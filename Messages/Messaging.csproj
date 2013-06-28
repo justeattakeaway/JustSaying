@@ -40,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IMessagePublisher.cs" />
+    <Compile Include="Lookups\IPublishEndpointProvider.cs" />
     <Compile Include="Messages\CustomerCommunication\CustomerOrderRejectionSms.cs" />
     <Compile Include="Messages\CustomerCommunication\CustomerOrderRejectionSmsFailed.cs" />
     <Compile Include="Messages\Message.cs" />

@@ -92,12 +92,12 @@ namespace JustEat.AwsTools
             return result.GetQueueAttributesResult;
         }
 
-        public void AddPermission(SnsTopic snsTopic)
+        public void AddPermission(SnsTopicArn snsTopic)
         {
             Client.SetQueueAttributes(new SetQueueAttributesRequest().WithQueueUrl(Url).WithPolicy(GetQueueSubscriptionPilocy(snsTopic)));
         }
 
-        private string GetQueueSubscriptionPilocy(SnsTopic topic)
+        private string GetQueueSubscriptionPilocy(SnsTopicArn topic)
         {
             return @"{
                                                       ""Version"": ""2012-10-17"",
@@ -119,7 +119,7 @@ namespace JustEat.AwsTools
                                                          }
                                                     }";
         }
-        private static string GetQueueSubscriptionPilocyNoArn(SnsTopic topic)
+        private static string GetQueueSubscriptionPilocyNoArn(SnsTopicByName topic)
         {
             return @"{
                         ""Version"": ""2012-10-17"",

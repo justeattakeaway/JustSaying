@@ -6,20 +6,18 @@ using SimplesNotificationStack.Messaging.Messages;
 
 namespace JustEat.AwsTools
 {
-    public class SnsTopic : IMessagePublisher
+    public class SnsTopicByName : SnsTopicArn, IMessagePublisher
     {
         public string TopicName { get; private set; }
-        public string Arn { get; private set; }
-        public AmazonSimpleNotificationService Client { get; private set; }
 
-        public SnsTopic(string topicName, AmazonSimpleNotificationService client)
+        public SnsTopicByName(string topicName, AmazonSimpleNotificationService client)
         {
             TopicName = topicName;
             Client = client;
             Exists();
         }
 
-        public bool Exists()
+        public override bool Exists()
         {
             var topicCheck = Client.ListTopics(new ListTopicsRequest());
             if (topicCheck.IsSetListTopicsResult())
@@ -54,6 +52,29 @@ namespace JustEat.AwsTools
             var response = Client.DeleteTopic(new DeleteTopicRequest().WithTopicArn(Arn));
             Arn = string.Empty;
         }
+    }
+
+    public class SnsTopicByArn : SnsTopicArn, IMessagePublisher
+    {
+        public SnsTopicByArn(string topicArn, AmazonSimpleNotificationService client)
+        {
+            Arn = topicArn;
+            Client = client;
+        }
+
+        public override bool Exists()
+        {
+            var topicCheck = Client.ListTopics(new ListTopicsRequest());
+            return topicCheck.IsSetListTopicsResult() && topicCheck.ListTopicsResult.Topics.Any(x => x.TopicArn == Arn);
+        }
+    }
+
+    public abstract class SnsTopicArn
+    {
+        public string Arn { get; protected set; }
+        public AmazonSimpleNotificationService Client { get; protected set; }
+
+        public abstract bool Exists();
 
         public bool IsSubscribed(SqsQueue queue)
         {
@@ -75,13 +96,13 @@ namespace JustEat.AwsTools
             }
             return false;
         }
-        
+
         public void Publish(Message message)
         {
             Client.Publish(new PublishRequest
             {
                 Subject = message.GetType().ToString(),
-               // Message = JsonConvert.SerializeObject(new NewOrder { CustomerId = i }),
+                // Message = JsonConvert.SerializeObject(new NewOrder { CustomerId = i }),
                 TopicArn = Arn
             });
         }
