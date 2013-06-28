@@ -7,7 +7,7 @@ using Amazon.SQS.Model;
 
 namespace JustEat.AwsTools
 {
-    public class SqsQueue
+    public class SqsQueueByName
     {
         public string QueueNamePrefix { get; private set; }
         public string Arn { get; private set; }
@@ -118,21 +118,6 @@ namespace JustEat.AwsTools
 															}
                                                          }
                                                     }";
-        }
-        private static string GetQueueSubscriptionPilocyNoArn(SnsTopicByName topic)
-        {
-            return @"{
-                        ""Version"": ""2012-10-17"",
-                        ""Id"": ""Sns_Subsciption_Policy"",
-                        ""Statement"": {
-                            ""Sid"":""Send_Message"",
-                            ""Effect"": ""Allow"",
-                            ""Principal"": {
-                                ""AWS"": ""*""
-                                },
-                            ""Action"": ""SQS:SendMessage""
-                            }
-                    }";
         }
     }
 }
