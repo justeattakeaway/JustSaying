@@ -18,23 +18,17 @@ cmd_opts = {logger: @log}
 directory 'out'
 
 task :directories => 'out'
-setup_nuget name: name, configuration: configuration, version: version
+setup_nuget name: name, configuration: configuration, version: version, restore: false
 
-task :harvest do
-  src_destination = "out/package/lib/net40"
-  excludeFiles = ["AWSSDK.dll"]
-  exclude_dirs = [""]
-
-  rm_rf src_destination if Pathname.new(src_destination).exist?
-  r = Robocopier.new
-  r.copy(File.join("AwsTools", "/bin/#{configuration}"), src_destination, {:exclude_files => excludeFiles, :exclude_dirs => exclude_dirs})
+task :clean do
+  package_lib = "out/package/lib"
+  rm_rf package_lib if Pathname.new(package_lib).exist?
 end
 
 AssemblyInfoGenerator.new(log: @log, version: version).generate
 desc 'Bootstrap all build-dependencies'
 task :bootstrap => [:assembly_info, :directories]
-task :package => [:harvest]
-task :package => [:bootstrap]
+task :package => [:clean]
 task :package => [:nuget]
 task :default => [:package]
 
