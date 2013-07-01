@@ -32,7 +32,7 @@ end
 
 AssemblyInfoGenerator.new(log: @log, version: version).generate
 desc 'Bootstrap all build-dependencies'
-task :bootstrap => ['nuget:restore', :assembly_info, :directories]
+task :bootstrap => [:assembly_info, :directories]
 task :package => [:harvest]
 task :package => [:bootstrap]
 task :package => [:nuget]
