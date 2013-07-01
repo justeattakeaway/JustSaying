@@ -7,7 +7,7 @@ using Amazon.SQS.Model;
 
 namespace JustEat.AwsTools
 {
-    public class SqsQueueByName
+    public class SqsQueue
     {
         public string QueueNamePrefix { get; private set; }
         public string Arn { get; private set; }
