@@ -10,7 +10,7 @@ namespace SimplesNotificationStack.Messaging.Lookups
     /// <summary>
     /// Provides endpoint locations for SQS queues subscribed to topics
     /// </summary>
-    class SqsPublishSubscribtionEndpointProvider : IPublishSubscribtionEndpointProvider
+    public class SqsSubscribtionEndpointProvider : IPublishSubscribtionEndpointProvider
     {
         public string GetLocationEndpoint(Component component, PublishTopics topic)
         {
