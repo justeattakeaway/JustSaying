@@ -20,4 +20,26 @@ namespace UnitTests.Serialisation
             Assert.NotNull(result);
         }
     }
+
+    [TestFixture]
+    public class SerialisationMapRegistration_x
+    {
+        [Test]
+        [Ignore("works but statics causing some issues in test runner")]
+        public void MapSaysNotRegisteredBeforeStackRegisterCall()
+        {
+            Assert.False(SerialisationMap.IsRegistered);
+        }
+    }
+
+    [TestFixture]
+    public class SerialisationMapRegistration_y
+    {
+        [Test]
+        public void MapSaysRegisteredAfterStackRegisterCall()
+        {
+            SimplesNotificationStack.Messaging.Stack.Register();
+            Assert.True(SerialisationMap.IsRegistered);
+        }
+    }
 }

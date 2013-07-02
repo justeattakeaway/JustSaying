@@ -35,6 +35,8 @@ namespace SimplesNotificationStack.Messaging.MessageSerialisation
             Map.Add(serialisation);
         }
 
+        public static bool IsRegistered { get { return Map.Count > 0; } }
+
         public static ISerialiser<Message> GetMap(string objectType)
         {
             return Map.FirstOrDefault(x => x.Key == objectType);
