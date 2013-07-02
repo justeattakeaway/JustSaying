@@ -81,7 +81,7 @@ namespace JustEat.AwsTools
                                                     }";
         }
 
-        public static SimplesNotificationStack.Messaging.Messages.Message GetMessage(Message message)
+        public SimplesNotificationStack.Messaging.Messages.Message GetMessage(Message message)
         {
             // ToDo: This is 'rough temp code until I understand exectly how to treat / wrap SQS
 
