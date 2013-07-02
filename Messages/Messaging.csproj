@@ -30,6 +30,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.5.0.6\lib\net40\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -42,6 +45,7 @@
     <Compile Include="IMessagePublisher.cs" />
     <Compile Include="Lookups\IPublishEndpointProvider.cs" />
     <Compile Include="Lookups\IPublishSubscribtionEndpointProvider.cs" />
+    <Compile Include="MessageSerialisation\Class1.cs" />
     <Compile Include="PublishTopics.cs" />
     <Compile Include="Messages\CustomerCommunication\CustomerOrderRejectionSms.cs" />
     <Compile Include="Messages\CustomerCommunication\CustomerOrderRejectionSmsFailed.cs" />
@@ -54,6 +58,7 @@
     <Compile Include="Messages\Sms\Enums.cs" />
     <Compile Include="Component.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Stack.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

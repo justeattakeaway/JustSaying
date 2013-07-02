@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>JustEat.Testing</id>
+    <version>6.0.1.43</version>
+    <title>JustEat.Testing</title>
+    <authors>Peter Mounce</authors>
+    <owners>Peter Mounce</owners>
+    <licenseUrl>https://github.je-labs.com/PRS/JustEat.Testing/blob/master/LICENSE.md</licenseUrl>
+    <projectUrl>https://github.je-labs.com/PRS/JustEat.Testing</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>JustEat.Testing is our BDD helper for C# unit-tests</description>
+    <summary>JustEat.Testing is our BDD helper for C# unit-tests</summary>
+    <tags>bdd tests testing helper general library</tags>
+    <dependencies>
+      <dependency id="AutoFixture" version="3.4.1" />
+      <dependency id="NLog" version="2.0.1.2" />
+      <dependency id="NUnit" version="2.6.2" />
+    </dependencies>
+  </metadata>
+</package>
