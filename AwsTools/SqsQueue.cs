@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using Newtonsoft.Json.Linq;
+using SimplesNotificationStack.Messaging.MessageSerialisation;
 
 namespace JustEat.AwsTools
 {
@@ -77,6 +79,14 @@ namespace JustEat.AwsTools
 															}
                                                          }
                                                     }";
+        }
+
+        public static SimplesNotificationStack.Messaging.Messages.Message GetMessage(Message message)
+        {
+            // ToDo: This is 'rough temp code until I understand exectly how to treat / wrap SQS
+
+            return SerialisationMap.GetMap(JObject.Parse(message.Body)["Subject"].ToString())
+                .Deserialised(JObject.Parse(message.Body)["Message"].ToString());
         }
     }
 
