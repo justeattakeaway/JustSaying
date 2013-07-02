@@ -46,7 +46,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SnsTopic.cs" />
+    <Compile Include="SnsTopicByName.cs" />
+    <Compile Include="SnsTopicBase.cs" />
+    <Compile Include="SnsTopicByArn.cs" />
     <Compile Include="SqsQueue.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -7,21 +7,89 @@ using Amazon.SQS.Model;
 
 namespace JustEat.AwsTools
 {
-    public class SqsQueue
+    public abstract class SqsQueueBase
     {
-        public string QueueNamePrefix { get; private set; }
-        public string Arn { get; private set; }
-        public string Url { get; private set; }
+        public string Arn { get; protected set; }
+        public string Url { get; protected set; }
         public AmazonSQS Client { get; private set; }
+        public string QueueNamePrefix { get; protected set; }
 
-        public SqsQueue(string queueName, AmazonSQS client)
+        public SqsQueueBase(AmazonSQS client)
+        {
+            Client = client;
+        }
+
+        public abstract bool Exists();
+
+        public void Delete()
+        {
+            Arn = null;
+            Url = null;
+
+            if (!Exists())
+                return;
+
+            var result = Client.DeleteQueue(new DeleteQueueRequest().WithQueueUrl(Url));
+            //return result.IsSetResponseMetadata();
+            Arn = null;
+            Url = null;
+        }
+
+        protected void SetArn()
+        {
+            Arn = GetAttrs(new[] { "QueueArn" }).QueueARN;
+        }
+
+        protected GetQueueAttributesResult GetAttrs(IEnumerable<string> attrKeys)
+        {
+            var request = new GetQueueAttributesRequest().WithQueueUrl(Url);
+            foreach (var key in attrKeys)
+                request.WithAttributeName(key);
+
+            var result = Client.GetQueueAttributes(request);
+
+            return result.GetQueueAttributesResult;
+        }
+
+        public void AddPermission(SnsTopicBase snsTopic)
+        {
+            Client.SetQueueAttributes(new SetQueueAttributesRequest().WithQueueUrl(Url).WithPolicy(GetQueueSubscriptionPilocy(snsTopic)));
+        }
+
+        protected string GetQueueSubscriptionPilocy(SnsTopicBase topic)
+        {
+            return @"{
+                                                      ""Version"": ""2012-10-17"",
+                                                      ""Id"": ""Sns_Subsciption_Policy"",
+                                                      ""Statement"": 
+                                                        {
+                                                           ""Sid"":""Send_Message"",
+                                                           ""Effect"": ""Allow"",
+                                                           ""Principal"": {
+                                                                ""AWS"": ""*""
+                                                             },
+                                                            ""Action"": ""SQS:SendMessage"",
+                                                            ""Resource"": """ + Arn + @""",
+                                                            ""Condition"" : {
+															   ""ArnEquals"" : {
+																  ""aws:SourceArn"":""" + topic.Arn + @"""
+															   }
+															}
+                                                         }
+                                                    }";
+        }
+    }
+
+    public class SqsQueueByName : SqsQueueBase
+    {
+        public SqsQueueByName(string queueName, AmazonSQS client)
+            : base(client)
         {
             QueueNamePrefix = queueName;
-            Client = client;
             Exists();
         }
 
-        public bool Exists()
+        public override bool Exists()
         {
             var result = Client.ListQueues(new ListQueuesRequest().WithQueueNamePrefix(QueueNamePrefix));
             if (result.IsSetListQueuesResult() && result.ListQueuesResult.IsSetQueueUrl())
@@ -55,69 +123,33 @@ namespace JustEat.AwsTools
                 {
                     // Ensure we wait for queue delete timeout to expire.
                     Thread.Sleep(60000);
-                    Create(attempt ++);
+                    Create(attempt++);
                 }
             }
 
             return false;
         }
+    }
 
-        public void Delete()
+    public class SqsQueueByUrl : SqsQueueBase
+    {
+        public SqsQueueByUrl(string queueUrl, AmazonSQS client)
+            : base(client)
         {
-            Arn = null;
-            Url = null;
-
-            if (!Exists())
-                return;
-
-            var result = Client.DeleteQueue(new DeleteQueueRequest().WithQueueUrl(Url));
-            //return result.IsSetResponseMetadata();
-            Arn = null;
-            Url = null;
+            Url = queueUrl;
         }
 
-        private void SetArn()
+        public override bool Exists()
         {
-            Arn = GetAttrs(new[] { "QueueArn" }).QueueARN;
-        }
-        
-        private GetQueueAttributesResult GetAttrs(IEnumerable<string> attrKeys)
-        {
-            var request = new GetQueueAttributesRequest().WithQueueUrl(Url);
-            foreach (var key in attrKeys)
-                request.WithAttributeName(key);
+            var result = Client.ListQueues(new ListQueuesRequest());
+            if (result.IsSetListQueuesResult() && result.ListQueuesResult.IsSetQueueUrl() && result.ListQueuesResult.QueueUrl.Any(x => x == Url))
+            {
+                SetArn();
+                // Need to set the prefix yet!
+                return true;
+            }
 
-            var result = Client.GetQueueAttributes(request);
-
-            return result.GetQueueAttributesResult;
-        }
-
-        public void AddPermission(SnsTopicArn snsTopic)
-        {
-            Client.SetQueueAttributes(new SetQueueAttributesRequest().WithQueueUrl(Url).WithPolicy(GetQueueSubscriptionPilocy(snsTopic)));
-        }
-
-        private string GetQueueSubscriptionPilocy(SnsTopicArn topic)
-        {
-            return @"{
-                                                      ""Version"": ""2012-10-17"",
-                                                      ""Id"": ""Sns_Subsciption_Policy"",
-                                                      ""Statement"": 
-                                                        {
-                                                           ""Sid"":""Send_Message"",
-                                                           ""Effect"": ""Allow"",
-                                                           ""Principal"": {
-                                                                ""AWS"": ""*""
-                                                             },
-                                                            ""Action"": ""SQS:SendMessage"",
-                                                            ""Resource"": """ + Arn + @""",
-                                                            ""Condition"" : {
-															   ""ArnEquals"" : {
-																  ""aws:SourceArn"":""" + topic.Arn + @"""
-															   }
-															}
-                                                         }
-                                                    }";
+            return false;
         }
     }
 }
