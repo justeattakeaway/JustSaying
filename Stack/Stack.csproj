@@ -30,6 +30,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AWSSDK, Version=1.5.25.0, Culture=neutral, PublicKeyToken=9f476d3089b52be3, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\AWSSDK.1.5.25.0\lib\AWSSDK.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -43,6 +47,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\AwsTools\AwsTools.csproj">
+      <Project>{CBF2110B-C3A4-45E8-BBD6-301D77567043}</Project>
+      <Name>AwsTools</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Messages\Messaging.csproj">
       <Project>{899CD315-37B3-46D0-B2DC-FB94C552D968}</Project>
       <Name>Messaging</Name>
