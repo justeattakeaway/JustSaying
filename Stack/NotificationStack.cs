@@ -7,26 +7,29 @@ namespace SimplesNotificationStack.Stack
 {
     public class NotificationStack
     {
-        private readonly List<KeyValuePair<NotificationTopic, IMessageSubscriber>> _notificationSubscribers;
+        private readonly Dictionary<NotificationTopic, IMessageSubscriber> _notificationSubscribers;
 
-        public NotificationStack(Messaging.Component component)
+        public NotificationStack(Component component)
         {
-            _notificationSubscribers = new List<KeyValuePair<NotificationTopic, IMessageSubscriber>>();
+            _notificationSubscribers = new Dictionary<NotificationTopic, IMessageSubscriber>();
         }
 
         public void AddNotificationTopicSubscriber(NotificationTopic topic, IMessageSubscriber subscriber)
         {
-            _notificationSubscribers.Add(new KeyValuePair<NotificationTopic, IMessageSubscriber>(topic, subscriber));
+            _notificationSubscribers.Add(topic, subscriber);
         }
 
         public void AddMessageHandler(NotificationTopic topic, IHandler<Message> handler)
         {
-
+            _notificationSubscribers[topic].AddMessageHandler(handler);
         }
 
         public void Start()
         {
-            _notificationSubscribers.ForEach(x => x.Value.Listen());
+            foreach (var subscription in _notificationSubscribers)
+            {
+                subscription.Value.Listen();
+            }
         }
     }
 }

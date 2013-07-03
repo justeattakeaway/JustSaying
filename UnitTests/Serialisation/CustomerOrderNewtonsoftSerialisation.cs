@@ -16,7 +16,6 @@ namespace UnitTests.Serialisation
         [TestFixtureSetUp]
         public void SetupFixture()
         {
-            Stack.Register();
             _originalObject = new CustomerOrderRejectionSms(1, 2, "3", SmsCommunicationActivity.ConfirmedReceived);
             _serializeObject = JsonConvert.SerializeObject(_originalObject);
         }
