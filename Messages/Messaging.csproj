@@ -46,7 +46,8 @@
     <Compile Include="INotificationSubscriber.cs" />
     <Compile Include="Lookups\IPublishEndpointProvider.cs" />
     <Compile Include="Lookups\IPublishSubscribtionEndpointProvider.cs" />
-    <Compile Include="MessageHandling\HandlerMap.cs" />
+    <Compile Include="MessageHandling\BaseHandler.cs" />
+    <Compile Include="MessageHandling\IHandler.cs" />
     <Compile Include="MessageSerialisation\IMessageSerialisationRegister.cs" />
     <Compile Include="MessageSerialisation\IMessageSerialiser.cs" />
     <Compile Include="MessageSerialisation\NewtonsoftSerialiser.cs" />
