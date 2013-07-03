@@ -1,4 +1,4 @@
 namespace SimplesNotificationStack.Messaging
 {
-    public enum PublishTopics { CustomerCommunication, OrderDispatch }
+    public enum NotificationTopic { CustomerCommunication, OrderDispatch }
 }

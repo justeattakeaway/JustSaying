@@ -4,7 +4,7 @@ namespace SimplesNotificationStack.Messaging.Lookups
 {
     public interface IPublishSubscribtionEndpointProvider
     {
-        string GetLocationEndpoint(Component component, PublishTopics topic);
+        string GetLocationEndpoint(Component component, NotificationTopic topic);
     }
 
     /// <summary>
@@ -12,12 +12,12 @@ namespace SimplesNotificationStack.Messaging.Lookups
     /// </summary>
     public class SqsSubscribtionEndpointProvider : IPublishSubscribtionEndpointProvider
     {
-        public string GetLocationEndpoint(Component component, PublishTopics topic)
+        public string GetLocationEndpoint(Component component, NotificationTopic topic)
         {
             switch (component)
             {
                 case Component.OrderEngine:
-                    if (topic == PublishTopics.CustomerCommunication)
+                    if (topic == NotificationTopic.CustomerCommunication)
                         return "https://sqs.eu-west-1.amazonaws.com/507204202721/uk-qa12-orderengine-customer-order-communication";
                     break;
             }

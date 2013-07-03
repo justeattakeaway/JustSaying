@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{899CD315-37B3-46D0-B2DC-FB94C552D968}</ProjectGuid>
+    <ProjectGuid>{A36B7ECF-A2AA-44CC-9538-7BC28BDDE4E0}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SimplesNotificationStack.Messaging</RootNamespace>
-    <AssemblyName>SimplesNotificationStack.Messaging</AssemblyName>
+    <RootNamespace>Stack</RootNamespace>
+    <AssemblyName>Stack</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -30,9 +30,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.5.0.6\lib\net40\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -42,34 +39,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IMessagePublisher.cs" />
-    <Compile Include="IMessageSubscriber.cs" />
-    <Compile Include="Lookups\IPublishEndpointProvider.cs" />
-    <Compile Include="Lookups\IPublishSubscribtionEndpointProvider.cs" />
-    <Compile Include="MessageHandling\HandlerMap.cs" />
-    <Compile Include="MessageSerialisation\SerialisationMap.cs" />
-    <Compile Include="PublishTopics.cs" />
-    <Compile Include="Messages\CustomerCommunication\CustomerOrderRejectionSms.cs" />
-    <Compile Include="Messages\CustomerCommunication\CustomerOrderRejectionSmsFailed.cs" />
-    <Compile Include="Messages\Message.cs" />
-    <Compile Include="Messages\OrderDispatch\OrderAccepted.cs" />
-    <Compile Include="Messages\OrderDispatch\OrderAlternateTimeSuggested.cs" />
-    <Compile Include="Messages\OrderDispatch\OrderMessage.cs" />
-    <Compile Include="Messages\OrderDispatch\OrderRejected.cs" />
-    <Compile Include="Messages\OrderDispatch\OrderRejectReason.cs" />
-    <Compile Include="Messages\Sms\Enums.cs" />
-    <Compile Include="Component.cs" />
+    <Compile Include="NotificationStack.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Stack.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\Messages\Messaging.csproj">
+      <Project>{899CD315-37B3-46D0-B2DC-FB94C552D968}</Project>
+      <Name>Messaging</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Target Name="BeforeBuild" Condition="!Exists('Properties\AssemblyInfo.cs')">
-    <Exec Command="bundle exec rake bootstrap" WorkingDirectory="..\" />
-  </Target>
 </Project>

@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using Newtonsoft.Json;
+using SimplesNotificationStack.Messaging;
 using SimplesNotificationStack.Messaging.MessageSerialisation;
 using SimplesNotificationStack.Messaging.Messages.CustomerCommunication;
 using SimplesNotificationStack.Messaging.Messages.Sms;
@@ -15,7 +16,7 @@ namespace UnitTests.Serialisation
         [TestFixtureSetUp]
         public void SetupFixture()
         {
-            SimplesNotificationStack.Messaging.Stack.Register();
+            Stack.Register();
             _originalObject = new CustomerOrderRejectionSms(1, 2, "3", SmsCommunicationActivity.ConfirmedReceived);
             _serializeObject = JsonConvert.SerializeObject(_originalObject);
         }

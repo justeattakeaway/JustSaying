@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AwsTools", "AwsTools\AwsToo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messaging.UnitTests", "UnitTests\Messaging.UnitTests.csproj", "{7E36099E-E6A4-4259-973C-0ABE776377BA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stack", "Stack\Stack.csproj", "{A36B7ECF-A2AA-44CC-9538-7BC28BDDE4E0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stack.UnitTests", "Stack.UnitTests\Stack.UnitTests.csproj", "{A633B28E-00DE-4390-9C58-64170811E0D2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +29,14 @@ Global
 		{7E36099E-E6A4-4259-973C-0ABE776377BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E36099E-E6A4-4259-973C-0ABE776377BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E36099E-E6A4-4259-973C-0ABE776377BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A36B7ECF-A2AA-44CC-9538-7BC28BDDE4E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A36B7ECF-A2AA-44CC-9538-7BC28BDDE4E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A36B7ECF-A2AA-44CC-9538-7BC28BDDE4E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A36B7ECF-A2AA-44CC-9538-7BC28BDDE4E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A633B28E-00DE-4390-9C58-64170811E0D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A633B28E-00DE-4390-9C58-64170811E0D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A633B28E-00DE-4390-9C58-64170811E0D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A633B28E-00DE-4390-9C58-64170811E0D2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
