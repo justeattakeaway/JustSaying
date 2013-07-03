@@ -10,7 +10,7 @@ require './automation/nuget.rb'
 require './automation/robocopier.rb'
 include Cocaine
 
-name = ENV['component'] || 'SimplesNotificationStack'
+name = ENV['component'] || 'JustEat.Simples.NotificationStack'
 @log = setup_logging(ENV['VERBOSITY'] || 'info')
 configuration = ENV['msbuild_configuration'] || 'Release'
 cmd_opts = {logger: @log}

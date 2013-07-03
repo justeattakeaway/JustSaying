@@ -27,7 +27,7 @@ def setup_nuget opts={}
 		directory package_lib
 
 		task :harvest => [package_lib] do
-			lib_files = FileList.new("AwsTools/bin/#{configuration}/*.{exe,config,dll,pdb,xml}")
+			lib_files = FileList.new("Stack/bin/#{configuration}/*.{exe,config,dll,pdb,xml}")
 			lib_files.exclude /(Shouldly|Rhino|nunit|Test|Castle|NLog|ServiceStack|AWSSDK)/
 			lib_files.map{|f|Pathname.new f}.each do |f|
 			harvested = "#{package_lib}/#{f.basename}"
