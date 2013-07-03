@@ -41,7 +41,7 @@ namespace SimplesNotificationStack.AwsTools
                 {
                     var typedMessage = _serialisationRegister
                         .GetSerialiser(JObject.Parse(message.Body)["Subject"].ToString())
-                        .Deserialised(JObject.Parse(message.Body)["Message"].ToString());
+                        .Deserialise(JObject.Parse(message.Body)["Message"].ToString());
 
                     if (typedMessage != null)
                         _handlers[typedMessage.GetType()].Handle(typedMessage);

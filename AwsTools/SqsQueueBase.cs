@@ -78,13 +78,5 @@ namespace JustEat.AwsTools
                                                          }
                                                     }";
         }
-
-        public SimplesNotificationStack.Messaging.Messages.Message GetMessage(Message message)
-        {
-            // ToDo: This is 'rough temp code until I understand exectly how to treat / wrap SQS
-
-            return SerialisationMap.GetSerialiser(JObject.Parse(message.Body)["Subject"].ToString())
-                .Deserialised(JObject.Parse(message.Body)["Message"].ToString());
-        }
     }
 }

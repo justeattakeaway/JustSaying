@@ -54,7 +54,7 @@ namespace AwsTools.UnitTests
             Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(response);
 
             DeserialisedMessage = new CustomerOrderRejectionSms(1, 2, "3", SmsCommunicationActivity.ConfirmedReceived);
-            Serialiser.Deserialised(Arg.Any<string>()).Returns(DeserialisedMessage);
+            Serialiser.Deserialise(Arg.Any<string>()).Returns(DeserialisedMessage);
 
             Handler.HandlesMessageType.Returns(typeof(CustomerOrderRejectionSms));
         }
@@ -86,7 +86,7 @@ namespace AwsTools.UnitTests
         [Then]
         public void MessagesGetDeserialisedByCorrectHandler()
         {
-            Serialiser.Received().Deserialised(MessageBody);
+            Serialiser.Received().Deserialise(MessageBody);
         }
 
         [Then]
@@ -98,7 +98,7 @@ namespace AwsTools.UnitTests
         [Then]
         public void AllMessagesAreClearedFromQueue()
         {
-            Serialiser.Received(1).Deserialised(Arg.Any<string>());
+            Serialiser.Received(1).Deserialise(Arg.Any<string>());
             Sqs.Received(2).DeleteMessage(Arg.Any<DeleteMessageRequest>());
         }
     }
