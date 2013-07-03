@@ -6,17 +6,4 @@ namespace SimplesNotificationStack.Messaging.MessageSerialisation
     {
         IMessageSerialiser<Message> GetSerialiser(string objectType);
     }
-
-    public class ReflectedMessageSerialisationRegister : IMessageSerialisationRegister
-    {
-        public ReflectedMessageSerialisationRegister()
-        {
-            // REFLECT TO GET!
-        }
-
-        public IMessageSerialiser<Message> GetSerialiser(string objectType)
-        {
-            throw new System.NotImplementedException();
-        }
-    }
 }
