@@ -24,7 +24,7 @@ namespace UnitTests.Serialisation
         public void Deserialisation()
         {
             // Act
-            var result = SerialisationMap.GetMap(typeof(CustomerOrderRejectionSms).ToString()).Deserialised(_serializeObject) as CustomerOrderRejectionSms;
+            var result = SerialisationMap.GetSerialiser(typeof(CustomerOrderRejectionSms).ToString()).Deserialised(_serializeObject) as CustomerOrderRejectionSms;
 
             // Assert
             Assert.AreEqual(1, result.OrderId);
@@ -35,7 +35,7 @@ namespace UnitTests.Serialisation
         public void Serialisation()
         {
             // Act
-            var result = SerialisationMap.GetMap(typeof (CustomerOrderRejectionSms).ToString()).Serialised(_originalObject);
+            var result = SerialisationMap.GetSerialiser(typeof (CustomerOrderRejectionSms).ToString()).Serialised(_originalObject);
 
             // Assert
             Assert.AreEqual(_serializeObject, result);

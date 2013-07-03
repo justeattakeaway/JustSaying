@@ -1,43 +1,26 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json;
 using SimplesNotificationStack.Messaging.Messages;
 
 namespace SimplesNotificationStack.Messaging.MessageSerialisation
 {
-    public interface ISerialiser<out T> where T : Message
+    public interface IMessageSerialisationRegister
     {
-        string Key { get; }
-        T Deserialised(string message);
-        string Serialised(Message message);
-    }
-
-    internal class NewtonsoftBaseSerialiser<T> : ISerialiser<Message> where T : Message
-    {
-        public string Key { get { return typeof(T).ToString(); } }
-        public Message Deserialised(string message)
-        {
-            return JsonConvert.DeserializeObject<T>(message);
-        }
-
-        public string Serialised(Message message)
-        {
-            return JsonConvert.SerializeObject(message);
-        }
+        IMessageSerialiser<Message> GetSerialiser(string objectType);
     }
 
     public static class SerialisationMap
     {
-        private static readonly List<ISerialiser<Message>> Map = new List<ISerialiser<Message>>();
+        private static readonly List<IMessageSerialiser<Message>> Map = new List<IMessageSerialiser<Message>>();
 
-        internal static void Register(ISerialiser<Message> serialisation)
+        internal static void Register(IMessageSerialiser<Message> serialisation)
         {
             Map.Add(serialisation);
         }
 
         public static bool IsRegistered { get { return Map.Count > 0; } }
 
-        public static ISerialiser<Message> GetMap(string objectType)
+        public static IMessageSerialiser<Message> GetSerialiser(string objectType)
         {
             return Map.FirstOrDefault(x => x.Key == objectType);
         }

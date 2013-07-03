@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Newtonsoft.Json.Linq;
@@ -85,81 +83,8 @@ namespace JustEat.AwsTools
         {
             // ToDo: This is 'rough temp code until I understand exectly how to treat / wrap SQS
 
-            return SerialisationMap.GetMap(JObject.Parse(message.Body)["Subject"].ToString())
+            return SerialisationMap.GetSerialiser(JObject.Parse(message.Body)["Subject"].ToString())
                 .Deserialised(JObject.Parse(message.Body)["Message"].ToString());
-        }
-    }
-
-    public class SqsQueueByName : SqsQueueBase
-    {
-        public SqsQueueByName(string queueName, AmazonSQS client)
-            : base(client)
-        {
-            QueueNamePrefix = queueName;
-            Exists();
-        }
-
-        public override bool Exists()
-        {
-            var result = Client.ListQueues(new ListQueuesRequest().WithQueueNamePrefix(QueueNamePrefix));
-            if (result.IsSetListQueuesResult() && result.ListQueuesResult.IsSetQueueUrl())
-            {
-                Url = result.ListQueuesResult.QueueUrl.First();
-                SetArn();
-                return true;
-            }
-
-            return false;
-        }
-
-        public bool Create(int attempt = 0)
-        {
-            try
-            {
-                var result = Client.CreateQueue(new CreateQueueRequest().WithQueueName(QueueNamePrefix));
-                if (result.IsSetCreateQueueResult() && !string.IsNullOrWhiteSpace(result.CreateQueueResult.QueueUrl))
-                {
-                    Url = result.CreateQueueResult.QueueUrl;
-                    SetArn();
-                    return true;
-                }
-            }
-            catch (AmazonSQSException ex)
-            {
-                if (attempt >= 2)
-                    throw;
-
-                if (ex.ErrorCode == "AWS.SimpleQueueService.QueueDeletedRecently")
-                {
-                    // Ensure we wait for queue delete timeout to expire.
-                    Thread.Sleep(60000);
-                    Create(attempt++);
-                }
-            }
-
-            return false;
-        }
-    }
-
-    public class SqsQueueByUrl : SqsQueueBase
-    {
-        public SqsQueueByUrl(string queueUrl, AmazonSQS client)
-            : base(client)
-        {
-            Url = queueUrl;
-        }
-
-        public override bool Exists()
-        {
-            var result = Client.ListQueues(new ListQueuesRequest());
-            if (result.IsSetListQueuesResult() && result.ListQueuesResult.IsSetQueueUrl() && result.ListQueuesResult.QueueUrl.Any(x => x == Url))
-            {
-                SetArn();
-                // Need to set the prefix yet!
-                return true;
-            }
-
-            return false;
         }
     }
 }

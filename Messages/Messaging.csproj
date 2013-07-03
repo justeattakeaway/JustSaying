@@ -43,10 +43,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IMessagePublisher.cs" />
-    <Compile Include="IMessageSubscriber.cs" />
+    <Compile Include="INotificationSubscriber.cs" />
     <Compile Include="Lookups\IPublishEndpointProvider.cs" />
     <Compile Include="Lookups\IPublishSubscribtionEndpointProvider.cs" />
     <Compile Include="MessageHandling\HandlerMap.cs" />
+    <Compile Include="MessageSerialisation\IMessageSerialiser.cs" />
+    <Compile Include="MessageSerialisation\NewtonsoftBaseSerialiser.cs" />
     <Compile Include="MessageSerialisation\SerialisationMap.cs" />
     <Compile Include="PublishTopics.cs" />
     <Compile Include="Messages\CustomerCommunication\CustomerOrderRejectionSms.cs" />

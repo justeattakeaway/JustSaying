@@ -1,12 +1,11 @@
-using System.Collections.Generic;
 using SimplesNotificationStack.Messaging.MessageHandling;
 using SimplesNotificationStack.Messaging.Messages;
 
 namespace SimplesNotificationStack.Messaging
 {
-    public interface IMessageSubscriber
+    public interface INotificationSubscriber
     {
-        void AddMessageHandler(IHandler<Message> handlers);
+        void AddMessageHandler(IHandler<Message> handler);
         void Listen();
     }
 }

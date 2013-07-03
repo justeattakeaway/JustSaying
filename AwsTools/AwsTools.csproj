@@ -52,7 +52,10 @@
     <Compile Include="SnsTopicByName.cs" />
     <Compile Include="SnsTopicBase.cs" />
     <Compile Include="SnsTopicByArn.cs" />
-    <Compile Include="SqsQueue.cs" />
+    <Compile Include="SqsNotificationListener.cs" />
+    <Compile Include="SqsQueueBase.cs" />
+    <Compile Include="SqsQueueByName.cs" />
+    <Compile Include="SqsQueueByUrl.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Messages\Messaging.csproj">

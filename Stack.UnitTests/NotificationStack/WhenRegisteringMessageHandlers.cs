@@ -9,13 +9,13 @@ namespace Stack.UnitTests.NotificationStack
 {
     public class WhenRegisteringMessageHandlers : NotificationStackBaseTest
     {
-        private IMessageSubscriber _subscriber;
+        private INotificationSubscriber _subscriber;
         private IHandler<Message> _handler1;
         private IHandler<Message> _handler2;
 
         protected override void Given()
         {
-            _subscriber = Substitute.For<IMessageSubscriber>();
+            _subscriber = Substitute.For<INotificationSubscriber>();
             _handler1 = Substitute.For<IHandler<Message>>();
             _handler2 = Substitute.For<IHandler<Message>>();
         }

@@ -6,13 +6,13 @@ namespace Stack.UnitTests.NotificationStack
 {
     public class WhenRegisteringSubscribers : NotificationStackBaseTest
     {
-        private IMessageSubscriber _subscriber1;
-        private IMessageSubscriber _subscriber2;
+        private INotificationSubscriber _subscriber1;
+        private INotificationSubscriber _subscriber2;
 
         protected override void Given()
         {
-            _subscriber1 = Substitute.For<IMessageSubscriber>();
-            _subscriber2 = Substitute.For<IMessageSubscriber>();
+            _subscriber1 = Substitute.For<INotificationSubscriber>();
+            _subscriber2 = Substitute.For<INotificationSubscriber>();
         }
 
         protected override void When()

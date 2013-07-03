@@ -7,14 +7,14 @@ namespace SimplesNotificationStack.Stack
 {
     public class NotificationStack
     {
-        private readonly Dictionary<NotificationTopic, IMessageSubscriber> _notificationSubscribers;
+        private readonly Dictionary<NotificationTopic, INotificationSubscriber> _notificationSubscribers;
 
         public NotificationStack(Component component)
         {
-            _notificationSubscribers = new Dictionary<NotificationTopic, IMessageSubscriber>();
+            _notificationSubscribers = new Dictionary<NotificationTopic, INotificationSubscriber>();
         }
 
-        public void AddNotificationTopicSubscriber(NotificationTopic topic, IMessageSubscriber subscriber)
+        public void AddNotificationTopicSubscriber(NotificationTopic topic, INotificationSubscriber subscriber)
         {
             _notificationSubscribers.Add(topic, subscriber);
         }
