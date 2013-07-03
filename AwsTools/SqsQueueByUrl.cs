@@ -2,7 +2,7 @@ using System.Linq;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 
-namespace JustEat.AwsTools
+namespace JustEat.Simples.NotificationStack.AwsTools
 {
     public class SqsQueueByUrl : SqsQueueBase
     {

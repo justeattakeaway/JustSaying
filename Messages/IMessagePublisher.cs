@@ -1,6 +1,6 @@
-﻿using SimplesNotificationStack.Messaging.Messages;
+﻿using JustEat.Simples.NotificationStack.Messaging.Messages;
 
-namespace SimplesNotificationStack.Messaging
+namespace JustEat.Simples.NotificationStack.Messaging
 {
     public interface IMessagePublisher
     {

@@ -1,6 +1,6 @@
-using SimplesNotificationStack.Messaging.Messages.Sms;
+using JustEat.Simples.NotificationStack.Messaging.Messages.Sms;
 
-namespace SimplesNotificationStack.Messaging.Messages.CustomerCommunication
+namespace JustEat.Simples.NotificationStack.Messaging.Messages.CustomerCommunication
 {
     public class CustomerOrderRejectionSmsFailed : CustomerOrderRejectionSms
     {

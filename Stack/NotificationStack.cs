@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
-using SimplesNotificationStack.Messaging;
-using SimplesNotificationStack.Messaging.MessageHandling;
-using SimplesNotificationStack.Messaging.Messages;
+using JustEat.Simples.NotificationStack.Messaging;
+using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
+using JustEat.Simples.NotificationStack.Messaging.Messages;
 
-namespace SimplesNotificationStack.Stack
+namespace JustEat.Simples.NotificationStack.Stack
 {
     public class NotificationStack
     {

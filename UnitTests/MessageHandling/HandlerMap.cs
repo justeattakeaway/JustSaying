@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
-using SimplesNotificationStack.Messaging.MessageHandling;
-using SimplesNotificationStack.Messaging.Messages;
+using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
+using JustEat.Simples.NotificationStack.Messaging.Messages;
 
 namespace UnitTests.MessageHandling
 {

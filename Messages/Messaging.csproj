@@ -7,8 +7,8 @@
     <ProjectGuid>{899CD315-37B3-46D0-B2DC-FB94C552D968}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SimplesNotificationStack.Messaging</RootNamespace>
-    <AssemblyName>SimplesNotificationStack.Messaging</AssemblyName>
+    <RootNamespace>JustEat.Simples.NotificationStack.Messaging</RootNamespace>
+    <AssemblyName>JustEat.Simples.NotificationStack.Messaging</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

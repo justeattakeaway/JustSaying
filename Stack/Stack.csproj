@@ -7,8 +7,8 @@
     <ProjectGuid>{A36B7ECF-A2AA-44CC-9538-7BC28BDDE4E0}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Stack</RootNamespace>
-    <AssemblyName>Stack</AssemblyName>
+    <RootNamespace>JustEat.Simples.NotificationStack.Stack</RootNamespace>
+    <AssemblyName>JustEat.Simples.NotificationStack.Stack</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FluentNotificationStack.cs" />
     <Compile Include="NotificationStack.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

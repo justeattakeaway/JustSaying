@@ -1,13 +1,13 @@
 using JustEat.Testing;
-using SimplesNotificationStack.Messaging;
+using JustEat.Simples.NotificationStack.Messaging;
 
 namespace Stack.UnitTests.NotificationStack
 {
-    public abstract class NotificationStackBaseTest : BehaviourTest<SimplesNotificationStack.Stack.NotificationStack>
+    public abstract class NotificationStackBaseTest : BehaviourTest<JustEat.Simples.NotificationStack.Stack.NotificationStack>
     {
-        protected override SimplesNotificationStack.Stack.NotificationStack CreateSystemUnderTest()
+        protected override JustEat.Simples.NotificationStack.Stack.NotificationStack CreateSystemUnderTest()
         {
-            return new SimplesNotificationStack.Stack.NotificationStack(Component.BoxHandler);
+            return new JustEat.Simples.NotificationStack.Stack.NotificationStack(Component.BoxHandler);
         }
     }
 }

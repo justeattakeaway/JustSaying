@@ -3,7 +3,7 @@ using System.Threading;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 
-namespace JustEat.AwsTools
+namespace JustEat.Simples.NotificationStack.AwsTools
 {
     public class SqsQueueByName : SqsQueueBase
     {

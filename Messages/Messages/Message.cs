@@ -1,6 +1,6 @@
 using System;
 
-namespace SimplesNotificationStack.Messaging.Messages
+namespace JustEat.Simples.NotificationStack.Messaging.Messages
 {
     public abstract class Message
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SimplesNotificationStack.Messaging.Lookups
+namespace JustEat.Simples.NotificationStack.Messaging.Lookups
 {
     public interface IPublishEndpointProvider
     {

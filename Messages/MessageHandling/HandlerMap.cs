@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SimplesNotificationStack.Messaging.Messages;
+using JustEat.Simples.NotificationStack.Messaging.Messages;
 
-namespace SimplesNotificationStack.Messaging.MessageHandling
+namespace JustEat.Simples.NotificationStack.Messaging.MessageHandling
 {
     public interface IHandler<out T> where T : Message
     {

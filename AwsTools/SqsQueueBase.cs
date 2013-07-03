@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Newtonsoft.Json.Linq;
-using SimplesNotificationStack.Messaging.MessageSerialisation;
+using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 
-namespace JustEat.AwsTools
+namespace JustEat.Simples.NotificationStack.AwsTools
 {
     public abstract class SqsQueueBase
     {

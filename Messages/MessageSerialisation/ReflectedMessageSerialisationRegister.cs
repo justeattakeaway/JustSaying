@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using SimplesNotificationStack.Messaging.Messages;
-using SimplesNotificationStack.Messaging.Messages.CustomerCommunication;
-using SimplesNotificationStack.Messaging.Messages.OrderDispatch;
+using JustEat.Simples.NotificationStack.Messaging.Messages;
+using JustEat.Simples.NotificationStack.Messaging.Messages.CustomerCommunication;
+using JustEat.Simples.NotificationStack.Messaging.Messages.OrderDispatch;
 
-namespace SimplesNotificationStack.Messaging.MessageSerialisation
+namespace JustEat.Simples.NotificationStack.Messaging.MessageSerialisation
 {
     public class ReflectedMessageSerialisationRegister : IMessageSerialisationRegister
     {

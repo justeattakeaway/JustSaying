@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
-using SimplesNotificationStack.Messaging.Messages;
+using JustEat.Simples.NotificationStack.Messaging.Messages;
 
-namespace SimplesNotificationStack.Messaging.MessageSerialisation
+namespace JustEat.Simples.NotificationStack.Messaging.MessageSerialisation
 {
     public class NewtonsoftSerialiser<T> : IMessageSerialiser<Message> where T : Message
     {

@@ -1,12 +1,12 @@
 using Amazon;
-using JustEat.AwsTools;
-using SimplesNotificationStack.AwsTools;
-using SimplesNotificationStack.Messaging;
-using SimplesNotificationStack.Messaging.MessageHandling;
-using SimplesNotificationStack.Messaging.MessageSerialisation;
-using SimplesNotificationStack.Messaging.Messages;
+using JustEat.Simples.NotificationStack.AwsTools;
+using JustEat.Simples.NotificationStack.AwsTools;
+using JustEat.Simples.NotificationStack.Messaging;
+using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
+using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
+using JustEat.Simples.NotificationStack.Messaging.Messages;
 
-namespace SimplesNotificationStack.Stack
+namespace JustEat.Simples.NotificationStack.Stack
 {
     /// <summary>
     /// This is not the perfect shining example of a fluent API YET!

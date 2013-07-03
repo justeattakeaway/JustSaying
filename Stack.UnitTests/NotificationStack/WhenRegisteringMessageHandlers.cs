@@ -1,9 +1,9 @@
 using JustEat.Testing;
 using NSubstitute;
 using NSubstitute.Experimental;
-using SimplesNotificationStack.Messaging;
-using SimplesNotificationStack.Messaging.MessageHandling;
-using SimplesNotificationStack.Messaging.Messages;
+using JustEat.Simples.NotificationStack.Messaging;
+using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
+using JustEat.Simples.NotificationStack.Messaging.Messages;
 
 namespace Stack.UnitTests.NotificationStack
 {

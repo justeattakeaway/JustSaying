@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using JustEat.Testing;
 using NUnit.Framework;
-using SimplesNotificationStack.Messaging.MessageSerialisation;
-using SimplesNotificationStack.Messaging.Messages.CustomerCommunication;
+using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
+using JustEat.Simples.NotificationStack.Messaging.Messages.CustomerCommunication;
 
 namespace UnitTests.Serialisation.SerialisationRegister
 {

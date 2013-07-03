@@ -1,17 +1,17 @@
 using System.Linq;
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using JustEat.AwsTools;
+using JustEat.Simples.NotificationStack.AwsTools;
 using JustEat.Testing;
 using NSubstitute;
-using SimplesNotificationStack.Messaging.MessageHandling;
-using SimplesNotificationStack.Messaging.MessageSerialisation;
-using SimplesNotificationStack.Messaging.Messages.CustomerCommunication;
-using SimplesNotificationStack.Messaging.Messages.Sms;
+using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
+using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
+using JustEat.Simples.NotificationStack.Messaging.Messages.CustomerCommunication;
+using JustEat.Simples.NotificationStack.Messaging.Messages.Sms;
 
 namespace AwsTools.UnitTests.SqsNotificationListener
 {
-    public class BaseQueuePollingTest : BehaviourTest<SimplesNotificationStack.AwsTools.SqsNotificationListener>
+    public class BaseQueuePollingTest : BehaviourTest<JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener>
     {
         protected const string QueueUrl = "url";
         protected readonly AmazonSQS Sqs = Substitute.For<AmazonSQS>();
@@ -21,11 +21,11 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected readonly IHandler<CustomerOrderRejectionSms> Handler = Substitute.For<IHandler<CustomerOrderRejectionSms>>();
         private readonly string _messageTypeString = typeof(CustomerOrderRejectionSms).ToString();
 
-        protected override SimplesNotificationStack.AwsTools.SqsNotificationListener CreateSystemUnderTest()
+        protected override JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
             var serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
             serialisationRegister.GetSerialiser(_messageTypeString).Returns(Serialiser);
-            return new SimplesNotificationStack.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), serialisationRegister);
+            return new JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), serialisationRegister);
         }
 
         protected override void Given()

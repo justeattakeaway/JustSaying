@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using Amazon.SQS.Model;
-using JustEat.AwsTools;
+using JustEat.Simples.NotificationStack.AwsTools;
 using Newtonsoft.Json.Linq;
-using SimplesNotificationStack.Messaging;
-using SimplesNotificationStack.Messaging.MessageHandling;
-using SimplesNotificationStack.Messaging.MessageSerialisation;
-using Message = SimplesNotificationStack.Messaging.Messages.Message;
+using JustEat.Simples.NotificationStack.Messaging;
+using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
+using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
+using Message = JustEat.Simples.NotificationStack.Messaging.Messages.Message;
 
-namespace SimplesNotificationStack.AwsTools
+namespace JustEat.Simples.NotificationStack.AwsTools
 {
     public class SqsNotificationListener : INotificationSubscriber
     {
@@ -51,7 +51,7 @@ namespace SimplesNotificationStack.AwsTools
                 catch (InvalidOperationException) { } // Swallow no messages
             }
 
-            //var endpoint = new SimplesNotificationStack.Messaging.Lookups.SqsSubscribtionEndpointProvider().GetLocationEndpoint(Component.OrderEngine, PublishTopics.CustomerCommunication);
+            //var endpoint = new JustEat.Simples.NotificationStack.Messaging.Lookups.SqsSubscribtionEndpointProvider().GetLocationEndpoint(Component.OrderEngine, PublishTopics.CustomerCommunication);
             //var queue = new AwsTools.SqsQueueByUrl(endpoint, Amazon.AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
         }
     }

@@ -7,8 +7,8 @@
     <ProjectGuid>{CBF2110B-C3A4-45E8-BBD6-301D77567043}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SimplesNotificationStack.AwsTools</RootNamespace>
-    <AssemblyName>SimplesNotificationStack.AwsTools</AssemblyName>
+    <RootNamespace>JustEat.Simples.NotificationStack.AwsTools</RootNamespace>
+    <AssemblyName>JustEat.Simples.NotificationStack.AwsTools</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>

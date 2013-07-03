@@ -1,4 +1,4 @@
-namespace SimplesNotificationStack.Messaging.Messages.OrderDispatch
+namespace JustEat.Simples.NotificationStack.Messaging.Messages.OrderDispatch
 {
     public abstract class OrderMessage : Message
     {

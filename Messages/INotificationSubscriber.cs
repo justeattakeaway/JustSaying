@@ -1,7 +1,7 @@
-using SimplesNotificationStack.Messaging.MessageHandling;
-using SimplesNotificationStack.Messaging.Messages;
+using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
+using JustEat.Simples.NotificationStack.Messaging.Messages;
 
-namespace SimplesNotificationStack.Messaging
+namespace JustEat.Simples.NotificationStack.Messaging
 {
     public interface INotificationSubscriber
     {

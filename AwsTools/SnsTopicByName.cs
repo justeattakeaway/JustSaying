@@ -1,9 +1,9 @@
 using System.Linq;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
-using SimplesNotificationStack.Messaging;
+using JustEat.Simples.NotificationStack.Messaging;
 
-namespace JustEat.AwsTools
+namespace JustEat.Simples.NotificationStack.AwsTools
 {
     public class SnsTopicByName : SnsTopicBase, IMessagePublisher
     {
