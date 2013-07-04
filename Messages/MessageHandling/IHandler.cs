@@ -1,11 +1,7 @@
-﻿using System;
-using JustEat.Simples.NotificationStack.Messaging.Messages;
-
-namespace JustEat.Simples.NotificationStack.Messaging.MessageHandling
+﻿namespace JustEat.Simples.NotificationStack.Messaging.MessageHandling
 {
-    public interface IHandler<out T> where T : Message
+    public interface IHandles<in T>
     {
-        Type HandlesMessageType { get; }
-        bool Handle(Message message);
+        bool Handle(T message);
     }
 }

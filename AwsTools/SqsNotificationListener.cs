@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Amazon.SQS.Model;
-using JustEat.Simples.NotificationStack.AwsTools;
 using Newtonsoft.Json.Linq;
 using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
@@ -14,18 +13,24 @@ namespace JustEat.Simples.NotificationStack.AwsTools
     {
         private readonly SqsQueueByUrl _queue;
         private readonly IMessageSerialisationRegister _serialisationRegister;
-        private readonly Dictionary<Type, IHandler<Message>> _handlers;
+        private readonly Dictionary<Type, List<Action<Message>>> _handlers;
 
         public SqsNotificationListener(SqsQueueByUrl queue, IMessageSerialisationRegister serialisationRegister)
         {
             _queue = queue;
             _serialisationRegister = serialisationRegister;
-            _handlers = new Dictionary<Type, IHandler<Message>>();
+            _handlers = new Dictionary<Type, List<Action<Message>>>();
         }
 
-        public void AddMessageHandler(IHandler<Message> handler)
+        public void AddMessageHandler<T>(Action<T> handler) where T : Message
         {
-            _handlers.Add(handler.HandlesMessageType, handler);
+            List<Action<Message>> handlers;
+            if (!_handlers.TryGetValue(typeof(T), out handlers))
+            {
+                handlers = new List<Action<Message>>();
+                _handlers.Add(typeof(T), handlers);
+            }
+            handlers.Add(DelegateAdjuster.CastArgument<Message, T>(x => handler(x)));
         }
 
         public void Listen()
@@ -44,7 +49,14 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                         .Deserialise(JObject.Parse(message.Body)["Message"].ToString());
 
                     if (typedMessage != null)
-                        _handlers[typedMessage.GetType()].Handle(typedMessage);
+                    {
+                        List<Action<Message>> handlers;
+                        if (!_handlers.TryGetValue(typedMessage.GetType(), out handlers)) return;
+                        foreach (var handler in handlers)
+                        {
+                            handler(typedMessage);
+                        }
+                    }
 
                     _queue.Client.DeleteMessage(new DeleteMessageRequest().WithQueueUrl(_queue.Url).WithReceiptHandle(message.ReceiptHandle));
                 }

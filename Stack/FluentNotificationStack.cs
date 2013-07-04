@@ -1,8 +1,7 @@
+using System;
 using Amazon;
 using JustEat.Simples.NotificationStack.AwsTools;
-using JustEat.Simples.NotificationStack.AwsTools;
 using JustEat.Simples.NotificationStack.Messaging;
-using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
 
@@ -55,7 +54,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <param name="topic"></param>
         /// <param name="handler"></param>
         /// <returns></returns>
-        public FluentNotificationStack WithTopicMessageHandler(NotificationTopic topic, IHandler<Message> handler)
+        public FluentNotificationStack AddMessageHandler<T>(NotificationTopic topic, Action<T> handler) where T : Message
         {
             _instance.AddMessageHandler(topic, handler);
             return this;

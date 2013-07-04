@@ -15,7 +15,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         [Then]
         public void ProcessingIsPassedToTheHandlerForCorrectMessage()
         {
-            Handler.Received().Handle(DeserialisedMessage);
+            Handler.Received().Invoke(DeserialisedMessage);
         }
 
         [Then]

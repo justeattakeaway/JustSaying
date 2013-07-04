@@ -50,6 +50,7 @@ def setup_nuget opts={}
 			nuspec.output_file = "#{name}.nuspec"
 			nuspec.tags = ""
       nuspec.dependency "AWSSDK", "1.5.25.0"
+      nuspec.dependency "Newtonsoft.Json", "4.5.0.0"
 		end
 
 		nupkg = "out/#{name}.#{version}.nupkg"
