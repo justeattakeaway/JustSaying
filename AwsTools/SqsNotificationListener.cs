@@ -35,6 +35,12 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 
         public void Listen()
         {
+            Action run = () => { while (true) { ListenLoop(); } };
+            run.BeginInvoke(null, null);
+        }
+
+        private void ListenLoop()
+        {
             var messageResult = _queue.Client.ReceiveMessage(new ReceiveMessageRequest()
                                                                  .WithQueueUrl(_queue.Url)
                                                                  .WithMaxNumberOfMessages(10))

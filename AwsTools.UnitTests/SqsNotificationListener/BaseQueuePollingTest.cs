@@ -47,10 +47,10 @@ namespace AwsTools.UnitTests.SqsNotificationListener
                                                                                                      "\"Message\":\"SOME_RANDOM_MESSAGE\"}"
                                                                                           }}.ToList(),
                                                               }};
-            Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(response);
+            Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => response, x => new ReceiveMessageResponse());
 
             DeserialisedMessage = new CustomerOrderRejectionSms(1, 2, "3", SmsCommunicationActivity.ConfirmedReceived);
-            Serialiser.Deserialise(Arg.Any<string>()).Returns(DeserialisedMessage);
+            Serialiser.Deserialise(Arg.Any<string>()).Returns(x => DeserialisedMessage);
         }
 
         protected override void When()
