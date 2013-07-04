@@ -22,12 +22,12 @@ namespace JustEat.Simples.NotificationStack.Messaging.MessageSerialisation
             //           where t.BaseType == (typeof (Message)) && t.GetConstructor(Type.EmptyTypes) != null
             //           select new {Key = t, Value = new NewtonsoftSerialiser<t>()};
 
-            _map.Add(typeof(CustomerOrderRejectionSms).ToString(), new NewtonsoftSerialiser<CustomerOrderRejectionSms>());
-            _map.Add(typeof(CustomerOrderRejectionSmsFailed).ToString(), new NewtonsoftSerialiser<CustomerOrderRejectionSmsFailed>());
+            _map.Add(typeof(CustomerOrderRejectionSms).Name, new NewtonsoftSerialiser<CustomerOrderRejectionSms>());
+            _map.Add(typeof(CustomerOrderRejectionSmsFailed).Name, new NewtonsoftSerialiser<CustomerOrderRejectionSmsFailed>());
 
-            _map.Add(typeof(OrderAccepted).ToString(), new NewtonsoftSerialiser<OrderAccepted>());
-            _map.Add(typeof(OrderAlternateTimeSuggested).ToString(), new NewtonsoftSerialiser<OrderAlternateTimeSuggested>());
-            _map.Add(typeof(OrderRejected).ToString(), new NewtonsoftSerialiser<OrderRejected>());
+            _map.Add(typeof(OrderAccepted).Name, new NewtonsoftSerialiser<OrderAccepted>());
+            _map.Add(typeof(OrderAlternateTimeSuggested).Name, new NewtonsoftSerialiser<OrderAlternateTimeSuggested>());
+            _map.Add(typeof(OrderRejected).Name, new NewtonsoftSerialiser<OrderRejected>());
         }
 
         public IMessageSerialiser<Message> GetSerialiser(string objectType)

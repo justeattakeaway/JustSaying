@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using JustEat.Testing;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Messaging.Messages.CustomerCommunication;
 
@@ -17,22 +12,7 @@ namespace UnitTests.Serialisation.SerialisationRegister
         {
             var target = new ReflectedMessageSerialisationRegister();
             
-            Assert.NotNull(target.GetSerialiser(typeof(CustomerOrderRejectionSms).ToString()));
+            Assert.NotNull(target.GetSerialiser(typeof(CustomerOrderRejectionSms).Name));
         }
     }
-
-    //public class WhenCreatedx : BehaviourTest<ReflectedMessageSerialisationRegister>
-    //{
-    //    protected override void Given()
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-
-    //    protected override void When()
-    //    {
-            
-    //    }
-
-    //    [Then]
-    //}
 }
