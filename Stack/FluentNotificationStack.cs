@@ -28,7 +28,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <summary>
         /// Create a new notification stack registration.
         /// </summary>
-        /// <param name="component"></param>
+        /// <param name="component">Listening component</param>
         /// <returns></returns>
         public static FluentNotificationStack Register(Component component)
         {
@@ -38,7 +38,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <summary>
         /// Subscribe to a topic using SQS.
         /// </summary>
-        /// <param name="topic"></param>
+        /// <param name="topic">Topic to listen in on</param>
         /// <returns></returns>
         public FluentNotificationStack WithSqsTopicSubscriber(NotificationTopic topic)
         {
@@ -52,8 +52,9 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <summary>
         /// Set message handlers for the given topic
         /// </summary>
-        /// <param name="topic"></param>
-        /// <param name="handler"></param>
+        /// <typeparam name="T">Message type to be handled</typeparam>
+        /// <param name="topic">Topic message is published under</param>
+        /// <param name="handler">Handler for the message type</param>
         /// <returns></returns>
         public FluentNotificationStack WithMessageHandler<T>(NotificationTopic topic, IHandler<T> handler) where T : Message
         {
