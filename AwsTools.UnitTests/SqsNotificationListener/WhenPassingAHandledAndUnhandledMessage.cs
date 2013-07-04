@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using Amazon.SQS.Model;
+﻿using Amazon.SQS.Model;
 using JustEat.Testing;
 using NSubstitute;
 
@@ -22,7 +21,6 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         [Then]
         public void AllMessagesAreClearedFromQueue()
         {
-            Thread.Sleep(50);
             Serialiser.Received(1).Deserialise(Arg.Any<string>());
             Sqs.Received(2).DeleteMessage(Arg.Any<DeleteMessageRequest>());
         }

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustEat.Simples.NotificationStack.AwsTools;
@@ -57,6 +58,8 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         {
             SystemUnderTest.AddMessageHandler(Handler);
             SystemUnderTest.Listen();
+
+            Thread.Sleep(50);
         }
     }
 }
