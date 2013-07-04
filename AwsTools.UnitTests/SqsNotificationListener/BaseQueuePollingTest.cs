@@ -3,6 +3,7 @@ using System.Linq;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustEat.Simples.NotificationStack.AwsTools;
+using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Testing;
 using NSubstitute;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
@@ -18,7 +19,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected readonly IMessageSerialiser<CustomerOrderRejectionSms> Serialiser = Substitute.For<IMessageSerialiser<CustomerOrderRejectionSms>>();
         protected CustomerOrderRejectionSms DeserialisedMessage;
         protected const string MessageBody = "object";
-        protected readonly Action<CustomerOrderRejectionSms> Handler = Substitute.For<Action<CustomerOrderRejectionSms>>();
+        protected readonly IHandler<CustomerOrderRejectionSms> Handler = Substitute.For<IHandler<CustomerOrderRejectionSms>>();
         private readonly string _messageTypeString = typeof(CustomerOrderRejectionSms).ToString();
 
         protected override JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener CreateSystemUnderTest()

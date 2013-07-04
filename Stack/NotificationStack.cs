@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using JustEat.Simples.NotificationStack.Messaging;
+using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
 
 namespace JustEat.Simples.NotificationStack.Stack
@@ -22,7 +23,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             _notificationSubscribers.Add(topic, subscriber);
         }
 
-        public void AddMessageHandler<T>(NotificationTopic topic, Action<T> handler) where T : Message
+        public void AddMessageHandler<T>(NotificationTopic topic, IHandler<T> handler) where T : Message
         {
             _notificationSubscribers[topic].AddMessageHandler(handler);
         }

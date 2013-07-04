@@ -22,7 +22,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             _handlers = new Dictionary<Type, List<Action<Message>>>();
         }
 
-        public void AddMessageHandler<T>(Action<T> handler) where T : Message
+        public void AddMessageHandler<T>(IHandler<T> handler) where T : Message
         {
             List<Action<Message>> handlers;
             if (!_handlers.TryGetValue(typeof(T), out handlers))
@@ -30,7 +30,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                 handlers = new List<Action<Message>>();
                 _handlers.Add(typeof(T), handlers);
             }
-            handlers.Add(DelegateAdjuster.CastArgument<Message, T>(x => handler(x)));
+            handlers.Add(DelegateAdjuster.CastArgument<Message, T>(x => handler.Handle(x)));
         }
 
         public void Listen()
