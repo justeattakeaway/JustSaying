@@ -55,7 +55,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <param name="topic"></param>
         /// <param name="handler"></param>
         /// <returns></returns>
-        public FluentNotificationStack AddMessageHandler<T>(NotificationTopic topic, IHandler<T> handler) where T : Message
+        public FluentNotificationStack WithMessageHandler<T>(NotificationTopic topic, IHandler<T> handler) where T : Message
         {
             _instance.AddMessageHandler(topic, handler);
             return this;
