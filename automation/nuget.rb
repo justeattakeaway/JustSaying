@@ -21,13 +21,13 @@ def setup_nuget opts={}
 		desc "Harvest the output to prepare package"
 		task :harvest
 
-		package_dir = "out/package"
+		package_dir = "out/#{name}/package"
 		package_lib = "#{package_dir}/lib/net40"
 		directory package_dir
 		directory package_lib
 
 		task :harvest => [package_lib] do
-			lib_files = FileList.new("Stack/bin/#{configuration}/*.{exe,config,dll,pdb,xml}")
+			lib_files = FileList.new("#{name}/bin/#{configuration}/*.{exe,config,dll,pdb,xml}")
 			lib_files.exclude /(Shouldly|Rhino|nunit|Test|Castle|NLog|ServiceStack|AWSSDK)/
 			lib_files.map{|f|Pathname.new f}.each do |f|
 			harvested = "#{package_lib}/#{f.basename}"
@@ -53,10 +53,10 @@ def setup_nuget opts={}
       nuspec.dependency "Newtonsoft.Json", "4.5.0.0"
 		end
 
-		nupkg = "out/#{name}.#{version}.nupkg"
+		nupkg = "#{package_dir}/#{name}.#{version}.nupkg"
 		desc "Create the nuget package"
 		file nupkg => [:nuspec] do |nugetpack|
-      pack = CommandLine.new(nuget, "pack out\\package\\#{name}.nuspec -basepath out\\package -o out", logger: @log)
+      pack = CommandLine.new(nuget, "pack #{package_dir}/#{name}.nuspec -basepath #{package_dir} -o #{package_dir}", logger: @log)
 			pack.run
 		end
 		task :nupkg => nupkg
