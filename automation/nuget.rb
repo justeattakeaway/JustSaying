@@ -55,6 +55,8 @@ def setup_nuget opts={}
       elsif (name == "JustEat.Simples.DataAccess")
         nuspec.dependency "Dapper", "1.13"
         nuspec.dependency "NLog", "2.0.1.2"
+      elsif (name == "JustEat.Simples.Api")
+        nuspec.dependency "Newtonsoft.Json", "4.5.0.0"
       end
 
 		end
