@@ -1,17 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messaging", "Messages\Messaging.csproj", "{899CD315-37B3-46D0-B2DC-FB94C552D968}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messaging", "JustEat.Simples.Messaging\Messaging.csproj", "{899CD315-37B3-46D0-B2DC-FB94C552D968}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AwsTools", "AwsTools\AwsTools.csproj", "{CBF2110B-C3A4-45E8-BBD6-301D77567043}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AwsTools", "JustEat.Simples.AwsTools\AwsTools.csproj", "{CBF2110B-C3A4-45E8-BBD6-301D77567043}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messaging.UnitTests", "UnitTests\Messaging.UnitTests.csproj", "{7E36099E-E6A4-4259-973C-0ABE776377BA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messaging.UnitTests", "JustEat.Simples.Messaging.UnitTests\Messaging.UnitTests.csproj", "{7E36099E-E6A4-4259-973C-0ABE776377BA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stack", "Stack\Stack.csproj", "{A36B7ECF-A2AA-44CC-9538-7BC28BDDE4E0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationStack", "JustEat.Simples.NotificationStack\NotificationStack.csproj", "{A36B7ECF-A2AA-44CC-9538-7BC28BDDE4E0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stack.UnitTests", "Stack.UnitTests\Stack.UnitTests.csproj", "{A633B28E-00DE-4390-9C58-64170811E0D2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationStack.UnitTests", "JustEat.Simples.NotificationStack.UnitTests\NotificationStack.UnitTests.csproj", "{A633B28E-00DE-4390-9C58-64170811E0D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AwsTools.UnitTests", "AwsTools.UnitTests\AwsTools.UnitTests.csproj", "{D5F19B9D-F761-4300-A9A1-2A1352CEEB8F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AwsTools.UnitTests", "JustEat.Simples.AwsTools.UnitTests\AwsTools.UnitTests.csproj", "{D5F19B9D-F761-4300-A9A1-2A1352CEEB8F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

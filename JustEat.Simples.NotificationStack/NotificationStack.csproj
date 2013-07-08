@@ -4,15 +4,13 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A633B28E-00DE-4390-9C58-64170811E0D2}</ProjectGuid>
+    <ProjectGuid>{A36B7ECF-A2AA-44CC-9538-7BC28BDDE4E0}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Stack.UnitTests</RootNamespace>
-    <AssemblyName>Stack.UnitTests</AssemblyName>
+    <RootNamespace>JustEat.Simples.NotificationStack.Stack</RootNamespace>
+    <AssemblyName>JustEat.Simples.NotificationStack.Stack</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
-    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -32,22 +30,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="JustEat.Testing, Version=6.0.1.43, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="AWSSDK, Version=1.5.25.0, Culture=neutral, PublicKeyToken=9f476d3089b52be3, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\JustEat.Testing.6.0.1.43\lib\net40\JustEat.Testing.dll</HintPath>
-    </Reference>
-    <Reference Include="NLog">
-      <HintPath>..\packages\NLog.2.0.1.2\lib\net40\NLog.dll</HintPath>
-    </Reference>
-    <Reference Include="NSubstitute">
-      <HintPath>..\packages\NSubstitute.1.6.1.0\lib\NET40\NSubstitute.dll</HintPath>
-    </Reference>
-    <Reference Include="nunit.framework, Version=2.6.2.12296, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\NUnit.2.6.2\lib\nunit.framework.dll</HintPath>
-    </Reference>
-    <Reference Include="Ploeh.AutoFixture">
-      <HintPath>..\packages\AutoFixture.3.4.1\lib\net40\Ploeh.AutoFixture.dll</HintPath>
+      <HintPath>..\packages\AWSSDK.1.5.25.0\lib\AWSSDK.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -58,26 +43,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="NotificationStack\NotificationStackBaseTest.cs" />
-    <Compile Include="NotificationStack\WhenRegisteringMessageHandlers.cs" />
-    <Compile Include="NotificationStack\WhenRegisteringSubscribers.cs" />
+    <Compile Include="FluentNotificationStack.cs" />
+    <Compile Include="NotificationStack.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Messages\Messaging.csproj">
-      <Project>{899cd315-37b3-46d0-b2dc-fb94c552d968}</Project>
+    <ProjectReference Include="..\JustEat.Simples.AwsTools\AwsTools.csproj">
+      <Project>{CBF2110B-C3A4-45E8-BBD6-301D77567043}</Project>
+      <Name>AwsTools</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\JustEat.Simples.Messaging\Messaging.csproj">
+      <Project>{899CD315-37B3-46D0-B2DC-FB94C552D968}</Project>
       <Name>Messaging</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Stack\Stack.csproj">
-      <Project>{a36b7ecf-a2aa-44cc-9538-7bc28bdde4e0}</Project>
-      <Name>Stack</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
