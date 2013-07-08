@@ -49,8 +49,14 @@ def setup_nuget opts={}
 			nuspec.working_directory = package_dir
 			nuspec.output_file = "#{name}.nuspec"
 			nuspec.tags = ""
-      nuspec.dependency "AWSSDK", "1.5.25.0"
-      nuspec.dependency "Newtonsoft.Json", "4.5.0.0"
+      if (name == "JustEat.Simples.NotificationStack")
+        nuspec.dependency "AWSSDK", "1.5.25.0"
+        nuspec.dependency "Newtonsoft.Json", "4.5.0.0"
+      elsif (name == "JustEat.Simples.DataAccess")
+        nuspec.dependency "Dapper", "1.13"
+        nuspec.dependency "NLog", "2.0.1.2"
+      end
+
 		end
 
 		nupkg = "#{package_dir}/#{name}.#{version}.nupkg"
