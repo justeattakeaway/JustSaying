@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using JustEat.Simples.DataAccess.Dapper;
 using System.Linq;
 using Dapper;
-using JE.Api.Order.Database;
 using NLog;
 
 namespace JustEat.Simples.DataAccess.Dapper

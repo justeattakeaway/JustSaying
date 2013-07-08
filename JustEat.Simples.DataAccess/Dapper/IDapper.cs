@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
-using System.Data;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace JE.Api.Order.Database
+namespace JustEat.Simples.DataAccess.Dapper
 {
 	public interface IDapper
 	{
