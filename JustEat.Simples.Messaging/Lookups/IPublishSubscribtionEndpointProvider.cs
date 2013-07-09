@@ -20,6 +20,10 @@ namespace JustEat.Simples.NotificationStack.Messaging.Lookups
                     if (topic == NotificationTopic.CustomerCommunication)
                         return "https://sqs.eu-west-1.amazonaws.com/507204202721/uk-qa12-orderengine-customer-order-communication";
                     break;
+                case Component.SmsSender:
+                    if (topic == NotificationTopic.OrderDispatch)
+                        return "https://sqs.eu-west-1.amazonaws.com/507204202721/uk-qa12-sms-sende-order-dispatch";
+                    break;
             }
 
             throw new IndexOutOfRangeException(string.Format("Cannot map an endpoint for component '{0}' and topic '{1}'", component.ToString(), topic.ToString()));
