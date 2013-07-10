@@ -69,5 +69,13 @@ namespace JustEat.Simples.NotificationStack.Stack
         {
             _instance.Start();
         }
+
+        /// <summary>
+        /// Gor graceful shutdown of all listening threads
+        /// </summary>
+        public void StopListening()
+        {
+            _instance.Stop();
+        }
     }
 }

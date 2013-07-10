@@ -21,33 +21,19 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected CustomerOrderRejectionSms DeserialisedMessage;
         protected const string MessageBody = "object";
         protected readonly IHandler<CustomerOrderRejectionSms> Handler = Substitute.For<IHandler<CustomerOrderRejectionSms>>();
+        protected IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly string _messageTypeString = typeof(CustomerOrderRejectionSms).ToString();
 
         protected override JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
-            var serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
-            serialisationRegister.GetSerialiser(_messageTypeString).Returns(Serialiser);
-            return new JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), serialisationRegister);
+            _serialisationRegister.GetSerialiser(_messageTypeString).Returns(Serialiser);
+            return new JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), _serialisationRegister);
         }
 
         protected override void Given()
         {
-            var response = new ReceiveMessageResponse
-                               {
-                                   ReceiveMessageResult = new ReceiveMessageResult
-                                                              {
-                                                                  Message = new[] {       
-                                                                                      new Message
-                                                                                          {
-                                                                                              Body = "{\"Subject\":\"" + _messageTypeString + "\"," + 
-                                                                                                     "\"Message\":\"" + MessageBody + "\"}"
-                                                                                          },
-                                                                                      new Message
-                                                                                          {
-                                                                                              Body = "{\"Subject\":\"SOME_UNKNOWN_MESSAGE\"," + 
-                                                                                                     "\"Message\":\"SOME_RANDOM_MESSAGE\"}"
-                                                                                          }}.ToList(),
-                                                              }};
+            var response = GenerateResponseMessage(_messageTypeString);
+
             Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => response, x => new ReceiveMessageResponse());
 
             DeserialisedMessage = new CustomerOrderRejectionSms(1, 2, "3", SmsCommunicationActivity.ConfirmedReceived);
@@ -60,6 +46,25 @@ namespace AwsTools.UnitTests.SqsNotificationListener
             SystemUnderTest.Listen();
 
             Thread.Sleep(50);
+        }
+
+        protected ReceiveMessageResponse GenerateResponseMessage(string messageType)
+        {
+            return new ReceiveMessageResponse
+            {
+                ReceiveMessageResult = new ReceiveMessageResult
+                {
+                    Message = new[] {       
+                            new Message
+                                {
+                                    Body = "{\"Subject\":\"" + messageType + "\"," + "\"Message\":\"" + MessageBody + "\"}"
+                                },
+                            new Message
+                                {
+                                    Body = "{\"Subject\":\"SOME_UNKNOWN_MESSAGE\"," + "\"Message\":\"SOME_RANDOM_MESSAGE\"}"
+                                }}.ToList(),
+                }
+            };
         }
     }
 }

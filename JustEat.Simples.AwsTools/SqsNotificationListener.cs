@@ -14,6 +14,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         private readonly SqsQueueByUrl _queue;
         private readonly IMessageSerialisationRegister _serialisationRegister;
         private readonly Dictionary<Type, List<Action<Message>>> _handlers;
+        private bool _listen = true;
 
         public SqsNotificationListener(SqsQueueByUrl queue, IMessageSerialisationRegister serialisationRegister)
         {
@@ -35,8 +36,13 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 
         public void Listen()
         {
-            Action run = () => { while (true) { ListenLoop(); } };
+            Action run = () => { while (_listen) { ListenLoop(); } };
             run.BeginInvoke(null, null);
+        }
+
+        public void StopListening()
+        {
+            _listen = false;
         }
 
         private void ListenLoop()

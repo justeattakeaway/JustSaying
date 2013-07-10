@@ -61,6 +61,7 @@
     <Compile Include="NotificationStack\NotificationStackBaseTest.cs" />
     <Compile Include="NotificationStack\WhenRegisteringMessageHandlers.cs" />
     <Compile Include="NotificationStack\WhenRegisteringSubscribers.cs" />
+    <Compile Include="NotificationStack\WhenStopping.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

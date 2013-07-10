@@ -35,5 +35,13 @@ namespace JustEat.Simples.NotificationStack.Stack
                 subscription.Value.Listen();
             }
         }
+
+        public void Stop()
+        {
+            foreach (var subscription in _notificationSubscribers)
+            {
+                subscription.Value.StopListening();
+            }
+        }
     }
 }
