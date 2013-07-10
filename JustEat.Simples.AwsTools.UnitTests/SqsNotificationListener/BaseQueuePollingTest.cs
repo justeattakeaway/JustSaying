@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Threading;
 using Amazon.SQS;
@@ -21,13 +20,13 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected CustomerOrderRejectionSms DeserialisedMessage;
         protected const string MessageBody = "object";
         protected readonly IHandler<CustomerOrderRejectionSms> Handler = Substitute.For<IHandler<CustomerOrderRejectionSms>>();
-        protected IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
+        protected readonly IMessageSerialisationRegister SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly string _messageTypeString = typeof(CustomerOrderRejectionSms).ToString();
 
         protected override JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
-            _serialisationRegister.GetSerialiser(_messageTypeString).Returns(Serialiser);
-            return new JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), _serialisationRegister);
+            SerialisationRegister.GetSerialiser(_messageTypeString).Returns(Serialiser);
+            return new JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), SerialisationRegister);
         }
 
         protected override void Given()

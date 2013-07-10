@@ -21,7 +21,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         [Then]
         public void MessagesAfterStopAreNotProcessed()
         {
-            _serialisationRegister.DidNotReceive().GetSerialiser(SubjectOfMessageAfterStop);
+            SerialisationRegister.DidNotReceive().GetSerialiser(SubjectOfMessageAfterStop);
         }
     }
 }

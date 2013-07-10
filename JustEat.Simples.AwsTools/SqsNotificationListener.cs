@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Amazon.SQS.Model;
+using NLog;
 using Newtonsoft.Json.Linq;
 using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
@@ -15,6 +16,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         private readonly IMessageSerialisationRegister _serialisationRegister;
         private readonly Dictionary<Type, List<Action<Message>>> _handlers;
         private bool _listen = true;
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
         public SqsNotificationListener(SqsQueueByUrl queue, IMessageSerialisationRegister serialisationRegister)
         {
@@ -73,10 +75,11 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                     _queue.Client.DeleteMessage(new DeleteMessageRequest().WithQueueUrl(_queue.Url).WithReceiptHandle(message.ReceiptHandle));
                 }
                 catch (InvalidOperationException) { } // Swallow no messages
+                catch (Exception ex)
+                {
+                    Log.ErrorException("Issue in message handling loop", ex);
+                }
             }
-
-            //var endpoint = new JustEat.Simples.NotificationStack.Messaging.Lookups.SqsSubscribtionEndpointProvider().GetLocationEndpoint(Component.OrderEngine, PublishTopics.CustomerCommunication);
-            //var queue = new AwsTools.SqsQueueByUrl(endpoint, Amazon.AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
         }
     }
 }
