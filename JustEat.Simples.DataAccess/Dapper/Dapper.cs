@@ -10,15 +10,13 @@ namespace JustEat.Simples.DataAccess.Dapper
 {
     public class Dapper : IDapper
     {
-        private readonly string _tenant;
         private int CommandTimeout { get; set; }
         private readonly ISqlMonitoringService _monitoringService;
         private readonly IDatabaseConfiguration _dbConfig;
         private readonly static Logger Logger = LogManager.GetCurrentClassLogger();
 
-        public Dapper(string tenant, ISqlMonitoringService monitoringService, IDatabaseConfiguration databaseConfiguration)
+        public Dapper(ISqlMonitoringService monitoringService, IDatabaseConfiguration databaseConfiguration)
         {
-            _tenant = tenant;
             _monitoringService = monitoringService;
             _dbConfig = databaseConfiguration;
         }
@@ -30,7 +28,7 @@ namespace JustEat.Simples.DataAccess.Dapper
 
         protected virtual IDbConnection CreateConnection()
         {
-            var conn = new SqlConnection(_dbConfig.GetConnectionString(_tenant));
+            var conn = new SqlConnection(_dbConfig.GetConnectionString());
             conn.Open();
             return conn;
         }

@@ -9,7 +9,7 @@ namespace JustEat.Simples.DataAccess.UnitTests.Dapper
     {
         protected override void Given()
         {
-            Config.GetConnectionString(Tenant).Returns(x => { throw ExceptionHelpers.MakeSqlDeadlockException(); });
+            Config.GetConnectionString().Returns(x => { throw ExceptionHelpers.MakeSqlDeadlockException(); });
             base.Given();
         }
 

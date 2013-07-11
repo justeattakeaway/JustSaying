@@ -2,6 +2,6 @@ namespace JustEat.Simples.DataAccess
 {
     public interface IDatabaseConfiguration
     {
-        string GetConnectionString(string tenant);
+        string GetConnectionString();
     }
 }
