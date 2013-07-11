@@ -92,7 +92,7 @@ namespace JustEat.Simples.DataAccess.Dapper
         {
             if (retryTimes < 0)
             {
-                throw new ArgumentException("Value must be greater the zero.", "retryTimes");
+                throw new ArgumentException("Value must be greater than zero.", "retryTimes");
             }
 
             try
@@ -101,10 +101,16 @@ namespace JustEat.Simples.DataAccess.Dapper
             }
             catch (SqlException sex)
             {
-                if (sex.Number == 1205)
+                var isDeadlockException = sex.Number == 1205;
+                
+                if(!isDeadlockException)
                 {
-                    _monitoringService.SqlDeadlockException();
+                    _monitoringService.SqlException();
+                    Logger.ErrorException(string.Format("Execute Exception: {0} , {1}", sql, parameters.ToString()), sex);
+                    throw;
                 }
+
+                _monitoringService.SqlDeadlockException();
 
                 if (retryTimes > 0)
                 {
@@ -112,16 +118,9 @@ namespace JustEat.Simples.DataAccess.Dapper
                 }
                 else
                 {
-                    _monitoringService.SqlException();
-                    Logger.ErrorException(string.Format("Execute Exception: {0} , {1}", sql, parameters.ToString()), sex);
+                    Logger.ErrorException("SQL deadlock occured. Not Retrying.", sex);
                     throw;
                 }
-            }
-            catch (Exception ex)
-            {
-                _monitoringService.SqlException();
-                Logger.ErrorException(string.Format("Execute Exception: {0} , {1}", sql, parameters.ToString()), ex);
-                throw;
             }
 
             return DeadlockRetryExecute(sql, parameters, retryTimes - 1);
