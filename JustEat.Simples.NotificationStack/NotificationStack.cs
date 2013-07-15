@@ -9,6 +9,7 @@ namespace JustEat.Simples.NotificationStack.Stack
     public class NotificationStack
     {
         internal Component Component { get; private set; }
+        public bool Listening { get; private set; }
 
         private readonly Dictionary<NotificationTopic, INotificationSubscriber> _notificationSubscribers;
 
@@ -34,6 +35,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             {
                 subscription.Value.Listen();
             }
+            Listening = true;
         }
 
         public void Stop()
@@ -42,6 +44,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             {
                 subscription.Value.StopListening();
             }
+            Listening = false;
         }
     }
 }

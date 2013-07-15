@@ -20,6 +20,8 @@ namespace JustEat.Simples.NotificationStack.Stack
         private static NotificationStack _instance;
         private static readonly IMessageSerialisationRegister SerialisationRegister = new ReflectedMessageSerialisationRegister();
 
+        public bool Listening { get { return (_instance != null) && _instance.Listening; } }
+
         private FluentNotificationStack(NotificationStack notificationStack)
         {
             _instance = notificationStack;
