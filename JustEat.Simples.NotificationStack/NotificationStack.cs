@@ -31,6 +31,9 @@ namespace JustEat.Simples.NotificationStack.Stack
 
         public void Start()
         {
+            if (Listening)
+                return;
+            
             foreach (var subscription in _notificationSubscribers)
             {
                 subscription.Value.Listen();
@@ -40,6 +43,9 @@ namespace JustEat.Simples.NotificationStack.Stack
 
         public void Stop()
         {
+            if (!Listening)
+                return;
+
             foreach (var subscription in _notificationSubscribers)
             {
                 subscription.Value.StopListening();

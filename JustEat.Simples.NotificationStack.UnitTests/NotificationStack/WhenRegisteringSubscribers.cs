@@ -35,5 +35,13 @@ namespace Stack.UnitTests.NotificationStack
         {
             Assert.True(SystemUnderTest.Listening);
         }
+
+        [Then]
+        public void CallingStartTwiceDoesNotStartListeningTwice()
+        {
+            SystemUnderTest.Start();
+            _subscriber1.Received(1).Listen();
+            _subscriber2.Received(1).Listen();
+        }
     }
 }

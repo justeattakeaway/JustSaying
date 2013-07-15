@@ -53,6 +53,13 @@ namespace Stack.UnitTests.NotificationStack
         {
             Assert.False(SystemUnderTest.Listening);
         }
+
+        [Then]
+        public void CallingStopTwiceDoesNotStopListeningTwice()
+        {
+            SystemUnderTest.Stop();
+            _subscriber1.Received(1).StopListening();
+        }
     }
     
 }
