@@ -97,6 +97,10 @@ namespace JustEat.Simples.NotificationStack.Stack
             _instance.Stop();
         }
 
+        /// <summary>
+        /// Publish a message to the stack.
+        /// </summary>
+        /// <param name="message"></param>
         public void Publish(Message message)
         {
             if (_instance == null)
