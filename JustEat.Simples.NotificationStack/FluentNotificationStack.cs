@@ -15,7 +15,7 @@ namespace JustEat.Simples.NotificationStack.Stack
     /// 2. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class FluentNotificationStack
+    public class FluentNotificationStack : IMessagePublisher
     {
         private static NotificationStack _instance;
         private static readonly IMessageSerialisationRegister SerialisationRegister = new ReflectedMessageSerialisationRegister();
@@ -64,6 +64,8 @@ namespace JustEat.Simples.NotificationStack.Stack
             return this;
         }
 
+        //public FluentNotificationStack WithSnsMessagePublisher
+
         /// <summary>
         /// I'm done setting up. Fire this baby up...
         /// </summary>
@@ -78,6 +80,14 @@ namespace JustEat.Simples.NotificationStack.Stack
         public void StopListening()
         {
             _instance.Stop();
+        }
+
+        public void Publish(Message message)
+        {
+            if (_instance == null)
+                throw new InvalidOperationException("You must register for message publication before publishing a message");
+
+            _instance.Publish(message);
         }
     }
 }

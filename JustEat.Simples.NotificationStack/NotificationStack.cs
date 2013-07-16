@@ -75,8 +75,8 @@ namespace JustEat.Simples.NotificationStack.Stack
                 published = true;
             }
 
-            //if (!published)
-            //    Logger.Error("No publisher is registered for this message.");
+            if (!published)
+                throw new InvalidOperationException("This message is not registered for publication");
         }
     }
 }
