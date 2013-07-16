@@ -6,17 +6,19 @@ using JustEat.Simples.NotificationStack.Messaging.Messages;
 
 namespace JustEat.Simples.NotificationStack.Stack
 {
-    public class NotificationStack
+    public class NotificationStack : IMessagePublisher
     {
         internal Component Component { get; private set; }
         public bool Listening { get; private set; }
 
         private readonly Dictionary<NotificationTopic, INotificationSubscriber> _notificationSubscribers;
+        private readonly Dictionary<NotificationTopic, Dictionary<Type, IMessagePublisher>> _messagePublishers;
 
         public NotificationStack(Component component)
         {
             Component = component;
             _notificationSubscribers = new Dictionary<NotificationTopic, INotificationSubscriber>();
+            _messagePublishers = new Dictionary<NotificationTopic, Dictionary<Type, IMessagePublisher>>();
         }
 
         public void AddNotificationTopicSubscriber(NotificationTopic topic, INotificationSubscriber subscriber)
@@ -27,6 +29,14 @@ namespace JustEat.Simples.NotificationStack.Stack
         public void AddMessageHandler<T>(NotificationTopic topic, IHandler<T> handler) where T : Message
         {
             _notificationSubscribers[topic].AddMessageHandler(handler);
+        }
+
+        public void AddMessagePublisher<T>(NotificationTopic topic, IMessagePublisher messagePublisher) where T : Message
+        {
+            if (! _messagePublishers.ContainsKey(topic))
+                _messagePublishers.Add(topic, new Dictionary<Type, IMessagePublisher>());
+
+            _messagePublishers[topic].Add(typeof(T), messagePublisher);
         }
 
         public void Start()
@@ -51,6 +61,22 @@ namespace JustEat.Simples.NotificationStack.Stack
                 subscription.Value.StopListening();
             }
             Listening = false;
+        }
+
+        public void Publish(Message message)
+        {
+            var published = false;
+            foreach (var topicPublisher in _messagePublishers.Values)
+            {
+                if (!topicPublisher.ContainsKey(message.GetType()))
+                    continue;
+
+                topicPublisher[message.GetType()].Publish(message);
+                published = true;
+            }
+
+            //if (!published)
+            //    Logger.Error("No publisher is registered for this message.");
         }
     }
 }

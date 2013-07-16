@@ -32,7 +32,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// </summary>
         /// <param name="component">Listening component</param>
         /// <returns></returns>
-        public static FluentNotificationStack Register(Component component)
+        public static FluentNotificationStack RegisterListeners(Component component)
         {
             return new FluentNotificationStack(new NotificationStack(component));
         }
