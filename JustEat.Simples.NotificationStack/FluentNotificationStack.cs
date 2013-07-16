@@ -18,9 +18,12 @@ namespace JustEat.Simples.NotificationStack.Stack
     /// </summary>
     public class FluentNotificationStack : IMessagePublisher
     {
-        private static NotificationStack _instance;
-        private static readonly IMessageSerialisationRegister SerialisationRegister = new ReflectedMessageSerialisationRegister();
+        private readonly NotificationStack _instance;
+        private readonly IMessageSerialisationRegister _serialisationRegister = new ReflectedMessageSerialisationRegister();
 
+        /// <summary>
+        /// States whether the stack is listening for messages (subscriptions are running)
+        /// </summary>
         public bool Listening { get { return (_instance != null) && _instance.Listening; } }
 
         private FluentNotificationStack(NotificationStack notificationStack)
@@ -47,7 +50,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         {
             var endpoint = new Messaging.Lookups.SqsSubscribtionEndpointProvider().GetLocationEndpoint(_instance.Component, topic);
             var queue = new SqsQueueByUrl(endpoint, AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
-            var sqsSub = new SqsNotificationListener(queue, SerialisationRegister);
+            var sqsSub = new SqsNotificationListener(queue, _serialisationRegister);
             _instance.AddNotificationTopicSubscriber(topic, sqsSub);
             return this;
         }
@@ -74,7 +77,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         public FluentNotificationStack WithSnsMessagePublisher<T>(NotificationTopic topic) where T : Message
         {
             var endpoint = new SnsPublishEndpointProvider().GetLocationEndpoint(topic);
-            var eventPublisher = new SnsTopicByArn(endpoint, AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), SerialisationRegister);
+            var eventPublisher = new SnsTopicByArn(endpoint, AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), _serialisationRegister);
 
             _instance.AddMessagePublisher<T>(topic, eventPublisher);
 
