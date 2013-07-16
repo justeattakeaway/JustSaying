@@ -2,6 +2,7 @@ using System;
 using Amazon;
 using JustEat.Simples.NotificationStack.AwsTools;
 using JustEat.Simples.NotificationStack.Messaging;
+using JustEat.Simples.NotificationStack.Messaging.Lookups;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
@@ -64,10 +65,24 @@ namespace JustEat.Simples.NotificationStack.Stack
             return this;
         }
 
-        //public FluentNotificationStack WithSnsMessagePublisher
+        /// <summary>
+        /// Register for publishing messages to SNS
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="topic"></param>
+        /// <returns></returns>
+        public FluentNotificationStack WithSnsMessagePublisher<T>(NotificationTopic topic) where T : Message
+        {
+            var endpoint = new SnsPublishEndpointProvider().GetLocationEndpoint(topic);
+            var eventPublisher = new SnsTopicByArn(endpoint, AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), SerialisationRegister);
+
+            _instance.AddMessagePublisher<T>(topic, eventPublisher);
+
+            return this;
+        }
 
         /// <summary>
-        /// I'm done setting up. Fire this baby up...
+        /// I'm done setting up. Fire up listening on this baby...
         /// </summary>
         public void StartListening()
         {
