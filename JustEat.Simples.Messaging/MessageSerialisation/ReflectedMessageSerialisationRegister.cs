@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
 using JustEat.Simples.NotificationStack.Messaging.Messages.CustomerCommunication;
 using JustEat.Simples.NotificationStack.Messaging.Messages.OrderDispatch;
@@ -10,7 +8,7 @@ namespace JustEat.Simples.NotificationStack.Messaging.MessageSerialisation
 {
     public class ReflectedMessageSerialisationRegister : IMessageSerialisationRegister
     {
-        private Dictionary<string, IMessageSerialiser<Message>> _map;
+        private readonly Dictionary<string, IMessageSerialiser<Message>> _map;
 
         public ReflectedMessageSerialisationRegister()
         {
@@ -33,6 +31,11 @@ namespace JustEat.Simples.NotificationStack.Messaging.MessageSerialisation
         public IMessageSerialiser<Message> GetSerialiser(string objectType)
         {
             return _map[objectType];
+        }
+
+        public IMessageSerialiser<Message> GetSerialiser(Type objectType)
+        {
+            return _map[objectType.Name];
         }
     }
 }

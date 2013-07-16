@@ -21,6 +21,7 @@ namespace Stack.UnitTests.NotificationStack
             SystemUnderTest.AddNotificationTopicSubscriber(NotificationTopic.OrderDispatch, _subscriber1);
             SystemUnderTest.AddNotificationTopicSubscriber(NotificationTopic.CustomerCommunication, _subscriber2);
 
+            SystemUnderTest.Start();
             SystemUnderTest.Stop();
         }
 
