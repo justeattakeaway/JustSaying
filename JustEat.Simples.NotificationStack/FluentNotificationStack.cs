@@ -48,10 +48,22 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <returns></returns>
         public FluentNotificationStack WithSqsTopicSubscriber(NotificationTopic topic)
         {
-            var endpoint = new Messaging.Lookups.SqsSubscribtionEndpointProvider().GetLocationEndpoint(_instance.Component, topic);
-            var queue = new SqsQueueByUrl(endpoint, AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
-            var sqsSub = new SqsNotificationListener(queue, _serialisationRegister);
-            _instance.AddNotificationTopicSubscriber(topic, sqsSub);
+            var endpointProvider = new SqsSubscribtionEndpointProvider();
+            //var queue = new SqsQueueByUrl(endpointProvider.GetLocationEndpoint(_instance.Component, topic), AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
+            var queue = new SqsQueueByName(endpointProvider.GetLocationName(_instance.Component, topic), AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
+            var eventTopic = new SnsTopicByName(new SnsPublishEndpointProvider().GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), _serialisationRegister);
+
+            if (!queue.Exists())
+                queue.Create();
+
+            if (!eventTopic.Exists())
+                eventTopic.Create();
+
+            if (!eventTopic.IsSubscribed(queue))
+                eventTopic.Subscribe(queue);
+            
+            var sqsSubscriptionListener = new SqsNotificationListener(queue, _serialisationRegister);
+            _instance.AddNotificationTopicSubscriber(topic, sqsSubscriptionListener);
             return this;
         }
 
@@ -76,8 +88,12 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <returns></returns>
         public FluentNotificationStack WithSnsMessagePublisher<T>(NotificationTopic topic) where T : Message
         {
-            var endpoint = new SnsPublishEndpointProvider().GetLocationEndpoint(topic);
-            var eventPublisher = new SnsTopicByArn(endpoint, AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), _serialisationRegister);
+            var endpointProvider = new SnsPublishEndpointProvider();
+            //var eventPublisher = new SnsTopicByArn(endpointProvider.GetLocationEndpoint(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), _serialisationRegister);
+            var eventPublisher = new SnsTopicByName(endpointProvider.GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), _serialisationRegister);
+
+            if (!eventPublisher.Exists())
+                eventPublisher.Create();
 
             _instance.AddMessagePublisher<T>(topic, eventPublisher);
 

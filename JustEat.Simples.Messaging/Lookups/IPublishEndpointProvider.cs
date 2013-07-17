@@ -31,10 +31,10 @@ namespace JustEat.Simples.NotificationStack.Messaging.Lookups
             switch (location)
             {
                 case NotificationTopic.OrderDispatch:
-                    return "order-dispatch";
+                    return "uk-qa12-order-dispatch";
 
                 case NotificationTopic.CustomerCommunication:
-                    return "customer-order-communication";
+                    return "uk-qa12-customer-order-communication";
             }
             
             throw new IndexOutOfRangeException("There is no location defined for the provided location type");

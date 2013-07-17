@@ -12,13 +12,13 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 {
     public class SqsNotificationListener : INotificationSubscriber
     {
-        private readonly SqsQueueByUrl _queue;
+        private readonly SqsQueueBase _queue;
         private readonly IMessageSerialisationRegister _serialisationRegister;
         private readonly Dictionary<Type, List<Action<Message>>> _handlers;
         private bool _listen = true;
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-        public SqsNotificationListener(SqsQueueByUrl queue, IMessageSerialisationRegister serialisationRegister)
+        public SqsNotificationListener(SqsQueueBase queue, IMessageSerialisationRegister serialisationRegister)
         {
             _queue = queue;
             _serialisationRegister = serialisationRegister;

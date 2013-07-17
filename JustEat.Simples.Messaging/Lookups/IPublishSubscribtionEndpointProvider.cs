@@ -5,6 +5,7 @@ namespace JustEat.Simples.NotificationStack.Messaging.Lookups
     public interface IPublishSubscribtionEndpointProvider
     {
         string GetLocationEndpoint(Component component, NotificationTopic topic);
+        string GetLocationName(Component component, NotificationTopic topic);
     }
 
     /// <summary>
@@ -22,7 +23,24 @@ namespace JustEat.Simples.NotificationStack.Messaging.Lookups
                     break;
                 case Component.SmsSender:
                     if (topic == NotificationTopic.OrderDispatch)
-                        return "https://sqs.eu-west-1.amazonaws.com/507204202721/uk-qa12-sms-sende-order-dispatch";
+                        return "https://sqs.eu-west-1.amazonaws.com/507204202721/uk-qa12-sms-send-order-dispatch";
+                    break;
+            }
+
+            throw new IndexOutOfRangeException(string.Format("Cannot map an endpoint for component '{0}' and topic '{1}'", component.ToString(), topic.ToString()));
+        }
+
+        public string GetLocationName(Component component, NotificationTopic topic)
+        {
+            switch (component)
+            {
+                case Component.OrderEngine:
+                    if (topic == NotificationTopic.CustomerCommunication)
+                        return "uk-qa12-orderengine-customer-order-communication";
+                    break;
+                case Component.SmsSender:
+                    if (topic == NotificationTopic.OrderDispatch)
+                        return "uk-qa12-sms-send-order-dispatch";
                     break;
             }
 
