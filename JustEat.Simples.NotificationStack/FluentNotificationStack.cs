@@ -19,6 +19,7 @@ namespace JustEat.Simples.NotificationStack.Stack
     public class FluentNotificationStack : IMessagePublisher
     {
         private readonly NotificationStack _instance;
+        private readonly IMessagingConfig _config;
         private readonly IMessageSerialisationRegister _serialisationRegister = new ReflectedMessageSerialisationRegister();
 
         /// <summary>
@@ -26,19 +27,21 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// </summary>
         public bool Listening { get { return (_instance != null) && _instance.Listening; } }
 
-        private FluentNotificationStack(NotificationStack notificationStack)
+        private FluentNotificationStack(NotificationStack notificationStack, IMessagingConfig config)
         {
             _instance = notificationStack;
+            _config = config;
         }
 
         /// <summary>
         /// Create a new notification stack registration.
         /// </summary>
         /// <param name="component">Listening component</param>
+        /// <param name="config">Configuration items</param>
         /// <returns></returns>
-        public static FluentNotificationStack Register(Component component)
+        public static FluentNotificationStack Register(Component component, IMessagingConfig config)
         {
-            return new FluentNotificationStack(new NotificationStack(component));
+            return new FluentNotificationStack(new NotificationStack(component), config);
         }
 
         /// <summary>
@@ -48,10 +51,10 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <returns></returns>
         public FluentNotificationStack WithSqsTopicSubscriber(NotificationTopic topic)
         {
-            var endpointProvider = new SqsSubscribtionEndpointProvider();
+            var endpointProvider = new SqsSubscribtionEndpointProvider(_config);
             //var queue = new SqsQueueByUrl(endpointProvider.GetLocationEndpoint(_instance.Component, topic), AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
             var queue = new SqsQueueByName(endpointProvider.GetLocationName(_instance.Component, topic), AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
-            var eventTopic = new SnsTopicByName(new SnsPublishEndpointProvider().GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), _serialisationRegister);
+            var eventTopic = new SnsTopicByName(new SnsPublishEndpointProvider(_config).GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), _serialisationRegister);
 
             if (!queue.Exists())
                 queue.Create();
@@ -88,7 +91,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <returns></returns>
         public FluentNotificationStack WithSnsMessagePublisher<T>(NotificationTopic topic) where T : Message
         {
-            var endpointProvider = new SnsPublishEndpointProvider();
+            var endpointProvider = new SnsPublishEndpointProvider(_config);
             //var eventPublisher = new SnsTopicByArn(endpointProvider.GetLocationEndpoint(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), _serialisationRegister);
             var eventPublisher = new SnsTopicByName(endpointProvider.GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), _serialisationRegister);
 
