@@ -41,6 +41,12 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <returns></returns>
         public static FluentNotificationStack Register(Component component, IMessagingConfig config)
         {
+            if (string.IsNullOrWhiteSpace(config.Environment))
+                throw new InvalidOperationException("Cannot have a blank entry for config.Environment");
+
+            if (string.IsNullOrWhiteSpace(config.Tenant))
+                throw new InvalidOperationException("Cannot have a blank entry for config.Tenant");
+
             return new FluentNotificationStack(new NotificationStack(component), config);
         }
 
