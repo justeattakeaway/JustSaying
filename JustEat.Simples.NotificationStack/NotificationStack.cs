@@ -6,9 +6,20 @@ using JustEat.Simples.NotificationStack.Messaging.Messages;
 
 namespace JustEat.Simples.NotificationStack.Stack
 {
-    public class NotificationStack : IMessagePublisher
+    public interface INotificationStack : IMessagePublisher
     {
-        internal Component Component { get; private set; }
+        Component Component { get; }
+        bool Listening { get; }
+        void AddNotificationTopicSubscriber(NotificationTopic topic, INotificationSubscriber subscriber);
+        void AddMessageHandler<T>(NotificationTopic topic, IHandler<T> handler) where T : Message;
+        void AddMessagePublisher<T>(NotificationTopic topic, IMessagePublisher messagePublisher) where T : Message;
+        void Start();
+        void Stop();
+    }
+
+    public class NotificationStack : INotificationStack
+    {
+        public Component Component { get; private set; }
         public bool Listening { get; private set; }
 
         private readonly Dictionary<NotificationTopic, INotificationSubscriber> _notificationSubscribers;

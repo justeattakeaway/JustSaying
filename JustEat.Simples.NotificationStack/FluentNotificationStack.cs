@@ -18,7 +18,7 @@ namespace JustEat.Simples.NotificationStack.Stack
     /// </summary>
     public class FluentNotificationStack : IMessagePublisher
     {
-        private readonly NotificationStack _instance;
+        private readonly INotificationStack _instance;
         private readonly IMessagingConfig _config;
         private readonly IMessageSerialisationRegister _serialisationRegister = new ReflectedMessageSerialisationRegister();
 
@@ -27,7 +27,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// </summary>
         public bool Listening { get { return (_instance != null) && _instance.Listening; } }
 
-        private FluentNotificationStack(NotificationStack notificationStack, IMessagingConfig config)
+        public FluentNotificationStack(INotificationStack notificationStack, IMessagingConfig config)
         {
             _instance = notificationStack;
             _config = config;
@@ -134,6 +134,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             if (_instance == null)
                 throw new InvalidOperationException("You must register for message publication before publishing a message");
 
+            message.RaisingComponent = _instance.Component;
             _instance.Publish(message);
         }
     }
