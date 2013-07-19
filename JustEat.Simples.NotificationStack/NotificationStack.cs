@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
+using NLog;
 
 namespace JustEat.Simples.NotificationStack.Stack
 {
@@ -24,6 +25,7 @@ namespace JustEat.Simples.NotificationStack.Stack
 
         private readonly Dictionary<NotificationTopic, INotificationSubscriber> _notificationSubscribers;
         private readonly Dictionary<NotificationTopic, Dictionary<Type, IMessagePublisher>> _messagePublishers;
+        private static readonly Logger Log = LogManager.GetLogger("EventLog");
 
         public NotificationStack(Component component)
         {
@@ -84,10 +86,14 @@ namespace JustEat.Simples.NotificationStack.Stack
 
                 topicPublisher[message.GetType()].Publish(message);
                 published = true;
+                Log.Info("Published message: {0}.", message.ToString());
             }
 
             if (!published)
+            {
+                Log.Error("Error publishing message: {0}.", message.ToString());
                 throw new InvalidOperationException("This message is not registered for publication");
+            }
         }
     }
 }
