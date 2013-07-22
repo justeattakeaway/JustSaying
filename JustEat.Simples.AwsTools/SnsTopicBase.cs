@@ -45,15 +45,16 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         public void Publish(Message message)
         {
             var messageToSend = _serialisationRegister.GetSerialiser(message.GetType()).Serialise(message);
+            var messageType = message.GetType().Name;
 
             Client.Publish(new PublishRequest
                                {
-                                   Subject = message.GetType().Name,
+                                   Subject = messageType,
                                    Message = messageToSend,
                                    TopicArn = Arn
                                });
 
-            Log.Info("Published message: {0}.", messageToSend);
+            Log.Info("Published message: '{0}' with content {1}", messageType, messageToSend);
         }
     }
 }
