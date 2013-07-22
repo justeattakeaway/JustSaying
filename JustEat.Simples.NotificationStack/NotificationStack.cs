@@ -86,13 +86,12 @@ namespace JustEat.Simples.NotificationStack.Stack
 
                 topicPublisher[message.GetType()].Publish(message);
                 published = true;
-                Log.Info("Published message: {0}.", message.ToString());
             }
 
             if (!published)
             {
-                Log.Error("Error publishing message: {0}.", message.ToString());
-                throw new InvalidOperationException("This message is not registered for publication");
+                Log.Error("Error publishing message, no publisher registered for message type: {0}.", message.ToString());
+                throw new InvalidOperationException(string.Format("This message is not registered for publication: '{0}'", message));
             }
         }
     }

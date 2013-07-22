@@ -3,6 +3,7 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
+using NLog;
 
 namespace JustEat.Simples.NotificationStack.AwsTools
 {
@@ -11,6 +12,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         private readonly IMessageSerialisationRegister _serialisationRegister;
         public string Arn { get; protected set; }
         public AmazonSimpleNotificationService Client { get; protected set; }
+        private static readonly Logger Log = LogManager.GetLogger("EventLog");
 
         public SnsTopicBase(IMessageSerialisationRegister serialisationRegister)
         {
@@ -42,12 +44,16 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 
         public void Publish(Message message)
         {
+            var messageToSend = _serialisationRegister.GetSerialiser(message.GetType()).Serialise(message);
+
             Client.Publish(new PublishRequest
                                {
                                    Subject = message.GetType().Name,
-                                   Message = _serialisationRegister.GetSerialiser(message.GetType()).Serialise(message),
+                                   Message = messageToSend,
                                    TopicArn = Arn
                                });
+
+            Log.Info("Published message: {0}.", messageToSend);
         }
     }
 }
