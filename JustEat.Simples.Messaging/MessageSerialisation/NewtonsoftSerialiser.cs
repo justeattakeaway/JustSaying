@@ -6,14 +6,16 @@ namespace JustEat.Simples.NotificationStack.Messaging.MessageSerialisation
     public class NewtonsoftSerialiser<T> : IMessageSerialiser<Message> where T : Message
     {
         public string Key { get { return typeof(T).ToString(); } }
+        private readonly JsonConverter _enumConverter = new Newtonsoft.Json.Converters.StringEnumConverter();
+
         public Message Deserialise(string message)
         {
-            return JsonConvert.DeserializeObject<T>(message);
+            return JsonConvert.DeserializeObject<T>(message, _enumConverter);
         }
 
         public string Serialise(Message message)
         {
-            return JsonConvert.SerializeObject(message);
+            return JsonConvert.SerializeObject(message, _enumConverter);
         }
     }
 }
