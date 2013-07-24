@@ -58,9 +58,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FluentNotificationStack\ConfigValidation\BaseConfigValidationTest.cs" />
+    <Compile Include="FluentNotificationStack\ConfigValidation\WhenNoTenantIsProvided.cs" />
+    <Compile Include="FluentNotificationStack\ConfigValidation\WhenNoEnvironmentIsProvided.cs" />
+    <Compile Include="FluentNotificationStack\Publishing\WhenPublishingAndNotInstantiated.cs" />
+    <Compile Include="FluentNotificationStack\Publishing\WhenPublishing.cs" />
     <Compile Include="NotificationStack\NotificationStackBaseTest.cs" />
+    <Compile Include="NotificationStack\WhenPublishingWithoutRegistering.cs" />
     <Compile Include="NotificationStack\WhenRegisteringMessageHandlers.cs" />
+    <Compile Include="NotificationStack\WhenRegisteringPublishers.cs" />
     <Compile Include="NotificationStack\WhenRegisteringSubscribers.cs" />
+    <Compile Include="NotificationStack\WhenRegisteringTheSamePublisherTwice.cs" />
     <Compile Include="NotificationStack\WhenStopping.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

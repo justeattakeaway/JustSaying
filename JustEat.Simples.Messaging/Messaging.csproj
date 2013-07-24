@@ -43,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IMessagePublisher.cs" />
+    <Compile Include="IMessagingConfig.cs" />
     <Compile Include="INotificationSubscriber.cs" />
     <Compile Include="Lookups\IPublishEndpointProvider.cs" />
     <Compile Include="Lookups\IPublishSubscribtionEndpointProvider.cs" />

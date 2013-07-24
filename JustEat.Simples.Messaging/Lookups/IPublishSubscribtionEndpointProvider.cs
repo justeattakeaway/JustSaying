@@ -5,6 +5,7 @@ namespace JustEat.Simples.NotificationStack.Messaging.Lookups
     public interface IPublishSubscribtionEndpointProvider
     {
         string GetLocationEndpoint(Component component, NotificationTopic topic);
+        string GetLocationName(Component component, NotificationTopic topic);
     }
 
     /// <summary>
@@ -12,8 +13,16 @@ namespace JustEat.Simples.NotificationStack.Messaging.Lookups
     /// </summary>
     public class SqsSubscribtionEndpointProvider : IPublishSubscribtionEndpointProvider
     {
+        private readonly IMessagingConfig _config;
+
+        public SqsSubscribtionEndpointProvider(IMessagingConfig config)
+        {
+            _config = config;
+        }
+
         public string GetLocationEndpoint(Component component, NotificationTopic topic)
         {
+            throw new NotImplementedException("Not implemented yet. Come back later");
             switch (component)
             {
                 case Component.OrderEngine:
@@ -22,11 +31,16 @@ namespace JustEat.Simples.NotificationStack.Messaging.Lookups
                     break;
                 case Component.SmsSender:
                     if (topic == NotificationTopic.OrderDispatch)
-                        return "https://sqs.eu-west-1.amazonaws.com/507204202721/uk-qa12-sms-sende-order-dispatch";
+                        return "https://sqs.eu-west-1.amazonaws.com/507204202721/uk-qa12-sms-send-order-dispatch";
                     break;
             }
 
             throw new IndexOutOfRangeException(string.Format("Cannot map an endpoint for component '{0}' and topic '{1}'", component.ToString(), topic.ToString()));
+        }
+
+        public string GetLocationName(Component component, NotificationTopic topic)
+        {
+            return String.Join("-", new[] { _config.Tenant, _config.Environment, component.ToString(), topic.ToString() }).ToLower();
         }
     }
 }

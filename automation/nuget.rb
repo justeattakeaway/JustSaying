@@ -50,8 +50,9 @@ def setup_nuget opts={}
 			nuspec.output_file = "#{name}.nuspec"
 			nuspec.tags = ""
       if (name == "JustEat.Simples.NotificationStack")
-        nuspec.dependency "AWSSDK", "1.5.25.0"
+        nuspec.dependency "AWSSDK", "1.5.26.3"
         nuspec.dependency "Newtonsoft.Json", "4.5.0.0"
+        nuspec.dependency "NLog", "2.0.1.2"
       elsif (name == "JustEat.Simples.DataAccess")
         nuspec.dependency "Dapper", "1.13"
         nuspec.dependency "NLog", "2.0.1.2"
