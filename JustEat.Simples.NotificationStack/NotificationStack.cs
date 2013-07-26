@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Remoting.Messaging;
+using System.Threading;
 using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
@@ -25,11 +27,16 @@ namespace JustEat.Simples.NotificationStack.Stack
 
         private readonly Dictionary<NotificationTopic, INotificationSubscriber> _notificationSubscribers;
         private readonly Dictionary<NotificationTopic, Dictionary<Type, IMessagePublisher>> _messagePublishers;
+        private readonly IMessagingConfig _config;
         private static readonly Logger Log = LogManager.GetLogger("EventLog");
 
-        public NotificationStack(Component component)
+        public NotificationStack(Component component, IMessagingConfig config)
         {
+            if (config.PublishFailureReAttempts == 0)
+                Log.Warn("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may loose messages!");
+
             Component = component;
+            _config = config;
             _notificationSubscribers = new Dictionary<NotificationTopic, INotificationSubscriber>();
             _messagePublishers = new Dictionary<NotificationTopic, Dictionary<Type, IMessagePublisher>>();
         }
@@ -84,7 +91,7 @@ namespace JustEat.Simples.NotificationStack.Stack
                 if (!topicPublisher.ContainsKey(message.GetType()))
                     continue;
 
-                topicPublisher[message.GetType()].Publish(message);
+                Publish(topicPublisher[message.GetType()], message);
                 published = true;
             }
 
@@ -93,6 +100,31 @@ namespace JustEat.Simples.NotificationStack.Stack
                 Log.Error("Error publishing message, no publisher registered for message type: {0}.", message.ToString());
                 throw new InvalidOperationException(string.Format("This message is not registered for publication: '{0}'", message));
             }
+        }
+
+        private void Publish(IMessagePublisher publisher, Message message, int attemptCount = 0)
+        {
+            Action publish = () =>
+            {
+                attemptCount++;
+                try
+                {
+                    publisher.Publish(message);
+                }
+                catch (Exception ex)
+                {
+                    if (attemptCount == _config.PublishFailureReAttempts)
+                    {
+                        Log.ErrorException(string.Format("Unable to publish message {0}", message.GetType().Name), ex);
+                        throw;
+                    }
+
+                    Thread.Sleep(_config.PublishFailureBackoffMilliseconds * attemptCount); // Increase back off each time
+                    Publish(publisher, message, attemptCount);
+                }
+            };
+
+            publish.BeginInvoke(null, null);
         }
     }
 }

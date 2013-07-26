@@ -47,7 +47,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             if (string.IsNullOrWhiteSpace(config.Tenant))
                 throw new InvalidOperationException("Cannot have a blank entry for config.Tenant");
 
-            return new FluentNotificationStack(new NotificationStack(component), config);
+            return new FluentNotificationStack(new NotificationStack(component, config), config);
         }
 
         /// <summary>
