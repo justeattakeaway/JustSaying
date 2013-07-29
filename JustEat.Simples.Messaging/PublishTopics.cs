@@ -1,4 +1,9 @@
 namespace JustEat.Simples.NotificationStack.Messaging
 {
-    public enum NotificationTopic { CustomerCommunication, OrderDispatch }
+    public enum NotificationTopic
+    {
+        CustomerCommunication, 
+        OrderDispatch,
+        OrderResolved
+    }
 }
