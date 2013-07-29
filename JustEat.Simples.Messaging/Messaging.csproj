@@ -53,6 +53,10 @@
     <Compile Include="MessageSerialisation\IMessageSerialiser.cs" />
     <Compile Include="MessageSerialisation\NewtonsoftSerialiser.cs" />
     <Compile Include="MessageSerialisation\ReflectedMessageSerialisationRegister.cs" />
+    <Compile Include="Messages\OrderResolved\OrderResolutionStatus.cs" />
+    <Compile Include="Messages\OrderResolved\OrderResolvedAndAccepted.cs" />
+    <Compile Include="Messages\OrderResolved\OrderResolvedAndCancelled.cs" />
+    <Compile Include="Messages\OrderResolved\OrderResolvedMessage.cs" />
     <Compile Include="PublishTopics.cs" />
     <Compile Include="Messages\CustomerCommunication\CustomerOrderRejectionSms.cs" />
     <Compile Include="Messages\CustomerCommunication\CustomerOrderRejectionSmsFailed.cs" />
