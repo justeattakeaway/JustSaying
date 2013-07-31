@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
-using JustEat.Simples.NotificationStack.Messaging.Messages.CustomerCommunication;
-using JustEat.Simples.NotificationStack.Messaging.Messages.OrderDispatch;
 
 namespace JustEat.Simples.NotificationStack.Messaging.MessageSerialisation
 {
@@ -14,18 +14,18 @@ namespace JustEat.Simples.NotificationStack.Messaging.MessageSerialisation
         {
             _map = new Dictionary<string, IMessageSerialiser<Message>>();
 
-            // ToDo: reflect this somehow!
+            var messageType = typeof (Message);
 
-            //var list = from t in Assembly.GetExecutingAssembly().GetTypes()
-            //           where t.BaseType == (typeof (Message)) && t.GetConstructor(Type.EmptyTypes) != null
-            //           select new {Key = t, Value = new NewtonsoftSerialiser<t>()};
+            var newtonsoftType = typeof (NewtonsoftSerialiser<>);
 
-            _map.Add(typeof(CustomerOrderRejectionSms).Name, new ServiceStackSerialiser<CustomerOrderRejectionSms>());
-            _map.Add(typeof(CustomerOrderRejectionSmsFailed).Name, new ServiceStackSerialiser<CustomerOrderRejectionSmsFailed>());
-
-            _map.Add(typeof(OrderAccepted).Name, new ServiceStackSerialiser<OrderAccepted>());
-            _map.Add(typeof(OrderAlternateTimeSuggested).Name, new ServiceStackSerialiser<OrderAlternateTimeSuggested>());
-            _map.Add(typeof(OrderRejected).Name, new ServiceStackSerialiser<OrderRejected>());
+            Assembly.GetExecutingAssembly().GetTypes()
+                .Where(x => x.IsSubclassOf(messageType) && !x.IsAbstract)
+                .ToList()
+                .ForEach(x =>
+                {
+                    var genericType = newtonsoftType.MakeGenericType(new[] {x});
+                    _map.Add(x.Name, (IMessageSerialiser<Message>) Activator.CreateInstance(genericType));
+                });
         }
 
         public IMessageSerialiser<Message> GetSerialiser(string objectType)
