@@ -4,5 +4,7 @@ namespace JustEat.Simples.NotificationStack.Messaging
     {
         string Tenant { get; }
         string Environment { get; }
+        int PublishFailureReAttempts { get; }
+        int PublishFailureBackoffMilliseconds { get; }
     }
 }

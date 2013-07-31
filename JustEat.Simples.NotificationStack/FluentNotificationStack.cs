@@ -47,15 +47,16 @@ namespace JustEat.Simples.NotificationStack.Stack
             if (string.IsNullOrWhiteSpace(config.Tenant))
                 throw new InvalidOperationException("Cannot have a blank entry for config.Tenant");
 
-            return new FluentNotificationStack(new NotificationStack(component), config);
+            return new FluentNotificationStack(new NotificationStack(component, config), config);
         }
 
         /// <summary>
         /// Subscribe to a topic using SQS.
         /// </summary>
         /// <param name="topic">Topic to listen in on</param>
+        /// <param name="messageRetentionSeconds">Time messages should be kept in this queue</param>
         /// <returns></returns>
-        public FluentNotificationStack WithSqsTopicSubscriber(NotificationTopic topic)
+        public FluentNotificationStack WithSqsTopicSubscriber(NotificationTopic topic, int messageRetentionSeconds)
         {
             var endpointProvider = new SqsSubscribtionEndpointProvider(_config);
             //var queue = new SqsQueueByUrl(endpointProvider.GetLocationEndpoint(_instance.Component, topic), AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
@@ -63,7 +64,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             var eventTopic = new SnsTopicByName(new SnsPublishEndpointProvider(_config).GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), _serialisationRegister);
 
             if (!queue.Exists())
-                queue.Create();
+                queue.Create(messageRetentionSeconds);
 
             if (!eventTopic.Exists())
                 eventTopic.Create();

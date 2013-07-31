@@ -52,6 +52,8 @@
       </SubType>
     </Compile>
     <Compile Include="Client\ApiSettings.cs" />
+    <Compile Include="Client\Order\IOrderApi.cs" />
+    <Compile Include="Client\Order\OrderStatus.cs" />
     <Compile Include="Client\Restaurant\IRestaurantApi.cs" />
     <Compile Include="Client\Restaurant\Models\RestaurantDetail.cs" />
     <Compile Include="Client\Restaurant\RestaurantApi.cs" />

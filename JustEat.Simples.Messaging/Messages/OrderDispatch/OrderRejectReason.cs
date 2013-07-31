@@ -1,4 +1,4 @@
 namespace JustEat.Simples.NotificationStack.Messaging.Messages.OrderDispatch
 {
-    public enum OrderRejectReason { TooFar, TooBusy, OutOfFood, UnSpecified } // DO NOT CHANGE THE ORDERING, it matched JCT v2 contract.
+    public enum OrderRejectReason { TooFar = 0, TooBusy = 1, OutOfFood = 2, UnSpecified = 3 }
 }

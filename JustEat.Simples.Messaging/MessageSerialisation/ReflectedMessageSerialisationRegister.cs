@@ -8,6 +8,7 @@ namespace JustEat.Simples.NotificationStack.Messaging.MessageSerialisation
 {
     public class ReflectedMessageSerialisationRegister : IMessageSerialisationRegister
     {
+        private readonly Type _serialiserType = typeof(ServiceStackSerialiser<>); // ToDo: This should be passed in to the fluent stack so that consumers can choose!
         private readonly Dictionary<string, IMessageSerialiser<Message>> _map;
 
         public ReflectedMessageSerialisationRegister()
@@ -16,14 +17,12 @@ namespace JustEat.Simples.NotificationStack.Messaging.MessageSerialisation
 
             var messageType = typeof (Message);
 
-            var newtonsoftType = typeof (NewtonsoftSerialiser<>);
-
             Assembly.GetExecutingAssembly().GetTypes()
                 .Where(x => x.IsSubclassOf(messageType) && !x.IsAbstract)
                 .ToList()
                 .ForEach(x =>
                 {
-                    var genericType = newtonsoftType.MakeGenericType(new[] {x});
+                    var genericType = _serialiserType.MakeGenericType(new[] {x});
                     _map.Add(x.Name, (IMessageSerialiser<Message>) Activator.CreateInstance(genericType));
                 });
         }
