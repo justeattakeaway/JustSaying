@@ -49,14 +49,13 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 
         private void ListenLoop()
         {
-            var messageResult = _queue.Client.ReceiveMessage(new ReceiveMessageRequest()
-                                                                 .WithQueueUrl(_queue.Url)
-                                                                 .WithMaxNumberOfMessages(10))
-                .ReceiveMessageResult;
-
-            foreach (var message in messageResult.Message)
+            try
             {
-                try
+                var sqsMessageResponse = _queue.Client.ReceiveMessage(new ReceiveMessageRequest()
+                                                                          .WithQueueUrl(_queue.Url)
+                                                                          .WithMaxNumberOfMessages(10));
+
+                foreach (var message in sqsMessageResponse.ReceiveMessageResult.Message)
                 {
                     var typedMessage = _serialisationRegister
                         .GetSerialiser(JObject.Parse(message.Body)["Subject"].ToString())
@@ -74,12 +73,9 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 
                     _queue.Client.DeleteMessage(new DeleteMessageRequest().WithQueueUrl(_queue.Url).WithReceiptHandle(message.ReceiptHandle));
                 }
-                catch (InvalidOperationException) { } // Swallow no messages
-                catch (Exception ex)
-                {
-                    Log.ErrorException("Issue in message handling loop", ex);
-                }
             }
+            catch (InvalidOperationException ex) { Log.Trace("Suspected no messaged in queue. Ex: {0}", ex); }
+            catch (Exception ex) { Log.ErrorException("Issue in message handling loop", ex); }
         }
     }
 }
