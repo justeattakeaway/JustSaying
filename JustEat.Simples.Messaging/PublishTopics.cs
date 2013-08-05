@@ -4,6 +4,7 @@ namespace JustEat.Simples.NotificationStack.Messaging
     {
         CustomerCommunication, 
         OrderDispatch,
-        OrderResolved
+        OrderResolved,
+        OrderFulfilmentStatus
     }
 }
