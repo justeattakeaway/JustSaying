@@ -19,6 +19,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustEat.Simples.DataAccess.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustEat.Simples.Api", "JustEat.Simples.Api\JustEat.Simples.Api.csproj", "{03F2DA85-A6BA-4935-B7FD-D871F068F6AD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustEat.Simples.Common", "JustEat.Simples.Common\JustEat.Simples.Common.csproj", "{63132A55-8510-4DFD-B92B-BE3769807048}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustEat.Simples.Common.UnitTests", "JustEat.Simples.Common.UnitTests\JustEat.Simples.Common.UnitTests.csproj", "{F77566C3-866B-43C9-84C2-7B2995BEC0FE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,6 +65,14 @@ Global
 		{03F2DA85-A6BA-4935-B7FD-D871F068F6AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{03F2DA85-A6BA-4935-B7FD-D871F068F6AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{03F2DA85-A6BA-4935-B7FD-D871F068F6AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63132A55-8510-4DFD-B92B-BE3769807048}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63132A55-8510-4DFD-B92B-BE3769807048}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63132A55-8510-4DFD-B92B-BE3769807048}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63132A55-8510-4DFD-B92B-BE3769807048}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F77566C3-866B-43C9-84C2-7B2995BEC0FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F77566C3-866B-43C9-84C2-7B2995BEC0FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F77566C3-866B-43C9-84C2-7B2995BEC0FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F77566C3-866B-43C9-84C2-7B2995BEC0FE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
