@@ -13,6 +13,7 @@ namespace JustEat.Simples.NotificationStack.Messaging.Messages
         DeletedFakeNotCollected = 12,
         DeletedRestaurantCannotDeliver = 13,
         OkPhonedRestaurant = 14,
+        OkByBox = 15,
         DeletedRejectedByRestaurant = 16,
         DeletedNewTimeRejected = 17,
         DeletedSystemError = 18,
