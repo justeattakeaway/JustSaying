@@ -1,4 +1,4 @@
-namespace JustEat.Simples.NotificationStack.Messaging.Messages.OrderResolved
+namespace JustEat.Simples.NotificationStack.Messaging.Messages
 {
     public enum OrderResolutionStatus
     {
