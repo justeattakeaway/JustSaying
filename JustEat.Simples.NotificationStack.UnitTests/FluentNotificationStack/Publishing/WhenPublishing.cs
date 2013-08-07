@@ -15,7 +15,7 @@ namespace Stack.UnitTests.FluentNotificationStack.Publishing
 
         protected override JustEat.Simples.NotificationStack.Stack.FluentNotificationStack CreateSystemUnderTest()
         {
-            return new JustEat.Simples.NotificationStack.Stack.FluentNotificationStack(_notificationStack, Substitute.For<IMessagingConfig>());
+            return new JustEat.Simples.NotificationStack.Stack.FluentNotificationStack(_notificationStack);
         }
 
         protected override void Given()

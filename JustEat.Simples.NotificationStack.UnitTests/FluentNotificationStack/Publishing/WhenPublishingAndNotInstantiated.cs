@@ -8,7 +8,7 @@ namespace Stack.UnitTests.FluentNotificationStack.Publishing
     {
         protected override JustEat.Simples.NotificationStack.Stack.FluentNotificationStack CreateSystemUnderTest()
         {
-            return new JustEat.Simples.NotificationStack.Stack.FluentNotificationStack(null, null);
+            return new JustEat.Simples.NotificationStack.Stack.FluentNotificationStack(null);
         }
 
         protected override void Given()
