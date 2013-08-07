@@ -63,11 +63,14 @@
     <Compile Include="Messages\OrderFulfilmentStatus\RequiresManualIntervention.cs" />
     <Compile Include="Messages\OrderFulfilmentStatus\Accepted.cs" />
     <Compile Include="Messages\OrderFulfilmentStatus\ResolvedOrderBase.cs" />
-    <Compile Include="Messages\OrderResolved\OrderResolutionStatus.cs" />
+    <Compile Include="Messages\OrderResolutionRequested\OrderAcceptedResolutionRequested.cs" />
+    <Compile Include="Messages\OrderResolutionRequested\OrderCancelledResolutionRequested.cs" />
+    <Compile Include="Messages\OrderResolutionRequested\OrderResolutionRequestedMessage.cs" />
+    <Compile Include="Messages\OrderResolutionStatus.cs" />
     <Compile Include="Messages\OrderResolved\OrderResolvedAndAccepted.cs" />
     <Compile Include="Messages\OrderResolved\OrderResolvedAndCancelled.cs" />
     <Compile Include="Messages\OrderResolved\OrderResolvedMessage.cs" />
-    <Compile Include="PublishTopics.cs" />
+    <Compile Include="NotificationTopic.cs" />
     <Compile Include="Messages\CustomerCommunication\CustomerOrderRejectionSms.cs" />
     <Compile Include="Messages\CustomerCommunication\CustomerOrderRejectionSmsFailed.cs" />
     <Compile Include="Messages\Message.cs" />
