@@ -5,17 +5,17 @@ using JustEat.Simples.NotificationStack.Stack;
 using JustEat.Testing;
 using NSubstitute;
 
-namespace Stack.UnitTests.FluentNotificationStack.Publishing
+namespace Stack.UnitTests.FluentNotificationStackTests.Publishing
 {
-    public class WhenPublishing : BehaviourTest<JustEat.Simples.NotificationStack.Stack.FluentNotificationStack>
+    public class WhenPublishing : BehaviourTest<FluentNotificationStack>
     {
         private const Component RegisterningComponent = Component.OrderEngine;
         private readonly Message _message = new OrderAccepted(0, 0, 0);
         private readonly INotificationStack _notificationStack = Substitute.For<INotificationStack>();
 
-        protected override JustEat.Simples.NotificationStack.Stack.FluentNotificationStack CreateSystemUnderTest()
+        protected override FluentNotificationStack CreateSystemUnderTest()
         {
-            return new JustEat.Simples.NotificationStack.Stack.FluentNotificationStack(_notificationStack);
+            return new FluentNotificationStack(_notificationStack);
         }
 
         protected override void Given()

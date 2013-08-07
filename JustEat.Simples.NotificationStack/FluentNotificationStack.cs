@@ -24,12 +24,27 @@ namespace JustEat.Simples.NotificationStack.Stack
         {
         }
 
+        public static FluentNotificationStack Register(Component component, Action<INotificationStackConfiguration> action)
+        {
+            var config = new MessagingConfig();
+            action.Invoke(config);
+
+            if (string.IsNullOrWhiteSpace(config.Environment))
+                throw new InvalidOperationException("Cannot have a blank entry for config.Environment");
+
+            if (string.IsNullOrWhiteSpace(config.Tenant))
+                throw new InvalidOperationException("Cannot have a blank entry for config.Tenant");
+
+            return new FluentNotificationStack(new NotificationStack(component, config));
+        }
+
         /// <summary>
         /// Create a new notification stack registration.
         /// </summary>
         /// <param name="component">Listening component</param>
         /// <param name="config">Configuration items</param>
         /// <returns></returns>
+        [Obsolete("Use Register(Component component, Action<INotificationStackConfiguration> action) instead,", false)]
         public static FluentNotificationStack Register(Component component, IMessagingConfig config)
         {
             if (string.IsNullOrWhiteSpace(config.Environment))
@@ -155,4 +170,21 @@ namespace JustEat.Simples.NotificationStack.Stack
             Stack = stack;
         }
     }
+
+    public class MessagingConfig : IMessagingConfig, INotificationStackConfiguration
+    {
+        public string Tenant { get; set; }
+        public string Environment { get; set; }
+        public int PublishFailureReAttempts { get; set; }
+        public int PublishFailureBackoffMilliseconds { get; set; }
+    }
+
+    public interface INotificationStackConfiguration
+    {
+        string Tenant { get; set; }
+        string Environment { get; set; }
+        int PublishFailureReAttempts { get; set; }
+        int PublishFailureBackoffMilliseconds { get; set; }
+    }
+
 }
