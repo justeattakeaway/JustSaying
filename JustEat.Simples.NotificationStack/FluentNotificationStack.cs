@@ -16,21 +16,12 @@ namespace JustEat.Simples.NotificationStack.Stack
     /// 2. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class FluentNotificationStack : IMessagePublisher
+    public class FluentNotificationStack : FluentStackBase, IMessagePublisher
     {
-        private readonly INotificationStack _instance;
-        private readonly IMessagingConfig _config;
         private readonly IMessageSerialisationRegister _serialisationRegister = new ReflectedMessageSerialisationRegister();
 
-        /// <summary>
-        /// States whether the stack is listening for messages (subscriptions are running)
-        /// </summary>
-        public bool Listening { get { return (_instance != null) && _instance.Listening; } }
-
-        public FluentNotificationStack(INotificationStack notificationStack, IMessagingConfig config)
+        public FluentNotificationStack(INotificationStack stack) : base(stack)
         {
-            _instance = notificationStack;
-            _config = config;
         }
 
         /// <summary>
@@ -47,7 +38,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             if (string.IsNullOrWhiteSpace(config.Tenant))
                 throw new InvalidOperationException("Cannot have a blank entry for config.Tenant");
 
-            return new FluentNotificationStack(new NotificationStack(component, config), config);
+            return new FluentNotificationStack(new NotificationStack(component, config));
         }
 
         /// <summary>
@@ -56,12 +47,12 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <param name="topic">Topic to listen in on</param>
         /// <param name="messageRetentionSeconds">Time messages should be kept in this queue</param>
         /// <returns></returns>
-        public FluentNotificationStack WithSqsTopicSubscriber(NotificationTopic topic, int messageRetentionSeconds)
+        public FluentSubscription WithSqsTopicSubscriber(NotificationTopic topic, int messageRetentionSeconds)
         {
-            var endpointProvider = new SqsSubscribtionEndpointProvider(_config);
+            var endpointProvider = new SqsSubscribtionEndpointProvider(Stack.Config);
             //var queue = new SqsQueueByUrl(endpointProvider.GetLocationEndpoint(_instance.Component, topic), AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
-            var queue = new SqsQueueByName(endpointProvider.GetLocationName(_instance.Component, topic), AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
-            var eventTopic = new SnsTopicByName(new SnsPublishEndpointProvider(_config).GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), _serialisationRegister);
+            var queue = new SqsQueueByName(endpointProvider.GetLocationName(Stack.Component, topic), AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
+            var eventTopic = new SnsTopicByName(new SnsPublishEndpointProvider(Stack.Config).GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), _serialisationRegister);
 
             if (!queue.Exists())
                 queue.Create(messageRetentionSeconds);
@@ -71,23 +62,10 @@ namespace JustEat.Simples.NotificationStack.Stack
 
             if (!eventTopic.IsSubscribed(queue))
                 eventTopic.Subscribe(queue);
-            
-            var sqsSubscriptionListener = new SqsNotificationListener(queue, _serialisationRegister);
-            _instance.AddNotificationTopicSubscriber(topic, sqsSubscriptionListener);
-            return this;
-        }
 
-        /// <summary>
-        /// Set message handlers for the given topic
-        /// </summary>
-        /// <typeparam name="T">Message type to be handled</typeparam>
-        /// <param name="topic">Topic message is published under</param>
-        /// <param name="handler">Handler for the message type</param>
-        /// <returns></returns>
-        public FluentNotificationStack WithMessageHandler<T>(NotificationTopic topic, IHandler<T> handler) where T : Message
-        {
-            _instance.AddMessageHandler(topic, handler);
-            return this;
+            var sqsSubscriptionListener = new SqsNotificationListener(queue, _serialisationRegister);
+            Stack.AddNotificationTopicSubscriber(topic, sqsSubscriptionListener);
+            return new FluentSubscription(Stack, topic);
         }
 
         /// <summary>
@@ -98,14 +76,14 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <returns></returns>
         public FluentNotificationStack WithSnsMessagePublisher<T>(NotificationTopic topic) where T : Message
         {
-            var endpointProvider = new SnsPublishEndpointProvider(_config);
+            var endpointProvider = new SnsPublishEndpointProvider(Stack.Config);
             //var eventPublisher = new SnsTopicByArn(endpointProvider.GetLocationEndpoint(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), _serialisationRegister);
             var eventPublisher = new SnsTopicByName(endpointProvider.GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), _serialisationRegister);
 
             if (!eventPublisher.Exists())
                 eventPublisher.Create();
 
-            _instance.AddMessagePublisher<T>(topic, eventPublisher);
+            Stack.AddMessagePublisher<T>(topic, eventPublisher);
 
             return this;
         }
@@ -115,7 +93,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// </summary>
         public void StartListening()
         {
-            _instance.Start();
+            Stack.Start();
         }
 
         /// <summary>
@@ -123,7 +101,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// </summary>
         public void StopListening()
         {
-            _instance.Stop();
+            Stack.Stop();
         }
 
         /// <summary>
@@ -132,11 +110,49 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <param name="message"></param>
         public void Publish(Message message)
         {
-            if (_instance == null)
+            if (Stack == null)
                 throw new InvalidOperationException("You must register for message publication before publishing a message");
 
-            message.RaisingComponent = _instance.Component;
-            _instance.Publish(message);
+            message.RaisingComponent = Stack.Component;
+            Stack.Publish(message);
+        }
+
+        /// <summary>
+        /// States whether the stack is listening for messages (subscriptions are running)
+        /// </summary>
+        public bool Listening { get { return (Stack != null) && Stack.Listening; } }
+    }
+
+    public class FluentSubscription : FluentNotificationStack
+    {
+        private readonly NotificationTopic _topic;
+
+        public FluentSubscription(INotificationStack stack, NotificationTopic topic) : base(stack)
+        {
+            _topic = topic;
+        }
+
+        /// <summary>
+        /// Set message handlers for the given topic
+        /// </summary>
+        /// <typeparam name="T">Message type to be handled</typeparam>
+        /// <param name="topic">Topic message is published under</param>
+        /// <param name="handler">Handler for the message type</param>
+        /// <returns></returns>
+        public FluentSubscription WithMessageHandler<T>(IHandler<T> handler) where T : Message
+        {
+            Stack.AddMessageHandler(_topic, handler);
+            return this;
+        }
+    }
+
+    public abstract class FluentStackBase
+    {
+        protected readonly INotificationStack Stack;
+
+        protected FluentStackBase(INotificationStack stack)
+        {
+            Stack = stack;
         }
     }
 }
