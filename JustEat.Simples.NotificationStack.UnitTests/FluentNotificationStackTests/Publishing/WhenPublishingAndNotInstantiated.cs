@@ -1,14 +1,15 @@
 ﻿using System;
+using JustEat.Simples.NotificationStack.Stack;
 using JustEat.Testing;
 using NUnit.Framework;
 
-namespace Stack.UnitTests.FluentNotificationStack.Publishing
+namespace Stack.UnitTests.FluentNotificationStackTests.Publishing
 {
-    public class WhenPublishingAndNotInstantiated : BehaviourTest<JustEat.Simples.NotificationStack.Stack.FluentNotificationStack>
+    public class WhenPublishingAndNotInstantiated : BehaviourTest<FluentNotificationStack>
     {
-        protected override JustEat.Simples.NotificationStack.Stack.FluentNotificationStack CreateSystemUnderTest()
+        protected override FluentNotificationStack CreateSystemUnderTest()
         {
-            return new JustEat.Simples.NotificationStack.Stack.FluentNotificationStack(null);
+            return new FluentNotificationStack(null);
         }
 
         protected override void Given()
