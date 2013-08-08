@@ -64,6 +64,9 @@ def setup_nuget opts={}
 			  nuspec.summary = "Accessing APIs"
         nuspec.dependency "Newtonsoft.Json", "4.5.0.0"
         nuspec.dependency "RestSharp", "104.1.0.0"
+      elsif (name == "JustEat.Simples.Api")
+			  nuspec.description = "Simples Common contains stuff like logging / monitoring / configuration. Enjoy."
+			  nuspec.summary = "Common utilities"
       end
 
 		end
