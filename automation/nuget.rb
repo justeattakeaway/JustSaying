@@ -41,8 +41,6 @@ def setup_nuget opts={}
 			nuspec.version = version
 			nuspec.authors = "Anton Jefcoate"
 			nuspec.owners = "Anton Jefcoate"
-			nuspec.description = "Simples Notification Stack is a set of tools and the messages required by team simples for our order fulfilment messaging stack"
-			nuspec.summary = "Order fulfilment messaging"
 			nuspec.language = "en-GB"
 			nuspec.licenseUrl = "https://github.je-labs.com/Simples/#{name}/blob/master/LICENSE.md"
 			nuspec.projectUrl = "https://github.je-labs.com/Simples/#{name}"
@@ -50,16 +48,25 @@ def setup_nuget opts={}
 			nuspec.output_file = "#{name}.nuspec"
 			nuspec.tags = ""
       if (name == "JustEat.Simples.NotificationStack")
-        nuspec.dependency "AWSSDK", "1.5.26.3"
+			  nuspec.description = "Simples Notification Stack is a set of tools and the messages required by team simples for our order fulfilment messaging stack"
+			  nuspec.summary = "Messaging / Eventing / Notifications"
+        nuspec.dependency "AWSSDK", "[1.5.28.3]"
         nuspec.dependency "Newtonsoft.Json", "4.5.0.0"
         nuspec.dependency "ServiceStack.Text", "3.9.56"
         nuspec.dependency "NLog", "2.0.1.2"
       elsif (name == "JustEat.Simples.DataAccess")
+			  nuspec.description = "Simples DataAccess contains the generic data access code / tooling used across Simples team"
+			  nuspec.summary = "Data access tooling"
         nuspec.dependency "Dapper", "1.13"
         nuspec.dependency "NLog", "2.0.1.2"
       elsif (name == "JustEat.Simples.Api")
+			  nuspec.description = "Simples Api is a set of strongly typed API access libraries for calling other JustEat standard APIs"
+			  nuspec.summary = "Accessing APIs"
         nuspec.dependency "Newtonsoft.Json", "4.5.0.0"
         nuspec.dependency "RestSharp", "104.1.0.0"
+      elsif (name == "JustEat.Simples.Common")
+			  nuspec.description = "Simples Common contains stuff like logging / monitoring / configuration. Enjoy."
+			  nuspec.summary = "Common utilities"
       end
 
 		end

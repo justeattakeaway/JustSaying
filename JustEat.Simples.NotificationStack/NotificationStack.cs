@@ -18,6 +18,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         void AddMessagePublisher<T>(NotificationTopic topic, IMessagePublisher messagePublisher) where T : Message;
         void Start();
         void Stop();
+        IMessagingConfig Config { get; }
     }
 
     public class NotificationStack : INotificationStack
@@ -27,7 +28,7 @@ namespace JustEat.Simples.NotificationStack.Stack
 
         private readonly Dictionary<NotificationTopic, INotificationSubscriber> _notificationSubscribers;
         private readonly Dictionary<NotificationTopic, Dictionary<Type, IMessagePublisher>> _messagePublishers;
-        private readonly IMessagingConfig _config;
+        public IMessagingConfig Config { get; private set; }
         private static readonly Logger Log = LogManager.GetLogger("EventLog");
 
         public NotificationStack(Component component, IMessagingConfig config)
@@ -36,7 +37,7 @@ namespace JustEat.Simples.NotificationStack.Stack
                 Log.Warn("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may loose messages!");
 
             Component = component;
-            _config = config;
+            Config = config;
             _notificationSubscribers = new Dictionary<NotificationTopic, INotificationSubscriber>();
             _messagePublishers = new Dictionary<NotificationTopic, Dictionary<Type, IMessagePublisher>>();
         }
@@ -113,13 +114,13 @@ namespace JustEat.Simples.NotificationStack.Stack
                 }
                 catch (Exception ex)
                 {
-                    if (attemptCount == _config.PublishFailureReAttempts)
+                    if (attemptCount == Config.PublishFailureReAttempts)
                     {
                         Log.ErrorException(string.Format("Unable to publish message {0}", message.GetType().Name), ex);
                         throw;
                     }
 
-                    Thread.Sleep(_config.PublishFailureBackoffMilliseconds * attemptCount); // Increase back off each time
+                    Thread.Sleep(Config.PublishFailureBackoffMilliseconds * attemptCount); // Increase back off each time
                     Publish(publisher, message, attemptCount);
                 }
             };

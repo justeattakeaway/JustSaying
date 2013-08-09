@@ -3,11 +3,13 @@ using System.Linq;
 using System.Threading;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using Amazon.SQS.Util;
 
 namespace JustEat.Simples.NotificationStack.AwsTools
 {
     public class SqsQueueByName : SqsQueueBase
     {
+
         public SqsQueueByName(string queueName, AmazonSQS client)
             : base(client)
         {
@@ -34,7 +36,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             {
                 var result = Client.CreateQueue(new CreateQueueRequest()
                     .WithQueueName(QueueNamePrefix)
-                    .WithAttribute(new[] { new Attribute { Name = "MessageRetentionPeriod", Value = retentionPeriodSeconds.ToString(CultureInfo.InvariantCulture)} }));
+                    .WithAttribute(new[] { new Attribute { Name = SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD , Value = retentionPeriodSeconds.ToString(CultureInfo.InvariantCulture)} }));
 
                 if (result.IsSetCreateQueueResult() && !string.IsNullOrWhiteSpace(result.CreateQueueResult.QueueUrl))
                 {

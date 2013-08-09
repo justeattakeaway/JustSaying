@@ -36,5 +36,10 @@ namespace JustEat.Simples.NotificationStack.Messaging.MessageSerialisation
         {
             return _map[objectType.Name];
         }
+
+        public void AddSerialiser<T>(IMessageSerialiser<Message> serialiser) where T : Message
+        {
+            // I don't care about this as I already have it all thank you very much.
+        }
     }
 }
