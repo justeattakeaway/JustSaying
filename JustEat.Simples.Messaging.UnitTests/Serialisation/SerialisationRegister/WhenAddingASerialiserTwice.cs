@@ -15,8 +15,8 @@ namespace UnitTests.Serialisation.SerialisationRegister
 
         protected override void When()
         {
-            SystemUnderTest.AddSerialiser(Substitute.For<IMessageSerialiser<CustomerOrderRejectionSms>>());
-            SystemUnderTest.AddSerialiser(Substitute.For<IMessageSerialiser<CustomerOrderRejectionSms>>());
+            SystemUnderTest.AddSerialiser<CustomerOrderRejectionSms>(Substitute.For<IMessageSerialiser<CustomerOrderRejectionSms>>());
+            SystemUnderTest.AddSerialiser<CustomerOrderRejectionSms>(Substitute.For<IMessageSerialiser<CustomerOrderRejectionSms>>());
         }
 
         [Then]

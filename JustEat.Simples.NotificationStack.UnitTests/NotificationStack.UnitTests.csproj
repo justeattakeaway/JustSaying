@@ -58,11 +58,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FluentNotificationStackTests\AddingHandlers\WhenAddingASubscriptionHandler.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\BaseConfigValidationTest.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoEnvironmentIsProvided.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoTenantIsProvided.cs" />
     <Compile Include="FluentNotificationStackTests\Publishing\WhenPublishing.cs" />
     <Compile Include="FluentNotificationStackTests\Publishing\WhenPublishingAndNotInstantiated.cs" />
+    <Compile Include="FluentNotificationStackTests\RegisteringPublishers\WhenRegisteringAPublisher.cs" />
     <Compile Include="NotificationStack\NotificationStackBaseTest.cs" />
     <Compile Include="NotificationStack\WhenPublishingWithoutRegistering.cs" />
     <Compile Include="NotificationStack\WhenRegisteringMessageHandlers.cs" />

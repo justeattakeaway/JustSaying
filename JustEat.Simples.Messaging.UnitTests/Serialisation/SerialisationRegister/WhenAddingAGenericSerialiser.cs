@@ -1,21 +1,19 @@
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Messaging.Messages.CustomerCommunication;
 using JustEat.Testing;
-using NSubstitute;
 using NUnit.Framework;
 
 namespace UnitTests.Serialisation.SerialisationRegister
 {
-    public class WhenAddingASerialiser : BehaviourTest<MessageSerialisationRegister>
+    public class WhenAddingAGenericSerialiser : BehaviourTest<MessageSerialisationRegister>
     {
-        protected override void Given()
-        {
-            //
-        }
+        private readonly ServiceStackSerialiser<CustomerOrderRejectionSms> _serialiser = new ServiceStackSerialiser<CustomerOrderRejectionSms>();
+
+        protected override void Given() { }
 
         protected override void When()
         {
-            SystemUnderTest.AddSerialiser<CustomerOrderRejectionSms>(Substitute.For<IMessageSerialiser<CustomerOrderRejectionSms>>());
+            SystemUnderTest.AddSerialiser<CustomerOrderRejectionSms>(_serialiser);
         }
 
         [Then]
