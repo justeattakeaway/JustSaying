@@ -72,7 +72,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             if (!eventTopic.IsSubscribed(queue))
                 eventTopic.Subscribe(queue);
             
-            var sqsSubscriptionListener = new SqsNotificationListener(queue, _serialisationRegister);
+            var sqsSubscriptionListener = new SqsNotificationListener(queue, _serialisationRegister, new NullMessageFootprintStore());
             _instance.AddNotificationTopicSubscriber(topic, sqsSubscriptionListener);
             return this;
         }

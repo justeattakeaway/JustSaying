@@ -14,14 +14,16 @@ namespace JustEat.Simples.NotificationStack.AwsTools
     {
         private readonly SqsQueueBase _queue;
         private readonly IMessageSerialisationRegister _serialisationRegister;
+        private readonly IMessageFootprintStore _messageFootprintStore;
         private readonly Dictionary<Type, List<Action<Message>>> _handlers;
         private bool _listen = true;
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-        public SqsNotificationListener(SqsQueueBase queue, IMessageSerialisationRegister serialisationRegister)
+        public SqsNotificationListener(SqsQueueBase queue, IMessageSerialisationRegister serialisationRegister, IMessageFootprintStore messageFootprintStore)
         {
             _queue = queue;
             _serialisationRegister = serialisationRegister;
+            _messageFootprintStore = messageFootprintStore;
             _handlers = new Dictionary<Type, List<Action<Message>>>();
         }
 
@@ -33,7 +35,18 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                 handlers = new List<Action<Message>>();
                 _handlers.Add(typeof(T), handlers);
             }
-            handlers.Add(DelegateAdjuster.CastArgument<Message, T>(x => handler.Handle(x)));
+            
+            handlers.Add(DelegateAdjuster.CastArgument<Message, T>(x => RepeatCallSafe(x, handler)));
+        }
+
+        private void RepeatCallSafe<T>(T message, IHandler<T> handler) where T : Message
+        {
+            if (_messageFootprintStore.IsMessageReceieved(message.Id))
+                return;
+
+            handler.Handle(message);
+
+            _messageFootprintStore.MarkMessageAsRecieved(message.Id);
         }
 
         public void Listen()
@@ -77,5 +90,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             catch (InvalidOperationException ex) { Log.Trace("Suspected no messaged in queue. Ex: {0}", ex); }
             catch (Exception ex) { Log.ErrorException("Issue in message handling loop", ex); }
         }
+
+        
     }
 }

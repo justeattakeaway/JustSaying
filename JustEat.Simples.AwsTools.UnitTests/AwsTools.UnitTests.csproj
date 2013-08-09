@@ -52,6 +52,7 @@
       <HintPath>..\packages\AutoFixture.3.4.1\lib\net40\Ploeh.AutoFixture.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -63,6 +64,8 @@
     <Compile Include="Integration.cs" />
     <Compile Include="Sns\TopicByArn\WhenPublishing.cs" />
     <Compile Include="SqsNotificationListener\BaseQueuePollingTest.cs" />
+    <Compile Include="SqsNotificationListener\WhenAMessageIsReceieved.cs" />
+    <Compile Include="SqsNotificationListener\WhenAMessageIsReceievedMoreThanOnce.cs" />
     <Compile Include="SqsNotificationListener\WhenListeningStops.cs" />
     <Compile Include="SqsNotificationListener\WhenPassingAHandledAndUnhandledMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

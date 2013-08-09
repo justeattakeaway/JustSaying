@@ -1,4 +1,6 @@
-﻿using Amazon.SimpleNotificationService;
+﻿using System;
+using Amazon.DynamoDBv2.DataModel;
+using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustEat.Simples.NotificationStack.AwsTools;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
@@ -6,6 +8,7 @@ using JustEat.Simples.NotificationStack.Messaging.Messages;
 using JustEat.Simples.NotificationStack.Messaging.Messages.OrderDispatch;
 using JustEat.Testing;
 using NSubstitute;
+using NUnit.Framework;
 
 namespace AwsTools.UnitTests.Sns.TopicByArn
 {
