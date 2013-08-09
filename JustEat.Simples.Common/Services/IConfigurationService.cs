@@ -4,5 +4,6 @@ namespace JustEat.Simples.Common.Services
     {
         string GetString(string key);
         int GetInteger(string key);
+        bool GetBoolean(string key);
     }
 }

@@ -16,6 +16,11 @@ namespace JustEat.Simples.Common.Services
             return GetValue<int>(key);
         }
 
+        public bool GetBoolean(string key)
+        {
+            return GetValue<bool>(key);
+        }
+
         private static T GetValue<T>(string key)
         {
             var value = ConfigurationManager.AppSettings[key];
@@ -26,14 +31,16 @@ namespace JustEat.Simples.Common.Services
                     string.Format(CultureInfo.InvariantCulture, "Setting for key '{0}' was not found.", key));
             }
 
-            if (typeof(T) == typeof(string))
+            var ttype = typeof(T);
+
+            if (ttype == typeof(string))
             {
                 return (T)(object)value;
             }
 
-            if (typeof(T) == typeof(int))
+            if (ttype == typeof(int) || ttype == typeof(bool))
             {
-                return (T)Convert.ChangeType(value, typeof(T), CultureInfo.InvariantCulture);
+                return (T)Convert.ChangeType(value, ttype, CultureInfo.InvariantCulture);
             }
 
             throw new NotImplementedException(
