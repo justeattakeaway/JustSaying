@@ -64,7 +64,9 @@
     <Compile Include="Lookups\SqsEndpointNames\WhenRequestingAnEndpointName.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serialisation\Newtonsoft\WhenSerialisingAndDeserialising.cs" />
-    <Compile Include="Serialisation\SerialisationRegister\WhenCreated.cs" />
+    <Compile Include="Serialisation\ReflectedSerialisationRegister\WhenCreated.cs" />
+    <Compile Include="Serialisation\SerialisationRegister\WhenAddingASerialiser.cs" />
+    <Compile Include="Serialisation\SerialisationRegister\WhenAddingASerialiserTwice.cs" />
     <Compile Include="Serialisation\ServiceStack\WhenSerialisingAndDeserialising.cs" />
   </ItemGroup>
   <ItemGroup>
