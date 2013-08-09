@@ -69,6 +69,7 @@
     <Compile Include="Messages\OrderResolutionRequested\OrderCancelledResolutionRequested.cs" />
     <Compile Include="Messages\OrderResolutionRequested\OrderResolutionRequestedMessage.cs" />
     <Compile Include="Messages\OrderResolutionStatus.cs" />
+    <Compile Include="Messages\OrderResolutionStatusGroups.cs" />
     <Compile Include="Messages\OrderResolved\OrderResolvedAndAccepted.cs" />
     <Compile Include="Messages\OrderResolved\OrderResolvedAndCancelled.cs" />
     <Compile Include="Messages\OrderResolved\OrderResolvedMessage.cs" />

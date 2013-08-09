@@ -60,6 +60,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Class1.cs" />
     <Compile Include="Lookups\SnsEndpointNames\WhenRequestingAnEndpointName.cs" />
     <Compile Include="Lookups\SqsEndpointNames\WhenRequestingAnEndpointName.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
