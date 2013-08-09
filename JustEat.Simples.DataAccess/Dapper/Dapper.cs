@@ -11,14 +11,36 @@ namespace JustEat.Simples.DataAccess.Dapper
     public class Dapper : IDapper
     {
         private int CommandTimeout { get; set; }
-        private readonly ISqlMonitoringService _monitoringService;
-        private readonly IDatabaseConfiguration _dbConfig;
+
+        private readonly EventingConfiguration _eventingConfiguration;
+        private readonly DatabaseConfiguration _databaseConfiguration;
+
         private readonly static Logger Logger = LogManager.GetCurrentClassLogger();
 
+        [Obsolete("Use Dapper(Action<DatabaseConfiguration> databaseConfigurationAction, Action<EventingConfiguration> eventingConfigurationAction)", false)]
         public Dapper(ISqlMonitoringService monitoringService, IDatabaseConfiguration databaseConfiguration)
         {
-            _monitoringService = monitoringService;
-            _dbConfig = databaseConfiguration;
+            var dConfiguration = new DatabaseConfiguration();
+            var eConfiguration = new EventingConfiguration();
+
+            dConfiguration.ConnectionString = databaseConfiguration.GetConnectionString;
+            eConfiguration.SqlException = monitoringService.SqlException;
+            eConfiguration.SqlDeadlockException = monitoringService.SqlDeadlockException;
+
+            _databaseConfiguration = dConfiguration;
+            _eventingConfiguration = eConfiguration;
+        }
+
+        public Dapper(Action<DatabaseConfiguration> databaseConfigurationAction, Action<EventingConfiguration> eventingConfigurationAction)
+        {
+            var databaseConfiguration = new DatabaseConfiguration();
+            databaseConfigurationAction.Invoke(databaseConfiguration);
+
+            var eventingConfiguration = new EventingConfiguration();
+            eventingConfigurationAction.Invoke(eventingConfiguration);
+
+            _databaseConfiguration = databaseConfiguration;
+            _eventingConfiguration = eventingConfiguration;
         }
 
         protected Dapper()
@@ -28,7 +50,7 @@ namespace JustEat.Simples.DataAccess.Dapper
 
         protected virtual IDbConnection CreateConnection()
         {
-            var conn = new SqlConnection(_dbConfig.GetConnectionString());
+            var conn = new SqlConnection(_databaseConfiguration.ConnectionString.Invoke());
             conn.Open();
             return conn;
         }
@@ -44,7 +66,7 @@ namespace JustEat.Simples.DataAccess.Dapper
             }
             catch (Exception ex)
             {
-                _monitoringService.SqlException();
+                _eventingConfiguration.SqlException.Invoke();
                 Logger.ErrorException(string.Format("Query Exception: {0} , {1}", sql, parameters.ToString()), ex);
                 throw;
             }
@@ -65,7 +87,7 @@ namespace JustEat.Simples.DataAccess.Dapper
             }
             catch (Exception ex)
             {
-                _monitoringService.SqlException();
+                _eventingConfiguration.SqlException.Invoke(); ;
                 Logger.ErrorException(string.Format("Query Exception: {0} , {1}", sql, parameters.ToString()), ex);
                 throw;
             }
@@ -103,12 +125,12 @@ namespace JustEat.Simples.DataAccess.Dapper
                 
                 if(!isDeadlockException)
                 {
-                    _monitoringService.SqlException();
+                    _eventingConfiguration.SqlException.Invoke();
                     Logger.ErrorException(string.Format("Execute Exception: {0} , {1}", sql, parameters.ToString()), sex);
                     throw;
                 }
 
-                _monitoringService.SqlDeadlockException();
+                _eventingConfiguration.SqlDeadlockException.Invoke();
 
                 if (retryTimes > 0)
                 {

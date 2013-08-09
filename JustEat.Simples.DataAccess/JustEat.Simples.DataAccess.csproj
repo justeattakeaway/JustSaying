@@ -49,6 +49,8 @@
   <ItemGroup>
     <Compile Include="Dapper\Dapper.cs" />
     <Compile Include="Dapper\IDapper.cs" />
+    <Compile Include="DatabaseConfiguration.cs" />
+    <Compile Include="EventingConfiguration.cs" />
     <Compile Include="IDatabaseConfiguration.cs" />
     <Compile Include="ISqlMonitoringService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

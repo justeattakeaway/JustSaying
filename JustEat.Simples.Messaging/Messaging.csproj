@@ -64,6 +64,7 @@
     <Compile Include="Messages\OrderFulfilmentStatus\RequiresManualIntervention.cs" />
     <Compile Include="Messages\OrderFulfilmentStatus\Accepted.cs" />
     <Compile Include="Messages\OrderFulfilmentStatus\ResolvedOrderBase.cs" />
+    <Compile Include="Messages\OrderPlacement\OrderPlacementRequested.cs" />
     <Compile Include="Messages\OrderResolutionRequested\OrderAcceptedResolutionRequested.cs" />
     <Compile Include="Messages\OrderResolutionRequested\OrderCancelledResolutionRequested.cs" />
     <Compile Include="Messages\OrderResolutionRequested\OrderResolutionRequestedMessage.cs" />
