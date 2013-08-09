@@ -2,7 +2,7 @@
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Messaging.Messages.CustomerCommunication;
 
-namespace UnitTests.Serialisation.SerialisationRegister
+namespace UnitTests.Serialisation.ReflectedSerialisationRegister
 {
     [TestFixture]
     public class WhenCreated
