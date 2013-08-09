@@ -1,5 +1,3 @@
-using JustEat.Simples.NotificationStack.Messaging.Messages.Sms;
-
 namespace JustEat.Simples.NotificationStack.Messaging.Messages.OrderPlacement
 {
     public class OrderPlacementRequested : Message
