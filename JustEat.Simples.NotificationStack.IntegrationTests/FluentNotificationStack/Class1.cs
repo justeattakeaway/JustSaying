@@ -5,20 +5,20 @@ using JustEat.Simples.NotificationStack.Stack;
 using JustEat.Testing;
 using NSubstitute;
 
-namespace Stack.UnitTests.FluentNotificationStackTests.RegisteringPublishers
+namespace NotificationStack.IntegrationTests.FluentNotificationStack
 {
-    public class WhenRegisteringAPublisher : BehaviourTest<FluentNotificationStack>
+    public class WhenRegisteringAPublisher : BehaviourTest<JustEat.Simples.NotificationStack.Stack.FluentNotificationStack>
     {
         private readonly INotificationStack _stack = Substitute.For<INotificationStack>();
         private readonly IMessageSerialisationRegister _serialisationReg = Substitute.For<IMessageSerialisationRegister>();
         private const NotificationTopic Topic = NotificationTopic.CustomerCommunication;
 
-        protected override FluentNotificationStack CreateSystemUnderTest()
+        protected override JustEat.Simples.NotificationStack.Stack.FluentNotificationStack CreateSystemUnderTest()
         {
             return new FluentSubscription(_stack, _serialisationReg, Topic);
         }
 
-        protected override void Given(){}
+        protected override void Given() { }
 
         protected override void When()
         {
