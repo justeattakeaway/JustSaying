@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Configuration;
-using System.Threading;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
@@ -10,25 +8,8 @@ using NUnit.Framework;
 namespace AwsTools.UnitTests
 {
     [TestFixture]
-    public class Integration
+    public class DynamoDbStoreIntregrationTests
     {
-        [Test, Explicit]
-        // Use this to manually test the creation of a queue.
-        public void CreatingAQueue()
-        {
-            var q = new SqsQueueByName("testQ", AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
-            if (q.Exists())
-            {
-                q.Delete();
-                Thread.Sleep(60000);
-            }
-
-            var x = q.Create(600);
-            Thread.Sleep(10000);
-
-            Assert.True(q.Exists());
-        }
-
         [Test, Explicit]
         public void SavingAndRetrievingAnItemInDynamoDb()
         {
@@ -44,7 +25,5 @@ namespace AwsTools.UnitTests
             Assert.IsNotNull(footprint);
             Console.WriteLine(footprint.MessageId);
         }
-        
     }
-
 }

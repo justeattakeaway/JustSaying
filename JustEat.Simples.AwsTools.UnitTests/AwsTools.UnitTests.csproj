@@ -61,7 +61,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Integration.cs" />
+    <Compile Include="DynamoDbStoreIntregrationTests.cs" />
+    <Compile Include="SqsQueueIntegrationTests.cs" />
     <Compile Include="Sns\TopicByArn\WhenPublishing.cs" />
     <Compile Include="SqsNotificationListener\BaseQueuePollingTest.cs" />
     <Compile Include="SqsNotificationListener\WhenAMessageIsReceieved.cs" />
