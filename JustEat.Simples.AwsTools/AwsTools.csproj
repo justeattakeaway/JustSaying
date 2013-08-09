@@ -51,6 +51,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DynamoStore.cs" />
+    <Compile Include="MessageFootprint.cs" />
+    <Compile Include="IMessageFootprintStore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SnsTopicByName.cs" />
     <Compile Include="SnsTopicBase.cs" />

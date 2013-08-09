@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading;
 using Amazon.SQS;
@@ -21,17 +22,18 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected const string MessageBody = "object";
         protected readonly IHandler<CustomerOrderRejectionSms> Handler = Substitute.For<IHandler<CustomerOrderRejectionSms>>();
         protected readonly IMessageSerialisationRegister SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
+        protected readonly IMessageFootprintStore MessageFootprintStore = Substitute.For<IMessageFootprintStore>();
         private readonly string _messageTypeString = typeof(CustomerOrderRejectionSms).ToString();
 
         protected override JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
             SerialisationRegister.GetSerialiser(_messageTypeString).Returns(Serialiser);
-            return new JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), SerialisationRegister);
+            return new JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), SerialisationRegister, MessageFootprintStore);
         }
 
         protected override void Given()
         {
-            var response = GenerateResponseMessage(_messageTypeString);
+            var response = GenerateResponseMessage(_messageTypeString, Guid.NewGuid());
 
             Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => response, x => new ReceiveMessageResponse());
 
@@ -47,7 +49,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
             Thread.Sleep(50);
         }
 
-        protected ReceiveMessageResponse GenerateResponseMessage(string messageType)
+        protected ReceiveMessageResponse GenerateResponseMessage(string messageType, Guid messageId)
         {
             return new ReceiveMessageResponse
             {
@@ -55,11 +57,13 @@ namespace AwsTools.UnitTests.SqsNotificationListener
                 {
                     Message = new[] {       
                             new Message
-                                {
+                                {   
+                                    MessageId = messageId.ToString(),
                                     Body = "{\"Subject\":\"" + messageType + "\"," + "\"Message\":\"" + MessageBody + "\"}"
                                 },
                             new Message
                                 {
+                                    MessageId = messageId.ToString(),
                                     Body = "{\"Subject\":\"SOME_UNKNOWN_MESSAGE\"," + "\"Message\":\"SOME_RANDOM_MESSAGE\"}"
                                 }}.ToList(),
                 }

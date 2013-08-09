@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using Amazon.SQS.Model;
 using JustEat.Testing;
@@ -14,7 +15,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
             base.When();
 
             SystemUnderTest.StopListening();
-            Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => GenerateResponseMessage(SubjectOfMessageAfterStop), x => new ReceiveMessageResponse());
+            Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid()), x => new ReceiveMessageResponse());
             Thread.Sleep(30);
         }
 
