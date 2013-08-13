@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using NLog;
 using Newtonsoft.Json.Linq;
@@ -69,11 +70,23 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                                                                           .WithMaxNumberOfMessages(10)
                                                                           .WithWaitTimeSeconds(20));
 
-                foreach (var message in sqsMessageResponse.ReceiveMessageResult.Message)
+
+                sqsMessageResponse.ReceiveMessageResult.Message.ForEach(HandleMessage);
+                
+            }
+            catch (InvalidOperationException ex) { Log.Trace("Suspected no messaged in queue. Ex: {0}", ex); }
+            catch (Exception ex) { Log.ErrorException("Issue in message handling loop", ex); }
+        }
+
+        private void HandleMessage(Amazon.SQS.Model.Message message)
+        {
+            Action run = () =>
+            {
+                try
                 {
                     var typedMessage = _serialisationRegister
-                        .GetSerialiser(JObject.Parse(message.Body)["Subject"].ToString())
-                        .Deserialise(JObject.Parse(message.Body)["Message"].ToString());
+                                .GetSerialiser(JObject.Parse(message.Body)["Subject"].ToString())
+                                .Deserialise(JObject.Parse(message.Body)["Message"].ToString());
 
                     if (typedMessage != null)
                     {
@@ -87,11 +100,10 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 
                     _queue.Client.DeleteMessage(new DeleteMessageRequest().WithQueueUrl(_queue.Url).WithReceiptHandle(message.ReceiptHandle));
                 }
-            }
-            catch (InvalidOperationException ex) { Log.Trace("Suspected no messaged in queue. Ex: {0}", ex); }
-            catch (Exception ex) { Log.ErrorException("Issue in message handling loop", ex); }
-        }
+                catch (Exception ex) { Log.ErrorException("Issue handling message", ex); }
+            };
 
-        
+            run.BeginInvoke(null, null);
+        }
     }
 }

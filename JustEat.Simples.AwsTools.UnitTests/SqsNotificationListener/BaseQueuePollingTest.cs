@@ -24,6 +24,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected readonly IMessageSerialisationRegister SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         protected readonly IMessageFootprintStore MessageFootprintStore = Substitute.For<IMessageFootprintStore>();
         private readonly string _messageTypeString = typeof(CustomerOrderRejectionSms).ToString();
+        protected int TestWaitTime = 20;
 
         protected override JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
@@ -46,7 +47,9 @@ namespace AwsTools.UnitTests.SqsNotificationListener
             SystemUnderTest.AddMessageHandler(Handler);
             SystemUnderTest.Listen();
 
-            Thread.Sleep(50);
+            Thread.Sleep(TestWaitTime);
+
+            SystemUnderTest.StopListening();
         }
 
         protected ReceiveMessageResponse GenerateResponseMessage(string messageType, Guid messageId)
