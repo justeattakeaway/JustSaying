@@ -28,7 +28,6 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
         protected override JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
-            SerialisationRegister.GetSerialiser(_messageTypeString).Returns(Serialiser);
             return new JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), SerialisationRegister, MessageFootprintStore);
         }
 
@@ -38,6 +37,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
             Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => response, x => new ReceiveMessageResponse());
 
+            SerialisationRegister.GetSerialiser(_messageTypeString).Returns(Serialiser);
             DeserialisedMessage = new CustomerOrderRejectionSms(1, 2, "3", SmsCommunicationActivity.ConfirmedReceived);
             Serialiser.Deserialise(Arg.Any<string>()).Returns(x => DeserialisedMessage);
         }

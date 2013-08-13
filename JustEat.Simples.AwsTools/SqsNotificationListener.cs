@@ -100,7 +100,12 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 
                     _queue.Client.DeleteMessage(new DeleteMessageRequest().WithQueueUrl(_queue.Url).WithReceiptHandle(message.ReceiptHandle));
                 }
-                catch (Exception ex) { Log.ErrorException("Issue handling message", ex); }
+                catch (KeyNotFoundException)
+                {
+                    Log.Info("Didn't handle message {0}. No serialiser setup", JObject.Parse(message.Body)["Subject"].ToString());
+                    _queue.Client.DeleteMessage(new DeleteMessageRequest().WithQueueUrl(_queue.Url).WithReceiptHandle(message.ReceiptHandle));
+                }
+                catch (Exception ex) { Log.ErrorException(string.Format("Issue handling message... {0}", message), ex); }
             };
 
             run.BeginInvoke(null, null);
