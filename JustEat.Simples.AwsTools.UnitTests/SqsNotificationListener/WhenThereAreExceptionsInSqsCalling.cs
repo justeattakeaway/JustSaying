@@ -12,6 +12,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
         protected override void Given()
         {
+            TestWaitTime = 50;
             base.Given();
             Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>())
                 .Returns(x => { throw new Exception(); })

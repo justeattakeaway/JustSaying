@@ -6,6 +6,11 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 {
     public class WhenPassingAHandledAndUnhandledMessage : BaseQueuePollingTest
     {
+        protected override void Given()
+        {
+            TestWaitTime = 100;
+            base.Given();
+        }
         [Then]
         public void MessagesGetDeserialisedByCorrectHandler()
         {

@@ -14,6 +14,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
         protected override void Given()
         {
+            TestWaitTime = 100;
             _messageId = Guid.NewGuid();
             DeserialisedMessage = new CustomerOrderRejectionSms(1, 2, "3", SmsCommunicationActivity.ConfirmedReceived) { Id = _messageId };
             Serialiser.Deserialise(Arg.Any<string>()).Returns(x => DeserialisedMessage);
@@ -23,18 +24,14 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
         protected override void When()
         {
-            base.When();
-
             Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => GenerateResponseMessage("anymessagetype", _messageId));
-            
-            Thread.Sleep(500);
+            base.When();
         }
 
         [Then]
         public void MessageIsMarkedAsRecieved()
         {
             MessageFootprintStore.Received().MarkMessageAsRecieved(_messageId);
-            
         }
     }
 }
