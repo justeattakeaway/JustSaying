@@ -66,7 +66,8 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             {
                 var sqsMessageResponse = _queue.Client.ReceiveMessage(new ReceiveMessageRequest()
                                                                           .WithQueueUrl(_queue.Url)
-                                                                          .WithMaxNumberOfMessages(10));
+                                                                          .WithMaxNumberOfMessages(10)
+                                                                          .WithWaitTimeSeconds(20));
 
                 foreach (var message in sqsMessageResponse.ReceiveMessageResult.Message)
                 {
