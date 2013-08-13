@@ -58,6 +58,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FluentNotificationStackTests\AddingHandlers\WhenAddingASubscriptionHandler.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\BaseConfigValidationTest.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoEnvironmentIsProvided.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoTenantIsProvided.cs" />
@@ -84,6 +85,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="FluentNotificationStackTests\RegisteringPublishers\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />

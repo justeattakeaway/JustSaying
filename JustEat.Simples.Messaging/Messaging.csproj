@@ -56,6 +56,7 @@
     <Compile Include="MessageHandling\IHandler.cs" />
     <Compile Include="MessageSerialisation\IMessageSerialisationRegister.cs" />
     <Compile Include="MessageSerialisation\IMessageSerialiser.cs" />
+    <Compile Include="MessageSerialisation\MessageSerialisationRegister.cs" />
     <Compile Include="MessageSerialisation\NewtonsoftSerialiser.cs" />
     <Compile Include="MessageSerialisation\ReflectedMessageSerialisationRegister.cs" />
     <Compile Include="MessageSerialisation\ServiceStackSerialiser.cs" />
@@ -69,6 +70,7 @@
     <Compile Include="Messages\OrderResolutionRequested\OrderCancelledResolutionRequested.cs" />
     <Compile Include="Messages\OrderResolutionRequested\OrderResolutionRequestedMessage.cs" />
     <Compile Include="Messages\OrderResolutionStatus.cs" />
+    <Compile Include="Messages\OrderResolutionStatusGroups.cs" />
     <Compile Include="Messages\OrderResolved\OrderResolvedAndAccepted.cs" />
     <Compile Include="Messages\OrderResolved\OrderResolvedAndCancelled.cs" />
     <Compile Include="Messages\OrderResolved\OrderResolvedMessage.cs" />

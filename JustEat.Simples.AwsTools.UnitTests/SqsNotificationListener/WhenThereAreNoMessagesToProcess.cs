@@ -15,7 +15,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
         protected override JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
-            return new JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener(new SqsQueueByUrl("", _sqs), null);
+            return new JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener(new SqsQueueByUrl("", _sqs), null, new NullMessageFootprintStore());
         }
 
         protected override void Given()

@@ -15,11 +15,12 @@ namespace AwsTools.UnitTests.SqsNotificationListener
     {
         private readonly AmazonSQS _sqs = Substitute.For<AmazonSQS>();
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
+        
         private int _callCount;
 
         protected override JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
-            return new JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener(new SqsQueueByUrl("", _sqs), _serialisationRegister);
+            return new JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener(new SqsQueueByUrl("", _sqs), _serialisationRegister, new NullMessageFootprintStore());
         }
 
         protected override void Given()
