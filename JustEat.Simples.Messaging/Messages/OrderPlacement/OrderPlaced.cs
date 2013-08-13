@@ -1,9 +1,9 @@
 using System;
 namespace JustEat.Simples.NotificationStack.Messaging.Messages.OrderPlacement
 {
-    public class OrderPlacementRequested : Message
+    public class OrderPlaced : Message
     {
-        public OrderPlacementRequested(Guid orderId)
+        public OrderPlaced(Guid orderId)
         {
             OrderId = orderId;
         }

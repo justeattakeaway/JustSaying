@@ -7,6 +7,6 @@ namespace JustEat.Simples.NotificationStack.Messaging
         OrderResolutionRequested,
         OrderResolved,
         OrderFulfilmentStatus,
-        OrderPlacement
+        OrderProcessing
     }
 }

@@ -52,6 +52,15 @@
       </SubType>
     </Compile>
     <Compile Include="Client\ApiSettings.cs" />
+    <Compile Include="Client\Basket\BasketApi.cs" />
+    <Compile Include="Client\Basket\IBasketApi.cs" />
+    <Compile Include="Client\Basket\Models\OptionalAccessory.cs" />
+    <Compile Include="Client\Basket\Models\RequiredAccessory.cs" />
+    <Compile Include="Client\Basket\Models\MealPart.cs" />
+    <Compile Include="Client\Basket\Models\OrderItemView.cs" />
+    <Compile Include="Client\Basket\Models\UserPrompt.cs" />
+    <Compile Include="Client\Basket\Models\MessageKeyValue.cs" />
+    <Compile Include="Client\Basket\Models\OrderBasketResponse.cs" />
     <Compile Include="Client\Order\IOrderApi.cs" />
     <Compile Include="Client\Order\OrderStatus.cs" />
     <Compile Include="Client\Restaurant\IRestaurantApi.cs" />
@@ -64,6 +73,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
