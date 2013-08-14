@@ -10,7 +10,7 @@ namespace JustEat.Simples.Api.Client.Basket
 
         public OrderBasketResponse GetBasket(string basketId)
         {
-            string url = BuildUrl(Operations.Details, string.Join(",", basketId));
+            var url = BuildUrl(Operations.Baskets, basketId);
 
             var result = GetJson<OrderBasketResponse>(url);
 
@@ -19,7 +19,7 @@ namespace JustEat.Simples.Api.Client.Basket
 
         private static class Operations
         {
-            public const string Details = "baskets/{0}";
+            public const string Baskets = "baskets/{0}";
         }
     }
 }

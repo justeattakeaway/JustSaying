@@ -61,6 +61,13 @@
     <Compile Include="Client\Basket\Models\UserPrompt.cs" />
     <Compile Include="Client\Basket\Models\MessageKeyValue.cs" />
     <Compile Include="Client\Basket\Models\OrderBasketResponse.cs" />
+    <Compile Include="Client\Menu\MenuApi.cs" />
+    <Compile Include="Client\Menu\IMenuApi.cs" />
+    <Compile Include="Client\Menu\Models\MealPartDetails.cs" />
+    <Compile Include="Client\Menu\Models\Offer.cs" />
+    <Compile Include="Client\Menu\Models\AccessoryDetails.cs" />
+    <Compile Include="Client\Menu\Models\ProductDetails.cs" />
+    <Compile Include="Client\Menu\Models\ProductDetailsResponse.cs" />
     <Compile Include="Client\Order\IOrderApi.cs" />
     <Compile Include="Client\Order\OrderStatus.cs" />
     <Compile Include="Client\Restaurant\IRestaurantApi.cs" />
