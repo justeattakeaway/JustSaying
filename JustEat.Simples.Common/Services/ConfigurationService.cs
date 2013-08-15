@@ -21,6 +21,11 @@ namespace JustEat.Simples.Common.Services
             return GetValue<bool>(key);
         }
 
+        public string GetConnectionString(string key)
+        {
+            return ConfigurationManager.ConnectionStrings[key].ConnectionString;
+        }
+
         private static T GetValue<T>(string key)
         {
             var value = ConfigurationManager.AppSettings[key];
