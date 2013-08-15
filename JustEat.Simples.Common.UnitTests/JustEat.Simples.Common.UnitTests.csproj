@@ -60,6 +60,7 @@
     <Compile Include="Services\Cache\WhenSettingTimeoutOnCache.cs" />
     <Compile Include="Services\Cache\WhenSettingTimeoutOnCacheBase.cs" />
     <Compile Include="Services\Configuration\WhenGettingBoolFromConfigurationFile.cs" />
+    <Compile Include="Services\Configuration\WhenGettingCoonnectionStringFromConfigurationFile.cs" />
     <Compile Include="Services\Configuration\WhenGettingIntFromConfigurationFile.cs" />
     <Compile Include="Services\Configuration\WhenGettingStringValueFromConfigurationFile.cs" />
     <Compile Include="Services\Configuration\WhenGettingValueAndNotInConfigurationFile.cs" />
