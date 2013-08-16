@@ -56,7 +56,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\Cache\Copy of WhenGettingValueFromCache.cs" />
     <Compile Include="Services\Cache\WhenGettingValueFromCache.cs" />
     <Compile Include="Services\Cache\WhenSettingTimeoutOnCache.cs" />
     <Compile Include="Services\Cache\WhenSettingTimeoutOnCacheBase.cs" />
