@@ -15,8 +15,8 @@ namespace JustEat.Simples.DataAccess.Dapper
 
         int DeadlockRetryExecute(string sql, dynamic parameters, int retryTimes);
 
-        T QuerySingle<T>(string sql, dynamic parameters = null);
+        T QueryFirst<T>(string sql, dynamic parameters = null);
 
-        T QuerySingleOrDefault<T>(string sql, dynamic parameters = null);
+        T QueryFirstOrDefault<T>(string sql, dynamic parameters = null);
     }
 }
