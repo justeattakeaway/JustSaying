@@ -145,5 +145,15 @@ namespace JustEat.Simples.DataAccess.Dapper
 
             return DeadlockRetryExecute(sql, parameters, retryTimes - 1);
         }
+
+        public T QuerySingle<T>(string sql, dynamic parameters = null)
+        {
+            return Query<T>(sql, parameters).Single();
+        }
+
+        public T QuerySingleOrDefault<T>(string sql, dynamic parameters = null)
+        {
+            return Query<T>(sql, parameters).SingleOrDefault();
+        }
     }
 }
