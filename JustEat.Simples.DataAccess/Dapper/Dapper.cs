@@ -148,12 +148,22 @@ namespace JustEat.Simples.DataAccess.Dapper
 
         public T QueryFirst<T>(string sql, dynamic parameters = null)
         {
-            return Query<T>(sql, parameters).First();
+            return Enumerable.First(Query<T>(sql, parameters));
         }
 
         public T QueryFirstOrDefault<T>(string sql, dynamic parameters = null)
         {
-            return Query<T>(sql, parameters).FirstOrDefault();
+            return Enumerable.FirstOrDefault(Query<T>(sql, parameters));
+        }
+
+        public T QuerySingle<T>(string sql, dynamic parameters = null)
+        {
+            return Enumerable.Single(Query<T>(sql, parameters));
+        }
+
+        public T QuerySingleOrDefault<T>(string sql, dynamic parameters = null)
+        {
+            return Enumerable.SingleOrDefault(Query<T>(sql, parameters));
         }
     }
 }
