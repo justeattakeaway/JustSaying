@@ -55,13 +55,13 @@ namespace JustEat.Simples.DataAccess.Dapper
             return conn;
         }
 
-        public IEnumerable<T> Query<T>(string sql, dynamic parameters)
+        public IEnumerable<T> Query<T>(string sql, dynamic parameters, CommandType commandType = CommandType.Text)
         {
             try
             {
                 using (var conn = CreateConnection())
                 {
-                    return conn.Query<T>(sql, parameters as object, commandTimeout: CommandTimeout);
+                    return conn.Query<T>(sql, parameters as object, commandTimeout: CommandTimeout, commandType: commandType);
                 }
             }
             catch (Exception ex)
