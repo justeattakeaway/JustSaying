@@ -19,17 +19,7 @@ namespace JustEat.Simples.Api.Client
 
         protected T GetJson<T>(string url, dynamic payload)
         {
-            string proxy = ConfigurationManager.AppSettings["Proxy-iapi"];
-            var request = WebRequest.Create(url);
-            if (!string.IsNullOrEmpty(proxy))
-                request.Proxy = new WebProxy(proxy);
-
-            request.Headers = new WebHeaderCollection
-                              {
-                                  { HttpRequestHeader.AcceptCharset, _apiSettings.AcceptCharset },
-                                  { HttpRequestHeader.AcceptLanguage, _apiSettings.AcceptLanguage }
-                              };
-
+            var request = CreateWebRequest(url);
 
             if (payload != null) {
                 var postBody = JsonConvert.SerializeObject(payload);
@@ -59,16 +49,7 @@ namespace JustEat.Simples.Api.Client
 
         protected T GetJson<T>(string url)
         {
-            string proxy = ConfigurationManager.AppSettings["Proxy-iapi"];
-            var request = WebRequest.Create(url);
-            if (!string.IsNullOrEmpty(proxy))
-                request.Proxy = new WebProxy(proxy);
-
-            request.Headers = new WebHeaderCollection
-                              {
-                                  { HttpRequestHeader.AcceptCharset, _apiSettings.AcceptCharset },
-                                  { HttpRequestHeader.AcceptLanguage, _apiSettings.AcceptLanguage }
-                              };
+            var request = CreateWebRequest(url);
 
             string body;
 
@@ -85,6 +66,7 @@ namespace JustEat.Simples.Api.Client
                     body = sr.ReadToEnd();
                 }
             }
+
             return JsonConvert.DeserializeObject<T>(body);
         }
 
@@ -94,5 +76,19 @@ namespace JustEat.Simples.Api.Client
             return _apiSettings.Host + string.Format(template, temp);
         }
 
+        private WebRequest CreateWebRequest(string url)
+        {
+            string proxy = ConfigurationManager.AppSettings["Proxy-iapi"];
+            var request = WebRequest.Create(url);
+            if (!string.IsNullOrEmpty(proxy))
+                request.Proxy = new WebProxy(proxy);
+
+            request.Headers = new WebHeaderCollection
+                              {
+                                  { HttpRequestHeader.AcceptCharset, _apiSettings.AcceptCharset },
+                                  { HttpRequestHeader.AcceptLanguage, _apiSettings.AcceptLanguage }
+                              };
+            return request;
+        }
     }
 }

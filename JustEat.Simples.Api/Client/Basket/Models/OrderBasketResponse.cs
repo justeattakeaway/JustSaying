@@ -25,5 +25,9 @@ namespace JustEat.Simples.Api.Client.Basket.Models
         public decimal Total { get; set; }
 
         public bool Orderable { get; set; }
+
+        public string ServiceType { get; set; }
+
+        public int RestaurantId { get; set; }
     }
 }
