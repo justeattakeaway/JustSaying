@@ -66,6 +66,7 @@
     <Compile Include="Messages\OrderFulfilmentStatus\ResolvedOrderBase.cs" />
     <Compile Include="Messages\OrderPlacement\OrderPlaced.cs" />
     <Compile Include="Messages\OrderPlacement\OrderPlacementRequested.cs" />
+    <Compile Include="Messages\OrderPlacement\PaymentComplete.cs" />
     <Compile Include="Messages\OrderResolutionRequested\OrderAcceptedResolutionRequested.cs" />
     <Compile Include="Messages\OrderResolutionRequested\OrderCancelledResolutionRequested.cs" />
     <Compile Include="Messages\OrderResolutionRequested\OrderResolutionRequestedMessage.cs" />
