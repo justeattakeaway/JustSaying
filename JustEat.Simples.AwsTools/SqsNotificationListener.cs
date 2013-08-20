@@ -52,6 +52,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 
         public void Listen()
         {
+            _listen = true;
             Action run = () => { while (_listen) { ListenLoop(); } };
             run.BeginInvoke(null, null);
         }
