@@ -10,26 +10,16 @@ namespace JustEat.Simples.Api.Client
 {
     public abstract class ApiClientBase
     {
-        private readonly ApiSettings _apiSettings;
+        private readonly IApiSettings _apiSettings;
 
-        protected ApiClientBase(ApiSettings apiSettings)
+        protected ApiClientBase(IApiSettings apiSettings)
         {
             _apiSettings = apiSettings;
         }
 
         protected T GetJson<T>(string url, dynamic payload)
         {
-            string proxy = ConfigurationManager.AppSettings["Proxy-iapi"];
-            var request = WebRequest.Create(url);
-            if (!string.IsNullOrEmpty(proxy))
-                request.Proxy = new WebProxy(proxy);
-
-            request.Headers = new WebHeaderCollection
-                              {
-                                  { HttpRequestHeader.AcceptCharset, _apiSettings.AcceptCharset },
-                                  { HttpRequestHeader.AcceptLanguage, _apiSettings.AcceptLanguage }
-                              };
-
+            var request = CreateWebRequest(url);
 
             if (payload != null) {
                 var postBody = JsonConvert.SerializeObject(payload);
@@ -44,22 +34,56 @@ namespace JustEat.Simples.Api.Client
                 }
             }
 
+            return Request<T>(request);
+        }
+
+        protected T GetJson<T>(string url)
+        {
+            var request = CreateWebRequest(url);
+
+            return Request<T>(request);
+        }
+
+        private T Request<T>(WebRequest request)
+        {
             string body;
 
-            using (var response = (HttpWebResponse)request.GetResponse()) {
-// ReSharper disable AssignNullToNotNullAttribute
-                using (var sr = new StreamReader(response.GetResponseStream())) {
-// ReSharper restore AssignNullToNotNullAttribute
-                    body = sr.ReadToEnd();
-                }
+            using (var response = (HttpWebResponse)request.GetResponse())
+            {
+                if (response.StatusCode != HttpStatusCode.OK)
+                    throw new Exception(String.Format("Server error (HTTP {0}: {1}).",
+                                                      response.StatusCode,
+                                                      response.StatusDescription
+                                                      )
+                                       );
+
+                body = GetResponseString(response);
             }
 
             return JsonConvert.DeserializeObject<T>(body);
         }
 
-        protected T GetJson<T>(string url)
+        protected virtual string GetResponseString(HttpWebResponse response)
         {
-            string proxy = ConfigurationManager.AppSettings["Proxy-iapi"];
+            string body;
+            // ReSharper disable AssignNullToNotNullAttribute
+            using (var sr = new StreamReader(response.GetResponseStream()))
+            {
+                // ReSharper restore AssignNullToNotNullAttribute
+                body = sr.ReadToEnd();
+            }
+            return body;
+        }
+
+        protected virtual string BuildUrl(string template, params object[] values)
+        {
+            var temp = values.Where(v => v != null).ToArray();
+            return _apiSettings.Host + string.Format(template, temp);
+        }
+
+        protected virtual WebRequest CreateWebRequest(string url)
+        {
+            string proxy = _apiSettings.ProxyIapi;
             var request = WebRequest.Create(url);
             if (!string.IsNullOrEmpty(proxy))
                 request.Proxy = new WebProxy(proxy);
@@ -69,30 +93,7 @@ namespace JustEat.Simples.Api.Client
                                   { HttpRequestHeader.AcceptCharset, _apiSettings.AcceptCharset },
                                   { HttpRequestHeader.AcceptLanguage, _apiSettings.AcceptLanguage }
                               };
-
-            string body;
-
-            using (var response = (HttpWebResponse)request.GetResponse())
-            {
-                if (response.StatusCode != HttpStatusCode.OK)
-                    throw new Exception(String.Format(
-                    "Server error (HTTP {0}: {1}).",
-                    response.StatusCode,
-                    response.StatusDescription));
-// ReSharper disable AssignNullToNotNullAttribute
-                using (var sr = new StreamReader(response.GetResponseStream())) {
-// ReSharper restore AssignNullToNotNullAttribute
-                    body = sr.ReadToEnd();
-                }
-            }
-            return JsonConvert.DeserializeObject<T>(body);
+            return request;
         }
-
-        protected string BuildUrl(string template, params object[] values)
-        {
-            var temp = values.Where(v => v != null).ToArray();
-            return _apiSettings.Host + string.Format(template, temp);
-        }
-
     }
 }

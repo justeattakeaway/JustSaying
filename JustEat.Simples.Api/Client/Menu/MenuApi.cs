@@ -5,7 +5,7 @@ namespace JustEat.Simples.Api.Client.Menu
 {
     public class MenuApi : ApiClientBase, IMenuApi
     {
-        public MenuApi(ApiSettings apiSettings)
+        public MenuApi(IApiSettings apiSettings)
             : base(apiSettings)
         {
         }
