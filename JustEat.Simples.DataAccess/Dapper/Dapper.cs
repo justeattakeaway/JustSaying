@@ -55,13 +55,13 @@ namespace JustEat.Simples.DataAccess.Dapper
             return conn;
         }
 
-        public IEnumerable<T> Query<T>(string sql, dynamic parameters)
+        public IEnumerable<T> Query<T>(string sql, dynamic parameters, CommandType commandType = CommandType.Text)
         {
             try
             {
                 using (var conn = CreateConnection())
                 {
-                    return conn.Query<T>(sql, parameters as object, commandTimeout: CommandTimeout);
+                    return conn.Query<T>(sql, parameters as object, commandTimeout: CommandTimeout, commandType: commandType);
                 }
             }
             catch (Exception ex)
@@ -144,6 +144,26 @@ namespace JustEat.Simples.DataAccess.Dapper
             }
 
             return DeadlockRetryExecute(sql, parameters, retryTimes - 1);
+        }
+
+        public T QueryFirst<T>(string sql, dynamic parameters = null)
+        {
+            return Enumerable.First(Query<T>(sql, parameters));
+        }
+
+        public T QueryFirstOrDefault<T>(string sql, dynamic parameters = null)
+        {
+            return Enumerable.FirstOrDefault(Query<T>(sql, parameters));
+        }
+
+        public T QuerySingle<T>(string sql, dynamic parameters = null)
+        {
+            return Enumerable.Single(Query<T>(sql, parameters));
+        }
+
+        public T QuerySingleOrDefault<T>(string sql, dynamic parameters = null)
+        {
+            return Enumerable.SingleOrDefault(Query<T>(sql, parameters));
         }
     }
 }

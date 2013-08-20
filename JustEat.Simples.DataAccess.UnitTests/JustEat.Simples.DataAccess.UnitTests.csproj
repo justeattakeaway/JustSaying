@@ -64,6 +64,7 @@
     <Compile Include="Dapper\WhenDapperThrowsAnExceptionWhenExecuting.cs" />
     <Compile Include="Dapper\WhenDapperThrowsAnExceptionWhenQuerying.cs" />
     <Compile Include="Dapper\WhenDapperThrowsAnExceptionWhenQueryingMultiple.cs" />
+    <Compile Include="Dapper\WhenReturningDynamicTypes.cs" />
     <Compile Include="ExceptionHelpers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

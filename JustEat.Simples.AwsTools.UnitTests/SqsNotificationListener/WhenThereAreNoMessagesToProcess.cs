@@ -28,6 +28,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         {
             SystemUnderTest.Listen();
             Thread.Sleep(20);
+            SystemUnderTest.StopListening();
         }
 
         [Then]

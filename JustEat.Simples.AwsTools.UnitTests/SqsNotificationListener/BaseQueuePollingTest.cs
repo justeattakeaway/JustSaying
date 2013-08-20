@@ -24,10 +24,10 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected readonly IMessageSerialisationRegister SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         protected readonly IMessageFootprintStore MessageFootprintStore = Substitute.For<IMessageFootprintStore>();
         private readonly string _messageTypeString = typeof(CustomerOrderRejectionSms).ToString();
+        protected int TestWaitTime = 20;
 
         protected override JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
-            SerialisationRegister.GetSerialiser(_messageTypeString).Returns(Serialiser);
             return new JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), SerialisationRegister, MessageFootprintStore);
         }
 
@@ -37,6 +37,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
             Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => response, x => new ReceiveMessageResponse());
 
+            SerialisationRegister.GetSerialiser(_messageTypeString).Returns(Serialiser);
             DeserialisedMessage = new CustomerOrderRejectionSms(1, 2, "3", SmsCommunicationActivity.ConfirmedReceived);
             Serialiser.Deserialise(Arg.Any<string>()).Returns(x => DeserialisedMessage);
         }
@@ -46,7 +47,9 @@ namespace AwsTools.UnitTests.SqsNotificationListener
             SystemUnderTest.AddMessageHandler(Handler);
             SystemUnderTest.Listen();
 
-            Thread.Sleep(50);
+            Thread.Sleep(TestWaitTime);
+
+            SystemUnderTest.StopListening();
         }
 
         protected ReceiveMessageResponse GenerateResponseMessage(string messageType, Guid messageId)

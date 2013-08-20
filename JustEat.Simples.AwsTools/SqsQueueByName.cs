@@ -30,13 +30,17 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             return false;
         }
 
-        public bool Create(int retentionPeriodSeconds, int attempt = 0)
+        public bool Create(int retentionPeriodSeconds, int attempt = 0, int visibilityTimeoutSeconds = 30)
         {
             try
             {
                 var result = Client.CreateQueue(new CreateQueueRequest()
                     .WithQueueName(QueueNamePrefix)
-                    .WithAttribute(new[] { new Attribute { Name = SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD , Value = retentionPeriodSeconds.ToString(CultureInfo.InvariantCulture)} }));
+                    .WithAttribute(new[]
+                    {
+                        new Attribute { Name = SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD , Value = retentionPeriodSeconds.ToString(CultureInfo.InvariantCulture)},
+                        new Attribute { Name = SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , Value = visibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture)},
+                    }));
 
                 if (result.IsSetCreateQueueResult() && !string.IsNullOrWhiteSpace(result.CreateQueueResult.QueueUrl))
                 {
