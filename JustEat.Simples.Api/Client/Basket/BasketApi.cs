@@ -3,7 +3,7 @@ namespace JustEat.Simples.Api.Client.Basket
 {
     public class BasketApi : ApiClientBase, IBasketApi
     {
-        public BasketApi(ApiSettings apiSettings)
+        public BasketApi(IApiSettings apiSettings)
             : base(apiSettings)
         {
         }
