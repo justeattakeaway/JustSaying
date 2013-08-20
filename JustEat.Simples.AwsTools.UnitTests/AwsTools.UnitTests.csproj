@@ -62,15 +62,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DynamoDbStoreIntregrationTests.cs" />
+    <Compile Include="SqsNotificationListener\WhenListeningStartsAndStops.cs" />
     <Compile Include="SqsQueueIntegrationTests.cs" />
     <Compile Include="Sns\TopicByArn\WhenPublishing.cs" />
     <Compile Include="SqsNotificationListener\BaseQueuePollingTest.cs" />
     <Compile Include="SqsNotificationListener\WhenAMessageIsReceieved.cs" />
     <Compile Include="SqsNotificationListener\WhenAMessageIsReceievedMoreThanOnce.cs" />
-    <Compile Include="SqsNotificationListener\WhenListeningStops.cs" />
     <Compile Include="SqsNotificationListener\WhenPassingAHandledAndUnhandledMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SqsNotificationListener\WhenListeningStarts.cs" />
     <Compile Include="SqsNotificationListener\WhenThereAreExceptionsInMessageProcessing.cs" />
     <Compile Include="SqsNotificationListener\WhenThereAreExceptionsInSqsCalling.cs" />
     <Compile Include="SqsNotificationListener\WhenThereAreNoMessagesToProcess.cs" />
