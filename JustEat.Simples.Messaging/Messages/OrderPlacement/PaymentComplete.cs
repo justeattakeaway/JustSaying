@@ -2,7 +2,7 @@ namespace JustEat.Simples.NotificationStack.Messaging.Messages.OrderPlacement
 {
     public class PaymentComplete : Message
     {
-        public PaymentComplete(string orderId, bool paymentSuccessful, string lastCardDigits, string avsStuff, string paymentTransactionRef, string paymentServiceProvider, double totalPaid)
+        public PaymentComplete(string orderId, bool paymentSuccessful, string lastCardDigits, string avsStuff, string paymentTransactionRef, string paymentServiceProvider, decimal totalPaid)
         {
             TotalPaid = totalPaid;
             PaymentServiceProvider = paymentServiceProvider;
@@ -19,6 +19,6 @@ namespace JustEat.Simples.NotificationStack.Messaging.Messages.OrderPlacement
         public string AvsStuff { get; private set; }
         public string PaymentTransactionRef { get; private set; }
         public string PaymentServiceProvider { get; private set; }
-        public double TotalPaid { get; private set; }
+        public decimal TotalPaid { get; private set; }
     }
 }
