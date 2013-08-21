@@ -4,13 +4,6 @@ namespace JustEat.Simples.Api.Client.Menu.Models
 {
     public class ProductDetails
     {
-        public ProductDetails()
-        {
-            OptionalAccessories = new List<AccessoryDetails>();
-            RequiredAccessories = new List<AccessoryDetails>();
-            MealParts = new List<MealPartDetails>();
-        }
-
         public int ProductId { get; set; }
         public decimal Price { get; set; }
         public string Name { get; set; }
@@ -23,7 +16,5 @@ namespace JustEat.Simples.Api.Client.Menu.Models
         public IEnumerable<AccessoryDetails> OptionalAccessories { get; set; }
         public IEnumerable<AccessoryDetails> RequiredAccessories { get; set; }
         public IEnumerable<MealPartDetails> MealParts { get; set; }
-
-        public bool HasMealParts { get; set; }
     }
 }

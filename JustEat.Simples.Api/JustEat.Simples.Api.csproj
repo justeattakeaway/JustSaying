@@ -61,6 +61,7 @@
     <Compile Include="Client\Basket\Models\UserPrompt.cs" />
     <Compile Include="Client\Basket\Models\MessageKeyValue.cs" />
     <Compile Include="Client\Basket\Models\OrderBasketResponse.cs" />
+    <Compile Include="Client\IApiSettings.cs" />
     <Compile Include="Client\Menu\MenuApi.cs" />
     <Compile Include="Client\Menu\IMenuApi.cs" />
     <Compile Include="Client\Menu\Models\MealPartDetails.cs" />
