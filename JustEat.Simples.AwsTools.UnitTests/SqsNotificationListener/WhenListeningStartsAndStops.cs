@@ -15,10 +15,10 @@ namespace AwsTools.UnitTests.SqsNotificationListener
             base.When();
 
             SystemUnderTest.StopListening();
-            Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid()), x => new ReceiveMessageResponse());
-            Thread.Sleep(1000);
-
+            Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid()), x => new ReceiveMessageResponse{ReceiveMessageResult = new ReceiveMessageResult()});
             SystemUnderTest.Listen();
+            Thread.Sleep(20);
+            SystemUnderTest.StopListening();
         }
 
         [Then]
