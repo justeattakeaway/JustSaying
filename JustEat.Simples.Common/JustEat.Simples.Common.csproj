@@ -37,6 +37,18 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataModels\OrderContainer\ApplicationInfo.cs" />
+    <Compile Include="DataModels\OrderContainer\BasketInfo.cs" />
+    <Compile Include="DataModels\OrderContainer\BasketItem.cs" />
+    <Compile Include="DataModels\OrderContainer\CustomerInfo.cs" />
+    <Compile Include="DataModels\OrderContainer\MealPart.cs" />
+    <Compile Include="DataModels\OrderContainer\OptionalAccessory.cs" />
+    <Compile Include="DataModels\OrderContainer\OrderInfo.cs" />
+    <Compile Include="DataModels\OrderContainer\OrderContainer.cs" />
+    <Compile Include="DataModels\OrderContainer\PaymentInfo.cs" />
+    <Compile Include="DataModels\OrderContainer\RequiredAccessory.cs" />
+    <Compile Include="DataModels\OrderContainer\RestaurantInfo.cs" />
+    <Compile Include="DataModels\OrderContainer\ServiceType.cs" />
     <Compile Include="GzipCompression.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\ConfigurationService.cs" />
@@ -44,6 +56,7 @@
     <Compile Include="Services\ICacheService.cs" />
     <Compile Include="Services\IConfigurationService.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
