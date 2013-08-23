@@ -56,6 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GZipCompressionTests.cs" />
+    <Compile Include="Localisation\DateTimes\Class1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\Cache\WhenGettingValueFromCache.cs" />
     <Compile Include="Services\Cache\WhenSettingTimeoutOnCache.cs" />
@@ -79,6 +80,7 @@
       <Name>JustEat.Simples.Common</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
