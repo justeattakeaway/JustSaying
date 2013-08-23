@@ -13,8 +13,8 @@ namespace JustEat.Simples.Api.Client.Menu.Models
 
         public Offer Offer { get; set; }
 
-        public IEnumerable<AccessoryDetails> OptionalAccessories { get; set; }
-        public IEnumerable<AccessoryDetails> RequiredAccessories { get; set; }
-        public IEnumerable<MealPartDetails> MealParts { get; set; }
+        public IList<AccessoryDetails> OptionalAccessories { get; set; }
+        public IList<AccessoryDetails> RequiredAccessories { get; set; }
+        public IList<MealPartDetails> MealParts { get; set; }
     }
 }
