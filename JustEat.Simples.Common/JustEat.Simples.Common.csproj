@@ -50,6 +50,9 @@
     <Compile Include="DataModels\OrderContainer\RestaurantInfo.cs" />
     <Compile Include="DataModels\OrderContainer\ServiceType.cs" />
     <Compile Include="GzipCompression.cs" />
+    <Compile Include="Localisation\DateTimeProviders\ITime.cs" />
+    <Compile Include="Localisation\DateTimeProviders\OperatingTime.cs" />
+    <Compile Include="Localisation\DateTimeProviders\UtcTime.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\ConfigurationService.cs" />
     <Compile Include="Services\InProcCacheService.cs" />
