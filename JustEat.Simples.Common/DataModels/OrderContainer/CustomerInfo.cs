@@ -34,5 +34,10 @@
         /// Customer postcode.
         /// </summary>
         public string Postcode { get; set; }
+
+        /// <summary>
+        /// Customer postcode.
+        /// </summary>
+        public string PhoneNumber { get; set; }
     }
 }
