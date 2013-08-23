@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace JustEat.Simples.Common.DataModels.OrderContainer
 {
@@ -10,6 +11,7 @@ namespace JustEat.Simples.Common.DataModels.OrderContainer
         public string OrderId { get; set; }
         public List<PaymentLine> PaymentLines { get; set; }
         public decimal Total { get; set; }
+        public DateTime? PaidDate { get; set; }
     }
 
     public class PaymentLine

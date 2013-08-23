@@ -23,11 +23,6 @@ namespace JustEat.Simples.Common.DataModels.OrderContainer
         public DateTime PlacedDate { get; set; }
 
         /// <summary>
-        /// Date when order has been paid.
-        /// </summary>
-        public DateTime PaidDate { get; set; }
-
-        /// <summary>
         /// Initial due (delivery) date and time.
         /// </summary>
         /// TODO needs to get from basket. Awaiting http://jira.just-eat.net:8080/browse/JAL-572.
