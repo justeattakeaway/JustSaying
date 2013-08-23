@@ -3,13 +3,13 @@ namespace JustEat.Simples.NotificationStack.Messaging.Messages.OrderPlacement
 {
     public class OrderPlaced : Message
     {
-        public OrderPlaced(Guid orderId, int legacyrderId)
+        public OrderPlaced(string orderId, int legacyOrderId)
         {
-            LegacyrderId = legacyrderId;
+            LegacyOrderId = legacyOrderId;
             OrderId = orderId;
         }
 
-        public Guid OrderId { get; private set; }
-        public int LegacyrderId { get; private set; }
+        public string OrderId { get; private set; }
+        public int LegacyOrderId { get; private set; }
     }
 }
