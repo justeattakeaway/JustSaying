@@ -17,6 +17,16 @@ namespace JustEat.Simples.Api.Client.Basket
             return result;
         }
 
+        public OrderAddress GetOrderAddress(string basketId)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public OrderTime GetOrderTime(string basketId)
+        {
+            throw new System.NotImplementedException();
+        }
+
         private static class Operations
         {
             public const string Baskets = "baskets/{0}";
