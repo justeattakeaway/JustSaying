@@ -21,7 +21,7 @@ namespace JustEat.Simples.Api.Client.Menu
 
         private static class Operations
         {
-            public const string Menu = "/menu/{menuId}/products?productIds={productIds}";
+            public const string Menu = "/menu/{0}/products?productIds={1}";
         }
     }
 }
