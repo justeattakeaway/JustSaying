@@ -39,5 +39,7 @@
         /// Customer postcode.
         /// </summary>
         public string PhoneNumber { get; set; }
+
+        public string TimeZone { get; set; }
     }
 }
