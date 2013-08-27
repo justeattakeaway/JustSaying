@@ -32,5 +32,7 @@ namespace JustEat.Simples.Common.DataModels.OrderContainer
         /// Due (delivery) date. Actual date and time
         /// </summary>
         public DateTime DueDate { get; set; }
+
+        public bool PromptAsap { get; set; }
     }
 }

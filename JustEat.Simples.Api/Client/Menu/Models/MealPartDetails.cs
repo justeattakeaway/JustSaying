@@ -7,8 +7,8 @@ namespace JustEat.Simples.Api.Client.Menu.Models
         public int ProductId { get; set; }
         public string Name { get; set; }
         public string Synonym { get; set; }
-        public IEnumerable<int> GroupIds { get; set; }
-        public IEnumerable<AccessoryDetails> OptionalAccessories { get; set; }
-        public IEnumerable<AccessoryDetails> RequiredAccessories { get; set; }
+        public IList<int> GroupIds { get; set; }
+        public IList<AccessoryDetails> OptionalAccessories { get; set; }
+        public IList<AccessoryDetails> RequiredAccessories { get; set; }
     }
 }

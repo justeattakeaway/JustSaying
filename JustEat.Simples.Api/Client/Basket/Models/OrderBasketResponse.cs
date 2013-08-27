@@ -8,9 +8,9 @@ namespace JustEat.Simples.Api.Client.Basket.Models
 
         public decimal SubTotal { get; set; }
 
-        public IEnumerable<UserPrompt> UserPrompt { get; set; }
+        public IList<UserPrompt> UserPrompt { get; set; }
 
-        public IEnumerable<OrderItemView> OrderItems { get; set; }
+        public IList<OrderItemView> OrderItems { get; set; }
 
         public int MenuId { get; set; }
 
