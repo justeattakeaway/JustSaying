@@ -1,5 +1,3 @@
-using System;
-using System.Dynamic;
 using JustEat.Simples.Common.DataModels.OrderContainer;
 
 namespace JustEat.Simples.Api.Client.Order
