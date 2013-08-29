@@ -72,6 +72,7 @@
     <Compile Include="Services\Configuration\WhenGettingIntFromConfigurationFile.cs" />
     <Compile Include="Services\Configuration\WhenGettingStringValueFromConfigurationFile.cs" />
     <Compile Include="Services\Configuration\WhenGettingValueAndNotInConfigurationFile.cs" />
+    <Compile Include="Services\IdGeneration\WhenGeneratingNewShortGuid.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">
