@@ -30,6 +30,22 @@ namespace JustEat.Simples.Api.Client.Restaurant
                             }).ToList();
         }
 
+        public RestaurantDetail GetRestaurantDetails(int restaurantId)
+        {
+            return GetRestaurantDetails(new[] {restaurantId}).Single();
+        }
+
+        public IList<OperationalStatus> GetRestaurantOperationalStatus(IEnumerable<int> restaurantIds)
+        {
+            string url = BuildUrl(Operations.Confidence, String.Join(",", restaurantIds));
+            var result = GetJson<IList<OperationalStatus>>(url);
+            return result;
+        }
+
+        public OperationalStatus GetRestaurantOperationalStatus(int restaurantId)
+        {
+            return GetRestaurantOperationalStatus(new[] {restaurantId}).Single();
+        }
 
         public dynamic JctStatusExpando(int restaurantId, string imei)
         {
@@ -42,6 +58,7 @@ namespace JustEat.Simples.Api.Client.Restaurant
         private static class Operations
         {
             public const string Details = "/details?ids={0}";
+            public const string Confidence = "/operationalStatus?ids={0}";
         }
     }
 }

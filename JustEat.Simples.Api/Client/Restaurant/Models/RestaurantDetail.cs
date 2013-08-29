@@ -10,8 +10,12 @@ namespace JustEat.Simples.Api.Client.Restaurant.Models
 
         public string PhoneNumber { get; set; }
 
-        public ConfidenceLevel Confidence { get; set; }
-
         public int RestaurantType { get; set; }
+    }
+
+    public class OperationalStatus
+    {
+        public int RestaurantId { get; set; }
+        public ConfidenceLevel Confidence { get; set; }
     }
 }
