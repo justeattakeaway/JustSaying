@@ -32,19 +32,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="JustEat.Simples.Common, Version=0.0.1.183, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\JustEat.Simples.Api.0.0.1.183\lib\net40\JustEat.Simples.Common.dll</HintPath>
-    </Reference>
     <Reference Include="JustEat.Testing">
       <HintPath>..\packages\JustEat.Testing.6.0.1.43\lib\net40\JustEat.Testing.dll</HintPath>
     </Reference>
     <Reference Include="Moq">
       <HintPath>..\packages\Moq.4.0.10827\lib\NET40\Moq.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\JustEat.Simples.Api.0.0.1.183\lib\net40\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.5.0.6\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=2.0.1.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -82,6 +77,10 @@
     <ProjectReference Include="..\JustEat.Simples.Api\JustEat.Simples.Api.csproj">
       <Project>{03f2da85-a6ba-4935-b7fd-d871f068f6ad}</Project>
       <Name>JustEat.Simples.Api</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\JustEat.Simples.Common\JustEat.Simples.Common.csproj">
+      <Project>{63132a55-8510-4dfd-b92b-be3769807048}</Project>
+      <Name>JustEat.Simples.Common</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
