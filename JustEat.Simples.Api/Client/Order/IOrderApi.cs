@@ -6,5 +6,6 @@ namespace JustEat.Simples.Api.Client.Order
     {
         bool UpdateOrderStatus(int orderId, OrderStatus status, string adminComment, bool sendConfEmailToCustomer);
         OrderContainer OrderDetails(string orderId);
+        void Refund(int orderId);
     }
 }

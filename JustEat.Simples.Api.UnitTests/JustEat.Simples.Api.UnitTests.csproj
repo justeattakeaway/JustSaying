@@ -73,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Client\Basket\WhenGetBasketCalled.cs" />
+    <Compile Include="Client\Order\WhenRefundCalled.cs" />
     <Compile Include="Client\Menu\WhenGetProductDetailsCalled.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

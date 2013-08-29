@@ -1,14 +1,28 @@
+using System.Net;
 using JustEat.Simples.Common.DataModels.OrderContainer;
 
 namespace JustEat.Simples.Api.Client.Order
 {
     public class OrderApi : ApiClientBase, IOrderApi
     {
-        public OrderApi(IApiSettings apiSettings) : base(apiSettings) { }
+        private readonly string _jeFeatureHeader;
+
+        public OrderApi(IApiSettings apiSettings, string jeFeatureHeader) : base(apiSettings)
+        {
+            _jeFeatureHeader = jeFeatureHeader;
+        }
+
+        protected override WebRequest CreateWebRequest(string url)
+        {
+            var request = base.CreateWebRequest(url);
+            request.Headers.Add("X-JE-Feature", _jeFeatureHeader);
+            return request;
+        }
 
         private static class Operations
         {
             public const string Details = "/order/{0}";
+            public const string Refund = "/refund";
         }
 
         public bool UpdateOrderStatus(int orderId, OrderStatus status, string adminComment, bool sendConfEmailToCustomer)
@@ -21,6 +35,12 @@ namespace JustEat.Simples.Api.Client.Order
             var url = BuildUrl(Operations.Details, orderId);
             var result = GetJson<OrderContainer>(url);
             return result;
+        }
+
+        public void Refund(int orderId)
+        {
+            var url = BuildUrl(Operations.Refund);
+            GetJson<dynamic>(url, new { OrderId = orderId});
         }
     }
 }
