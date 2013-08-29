@@ -20,7 +20,7 @@ namespace JustEat.Simples.Common.DataModels.OrderContainer
         /// <summary>
         /// Collection of basket items.
         /// </summary>
-        public List<BasketItem> BasketItem { get; set; }
+        public List<BasketItem> Items { get; set; }
 
         /// <summary>
         /// Subtotal of of the basket.
