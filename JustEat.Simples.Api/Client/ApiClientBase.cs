@@ -60,7 +60,7 @@ namespace JustEat.Simples.Api.Client
                 body = GetResponseString(response);
             }
 
-            return JsonConvert.DeserializeObject<T>(body);
+            return body == null ? default(T) : JsonConvert.DeserializeObject<T>(body);
         }
 
         protected virtual string GetResponseString(HttpWebResponse response)
