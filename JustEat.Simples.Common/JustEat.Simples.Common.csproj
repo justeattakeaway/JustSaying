@@ -54,6 +54,8 @@
     <Compile Include="Localisation\DateTimeProviders\OperatingTime.cs" />
     <Compile Include="Localisation\DateTimeProviders\UtcTime.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\ShortGuidGenerator.cs" />
+    <Compile Include="Services\IIdGenerator.cs" />
     <Compile Include="Services\ConfigurationService.cs" />
     <Compile Include="Services\InProcCacheService.cs" />
     <Compile Include="Services\ICacheService.cs" />
