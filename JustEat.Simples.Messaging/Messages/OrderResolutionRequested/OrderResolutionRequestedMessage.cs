@@ -10,12 +10,15 @@ namespace JustEat.Simples.NotificationStack.Messaging.Messages.OrderResolutionRe
 
         public OrderResolutionStatus OrderResolutionStatus { get; private set; }
 
-        protected OrderResolutionRequestedMessage(int orderId, string auditComment, bool notifiyCustomer, OrderResolutionStatus orderResolutionStatus)
+        public bool RemoveFromUnverifiedOrders { get; private set; }
+
+        protected OrderResolutionRequestedMessage(int orderId, string auditComment, bool notifiyCustomer, OrderResolutionStatus orderResolutionStatus, bool removeFromUnverifiedOrders = false)
         {
             OrderResolutionStatus = orderResolutionStatus;
             NotifiyCustomer = notifiyCustomer;
             AuditComment = auditComment;
             OrderId = orderId;
+            RemoveFromUnverifiedOrders = removeFromUnverifiedOrders;
         }
     }
 }
