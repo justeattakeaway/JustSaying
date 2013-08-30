@@ -1,4 +1,5 @@
-﻿using JustEat.Simples.Api.Client;
+﻿using System.IO;
+using JustEat.Simples.Api.Client;
 using JustEat.Simples.Api.Client.Menu;
 using JustEat.Simples.Api.Client.Menu.Models;
 using JustEat.Testing;
@@ -23,7 +24,7 @@ namespace JustEat.Simples.Api.UnitTests.Client.Menu
         {
             var apiSettingsMock = new Mock<IApiSettings>();
 
-            var menuApiMock = new Mock<MenuApi>(apiSettingsMock.Object);
+            var menuApiMock = new Mock<MenuApi>(apiSettingsMock.Object) { CallBase = true };
 
             object[] buildUrlParams = { ItExpr.IsAny<string>(), ItExpr.IsAny<object[]>() };
             menuApiMock.Protected()
