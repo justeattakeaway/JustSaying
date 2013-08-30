@@ -24,7 +24,7 @@ namespace JustEat.Simples.Api.UnitTests.Client.Basket
         {
             var apiSettingsMock = new Mock<IApiSettings>();
 
-            var basketApiMock = new Mock<BasketApi>(apiSettingsMock.Object);
+            var basketApiMock = new Mock<BasketApi>(apiSettingsMock.Object) { CallBase = true };
 
             object[] buildUrlParams = { ItExpr.IsAny<string>(), ItExpr.IsAny<object[]>() };
             basketApiMock.Protected()
