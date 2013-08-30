@@ -63,6 +63,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Client\Basket\WhenGetOrderAddressCalled.cs" />
+    <Compile Include="Client\Basket\WhenGetOrderTimeCalled.cs" />
     <Compile Include="Client\Basket\WhenGetBasketCalled.cs" />
     <Compile Include="Client\Order\WhenRefundCalled.cs" />
     <Compile Include="Client\Menu\WhenGetProductDetailsCalled.cs" />
