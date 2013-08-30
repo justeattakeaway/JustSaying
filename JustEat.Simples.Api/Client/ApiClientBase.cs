@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace JustEat.Simples.Api.Client
 {
@@ -20,9 +22,19 @@ namespace JustEat.Simples.Api.Client
         protected T GetJson<T>(string url, dynamic payload)
         {
             var request = CreateWebRequest(url);
+            request = SetUpWebRequest(request);
 
-            if (payload != null) {
-                var postBody = JsonConvert.SerializeObject(payload);
+            if (payload != null)
+            {
+                var settings = new JsonSerializerSettings();
+
+                if(CamelCasePropertyNames)
+                {
+                    settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                }
+
+                var postBody = JsonConvert.SerializeObject(payload, settings);
+
                 var bytes = Encoding.UTF8.GetBytes(postBody);
 
                 request.ContentType = _apiSettings.ContentType;
@@ -37,9 +49,15 @@ namespace JustEat.Simples.Api.Client
             return Request<T>(request);
         }
 
+        protected virtual bool CamelCasePropertyNames
+        {
+            get { return false; }
+        }
+
         protected T GetJson<T>(string url)
         {
             var request = CreateWebRequest(url);
+            request = SetUpWebRequest(request);
 
             return Request<T>(request);
         }
@@ -83,16 +101,21 @@ namespace JustEat.Simples.Api.Client
 
         protected virtual WebRequest CreateWebRequest(string url)
         {
+            return WebRequest.Create(url);
+        }
+
+        protected virtual WebRequest SetUpWebRequest(WebRequest request)
+        {
             string proxy = _apiSettings.ProxyIapi;
-            var request = WebRequest.Create(url);
+
             if (!string.IsNullOrEmpty(proxy))
                 request.Proxy = new WebProxy(proxy);
 
             request.Headers = new WebHeaderCollection
-                              {
-                                  { HttpRequestHeader.AcceptCharset, _apiSettings.AcceptCharset },
-                                  { HttpRequestHeader.AcceptLanguage, _apiSettings.AcceptLanguage }
-                              };
+            {
+                {HttpRequestHeader.AcceptCharset, _apiSettings.AcceptCharset},
+                {HttpRequestHeader.AcceptLanguage, _apiSettings.AcceptLanguage}
+            };
             return request;
         }
     }
