@@ -12,9 +12,14 @@ namespace JustEat.Simples.Api.Client.Order
             _jeFeatureHeader = jeFeatureHeader;
         }
 
-        protected override WebRequest CreateWebRequest(string url)
+        protected override bool CamelCasePropertyNames
         {
-            var request = base.CreateWebRequest(url);
+            get { return true; }
+        }
+
+        protected override WebRequest SetUpWebRequest(WebRequest request)
+        {
+            request = base.SetUpWebRequest(request);
             request.Headers.Add("X-JE-Feature", _jeFeatureHeader);
             return request;
         }
