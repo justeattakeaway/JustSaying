@@ -44,7 +44,14 @@ namespace JustEat.Simples.NotificationStack.Stack
 
         public void AddNotificationTopicSubscriber(NotificationTopic topic, INotificationSubscriber subscriber)
         {
-            _notificationSubscribers.Add(topic, subscriber);
+            try
+            {
+                _notificationSubscribers.Add(topic, subscriber);
+            }
+            catch (ArgumentException)
+            {
+                throw new ArgumentException("You cannot declare more than one subscriber service for the same topic per component. Topic: {0}", topic.ToString());
+            }
         }
 
         public void AddMessageHandler<T>(NotificationTopic topic, IHandler<T> handler) where T : Message
