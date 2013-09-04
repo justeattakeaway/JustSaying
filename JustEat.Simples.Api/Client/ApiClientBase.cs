@@ -13,6 +13,7 @@ namespace JustEat.Simples.Api.Client
     public abstract class ApiClientBase
     {
         private readonly IApiSettings _apiSettings;
+        private static IEnumerable<HttpStatusCode> _goodResponses = new[] { HttpStatusCode.OK, HttpStatusCode.Accepted };
 
         protected ApiClientBase(IApiSettings apiSettings)
         {
@@ -64,11 +65,12 @@ namespace JustEat.Simples.Api.Client
 
         private T Request<T>(WebRequest request)
         {
+            
             string body;
 
             using (var response = (HttpWebResponse)request.GetResponse())
             {
-                if (response.StatusCode != HttpStatusCode.OK)
+                if (!_goodResponses.Contains(response.StatusCode))
                     throw new Exception(String.Format("Server error (HTTP {0}: {1}).",
                                                       response.StatusCode,
                                                       response.StatusDescription
