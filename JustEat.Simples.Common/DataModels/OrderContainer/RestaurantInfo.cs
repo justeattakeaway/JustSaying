@@ -41,5 +41,9 @@ namespace JustEat.Simples.Common.DataModels.OrderContainer
         /// Restaurant phone number.
         /// </summary>
         public string PhoneNumber { get; set; }
+
+        public string SeoName { get; set; }
+
+        public string LogoUrl { get; set; }
     }
 }
