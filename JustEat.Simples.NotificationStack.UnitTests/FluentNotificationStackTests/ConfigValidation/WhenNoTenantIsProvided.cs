@@ -11,7 +11,6 @@ namespace Stack.UnitTests.FluentNotificationStackTests.ConfigValidation
         protected override void When()
         {
             FluentNotificationStack.Register(
-                Component.OrderEngine,
                 configuration =>
                 {
                     configuration.Environment = "x";
@@ -21,7 +20,13 @@ namespace Stack.UnitTests.FluentNotificationStackTests.ConfigValidation
         [Then]
         public void ConfigItemsAreRequired()
         {
-            Assert.IsInstanceOf<InvalidOperationException>(ThrownException);
+            Assert.IsInstanceOf<ArgumentNullException>(ThrownException);
+        }
+
+        [Then]
+        public void TenantIsRequested()
+        {
+            Assert.AreEqual(((ArgumentException)ThrownException).ParamName, "config.Tenant");
         }
     }
 }

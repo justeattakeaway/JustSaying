@@ -89,7 +89,6 @@
     <Compile Include="Messages\OrderDispatch\OrderRejected.cs" />
     <Compile Include="Messages\OrderDispatch\OrderRejectReason.cs" />
     <Compile Include="Messages\Sms\Enums.cs" />
-    <Compile Include="Component.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

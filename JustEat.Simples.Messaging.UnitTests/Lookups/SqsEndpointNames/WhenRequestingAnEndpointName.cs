@@ -25,7 +25,7 @@ namespace UnitTests.Lookups.SqsEndpointNames
 
         protected override void When()
         {
-            _result = SystemUnderTest.GetLocationName(Component.BoxHandler, NotificationTopic.OrderDispatch);
+            _result = SystemUnderTest.GetLocationName("BoxHandler", NotificationTopic.OrderDispatch);
         }
 
         [Then]

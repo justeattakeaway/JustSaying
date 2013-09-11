@@ -14,7 +14,7 @@ namespace UnitTests.Serialisation.Newtonsoft
         private string _jsonMessage;
         protected override void Given()
         {
-            _messageOut = new CustomerOrderRejectionSms(1, 2, "3", SmsCommunicationActivity.Sent){RaisingComponent = Component.OrderEngine};
+            _messageOut = new CustomerOrderRejectionSms(1, 2, "3", SmsCommunicationActivity.Sent){RaisingComponent = "OrderEngine"};
         }
 
         protected override void When()

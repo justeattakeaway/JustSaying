@@ -11,7 +11,6 @@ namespace JustEat.Simples.NotificationStack.Stack
 {
     public interface INotificationStack : IMessagePublisher
     {
-        Component Component { get; }
         bool Listening { get; }
         void AddNotificationTopicSubscriber(NotificationTopic topic, INotificationSubscriber subscriber);
         void AddMessageHandler<T>(NotificationTopic topic, IHandler<T> handler) where T : Message;
@@ -23,7 +22,6 @@ namespace JustEat.Simples.NotificationStack.Stack
 
     public class NotificationStack : INotificationStack
     {
-        public Component Component { get; private set; }
         public bool Listening { get; private set; }
 
         private readonly Dictionary<NotificationTopic, INotificationSubscriber> _notificationSubscribers;
@@ -31,12 +29,11 @@ namespace JustEat.Simples.NotificationStack.Stack
         public IMessagingConfig Config { get; private set; }
         private static readonly Logger Log = LogManager.GetLogger("EventLog");
 
-        public NotificationStack(Component component, IMessagingConfig config)
+        public NotificationStack(IMessagingConfig config)
         {
             if (config.PublishFailureReAttempts == 0)
                 Log.Warn("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may loose messages!");
 
-            Component = component;
             Config = config;
             _notificationSubscribers = new Dictionary<NotificationTopic, INotificationSubscriber>();
             _messagePublishers = new Dictionary<NotificationTopic, Dictionary<Type, IMessagePublisher>>();

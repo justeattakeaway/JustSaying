@@ -18,8 +18,9 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
         {
             _handler.Handle(Arg.Any<OrderAccepted>()).Returns(true);
 
-            var publisher = JustEat.Simples.NotificationStack.Stack.FluentNotificationStack.Register(Component.OrderEngine, c =>
+            var publisher = JustEat.Simples.NotificationStack.Stack.FluentNotificationStack.Register(c =>
                                                                         {
+                                                                            c.Component = "OrderEngine";
                                                                             c.Tenant = "uk";
                                                                             c.Environment = "integrationTest";
                                                                             c.PublishFailureBackoffMilliseconds = 1;

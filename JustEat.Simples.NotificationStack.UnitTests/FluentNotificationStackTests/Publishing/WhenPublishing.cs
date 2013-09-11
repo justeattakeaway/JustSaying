@@ -9,7 +9,7 @@ namespace Stack.UnitTests.FluentNotificationStackTests.Publishing
 {
     public class WhenPublishing : BehaviourTest<FluentNotificationStack>
     {
-        private const Component RegisterningComponent = Component.OrderEngine;
+        private const string RegisterningComponent = "OrderEngine";
         private readonly Message _message = new OrderAccepted(0, 0, 0);
         private readonly INotificationStack _notificationStack = Substitute.For<INotificationStack>();
 
@@ -20,7 +20,9 @@ namespace Stack.UnitTests.FluentNotificationStackTests.Publishing
 
         protected override void Given()
         {
-            _notificationStack.Component.Returns(RegisterningComponent);
+            var config = Substitute.For<IMessagingConfig>();
+            config.Component.Returns(RegisterningComponent);
+            _notificationStack.Config.Returns(config);
         }
 
         protected override void When()

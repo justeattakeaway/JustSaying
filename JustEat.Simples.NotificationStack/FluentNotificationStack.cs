@@ -25,18 +25,21 @@ namespace JustEat.Simples.NotificationStack.Stack
             SerialisationRegister = serialisationRegister;
         }
 
-        public static FluentNotificationStack Register(Component component, Action<INotificationStackConfiguration> action)
+        public static FluentNotificationStack Register(Action<INotificationStackConfiguration> configuration)
         {
             var config = new MessagingConfig();
-            action.Invoke(config);
+            configuration.Invoke(config);
 
             if (string.IsNullOrWhiteSpace(config.Environment))
-                throw new InvalidOperationException("Cannot have a blank entry for config.Environment");
+                throw new ArgumentNullException("config.Environment", "Cannot have a blank entry for config.Environment");
 
             if (string.IsNullOrWhiteSpace(config.Tenant))
-                throw new InvalidOperationException("Cannot have a blank entry for config.Tenant");
+                throw new ArgumentNullException("config.Tenant", "Cannot have a blank entry for config.Tenant");
 
-            return new FluentNotificationStack(new NotificationStack(component, config), new MessageSerialisationRegister());
+            if (string.IsNullOrWhiteSpace(config.Component))
+                throw new ArgumentNullException("config.Component", "Cannot have a blank entry for config.Component");
+
+            return new FluentNotificationStack(new NotificationStack(config), new MessageSerialisationRegister());
         }
 
         /// <summary>
@@ -46,7 +49,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <param name="config">Configuration items</param>
         /// <returns></returns>
         [Obsolete("Use Register(Component component, Action<INotificationStackConfiguration> action) instead,", false)]
-        public static FluentNotificationStack Register(Component component, IMessagingConfig config)
+        public static FluentNotificationStack Register(IMessagingConfig config)
         {
             if (string.IsNullOrWhiteSpace(config.Environment))
                 throw new InvalidOperationException("Cannot have a blank entry for config.Environment");
@@ -54,7 +57,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             if (string.IsNullOrWhiteSpace(config.Tenant))
                 throw new InvalidOperationException("Cannot have a blank entry for config.Tenant");
 
-            return new FluentNotificationStack(new NotificationStack(component, config), new MessageSerialisationRegister());
+            return new FluentNotificationStack(new NotificationStack(config), new MessageSerialisationRegister());
         }
 
         /// <summary>
@@ -67,7 +70,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         public FluentSubscription WithSqsTopicSubscriber(NotificationTopic topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30)
         {
             var endpointProvider = new SqsSubscribtionEndpointProvider(Stack.Config);
-            var queue = new SqsQueueByName(endpointProvider.GetLocationName(Stack.Component, topic), AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
+            var queue = new SqsQueueByName(endpointProvider.GetLocationName(Stack.Config.Component, topic), AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
             var eventTopic = new SnsTopicByName(new SnsPublishEndpointProvider(Stack.Config).GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), SerialisationRegister);
 
             if (!queue.Exists())
@@ -129,7 +132,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             if (Stack == null)
                 throw new InvalidOperationException("You must register for message publication before publishing a message");
 
-            message.RaisingComponent = Stack.Component;
+            message.RaisingComponent = Stack.Config.Component;
             Stack.Publish(message);
         }
 
@@ -176,6 +179,7 @@ namespace JustEat.Simples.NotificationStack.Stack
 
     public class MessagingConfig : IMessagingConfig, INotificationStackConfiguration
     {
+        public string Component { get; set; }
         public string Tenant { get; set; }
         public string Environment { get; set; }
         public int PublishFailureReAttempts { get; set; }
@@ -184,10 +188,10 @@ namespace JustEat.Simples.NotificationStack.Stack
 
     public interface INotificationStackConfiguration
     {
+        string Component { get; set; }
         string Tenant { get; set; }
         string Environment { get; set; }
         int PublishFailureReAttempts { get; set; }
         int PublishFailureBackoffMilliseconds { get; set; }
     }
-
 }
