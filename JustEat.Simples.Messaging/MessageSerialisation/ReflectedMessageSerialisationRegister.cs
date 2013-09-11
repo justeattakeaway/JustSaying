@@ -6,6 +6,7 @@ using JustEat.Simples.NotificationStack.Messaging.Messages;
 
 namespace JustEat.Simples.NotificationStack.Messaging.MessageSerialisation
 {
+    [Obsolete("No longer loading messages via reflection.", true)]
     public class ReflectedMessageSerialisationRegister : IMessageSerialisationRegister
     {
         private readonly Type _serialiserType = typeof(ServiceStackSerialiser<>); // ToDo: This should be passed in to the fluent stack so that consumers can choose!
