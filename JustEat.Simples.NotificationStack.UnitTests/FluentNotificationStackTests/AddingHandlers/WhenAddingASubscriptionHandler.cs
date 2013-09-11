@@ -13,7 +13,7 @@ namespace Stack.UnitTests.FluentNotificationStackTests.AddingHandlers
         private readonly INotificationStack _stack = Substitute.For<INotificationStack>();
         private readonly IMessageSerialisationRegister _serialisationReg = Substitute.For<IMessageSerialisationRegister>();
         private readonly IHandler<Message> _handler = Substitute.For<IHandler<Message>>();
-        private const NotificationTopic Topic = NotificationTopic.CustomerCommunication;
+        private const string Topic = "CustomerCommunication";
 
         protected override FluentSubscription CreateSystemUnderTest()
         {

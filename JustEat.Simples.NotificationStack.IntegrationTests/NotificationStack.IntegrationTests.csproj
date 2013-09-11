@@ -58,6 +58,7 @@
   <ItemGroup>
     <Compile Include="FluentNotificationStack\Class1.cs" />
     <Compile Include="FluentNotificationStack\WhenAMessageIsPublishedViaSnsToSqsSubscriber.cs" />
+    <Compile Include="FluentNotificationStack\WhenRegisteringAPublisher.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

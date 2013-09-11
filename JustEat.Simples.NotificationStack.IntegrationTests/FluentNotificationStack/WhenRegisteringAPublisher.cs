@@ -1,4 +1,4 @@
-﻿using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
+using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
 using JustEat.Simples.NotificationStack.Stack;
@@ -7,7 +7,7 @@ using NSubstitute;
 
 namespace NotificationStack.IntegrationTests.FluentNotificationStack
 {
-    public class WhenRegisteringASqsMessageHandler : BehaviourTest<JustEat.Simples.NotificationStack.Stack.FluentNotificationStack>
+    public class WhenRegisteringAPublisher : BehaviourTest<JustEat.Simples.NotificationStack.Stack.FluentNotificationStack>
     {
         private readonly INotificationStack _stack = Substitute.For<INotificationStack>();
         private readonly IMessageSerialisationRegister _serialisationReg = Substitute.For<IMessageSerialisationRegister>();
@@ -22,7 +22,13 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
 
         protected override void When()
         {
-            SystemUnderTest.WithSqsTopicSubscriber(Topic, 60).WithMessageHandler<Message>(Substitute.For<IHandler<Message>>());
+            SystemUnderTest.WithSnsMessagePublisher<Message>(Topic);
+        }
+
+        [Then]
+        public void APublisherIsAddedToTheStack()
+        {
+            _stack.Received().AddMessagePublisher<Message>(Topic, Arg.Any<IMessagePublisher>());
         }
 
         [Then]

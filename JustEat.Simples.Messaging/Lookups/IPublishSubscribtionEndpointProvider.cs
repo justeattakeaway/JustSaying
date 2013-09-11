@@ -4,8 +4,8 @@ namespace JustEat.Simples.NotificationStack.Messaging.Lookups
 {
     public interface IPublishSubscribtionEndpointProvider
     {
-        string GetLocationEndpoint(string component, NotificationTopic topic);
-        string GetLocationName(string component, NotificationTopic topic);
+        string GetLocationEndpoint(string component, string topic);
+        string GetLocationName(string component, string topic);
     }
 
     /// <summary>
@@ -20,7 +20,7 @@ namespace JustEat.Simples.NotificationStack.Messaging.Lookups
             _config = config;
         }
 
-        public string GetLocationEndpoint(string component, NotificationTopic topic)
+        public string GetLocationEndpoint(string component, string topic)
         {
             throw new NotImplementedException("Not implemented yet. Come back later");
             //switch (component)
@@ -38,9 +38,9 @@ namespace JustEat.Simples.NotificationStack.Messaging.Lookups
             //throw new IndexOutOfRangeException(string.Format("Cannot map an endpoint for component '{0}' and topic '{1}'", component.ToString(), topic.ToString()));
         }
 
-        public string GetLocationName(string component, NotificationTopic topic)
+        public string GetLocationName(string component, string topic)
         {
-            return String.Join("-", new[] { _config.Tenant, _config.Environment, component, topic.ToString() }).ToLower();
+            return String.Join("-", new[] { _config.Tenant, _config.Environment, component, topic }).ToLower();
         }
     }
 }

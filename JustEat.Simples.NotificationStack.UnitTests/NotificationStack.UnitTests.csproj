@@ -60,6 +60,7 @@
   <ItemGroup>
     <Compile Include="FluentNotificationStackTests\AddingHandlers\WhenAddingASubscriptionHandler.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\BaseConfigValidationTest.cs" />
+    <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoComponentIsProvided.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoEnvironmentIsProvided.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoTenantIsProvided.cs" />
     <Compile Include="FluentNotificationStackTests\Publishing\WhenPublishing.cs" />

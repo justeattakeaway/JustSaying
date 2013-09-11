@@ -1,4 +1,3 @@
-using System;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Testing;
 using NSubstitute;
@@ -23,9 +22,9 @@ namespace Stack.UnitTests.NotificationStack
 
         protected override void When()
         {
-            SystemUnderTest.AddNotificationTopicSubscriber(NotificationTopic.OrderDispatch, _subscriber);
-            SystemUnderTest.AddMessageHandler(NotificationTopic.OrderDispatch, _handler1);
-            SystemUnderTest.AddMessageHandler(NotificationTopic.OrderDispatch, _handler2);
+            SystemUnderTest.AddNotificationTopicSubscriber("OrderDispatch", _subscriber);
+            SystemUnderTest.AddMessageHandler("OrderDispatch", _handler1);
+            SystemUnderTest.AddMessageHandler("OrderDispatch", _handler2);
             SystemUnderTest.Start();
         }
 

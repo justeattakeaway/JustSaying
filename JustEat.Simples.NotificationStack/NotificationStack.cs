@@ -12,9 +12,9 @@ namespace JustEat.Simples.NotificationStack.Stack
     public interface INotificationStack : IMessagePublisher
     {
         bool Listening { get; }
-        void AddNotificationTopicSubscriber(NotificationTopic topic, INotificationSubscriber subscriber);
-        void AddMessageHandler<T>(NotificationTopic topic, IHandler<T> handler) where T : Message;
-        void AddMessagePublisher<T>(NotificationTopic topic, IMessagePublisher messagePublisher) where T : Message;
+        void AddNotificationTopicSubscriber(string topic, INotificationSubscriber subscriber);
+        void AddMessageHandler<T>(string topic, IHandler<T> handler) where T : Message;
+        void AddMessagePublisher<T>(string topic, IMessagePublisher messagePublisher) where T : Message;
         void Start();
         void Stop();
         IMessagingConfig Config { get; }
@@ -24,8 +24,8 @@ namespace JustEat.Simples.NotificationStack.Stack
     {
         public bool Listening { get; private set; }
 
-        private readonly Dictionary<NotificationTopic, INotificationSubscriber> _notificationSubscribers;
-        private readonly Dictionary<NotificationTopic, Dictionary<Type, IMessagePublisher>> _messagePublishers;
+        private readonly Dictionary<string, INotificationSubscriber> _notificationSubscribers;
+        private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _messagePublishers;
         public IMessagingConfig Config { get; private set; }
         private static readonly Logger Log = LogManager.GetLogger("EventLog");
 
@@ -35,12 +35,15 @@ namespace JustEat.Simples.NotificationStack.Stack
                 Log.Warn("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may loose messages!");
 
             Config = config;
-            _notificationSubscribers = new Dictionary<NotificationTopic, INotificationSubscriber>();
-            _messagePublishers = new Dictionary<NotificationTopic, Dictionary<Type, IMessagePublisher>>();
+            _notificationSubscribers = new Dictionary<string, INotificationSubscriber>();
+            _messagePublishers = new Dictionary<string, Dictionary<Type, IMessagePublisher>>();
         }
 
-        public void AddNotificationTopicSubscriber(NotificationTopic topic, INotificationSubscriber subscriber)
+        public void AddNotificationTopicSubscriber(string topic, INotificationSubscriber subscriber)
         {
+            if (string.IsNullOrWhiteSpace(topic))
+                throw new ArgumentNullException("topic");
+
             try
             {
                 _notificationSubscribers.Add(topic, subscriber);
@@ -51,13 +54,19 @@ namespace JustEat.Simples.NotificationStack.Stack
             }
         }
 
-        public void AddMessageHandler<T>(NotificationTopic topic, IHandler<T> handler) where T : Message
+        public void AddMessageHandler<T>(string topic, IHandler<T> handler) where T : Message
         {
+            if (string.IsNullOrWhiteSpace(topic))
+                throw new ArgumentNullException("topic");
+
             _notificationSubscribers[topic].AddMessageHandler(handler);
         }
 
-        public void AddMessagePublisher<T>(NotificationTopic topic, IMessagePublisher messagePublisher) where T : Message
+        public void AddMessagePublisher<T>(string topic, IMessagePublisher messagePublisher) where T : Message
         {
+            if (string.IsNullOrWhiteSpace(topic))
+                throw new ArgumentNullException("topic");
+
             if (! _messagePublishers.ContainsKey(topic))
                 _messagePublishers.Add(topic, new Dictionary<Type, IMessagePublisher>());
 

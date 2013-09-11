@@ -67,7 +67,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <param name="messageRetentionSeconds">Time messages should be kept in this queue</param>
         /// <param name="visibilityTimeoutSeconds">Seconds message should be invisible to other other receiving components</param>
         /// <returns></returns>
-        public FluentSubscription WithSqsTopicSubscriber(NotificationTopic topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30)
+        public FluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30)
         {
             var endpointProvider = new SqsSubscribtionEndpointProvider(Stack.Config);
             var queue = new SqsQueueByName(endpointProvider.GetLocationName(Stack.Config.Component, topic), AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
@@ -93,7 +93,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <typeparam name="T"></typeparam>
         /// <param name="topic"></param>
         /// <returns></returns>
-        public FluentNotificationStack WithSnsMessagePublisher<T>(NotificationTopic topic) where T : Message
+        public FluentNotificationStack WithSnsMessagePublisher<T>(string topic) where T : Message
         {
             var endpointProvider = new SnsPublishEndpointProvider(Stack.Config);
             var eventPublisher = new SnsTopicByName(endpointProvider.GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), SerialisationRegister);
@@ -144,9 +144,9 @@ namespace JustEat.Simples.NotificationStack.Stack
 
     public class FluentSubscription : FluentNotificationStack
     {
-        private readonly NotificationTopic _topic;
+        private readonly string _topic;
 
-        public FluentSubscription(INotificationStack stack, IMessageSerialisationRegister serialisationRegister, NotificationTopic topic)
+        public FluentSubscription(INotificationStack stack, IMessageSerialisationRegister serialisationRegister, string topic)
             : base(stack, serialisationRegister)
         {
             _topic = topic;

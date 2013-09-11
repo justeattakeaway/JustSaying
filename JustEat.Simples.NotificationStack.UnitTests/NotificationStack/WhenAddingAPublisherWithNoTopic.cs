@@ -1,11 +1,13 @@
+using System;
 using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.Messages.OrderDispatch;
 using JustEat.Testing;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace Stack.UnitTests.NotificationStack
 {
-    public class WhenRegisteringTheSamePublisherTwice : NotificationStackBaseTest
+    public class WhenAddingAPublisherWithNoTopic : NotificationStackBaseTest
     {
         protected override void Given()
         {
@@ -14,14 +16,13 @@ namespace Stack.UnitTests.NotificationStack
 
         protected override void When()
         {
-            SystemUnderTest.AddMessagePublisher<OrderAccepted>("OrderDispatch", null);
-            SystemUnderTest.AddMessagePublisher<OrderAccepted>("OrderDispatch", null);
+            SystemUnderTest.AddMessagePublisher<OrderAccepted>(" ", Substitute.For<IMessagePublisher>());
         }
 
         [Then]
-        public void AnExceptionIsThrown()
+        public void ArgExceptionThrown()
         {
-            Assert.NotNull(ThrownException);
+            Assert.AreEqual(((ArgumentException)ThrownException).ParamName, "topic");
         }
     }
 }
