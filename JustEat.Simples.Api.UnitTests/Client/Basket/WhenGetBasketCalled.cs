@@ -119,12 +119,14 @@ namespace JustEat.Simples.Api.UnitTests.Client.Basket
             "           \"ProductTypeId\" : 89" +
             "       }" +
             "   ]," +
+            "   \"Discounts\" : [" +
+            "{\"Id\":560,\"Discount\":15.85,\"DiscountType\":\"Percent\",\"QualifyingValue\":10.00}]," + 
             "   \"MenuId\" : 83177," +
             "   \"ToSpend\" : 0.0," +
             "   \"MultiBuyDiscount\" : 1.0," +
-            "   \"Discount\" : 0.0," +
+            "   \"Discount\" : 15.85," +
             "   \"DeliveryCharge\" : 2.0," +
-            "   \"Total\" : 158.58," +
+            "   \"Total\" : 142.73," +
             "   \"Orderable\" : true," +
             "   \"ServiceType\" : \"Delivery\"," +
             "   \"RestaurantId\" : 24310" +

@@ -54,6 +54,7 @@
     <Compile Include="Client\ApiSettings.cs" />
     <Compile Include="Client\Basket\BasketApi.cs" />
     <Compile Include="Client\Basket\IBasketApi.cs" />
+    <Compile Include="Client\Basket\Models\OfferDetails.cs" />
     <Compile Include="Client\Basket\Models\OptionalAccessory.cs" />
     <Compile Include="Client\Basket\Models\OrderAddress.cs" />
     <Compile Include="Client\Basket\Models\OrderTime.cs" />

@@ -12,6 +12,8 @@ namespace JustEat.Simples.Api.Client.Basket.Models
 
         public IList<OrderItemView> OrderItems { get; set; }
 
+        public IEnumerable<OfferDetails> Discounts { get; set; }
+
         public int MenuId { get; set; }
 
         public decimal ToSpend { get; set; }
