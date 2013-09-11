@@ -1,5 +1,5 @@
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
-using JustEat.Simples.NotificationStack.Messaging.Messages.CustomerCommunication;
+using JustEat.Simples.NotificationStack.Messaging.Messages;
 using JustEat.Testing;
 using NSubstitute;
 using NUnit.Framework;
@@ -15,8 +15,8 @@ namespace UnitTests.Serialisation.SerialisationRegister
 
         protected override void When()
         {
-            SystemUnderTest.AddSerialiser<CustomerOrderRejectionSms>(Substitute.For<IMessageSerialiser<CustomerOrderRejectionSms>>());
-            SystemUnderTest.AddSerialiser<CustomerOrderRejectionSms>(Substitute.For<IMessageSerialiser<CustomerOrderRejectionSms>>());
+            SystemUnderTest.AddSerialiser<Message>(Substitute.For<IMessageSerialiser<Message>>());
+            SystemUnderTest.AddSerialiser<Message>(Substitute.For<IMessageSerialiser<Message>>());
         }
 
         [Then]
@@ -28,7 +28,7 @@ namespace UnitTests.Serialisation.SerialisationRegister
         [Then]
         public void TheMappingContainsTheSerialiser()
         {
-            Assert.NotNull(SystemUnderTest.GetSerialiser(typeof(CustomerOrderRejectionSms).Name));
+            Assert.NotNull(SystemUnderTest.GetSerialiser(typeof(Message).Name));
         }
     }
 }

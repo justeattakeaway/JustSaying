@@ -4,15 +4,13 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{899CD315-37B3-46D0-B2DC-FB94C552D968}</ProjectGuid>
+    <ProjectGuid>{26E0A5AC-EE6E-4C82-A859-35964C3FFB94}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>JustEat.Simples.NotificationStack.Messaging</RootNamespace>
-    <AssemblyName>JustEat.Simples.NotificationStack.Messaging</AssemblyName>
+    <RootNamespace>Tests.MessageStubs</RootNamespace>
+    <AssemblyName>Tests.MessageStubs</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
-    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -32,12 +30,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.5.0.6\lib\net40\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.Text">
-      <HintPath>..\packages\ServiceStack.Text.3.9.56\lib\net35\ServiceStack.Text.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -47,33 +39,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IMessagePublisher.cs" />
-    <Compile Include="IMessagingConfig.cs" />
-    <Compile Include="INotificationSubscriber.cs" />
-    <Compile Include="Lookups\IPublishEndpointProvider.cs" />
-    <Compile Include="Lookups\IPublishSubscribtionEndpointProvider.cs" />
-    <Compile Include="MessageHandling\DelegateAdjuster.cs" />
-    <Compile Include="MessageHandling\IHandler.cs" />
-    <Compile Include="MessageSerialisation\IMessageSerialisationRegister.cs" />
-    <Compile Include="MessageSerialisation\IMessageSerialiser.cs" />
-    <Compile Include="MessageSerialisation\MessageSerialisationRegister.cs" />
-    <Compile Include="MessageSerialisation\NewtonsoftSerialiser.cs" />
-    <Compile Include="MessageSerialisation\ReflectedMessageSerialisationRegister.cs" />
-    <Compile Include="MessageSerialisation\ServiceStackSerialiser.cs" />
-    <Compile Include="Messages\Message.cs" />
+    <Compile Include="MessageStubs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <ProjectReference Include="..\JustEat.Simples.Messaging\Messaging.csproj">
+      <Project>{899CD315-37B3-46D0-B2DC-FB94C552D968}</Project>
+      <Name>Messaging</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Target Name="BeforeBuild" Condition="!Exists('Properties\AssemblyInfo.cs')">
-    <Exec Command="bundle exec rake bootstrap" WorkingDirectory="..\" />
-  </Target>
-  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
 </Project>

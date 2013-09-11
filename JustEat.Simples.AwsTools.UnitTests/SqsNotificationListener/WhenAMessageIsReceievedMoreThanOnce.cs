@@ -1,8 +1,7 @@
 using System;
 using System.Threading;
 using Amazon.SQS.Model;
-using JustEat.Simples.NotificationStack.Messaging.Messages.CustomerCommunication;
-using JustEat.Simples.NotificationStack.Messaging.Messages.Sms;
+using AwsTools.UnitTests.MessageStubs;
 using JustEat.Testing;
 using NSubstitute;
 
@@ -16,7 +15,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected override void Given()
         {
             _messageId = Guid.NewGuid();
-            DeserialisedMessage = new CustomerOrderRejectionSms(1, 2, "3", SmsCommunicationActivity.ConfirmedReceived){Id = _messageId};
+            DeserialisedMessage = new GenericMessage { Id = _messageId };
             Serialiser.Deserialise(Arg.Any<string>()).Returns(x => DeserialisedMessage);
             SerialisationRegister.GetSerialiser(Arg.Any<string>()).Returns(Serialiser);
             
@@ -34,7 +33,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         [Then]
         public void MessageIsNotReceivedAgain()
         {
-            Handler.DidNotReceive().Handle(Arg.Any<CustomerOrderRejectionSms>());
+            Handler.DidNotReceive().Handle(Arg.Any<GenericMessage>());
         }
     }
 }

@@ -4,8 +4,8 @@ namespace JustEat.Simples.NotificationStack.Messaging.Lookups
 {
     public interface IPublishEndpointProvider
     {
-        string GetLocationEndpoint(NotificationTopic location);
-        string GetLocationName(NotificationTopic location);
+        string GetLocationEndpoint(string location);
+        string GetLocationName(string location);
     }
 
     public class SnsPublishEndpointProvider : IPublishEndpointProvider
@@ -17,25 +17,25 @@ namespace JustEat.Simples.NotificationStack.Messaging.Lookups
             _config = config;
         }
 
-        public string GetLocationEndpoint(NotificationTopic location)
+        public string GetLocationEndpoint(string location)
         {
             throw new NotImplementedException("Not implemented yet. Come back later");
-            // Eventually this should come from the Settings API (having been published somewhere by the create process).
-            switch (location)
-            {
-                case NotificationTopic.OrderDispatch:
-                    return "arn:aws:sns:eu-west-1:507204202721:uk-qa12-order-dispatch";
+            //// Eventually this should come from the Settings API (having been published somewhere by the create process).
+            //switch (location)
+            //{
+            //    case NotificationTopic.OrderDispatch:
+            //        return "arn:aws:sns:eu-west-1:507204202721:uk-qa12-order-dispatch";
 
-                case NotificationTopic.CustomerCommunication:
-                    return "arn:aws:sns:eu-west-1:507204202721:uk-qa12-customer-order-communication";
-            } 
+            //    case NotificationTopic.CustomerCommunication:
+            //        return "arn:aws:sns:eu-west-1:507204202721:uk-qa12-customer-order-communication";
+            //} 
 
-            throw new IndexOutOfRangeException("There is no endpoint defined for the provided location type");
+            //throw new IndexOutOfRangeException("There is no endpoint defined for the provided location type");
         }
 
-        public string GetLocationName(NotificationTopic location)
+        public string GetLocationName(string location)
         {
-            return String.Join("-", new[] { _config.Tenant, _config.Environment, location.ToString() }).ToLower();
+            return String.Join("-", new[] { _config.Tenant, _config.Environment, location }).ToLower();
         }
     }
 }

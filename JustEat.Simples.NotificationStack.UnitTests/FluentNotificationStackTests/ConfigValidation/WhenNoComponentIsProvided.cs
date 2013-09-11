@@ -1,32 +1,32 @@
 using System;
-using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Stack;
 using JustEat.Testing;
 using NUnit.Framework;
 
 namespace Stack.UnitTests.FluentNotificationStackTests.ConfigValidation
 {
-    public class WhenNoEnvironmentIsProvided : BaseConfigValidationTest
+    public class WhenNoComponentIsProvided : BaseConfigValidationTest
     {
         protected override void When()
         {
             FluentNotificationStack.Register(
                 configuration =>
-                {
-                    configuration.Tenant = "x";
-                });
+                    {
+                        configuration.Environment = "x";
+                        configuration.Tenant = "y";
+                    });
         }
 
         [Then]
         public void ConfigItemsAreRequired()
         {
-            Assert.IsInstanceOf<ArgumentException>(ThrownException);
+            Assert.IsInstanceOf<ArgumentNullException>(ThrownException);
         }
 
         [Then]
-        public void EnvironmentIsRequested()
+        public void ComponentIsRequested()
         {
-            Assert.AreEqual(((ArgumentException)ThrownException).ParamName, "config.Environment");
+            Assert.AreEqual(((ArgumentException)ThrownException).ParamName, "config.Component");
         }
     }
 }

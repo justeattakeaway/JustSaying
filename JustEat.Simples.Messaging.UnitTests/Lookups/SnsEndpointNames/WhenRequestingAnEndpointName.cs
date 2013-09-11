@@ -25,7 +25,7 @@ namespace UnitTests.Lookups.SnsEndpointNames
 
         protected override void When()
         {
-            _result = SystemUnderTest.GetLocationName(NotificationTopic.OrderDispatch);
+            _result = SystemUnderTest.GetLocationName("OrderDispatch");
         }
 
         [Then]

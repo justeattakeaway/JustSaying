@@ -1,38 +1,36 @@
-﻿using JustEat.Simples.NotificationStack.Messaging;
-using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
+using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
 using JustEat.Simples.NotificationStack.Stack;
 using JustEat.Testing;
 using NSubstitute;
 
-namespace Stack.UnitTests.FluentNotificationStackTests.AddingHandlers
+namespace NotificationStack.IntegrationTests.FluentNotificationStack
 {
-    public class WhenAddingASubscriptionHandler : BehaviourTest<FluentSubscription>
+    public class WhenRegisteringAPublisher : BehaviourTest<JustEat.Simples.NotificationStack.Stack.FluentNotificationStack>
     {
         private readonly INotificationStack _stack = Substitute.For<INotificationStack>();
         private readonly IMessageSerialisationRegister _serialisationReg = Substitute.For<IMessageSerialisationRegister>();
-        private readonly IHandler<Message> _handler = Substitute.For<IHandler<Message>>();
         private const string Topic = "CustomerCommunication";
 
-        protected override FluentSubscription CreateSystemUnderTest()
+        protected override JustEat.Simples.NotificationStack.Stack.FluentNotificationStack CreateSystemUnderTest()
         {
             return new FluentSubscription(_stack, _serialisationReg, Topic);
         }
 
-        protected override void Given(){}
+        protected override void Given() { }
 
         protected override void When()
         {
-            SystemUnderTest.WithMessageHandler(_handler);
+            SystemUnderTest.WithSnsMessagePublisher<Message>(Topic);
         }
 
         [Then]
-        public void HandlerIsAddedToStack()
+        public void APublisherIsAddedToTheStack()
         {
-            _stack.Received().AddMessageHandler(Topic, _handler);
+            _stack.Received().AddMessagePublisher<Message>(Topic, Arg.Any<IMessagePublisher>());
         }
-        
+
         [Then]
         public void SerialisationIsRegisteredForMessage()
         {

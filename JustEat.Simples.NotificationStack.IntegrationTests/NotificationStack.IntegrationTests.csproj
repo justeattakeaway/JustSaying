@@ -56,8 +56,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FluentNotificationStack\Class1.cs" />
+    <Compile Include="FluentNotificationStack\WhenRegisteringASqsMessageHandler.cs" />
     <Compile Include="FluentNotificationStack\WhenAMessageIsPublishedViaSnsToSqsSubscriber.cs" />
+    <Compile Include="FluentNotificationStack\WhenRegisteringAPublisher.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -71,6 +72,10 @@
     <ProjectReference Include="..\JustEat.Simples.NotificationStack\NotificationStack.csproj">
       <Project>{A36B7ECF-A2AA-44CC-9538-7BC28BDDE4E0}</Project>
       <Name>NotificationStack</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Tests.MessageStubs\Tests.MessageStubs.csproj">
+      <Project>{26E0A5AC-EE6E-4C82-A859-35964C3FFB94}</Project>
+      <Name>Tests.MessageStubs</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

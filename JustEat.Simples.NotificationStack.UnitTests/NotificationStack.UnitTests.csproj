@@ -60,16 +60,22 @@
   <ItemGroup>
     <Compile Include="FluentNotificationStackTests\AddingHandlers\WhenAddingASubscriptionHandler.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\BaseConfigValidationTest.cs" />
+    <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoComponentIsProvided.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoEnvironmentIsProvided.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoTenantIsProvided.cs" />
     <Compile Include="FluentNotificationStackTests\Publishing\WhenPublishing.cs" />
     <Compile Include="FluentNotificationStackTests\Publishing\WhenPublishingAndNotInstantiated.cs" />
     <Compile Include="NotificationStack\NotificationStackBaseTest.cs" />
+    <Compile Include="NotificationStack\WhenAddingAPublisherWithNoTopic.cs" />
+    <Compile Include="NotificationStack\WhenPublishingFails.cs" />
+    <Compile Include="NotificationStack\WhenRegisteringMessageHandlersAndNotPassingTopic.cs" />
+    <Compile Include="NotificationStack\WhenSubscribingAndNotPassingATopic.cs" />
     <Compile Include="NotificationStack\WhenPublishingWithoutRegistering.cs" />
     <Compile Include="NotificationStack\WhenRegisteringMessageHandlers.cs" />
     <Compile Include="NotificationStack\WhenRegisteringPublishers.cs" />
     <Compile Include="NotificationStack\WhenRegisteringSubscribers.cs" />
     <Compile Include="NotificationStack\WhenRegisteringTheSamePublisherTwice.cs" />
+    <Compile Include="NotificationStack\WhenStartingThenStopping.cs" />
     <Compile Include="NotificationStack\WhenStopping.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -81,6 +87,10 @@
     <ProjectReference Include="..\JustEat.Simples.NotificationStack\NotificationStack.csproj">
       <Project>{a36b7ecf-a2aa-44cc-9538-7bc28bdde4e0}</Project>
       <Name>NotificationStack</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Tests.MessageStubs\Tests.MessageStubs.csproj">
+      <Project>{26E0A5AC-EE6E-4C82-A859-35964C3FFB94}</Project>
+      <Name>Tests.MessageStubs</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

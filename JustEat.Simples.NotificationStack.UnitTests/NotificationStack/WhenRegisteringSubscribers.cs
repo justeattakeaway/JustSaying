@@ -18,8 +18,8 @@ namespace Stack.UnitTests.NotificationStack
 
         protected override void When()
         {
-            SystemUnderTest.AddNotificationTopicSubscriber(NotificationTopic.OrderDispatch, _subscriber1);
-            SystemUnderTest.AddNotificationTopicSubscriber(NotificationTopic.CustomerCommunication, _subscriber2);
+            SystemUnderTest.AddNotificationTopicSubscriber("OrderDispatch", _subscriber1);
+            SystemUnderTest.AddNotificationTopicSubscriber("CustomerCommunication", _subscriber2);
             SystemUnderTest.Start();
         }
 
