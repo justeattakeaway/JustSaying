@@ -61,6 +61,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Class1.cs" />
     <Compile Include="DynamoDbStoreIntregrationTests.cs" />
     <Compile Include="SqsNotificationListener\WhenListeningStartsAndStops.cs" />
     <Compile Include="SqsQueueIntegrationTests.cs" />

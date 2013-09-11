@@ -1,22 +1,22 @@
 ﻿using System.Threading;
-using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
-using JustEat.Simples.NotificationStack.Messaging.Messages.OrderDispatch;
+using JustEat.Simples.NotificationStack.Messaging.Messages;
 using NSubstitute;
 using NUnit.Framework;
+using Tests.MessageStubs;
 
 namespace NotificationStack.IntegrationTests.FluentNotificationStack
 {
     [TestFixture]
     public class WhenAMessageIsPublishedViaSnsToSqsSubscriber
     {
-        private readonly IHandler<OrderAccepted> _handler = Substitute.For<IHandler<OrderAccepted>>();
+        private readonly IHandler<GenericMessage> _handler = Substitute.For<IHandler<GenericMessage>>();
         private JustEat.Simples.NotificationStack.Stack.FluentNotificationStack _publisher;
 
         [SetUp]
         public void Given()
         {
-            _handler.Handle(Arg.Any<OrderAccepted>()).Returns(true);
+            _handler.Handle(Arg.Any<GenericMessage>()).Returns(true);
 
             var publisher = JustEat.Simples.NotificationStack.Stack.FluentNotificationStack.Register(c =>
                                                                         {
@@ -26,7 +26,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
                                                                             c.PublishFailureBackoffMilliseconds = 1;
                                                                             c.PublishFailureReAttempts = 3;
                                                                         })
-                .WithSnsMessagePublisher<OrderAccepted>("CustomerCommunication")
+                .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
                 .WithSqsTopicSubscriber("CustomerCommunication", 60)
                 .WithMessageHandler(_handler);
 
@@ -37,9 +37,9 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
         [Test]
         public void ThenItGetsHandled()
         {
-            _publisher.Publish(new OrderAccepted(1, 2, 3));
+            _publisher.Publish(new GenericMessage());
             Thread.Sleep(500);
-            _handler.Received().Handle(Arg.Any<OrderAccepted>());
+            _handler.Received().Handle(Arg.Any<GenericMessage>());
         }
 
         [TearDown]

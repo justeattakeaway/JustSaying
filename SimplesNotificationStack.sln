@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AwsTools.UnitTests", "JustE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationStack.IntegrationTests", "JustEat.Simples.NotificationStack.IntegrationTests\NotificationStack.IntegrationTests.csproj", "{A21D19BF-487E-4AB7-8F81-E7E4D659AACD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.MessageStubs", "Tests.MessageStubs\Tests.MessageStubs.csproj", "{26E0A5AC-EE6E-4C82-A859-35964C3FFB94}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +51,10 @@ Global
 		{A21D19BF-487E-4AB7-8F81-E7E4D659AACD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A21D19BF-487E-4AB7-8F81-E7E4D659AACD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A21D19BF-487E-4AB7-8F81-E7E4D659AACD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26E0A5AC-EE6E-4C82-A859-35964C3FFB94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26E0A5AC-EE6E-4C82-A859-35964C3FFB94}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26E0A5AC-EE6E-4C82-A859-35964C3FFB94}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26E0A5AC-EE6E-4C82-A859-35964C3FFB94}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

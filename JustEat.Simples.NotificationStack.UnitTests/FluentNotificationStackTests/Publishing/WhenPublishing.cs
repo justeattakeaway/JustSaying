@@ -1,16 +1,16 @@
 using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
-using JustEat.Simples.NotificationStack.Messaging.Messages.OrderDispatch;
 using JustEat.Simples.NotificationStack.Stack;
 using JustEat.Testing;
 using NSubstitute;
+using Tests.MessageStubs;
 
 namespace Stack.UnitTests.FluentNotificationStackTests.Publishing
 {
     public class WhenPublishing : BehaviourTest<FluentNotificationStack>
     {
         private const string RegisterningComponent = "OrderEngine";
-        private readonly Message _message = new OrderAccepted(0, 0, 0);
+        private readonly Message _message = new GenericMessage();
         private readonly INotificationStack _notificationStack = Substitute.For<INotificationStack>();
 
         protected override FluentNotificationStack CreateSystemUnderTest()

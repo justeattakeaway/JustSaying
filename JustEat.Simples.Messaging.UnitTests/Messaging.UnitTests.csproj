@@ -75,6 +75,10 @@
       <Project>{899cd315-37b3-46d0-b2dc-fb94c552d968}</Project>
       <Name>Messaging</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Tests.MessageStubs\Tests.MessageStubs.csproj">
+      <Project>{26E0A5AC-EE6E-4C82-A859-35964C3FFB94}</Project>
+      <Name>Tests.MessageStubs</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

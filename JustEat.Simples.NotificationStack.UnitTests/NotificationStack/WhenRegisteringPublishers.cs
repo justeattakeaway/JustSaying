@@ -1,8 +1,9 @@
 using System.Threading;
 using JustEat.Simples.NotificationStack.Messaging;
-using JustEat.Simples.NotificationStack.Messaging.Messages.OrderDispatch;
+using JustEat.Simples.NotificationStack.Messaging.Messages;
 using JustEat.Testing;
 using NSubstitute;
+using Tests.MessageStubs;
 
 namespace Stack.UnitTests.NotificationStack
 {
@@ -21,8 +22,8 @@ namespace Stack.UnitTests.NotificationStack
             SystemUnderTest.AddMessagePublisher<OrderRejected>("OrderDispatch", _publisher);
             SystemUnderTest.AddMessagePublisher<OrderRejected>("CustomerCommunication", _publisher);
 
-            SystemUnderTest.Publish(new OrderAccepted(0, 0, 0));
-            SystemUnderTest.Publish(new OrderRejected(0, 0, 0, OrderRejectReason.TooBusy));
+            SystemUnderTest.Publish(new OrderAccepted());
+            SystemUnderTest.Publish(new OrderRejected());
 
             Thread.Sleep(10);
         }

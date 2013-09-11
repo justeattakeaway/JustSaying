@@ -1,6 +1,6 @@
-﻿using NUnit.Framework;
+﻿using JustEat.Simples.NotificationStack.Messaging.Messages;
+using NUnit.Framework;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
-using JustEat.Simples.NotificationStack.Messaging.Messages.CustomerCommunication;
 
 namespace UnitTests.Serialisation.ReflectedSerialisationRegister
 {
@@ -12,7 +12,7 @@ namespace UnitTests.Serialisation.ReflectedSerialisationRegister
         {
             var target = new ReflectedMessageSerialisationRegister();
             
-            Assert.NotNull(target.GetSerialiser(typeof(CustomerOrderRejectionSms).Name));
+            Assert.NotNull(target.GetSerialiser(typeof(Message).Name));
         }
 
         [Test]
@@ -20,7 +20,7 @@ namespace UnitTests.Serialisation.ReflectedSerialisationRegister
         {
             var target = new ReflectedMessageSerialisationRegister();
 
-            Assert.NotNull(target.GetSerialiser(typeof(CustomerOrderRejectionSms)));
+            Assert.NotNull(target.GetSerialiser(typeof(Message)));
         }
     }
 }

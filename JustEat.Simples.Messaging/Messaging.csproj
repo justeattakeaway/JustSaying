@@ -60,34 +60,7 @@
     <Compile Include="MessageSerialisation\NewtonsoftSerialiser.cs" />
     <Compile Include="MessageSerialisation\ReflectedMessageSerialisationRegister.cs" />
     <Compile Include="MessageSerialisation\ServiceStackSerialiser.cs" />
-    <Compile Include="Messages\OrderFulfilmentStatus\Canceled.cs" />
-    <Compile Include="Messages\OrderFulfilmentStatus\RequiresManualIntervention.cs" />
-    <Compile Include="Messages\OrderFulfilmentStatus\Accepted.cs" />
-    <Compile Include="Messages\OrderFulfilmentStatus\ResolvedOrderBase.cs" />
-    <Compile Include="Messages\OrderPlacement\LegacyOrderViewsCreated.cs" />
-    <Compile Include="Messages\OrderPlacement\PreDispatchValidationFailed.cs" />
-    <Compile Include="Messages\OrderPlacement\OrderPlaced.cs" />
-    <Compile Include="Messages\OrderPlacement\OrderPlacementRequested.cs" />
-    <Compile Include="Messages\OrderPlacement\PreDispatchValidationPassed.cs" />
-    <Compile Include="Messages\OrderPlacement\PaymentComplete.cs" />
-    <Compile Include="Messages\OrderPlacement\PreDispatchValidationFailureReason.cs" />
-    <Compile Include="Messages\OrderResolutionRequested\OrderAcceptedResolutionRequested.cs" />
-    <Compile Include="Messages\OrderResolutionRequested\OrderCancelledResolutionRequested.cs" />
-    <Compile Include="Messages\OrderResolutionRequested\OrderResolutionRequestedMessage.cs" />
-    <Compile Include="Messages\OrderResolutionStatus.cs" />
-    <Compile Include="Messages\OrderResolutionStatusGroups.cs" />
-    <Compile Include="Messages\OrderResolved\OrderResolvedAndAccepted.cs" />
-    <Compile Include="Messages\OrderResolved\OrderResolvedAndCancelled.cs" />
-    <Compile Include="Messages\OrderResolved\OrderResolvedMessage.cs" />
-    <Compile Include="Messages\CustomerCommunication\CustomerOrderRejectionSms.cs" />
-    <Compile Include="Messages\CustomerCommunication\CustomerOrderRejectionSmsFailed.cs" />
     <Compile Include="Messages\Message.cs" />
-    <Compile Include="Messages\OrderDispatch\OrderAccepted.cs" />
-    <Compile Include="Messages\OrderDispatch\OrderAlternateTimeSuggested.cs" />
-    <Compile Include="Messages\OrderDispatch\OrderMessage.cs" />
-    <Compile Include="Messages\OrderDispatch\OrderRejected.cs" />
-    <Compile Include="Messages\OrderDispatch\OrderRejectReason.cs" />
-    <Compile Include="Messages\Sms\Enums.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

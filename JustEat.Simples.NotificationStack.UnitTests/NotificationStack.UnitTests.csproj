@@ -88,6 +88,10 @@
       <Project>{a36b7ecf-a2aa-44cc-9538-7bc28bdde4e0}</Project>
       <Name>NotificationStack</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Tests.MessageStubs\Tests.MessageStubs.csproj">
+      <Project>{26E0A5AC-EE6E-4C82-A859-35964C3FFB94}</Project>
+      <Name>Tests.MessageStubs</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -1,9 +1,9 @@
 using System;
 using JustEat.Simples.NotificationStack.Messaging;
-using JustEat.Simples.NotificationStack.Messaging.Messages.OrderDispatch;
 using JustEat.Testing;
 using NSubstitute;
 using NUnit.Framework;
+using Tests.MessageStubs;
 
 namespace Stack.UnitTests.NotificationStack
 {
@@ -16,7 +16,7 @@ namespace Stack.UnitTests.NotificationStack
 
         protected override void When()
         {
-            SystemUnderTest.AddMessagePublisher<OrderAccepted>(" ", Substitute.For<IMessagePublisher>());
+            SystemUnderTest.AddMessagePublisher<GenericMessage>(" ", Substitute.For<IMessagePublisher>());
         }
 
         [Then]

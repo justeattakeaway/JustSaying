@@ -2,9 +2,9 @@ using System;
 using System.Threading;
 using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
-using JustEat.Simples.NotificationStack.Messaging.Messages.OrderDispatch;
 using JustEat.Testing;
 using NSubstitute;
+using Tests.MessageStubs;
 
 namespace Stack.UnitTests.NotificationStack
 {
@@ -23,16 +23,16 @@ namespace Stack.UnitTests.NotificationStack
 
         protected override void When()
         {
-            SystemUnderTest.AddMessagePublisher<OrderAccepted>("OrderDispatch", _publisher);
+            SystemUnderTest.AddMessagePublisher<GenericMessage>("OrderDispatch", _publisher);
 
-            SystemUnderTest.Publish(new OrderAccepted(0, 0, 0));
+            SystemUnderTest.Publish(new GenericMessage());
             Thread.Sleep(20);
         }
 
         [Then]
         public void EventPublicationWasAttemptedTheConfiguredNumberOfTimes()
         {
-            _publisher.Received(PublishAttempts).Publish(Arg.Any<OrderAccepted>());
+            _publisher.Received(PublishAttempts).Publish(Arg.Any<GenericMessage>());
         }
     }
 }

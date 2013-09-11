@@ -1,6 +1,7 @@
 using System;
-using JustEat.Simples.NotificationStack.Messaging.Messages.OrderDispatch;
+using JustEat.Simples.NotificationStack.Messaging.Messages;
 using JustEat.Testing;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace Stack.UnitTests.NotificationStack
@@ -14,7 +15,7 @@ namespace Stack.UnitTests.NotificationStack
 
         protected override void When()
         {
-            SystemUnderTest.Publish(new OrderAccepted(0, 0, 0));
+            SystemUnderTest.Publish(Substitute.For<Message>());
         }
 
         [Then]
