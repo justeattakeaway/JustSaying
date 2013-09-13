@@ -50,11 +50,17 @@ def setup_nuget opts={}
       if (name == "JustEat.Simples.NotificationStack")
 			  nuspec.description = "Simples Notification Stack is a set of tools and the messages required by team simples for our order fulfilment messaging stack"
 			  nuspec.summary = "Messaging / Eventing / Notifications"
-        nuspec.dependency "AWSSDK", "[1.5.28.3]"
-        nuspec.dependency "Newtonsoft.Json", "4.5.0.0"
-        nuspec.dependency "ServiceStack.Text", "3.9.56"
-        nuspec.dependency "NLog", "2.0.1.2"
-      end
+			  nuspec.dependency "AWSSDK", "[1.5.28.3]"
+			  nuspec.dependency "Newtonsoft.Json", "4.5.0.0"
+			  nuspec.dependency "ServiceStack.Text", "3.9.56"
+			  nuspec.dependency "NLog", "2.0.1.2"
+	  elsif (name == "AwsTools")
+			  nuspec.description = "Simples AwsTools is a helpful wrapper around the AWSSDK and ensures all dependencies use the same version of the SDK"
+			  nuspec.summary = "AWSSDK Wrapper"
+			  nuspec.dependency "AWSSDK", "[1.5.28.3]"
+			  nuspec.dependency "Newtonsoft.Json", "4.5.0.0"
+			  nuspec.dependency "NLog", "2.0.1.2"
+      end	
 
 		end
 
