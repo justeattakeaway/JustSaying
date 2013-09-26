@@ -23,7 +23,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected readonly IMessageSerialisationRegister SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         protected readonly IMessageFootprintStore MessageFootprintStore = Substitute.For<IMessageFootprintStore>();
         private readonly string _messageTypeString = typeof(GenericMessage).ToString();
-        protected int TestWaitTime = 20;
+        protected int TestWaitTime = 1000;
 
         protected override JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
