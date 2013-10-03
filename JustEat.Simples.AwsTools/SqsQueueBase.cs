@@ -56,6 +56,16 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             Client.SetQueueAttributes(new SetQueueAttributesRequest().WithQueueUrl(Url).WithPolicy(GetQueueSubscriptionPilocy(snsTopic)));
         }
 
+        public bool HasPermission(SnsTopicBase snsTopic)
+        {
+            var policyResponse = Client.GetQueueAttributes(new GetQueueAttributesRequest().WithQueueUrl(Url).WithAttributeName(new[] { "Policy" }));
+            if (policyResponse.IsSetResponseMetadata())
+            {
+                return policyResponse.GetQueueAttributesResult.Policy == null || policyResponse.GetQueueAttributesResult.Policy.Contains(snsTopic.Arn);
+            }
+            return false;
+        }
+
         protected string GetQueueSubscriptionPilocy(SnsTopicBase topic)
         {
             return @"{
