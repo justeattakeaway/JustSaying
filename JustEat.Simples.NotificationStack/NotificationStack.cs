@@ -27,12 +27,14 @@ namespace JustEat.Simples.NotificationStack.Stack
         private readonly Dictionary<string, INotificationSubscriber> _notificationSubscribers;
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _messagePublishers;
         public IMessagingConfig Config { get; private set; }
-        private static readonly Logger Log = LogManager.GetLogger("EventLog");
+        private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
         public NotificationStack(IMessagingConfig config)
         {
             if (config.PublishFailureReAttempts == 0)
                 Log.Warn("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may loose messages!");
+
+            Log.Info(string.Format("Registering with stack - Component: {0}, Tenant: {1}, Environment: {2}", config.Component, config.Tenant, config.Environment));
 
             Config = config;
             _notificationSubscribers = new Dictionary<string, INotificationSubscriber>();

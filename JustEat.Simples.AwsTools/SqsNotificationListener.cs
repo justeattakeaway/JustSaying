@@ -18,7 +18,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         private readonly IMessageFootprintStore _messageFootprintStore;
         private readonly Dictionary<Type, List<Action<Message>>> _handlers;
         private bool _listen = true;
-        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+        private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
         public SqsNotificationListener(SqsQueueBase queue, IMessageSerialisationRegister serialisationRegister, IMessageFootprintStore messageFootprintStore)
         {
@@ -55,6 +55,8 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             _listen = true;
             Action run = () => { while (_listen) { ListenLoop(); } };
             run.BeginInvoke(null, null);
+
+            Log.Info("Starting Listening - Queue: " + _queue.QueueNamePrefix);
         }
 
         public void StopListening()
@@ -71,9 +73,9 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                                                                           .WithMaxNumberOfMessages(10)
                                                                           .WithWaitTimeSeconds(20));
 
-
+                var messageCount = (sqsMessageResponse.IsSetReceiveMessageResult()) ? sqsMessageResponse.ReceiveMessageResult.Message.Count : 0;
+                Log.Trace(string.Format("Polled for messages - Queue: {0}, MessageCount: {1}", _queue.QueueNamePrefix, messageCount));
                 sqsMessageResponse.ReceiveMessageResult.Message.ForEach(HandleMessage);
-                
             }
             catch (InvalidOperationException ex) { Log.Trace("Suspected no messaged in queue. Ex: {0}", ex); }
             catch (Exception ex) { Log.ErrorException("Issue in message handling loop", ex); }
@@ -85,8 +87,10 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             {
                 try
                 {
+                    var messageType = JObject.Parse(message.Body)["Subject"].ToString();
+
                     var typedMessage = _serialisationRegister
-                                .GetSerialiser(JObject.Parse(message.Body)["Subject"].ToString())
+                                .GetSerialiser(messageType)
                                 .Deserialise(JObject.Parse(message.Body)["Message"].ToString());
 
                     if (typedMessage != null)
@@ -96,6 +100,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                         foreach (var handler in handlers)
                         {
                             handler(typedMessage);
+                            Log.Trace("Handled message - MessageType: " + messageType);
                         }
                     }
 
@@ -103,7 +108,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                 }
                 catch (KeyNotFoundException)
                 {
-                    Log.Info("Didn't handle message {0}. No serialiser setup", JObject.Parse(message.Body)["Subject"].ToString());
+                    Log.Trace("Didn't handle message {0}. No serialiser setup", JObject.Parse(message.Body)["Subject"].ToString());
                     _queue.Client.DeleteMessage(new DeleteMessageRequest().WithQueueUrl(_queue.Url).WithReceiptHandle(message.ReceiptHandle));
                 }
                 catch (Exception ex) { Log.ErrorException(string.Format("Issue handling message... {0}. StackTrace: {1}", message, ex.StackTrace), ex); }

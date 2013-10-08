@@ -6,6 +6,7 @@ using JustEat.Simples.NotificationStack.Messaging.Lookups;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
+using NLog;
 
 namespace JustEat.Simples.NotificationStack.Stack
 {
@@ -19,6 +20,7 @@ namespace JustEat.Simples.NotificationStack.Stack
     public class FluentNotificationStack : FluentStackBase, IMessagePublisher
     {
         protected readonly IMessageSerialisationRegister SerialisationRegister;
+        private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
         public FluentNotificationStack(INotificationStack stack, IMessageSerialisationRegister serialisationRegister) : base(stack)
         {
@@ -38,7 +40,7 @@ namespace JustEat.Simples.NotificationStack.Stack
 
             if (string.IsNullOrWhiteSpace(config.Component))
                 throw new ArgumentNullException("config.Component", "Cannot have a blank entry for config.Component");
-
+            
             return new FluentNotificationStack(new NotificationStack(config), new MessageSerialisationRegister());
         }
 
@@ -87,6 +89,9 @@ namespace JustEat.Simples.NotificationStack.Stack
 
             var sqsSubscriptionListener = new SqsNotificationListener(queue, SerialisationRegister, new NullMessageFootprintStore());
             Stack.AddNotificationTopicSubscriber(topic, sqsSubscriptionListener);
+            
+            Log.Info(string.Format("Created SQS topic subscription - Component: {0}, Topic: {1}, QueueName: {2}", Stack.Config.Component, topic, queue.QueueNamePrefix));
+
             return new FluentSubscription(Stack, SerialisationRegister, topic);
         }
 
@@ -98,6 +103,8 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <returns></returns>
         public FluentNotificationStack WithSnsMessagePublisher<T>(string topic) where T : Message
         {
+            Log.Info("Added publisher");
+
             var endpointProvider = new SnsPublishEndpointProvider(Stack.Config);
             var eventPublisher = new SnsTopicByName(endpointProvider.GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), SerialisationRegister);
 
@@ -106,6 +113,8 @@ namespace JustEat.Simples.NotificationStack.Stack
 
             SerialisationRegister.AddSerialiser<T>(new ServiceStackSerialiser<T>());
             Stack.AddMessagePublisher<T>(topic, eventPublisher);
+
+            Log.Info(string.Format("Created SNS topic publisher - Component: {0}, Topic: {1}", Stack.Config.Component, topic));
 
             return this;
         }
@@ -116,6 +125,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         public void StartListening()
         {
             Stack.Start();
+            Log.Info("Started listening for messages: Component: " + Stack.Config.Component);
         }
 
         /// <summary>
@@ -124,6 +134,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         public void StopListening()
         {
             Stack.Stop();
+            Log.Info("Stopped listening for messages: Component: " + Stack.Config.Component);
         }
 
         /// <summary>
@@ -148,6 +159,7 @@ namespace JustEat.Simples.NotificationStack.Stack
     public class FluentSubscription : FluentNotificationStack
     {
         private readonly string _topic;
+        private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
         public FluentSubscription(INotificationStack stack, IMessageSerialisationRegister serialisationRegister, string topic)
             : base(stack, serialisationRegister)
@@ -166,6 +178,9 @@ namespace JustEat.Simples.NotificationStack.Stack
         {
             SerialisationRegister.AddSerialiser<T>(new ServiceStackSerialiser<T>());
             Stack.AddMessageHandler(_topic, handler);
+
+            Log.Info(string.Format("Added a message handler - Component: {0}: Topic: {1}, MessageType: {2}, HandlerName: {3}", Stack.Config.Component, _topic, typeof(T).Name, handler.GetType().Name));
+
             return this;
         }
     }
