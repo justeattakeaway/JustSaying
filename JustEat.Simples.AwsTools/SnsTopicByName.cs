@@ -24,6 +24,19 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             if (topicCheck.IsSetListTopicsResult())
             {
                 var topic = topicCheck.ListTopicsResult.Topics.FirstOrDefault(x => x.TopicArn.Contains(TopicName));
+
+                while (topic == null && topicCheck.ListTopicsResult.IsSetNextToken())
+                {
+                    topicCheck = Client.ListTopics(new ListTopicsRequest().WithNextToken(topicCheck.ListTopicsResult.NextToken));
+                    topic = topicCheck.ListTopicsResult.Topics.FirstOrDefault(x => x.TopicArn.Contains(TopicName));
+                    
+                    if (topic != null)
+                    {
+                        Arn = topic.TopicArn;
+                        return true;
+                    }
+                }
+
                 if (topic != null)
                 {
                     Arn = topic.TopicArn;
