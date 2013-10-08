@@ -179,7 +179,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             SerialisationRegister.AddSerialiser<T>(new ServiceStackSerialiser<T>());
             Stack.AddMessageHandler(_topic, handler);
 
-            Log.Info(string.Format("Added a message handler - Component: {0}: Topic: {1}, MessageType: {2}, HandlerName: {3}", Stack.Config.Component, _topic, typeof(T).Name, handler.GetType().Name));
+            Log.Info(string.Format("Added a message handler - Component: {0}, Topic: {1}, MessageType: {2}, HandlerName: {3}", Stack.Config.Component, _topic, typeof(T).Name, handler.GetType().Name));
 
             return this;
         }

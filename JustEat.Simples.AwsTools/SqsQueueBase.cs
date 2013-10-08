@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using NLog;
 using Newtonsoft.Json.Linq;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 
@@ -13,6 +14,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         public string Url { get; protected set; }
         public AmazonSQS Client { get; private set; }
         public string QueueNamePrefix { get; protected set; }
+        private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
         public SqsQueueBase(AmazonSQS client)
         {
@@ -54,6 +56,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         public void AddPermission(SnsTopicBase snsTopic)
         {
             Client.SetQueueAttributes(new SetQueueAttributesRequest().WithQueueUrl(Url).WithPolicy(GetQueueSubscriptionPilocy(snsTopic)));
+            Log.Info(string.Format("Added Queue permission for SNS topic to publish to Queue: {0}, Topic: {1}", Arn, snsTopic.Arn));
         }
 
         public bool HasPermission(SnsTopicBase snsTopic)

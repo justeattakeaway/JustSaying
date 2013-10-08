@@ -62,6 +62,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         public void StopListening()
         {
             _listen = false;
+            Log.Info("Stopped Listening - Queue: " + _queue.QueueNamePrefix);
         }
 
         private void ListenLoop()

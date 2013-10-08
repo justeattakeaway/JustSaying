@@ -3,12 +3,14 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
+using NLog;
 
 namespace JustEat.Simples.NotificationStack.AwsTools
 {
     public class SnsTopicByName : SnsTopicBase, IMessagePublisher
     {
         public string TopicName { get; private set; }
+        private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
         public SnsTopicByName(string topicName, AmazonSimpleNotificationService client, IMessageSerialisationRegister serialisationRegister)
             : base(serialisationRegister)
@@ -53,8 +55,10 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             if (response.IsSetCreateTopicResult() && response.CreateTopicResult.TopicArn != null)
             {    
                 Arn = response.CreateTopicResult.TopicArn;
+                Log.Info(string.Format("Created Topic: {0} on Arn: {1}", TopicName, Arn));
                 return true;
             }
+            Log.Info(string.Format("Failed to create Topic: {0}", TopicName));
             return false;
         }
 

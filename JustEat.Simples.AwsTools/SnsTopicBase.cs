@@ -12,7 +12,8 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         private readonly IMessageSerialisationRegister _serialisationRegister;
         public string Arn { get; protected set; }
         public AmazonSimpleNotificationService Client { get; protected set; }
-        private static readonly Logger Log = LogManager.GetLogger("EventLog");
+        private static readonly Logger EventLog = LogManager.GetLogger("EventLog");
+        private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
         public SnsTopicBase(IMessageSerialisationRegister serialisationRegister)
         {
@@ -37,8 +38,10 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             if (response.IsSetSubscribeResult() && response.SubscribeResult.IsSetSubscriptionArn())
             {
                 queue.AddPermission(this);
+                Log.Info(string.Format("Subscribed Queue to Topic - Queue: {0}, Topic: {1}", queue.Arn, Arn));
                 return true;
             }
+            Log.Info(string.Format("Failed to subscribe Queue to Topic: {0}, Topic: {1}", queue.Arn, Arn));
             return false;
         }
 
@@ -54,7 +57,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                                    TopicArn = Arn
                                });
 
-            Log.Info("Published message: '{0}' with content {1}", messageType, messageToSend);
+            EventLog.Info("Published message: '{0}' with content {1}", messageType, messageToSend);
         }
     }
 }
