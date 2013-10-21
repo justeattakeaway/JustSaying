@@ -52,6 +52,9 @@ namespace JustEat.Simples.NotificationStack.Messaging.Lookups
 
         private string GetLocationNameInternal(string component, string topic, int? instancePosition = null)
         {
+            if (instancePosition.HasValue && instancePosition.Value <= 0)
+                throw new ArgumentOutOfRangeException("instancePosition", "Cannot have an instance position less than 1. Check your configuration.");
+
             var instancePositionValue = instancePosition.HasValue
                                             ? instancePosition.Value.ToString(CultureInfo.InvariantCulture)
                                             : string.Empty;

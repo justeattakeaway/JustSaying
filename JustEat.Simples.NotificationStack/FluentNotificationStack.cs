@@ -69,10 +69,13 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <param name="messageRetentionSeconds">Time messages should be kept in this queue</param>
         /// <param name="visibilityTimeoutSeconds">Seconds message should be invisible to other other receiving components</param>
         /// <returns></returns>
-        public FluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30)
+        public FluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30, int? instancePosition = null)
         {
             var endpointProvider = new SqsSubscribtionEndpointProvider(Stack.Config);
-            var queue = new SqsQueueByName(endpointProvider.GetLocationName(Stack.Config.Component, topic), AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
+            var queueName = instancePosition.HasValue
+                                ? endpointProvider.GetLocationName(Stack.Config.Component, topic, instancePosition.Value)
+                                : endpointProvider.GetLocationName(Stack.Config.Component, topic);
+            var queue = new SqsQueueByName(queueName, AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
             var eventTopic = new SnsTopicByName(new SnsPublishEndpointProvider(Stack.Config).GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), SerialisationRegister);
 
             if (!queue.Exists())
