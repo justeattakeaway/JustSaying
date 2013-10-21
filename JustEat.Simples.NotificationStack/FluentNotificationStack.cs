@@ -68,6 +68,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <param name="topic">Topic to listen in on</param>
         /// <param name="messageRetentionSeconds">Time messages should be kept in this queue</param>
         /// <param name="visibilityTimeoutSeconds">Seconds message should be invisible to other other receiving components</param>
+        /// <param name="instancePosition">Optional instance position as tagged by paas tools in AWS. Using this will cause the message to get handled by EACH instance in your cluster</param>
         /// <returns></returns>
         public FluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30, int? instancePosition = null)
         {
