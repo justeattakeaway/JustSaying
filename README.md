@@ -78,7 +78,13 @@ We currently support SQS subscriptions only, but keep checking back for other me
 * We are telling it to keep 'OrderProcessing' topic messages for 2 mins, and not to handle them again on failure for 30 seconds
 
 ````c#
-            FluentNotificationStack.Register(configuration => { })
+            FluentNotificationStack.Register(configuration => {
+                    configuration.Component = Component.OrderValidator;  
+                    configuration.Environment = "qa12";  
+                    configuration.Tenant = "uk";  
+                    configuration.PublishFailureReAttempts = 3;  
+                    configuration.PublishFailureBackoffMilliseconds = 100;  
+            })  
             .WithSqsTopicSubscriber(Topic.OrderDispatch, 60)
                 .WithMessageHandler<OrderAccepted>(new CustomerNotificationHandler())
                 .WithMessageHandler<OrderRejected>(new CustomerNotificationHandler())
