@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 
 namespace JustEat.Simples.NotificationStack.Messaging.Lookups
 {
@@ -6,6 +7,7 @@ namespace JustEat.Simples.NotificationStack.Messaging.Lookups
     {
         string GetLocationEndpoint(string component, string topic);
         string GetLocationName(string component, string topic);
+        string GetLocationName(string component, string topic, int instancePosition);
     }
 
     /// <summary>
@@ -40,7 +42,21 @@ namespace JustEat.Simples.NotificationStack.Messaging.Lookups
 
         public string GetLocationName(string component, string topic)
         {
-            return String.Join("-", new[] { _config.Tenant, _config.Environment, component, topic }).ToLower();
+            return GetLocationNameInternal(component, topic);
+        }
+
+        public string GetLocationName(string component, string topic, int instancePosition)
+        {
+            return GetLocationNameInternal(component, topic, instancePosition);
+        }
+
+        private string GetLocationNameInternal(string component, string topic, int? instancePosition = null)
+        {
+            var instancePositionValue = instancePosition.HasValue
+                                            ? instancePosition.Value.ToString(CultureInfo.InvariantCulture)
+                                            : string.Empty;
+
+            return String.Join("-", new[] { _config.Tenant, _config.Environment, component, instancePositionValue, topic }).ToLower().Replace("--", "-");
         }
     }
 }
