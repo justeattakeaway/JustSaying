@@ -151,6 +151,8 @@ namespace JustEat.Simples.NotificationStack.Stack
                 throw new InvalidOperationException("You must register for message publication before publishing a message");
 
             message.RaisingComponent = Stack.Config.Component;
+            message.Tenant = Stack.Config.Tenant;
+
             Stack.Publish(message);
         }
 
