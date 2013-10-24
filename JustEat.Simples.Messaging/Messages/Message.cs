@@ -14,5 +14,6 @@ namespace JustEat.Simples.NotificationStack.Messaging.Messages
         public string RaisingComponent { get; set; }
         public string Version{ get; private set; }
         public string SourceIp { get; private set; }
+        public string Tenant { get; set; }
     }
 }

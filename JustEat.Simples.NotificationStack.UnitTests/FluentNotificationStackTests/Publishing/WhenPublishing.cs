@@ -10,6 +10,7 @@ namespace Stack.UnitTests.FluentNotificationStackTests.Publishing
     public class WhenPublishing : BehaviourTest<FluentNotificationStack>
     {
         private const string RegisterningComponent = "OrderEngine";
+        private const string Tenant = "LosAlamos";
         private readonly Message _message = new GenericMessage();
         private readonly INotificationStack _notificationStack = Substitute.For<INotificationStack>();
 
@@ -22,6 +23,7 @@ namespace Stack.UnitTests.FluentNotificationStackTests.Publishing
         {
             var config = Substitute.For<IMessagingConfig>();
             config.Component.Returns(RegisterningComponent);
+            config.Tenant.Returns(Tenant);
             _notificationStack.Config.Returns(config);
         }
 
@@ -40,6 +42,12 @@ namespace Stack.UnitTests.FluentNotificationStackTests.Publishing
         public void TheMessageIsPopulatedWithComponent()
         {
             _notificationStack.Received().Publish(Arg.Is<Message>(x => x.RaisingComponent == RegisterningComponent));
+        }
+
+        [Then]
+        public void TheMessageIsPopulatedWithTenant()
+        {
+            _notificationStack.Received().Publish(Arg.Is<Message>(x => x.Tenant == Tenant));
         }
     }
 }

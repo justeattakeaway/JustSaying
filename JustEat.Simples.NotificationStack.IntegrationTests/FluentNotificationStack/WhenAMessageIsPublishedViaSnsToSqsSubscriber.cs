@@ -27,7 +27,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
                                                                             c.PublishFailureReAttempts = 3;
                                                                         })
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
-                .WithSqsTopicSubscriber("CustomerCommunication", 60)
+                .WithSqsTopicSubscriber("CustomerCommunication", 60, instancePosition: 1)
                 .WithMessageHandler(_handler);
 
             publisher.StartListening();
