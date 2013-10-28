@@ -6,6 +6,9 @@ using JustEat.Simples.NotificationStack.Messaging.Lookups;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
+using JustEat.Simples.NotificationStack.Messaging.Monitoring;
+using JustEat.Simples.NotificationStack.Stack.Monitoring;
+using JustEat.StatsD;
 using NLog;
 
 namespace JustEat.Simples.NotificationStack.Stack
@@ -19,15 +22,13 @@ namespace JustEat.Simples.NotificationStack.Stack
     /// </summary>
     public class FluentNotificationStack : FluentStackBase, IMessagePublisher
     {
-        protected readonly IMessageSerialisationRegister SerialisationRegister;
         private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
-        public FluentNotificationStack(INotificationStack stack, IMessageSerialisationRegister serialisationRegister) : base(stack)
+        public FluentNotificationStack(INotificationStack stack) : base(stack)
         {
-            SerialisationRegister = serialisationRegister;
         }
 
-        public static FluentNotificationStack Register(Action<INotificationStackConfiguration> configuration)
+        public static FluentMonitoring Register(Action<INotificationStackConfiguration> configuration)
         {
             var config = new MessagingConfig();
             configuration.Invoke(config);
@@ -40,18 +41,17 @@ namespace JustEat.Simples.NotificationStack.Stack
 
             if (string.IsNullOrWhiteSpace(config.Component))
                 throw new ArgumentNullException("config.Component", "Cannot have a blank entry for config.Component");
-            
-            return new FluentNotificationStack(new NotificationStack(config), new MessageSerialisationRegister());
+
+            return new FluentMonitoring(new NotificationStack(config, new MessageSerialisationRegister()));
         }
 
         /// <summary>
         /// Create a new notification stack registration.
         /// </summary>
-        /// <param name="component">Listening component</param>
         /// <param name="config">Configuration items</param>
         /// <returns></returns>
         [Obsolete("Use Register(Component component, Action<INotificationStackConfiguration> action) instead,", false)]
-        public static FluentNotificationStack Register(IMessagingConfig config)
+        public static FluentMonitoring Register(IMessagingConfig config)
         {
             if (string.IsNullOrWhiteSpace(config.Environment))
                 throw new InvalidOperationException("Cannot have a blank entry for config.Environment");
@@ -59,7 +59,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             if (string.IsNullOrWhiteSpace(config.Tenant))
                 throw new InvalidOperationException("Cannot have a blank entry for config.Tenant");
 
-            return new FluentNotificationStack(new NotificationStack(config), new MessageSerialisationRegister());
+            return new FluentMonitoring(new NotificationStack(config, new MessageSerialisationRegister()));
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace JustEat.Simples.NotificationStack.Stack
                                 ? endpointProvider.GetLocationName(Stack.Config.Component, topic, instancePosition.Value)
                                 : endpointProvider.GetLocationName(Stack.Config.Component, topic);
             var queue = new SqsQueueByName(queueName, AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
-            var eventTopic = new SnsTopicByName(new SnsPublishEndpointProvider(Stack.Config).GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), SerialisationRegister);
+            var eventTopic = new SnsTopicByName(new SnsPublishEndpointProvider(Stack.Config).GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), Stack.SerialisationRegister);
 
             if (!queue.Exists())
                 queue.Create(messageRetentionSeconds, 0, visibilityTimeoutSeconds);
@@ -91,12 +91,12 @@ namespace JustEat.Simples.NotificationStack.Stack
             if (!queue.HasPermission(eventTopic))
                 queue.AddPermission(eventTopic);
 
-            var sqsSubscriptionListener = new SqsNotificationListener(queue, SerialisationRegister, new NullMessageFootprintStore());
+            var sqsSubscriptionListener = new SqsNotificationListener(queue, Stack.SerialisationRegister, new NullMessageFootprintStore(), Stack.Monitor);
             Stack.AddNotificationTopicSubscriber(topic, sqsSubscriptionListener);
             
             Log.Info(string.Format("Created SQS topic subscription - Component: {0}, Topic: {1}, QueueName: {2}", Stack.Config.Component, topic, queue.QueueNamePrefix));
 
-            return new FluentSubscription(Stack, SerialisationRegister, topic);
+            return new FluentSubscription(Stack, topic);
         }
 
         /// <summary>
@@ -110,12 +110,12 @@ namespace JustEat.Simples.NotificationStack.Stack
             Log.Info("Added publisher");
 
             var endpointProvider = new SnsPublishEndpointProvider(Stack.Config);
-            var eventPublisher = new SnsTopicByName(endpointProvider.GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), SerialisationRegister);
+            var eventPublisher = new SnsTopicByName(endpointProvider.GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), Stack.SerialisationRegister);
 
             if (!eventPublisher.Exists())
                 eventPublisher.Create();
 
-            SerialisationRegister.AddSerialiser<T>(new ServiceStackSerialiser<T>());
+            Stack.SerialisationRegister.AddSerialiser<T>(new ServiceStackSerialiser<T>());
             Stack.AddMessagePublisher<T>(topic, eventPublisher);
 
             Log.Info(string.Format("Created SNS topic publisher - Component: {0}, Topic: {1}", Stack.Config.Component, topic));
@@ -149,10 +149,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         {
             if (Stack == null)
                 throw new InvalidOperationException("You must register for message publication before publishing a message");
-
-            message.RaisingComponent = Stack.Config.Component;
-            message.Tenant = Stack.Config.Tenant;
-
+            
             Stack.Publish(message);
         }
 
@@ -167,8 +164,8 @@ namespace JustEat.Simples.NotificationStack.Stack
         private readonly string _topic;
         private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
-        public FluentSubscription(INotificationStack stack, IMessageSerialisationRegister serialisationRegister, string topic)
-            : base(stack, serialisationRegister)
+        public FluentSubscription(INotificationStack stack, string topic)
+            : base(stack)
         {
             _topic = topic;
         }
@@ -177,17 +174,45 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// Set message handlers for the given topic
         /// </summary>
         /// <typeparam name="T">Message type to be handled</typeparam>
-        /// <param name="topic">Topic message is published under</param>
         /// <param name="handler">Handler for the message type</param>
         /// <returns></returns>
         public FluentSubscription WithMessageHandler<T>(IHandler<T> handler) where T : Message
         {
-            SerialisationRegister.AddSerialiser<T>(new ServiceStackSerialiser<T>());
+            Stack.SerialisationRegister.AddSerialiser<T>(new ServiceStackSerialiser<T>());
             Stack.AddMessageHandler(_topic, handler);
 
             Log.Info(string.Format("Added a message handler - Component: {0}, Topic: {1}, MessageType: {2}, HandlerName: {3}", Stack.Config.Component, _topic, typeof(T).Name, handler.GetType().Name));
 
             return this;
+        }
+    }
+
+    public class FluentMonitoring : FluentStackBase
+    {
+        public FluentMonitoring(INotificationStack stack) : base(stack)
+        {
+        }
+
+        /// <summary>
+        /// Provide your own monitoring implementation
+        /// </summary>
+        /// <param name="messageMonitor">Monitoring class to be used</param>
+        /// <returns></returns>
+        public FluentNotificationStack WithMonitoring(IMessageMonitor messageMonitor)
+        {
+            Stack.Monitor = messageMonitor;
+            return new FluentNotificationStack(Stack);
+        }
+
+        /// <summary>
+        /// Use the default JustEat StatsD Monitoring tooling
+        /// </summary>
+        /// <param name="publisher">The JustEat.StatsD publisher you use in your application (suggest immediate publisher)</param>
+        /// <returns></returns>
+        public FluentNotificationStack WithStatsDMonitoring(IStatsDPublisher publisher)
+        {
+            Stack.Monitor = new StatsDMessageMonitor(publisher);
+            return new FluentNotificationStack(Stack);
         }
     }
 

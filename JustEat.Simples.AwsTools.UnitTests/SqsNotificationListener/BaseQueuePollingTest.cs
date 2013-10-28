@@ -6,6 +6,7 @@ using Amazon.SQS.Model;
 using AwsTools.UnitTests.MessageStubs;
 using JustEat.Simples.NotificationStack.AwsTools;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
+using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 using JustEat.Testing;
 using NSubstitute;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
@@ -20,6 +21,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected GenericMessage DeserialisedMessage;
         protected const string MessageBody = "object";
         protected readonly IHandler<GenericMessage> Handler = Substitute.For<IHandler<GenericMessage>>();
+        protected readonly IMessageMonitor Monitor = Substitute.For<IMessageMonitor>();
         protected readonly IMessageSerialisationRegister SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         protected readonly IMessageFootprintStore MessageFootprintStore = Substitute.For<IMessageFootprintStore>();
         private readonly string _messageTypeString = typeof(GenericMessage).ToString();
@@ -27,7 +29,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
         protected override JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
-            return new JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), SerialisationRegister, MessageFootprintStore);
+            return new JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), SerialisationRegister, MessageFootprintStore, Monitor);
         }
 
         protected override void Given()

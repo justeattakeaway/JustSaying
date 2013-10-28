@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
+using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 using NSubstitute;
 using NUnit.Framework;
 using Tests.MessageStubs;
@@ -20,12 +21,13 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
 
             var publisher = JustEat.Simples.NotificationStack.Stack.FluentNotificationStack.Register(c =>
                                                                         {
-                                                                            c.Component = "OrderEngine";
-                                                                            c.Tenant = "uk";
-                                                                            c.Environment = "integrationTest";
+                                                                            c.Component = "TestHarness";
+                                                                            c.Tenant = "Wherever";
+                                                                            c.Environment = "integration";
                                                                             c.PublishFailureBackoffMilliseconds = 1;
                                                                             c.PublishFailureReAttempts = 3;
                                                                         })
+                                                                        .WithMonitoring(Substitute.For<IMessageMonitor>())
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
                 .WithSqsTopicSubscriber("CustomerCommunication", 60, instancePosition: 1)
                 .WithMessageHandler(_handler);

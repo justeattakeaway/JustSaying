@@ -17,7 +17,7 @@ namespace Stack.UnitTests.FluentNotificationStackTests.AddingHandlers
 
         protected override FluentSubscription CreateSystemUnderTest()
         {
-            return new FluentSubscription(_stack, _serialisationReg, Topic);
+            return new FluentSubscription(_stack, Topic);
         }
 
         protected override void Given(){}
@@ -36,7 +36,7 @@ namespace Stack.UnitTests.FluentNotificationStackTests.AddingHandlers
         [Then]
         public void SerialisationIsRegisteredForMessage()
         {
-            _serialisationReg.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser<Message>>());
+            _stack.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser<Message>>());
         }
     }
 }

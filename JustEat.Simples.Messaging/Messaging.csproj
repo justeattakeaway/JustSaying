@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Monitoring\IMessageMonitor.cs" />
     <Compile Include="IMessagePublisher.cs" />
     <Compile Include="IMessagingConfig.cs" />
     <Compile Include="INotificationSubscriber.cs" />

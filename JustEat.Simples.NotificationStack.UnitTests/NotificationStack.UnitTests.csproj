@@ -32,6 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="JustEat.StatsD, Version=1.0.0.87, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\JustEat.StatsD.1.0.0.87\lib\JustEat.StatsD.dll</HintPath>
+    </Reference>
     <Reference Include="JustEat.Testing, Version=6.0.1.43, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\JustEat.Testing.6.0.1.43\lib\net40\JustEat.Testing.dll</HintPath>
@@ -59,6 +63,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FluentNotificationStackTests\AddingHandlers\WhenAddingASubscriptionHandler.cs" />
+    <Compile Include="FluentNotificationStackTests\AddingMonitoring\BaseConfigValidationTest.cs" />
+    <Compile Include="FluentNotificationStackTests\AddingMonitoring\WhenAddingACustomMonitor.cs" />
+    <Compile Include="FluentNotificationStackTests\AddingMonitoring\WhenAddingAStatsDMonitor.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\BaseConfigValidationTest.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoComponentIsProvided.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoEnvironmentIsProvided.cs" />
@@ -68,6 +75,7 @@
     <Compile Include="NotificationStack\NotificationStackBaseTest.cs" />
     <Compile Include="NotificationStack\WhenAddingAPublisherWithNoTopic.cs" />
     <Compile Include="NotificationStack\WhenPublishingFails.cs" />
+    <Compile Include="NotificationStack\WhenPublishingMessages.cs" />
     <Compile Include="NotificationStack\WhenRegisteringMessageHandlersAndNotPassingTopic.cs" />
     <Compile Include="NotificationStack\WhenSubscribingAndNotPassingATopic.cs" />
     <Compile Include="NotificationStack\WhenPublishingWithoutRegistering.cs" />

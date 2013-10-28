@@ -10,12 +10,11 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
     public class WhenRegisteringAPublisher : BehaviourTest<JustEat.Simples.NotificationStack.Stack.FluentNotificationStack>
     {
         private readonly INotificationStack _stack = Substitute.For<INotificationStack>();
-        private readonly IMessageSerialisationRegister _serialisationReg = Substitute.For<IMessageSerialisationRegister>();
         private const string Topic = "CustomerCommunication";
 
         protected override JustEat.Simples.NotificationStack.Stack.FluentNotificationStack CreateSystemUnderTest()
         {
-            return new FluentSubscription(_stack, _serialisationReg, Topic);
+            return new FluentSubscription(_stack, Topic);
         }
 
         protected override void Given() { }
@@ -34,7 +33,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
         [Then]
         public void SerialisationIsRegisteredForMessage()
         {
-            _serialisationReg.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser<Message>>());
+            _stack.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser<Message>>());
         }
     }
 }

@@ -16,7 +16,7 @@ namespace Stack.UnitTests.FluentNotificationStackTests.Publishing
 
         protected override FluentNotificationStack CreateSystemUnderTest()
         {
-            return new FluentNotificationStack(_notificationStack, null);
+            return new FluentNotificationStack(_notificationStack);
         }
 
         protected override void Given()
@@ -36,18 +36,6 @@ namespace Stack.UnitTests.FluentNotificationStackTests.Publishing
         public void TheMessageIsPublished()
         {
             _notificationStack.Received().Publish(_message);
-        }
-
-        [Then]
-        public void TheMessageIsPopulatedWithComponent()
-        {
-            _notificationStack.Received().Publish(Arg.Is<Message>(x => x.RaisingComponent == RegisterningComponent));
-        }
-
-        [Then]
-        public void TheMessageIsPopulatedWithTenant()
-        {
-            _notificationStack.Received().Publish(Arg.Is<Message>(x => x.Tenant == Tenant));
         }
     }
 }
