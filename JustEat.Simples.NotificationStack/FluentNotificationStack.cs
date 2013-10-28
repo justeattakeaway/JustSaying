@@ -48,7 +48,6 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <summary>
         /// Create a new notification stack registration.
         /// </summary>
-        /// <param name="component">Listening component</param>
         /// <param name="config">Configuration items</param>
         /// <returns></returns>
         [Obsolete("Use Register(Component component, Action<INotificationStackConfiguration> action) instead,", false)]
@@ -175,7 +174,6 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// Set message handlers for the given topic
         /// </summary>
         /// <typeparam name="T">Message type to be handled</typeparam>
-        /// <param name="topic">Topic message is published under</param>
         /// <param name="handler">Handler for the message type</param>
         /// <returns></returns>
         public FluentSubscription WithMessageHandler<T>(IHandler<T> handler) where T : Message
