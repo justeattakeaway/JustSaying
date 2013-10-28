@@ -28,7 +28,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         {
         }
 
-        public static FluentConfiguration Register(Action<INotificationStackConfiguration> configuration)
+        public static FluentMonitoring Register(Action<INotificationStackConfiguration> configuration)
         {
             var config = new MessagingConfig();
             configuration.Invoke(config);
@@ -42,7 +42,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             if (string.IsNullOrWhiteSpace(config.Component))
                 throw new ArgumentNullException("config.Component", "Cannot have a blank entry for config.Component");
 
-            return new FluentConfiguration(new NotificationStack(config, new MessageSerialisationRegister()));
+            return new FluentMonitoring(new NotificationStack(config, new MessageSerialisationRegister()));
         }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <param name="config">Configuration items</param>
         /// <returns></returns>
         [Obsolete("Use Register(Component component, Action<INotificationStackConfiguration> action) instead,", false)]
-        public static FluentConfiguration Register(IMessagingConfig config)
+        public static FluentMonitoring Register(IMessagingConfig config)
         {
             if (string.IsNullOrWhiteSpace(config.Environment))
                 throw new InvalidOperationException("Cannot have a blank entry for config.Environment");
@@ -60,7 +60,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             if (string.IsNullOrWhiteSpace(config.Tenant))
                 throw new InvalidOperationException("Cannot have a blank entry for config.Tenant");
 
-            return new FluentConfiguration(new NotificationStack(config, new MessageSerialisationRegister()));
+            return new FluentMonitoring(new NotificationStack(config, new MessageSerialisationRegister()));
         }
 
         /// <summary>
@@ -192,9 +192,9 @@ namespace JustEat.Simples.NotificationStack.Stack
         }
     }
 
-    public class FluentConfiguration : FluentStackBase
+    public class FluentMonitoring : FluentStackBase
     {
-        public FluentConfiguration(INotificationStack stack) : base(stack)
+        public FluentMonitoring(INotificationStack stack) : base(stack)
         {
         }
 
