@@ -1,4 +1,4 @@
-using JustEat.Simples.NotificationStack.Messaging.Monitoring;
+using JustEat.Simples.NotificationStack.Stack.Monitoring;
 using JustEat.Testing;
 using NSubstitute;
 

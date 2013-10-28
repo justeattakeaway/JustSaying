@@ -1,4 +1,5 @@
-﻿using Amazon.SQS.Model;
+﻿using System.Threading;
+using Amazon.SQS.Model;
 using JustEat.Testing;
 using NSubstitute;
 
@@ -9,8 +10,12 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected override void Given()
         {
             TestWaitTime = 100;
+            Handler.Handle(null).ReturnsForAnyArgs(info => true)
+                .AndDoes(x => Thread.Sleep(1)); // Ensure at least one ms wait on processing
+
             base.Given();
         }
+
         [Then]
         public void MessagesGetDeserialisedByCorrectHandler()
         {

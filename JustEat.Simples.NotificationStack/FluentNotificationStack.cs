@@ -7,6 +7,7 @@ using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
 using JustEat.Simples.NotificationStack.Messaging.Monitoring;
+using JustEat.Simples.NotificationStack.Stack.Monitoring;
 using NLog;
 
 namespace JustEat.Simples.NotificationStack.Stack

@@ -59,6 +59,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FluentNotificationStackTests\AddingHandlers\WhenAddingASubscriptionHandler.cs" />
+    <Compile Include="FluentNotificationStackTests\AddingMonitoring\BaseConfigValidationTest.cs" />
+    <Compile Include="FluentNotificationStackTests\AddingMonitoring\WhenAddingACustomMonitor.cs" />
+    <Compile Include="FluentNotificationStackTests\AddingMonitoring\WhenAddingAStatsDMonitor.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\BaseConfigValidationTest.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoComponentIsProvided.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoEnvironmentIsProvided.cs" />
