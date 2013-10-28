@@ -138,6 +138,7 @@ namespace JustEat.Simples.NotificationStack.Stack
                 {
                     if (attemptCount == Config.PublishFailureReAttempts)
                     {
+                        Monitor.IssuePublishingMessage();
                         Log.ErrorException(string.Format("Unable to publish message {0}", message.GetType().Name), ex);
                         throw;
                     }
