@@ -5,6 +5,7 @@ using System.Threading;
 using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
+using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 using NLog;
 
 namespace JustEat.Simples.NotificationStack.Stack
@@ -18,6 +19,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         void Start();
         void Stop();
         IMessagingConfig Config { get; }
+        IMessageMonitor Monitor { get; set; }
     }
 
     public class NotificationStack : INotificationStack
@@ -27,6 +29,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         private readonly Dictionary<string, INotificationSubscriber> _notificationSubscribers;
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _messagePublishers;
         public IMessagingConfig Config { get; private set; }
+        public IMessageMonitor Monitor { get; set; }
         private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
         public NotificationStack(IMessagingConfig config)

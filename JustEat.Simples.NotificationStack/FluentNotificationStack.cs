@@ -6,6 +6,7 @@ using JustEat.Simples.NotificationStack.Messaging.Lookups;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
+using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 using NLog;
 
 namespace JustEat.Simples.NotificationStack.Stack
@@ -27,7 +28,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             SerialisationRegister = serialisationRegister;
         }
 
-        public static FluentNotificationStack Register(Action<INotificationStackConfiguration> configuration)
+        public static FluentConfiguration Register(Action<INotificationStackConfiguration> configuration)
         {
             var config = new MessagingConfig();
             configuration.Invoke(config);
@@ -40,8 +41,9 @@ namespace JustEat.Simples.NotificationStack.Stack
 
             if (string.IsNullOrWhiteSpace(config.Component))
                 throw new ArgumentNullException("config.Component", "Cannot have a blank entry for config.Component");
-            
-            return new FluentNotificationStack(new NotificationStack(config), new MessageSerialisationRegister());
+
+            return new FluentConfiguration(new NotificationStack(config), new MessageSerialisationRegister())
+                .WithStatsDMonitoring();
         }
 
         /// <summary>
@@ -51,7 +53,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <param name="config">Configuration items</param>
         /// <returns></returns>
         [Obsolete("Use Register(Component component, Action<INotificationStackConfiguration> action) instead,", false)]
-        public static FluentNotificationStack Register(IMessagingConfig config)
+        public static FluentConfiguration Register(IMessagingConfig config)
         {
             if (string.IsNullOrWhiteSpace(config.Environment))
                 throw new InvalidOperationException("Cannot have a blank entry for config.Environment");
@@ -59,7 +61,8 @@ namespace JustEat.Simples.NotificationStack.Stack
             if (string.IsNullOrWhiteSpace(config.Tenant))
                 throw new InvalidOperationException("Cannot have a blank entry for config.Tenant");
 
-            return new FluentNotificationStack(new NotificationStack(config), new MessageSerialisationRegister());
+            return new FluentConfiguration(new NotificationStack(config), new MessageSerialisationRegister())
+                .WithStatsDMonitoring();
         }
 
         /// <summary>
@@ -91,7 +94,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             if (!queue.HasPermission(eventTopic))
                 queue.AddPermission(eventTopic);
 
-            var sqsSubscriptionListener = new SqsNotificationListener(queue, SerialisationRegister, new NullMessageFootprintStore());
+            var sqsSubscriptionListener = new SqsNotificationListener(queue, SerialisationRegister, new NullMessageFootprintStore(), Stack.Monitor);
             Stack.AddNotificationTopicSubscriber(topic, sqsSubscriptionListener);
             
             Log.Info(string.Format("Created SQS topic subscription - Component: {0}, Topic: {1}, QueueName: {2}", Stack.Config.Component, topic, queue.QueueNamePrefix));
@@ -187,6 +190,35 @@ namespace JustEat.Simples.NotificationStack.Stack
 
             Log.Info(string.Format("Added a message handler - Component: {0}, Topic: {1}, MessageType: {2}, HandlerName: {3}", Stack.Config.Component, _topic, typeof(T).Name, handler.GetType().Name));
 
+            return this;
+        }
+    }
+
+    public class FluentConfiguration : FluentNotificationStack
+    {
+        public FluentConfiguration(INotificationStack stack, IMessageSerialisationRegister serialisationRegister)
+            : base(stack, serialisationRegister)
+        {
+        }
+
+        /// <summary>
+        /// Provide your own monitoring implementation
+        /// </summary>
+        /// <param name="messageMonitor">Monitoring class to be used</param>
+        /// <returns></returns>
+        public FluentConfiguration WithMonitoring(IMessageMonitor messageMonitor)
+        {
+            Stack.Monitor = messageMonitor;
+            return this;
+        }
+
+        /// <summary>
+        /// Use the default JustEat StatsD Monitoring tooling
+        /// </summary>
+        /// <returns></returns>
+        public FluentConfiguration WithStatsDMonitoring()
+        {
+            Stack.Monitor = new StatsDMessageMonitor();
             return this;
         }
     }

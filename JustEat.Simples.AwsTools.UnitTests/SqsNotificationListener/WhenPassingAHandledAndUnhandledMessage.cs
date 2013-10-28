@@ -24,6 +24,18 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         }
 
         [Then]
+        public void MonitoringToldMessageHasBeenHandled()
+        {
+            Monitor.Received().Handled();
+        }
+
+        [Then]
+        public void MonitoringToldMessageHandlingTime()
+        {
+            Monitor.Received().HandleTime(Arg.Is<long>(x => x > 0));
+        }
+
+        [Then]
         public void AllMessagesAreClearedFromQueue()
         {
             Serialiser.Received(1).Deserialise(Arg.Any<string>());

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
+using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 using NLog;
 using Newtonsoft.Json.Linq;
 using JustEat.Simples.NotificationStack.Messaging;
@@ -16,15 +17,17 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         private readonly SqsQueueBase _queue;
         private readonly IMessageSerialisationRegister _serialisationRegister;
         private readonly IMessageFootprintStore _messageFootprintStore;
+        private readonly IMessageMonitor _messagingMonitor;
         private readonly Dictionary<Type, List<Action<Message>>> _handlers;
         private bool _listen = true;
         private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
-        public SqsNotificationListener(SqsQueueBase queue, IMessageSerialisationRegister serialisationRegister, IMessageFootprintStore messageFootprintStore)
+        public SqsNotificationListener(SqsQueueBase queue, IMessageSerialisationRegister serialisationRegister, IMessageFootprintStore messageFootprintStore, IMessageMonitor messagingMonitor)
         {
             _queue = queue;
             _serialisationRegister = serialisationRegister;
             _messageFootprintStore = messageFootprintStore;
+            _messagingMonitor = messagingMonitor;
             _handlers = new Dictionary<Type, List<Action<Message>>>();
         }
 
@@ -79,7 +82,11 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                 sqsMessageResponse.ReceiveMessageResult.Message.ForEach(HandleMessage);
             }
             catch (InvalidOperationException ex) { Log.Trace("Suspected no messaged in queue. Ex: {0}", ex); }
-            catch (Exception ex) { Log.ErrorException("Issue in message handling loop", ex); }
+            catch (Exception ex)
+            {
+                Log.ErrorException("Issue in message handling loop", ex);
+                _messagingMonitor.HandleException();
+            }
         }
 
         private void HandleMessage(Amazon.SQS.Model.Message message)
@@ -100,8 +107,13 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                         if (!_handlers.TryGetValue(typedMessage.GetType(), out handlers)) return;
                         foreach (var handler in handlers)
                         {
+                            var watch = new System.Diagnostics.Stopwatch();
+                            watch.Start();
                             handler(typedMessage);
+                            watch.Stop();
                             Log.Trace("Handled message - MessageType: " + messageType);
+                            _messagingMonitor.Handled();
+                            _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
                         }
                     }
 

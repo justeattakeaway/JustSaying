@@ -2,6 +2,7 @@ using System.Threading;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustEat.Simples.NotificationStack.AwsTools;
+using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 using JustEat.Testing;
 using NSubstitute;
 using NUnit.Framework;
@@ -15,7 +16,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
         protected override JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
-            return new JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener(new SqsQueueByUrl("", _sqs), null, new NullMessageFootprintStore());
+            return new JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener(new SqsQueueByUrl("", _sqs), null, new NullMessageFootprintStore(), Substitute.For<IMessageMonitor>());
         }
 
         protected override void Given()
