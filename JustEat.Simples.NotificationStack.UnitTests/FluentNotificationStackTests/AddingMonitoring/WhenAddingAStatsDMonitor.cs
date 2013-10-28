@@ -8,7 +8,7 @@ namespace Stack.UnitTests.FluentNotificationStackTests.AddingMonitoring
     {
         protected override void When()
         {
-            SystemUnderTest.WithStatsDMonitoring();
+            SystemUnderTest.WithStatsDMonitoring(null);
         }
 
         [Then]

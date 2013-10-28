@@ -4,6 +4,6 @@ namespace JustEat.Simples.NotificationStack.Messaging.Monitoring
     {
         void Handled();
         void HandleException();
-        void HandleTime(long handTimeMs);
+        void HandleTime(long handleTimeMs);
     }
 }

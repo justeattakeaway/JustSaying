@@ -1,3 +1,4 @@
+using System;
 using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 using JustEat.StatsD;
 
@@ -5,26 +6,26 @@ namespace JustEat.Simples.NotificationStack.Stack.Monitoring
 {
     public class StatsDMessageMonitor : IMessageMonitor
     {
-        private readonly StatsDImmediatePublisher _publisher;
+        private readonly IStatsDPublisher _publisher;
 
-        public StatsDMessageMonitor()//StatsDImmediatePublisher publisher
+        public StatsDMessageMonitor(IStatsDPublisher publisher)
         {
-            //_publisher = publisher;
+            _publisher = publisher;
         }
 
         public void Handled()
         {
-            throw new System.NotImplementedException();
+            _publisher.Increment("notificationstack-message-handled");
         }
 
         public void HandleException()
         {
-            throw new System.NotImplementedException();
+            _publisher.Increment("notificationstack-message-handle-exception");
         }
 
-        public void HandleTime(long handTimeMs)
+        public void HandleTime(long handleTimeMs)
         {
-            throw new System.NotImplementedException();
+            _publisher.Timing(TimeSpan.FromMilliseconds(handleTimeMs), "notificationstack-sqs-message-handled");
         }
     }
 }

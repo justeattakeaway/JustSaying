@@ -16,7 +16,7 @@ namespace Stack.UnitTests.FluentNotificationStackTests.Publishing
 
         protected override FluentNotificationStack CreateSystemUnderTest()
         {
-            return new FluentNotificationStack(_notificationStack, null);
+            return new FluentNotificationStack(_notificationStack);
         }
 
         protected override void Given()

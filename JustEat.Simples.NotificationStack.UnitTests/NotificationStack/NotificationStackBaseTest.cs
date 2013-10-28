@@ -10,7 +10,7 @@ namespace Stack.UnitTests.NotificationStack
 
         protected override JustEat.Simples.NotificationStack.Stack.NotificationStack CreateSystemUnderTest()
         {
-            return new JustEat.Simples.NotificationStack.Stack.NotificationStack(Config);
+            return new JustEat.Simples.NotificationStack.Stack.NotificationStack(Config, null);
         }
     }
 }

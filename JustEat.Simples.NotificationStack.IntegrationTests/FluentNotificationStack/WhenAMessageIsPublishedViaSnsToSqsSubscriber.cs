@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
+using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 using NSubstitute;
 using NUnit.Framework;
 using Tests.MessageStubs;
@@ -26,6 +27,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
                                                                             c.PublishFailureBackoffMilliseconds = 1;
                                                                             c.PublishFailureReAttempts = 3;
                                                                         })
+                                                                        .WithMonitoring(Substitute.For<IMessageMonitor>())
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
                 .WithSqsTopicSubscriber("CustomerCommunication", 60, instancePosition: 1)
                 .WithMessageHandler(_handler);

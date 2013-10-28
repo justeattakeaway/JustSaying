@@ -32,6 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="JustEat.StatsD, Version=1.0.0.87, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\JustEat.StatsD.1.0.0.87\lib\JustEat.StatsD.dll</HintPath>
+    </Reference>
     <Reference Include="JustEat.Testing">
       <HintPath>..\packages\JustEat.Testing.6.1.0.58\lib\net40\JustEat.Testing.dll</HintPath>
     </Reference>

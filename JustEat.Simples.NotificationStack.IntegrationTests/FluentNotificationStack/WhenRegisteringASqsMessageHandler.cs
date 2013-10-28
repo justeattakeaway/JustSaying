@@ -15,7 +15,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
 
         protected override JustEat.Simples.NotificationStack.Stack.FluentNotificationStack CreateSystemUnderTest()
         {
-            return new FluentSubscription(_stack, _serialisationReg, Topic);
+            return new FluentSubscription(_stack, Topic);
         }
 
         protected override void Given() { }
@@ -28,7 +28,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
         [Then]
         public void SerialisationIsRegisteredForMessage()
         {
-            _serialisationReg.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser<Message>>());
+            _stack.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser<Message>>());
         }
     }
 }

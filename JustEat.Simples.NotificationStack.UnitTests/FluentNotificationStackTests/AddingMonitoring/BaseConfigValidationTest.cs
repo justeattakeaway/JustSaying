@@ -10,7 +10,7 @@ namespace Stack.UnitTests.FluentNotificationStackTests.AddingMonitoring
 
         protected override FluentConfiguration CreateSystemUnderTest()
         {
-            return new FluentConfiguration(Stack, null);
+            return new FluentConfiguration(Stack);
         }
 
         protected override void Given()

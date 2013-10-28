@@ -4,6 +4,7 @@ using System.Runtime.Remoting.Messaging;
 using System.Threading;
 using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
+using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
 using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 using NLog;
@@ -20,6 +21,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         void Stop();
         IMessagingConfig Config { get; }
         IMessageMonitor Monitor { get; set; }
+        IMessageSerialisationRegister SerialisationRegister { get; }
     }
 
     public class NotificationStack : INotificationStack
@@ -30,9 +32,10 @@ namespace JustEat.Simples.NotificationStack.Stack
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _messagePublishers;
         public IMessagingConfig Config { get; private set; }
         public IMessageMonitor Monitor { get; set; }
+        public IMessageSerialisationRegister SerialisationRegister { get; private set; }
         private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
-        public NotificationStack(IMessagingConfig config)
+        public NotificationStack(IMessagingConfig config, IMessageSerialisationRegister serialisationRegister)
         {
             if (config.PublishFailureReAttempts == 0)
                 Log.Warn("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may loose messages!");
@@ -42,6 +45,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             Config = config;
             _notificationSubscribers = new Dictionary<string, INotificationSubscriber>();
             _messagePublishers = new Dictionary<string, Dictionary<Type, IMessagePublisher>>();
+            SerialisationRegister = serialisationRegister;
         }
 
         public void AddNotificationTopicSubscriber(string topic, INotificationSubscriber subscriber)
