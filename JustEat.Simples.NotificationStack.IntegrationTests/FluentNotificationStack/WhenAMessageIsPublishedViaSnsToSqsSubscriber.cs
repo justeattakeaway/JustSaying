@@ -21,9 +21,9 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
 
             var publisher = JustEat.Simples.NotificationStack.Stack.FluentNotificationStack.Register(c =>
                                                                         {
-                                                                            c.Component = "OrderEngine";
-                                                                            c.Tenant = "uk";
-                                                                            c.Environment = "integrationTest";
+                                                                            c.Component = "TestHarness";
+                                                                            c.Tenant = "Wherever";
+                                                                            c.Environment = "integration";
                                                                             c.PublishFailureBackoffMilliseconds = 1;
                                                                             c.PublishFailureReAttempts = 3;
                                                                         })
