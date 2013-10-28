@@ -75,6 +75,7 @@
     <Compile Include="NotificationStack\NotificationStackBaseTest.cs" />
     <Compile Include="NotificationStack\WhenAddingAPublisherWithNoTopic.cs" />
     <Compile Include="NotificationStack\WhenPublishingFails.cs" />
+    <Compile Include="NotificationStack\WhenPublishingMessages.cs" />
     <Compile Include="NotificationStack\WhenRegisteringMessageHandlersAndNotPassingTopic.cs" />
     <Compile Include="NotificationStack\WhenSubscribingAndNotPassingATopic.cs" />
     <Compile Include="NotificationStack\WhenPublishingWithoutRegistering.cs" />

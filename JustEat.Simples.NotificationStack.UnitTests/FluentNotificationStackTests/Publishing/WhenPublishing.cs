@@ -37,17 +37,5 @@ namespace Stack.UnitTests.FluentNotificationStackTests.Publishing
         {
             _notificationStack.Received().Publish(_message);
         }
-
-        [Then]
-        public void TheMessageIsPopulatedWithComponent()
-        {
-            _notificationStack.Received().Publish(Arg.Is<Message>(x => x.RaisingComponent == RegisterningComponent));
-        }
-
-        [Then]
-        public void TheMessageIsPopulatedWithTenant()
-        {
-            _notificationStack.Received().Publish(Arg.Is<Message>(x => x.Tenant == Tenant));
-        }
     }
 }

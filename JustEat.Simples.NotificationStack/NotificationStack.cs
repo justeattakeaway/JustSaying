@@ -108,6 +108,9 @@ namespace JustEat.Simples.NotificationStack.Stack
 
         public void Publish(Message message)
         {
+            message.RaisingComponent = Config.Component;
+            message.Tenant = Config.Tenant;
+
             var published = false;
             foreach (var topicPublisher in _messagePublishers.Values)
             {
