@@ -13,11 +13,6 @@ namespace JustEat.Simples.NotificationStack.Stack.Monitoring
             _publisher = publisher;
         }
 
-        public void Handled()
-        {
-            _publisher.Increment("notificationstack-message-handled");
-        }
-
         public void HandleException()
         {
             _publisher.Increment("notificationstack-message-handle-exception");
@@ -25,7 +20,7 @@ namespace JustEat.Simples.NotificationStack.Stack.Monitoring
 
         public void HandleTime(long handleTimeMs)
         {
-            _publisher.Timing(TimeSpan.FromMilliseconds(handleTimeMs), "notificationstack-sqs-message-handled");
+            _publisher.Timing(TimeSpan.FromMilliseconds(handleTimeMs), "notificationstack-message-handled");
         }
 
         public void IssuePublishingMessage()

@@ -112,7 +112,6 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                             handler(typedMessage);
                             watch.Stop();
                             Log.Trace("Handled message - MessageType: " + messageType);
-                            _messagingMonitor.Handled();
                             _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
                         }
                     }
