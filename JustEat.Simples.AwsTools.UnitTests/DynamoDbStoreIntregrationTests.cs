@@ -44,7 +44,7 @@ namespace AwsTools.UnitTests
             _tableName = "Test-" + Guid.NewGuid();
         }
 
-        [Test]
+        [Test, Explicit]
         public void CreateDynamoDbIfDoesNotExist()
         {
             DynamoDbConfig config = GetDynamoDbConfig();
@@ -55,7 +55,7 @@ namespace AwsTools.UnitTests
             AssertDynamoDbExists(_tableName);
         }
 
-        [Test]
+        [Test, Explicit]
         public void CanHandleConcurrentCalls()
         {
             DynamoDbConfig config = GetDynamoDbConfig();
