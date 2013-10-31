@@ -5,21 +5,20 @@ using NLog;
 
 namespace JustEat.Simples.NotificationStack.AwsTools
 {
-    public class DynamoDb
+    public class DynamoTable
     {
         private readonly DynamoDbConfig _config;
         private readonly AmazonDynamoDBClient _client;
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
         private readonly string[] _expectedErrorCodesForConcurrentCalls = new[] { "ResourceInUseException", "ThrottlingException" };
 
-        public DynamoDb(DynamoDbConfig config, AmazonDynamoDBClient client)
+        public DynamoTable(DynamoDbConfig config, AmazonDynamoDBClient client)
         {
             _config = config;
             _client = client;
-            CreateTableIfNotExist();
         }
 
-        private void CreateTableIfNotExist()
+        public void CreateIfNotExist()
         {
             var request = new DescribeTableRequest { TableName = _config.TableName };
             try
@@ -31,7 +30,6 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                 CreateTable();
             }
         }
-
         private void CreateTable()
         {
             var request = new CreateTableRequest

@@ -48,8 +48,9 @@ namespace AwsTools.UnitTests
         public void CreateDynamoDbIfDoesNotExist()
         {
             DynamoDbConfig config = GetDynamoDbConfig();
+            DynamoTable table = new DynamoTable(config, _client);
 
-            DynamoDb db = new DynamoDb(config, _client);
+            table.CreateIfNotExist();
 
             AssertDynamoDbExists(_tableName);
         }
@@ -59,8 +60,8 @@ namespace AwsTools.UnitTests
         {
             DynamoDbConfig config = GetDynamoDbConfig();
 
-            Task.Factory.StartNew(() => new DynamoDb(config, _client));
-            var tasks = Enumerable.Repeat(Task.Factory.StartNew(() => { new DynamoDb(config, _client); }), 10);
+            var table = new DynamoTable(config, _client);
+            var tasks = Enumerable.Repeat(Task.Factory.StartNew(table.CreateIfNotExist), 10);
             Task.WaitAll(tasks.ToArray());
 
             AssertDynamoDbExists(_tableName);

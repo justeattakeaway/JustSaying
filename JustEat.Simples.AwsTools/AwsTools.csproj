@@ -51,7 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DynamoDb.cs" />
+    <Compile Include="DynamoTable.cs" />
     <Compile Include="DynamoDbConfig.cs" />
     <Compile Include="DynamoStore.cs" />
     <Compile Include="InstanceMetaData.cs" />
