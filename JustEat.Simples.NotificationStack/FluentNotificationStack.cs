@@ -7,6 +7,7 @@ using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
 using JustEat.Simples.NotificationStack.Messaging.Monitoring;
+using JustEat.Simples.NotificationStack.Stack.Amazon;
 using JustEat.Simples.NotificationStack.Stack.Monitoring;
 using JustEat.StatsD;
 using NLog;
@@ -23,7 +24,9 @@ namespace JustEat.Simples.NotificationStack.Stack
     public class FluentNotificationStack : FluentStackBase, IMessagePublisher
     {
         private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
+        
         public static Action<Exception> GlobalErrorHandler { get; private set; }
+        public static IVerifyAmazonQueues AmazonQueueCreator = new AmazonQueueCreator();
 
         public FluentNotificationStack(INotificationStack stack) : base(stack)
         {
@@ -79,21 +82,9 @@ namespace JustEat.Simples.NotificationStack.Stack
             var queueName = instancePosition.HasValue
                                 ? endpointProvider.GetLocationName(Stack.Config.Component, topic, instancePosition.Value)
                                 : endpointProvider.GetLocationName(Stack.Config.Component, topic);
-            var queue = new SqsQueueByName(queueName, AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
-            var eventTopic = new SnsTopicByName(new SnsPublishEndpointProvider(Stack.Config).GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), Stack.SerialisationRegister);
-
-            if (!queue.Exists())
-                queue.Create(messageRetentionSeconds, 0, visibilityTimeoutSeconds);
-
-            if (!eventTopic.Exists())
-                eventTopic.Create();
-
-            if (!eventTopic.IsSubscribed(queue))
-                eventTopic.Subscribe(queue);
-
-            if (!queue.HasPermission(eventTopic))
-                queue.AddPermission(eventTopic);
-
+            
+            var queue = AmazonQueueCreator.VerifyOrCreateQueue(Stack.Config, Stack.SerialisationRegister, queueName, topic, messageRetentionSeconds, visibilityTimeoutSeconds, instancePosition);
+            
             var sqsSubscriptionListener = new SqsNotificationListener(queue, Stack.SerialisationRegister, new NullMessageFootprintStore(), Stack.Monitor, GlobalErrorHandler);
             Stack.AddNotificationTopicSubscriber(topic, sqsSubscriptionListener);
             

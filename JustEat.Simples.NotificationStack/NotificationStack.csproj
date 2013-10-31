@@ -55,7 +55,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Amazon\AmazonQueueCreator.cs" />
     <Compile Include="FluentNotificationStack.cs" />
+    <Compile Include="Amazon\IVerifyAmazonQueues.cs" />
     <Compile Include="Monitoring\StatsDMessageMonitor.cs" />
     <Compile Include="NotificationStack.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
