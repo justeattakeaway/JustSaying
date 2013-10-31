@@ -24,20 +24,16 @@ namespace JustEat.Simples.NotificationStack.Stack
     public class FluentNotificationStack : FluentStackBase, IMessagePublisher
     {
         private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
-        
-        public static Action<Exception> GlobalErrorHandler { get; private set; }
         public static IVerifyAmazonQueues AmazonQueueCreator = new AmazonQueueCreator();
 
         public FluentNotificationStack(INotificationStack stack) : base(stack)
         {
         }
 
-        public static FluentMonitoring Register(Action<INotificationStackConfiguration> configuration, Action<Exception> onError = null)
+        public static FluentMonitoring Register(Action<INotificationStackConfiguration> configuration)
         {
             var config = new MessagingConfig();
             configuration.Invoke(config);
-
-            GlobalErrorHandler = onError ?? (ex => { });
 
             if (string.IsNullOrWhiteSpace(config.Environment))
                 throw new ArgumentNullException("config.Environment", "Cannot have a blank entry for config.Environment");
@@ -57,7 +53,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <param name="config">Configuration items</param>
         /// <returns></returns>
         [Obsolete("Use Register(Component component, Action<INotificationStackConfiguration> action) instead,", false)]
-        public static FluentMonitoring Register(IMessagingConfig config)
+        public static FluentMonitoring Register(IMessagingConfig config, Action<Exception> onError = null)
         {
             if (string.IsNullOrWhiteSpace(config.Environment))
                 throw new InvalidOperationException("Cannot have a blank entry for config.Environment");
@@ -76,7 +72,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <param name="visibilityTimeoutSeconds">Seconds message should be invisible to other other receiving components</param>
         /// <param name="instancePosition">Optional instance position as tagged by paas tools in AWS. Using this will cause the message to get handled by EACH instance in your cluster</param>
         /// <returns></returns>
-        public FluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30, int? instancePosition = null)
+        public FluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30, int? instancePosition = null, Action<Exception> onError = null)
         {
             var endpointProvider = new SqsSubscribtionEndpointProvider(Stack.Config);
             var queueName = instancePosition.HasValue
@@ -85,7 +81,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             
             var queue = AmazonQueueCreator.VerifyOrCreateQueue(Stack.Config, Stack.SerialisationRegister, queueName, topic, messageRetentionSeconds, visibilityTimeoutSeconds, instancePosition);
             
-            var sqsSubscriptionListener = new SqsNotificationListener(queue, Stack.SerialisationRegister, new NullMessageFootprintStore(), Stack.Monitor, GlobalErrorHandler);
+            var sqsSubscriptionListener = new SqsNotificationListener(queue, Stack.SerialisationRegister, new NullMessageFootprintStore(), Stack.Monitor, onError);
             Stack.AddNotificationTopicSubscriber(topic, sqsSubscriptionListener);
             
             Log.Info(string.Format("Created SQS topic subscription - Component: {0}, Topic: {1}, QueueName: {2}", Stack.Config.Component, topic, queue.QueueNamePrefix));
