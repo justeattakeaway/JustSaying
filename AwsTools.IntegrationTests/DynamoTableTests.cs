@@ -4,35 +4,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.Model;
 using JustEat.Simples.NotificationStack.AwsTools;
 using NUnit.Framework;
 
-namespace AwsTools.UnitTests
+namespace AwsTools.IntegrationTests
 {
     [TestFixture]
-    public class DynamoDbStoreIntregrationTests
-    {
-        [Test, Explicit]
-        public void SavingAndRetrievingAnItemInDynamoDb()
-        {
-            var client = new AmazonDynamoDBClient(RegionEndpoint.EUWest1);
-            var provider = new DynamoStore(new DynamoDBContext(client));
-            var defaultDynamoDbOperationConfig = new DynamoDBOperationConfig();
-            var key = Guid.NewGuid().ToString();
-            var item = new MessageFootprint() { MessageId = key };
-
-            provider.Save(item, defaultDynamoDbOperationConfig);
-
-            var footprint = provider.Read<MessageFootprint>(key, defaultDynamoDbOperationConfig);
-            Assert.IsNotNull(footprint);
-            Console.WriteLine(footprint.MessageId);
-        }
-    }
-
-    [TestFixture]
-    public class DynamoDbTests
+    public class DynamoTableTests
     {
         private string _tableName;
         private AmazonDynamoDBClient _client;
@@ -44,7 +23,7 @@ namespace AwsTools.UnitTests
             _tableName = "Test-" + Guid.NewGuid();
         }
 
-        [Test, Explicit]
+        [Test]
         public void CreateDynamoDbIfDoesNotExist()
         {
             DynamoDbConfig config = GetDynamoDbConfig();
@@ -55,7 +34,7 @@ namespace AwsTools.UnitTests
             AssertDynamoDbExists(_tableName);
         }
 
-        [Test, Explicit]
+        [Test]
         public void CanHandleConcurrentCalls()
         {
             DynamoDbConfig config = GetDynamoDbConfig();

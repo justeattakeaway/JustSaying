@@ -1,15 +1,14 @@
-﻿using System.Configuration;
-using System.Threading;
+﻿using System.Threading;
 using Amazon;
 using JustEat.Simples.NotificationStack.AwsTools;
 using NUnit.Framework;
 
-namespace AwsTools.UnitTests
+namespace AwsTools.IntegrationTests
 {
     [TestFixture]
     public class SqsQueueIntegrationTests
     {
-        [Test, Explicit]
+        [Test]
         // Use this to manually test the creation of a queue.
         public void CreatingAQueue()
         {
