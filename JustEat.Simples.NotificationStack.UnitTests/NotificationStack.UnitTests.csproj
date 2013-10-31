@@ -67,6 +67,8 @@
     <Compile Include="FluentNotificationStackTests\AddingMonitoring\WhenAddingACustomMonitor.cs" />
     <Compile Include="FluentNotificationStackTests\AddingMonitoring\WhenAddingAStatsDMonitor.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\BaseConfigValidationTest.cs" />
+    <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenErrorHandlingActionIsNotProvided.cs" />
+    <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenErrorHandlingActionIsProvided.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoComponentIsProvided.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoEnvironmentIsProvided.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoTenantIsProvided.cs" />

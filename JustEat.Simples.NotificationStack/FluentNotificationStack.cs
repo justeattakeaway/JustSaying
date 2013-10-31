@@ -23,15 +23,18 @@ namespace JustEat.Simples.NotificationStack.Stack
     public class FluentNotificationStack : FluentStackBase, IMessagePublisher
     {
         private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
+        public static Action<Exception> GlobalErrorHandler { get; private set; }
 
         public FluentNotificationStack(INotificationStack stack) : base(stack)
         {
         }
 
-        public static FluentMonitoring Register(Action<INotificationStackConfiguration> configuration)
+        public static FluentMonitoring Register(Action<INotificationStackConfiguration> configuration, Action<Exception> onError = null)
         {
             var config = new MessagingConfig();
             configuration.Invoke(config);
+
+            GlobalErrorHandler = onError ?? (ex => { });
 
             if (string.IsNullOrWhiteSpace(config.Environment))
                 throw new ArgumentNullException("config.Environment", "Cannot have a blank entry for config.Environment");
@@ -91,7 +94,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             if (!queue.HasPermission(eventTopic))
                 queue.AddPermission(eventTopic);
 
-            var sqsSubscriptionListener = new SqsNotificationListener(queue, Stack.SerialisationRegister, new NullMessageFootprintStore(), Stack.Monitor);
+            var sqsSubscriptionListener = new SqsNotificationListener(queue, Stack.SerialisationRegister, new NullMessageFootprintStore(), Stack.Monitor, GlobalErrorHandler);
             Stack.AddNotificationTopicSubscriber(topic, sqsSubscriptionListener);
             
             Log.Info(string.Format("Created SQS topic subscription - Component: {0}, Topic: {1}, QueueName: {2}", Stack.Config.Component, topic, queue.QueueNamePrefix));

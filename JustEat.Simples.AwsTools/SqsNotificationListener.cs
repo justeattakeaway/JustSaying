@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 using NLog;
@@ -18,16 +17,18 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         private readonly IMessageSerialisationRegister _serialisationRegister;
         private readonly IMessageFootprintStore _messageFootprintStore;
         private readonly IMessageMonitor _messagingMonitor;
+        private readonly Action<Exception> _onError;
         private readonly Dictionary<Type, List<Action<Message>>> _handlers;
         private bool _listen = true;
         private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
-        public SqsNotificationListener(SqsQueueBase queue, IMessageSerialisationRegister serialisationRegister, IMessageFootprintStore messageFootprintStore, IMessageMonitor messagingMonitor)
+        public SqsNotificationListener(SqsQueueBase queue, IMessageSerialisationRegister serialisationRegister, IMessageFootprintStore messageFootprintStore, IMessageMonitor messagingMonitor, Action<Exception> onError = null)
         {
             _queue = queue;
             _serialisationRegister = serialisationRegister;
             _messageFootprintStore = messageFootprintStore;
             _messagingMonitor = messagingMonitor;
+            _onError = onError ?? (ex => { });
             _handlers = new Dictionary<Type, List<Action<Message>>>();
         }
 
@@ -123,7 +124,11 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                     Log.Trace("Didn't handle message {0}. No serialiser setup", JObject.Parse(message.Body)["Subject"].ToString());
                     _queue.Client.DeleteMessage(new DeleteMessageRequest().WithQueueUrl(_queue.Url).WithReceiptHandle(message.ReceiptHandle));
                 }
-                catch (Exception ex) { Log.ErrorException(string.Format("Issue handling message... {0}. StackTrace: {1}", message, ex.StackTrace), ex); }
+                catch (Exception ex)
+                {
+                    Log.ErrorException(string.Format("Issue handling message... {0}. StackTrace: {1}", message, ex.StackTrace), ex);
+                    _onError(ex);
+                }
             };
 
             run.BeginInvoke(null, null);
