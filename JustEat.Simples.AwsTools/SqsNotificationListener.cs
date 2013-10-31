@@ -90,7 +90,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             }
         }
 
-        private void HandleMessage(Amazon.SQS.Model.Message message)
+        public void HandleMessage(Amazon.SQS.Model.Message message)
         {
             Action run = () =>
             {
