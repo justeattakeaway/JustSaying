@@ -23,12 +23,6 @@ namespace AwsTools.UnitTests.SqsNotificationListener.HandlingExceptions
             Assert.That(ThrownException, Is.Null);
         }
 
-        [Then]
-        public void DefaultGlobalErrorHandlerIsProvided()
-        {
-            Assert.That(Handler, Is.Not.Null);
-        }
-
         protected override void Given() { }
     }
 }
