@@ -60,6 +60,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FluentNotificationStack\WhenAMessageThrowsAnException.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="FluentNotificationStack\WhenRegisteringASqsMessageHandler.cs" />
     <Compile Include="FluentNotificationStack\WhenAMessageIsPublishedViaSnsToSqsSubscriber.cs" />
     <Compile Include="FluentNotificationStack\WhenRegisteringAPublisher.cs" />
