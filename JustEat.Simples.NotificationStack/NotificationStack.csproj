@@ -31,6 +31,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="AWSSDK, Version=1.5.28.3, Culture=neutral, PublicKeyToken=9f476d3089b52be3, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -52,7 +55,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Amazon\AmazonQueueCreator.cs" />
     <Compile Include="FluentNotificationStack.cs" />
+    <Compile Include="Amazon\IVerifyAmazonQueues.cs" />
     <Compile Include="Monitoring\StatsDMessageMonitor.cs" />
     <Compile Include="NotificationStack.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
