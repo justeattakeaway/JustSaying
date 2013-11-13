@@ -61,6 +61,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BasicHandlingThrottlingTest.cs" />
     <Compile Include="DynamoDbStoreIntregrationTests.cs" />
     <Compile Include="DynamoTableTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -73,6 +74,14 @@
     <ProjectReference Include="..\JustEat.Simples.AwsTools\AwsTools.csproj">
       <Project>{cbf2110b-c3a4-45e8-bbd6-301d77567043}</Project>
       <Name>AwsTools</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\JustEat.Simples.Messaging\Messaging.csproj">
+      <Project>{899CD315-37B3-46D0-B2DC-FB94C552D968}</Project>
+      <Name>Messaging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Tests.MessageStubs\Tests.MessageStubs.csproj">
+      <Project>{26E0A5AC-EE6E-4C82-A859-35964C3FFB94}</Project>
+      <Name>Tests.MessageStubs</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
