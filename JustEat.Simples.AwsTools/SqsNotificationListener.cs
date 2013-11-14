@@ -18,7 +18,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         private readonly IMessageFootprintStore _messageFootprintStore;
         private readonly IMessageMonitor _messagingMonitor;
         private readonly Action<Exception> _onError;
-        private readonly Dictionary<Type, List<Action<Message>>> _handlers;
+        private readonly Dictionary<Type, List<Func<Message, bool>>> _handlers;
         private bool _listen = true;
         private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
@@ -29,29 +29,31 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             _messageFootprintStore = messageFootprintStore;
             _messagingMonitor = messagingMonitor;
             _onError = onError ?? (ex => { });
-            _handlers = new Dictionary<Type, List<Action<Message>>>();
+            _handlers = new Dictionary<Type, List<Func<Message, bool>>>();
         }
 
         public void AddMessageHandler<T>(IHandler<T> handler) where T : Message
         {
-            List<Action<Message>> handlers;
+            List<Func<Message, bool>> handlers;
             if (!_handlers.TryGetValue(typeof(T), out handlers))
             {
-                handlers = new List<Action<Message>>();
+                handlers = new List<Func<Message, bool>>();
                 _handlers.Add(typeof(T), handlers);
             }
-            
+
             handlers.Add(DelegateAdjuster.CastArgument<Message, T>(x => RepeatCallSafe(x, handler)));
         }
 
-        private void RepeatCallSafe<T>(T message, IHandler<T> handler) where T : Message
+        private bool RepeatCallSafe<T>(T message, IHandler<T> handler) where T : Message
         {
             if (_messageFootprintStore.IsMessageReceieved(message.Id))
-                return;
-
-            handler.Handle(message);
-
+            {
+                return true;
+            }
+            
+            var result = handler.Handle(message);
             _messageFootprintStore.MarkMessageAsRecieved(message.Id);
+            return result;
         }
 
         public void Listen()
@@ -102,22 +104,29 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                                 .GetSerialiser(messageType)
                                 .Deserialise(JObject.Parse(message.Body)["Message"].ToString());
 
+                    var handlingSucceeded = true;
+
                     if (typedMessage != null)
                     {
-                        List<Action<Message>> handlers;
+                        List<Func<Message, bool>> handlers;
                         if (!_handlers.TryGetValue(typedMessage.GetType(), out handlers)) return;
-                        foreach (var handler in handlers)
+
+                        foreach (var handle in handlers)
                         {
                             var watch = new System.Diagnostics.Stopwatch();
                             watch.Start();
-                            handler(typedMessage);
+
+                            if (!handle(typedMessage))
+                                handlingSucceeded = false;
+
                             watch.Stop();
                             Log.Trace("Handled message - MessageType: " + messageType);
                             _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
                         }
                     }
 
-                    _queue.Client.DeleteMessage(new DeleteMessageRequest().WithQueueUrl(_queue.Url).WithReceiptHandle(message.ReceiptHandle));
+                    if (handlingSucceeded)
+                        _queue.Client.DeleteMessage(new DeleteMessageRequest().WithQueueUrl(_queue.Url).WithReceiptHandle(message.ReceiptHandle));
                 }
                 catch (KeyNotFoundException)
                 {
