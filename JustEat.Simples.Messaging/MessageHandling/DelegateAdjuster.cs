@@ -5,19 +5,22 @@ namespace JustEat.Simples.NotificationStack.Messaging.MessageHandling
 {
     public class DelegateAdjuster
     {
-        public static Action<TBase> CastArgument<TBase, TDerived>(Expression<Action<TDerived>> source) where TDerived : TBase
+        public static Func<TBase, bool> CastArgument<TBase, TDerived>(Expression<Func<TDerived, bool>> source) where TDerived : TBase
         {
             if (typeof(TDerived) == typeof(TBase))
             {
-                return (Action<TBase>)((Delegate)source.Compile());
-
+                return (Func<TBase, bool>)((Delegate)source.Compile());
             }
+            
             var sourceParameter = Expression.Parameter(typeof(TBase), "source");
-            var result = Expression.Lambda<Action<TBase>>(
+
+            var result = Expression.Lambda<Func<TBase, bool>>(
                 Expression.Invoke(
-                    source,
-                    Expression.Convert(sourceParameter, typeof(TDerived))),
+                    source, 
+                    Expression.Convert(sourceParameter, typeof(TDerived))
+                ),
                 sourceParameter);
+
             return result.Compile();
         }
     }
