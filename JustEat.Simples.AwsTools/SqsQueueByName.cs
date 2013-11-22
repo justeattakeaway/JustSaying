@@ -60,7 +60,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                     // Ensure we wait for queue delete timeout to expire.
                     Log.Info(string.Format("Waiting to create Queue due to AWS time restriction - Queue: {0}, AttemptCount: {1}", QueueNamePrefix, attempt + 1));
                     Thread.Sleep(60000);
-                    Create(attempt++);
+                    Create(retentionPeriodSeconds, attempt++, visibilityTimeoutSeconds);
                 }
                 else
                 {
