@@ -13,7 +13,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
     public class WhenAMessageThrowsAnException
     {
         private readonly IHandler<GenericMessage> _handler = Substitute.For<IHandler<GenericMessage>>();
-        private JustEat.Simples.NotificationStack.Stack.FluentNotificationStack _publisher;
+        private JustEat.Simples.NotificationStack.Stack.IFluentNotificationStack _publisher;
         private Action<Exception> _globalErrorHandler;
         private bool _handledException;
 
@@ -24,7 +24,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
             _globalErrorHandler = ex => { _handledException = true; };
             var publisher = JustEat.Simples.NotificationStack.Stack.FluentNotificationStack.Register(c =>
                                                                         {
-                                                                            c.Component = "TestHarness";
+                                                                            c.Component = "TestHarnessExceptions";
                                                                             c.Tenant = "Wherever";
                                                                             c.Environment = "integration";
                                                                             c.PublishFailureBackoffMilliseconds = 1;
@@ -43,9 +43,9 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
         public void CustomExceptionHandlingIsCalled()
         {
             _publisher.Publish(new GenericMessage());
-            Thread.Sleep(500);
+            Thread.Sleep(1000);
+
             _handler.Received().Handle(Arg.Any<GenericMessage>());
-            Thread.Sleep(200);
             Assert.That(_handledException, Is.EqualTo(true));
         }
 

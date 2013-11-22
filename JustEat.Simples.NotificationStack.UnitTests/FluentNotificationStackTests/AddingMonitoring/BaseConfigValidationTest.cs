@@ -4,13 +4,13 @@ using NSubstitute;
 
 namespace Stack.UnitTests.FluentNotificationStackTests.AddingMonitoring
 {
-    public abstract class BaseMonitoringTest : BehaviourTest<FluentMonitoring>
+    public abstract class BaseMonitoringTest : BehaviourTest<FluentNotificationStack>
     {
         protected readonly INotificationStack Stack = Substitute.For<INotificationStack>();
 
-        protected override FluentMonitoring CreateSystemUnderTest()
+        protected override FluentNotificationStack CreateSystemUnderTest()
         {
-            return new FluentMonitoring(Stack);
+            return new FluentNotificationStack(Stack, null);
         }
 
         protected override void Given()

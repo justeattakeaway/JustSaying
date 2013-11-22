@@ -3,28 +3,28 @@ using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
 using JustEat.Simples.NotificationStack.Stack;
+using JustEat.Simples.NotificationStack.Stack.Amazon;
 using JustEat.Testing;
 using NSubstitute;
 
 namespace Stack.UnitTests.FluentNotificationStackTests.AddingHandlers
 {
-    public class WhenAddingASubscriptionHandler : BehaviourTest<FluentSubscription>
+    public class WhenAddingASubscriptionHandler : BehaviourTest<FluentNotificationStack>
     {
         private readonly INotificationStack _stack = Substitute.For<INotificationStack>();
-        private readonly IMessageSerialisationRegister _serialisationReg = Substitute.For<IMessageSerialisationRegister>();
         private readonly IHandler<Message> _handler = Substitute.For<IHandler<Message>>();
         private const string Topic = "CustomerCommunication";
 
-        protected override FluentSubscription CreateSystemUnderTest()
+        protected override FluentNotificationStack CreateSystemUnderTest()
         {
-            return new FluentSubscription(_stack, Topic);
+            return new FluentNotificationStack(_stack, Substitute.For<IVerifyAmazonQueues>());
         }
 
         protected override void Given(){}
 
         protected override void When()
         {
-            SystemUnderTest.WithMessageHandler(_handler);
+            SystemUnderTest.WithSqsTopicSubscriber(Topic, 1).WithMessageHandler(_handler);
         }
 
         [Then]

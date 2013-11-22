@@ -12,7 +12,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
     public class WhenAMessageIsPublishedViaSnsToSqsSubscriber
     {
         private readonly IHandler<GenericMessage> _handler = Substitute.For<IHandler<GenericMessage>>();
-        private JustEat.Simples.NotificationStack.Stack.FluentNotificationStack _publisher;
+        private JustEat.Simples.NotificationStack.Stack.IFluentNotificationStack _publisher;
 
         [SetUp]
         public void Given()
@@ -21,7 +21,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
 
             var publisher = JustEat.Simples.NotificationStack.Stack.FluentNotificationStack.Register(c =>
                                                                         {
-                                                                            c.Component = "TestHarness";
+                                                                            c.Component = "TestHarnessHandling";
                                                                             c.Tenant = "Wherever";
                                                                             c.Environment = "integration";
                                                                             c.PublishFailureBackoffMilliseconds = 1;
@@ -40,7 +40,8 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
         public void ThenItGetsHandled()
         {
             _publisher.Publish(new GenericMessage());
-            Thread.Sleep(500);
+            Thread.Sleep(2000);
+
             _handler.Received().Handle(Arg.Any<GenericMessage>());
         }
 
