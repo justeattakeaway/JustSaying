@@ -106,7 +106,10 @@ namespace JustEat.Simples.NotificationStack.Stack
             Log.Info("Added publisher");
 
             var endpointProvider = new SnsPublishEndpointProvider(_stack.Config);
-            var eventPublisher = new SnsTopicByName(endpointProvider.GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), _stack.SerialisationRegister);
+            var eventPublisher = new SnsTopicByName(
+                endpointProvider.GetLocationName(topic),
+                AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.GetBySystemName(_stack.Config.Region)),
+                _stack.SerialisationRegister);
 
             if (!eventPublisher.Exists())
                 eventPublisher.Create();
