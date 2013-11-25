@@ -2,6 +2,7 @@ using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
 using JustEat.Simples.NotificationStack.Stack;
+using JustEat.Simples.NotificationStack.Stack.Amazon;
 using JustEat.Testing;
 using NSubstitute;
 
@@ -14,7 +15,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
 
         protected override JustEat.Simples.NotificationStack.Stack.FluentNotificationStack CreateSystemUnderTest()
         {
-            return new FluentSubscription(_stack, Topic);
+            return new JustEat.Simples.NotificationStack.Stack.FluentNotificationStack(_stack, null);
         }
 
         protected override void Given() { }
