@@ -60,13 +60,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FluentNotificationStack\WhenAMessageThrowsAnException.cs">
+    <Compile Include="FluentNotificationStackTests\WhenAMessageThrowsAnException.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="FluentNotificationStack\WhenRegisteringASqsMessageHandler.cs" />
-    <Compile Include="FluentNotificationStack\WhenAMessageIsPublishedViaSnsToSqsSubscriber.cs" />
-    <Compile Include="FluentNotificationStack\WhenRegisteringAPublisher.cs" />
+    <Compile Include="FluentNotificationStackTests\WhenRegisteringASqsMessageHandler.cs" />
+    <Compile Include="FluentNotificationStackTests\WhenAMessageIsPublishedViaSnsToSqsSubscriber.cs" />
+    <Compile Include="FluentNotificationStackTests\WhenRegisteringAPublisher.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WhenConfiguringTheRegion\WhenRegisteringAPublisher.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

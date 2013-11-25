@@ -1,22 +1,21 @@
 ﻿using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
-using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
+using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Stack;
 using JustEat.Simples.NotificationStack.Stack.Amazon;
 using JustEat.Testing;
 using NSubstitute;
 
-namespace NotificationStack.IntegrationTests.FluentNotificationStack
+namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
 {
-    public class WhenRegisteringASqsMessageHandler : BehaviourTest<JustEat.Simples.NotificationStack.Stack.FluentNotificationStack>
+    public class WhenRegisteringASqsMessageHandler : BehaviourTest<FluentNotificationStack>
     {
         private readonly INotificationStack _stack = Substitute.For<INotificationStack>();
-        private readonly IMessageSerialisationRegister _serialisationReg = Substitute.For<IMessageSerialisationRegister>();
         private const string Topic = "CustomerCommunication";
 
-        protected override JustEat.Simples.NotificationStack.Stack.FluentNotificationStack CreateSystemUnderTest()
+        protected override FluentNotificationStack CreateSystemUnderTest()
         {
-            return new JustEat.Simples.NotificationStack.Stack.FluentNotificationStack(_stack, Substitute.For<IVerifyAmazonQueues>());
+            return new FluentNotificationStack(_stack, Substitute.For<IVerifyAmazonQueues>());
         }
 
         protected override void Given() { }

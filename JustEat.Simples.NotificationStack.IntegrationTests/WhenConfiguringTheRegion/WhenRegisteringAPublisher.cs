@@ -1,14 +1,13 @@
 using JustEat.Simples.NotificationStack.Messaging;
-using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
+using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Stack;
-using JustEat.Simples.NotificationStack.Stack.Amazon;
 using JustEat.Testing;
 using NSubstitute;
 
-namespace NotificationStack.IntegrationTests.FluentNotificationStack
+namespace NotificationStack.IntegrationTests.WhenConfiguringTheRegion
 {
-    public class WhenRegisteringAPublisher : BehaviourTest<JustEat.Simples.NotificationStack.Stack.FluentNotificationStack>
+    public class WhenRegisteringAPublisher : BehaviourTest<FluentNotificationStack>
     {
         private readonly INotificationStack _stack = Substitute.For<INotificationStack>();
         private const string Topic = "CustomerCommunication";

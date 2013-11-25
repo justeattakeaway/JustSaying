@@ -1,27 +1,31 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
-using JustEat.Simples.NotificationStack.Messaging.Messages;
 using JustEat.Simples.NotificationStack.Messaging.Monitoring;
+using JustEat.Simples.NotificationStack.Stack;
+using JustEat.Testing;
 using NSubstitute;
 using NUnit.Framework;
 using Tests.MessageStubs;
 
-namespace NotificationStack.IntegrationTests.FluentNotificationStack
+namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
 {
     [TestFixture]
-    public class WhenAMessageIsPublishedViaSnsToSqsSubscriber
+    public class WhenAMessageThrowsAnException
     {
         private readonly IHandler<GenericMessage> _handler = Substitute.For<IHandler<GenericMessage>>();
-        private JustEat.Simples.NotificationStack.Stack.IFluentNotificationStack _publisher;
+        private IFluentNotificationStack _publisher;
+        private Action<Exception> _globalErrorHandler;
+        private bool _handledException;
 
         [SetUp]
         public void Given()
         {
-            _handler.Handle(Arg.Any<GenericMessage>()).Returns(true);
-
-            var publisher = JustEat.Simples.NotificationStack.Stack.FluentNotificationStack.Register(c =>
+            _handler.Handle(Arg.Any<GenericMessage>()).Returns(true).AndDoes(ex => { throw new Exception("My Ex"); });
+            _globalErrorHandler = ex => { _handledException = true; };
+            var publisher = FluentNotificationStack.Register(c =>
                                                                         {
-                                                                            c.Component = "TestHarnessHandling";
+                                                                            c.Component = "TestHarnessExceptions";
                                                                             c.Tenant = "Wherever";
                                                                             c.Environment = "integration";
                                                                             c.PublishFailureBackoffMilliseconds = 1;
@@ -29,20 +33,21 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStack
                                                                         })
                                                                         .WithMonitoring(Substitute.For<IMessageMonitor>())
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
-                .WithSqsTopicSubscriber("CustomerCommunication", 60, instancePosition: 1)
+                .WithSqsTopicSubscriber("CustomerCommunication", 60, instancePosition: 1, onError: _globalErrorHandler)
                 .WithMessageHandler(_handler);
 
             publisher.StartListening();
             _publisher = publisher;
         }
 
-        [Test]
-        public void ThenItGetsHandled()
+        [Then]
+        public void CustomExceptionHandlingIsCalled()
         {
             _publisher.Publish(new GenericMessage());
-            Thread.Sleep(2000);
+            Thread.Sleep(1000);
 
             _handler.Received().Handle(Arg.Any<GenericMessage>());
+            Assert.That(_handledException, Is.EqualTo(true));
         }
 
         [TearDown]
