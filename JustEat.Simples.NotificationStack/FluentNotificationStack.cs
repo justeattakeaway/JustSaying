@@ -1,7 +1,5 @@
 using System;
-using System.Security.Cryptography.X509Certificates;
 using Amazon;
-using Amazon.EC2.Model;
 using JustEat.Simples.NotificationStack.AwsTools;
 using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.Lookups;
@@ -23,7 +21,7 @@ namespace JustEat.Simples.NotificationStack.Stack
     /// 2. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class FluentNotificationStack : IMessagePublisher, IFluentNotificationStack, IFluentMonitoring, IFluentSubscription
+    public class FluentNotificationStack : IFluentMonitoring, IFluentSubscription
     {
         private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
@@ -62,25 +60,6 @@ namespace JustEat.Simples.NotificationStack.Stack
             }
 
             return new FluentNotificationStack(new NotificationStack(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
-        }
-
-        /// <summary>
-        /// Create a new notification stack registration.
-        /// </summary>
-        /// <param name="config">Configuration items</param>
-        /// <returns></returns>
-        [Obsolete("Use Register(Component component, Action<INotificationStackConfiguration> action) instead,", false)]
-        public static IFluentMonitoring Register(IMessagingConfig config)
-        {
-            return Register(x =>
-            {
-                x.Component = config.Component;
-                x.Environment = config.Environment;
-                x.PublishFailureBackoffMilliseconds = config.PublishFailureBackoffMilliseconds;
-                x.PublishFailureReAttempts = config.PublishFailureReAttempts;
-                x.Tenant = config.Tenant;
-                x.Region = config.Region;
-            });
         }
 
         /// <summary>
