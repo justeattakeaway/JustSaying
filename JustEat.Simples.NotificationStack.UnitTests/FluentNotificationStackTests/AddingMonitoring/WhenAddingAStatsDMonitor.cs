@@ -14,7 +14,7 @@ namespace Stack.UnitTests.FluentNotificationStackTests.AddingMonitoring
         [Then]
         public void ThenAStatsDMonitorIsProvided()
         {
-            Stack.Received().Monitor = Arg.Any<StatsDMessageMonitor>();
+            NotificationStack.Received().Monitor = Arg.Any<StatsDMessageMonitor>();
         }
     }
 }

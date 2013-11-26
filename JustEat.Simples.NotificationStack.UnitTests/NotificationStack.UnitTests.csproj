@@ -66,8 +66,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FluentNotificationStackTestBase.cs" />
     <Compile Include="FluentNotificationStackTests\AddingHandlers\WhenAddingASubscriptionHandler.cs" />
-    <Compile Include="FluentNotificationStackTests\AddingMonitoring\BaseConfigValidationTest.cs" />
+    <Compile Include="FluentNotificationStackTests\AddingMonitoring\BaseMonitoringTest.cs" />
     <Compile Include="FluentNotificationStackTests\AddingMonitoring\WhenAddingACustomMonitor.cs" />
     <Compile Include="FluentNotificationStackTests\AddingMonitoring\WhenAddingAStatsDMonitor.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\BaseConfigValidationTest.cs" />
@@ -75,7 +76,6 @@
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoEnvironmentIsProvided.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoTenantIsProvided.cs" />
     <Compile Include="FluentNotificationStackTests\Publishing\WhenPublishing.cs" />
-    <Compile Include="FluentNotificationStackTests\Publishing\WhenPublishingAndNotInstantiated.cs" />
     <Compile Include="NotificationStack\NotificationStackBaseTest.cs" />
     <Compile Include="NotificationStack\WhenAddingAPublisherWithNoTopic.cs" />
     <Compile Include="NotificationStack\WhenPublishingFails.cs" />

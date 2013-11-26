@@ -1,5 +1,7 @@
 using System;
+using System.Security.Cryptography.X509Certificates;
 using Amazon;
+using Amazon.EC2.Model;
 using JustEat.Simples.NotificationStack.AwsTools;
 using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.Lookups;
@@ -28,7 +30,12 @@ namespace JustEat.Simples.NotificationStack.Stack
         private readonly INotificationStack _stack;
         private string _currnetTopic;
 
-        public FluentNotificationStack(INotificationStack stack, IVerifyAmazonQueues queueCreator)
+        public static string DefaultEndpoint
+        {
+            get { return RegionEndpoint.EUWest1.SystemName; }
+        }
+
+        private FluentNotificationStack(INotificationStack stack, IVerifyAmazonQueues queueCreator)
         {
             _stack = stack;
             _amazonQueueCreator = queueCreator;
@@ -47,6 +54,12 @@ namespace JustEat.Simples.NotificationStack.Stack
 
             if (string.IsNullOrWhiteSpace(config.Component))
                 throw new ArgumentNullException("config.Component", "Cannot have a blank entry for config.Component");
+            
+            if (string.IsNullOrWhiteSpace(config.Region))
+            {
+                config.Region = RegionEndpoint.EUWest1.SystemName;
+                Log.Info("No Region was specified, using {0} by default.", config.Region);
+            }
 
             return new FluentNotificationStack(new NotificationStack(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
         }
@@ -59,13 +72,15 @@ namespace JustEat.Simples.NotificationStack.Stack
         [Obsolete("Use Register(Component component, Action<INotificationStackConfiguration> action) instead,", false)]
         public static IFluentMonitoring Register(IMessagingConfig config)
         {
-            if (string.IsNullOrWhiteSpace(config.Environment))
-                throw new InvalidOperationException("Cannot have a blank entry for config.Environment");
-
-            if (string.IsNullOrWhiteSpace(config.Tenant))
-                throw new InvalidOperationException("Cannot have a blank entry for config.Tenant");
-
-            return new FluentNotificationStack(new NotificationStack(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
+            return Register(x =>
+            {
+                x.Component = config.Component;
+                x.Environment = config.Environment;
+                x.PublishFailureBackoffMilliseconds = config.PublishFailureBackoffMilliseconds;
+                x.PublishFailureReAttempts = config.PublishFailureReAttempts;
+                x.Tenant = config.Tenant;
+                x.Region = config.Region;
+            });
         }
 
         /// <summary>
