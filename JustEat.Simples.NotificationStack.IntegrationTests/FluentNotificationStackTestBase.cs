@@ -1,9 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using Amazon;
 using Amazon.SimpleNotificationService.Model;
+using Amazon.SQS.Model;
 using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.Lookups;
 using JustEat.Simples.NotificationStack.Stack;
@@ -17,7 +20,8 @@ namespace NotificationStack.IntegrationTests
         protected INotificationStackConfiguration Configuration;
         protected INotificationStack NotificationStack { get; private set; }
         private bool _mockNotificationStack;
-
+        protected const int QueueCreationDelayMilliseconds = 10 * 1000;
+        
         protected override void Given()
         {
             throw new NotImplementedException();
@@ -67,7 +71,8 @@ namespace NotificationStack.IntegrationTests
         }
 
         public static void DeleteTopicIfItAlreadyExists(RegionEndpoint regionEndpoint, string topicName)
-        {            var topics = GetAllTopics(regionEndpoint, topicName);
+        {            
+            var topics = GetAllTopics(regionEndpoint, topicName);
             
             topics.ForEach(t => DeleteTopic(regionEndpoint, t));
 
@@ -78,27 +83,70 @@ namespace NotificationStack.IntegrationTests
             }
         }
 
+        protected void DeleteQueueIfItAlreadyExists(RegionEndpoint regionEndpoint, string queueName)
+        {
+            var queues = GetAllQueues(regionEndpoint, queueName);
+
+            queues.ForEach(t => DeleteQueue(regionEndpoint, t));
+
+            const int maxSleepTime = 60;
+            const int sleepStep = 5*1000;
+            
+            var start = DateTime.Now;
+
+            while ((DateTime.Now - start).TotalSeconds <= maxSleepTime)
+            {
+                string queueUrl;
+                if (!TryGetQueue(regionEndpoint, queueName, out queueUrl))
+                {
+                    return;
+                }
+                
+                Thread.Sleep(sleepStep);
+            }
+
+            throw new Exception(string.Format("Deleted queue still exists {0} seconds after deletion!", (DateTime.Now - start).TotalSeconds));
+        }
+
         public static void DeleteTopic(RegionEndpoint regionEndpoint, Topic topic)
         {
             var client = AWSClientFactory.CreateAmazonSNSClient(regionEndpoint);
             client.DeleteTopic(new DeleteTopicRequest { TopicArn = topic.TopicArn });
         }
 
+        public static void DeleteQueue(RegionEndpoint regionEndpoint, string queueUrl)
+        {
+            var client = AWSClientFactory.CreateAmazonSQSClient(regionEndpoint);
+            client.DeleteQueue(new DeleteQueueRequest { QueueUrl = queueUrl });
+        }
+
         private static List<Topic> GetAllTopics(RegionEndpoint regionEndpoint, string topicName)
         {
             var client = AWSClientFactory.CreateAmazonSNSClient(regionEndpoint);
             var topics = client.ListTopics(new ListTopicsRequest());
-            return topics.ListTopicsResult.Topics;
+            return topics.ListTopicsResult.Topics.Where(x => x.TopicArn.IndexOf(topicName, StringComparison.InvariantCultureIgnoreCase) >= 0).ToList();
+        }
+
+        private static List<string> GetAllQueues(RegionEndpoint regionEndpoint, string queueName)
+        {
+            var client = AWSClientFactory.CreateAmazonSQSClient(regionEndpoint);
+            var topics = client.ListQueues(new ListQueuesRequest());
+            return topics.ListQueuesResult.QueueUrl.Where(x => x.IndexOf(queueName, StringComparison.InvariantCultureIgnoreCase) >= 0).ToList();
         }
 
         public static bool TryGetTopic(RegionEndpoint regionEndpoint, string topicName, out Topic topic)
         {
-            var client = AWSClientFactory.CreateAmazonSNSClient(regionEndpoint);
-            var topics = client.ListTopics(new ListTopicsRequest());
-
-            topic = topics.ListTopicsResult.Topics.SingleOrDefault(x => x.TopicArn.IndexOf(topicName, StringComparison.InvariantCultureIgnoreCase) >= 0);
+            topic = GetAllTopics(regionEndpoint, topicName).SingleOrDefault();
 
             return topic != null;
+        }
+
+        public static bool TryGetQueue(RegionEndpoint regionEndpoint, string queueName, out string queueUrl)
+        {
+            
+            queueUrl = GetAllQueues(regionEndpoint, queueName).SingleOrDefault();
+
+            return !String.IsNullOrEmpty(queueUrl);
         }
     }
 }

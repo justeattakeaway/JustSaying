@@ -74,6 +74,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         public IFluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30, int? instancePosition = null, Action<Exception> onError = null)
         {
             var endpointProvider = new SqsSubscribtionEndpointProvider(_stack.Config);
+            
             var queueName = instancePosition.HasValue
                                 ? endpointProvider.GetLocationName(_stack.Config.Component, topic, instancePosition.Value)
                                 : endpointProvider.GetLocationName(_stack.Config.Component, topic);

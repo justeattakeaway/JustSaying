@@ -68,7 +68,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="WhenRegisteringAPublisher\WhenPublishingAndNotInstantiated.cs" />
-    <Compile Include="WhenRegisteringASqsSubscriber\WhenRegisteringASqsMessageHandler.cs" />
+    <Compile Include="WhenRegisteringASqsSubscriber\WhenRegisteringASqsTopicSubscriber.cs" />
     <Compile Include="FluentNotificationStackTests\WhenAMessageIsPublishedViaSnsToSqsSubscriber.cs" />
     <Compile Include="WhenRegisteringAPublisher\WhenRegisteringAPublisherASerialiserIsAddedForTheMessageType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
