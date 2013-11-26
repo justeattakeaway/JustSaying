@@ -66,6 +66,7 @@
     <Compile Include="FluentNotificationStack\WhenRegisteringASqsMessageHandler.cs" />
     <Compile Include="FluentNotificationStack\WhenAMessageIsPublishedViaSnsToSqsSubscriber.cs" />
     <Compile Include="FluentNotificationStack\WhenRegisteringAPublisher.cs" />
+    <Compile Include="FluentNotificationStack\WhenThrottlingIsEnabledALongRunningHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

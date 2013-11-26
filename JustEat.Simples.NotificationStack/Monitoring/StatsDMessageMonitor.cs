@@ -27,5 +27,15 @@ namespace JustEat.Simples.NotificationStack.Stack.Monitoring
         {
             _publisher.Increment("notificationstack-message-publish-exception");
         }
+
+        public void IncrementThrottlingStatistic()
+        {
+            _publisher.Increment("notificationstack-concurrency-throttled");
+        }
+
+        public void HandleThrottlingTime(long handleTimeMs)
+        {
+            _publisher.Timing(TimeSpan.FromMilliseconds(handleTimeMs), "notificationstack-message-throttle");
+        }
     }
 }
