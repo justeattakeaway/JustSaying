@@ -56,7 +56,7 @@ namespace AwsTools.UnitTests.MessageProcessingStrategies
         public void SimulatedListenLoop_WhenThrottlingOccurs_CallsMessageMonitor()
         {
             var actions = BuildFakeIncomingMessages(50);
-            _messageProcessingStrategy = new Throttled(11, _fakeAmazonBatchSize, _fakeMonitor);
+            _messageProcessingStrategy = new Throttled(20, _fakeAmazonBatchSize, _fakeMonitor);
 
             ListenLoopExecuted(actions);
 
