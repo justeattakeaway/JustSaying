@@ -32,10 +32,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AWSSDK, Version=1.5.28.3, Culture=neutral, PublicKeyToken=9f476d3089b52be3, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\JustEat.Simples.AwsTools\bin\Debug\AWSSDK.dll</HintPath>
-    </Reference>
     <Reference Include="JustEat.StatsD, Version=1.0.0.87, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\JustEat.StatsD.1.0.0.87\lib\JustEat.StatsD.dll</HintPath>
