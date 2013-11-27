@@ -90,19 +90,16 @@ namespace NotificationStack.IntegrationTests
             queues.ForEach(t => DeleteQueue(regionEndpoint, t));
 
             const int maxSleepTime = 60;
-            const int sleepStep = 5*1000;
-            
+            const int sleepStep = 5;
+
             var start = DateTime.Now;
 
             while ((DateTime.Now - start).TotalSeconds <= maxSleepTime)
             {
-                string queueUrl;
-                if (!TryGetQueue(regionEndpoint, queueName, out queueUrl))
-                {
+                if (!GetAllQueues(regionEndpoint, queueName).Any())
                     return;
-                }
-                
-                Thread.Sleep(sleepStep);
+
+                Thread.Sleep(TimeSpan.FromSeconds(sleepStep));
             }
 
             throw new Exception(string.Format("Deleted queue still exists {0} seconds after deletion!", (DateTime.Now - start).TotalSeconds));
@@ -134,19 +131,56 @@ namespace NotificationStack.IntegrationTests
             return topics.ListQueuesResult.QueueUrl.Where(x => x.IndexOf(queueName, StringComparison.InvariantCultureIgnoreCase) >= 0).ToList();
         }
 
-        public static bool TryGetTopic(RegionEndpoint regionEndpoint, string topicName, out Topic topic)
+        protected static bool TryGetTopic(RegionEndpoint regionEndpoint, string topicName, out Topic topic)
         {
             topic = GetAllTopics(regionEndpoint, topicName).SingleOrDefault();
 
             return topic != null;
         }
 
-        public static bool TryGetQueue(RegionEndpoint regionEndpoint, string queueName, out string queueUrl)
+        protected static bool WaitForQueueToExist(RegionEndpoint regionEndpoint, string queueName, out string queueUrl)
         {
+            const int maxSleepTime = 60;
+            const int sleepStep = 5;
             
-            queueUrl = GetAllQueues(regionEndpoint, queueName).SingleOrDefault();
+            var start = DateTime.Now;
 
-            return !String.IsNullOrEmpty(queueUrl);
+            while ((DateTime.Now - start).TotalSeconds <= maxSleepTime) 
+            {
+                queueUrl = GetAllQueues(regionEndpoint, queueName).SingleOrDefault();
+
+                if (!String.IsNullOrEmpty(queueUrl))
+                    return true;
+
+                Thread.Sleep(TimeSpan.FromSeconds(sleepStep));
+            }
+
+            queueUrl = null;
+            return false;
+        }
+
+        protected bool IsQueueSubscribedToTopic(RegionEndpoint regionEndpoint, Topic topic, string queueUrl)
+        {
+            var request = new GetQueueAttributesRequest().WithQueueUrl(queueUrl).WithAttributeName("QueueArn");
+
+            var sqsclient = AWSClientFactory.CreateAmazonSQSClient(regionEndpoint);
+
+            var queueArn = sqsclient.GetQueueAttributes(request).GetQueueAttributesResult.QueueARN;
+
+            var client = AWSClientFactory.CreateAmazonSNSClient(regionEndpoint);
+
+            var subscriptions =  client.ListSubscriptionsByTopic(new ListSubscriptionsByTopicRequest().WithTopicArn(topic.TopicArn)).ListSubscriptionsByTopicResult.Subscriptions;
+
+            return subscriptions.Any(x => x.IsSetSubscriptionArn() && x.Endpoint == queueArn);
+        }
+
+        protected bool QueueHasPolicyForTopic(RegionEndpoint regionEndpoint, Topic topic, string queueUrl)
+        {
+            var client = AWSClientFactory.CreateAmazonSQSClient(regionEndpoint);
+
+            var policy = client.GetQueueAttributes(new GetQueueAttributesRequest().WithQueueUrl(queueUrl).WithAttributeName(new[] { "Policy" })).GetQueueAttributesResult.Policy;
+
+            return policy.Contains(topic.TopicArn);
         }
     }
 }

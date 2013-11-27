@@ -68,6 +68,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="WhenRegisteringAPublisher\WhenPublishingAndNotInstantiated.cs" />
+    <Compile Include="WhenRegisteringASqsSubscriber\WhenRegisteringASqsTopicSubscriberInADefaultRegion.cs" />
     <Compile Include="WhenRegisteringASqsSubscriber\WhenRegisteringASqsTopicSubscriber.cs" />
     <Compile Include="FluentNotificationStackTests\WhenAMessageIsPublishedViaSnsToSqsSubscriber.cs" />
     <Compile Include="WhenRegisteringAPublisher\WhenRegisteringAPublisherASerialiserIsAddedForTheMessageType.cs" />
@@ -76,6 +77,7 @@
     <Compile Include="WhenRegisteringAPublisher\WhenRegisteringAPublisherAPublisherIsAddedToTheNotificationStack.cs" />
     <Compile Include="WhenRegisteringAPublisher\WhenRegisteringAPublisherInANonDefaultRegion.cs" />
     <Compile Include="WhenRegisteringAPublisher\WhenRegisteringAPublisherInTheDefaultRegion.cs" />
+    <Compile Include="WhenRegisteringASqsSubscriber\WhenRegisteringASqsTopicSubscriberInANonDefaultRegion.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
