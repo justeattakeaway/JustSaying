@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using Amazon.SQS.Model;
+using JustEat.Simples.NotificationStack.AwsTools.MessageProcessingStrategies;
+using JustEat.Simples.NotificationStack.AwsTools.MessageProcessingStrategies.JustEat.Simples.NotificationStack.AwsTools.MessageProcessingStrategies;
 using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 using NLog;
 using Newtonsoft.Json.Linq;
@@ -22,6 +24,9 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         private bool _listen = true;
         private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
+        private const int MaxAmazonMessageCap = 10;
+        private IMessageProcessingStrategy _messageProcessingStrategy;
+
         public SqsNotificationListener(SqsQueueBase queue, IMessageSerialisationRegister serialisationRegister, IMessageFootprintStore messageFootprintStore, IMessageMonitor messagingMonitor, Action<Exception> onError = null)
         {
             _queue = queue;
@@ -30,6 +35,13 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             _messagingMonitor = messagingMonitor;
             _onError = onError ?? (ex => { });
             _handlers = new Dictionary<Type, List<Func<Message, bool>>>();
+            _messageProcessingStrategy = new MaximumThroughput();
+        }
+
+        public SqsNotificationListener WithMaximumConcurrentLimitOnMessagesInFlightOf(int maximumAllowedMesagesInFlight)
+        {
+            _messageProcessingStrategy = new Throttled(maximumAllowedMesagesInFlight, MaxAmazonMessageCap, _messagingMonitor);
+            return this;
         }
 
         public void AddMessageHandler<T>(IHandler<T> handler) where T : Message
@@ -50,7 +62,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             {
                 return true;
             }
-            
+
             var result = handler.Handle(message);
             _messageFootprintStore.MarkMessageAsRecieved(message.Id);
             return result;
@@ -71,20 +83,32 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             Log.Info("Stopped Listening - Queue: " + _queue.QueueNamePrefix);
         }
 
-        private void ListenLoop()
+        internal void ListenLoop()
         {
             try
             {
-                var sqsMessageResponse = _queue.Client.ReceiveMessage(new ReceiveMessageRequest()
-                                                                          .WithQueueUrl(_queue.Url)
-                                                                          .WithMaxNumberOfMessages(10)
-                                                                          .WithWaitTimeSeconds(20));
+                _messageProcessingStrategy.BeforeGettingMoreMessages();
 
-                var messageCount = (sqsMessageResponse.IsSetReceiveMessageResult()) ? sqsMessageResponse.ReceiveMessageResult.Message.Count : 0;
+                var sqsMessageResponse = _queue.Client.ReceiveMessage(new ReceiveMessageRequest()
+                    .WithQueueUrl(_queue.Url)
+                    .WithMaxNumberOfMessages(MaxAmazonMessageCap)
+                    .WithWaitTimeSeconds(20));
+
+                var messageCount = (sqsMessageResponse.IsSetReceiveMessageResult())
+                    ? sqsMessageResponse.ReceiveMessageResult.Message.Count
+                    : 0;
+
                 Log.Trace(string.Format("Polled for messages - Queue: {0}, MessageCount: {1}", _queue.QueueNamePrefix, messageCount));
-                sqsMessageResponse.ReceiveMessageResult.Message.ForEach(HandleMessage);
+
+                foreach (var message in sqsMessageResponse.ReceiveMessageResult.Message)
+                {
+                    HandleMessage(message);
+                }
             }
-            catch (InvalidOperationException ex) { Log.Trace("Suspected no messaged in queue. Ex: {0}", ex); }
+            catch (InvalidOperationException ex)
+            {
+                Log.Trace("Suspected no messaged in queue. Ex: {0}", ex);
+            }
             catch (Exception ex)
             {
                 Log.ErrorException("Issue in message handling loop", ex);
@@ -94,53 +118,55 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 
         public void HandleMessage(Amazon.SQS.Model.Message message)
         {
-            Action run = () =>
+            var action = new Action(() => ProcessMessageAction(message));
+            _messageProcessingStrategy.ProcessMessage(action);
+        }
+
+        public void ProcessMessageAction(Amazon.SQS.Model.Message message)
+        {
+            try
             {
-                try
+                var messageType = JObject.Parse(message.Body)["Subject"].ToString();
+
+                var typedMessage = _serialisationRegister
+                            .GetSerialiser(messageType)
+                            .Deserialise(JObject.Parse(message.Body)["Message"].ToString());
+
+                var handlingSucceeded = true;
+
+                if (typedMessage != null)
                 {
-                    var messageType = JObject.Parse(message.Body)["Subject"].ToString();
+                    List<Func<Message, bool>> handlers;
+                    if (!_handlers.TryGetValue(typedMessage.GetType(), out handlers)) return;
 
-                    var typedMessage = _serialisationRegister
-                                .GetSerialiser(messageType)
-                                .Deserialise(JObject.Parse(message.Body)["Message"].ToString());
-
-                    var handlingSucceeded = true;
-
-                    if (typedMessage != null)
+                    foreach (var handle in handlers)
                     {
-                        List<Func<Message, bool>> handlers;
-                        if (!_handlers.TryGetValue(typedMessage.GetType(), out handlers)) return;
+                        var watch = new System.Diagnostics.Stopwatch();
+                        watch.Start();
 
-                        foreach (var handle in handlers)
-                        {
-                            var watch = new System.Diagnostics.Stopwatch();
-                            watch.Start();
+                        if (!handle(typedMessage))
+                            handlingSucceeded = false;
 
-                            if (!handle(typedMessage))
-                                handlingSucceeded = false;
-
-                            watch.Stop();
-                            Log.Trace("Handled message - MessageType: " + messageType);
-                            _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
-                        }
+                        watch.Stop();
+                        Log.Trace("Handled message - MessageType: " + messageType);
+                        _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
                     }
-
-                    if (handlingSucceeded)
-                        _queue.Client.DeleteMessage(new DeleteMessageRequest().WithQueueUrl(_queue.Url).WithReceiptHandle(message.ReceiptHandle));
                 }
-                catch (KeyNotFoundException)
-                {
-                    Log.Trace("Didn't handle message {0}. No serialiser setup", JObject.Parse(message.Body)["Subject"].ToString());
+
+                if (handlingSucceeded)
                     _queue.Client.DeleteMessage(new DeleteMessageRequest().WithQueueUrl(_queue.Url).WithReceiptHandle(message.ReceiptHandle));
-                }
-                catch (Exception ex)
-                {
-                    Log.ErrorException(string.Format("Issue handling message... {0}. StackTrace: {1}", message, ex.StackTrace), ex);
-                    _onError(ex);
-                }
-            };
 
-            run.BeginInvoke(null, null);
+            }
+            catch (KeyNotFoundException)
+            {
+                Log.Trace("Didn't handle message {0}. No serialiser setup", JObject.Parse(message.Body)["Subject"].ToString());
+                _queue.Client.DeleteMessage(new DeleteMessageRequest().WithQueueUrl(_queue.Url).WithReceiptHandle(message.ReceiptHandle));
+            }
+            catch (Exception ex)
+            {
+                Log.ErrorException(string.Format("Issue handling message... {0}. StackTrace: {1}", message, ex.StackTrace), ex);
+                _onError(ex);
+            }
         }
     }
 }

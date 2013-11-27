@@ -57,6 +57,9 @@
     <Compile Include="InstanceMetaData.cs" />
     <Compile Include="MessageFootprint.cs" />
     <Compile Include="IMessageFootprintStore.cs" />
+    <Compile Include="MessageProcessingStrategies\IMessageProcessingStrategy.cs" />
+    <Compile Include="MessageProcessingStrategies\MaximumThroughput.cs" />
+    <Compile Include="MessageProcessingStrategies\Throttled.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SnsTopicByName.cs" />
     <Compile Include="SnsTopicBase.cs" />
