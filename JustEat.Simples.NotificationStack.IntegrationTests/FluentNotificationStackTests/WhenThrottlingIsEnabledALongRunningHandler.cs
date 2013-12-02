@@ -8,7 +8,7 @@ using NSubstitute;
 using NUnit.Framework;
 using Tests.MessageStubs;
 
-namespace NotificationStack.IntegrationTests.FluentNotificationStack
+namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
 {
     [TestFixture]
     public class WhenThrottlingIsEnabledALongRunningHandler

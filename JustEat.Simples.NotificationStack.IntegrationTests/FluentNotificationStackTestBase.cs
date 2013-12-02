@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -7,8 +6,6 @@ using System.Threading;
 using Amazon;
 using Amazon.SimpleNotificationService.Model;
 using Amazon.SQS.Model;
-using JustEat.Simples.NotificationStack.Messaging;
-using JustEat.Simples.NotificationStack.Messaging.Lookups;
 using JustEat.Simples.NotificationStack.Stack;
 using JustEat.Testing;
 using NSubstitute;
