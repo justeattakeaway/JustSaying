@@ -102,13 +102,13 @@ namespace NotificationStack.IntegrationTests
             throw new Exception(string.Format("Deleted queue still exists {0} seconds after deletion!", (DateTime.Now - start).TotalSeconds));
         }
 
-        public static void DeleteTopic(RegionEndpoint regionEndpoint, Topic topic)
+        protected static void DeleteTopic(RegionEndpoint regionEndpoint, Topic topic)
         {
             var client = AWSClientFactory.CreateAmazonSNSClient(regionEndpoint);
             client.DeleteTopic(new DeleteTopicRequest { TopicArn = topic.TopicArn });
         }
 
-        public static void DeleteQueue(RegionEndpoint regionEndpoint, string queueUrl)
+        private static void DeleteQueue(RegionEndpoint regionEndpoint, string queueUrl)
         {
             var client = AWSClientFactory.CreateAmazonSQSClient(regionEndpoint);
             client.DeleteQueue(new DeleteQueueRequest { QueueUrl = queueUrl });
