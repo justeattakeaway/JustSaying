@@ -9,16 +9,16 @@ using NSubstitute;
 
 namespace Stack.UnitTests.FluentNotificationStackTests.AddingHandlers
 {
-    public class WhenAddingASubscriptionHandler : BehaviourTest<FluentNotificationStack>
+    public class WhenAddingASubscriptionHandler : FluentNotificationStackTestBase
     {
-        private readonly INotificationStack _stack = Substitute.For<INotificationStack>();
+        //private readonly INotificationStack _stack = Substitute.For<INotificationStack>();
         private readonly IHandler<Message> _handler = Substitute.For<IHandler<Message>>();
         private const string Topic = "CustomerCommunication";
 
-        protected override FluentNotificationStack CreateSystemUnderTest()
+        /*protected override FluentNotificationStack CreateSystemUnderTest()
         {
             return new FluentNotificationStack(_stack, Substitute.For<IVerifyAmazonQueues>());
-        }
+        }*/
 
         protected override void Given(){}
 
@@ -30,13 +30,13 @@ namespace Stack.UnitTests.FluentNotificationStackTests.AddingHandlers
         [Then]
         public void HandlerIsAddedToStack()
         {
-            _stack.Received().AddMessageHandler(Topic, _handler);
+            NotificationStack.Received().AddMessageHandler(Topic, _handler);
         }
         
         [Then]
         public void SerialisationIsRegisteredForMessage()
         {
-            _stack.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser<Message>>());
+            NotificationStack.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser<Message>>());
         }
     }
 }

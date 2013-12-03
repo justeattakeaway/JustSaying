@@ -21,14 +21,19 @@ namespace JustEat.Simples.NotificationStack.Stack
     /// 2. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class FluentNotificationStack : IMessagePublisher, IFluentNotificationStack, IFluentMonitoring, IFluentSubscription
+    public class FluentNotificationStack : IFluentMonitoring, IFluentSubscription
     {
         private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
         private readonly INotificationStack _stack;
         private string _currnetTopic;
 
-        public FluentNotificationStack(INotificationStack stack, IVerifyAmazonQueues queueCreator)
+        public static string DefaultEndpoint
+        {
+            get { return RegionEndpoint.EUWest1.SystemName; }
+        }
+
+        private FluentNotificationStack(INotificationStack stack, IVerifyAmazonQueues queueCreator)
         {
             _stack = stack;
             _amazonQueueCreator = queueCreator;
@@ -47,23 +52,12 @@ namespace JustEat.Simples.NotificationStack.Stack
 
             if (string.IsNullOrWhiteSpace(config.Component))
                 throw new ArgumentNullException("config.Component", "Cannot have a blank entry for config.Component");
-
-            return new FluentNotificationStack(new NotificationStack(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
-        }
-
-        /// <summary>
-        /// Create a new notification stack registration.
-        /// </summary>
-        /// <param name="config">Configuration items</param>
-        /// <returns></returns>
-        [Obsolete("Use Register(Component component, Action<INotificationStackConfiguration> action) instead,", false)]
-        public static IFluentMonitoring Register(IMessagingConfig config)
-        {
-            if (string.IsNullOrWhiteSpace(config.Environment))
-                throw new InvalidOperationException("Cannot have a blank entry for config.Environment");
-
-            if (string.IsNullOrWhiteSpace(config.Tenant))
-                throw new InvalidOperationException("Cannot have a blank entry for config.Tenant");
+            
+            if (string.IsNullOrWhiteSpace(config.Region))
+            {
+                config.Region = RegionEndpoint.EUWest1.SystemName;
+                Log.Info("No Region was specified, using {0} by default.", config.Region);
+            }
 
             return new FluentNotificationStack(new NotificationStack(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
         }
@@ -80,6 +74,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         public IFluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30, int? instancePosition = null, Action<Exception> onError = null, int? maxAllowedMessagesInFlight = null)
         {
             var endpointProvider = new SqsSubscribtionEndpointProvider(_stack.Config);
+            
             var queueName = instancePosition.HasValue
                                 ? endpointProvider.GetLocationName(_stack.Config.Component, topic, instancePosition.Value)
                                 : endpointProvider.GetLocationName(_stack.Config.Component, topic);
@@ -109,7 +104,10 @@ namespace JustEat.Simples.NotificationStack.Stack
             Log.Info("Added publisher");
 
             var endpointProvider = new SnsPublishEndpointProvider(_stack.Config);
-            var eventPublisher = new SnsTopicByName(endpointProvider.GetLocationName(topic), AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.EUWest1), _stack.SerialisationRegister);
+            var eventPublisher = new SnsTopicByName(
+                endpointProvider.GetLocationName(topic),
+                AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.GetBySystemName(_stack.Config.Region)),
+                _stack.SerialisationRegister);
 
             if (!eventPublisher.Exists())
                 eventPublisher.Create();

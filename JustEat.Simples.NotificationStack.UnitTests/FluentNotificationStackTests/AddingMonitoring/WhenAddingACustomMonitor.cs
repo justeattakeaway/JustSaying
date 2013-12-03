@@ -16,7 +16,7 @@ namespace Stack.UnitTests.FluentNotificationStackTests.AddingMonitoring
         [Then]
         public void ThatMonitorIsAddedToTheStack()
         {
-            Stack.Received().Monitor = _monitor;
+            NotificationStack.Received().Monitor = _monitor;
         }
     }
 }

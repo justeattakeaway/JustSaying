@@ -9,5 +9,6 @@ namespace JustEat.Simples.NotificationStack.Stack
         public string Environment { get; set; }
         public int PublishFailureReAttempts { get; set; }
         public int PublishFailureBackoffMilliseconds { get; set; }
+        public string Region { get; set; }
     }
 }
