@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -11,7 +12,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 {
     public class WhenThereAreNoMessagesToProcess : BehaviourTest<JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener>
     {
-        private readonly AmazonSQS _sqs = Substitute.For<AmazonSQS>();
+        private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private int _callCount;
 
         protected override JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener CreateSystemUnderTest()
@@ -40,7 +41,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
         private ReceiveMessageResponse GenerateEmptyMessage()
         {
-            return new ReceiveMessageResponse { ReceiveMessageResult = new ReceiveMessageResult() };
+            return new ReceiveMessageResponse { Messages = new List<Message>() };
         }
     }
 }

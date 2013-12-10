@@ -51,7 +51,7 @@ namespace AwsTools.IntegrationTests
                     entries.Add(batchEntry);
                     entriesAdded++;
                 }
-                awsQueueClient.SendMessageBatch(new SendMessageBatchRequest().WithEntries(entries.ToArray()).WithQueueUrl(q.Url));
+                awsQueueClient.SendMessageBatch(new SendMessageBatchRequest { QueueUrl = q.Url, Entries = entries });
             }
             while (entriesAdded < throttleMessageCount);
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -12,7 +13,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
     {
         private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
-        public SqsQueueByName(string queueName, AmazonSQS client)
+        public SqsQueueByName(string queueName, IAmazonSQS client)
             : base(client)
         {
             QueueNamePrefix = queueName;
@@ -21,10 +22,10 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 
         public override bool Exists()
         {
-            var result = Client.ListQueues(new ListQueuesRequest().WithQueueNamePrefix(QueueNamePrefix));
-            if (result.IsSetListQueuesResult() && result.ListQueuesResult.IsSetQueueUrl())
+            var result = Client.ListQueues(new ListQueuesRequest{ QueueNamePrefix = QueueNamePrefix });
+            if (result.QueueUrls.Any())
             {
-                Url = result.ListQueuesResult.QueueUrl.First();
+                Url = result.QueueUrls.First();
                 SetArn();
                 return true;
             }
@@ -36,15 +37,15 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         {
             try
             {
-                var result = Client.CreateQueue(new CreateQueueRequest()
-                    .WithQueueName(QueueNamePrefix)
-                    .WithAttribute(new[]
+                var result = Client.CreateQueue(new CreateQueueRequest{
+                    QueueName = QueueNamePrefix,
+                    Attributes = new Dictionary<string,string>
                     {
-                        new Attribute { Name = SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD , Value = retentionPeriodSeconds.ToString(CultureInfo.InvariantCulture)},
-                        new Attribute { Name = SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , Value = visibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture)},
-                    }));
+                        { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD , retentionPeriodSeconds.ToString(CultureInfo.InvariantCulture)},
+                        { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , visibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture)},
+                    }});
 
-                if (result.IsSetCreateQueueResult() && !string.IsNullOrWhiteSpace(result.CreateQueueResult.QueueUrl))
+                if (!string.IsNullOrWhiteSpace(result.QueueUrl))
                 {
                     Url = result.CreateQueueResult.QueueUrl;
                     SetArn();

@@ -8,7 +8,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 {
     public class SnsTopicByArn : SnsTopicBase, IMessagePublisher
     {
-        public SnsTopicByArn(string topicArn, AmazonSimpleNotificationService client, IMessageSerialisationRegister serialisationRegister)
+        public SnsTopicByArn(string topicArn, IAmazonSimpleNotificationService client, IMessageSerialisationRegister serialisationRegister)
             :base(serialisationRegister)
         {
             Arn = topicArn;
@@ -18,7 +18,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         public override bool Exists()
         {
             var topicCheck = Client.ListTopics(new ListTopicsRequest());
-            return topicCheck.IsSetListTopicsResult() && topicCheck.ListTopicsResult.Topics.Any(x => x.TopicArn == Arn);
+            return topicCheck.Topics.Any(x => x.TopicArn == Arn);
         }
     }
 }

@@ -8,11 +8,11 @@ namespace JustEat.Simples.NotificationStack.AwsTools
     public class DynamoTable
     {
         private readonly DynamoDbConfig _config;
-        private readonly AmazonDynamoDBClient _client;
+        private readonly IAmazonDynamoDB _client;
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
         private readonly string[] _expectedErrorCodesForConcurrentCalls = new[] { "ResourceInUseException", "ThrottlingException" };
 
-        public DynamoTable(DynamoDbConfig config, AmazonDynamoDBClient client)
+        public DynamoTable(DynamoDbConfig config, IAmazonDynamoDB client)
         {
             _config = config;
             _client = client;

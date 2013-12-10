@@ -11,7 +11,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
     {
         private readonly IMessageSerialisationRegister _serialisationRegister;
         public string Arn { get; protected set; }
-        public AmazonSimpleNotificationService Client { get; protected set; }
+        public IAmazonSimpleNotificationService Client { get; protected set; }
         private static readonly Logger EventLog = LogManager.GetLogger("EventLog");
         private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
@@ -24,18 +24,17 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 
         public bool IsSubscribed(SqsQueueBase queue)
         {
-            var result = Client.ListSubscriptionsByTopic(new ListSubscriptionsByTopicRequest().WithTopicArn(Arn));
-            if (result.IsSetListSubscriptionsByTopicResult())
-            {
-                return result.ListSubscriptionsByTopicResult.Subscriptions.Any(x => x.IsSetSubscriptionArn() && x.Endpoint == queue.Arn);
-            }
+            var result = Client.ListSubscriptionsByTopic(new ListSubscriptionsByTopicRequest(Arn));
+            
+            return result.Subscriptions.Any(x => !string.IsNullOrEmpty(x.SubscriptionArn) && x.Endpoint == queue.Arn);
+            
             return false;
         }
 
         public bool Subscribe(SqsQueueBase queue)
         {
-            var response = Client.Subscribe(new SubscribeRequest().WithTopicArn(Arn).WithProtocol("sqs").WithEndpoint(queue.Arn));
-            if (response.IsSetSubscribeResult() && response.SubscribeResult.IsSetSubscriptionArn())
+            var response = Client.Subscribe(new SubscribeRequest(Arn, "sqs", queue.Arn));
+            if (!string.IsNullOrEmpty(response.SubscriptionArn))
             {
                 queue.AddPermission(this);
                 Log.Info(string.Format("Subscribed Queue to Topic - Queue: {0}, Topic: {1}", queue.Arn, Arn));
