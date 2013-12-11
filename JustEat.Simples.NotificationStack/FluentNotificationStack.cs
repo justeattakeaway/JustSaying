@@ -1,6 +1,8 @@
 using System;
+using System.Configuration;
 using Amazon;
 using JustEat.Simples.NotificationStack.AwsTools;
+using JustEat.Simples.NotificationStack.AwsTools.MessageProcessingStrategies;
 using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.Lookups;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
@@ -70,8 +72,10 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <param name="visibilityTimeoutSeconds">Seconds message should be invisible to other other receiving components</param>
         /// <param name="instancePosition">Optional instance position as tagged by paas tools in AWS. Using this will cause the message to get handled by EACH instance in your cluster</param>
         /// <param name="onError">Optional error handler. Use this param to inject custom error handling from within the consuming application</param>
+        /// <param name="maxAllowedMessagesInFlight">Configures the stack to use the Throttled handling strategy, configured to this level of concurrent messages in flight</param>
+        /// <param name="messageProcessingStrategy">Hook to supply your own IMessageProcessingStrategy</param>
         /// <returns></returns>
-        public IFluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30, int? instancePosition = null, Action<Exception> onError = null, int? maxAllowedMessagesInFlight = null)
+        public IFluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30, int? instancePosition = null, Action<Exception> onError = null, int? maxAllowedMessagesInFlight = null, IMessageProcessingStrategy messageProcessingStrategy = null)
         {
             var endpointProvider = new SqsSubscribtionEndpointProvider(_stack.Config);
             
@@ -83,9 +87,15 @@ namespace JustEat.Simples.NotificationStack.Stack
             
             var sqsSubscriptionListener = new SqsNotificationListener(queue, _stack.SerialisationRegister, new NullMessageFootprintStore(), _stack.Monitor, onError);
             _stack.AddNotificationTopicSubscriber(topic, sqsSubscriptionListener);
-            
+
+            if (maxAllowedMessagesInFlight.HasValue && messageProcessingStrategy != null)
+                throw new ConfigurationErrorsException("You have provided both 'maxAllowedMessagesInFlight' and 'messageProcessingStrategy' - these settings are mutually exclusive.");
+
             if (maxAllowedMessagesInFlight.HasValue)
                 sqsSubscriptionListener.WithMaximumConcurrentLimitOnMessagesInFlightOf(maxAllowedMessagesInFlight.Value);
+
+            if (messageProcessingStrategy != null)
+                sqsSubscriptionListener.WithMessageProcessingStrategy(messageProcessingStrategy);
 
             Log.Info(string.Format("Created SQS topic subscription - Component: {0}, Topic: {1}, QueueName: {2}", _stack.Config.Component, topic, queueName));
             _currnetTopic = topic;

@@ -44,6 +44,12 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             return this;
         }
 
+        public SqsNotificationListener WithMessageProcessingStrategy(IMessageProcessingStrategy messageProcessingStrategy)
+        {
+            _messageProcessingStrategy = messageProcessingStrategy;
+            return this;
+        }
+
         public void AddMessageHandler<T>(IHandler<T> handler) where T : Message
         {
             List<Func<Message, bool>> handlers;
