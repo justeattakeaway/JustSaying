@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using JustEat.Simples.NotificationStack.AwsTools.MessageProcessingStrategies;
@@ -41,16 +42,23 @@ namespace AwsTools.UnitTests.MessageProcessingStrategies
         }
 
 
-        [Test]
-        public void SimulatedListenLoop_ProcessedAllMessages()
+        [TestCase(1000)]
+        [TestCase(10000)]
+        public void SimulatedListenLoop_ProcessedAllMessages(int numberOfMessagesToProcess)
         {
-            var actions = BuildFakeIncomingMessages(100);
+            var watch = new Stopwatch();
+            watch.Start();
+            var actions = BuildFakeIncomingMessages(numberOfMessagesToProcess);
 
             ListenLoopExecuted(actions);
-            Thread.Sleep(1000);
 
-            Assert.That(_actionsProcessed, Is.EqualTo(100));
+            watch.Stop();
+            Thread.Sleep(2000);
+
+            Assert.That(_actionsProcessed, Is.EqualTo(numberOfMessagesToProcess));
+            Debug.WriteLine("Took " + watch.Elapsed + " to process " + numberOfMessagesToProcess + " messages.");
         }
+
 
         [Test]
         public void SimulatedListenLoop_WhenThrottlingOccurs_CallsMessageMonitor()
