@@ -215,7 +215,11 @@ namespace JustEat.Simples.NotificationStack.Stack
     public interface IFluentNotificationStack : IMessagePublisher
     {
         IFluentNotificationStack WithSnsMessagePublisher<T>(string topic) where T : Message;
-        IFluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30, int? instancePosition = null, Action<Exception> onError = null, int? maxAllowedMessagesInFlight = null);
+
+        IFluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds,
+            int visibilityTimeoutSeconds = 30, int? instancePosition = null, Action<Exception> onError = null,
+            int? maxAllowedMessagesInFlight = null, IMessageProcessingStrategy messageProcessingStrategy = null);
+
         void StartListening();
         void StopListening();
         bool Listening { get; }
