@@ -12,7 +12,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools.MessageProcessingStrategies
         public int BlockingThreshold { get; private set; }
 
         private readonly IMessageMonitor _messageMonitor;
-        private readonly IList<Task> _activeTasks;
+        private readonly List<Task> _activeTasks;
         private long _activeTaskCount;
 
         public Throttled(int maximumAllowedMesagesInFlight, int maximumBatchSize, IMessageMonitor messageMonitor)
@@ -34,10 +34,16 @@ namespace JustEat.Simples.NotificationStack.AwsTools.MessageProcessingStrategies
 
             while (Interlocked.Read(ref _activeTaskCount) >= BlockingThreshold)
             {
-                var activeTasksToWaitOn = _activeTasks.ToArray().Where(x => x != null).ToArray();
+                Task[] activeTasksToWaitOn;
+                lock (_activeTasks)
+                {
+                    activeTasksToWaitOn = _activeTasks.Where(x => x != null).ToArray();
+                }
 
                 if (activeTasksToWaitOn.Length == 0)
+                {
                     continue;
+                }
 
                 _messageMonitor.IncrementThrottlingStatistic();
                 Task.WaitAny(activeTasksToWaitOn);
@@ -51,17 +57,26 @@ namespace JustEat.Simples.NotificationStack.AwsTools.MessageProcessingStrategies
         public void ProcessMessage(Action action)
         {
             var task = new Task(action);
-            task.ContinueWith(t =>
-            {
-                _activeTasks.Remove(t);
-                Interlocked.Decrement(ref _activeTaskCount);
-
-            }, TaskContinuationOptions.ExecuteSynchronously);
-
+            task.ContinueWith(MarkTaskAsComplete, TaskContinuationOptions.ExecuteSynchronously);
+            
             Interlocked.Increment(ref _activeTaskCount);
-            _activeTasks.Add(task);
+            
+            lock (_activeTasks)
+            {
+                _activeTasks.Add(task);
+            }
 
             task.Start();
+        }
+
+        private void MarkTaskAsComplete(Task t)
+        {
+            lock (_activeTasks)
+            {
+                _activeTasks.Remove(t);
+            }
+
+            Interlocked.Decrement(ref _activeTaskCount);
         }
     }
 }
