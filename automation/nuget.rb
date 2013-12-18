@@ -53,14 +53,14 @@ def setup_nuget opts={}
 			  nuspec.dependency "AWSSDK", "[2.0.3.1]"
 			  nuspec.dependency "Newtonsoft.Json", "4.5.0.0"
 			  nuspec.dependency "ServiceStack.Text", "3.9.56"
-			  nuspec.dependency "NLog", "2.0.1.2"
+			  nuspec.dependency "NLog", "2.1.0"
         nuspec.dependency "JustEat.StatsD", "1.0.0.87"
 	  elsif (name == "AwsTools")
 			  nuspec.description = "Simples AwsTools is a helpful wrapper around the AWSSDK and ensures all dependencies use the same version of the SDK"
 			  nuspec.summary = "AWSSDK Wrapper"
 			  nuspec.dependency "AWSSDK", "[2.0.3.1]"
 			  nuspec.dependency "Newtonsoft.Json", "4.5.0.0"
-			  nuspec.dependency "NLog", "2.0.1.2"
+			  nuspec.dependency "NLog", "2.1.0"
       end	
 
 		end
