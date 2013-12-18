@@ -29,7 +29,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 
                 while (topic == null && !string.IsNullOrEmpty(topicCheck.NextToken))
                 {
-                    topicCheck = Client.ListTopics(new ListTopicsRequest(topicCheck.ListTopicsResult.NextToken));
+                    topicCheck = Client.ListTopics(new ListTopicsRequest(topicCheck.NextToken));
                     topic = topicCheck.Topics.FirstOrDefault(x => x.TopicArn.Contains(TopicName));
                     
                     if (topic != null)

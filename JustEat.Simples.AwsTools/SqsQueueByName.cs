@@ -47,7 +47,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 
                 if (!string.IsNullOrWhiteSpace(result.QueueUrl))
                 {
-                    Url = result.CreateQueueResult.QueueUrl;
+                    Url = result.QueueUrl;
                     SetArn();
 
                     Log.Info(string.Format("Created Queue: {0} on Arn: {1}", QueueNamePrefix, Arn));

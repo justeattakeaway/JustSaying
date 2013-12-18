@@ -27,8 +27,6 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             var result = Client.ListSubscriptionsByTopic(new ListSubscriptionsByTopicRequest(Arn));
             
             return result.Subscriptions.Any(x => !string.IsNullOrEmpty(x.SubscriptionArn) && x.Endpoint == queue.Arn);
-            
-            return false;
         }
 
         public bool Subscribe(SqsQueueBase queue)

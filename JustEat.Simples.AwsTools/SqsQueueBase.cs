@@ -51,7 +51,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             
             var result = Client.GetQueueAttributes(request);
 
-            return result.GetQueueAttributesResult;
+            return result;
         }
 
         public void AddPermission(SnsTopicBase snsTopic)

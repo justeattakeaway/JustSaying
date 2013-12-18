@@ -162,7 +162,7 @@ namespace NotificationStack.IntegrationTests
 
             var sqsclient = AWSClientFactory.CreateAmazonSQSClient(regionEndpoint);
 
-            var queueArn = sqsclient.GetQueueAttributes(request).GetQueueAttributesResult.QueueARN;
+            var queueArn = sqsclient.GetQueueAttributes(request).QueueARN;
 
             var client = AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(regionEndpoint);
 
