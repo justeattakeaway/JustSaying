@@ -13,7 +13,7 @@ namespace AwsTools.UnitTests.Sns.TopicByArn
     {
         private const string Message = "the_message_in_json";
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
-        private readonly AmazonSimpleNotificationService _sns = Substitute.For<AmazonSimpleNotificationService>();
+        private readonly IAmazonSimpleNotificationService _sns = Substitute.For<IAmazonSimpleNotificationService>();
         private const string Arn = "arn";
 
         protected override SnsTopicByArn CreateSystemUnderTest()

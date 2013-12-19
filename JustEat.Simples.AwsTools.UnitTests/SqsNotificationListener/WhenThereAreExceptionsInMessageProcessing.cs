@@ -14,7 +14,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 {
     public class WhenThereAreExceptionsInMessageProcessing : BehaviourTest<JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener>
     {
-        private readonly AmazonSQS _sqs = Substitute.For<AmazonSQS>();
+        private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         
         private int _callCount;
@@ -46,7 +46,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
         private ReceiveMessageResponse GenerateEmptyMessage()
         {
-            return new ReceiveMessageResponse { ReceiveMessageResult = new ReceiveMessageResult { Message = new[]{new Message()}.ToList()} };
+            return new ReceiveMessageResponse { Messages = new System.Collections.Generic.List<Message>() };
         }
     }
 }

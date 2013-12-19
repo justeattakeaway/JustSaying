@@ -104,7 +104,7 @@ namespace NotificationStack.IntegrationTests
 
         protected static void DeleteTopic(RegionEndpoint regionEndpoint, Topic topic)
         {
-            var client = AWSClientFactory.CreateAmazonSNSClient(regionEndpoint);
+            var client = AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(regionEndpoint);
             client.DeleteTopic(new DeleteTopicRequest { TopicArn = topic.TopicArn });
         }
 
@@ -116,16 +116,16 @@ namespace NotificationStack.IntegrationTests
 
         private static List<Topic> GetAllTopics(RegionEndpoint regionEndpoint, string topicName)
         {
-            var client = AWSClientFactory.CreateAmazonSNSClient(regionEndpoint);
+            var client = AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(regionEndpoint);
             var topics = client.ListTopics(new ListTopicsRequest());
-            return topics.ListTopicsResult.Topics.Where(x => x.TopicArn.IndexOf(topicName, StringComparison.InvariantCultureIgnoreCase) >= 0).ToList();
+            return topics.Topics.Where(x => x.TopicArn.IndexOf(topicName, StringComparison.InvariantCultureIgnoreCase) >= 0).ToList();
         }
 
         private static List<string> GetAllQueues(RegionEndpoint regionEndpoint, string queueName)
         {
             var client = AWSClientFactory.CreateAmazonSQSClient(regionEndpoint);
             var topics = client.ListQueues(new ListQueuesRequest());
-            return topics.ListQueuesResult.QueueUrl.Where(x => x.IndexOf(queueName, StringComparison.InvariantCultureIgnoreCase) >= 0).ToList();
+            return topics.QueueUrls.Where(x => x.IndexOf(queueName, StringComparison.InvariantCultureIgnoreCase) >= 0).ToList();
         }
 
         protected static bool TryGetTopic(RegionEndpoint regionEndpoint, string topicName, out Topic topic)
@@ -158,24 +158,24 @@ namespace NotificationStack.IntegrationTests
 
         protected bool IsQueueSubscribedToTopic(RegionEndpoint regionEndpoint, Topic topic, string queueUrl)
         {
-            var request = new GetQueueAttributesRequest().WithQueueUrl(queueUrl).WithAttributeName("QueueArn");
+            var request = new GetQueueAttributesRequest{ QueueUrl = queueUrl, AttributeNames = new List<string> { "QueueArn" } };
 
             var sqsclient = AWSClientFactory.CreateAmazonSQSClient(regionEndpoint);
 
-            var queueArn = sqsclient.GetQueueAttributes(request).GetQueueAttributesResult.QueueARN;
+            var queueArn = sqsclient.GetQueueAttributes(request).QueueARN;
 
-            var client = AWSClientFactory.CreateAmazonSNSClient(regionEndpoint);
+            var client = AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(regionEndpoint);
 
-            var subscriptions =  client.ListSubscriptionsByTopic(new ListSubscriptionsByTopicRequest().WithTopicArn(topic.TopicArn)).ListSubscriptionsByTopicResult.Subscriptions;
+            var subscriptions =  client.ListSubscriptionsByTopic(new ListSubscriptionsByTopicRequest(topic.TopicArn)).Subscriptions;
 
-            return subscriptions.Any(x => x.IsSetSubscriptionArn() && x.Endpoint == queueArn);
+            return subscriptions.Any(x => !string.IsNullOrEmpty(x.SubscriptionArn) && x.Endpoint == queueArn);
         }
 
         protected bool QueueHasPolicyForTopic(RegionEndpoint regionEndpoint, Topic topic, string queueUrl)
         {
             var client = AWSClientFactory.CreateAmazonSQSClient(regionEndpoint);
 
-            var policy = client.GetQueueAttributes(new GetQueueAttributesRequest().WithQueueUrl(queueUrl).WithAttributeName(new[] { "Policy" })).GetQueueAttributesResult.Policy;
+            var policy = client.GetQueueAttributes(new GetQueueAttributesRequest{ QueueUrl = queueUrl, AttributeNames = new List<string>{ "Policy" }}).Policy;
 
             return policy.Contains(topic.TopicArn);
         }

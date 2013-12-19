@@ -8,11 +8,11 @@ namespace JustEat.Simples.NotificationStack.AwsTools
     public class DynamoTable
     {
         private readonly DynamoDbConfig _config;
-        private readonly AmazonDynamoDBClient _client;
+        private readonly IAmazonDynamoDB _client;
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
         private readonly string[] _expectedErrorCodesForConcurrentCalls = new[] { "ResourceInUseException", "ThrottlingException" };
 
-        public DynamoTable(DynamoDbConfig config, AmazonDynamoDBClient client)
+        public DynamoTable(DynamoDbConfig config, IAmazonDynamoDB client)
         {
             _config = config;
             _client = client;
@@ -69,11 +69,11 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                         });
 
                     Log.Info("Dynamo Table name: {0}, status: {1}",
-                                      res.DescribeTableResult.Table.TableName,
-                                      res.DescribeTableResult.Table.TableStatus);
-                    status = res.DescribeTableResult.Table.TableStatus;
+                                      res.Table.TableName,
+                                      res.Table.TableStatus);
+                    status = res.Table.TableStatus;
                 }
-                catch (ResourceNotFoundException resourceNotFound)
+                catch (ResourceNotFoundException)
                 {
                     // DescribeTable is eventually consistent. So you might
                     // get resource not found. So we handle the potential exception.

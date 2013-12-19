@@ -10,13 +10,14 @@ using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 using JustEat.Testing;
 using NSubstitute;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
+using System.Collections.Generic;
 
 namespace AwsTools.UnitTests.SqsNotificationListener
 {
     public class BaseQueuePollingTest : BehaviourTest<JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener>
     {
         protected const string QueueUrl = "url";
-        protected readonly AmazonSQS Sqs = Substitute.For<AmazonSQS>();
+        protected readonly IAmazonSQS Sqs = Substitute.For<IAmazonSQS>();
         protected readonly IMessageSerialiser<GenericMessage> Serialiser = Substitute.For<IMessageSerialiser<GenericMessage>>();
         protected GenericMessage DeserialisedMessage;
         protected const string MessageBody = "object";
@@ -57,20 +58,17 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         {
             return new ReceiveMessageResponse
             {
-                ReceiveMessageResult = new ReceiveMessageResult
-                {
-                    Message = new[] {       
-                            new Message
-                                {   
-                                    MessageId = messageId.ToString(),
-                                    Body = "{\"Subject\":\"" + messageType + "\"," + "\"Message\":\"" + MessageBody + "\"}"
-                                },
-                            new Message
-                                {
-                                    MessageId = messageId.ToString(),
-                                    Body = "{\"Subject\":\"SOME_UNKNOWN_MESSAGE\"," + "\"Message\":\"SOME_RANDOM_MESSAGE\"}"
-                                }}.ToList(),
-                }
+                Messages = new List<Message> {       
+                    new Message
+                    {   
+                        MessageId = messageId.ToString(),
+                        Body = "{\"Subject\":\"" + messageType + "\"," + "\"Message\":\"" + MessageBody + "\"}"
+                    },
+                    new Message
+                    {
+                        MessageId = messageId.ToString(),
+                        Body = "{\"Subject\":\"SOME_UNKNOWN_MESSAGE\"," + "\"Message\":\"SOME_RANDOM_MESSAGE\"}"
+                    }}
             };
         }
     }

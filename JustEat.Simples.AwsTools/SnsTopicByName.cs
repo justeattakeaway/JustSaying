@@ -12,7 +12,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         public string TopicName { get; private set; }
         private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
-        public SnsTopicByName(string topicName, AmazonSimpleNotificationService client, IMessageSerialisationRegister serialisationRegister)
+        public SnsTopicByName(string topicName, IAmazonSimpleNotificationService client, IMessageSerialisationRegister serialisationRegister)
             : base(serialisationRegister)
         {
             TopicName = topicName;
@@ -23,14 +23,14 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         public override bool Exists()
         {
             var topicCheck = Client.ListTopics(new ListTopicsRequest());
-            if (topicCheck.IsSetListTopicsResult())
+            if (topicCheck.Topics.Any())
             {
-                var topic = topicCheck.ListTopicsResult.Topics.FirstOrDefault(x => x.TopicArn.Contains(TopicName));
+                var topic = topicCheck.Topics.FirstOrDefault(x => x.TopicArn.Contains(TopicName));
 
-                while (topic == null && topicCheck.ListTopicsResult.IsSetNextToken())
+                while (topic == null && !string.IsNullOrEmpty(topicCheck.NextToken))
                 {
-                    topicCheck = Client.ListTopics(new ListTopicsRequest().WithNextToken(topicCheck.ListTopicsResult.NextToken));
-                    topic = topicCheck.ListTopicsResult.Topics.FirstOrDefault(x => x.TopicArn.Contains(TopicName));
+                    topicCheck = Client.ListTopics(new ListTopicsRequest(topicCheck.NextToken));
+                    topic = topicCheck.Topics.FirstOrDefault(x => x.TopicArn.Contains(TopicName));
                     
                     if (topic != null)
                     {
@@ -51,10 +51,10 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 
         public bool Create()
         {
-            var response = Client.CreateTopic(new CreateTopicRequest().WithName(TopicName));
-            if (response.IsSetCreateTopicResult() && response.CreateTopicResult.TopicArn != null)
+            var response = Client.CreateTopic(new CreateTopicRequest(TopicName));
+            if (!string.IsNullOrEmpty(response.TopicArn))
             {    
-                Arn = response.CreateTopicResult.TopicArn;
+                Arn = response.TopicArn;
                 Log.Info(string.Format("Created Topic: {0} on Arn: {1}", TopicName, Arn));
                 return true;
             }
@@ -67,7 +67,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             if (!Exists())
                 return;
 
-            var response = Client.DeleteTopic(new DeleteTopicRequest().WithTopicArn(Arn));
+            var response = Client.DeleteTopic(new DeleteTopicRequest(Arn));
             Arn = string.Empty;
         }
     }

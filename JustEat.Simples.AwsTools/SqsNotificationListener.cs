@@ -95,18 +95,18 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             {
                 _messageProcessingStrategy.BeforeGettingMoreMessages();
 
-                var sqsMessageResponse = _queue.Client.ReceiveMessage(new ReceiveMessageRequest()
-                    .WithQueueUrl(_queue.Url)
-                    .WithMaxNumberOfMessages(MaxAmazonMessageCap)
-                    .WithWaitTimeSeconds(20));
+                var sqsMessageResponse = _queue.Client.ReceiveMessage(new ReceiveMessageRequest
+                {
+                    QueueUrl = _queue.Url,
+                    MaxNumberOfMessages = MaxAmazonMessageCap,
+                    WaitTimeSeconds = 20
+                });
 
-                var messageCount = (sqsMessageResponse.IsSetReceiveMessageResult())
-                    ? sqsMessageResponse.ReceiveMessageResult.Message.Count
-                    : 0;
+                var messageCount = sqsMessageResponse.Messages.Count;
 
                 Log.Trace(string.Format("Polled for messages - Queue: {0}, MessageCount: {1}", _queue.QueueNamePrefix, messageCount));
 
-                foreach (var message in sqsMessageResponse.ReceiveMessageResult.Message)
+                foreach (var message in sqsMessageResponse.Messages)
                 {
                     HandleMessage(message);
                 }
@@ -160,13 +160,13 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                 }
 
                 if (handlingSucceeded)
-                    _queue.Client.DeleteMessage(new DeleteMessageRequest().WithQueueUrl(_queue.Url).WithReceiptHandle(message.ReceiptHandle));
+                    _queue.Client.DeleteMessage(new DeleteMessageRequest { QueueUrl = _queue.Url, ReceiptHandle = message.ReceiptHandle });
 
             }
             catch (KeyNotFoundException)
             {
                 Log.Trace("Didn't handle message {0}. No serialiser setup", JObject.Parse(message.Body)["Subject"].ToString());
-                _queue.Client.DeleteMessage(new DeleteMessageRequest().WithQueueUrl(_queue.Url).WithReceiptHandle(message.ReceiptHandle));
+                _queue.Client.DeleteMessage(new DeleteMessageRequest { QueueUrl = _queue.Url, ReceiptHandle = message.ReceiptHandle });
             }
             catch (Exception ex)
             {

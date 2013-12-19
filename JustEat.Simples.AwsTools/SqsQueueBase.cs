@@ -12,11 +12,11 @@ namespace JustEat.Simples.NotificationStack.AwsTools
     {
         public string Arn { get; protected set; }
         public string Url { get; protected set; }
-        public AmazonSQS Client { get; private set; }
+        public IAmazonSQS Client { get; private set; }
         public string QueueNamePrefix { get; protected set; }
         private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
-        public SqsQueueBase(AmazonSQS client)
+        public SqsQueueBase(IAmazonSQS client)
         {
             Client = client;
         }
@@ -31,7 +31,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             if (!Exists())
                 return;
 
-            var result = Client.DeleteQueue(new DeleteQueueRequest().WithQueueUrl(Url));
+            var result = Client.DeleteQueue(new DeleteQueueRequest { QueueUrl = Url });
             //return result.IsSetResponseMetadata();
             Arn = null;
             Url = null;
@@ -44,29 +44,35 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 
         protected GetQueueAttributesResult GetAttrs(IEnumerable<string> attrKeys)
         {
-            var request = new GetQueueAttributesRequest().WithQueueUrl(Url);
-            foreach (var key in attrKeys)
-                request.WithAttributeName(key);
-
+            var request = new GetQueueAttributesRequest { 
+                QueueUrl = Url,
+                AttributeNames = new List<string>(attrKeys)
+            };
+            
             var result = Client.GetQueueAttributes(request);
 
-            return result.GetQueueAttributesResult;
+            return result;
         }
 
         public void AddPermission(SnsTopicBase snsTopic)
         {
-            Client.SetQueueAttributes(new SetQueueAttributesRequest().WithQueueUrl(Url).WithPolicy(GetQueueSubscriptionPilocy(snsTopic)));
+            Client.SetQueueAttributes(
+                new SetQueueAttributesRequest{
+                    QueueUrl = Url,
+                    Attributes = new Dictionary<string,string>{ {"Policy", GetQueueSubscriptionPilocy(snsTopic) } }
+                });
+                
             Log.Info(string.Format("Added Queue permission for SNS topic to publish to Queue: {0}, Topic: {1}", Arn, snsTopic.Arn));
         }
 
         public bool HasPermission(SnsTopicBase snsTopic)
         {
-            var policyResponse = Client.GetQueueAttributes(new GetQueueAttributesRequest().WithQueueUrl(Url).WithAttributeName(new[] { "Policy" }));
-            if (policyResponse.IsSetResponseMetadata())
-            {
-                return policyResponse.GetQueueAttributesResult.Policy == null || policyResponse.GetQueueAttributesResult.Policy.Contains(snsTopic.Arn);
-            }
-            return false;
+            var policyResponse = Client.GetQueueAttributes(
+                new GetQueueAttributesRequest{
+                 QueueUrl = Url,
+                 AttributeNames = new List<string> { "Policy" }});
+            
+            return  !string.IsNullOrEmpty(policyResponse.Policy) || policyResponse.Policy.Contains(snsTopic.Arn);
         }
 
         protected string GetQueueSubscriptionPilocy(SnsTopicBase topic)

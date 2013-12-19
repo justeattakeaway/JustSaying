@@ -116,7 +116,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             var endpointProvider = new SnsPublishEndpointProvider(_stack.Config);
             var eventPublisher = new SnsTopicByName(
                 endpointProvider.GetLocationName(topic),
-                AWSClientFactory.CreateAmazonSNSClient(RegionEndpoint.GetBySystemName(_stack.Config.Region)),
+                AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(_stack.Config.Region)),
                 _stack.SerialisationRegister);
 
             if (!eventPublisher.Exists())

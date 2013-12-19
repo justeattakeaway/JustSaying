@@ -6,7 +6,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 {
     public class SqsQueueByUrl : SqsQueueBase
     {
-        public SqsQueueByUrl(string queueUrl, AmazonSQS client)
+        public SqsQueueByUrl(string queueUrl, IAmazonSQS client)
             : base(client)
         {
             Url = queueUrl;
@@ -15,7 +15,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         public override bool Exists()
         {
             var result = Client.ListQueues(new ListQueuesRequest());
-            if (result.IsSetListQueuesResult() && result.ListQueuesResult.IsSetQueueUrl() && result.ListQueuesResult.QueueUrl.Any(x => x == Url))
+            if (result.QueueUrls.Any(x => x == Url))
             {
                 SetArn();
                 // Need to set the prefix yet!
