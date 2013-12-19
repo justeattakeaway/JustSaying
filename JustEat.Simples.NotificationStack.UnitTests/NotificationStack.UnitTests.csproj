@@ -32,9 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="JustEat.StatsD, Version=1.0.0.87, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="JustEat.StatsD, Version=1.0.0.96, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\JustEat.StatsD.1.0.0.87\lib\JustEat.StatsD.dll</HintPath>
+      <HintPath>..\packages\JustEat.StatsD.1.0.0.96\lib\JustEat.StatsD.dll</HintPath>
     </Reference>
     <Reference Include="JustEat.Testing, Version=6.0.1.43, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
