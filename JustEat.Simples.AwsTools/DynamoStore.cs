@@ -6,10 +6,10 @@ using Amazon.DynamoDBv2.DataModel;
 
 namespace JustEat.Simples.NotificationStack.AwsTools
 {
-    public class DynamoStore
+    public class DynamoStore : IDynamoStore
     {
         private readonly DynamoDBContext _context;
-
+        
         public DynamoStore(DynamoDBContext dynamoContext)
         {
             _context = dynamoContext;
@@ -29,11 +29,6 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         {
             var batch = _context.CreateBatchGet<T>(operationConfig);
 
-            if (batch == null)
-                throw new Exception(String.Format(CultureInfo.InvariantCulture,
-                                                        "{0}, CreateBatchGet<{1}> returned null",
-                                                        GetType().Name, typeof(T)));
-
             keys.ToList().ForEach(batch.AddKey);
 
             batch.Execute();
@@ -41,11 +36,9 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             return (batch.Results);
         }
 
-
         public void DeleteRow<T>(string key, DynamoDBOperationConfig operationConfig)
         {
             _context.Delete<T>(key, operationConfig);
         }
-
     }
 }
