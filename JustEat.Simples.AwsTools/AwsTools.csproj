@@ -55,6 +55,7 @@
     <Compile Include="DynamoTable.cs" />
     <Compile Include="DynamoDbConfig.cs" />
     <Compile Include="DynamoStore.cs" />
+    <Compile Include="IDynamoStore.cs" />
     <Compile Include="InstanceMetaData.cs" />
     <Compile Include="MessageFootprint.cs" />
     <Compile Include="IMessageFootprintStore.cs" />
