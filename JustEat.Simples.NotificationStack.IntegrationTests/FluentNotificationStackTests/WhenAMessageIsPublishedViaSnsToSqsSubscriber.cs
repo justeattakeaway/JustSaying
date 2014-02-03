@@ -1,55 +1,31 @@
-﻿using System.Threading;
-using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
-using JustEat.Simples.NotificationStack.Messaging.Monitoring;
-using JustEat.Simples.NotificationStack.Stack;
-using NSubstitute;
+﻿using JustEat.Simples.NotificationStack.Stack;
 using NUnit.Framework;
 using Tests.MessageStubs;
 
 namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
 {
-    [TestFixture]
-    public class WhenAMessageIsPublishedViaSnsToSqsSubscriber
+    public class WhenAMessageIsPublishedViaSnsToSqsSubscriber : GivenANotificationStack
     {
-        private readonly IHandler<GenericMessage> _handler = Substitute.For<IHandler<GenericMessage>>();
-        private IFluentNotificationStack _publisher;
+        private readonly Future<GenericMessage> _handler = new Future<GenericMessage>();
 
-        [SetUp]
-        public void Given()
+        protected override IFluentNotificationStack CreateSystemUnderTest()
         {
-            _handler.Handle(Arg.Any<GenericMessage>()).Returns(true);
+            base.CreateSystemUnderTest();
+            ServiceBus.WithMessageHandler(_handler);
+            ServiceBus.StartListening();
+            return ServiceBus;
+        }
 
-            var publisher = FluentNotificationStack.Register(c =>
-                                                                        {
-                                                                            c.Component = "TestHarnessHandling";
-                                                                            c.Tenant = "Wherever";
-                                                                            c.Environment = "integration";
-                                                                            c.PublishFailureBackoffMilliseconds = 1;
-                                                                            c.PublishFailureReAttempts = 3;
-                                                                        })
-                                                                        .WithMonitoring(Substitute.For<IMessageMonitor>())
-                .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
-                .WithSqsTopicSubscriber("CustomerCommunication", 60, instancePosition: 1)
-                .WithMessageHandler(_handler);
-
-            publisher.StartListening();
-            _publisher = publisher;
+        protected override void When()
+        {
+            ServiceBus.Publish(new GenericMessage());
         }
 
         [Test]
         public void ThenItGetsHandled()
         {
-            _publisher.Publish(new GenericMessage());
-            Thread.Sleep(2000);
-
-            _handler.Received().Handle(Arg.Any<GenericMessage>());
+            _handler.WaitUntilCompletion(2.Seconds()).ShouldBeTrue();
         }
 
-        [TearDown]
-        public void ByeBye()
-        {
-            _publisher.StopListening();
-            _publisher = null;
-        }
     }
 }

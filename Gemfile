@@ -1,5 +1,5 @@
 source "https://rubygems.org"
-source "http://ci.je-labs.com:8808"
+source "http://gems.je-labs.com:8808"
 
 #group :cucumber do
 #  gem 'cucumber', require: ['cucumber', 'cucumber/rake/task']

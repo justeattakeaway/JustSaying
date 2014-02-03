@@ -67,6 +67,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FluentNotificationStackTests\Future.cs" />
+    <Compile Include="FluentNotificationStackTests\GivenANotificationStack.cs" />
+    <Compile Include="FluentNotificationStackTests\TestExtensions.cs" />
     <Compile Include="FluentNotificationStackTests\WhenAMessageThrowsAnException.cs">
       <SubType>Code</SubType>
     </Compile>
