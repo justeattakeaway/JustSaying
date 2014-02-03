@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 
-namespace NotificationStack.IntegrationTests.FluentNotificationStack
+namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
 {
     public class Future<TMessage> : IHandler<TMessage>
     {

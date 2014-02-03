@@ -1,6 +1,6 @@
 using System;
 
-namespace NotificationStack.IntegrationTests.FluentNotificationStack
+namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
 {
     public static class TestExtensions
     {
