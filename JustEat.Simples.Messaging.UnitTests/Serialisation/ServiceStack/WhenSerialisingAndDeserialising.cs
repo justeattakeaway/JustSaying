@@ -1,6 +1,4 @@
-﻿using JustEat.Simples.NotificationStack.Messaging;
-using JustEat.Simples.NotificationStack.Messaging.Messages;
-using JustEat.Testing;
+﻿using JustEat.Testing;
 using NUnit.Framework;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using Tests.MessageStubs;

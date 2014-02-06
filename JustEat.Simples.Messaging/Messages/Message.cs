@@ -1,4 +1,5 @@
 using System;
+using Newtonsoft.Json;
 
 namespace JustEat.Simples.NotificationStack.Messaging.Messages
 {
@@ -15,5 +16,8 @@ namespace JustEat.Simples.NotificationStack.Messaging.Messages
         public string Version{ get; private set; }
         public string SourceIp { get; private set; }
         public string Tenant { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string Conversation { get; set; }
     }
 }
