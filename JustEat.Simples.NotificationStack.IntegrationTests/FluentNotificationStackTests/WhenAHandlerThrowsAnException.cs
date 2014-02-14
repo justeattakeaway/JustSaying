@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using Amazon.EC2.Model;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 using JustEat.Simples.NotificationStack.Stack;
@@ -11,18 +12,20 @@ using Tests.MessageStubs;
 namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
 {
     [TestFixture]
-    public class WhenAMessageThrowsAnException
+    public class WhenAHandlerThrowsAnException
     {
         private readonly IHandler<GenericMessage> _handler = Substitute.For<IHandler<GenericMessage>>();
         private IFluentNotificationStack _publisher;
         private Action<Exception> _globalErrorHandler;
         private bool _handledException;
+        private IMessageMonitor _monitoring;
 
         [SetUp]
         public void Given()
         {
             _handler.Handle(Arg.Any<GenericMessage>()).Returns(true).AndDoes(ex => { throw new Exception("My Ex"); });
             _globalErrorHandler = ex => { _handledException = true; };
+            _monitoring = Substitute.For<IMessageMonitor>();
             var publisher = FluentNotificationStack.Register(c =>
                                                                         {
                                                                             c.Component = "TestHarnessExceptions";
@@ -31,7 +34,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
                                                                             c.PublishFailureBackoffMilliseconds = 1;
                                                                             c.PublishFailureReAttempts = 3;
                                                                         })
-                                                                        .WithMonitoring(Substitute.For<IMessageMonitor>())
+                                                                        .WithMonitoring(_monitoring)
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
                 .WithSqsTopicSubscriber("CustomerCommunication", 60, instancePosition: 1, onError: _globalErrorHandler)
                 .WithMessageHandler(_handler);

@@ -13,6 +13,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
     {
         readonly Stopwatch _stopwatch = new Stopwatch();
         protected IFluentSubscription ServiceBus;
+        protected IMessageMonitor Monitoring;
 
         protected override void Given()
         {
@@ -21,6 +22,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
 
         protected override IFluentNotificationStack CreateSystemUnderTest()
         {
+            Monitoring = Substitute.For<IMessageMonitor>();
             ServiceBus =  JustEat.Simples.NotificationStack.Stack.FluentNotificationStack.Register(c =>
             {
                 c.Component = "TestHarnessHandling";
@@ -29,7 +31,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
                 c.PublishFailureBackoffMilliseconds = 1;
                 c.PublishFailureReAttempts = 3;
             })
-                .WithMonitoring(Substitute.For<IMessageMonitor>())
+                .WithMonitoring(Monitoring)
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
                 .WithSqsTopicSubscriber("CustomerCommunication", 60, instancePosition: 1);
             return ServiceBus;
