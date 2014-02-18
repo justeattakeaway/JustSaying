@@ -70,7 +70,7 @@
     <Compile Include="FluentNotificationStackTests\Future.cs" />
     <Compile Include="FluentNotificationStackTests\GivenANotificationStack.cs" />
     <Compile Include="FluentNotificationStackTests\TestExtensions.cs" />
-    <Compile Include="FluentNotificationStackTests\WhenAMessageThrowsAnException.cs">
+    <Compile Include="FluentNotificationStackTests\WhenAHandlerThrowsAnException.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="WhenRegisteringAPublisher\WhenPublishingAndNotInstantiated.cs" />

@@ -103,6 +103,12 @@ namespace JustEat.Simples.NotificationStack.Stack
             return this;
         }
 
+        public IFluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, IMessageProcessingStrategy messageProcessingStrategy)
+        {
+            return WithSqsTopicSubscriber(topic, messageRetentionSeconds, 30, null, null, null,
+                messageProcessingStrategy);
+        }
+
         /// <summary>
         /// Register for publishing messages to SNS
         /// </summary>
@@ -219,6 +225,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         IFluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds,
             int visibilityTimeoutSeconds = 30, int? instancePosition = null, Action<Exception> onError = null,
             int? maxAllowedMessagesInFlight = null, IMessageProcessingStrategy messageProcessingStrategy = null);
+        IFluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, IMessageProcessingStrategy messageProcessingStrategy);
 
         void StartListening();
         void StopListening();
