@@ -29,6 +29,19 @@ namespace AwsTools.UnitTests.MessageProcessingStrategies
             _actionsProcessed = 0;
         }
 
+        [Test]
+        public void ChangeMaxAllowedMessagesInFlightAtRuntime_TheChangeIsApplied()
+        {
+            var MaxAllowedMessagesInFlight = Substitute.For<Func<int>>();
+            MaxAllowedMessagesInFlight().Returns(100);
+            _messageProcessingStrategy = new Throttled(MaxAllowedMessagesInFlight, 10, _fakeMonitor);
+
+            MaxAllowedMessagesInFlight().Returns(90);
+
+            Assert.That(_messageProcessingStrategy.BlockingThreshold, Is.EqualTo(90 - 10));
+
+        }
+
         [TestCase(0, 10, 1)]
         [TestCase(9, 10, 1)]
         [TestCase(10, 10, 1)]

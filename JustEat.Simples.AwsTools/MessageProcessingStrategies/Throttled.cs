@@ -9,22 +9,34 @@ namespace JustEat.Simples.NotificationStack.AwsTools.MessageProcessingStrategies
 {
     public class Throttled : IMessageProcessingStrategy
     {
-        public int BlockingThreshold { get; private set; }
+        private readonly Func<int> _maximumAllowedMesagesInFlightProducer;
+        private const int MinimumThreashold = 1;
+        public int BlockingThreshold {
+            get
+            {
+                var threashold = _maximumAllowedMesagesInFlightProducer() - _maximumBatchSize;
+                if (threashold <= 0)
+                    return MinimumThreashold;
+                return threashold;
+            }
+           }
 
+        private readonly int _maximumBatchSize;
         private readonly IMessageMonitor _messageMonitor;
         private readonly List<Task> _activeTasks;
         private long _activeTaskCount;
 
         public Throttled(int maximumAllowedMesagesInFlight, int maximumBatchSize, IMessageMonitor messageMonitor)
-        {
-            _activeTasks = new List<Task>();
-            _messageMonitor = messageMonitor;
+            : this(() => maximumAllowedMesagesInFlight, maximumBatchSize, messageMonitor)
+        {}
 
-            BlockingThreshold = maximumAllowedMesagesInFlight - maximumBatchSize;
-            if (BlockingThreshold <= 0)
-            {
-                BlockingThreshold = 1;
-            }
+        public Throttled(Func<int> maximumAllowedMesagesInFlightProducer, int maximumBatchSize,
+            IMessageMonitor messageMonitor)
+        {
+            _maximumAllowedMesagesInFlightProducer = maximumAllowedMesagesInFlightProducer;
+            _activeTasks = new List<Task>();
+            _maximumBatchSize = maximumBatchSize;
+            _messageMonitor = messageMonitor;
         }
 
         public void BeforeGettingMoreMessages()
