@@ -130,14 +130,15 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         public void ProcessMessageAction(Amazon.SQS.Model.Message message)
         {
             Message typedMessage = null;
-
+            string rawMessage = null;
             try
             {
                 string messageType = JObject.Parse(message.Body)["Subject"].ToString();
 
+                rawMessage = JObject.Parse(message.Body)["Message"].ToString();
                 typedMessage = _serialisationRegister
                     .GetSerialiser(messageType)
-                    .Deserialise(JObject.Parse(message.Body)["Message"].ToString());
+                    .Deserialise(rawMessage);
 
                 var handlingSucceeded = true;
 
@@ -151,8 +152,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                         var watch = new System.Diagnostics.Stopwatch();
                         watch.Start();
 
-                        if (!handle(typedMessage))
-                            handlingSucceeded = false;
+                        handlingSucceeded = handle(typedMessage);
 
                         watch.Stop();
                         Log.Trace("Handled message - MessageType: " + messageType);
@@ -166,7 +166,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             }
             catch (KeyNotFoundException ex)
             {
-                Log.Trace("Didn't handle message {0}. No serialiser setup", JObject.Parse(message.Body)["Subject"].ToString());
+                Log.Trace("Didn't handle message {0}. No serialiser setup", rawMessage ?? "null");
                 _queue.Client.DeleteMessage(new DeleteMessageRequest
                 {
                     QueueUrl = _queue.Url,

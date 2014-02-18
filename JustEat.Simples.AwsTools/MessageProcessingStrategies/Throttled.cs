@@ -10,14 +10,14 @@ namespace JustEat.Simples.NotificationStack.AwsTools.MessageProcessingStrategies
     public class Throttled : IMessageProcessingStrategy
     {
         private readonly Func<int> _maximumAllowedMesagesInFlightProducer;
-        private const int MinimumThreashold = 1;
+        private const int MinimumThreshold = 1;
         public int BlockingThreshold {
             get
             {
-                var threashold = _maximumAllowedMesagesInFlightProducer() - _maximumBatchSize;
-                if (threashold <= 0)
-                    return MinimumThreashold;
-                return threashold;
+                var threshold = _maximumAllowedMesagesInFlightProducer() - _maximumBatchSize;
+                if (threshold <= 0)
+                    return MinimumThreshold;
+                return threshold;
             }
            }
 
