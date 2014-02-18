@@ -130,23 +130,15 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         public void ProcessMessageAction(Amazon.SQS.Model.Message message)
         {
             Message typedMessage = null;
-            string messageType = string.Empty;
+
             try
             {
-                messageType = JObject.Parse(message.Body)["Subject"].ToString();
+                string messageType = JObject.Parse(message.Body)["Subject"].ToString();
 
                 typedMessage = _serialisationRegister
-                            .GetSerialiser(messageType)
-                            .Deserialise(JObject.Parse(message.Body)["Message"].ToString());
-            }
-            catch (KeyNotFoundException)
-            {
-                Log.Trace("Didn't handle message {0}. No serialiser setup", JObject.Parse(message.Body)["Subject"].ToString());
-                _queue.Client.DeleteMessage(new DeleteMessageRequest { QueueUrl = _queue.Url, ReceiptHandle = message.ReceiptHandle });
-            }
+                    .GetSerialiser(messageType)
+                    .Deserialise(JObject.Parse(message.Body)["Message"].ToString());
 
-            try
-            {
                 var handlingSucceeded = true;
 
                 if (typedMessage != null)
@@ -172,11 +164,23 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                     _queue.Client.DeleteMessage(new DeleteMessageRequest { QueueUrl = _queue.Url, ReceiptHandle = message.ReceiptHandle });
 
             }
-           
+            catch (KeyNotFoundException ex)
+            {
+                Log.Trace("Didn't handle message {0}. No serialiser setup", JObject.Parse(message.Body)["Subject"].ToString());
+                _queue.Client.DeleteMessage(new DeleteMessageRequest
+                {
+                    QueueUrl = _queue.Url,
+                    ReceiptHandle = message.ReceiptHandle
+                });
+                _onError(ex);
+            }
             catch (Exception ex)
             {
                 Log.ErrorException(string.Format("Issue handling message... {0}. StackTrace: {1}", message, ex.StackTrace), ex);
-                _messagingMonitor.HandleException(typedMessage.GetType().Name);
+                if (typedMessage != null)
+                {
+                    _messagingMonitor.HandleException(typedMessage.GetType().Name);
+                }
                 _onError(ex);
                 
             }
