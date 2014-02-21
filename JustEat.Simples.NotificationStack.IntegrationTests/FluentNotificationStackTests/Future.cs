@@ -4,7 +4,7 @@ using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 
 namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
 {
-    public class Future<TMessage> : IHandler<TMessage>
+    public class Future<TMessage>
     {
         private readonly Action _action;
         private readonly ManualResetEvent _event;
@@ -19,16 +19,15 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
             _action = action;
         }
 
-        public bool Handle(TMessage message)
+        public void Complete(TMessage message)
         {
             Value = message;
-            IsCompleted = true;
-            _event.Set();
             if (_action != null)
             {
                 _action();
             }
-            return true;
+            _event.Set();
+            IsCompleted = true;
         }
 
         public Exception RecordedException { get; set; }

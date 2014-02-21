@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 using JustEat.Simples.NotificationStack.Stack;
 using JustEat.Testing;
@@ -14,6 +15,18 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
         readonly Stopwatch _stopwatch = new Stopwatch();
         protected IFluentSubscription ServiceBus;
         protected IMessageMonitor Monitoring;
+        private Future<GenericMessage> _handler;
+        private  INotificationStackConfiguration _config = new MessagingConfig { Component = "TestHarnessHandling", Tenant = "Wherever", Environment = "integration", PublishFailureBackoffMilliseconds = 1, PublishFailureReAttempts = 3};
+
+        protected void RegisterHandler(Future<GenericMessage> handler)
+        {
+            _handler = handler;
+        }
+
+        protected void RegisterConfig(INotificationStackConfiguration config)
+        {
+            _config = config;
+        }
 
         protected override void Given()
         {
@@ -23,17 +36,24 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
         protected override IFluentNotificationStack CreateSystemUnderTest()
         {
             Monitoring = Substitute.For<IMessageMonitor>();
-            ServiceBus =  JustEat.Simples.NotificationStack.Stack.FluentNotificationStack.Register(c =>
+            ServiceBus =  FluentNotificationStack.Register(c =>
             {
-                c.Component = "TestHarnessHandling";
-                c.Tenant = "Wherever";
-                c.Environment = "integration";
-                c.PublishFailureBackoffMilliseconds = 1;
-                c.PublishFailureReAttempts = 3;
+                c.Component = _config.Component;
+                c.Tenant = _config.Tenant;
+                c.Environment = _config.Environment;
+                c.PublishFailureBackoffMilliseconds = _config.PublishFailureBackoffMilliseconds;
+                c.PublishFailureReAttempts = _config.PublishFailureReAttempts;
             })
                 .WithMonitoring(Monitoring)
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
                 .WithSqsTopicSubscriber("CustomerCommunication", 60, instancePosition: 1);
+            
+            var handler = Substitute.For<IHandler<GenericMessage>>();
+            handler.When(x => x.Handle(Arg.Any<GenericMessage>()))
+                    .Do(x => _handler.Complete((GenericMessage)x.Args()[0]));
+
+            ServiceBus.WithMessageHandler(handler);
+            ServiceBus.StartListening();
             return ServiceBus;
         }
 
