@@ -72,8 +72,11 @@ namespace JustEat.Simples.NotificationStack.AwsTools
                 new GetQueueAttributesRequest{
                  QueueUrl = Url,
                  AttributeNames = new List<string> { "Policy" }});
-            
-            return  !string.IsNullOrEmpty(policyResponse.Policy) || policyResponse.Policy.Contains(snsTopic.Arn);
+
+            if (string.IsNullOrEmpty(policyResponse.Policy))
+                return false;
+
+            return policyResponse.Policy.Contains(snsTopic.Arn);
         }
 
         protected string GetQueueSubscriptionPilocy(SnsTopicBase topic)
