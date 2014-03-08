@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using Amazon.SQS.Model;
 using AwsTools.UnitTests.MessageStubs;
 using JustEat.Testing;
@@ -13,7 +12,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
         protected override void Given()
         {
-            TestWaitTime = 100;
+            TestWaitTime = 1000;
             _messageId = Guid.NewGuid();
             DeserialisedMessage = new GenericMessage { Id = _messageId };
             Serialiser.Deserialise(Arg.Any<string>()).Returns(x => DeserialisedMessage);

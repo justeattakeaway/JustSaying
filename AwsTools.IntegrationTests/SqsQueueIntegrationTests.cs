@@ -48,7 +48,7 @@ namespace AwsTools.IntegrationTests
 
         protected override void When()
         {
-            _isQueueCreated = SystemUnderTest.Create(60, 0, 30);
+            _isQueueCreated = SystemUnderTest.Create(60, attempt: 0, visibilityTimeoutSeconds: 30);
         }
 
         [Then]
@@ -68,7 +68,7 @@ namespace AwsTools.IntegrationTests
     {
         protected override void When()
         {
-            SystemUnderTest.Create(600, 0, 30, createErrorQueue: false);
+            SystemUnderTest.Create(600, attempt: 0, visibilityTimeoutSeconds: 30, createErrorQueue: false);
         }
 
         [Then]

@@ -58,6 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Amazon\AmazonQueueCreator.cs" />
+    <Compile Include="Amazon\SqsConfiguration.cs" />
     <Compile Include="FluentNotificationStack.cs" />
     <Compile Include="Amazon\IVerifyAmazonQueues.cs" />
     <Compile Include="INotificationStackConfiguration.cs" />

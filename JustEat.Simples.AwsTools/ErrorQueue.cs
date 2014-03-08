@@ -27,12 +27,13 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             int retentionPeriodSeconds,
             int attempt = NotificationStackConstants.DEFAULT_CREATE_REATTEMPT,
             int visibilityTimeoutSeconds = NotificationStackConstants.DEFAULT_VISIBILITY_TIMEOUT,
-            bool createErrorQueue = true)
+            bool errorQueueOptOut = false,
+            int retryCountBeforeSendingToErrorQueue = NotificationStackConstants.DEFAULT_HANDLER_RETRY_COUNT)
         {
-            if(createErrorQueue)
+            if (!errorQueueOptOut)
                 throw new InvalidOperationException("Cannot create a dead letter queue for a dead letter queue.");
 
-            return base.Create(retentionPeriodSeconds, attempt, visibilityTimeoutSeconds, false);
+            return base.Create(retentionPeriodSeconds, attempt, visibilityTimeoutSeconds, true);
         }
     }
 }

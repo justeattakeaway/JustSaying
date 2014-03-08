@@ -64,11 +64,11 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 
         public void Delete()
         {
-            if (!Exists())
-                return;
+            //if (!Exists())
+            //    return;
 
-            var response = Client.DeleteTopic(new DeleteTopicRequest(Arn));
-            Arn = string.Empty;
+            //var response = Client.DeleteTopic(new DeleteTopicRequest(Arn));
+            //Arn = string.Empty;
         }
     }
 }
