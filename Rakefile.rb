@@ -19,6 +19,7 @@ directory 'out'
 
 task :directories => 'out'
 setup_nuget name: name, configuration: configuration, version: version, restore: false
+setup_nuget name: name, configuration: configuration, version: version+'-Beta', restore: false
 
 task :clean do
   package_lib = "out/package/lib"
