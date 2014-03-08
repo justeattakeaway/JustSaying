@@ -28,8 +28,7 @@ end
 AssemblyInfoGenerator.new(log: @log, version: version).generate
 desc 'Bootstrap all build-dependencies'
 task :bootstrap => [:assembly_info, :directories]
-task :package => [:clean]
-task :package => [:nuget]
+task :package => [:clean, :nuget]
 task :default => [:package]
 
 # bundle exec rake msbuild_configuration=debug
