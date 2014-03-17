@@ -10,7 +10,7 @@ namespace JustEat.Simples.NotificationStack.Stack.Amazon
         public SqsConfiguration()
         {
             VisibilityTimeoutSeconds = NotificationStackConstants.DEFAULT_VISIBILITY_TIMEOUT;
-            RetryCountBeforeSendingToErrorQueue = 5;
+            RetryCountBeforeSendingToErrorQueue = NotificationStackConstants.DEFAULT_HANDLER_RETRY_COUNT;
         }
         public string QueueName { get; set; }
         public string Topic { get; set; }
