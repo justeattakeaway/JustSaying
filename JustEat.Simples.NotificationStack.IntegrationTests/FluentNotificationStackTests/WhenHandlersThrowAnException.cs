@@ -34,7 +34,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
         public void ThenExceptionIsRecordedInStatsD()
         {
             _handler.WaitUntilCompletion(10.Seconds()).ShouldBeTrue();
-            Thread.Sleep(1000);
+            Thread.Sleep(2000);
             Monitoring.Received().HandleException(Arg.Any<string>());
         }
 

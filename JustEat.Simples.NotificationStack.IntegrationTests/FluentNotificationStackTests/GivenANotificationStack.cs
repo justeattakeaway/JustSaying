@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using JustEat.Simples.NotificationStack.AwsTools;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 using JustEat.Simples.NotificationStack.Stack;
@@ -36,7 +37,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
         protected override IFluentNotificationStack CreateSystemUnderTest()
         {
             Monitoring = Substitute.For<IMessageMonitor>();
-            ServiceBus =  FluentNotificationStack.Register(c =>
+            ServiceBus = FluentNotificationStack.Register(c =>
             {
                 c.Component = _config.Component;
                 c.Tenant = _config.Tenant;
@@ -46,7 +47,13 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
             })
                 .WithMonitoring(Monitoring)
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
-                .WithSqsTopicSubscriber("CustomerCommunication", 60, instancePosition: 1);
+                .WithSqsTopicSubscriber(cf =>
+                {
+                    cf.Topic = "CustomerCommunication";
+                    cf.MessageRetentionSeconds = 60;
+                    cf.VisibilityTimeoutSeconds = NotificationStackConstants.DEFAULT_VISIBILITY_TIMEOUT;
+                    cf.InstancePosition = 1;
+                });
             
             var handler = Substitute.For<IHandler<GenericMessage>>();
             handler.When(x => x.Handle(Arg.Any<GenericMessage>()))

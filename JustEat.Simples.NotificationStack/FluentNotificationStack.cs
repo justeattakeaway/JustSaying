@@ -240,6 +240,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             int visibilityTimeoutSeconds = 30, int? instancePosition = null, Action<Exception> onError = null,
             int? maxAllowedMessagesInFlight = null, IMessageProcessingStrategy messageProcessingStrategy = null);
         IFluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, IMessageProcessingStrategy messageProcessingStrategy);
+        IFluentSubscription WithSqsTopicSubscriber(Action<SqsConfiguration> confBuilder);
 
         void StartListening();
         void StopListening();

@@ -88,7 +88,12 @@ We currently support SQS subscriptions only, but keep checking back for other me
             .WithSqsTopicSubscriber(Topic.OrderDispatch, 60)
                 .WithMessageHandler<OrderAccepted>(new CustomerNotificationHandler())
                 .WithMessageHandler<OrderRejected>(new CustomerNotificationHandler())
-            .WithSqsTopicSubscriber(Topic.OrderProcessing, 120, 30)
+            .WithSqsTopicSubscriber(cf =>
+                {
+                    cf.Topic = Topic.OrderProcessing;
+                    cf.MessageRetentionSeconds = 120;
+                    cf.VisibilityTimeoutSeconds = NotificationStackConstants.DEFAULT_VISIBILITY_TIMEOUT;
+                });
                 .WithMessageHandler(new TellGuardAboutFailedOrderHandler())
                 .StartListening();
 ````
