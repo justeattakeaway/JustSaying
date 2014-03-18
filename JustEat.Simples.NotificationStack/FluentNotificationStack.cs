@@ -101,7 +101,7 @@ namespace JustEat.Simples.NotificationStack.Stack
                                 : subscriptionEndpointProvider.GetLocationName(_stack.Config.Component, config.Topic);
             config.PublishEndpoint = publishEndpointProvider.GetLocationName(config.Topic);
             config.Validate();
-            var queue = _amazonQueueCreator.VerifyOrCreateQueue(_stack.Config, _stack.SerialisationRegister, config);
+            var queue = _amazonQueueCreator.VerifyOrCreateQueue(_stack.Config.Region, _stack.SerialisationRegister, config);
 
             var sqsSubscriptionListener = new SqsNotificationListener(queue, _stack.SerialisationRegister, new NullMessageFootprintStore(), _stack.Monitor, config.OnError);
             _stack.AddNotificationTopicSubscriber(config.Topic, sqsSubscriptionListener);

@@ -10,9 +10,9 @@ namespace JustEat.Simples.NotificationStack.Stack.Amazon
     public class AmazonQueueCreator : IVerifyAmazonQueues
     {
         [Obsolete("Please use the other overload that takes SqsConfiguration as parameter.")]
-        public SqsQueueByName VerifyOrCreateQueue(IMessagingConfig configuration, IMessageSerialisationRegister serialisationRegister, string queueName, string topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30, int? instancePosition = null)
+        public SqsQueueByName VerifyOrCreateQueue(string region, IMessageSerialisationRegister serialisationRegister, string queueName, string topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30, int? instancePosition = null)
         {
-            return VerifyOrCreateQueue(configuration, serialisationRegister,
+            return VerifyOrCreateQueue(region, serialisationRegister,
                 new SqsConfiguration
                 {
                     QueueName = queueName,
@@ -23,10 +23,10 @@ namespace JustEat.Simples.NotificationStack.Stack.Amazon
                 });
         }
 
-        public SqsQueueByName VerifyOrCreateQueue(IMessagingConfig configuration, IMessageSerialisationRegister serialisationRegister, SqsConfiguration queueConfig)
+        public SqsQueueByName VerifyOrCreateQueue(string region, IMessageSerialisationRegister serialisationRegister, SqsConfiguration queueConfig)
         {
-            var sqsclient = AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(configuration.Region));
-            var snsclient = AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(configuration.Region));
+            var sqsclient = AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(region));
+            var snsclient = AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(region));
 
             var queue = new SqsQueueByName(queueConfig.QueueName, sqsclient);
 
