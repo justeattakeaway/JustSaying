@@ -67,6 +67,7 @@
     <Compile Include="Lookups\SqsEndpointNames\WhenRequestingAnEndpointNameForASpecificInstance.cs" />
     <Compile Include="Lookups\SqsEndpointNames\WhenRequestingAnEndpointNameForASpecificInstanceNumberOfZero.cs" />
     <Compile Include="MessageHandling\DelegateAdjusters\WhenSerialisingAndDeserialising.cs" />
+    <Compile Include="MessageProcessingStrategies\ThrottledTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serialisation\Newtonsoft\DealingWithPotentiallyMissingConversation.cs" />
     <Compile Include="Serialisation\Newtonsoft\WhenSerialisingAndDeserialising.cs" />

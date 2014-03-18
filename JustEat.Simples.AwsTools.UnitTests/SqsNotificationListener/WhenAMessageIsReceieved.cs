@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Amazon.SQS.Model;
 using AwsTools.UnitTests.MessageStubs;
 using JustEat.Testing;
@@ -29,6 +30,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         [Then]
         public void MessageIsMarkedAsRecieved()
         {
+            Thread.Sleep(50);
             MessageFootprintStore.Received().MarkMessageAsRecieved(_messageId);
         }
     }

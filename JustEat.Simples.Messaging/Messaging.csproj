@@ -47,6 +47,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MessageProcessingStrategies\IMessageProcessingStrategy.cs" />
+    <Compile Include="MessageProcessingStrategies\MaximumThroughput.cs" />
+    <Compile Include="MessageProcessingStrategies\Throttled.cs" />
     <Compile Include="Monitoring\IMessageMonitor.cs" />
     <Compile Include="IMessagePublisher.cs" />
     <Compile Include="IMessagingConfig.cs" />
