@@ -29,7 +29,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected override void When()
         {
             SystemUnderTest.Listen();
-            Thread.Sleep(20);
+            Thread.Sleep(2000);
             SystemUnderTest.StopListening();
         }
 
