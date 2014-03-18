@@ -107,7 +107,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 
                 watch.Stop();
 
-                _messagingMonitor.PublishMessageTime(watch.ElapsedMilliseconds);
+                _messagingMonitor.ReceiveMessageTime(watch.ElapsedMilliseconds);
 
                 var messageCount = sqsMessageResponse.Messages.Count;
 
