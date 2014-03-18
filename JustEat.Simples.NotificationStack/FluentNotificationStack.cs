@@ -92,13 +92,15 @@ namespace JustEat.Simples.NotificationStack.Stack
         {
             var config = new SqsConfiguration();
             confBuilder(config);
-            config.Validate();
-            var endpointProvider = new SqsSubscribtionEndpointProvider(_stack.Config);
+            
+            var subscriptionEndpointProvider = new SqsSubscribtionEndpointProvider(_stack.Config);
+            var publishEndpointProvider = new SnsPublishEndpointProvider(_stack.Config);
 
             config.QueueName = config.InstancePosition.HasValue
-                                ? endpointProvider.GetLocationName(_stack.Config.Component, config.Topic, config.InstancePosition.Value)
-                                : endpointProvider.GetLocationName(_stack.Config.Component, config.Topic);
-
+                                ? subscriptionEndpointProvider.GetLocationName(_stack.Config.Component, config.Topic, config.InstancePosition.Value)
+                                : subscriptionEndpointProvider.GetLocationName(_stack.Config.Component, config.Topic);
+            config.PublishEndpoint = publishEndpointProvider.GetLocationName(config.Topic);
+            config.Validate();
             var queue = _amazonQueueCreator.VerifyOrCreateQueue(_stack.Config, _stack.SerialisationRegister, config);
 
             var sqsSubscriptionListener = new SqsNotificationListener(queue, _stack.SerialisationRegister, new NullMessageFootprintStore(), _stack.Monitor, config.OnError);

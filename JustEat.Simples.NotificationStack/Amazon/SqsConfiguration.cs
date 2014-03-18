@@ -22,6 +22,7 @@ namespace JustEat.Simples.NotificationStack.Stack.Amazon
         public int? MaxAllowedMessagesInFlight { get; set; }
         public IMessageProcessingStrategy MessageProcessingStrategy { get; set; }
         public Action<Exception> OnError { get; set; }
+        public string PublishEndpoint { get; set; }
 
         public void Validate()
         {
@@ -33,6 +34,9 @@ namespace JustEat.Simples.NotificationStack.Stack.Amazon
             
             if (MaxAllowedMessagesInFlight.HasValue && MessageProcessingStrategy != null)
                 throw new ConfigurationErrorsException("You have provided both 'maxAllowedMessagesInFlight' and 'messageProcessingStrategy' - these settings are mutually exclusive.");
+
+            if(PublishEndpoint == null)
+                throw new ConfigurationErrorsException("You must provide a value for PublishEndpoint.");
         }
     }
 }
