@@ -135,7 +135,14 @@ namespace JustEat.Simples.NotificationStack.Stack
                 attemptCount++;
                 try
                 {
+                    var watch = new System.Diagnostics.Stopwatch();
+                    watch.Start();
+
                     publisher.Publish(message);
+
+                    watch.Stop();
+
+                    Monitor.PublishMessageTime(watch.ElapsedMilliseconds);
                 }
                 catch (Exception ex)
                 {

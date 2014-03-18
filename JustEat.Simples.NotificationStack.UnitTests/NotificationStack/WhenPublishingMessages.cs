@@ -37,5 +37,11 @@ namespace Stack.UnitTests.NotificationStack
         {
             _publisher.Received().Publish(Arg.Is<GenericMessage>(x => x.Tenant == Tenant));
         }
+
+        [Then]
+        public void PublishMessageTimeStatsSent()
+        {
+            Monitor.Received(1).PublishMessageTime(Arg.Any<long>());
+        }
     }
 }
