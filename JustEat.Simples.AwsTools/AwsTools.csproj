@@ -44,6 +44,7 @@
       <HintPath>..\packages\NLog.2.1.0\lib\net40\NLog.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -52,6 +53,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Amazon\AmazonQueueCreator.cs" />
+    <Compile Include="Amazon\IVerifyAmazonQueues.cs" />
+    <Compile Include="Amazon\SqsConfiguration.cs" />
     <Compile Include="DynamoTable.cs" />
     <Compile Include="DynamoDbConfig.cs" />
     <Compile Include="DynamoStore.cs" />
