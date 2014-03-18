@@ -7,5 +7,7 @@ namespace JustEat.Simples.NotificationStack.Messaging.Monitoring
         void IssuePublishingMessage();
         void IncrementThrottlingStatistic();
         void HandleThrottlingTime(long handleTimeMs);
+        void PublishMessageTime(long handleTimeMs);
+        void ReceiveMessageTime(long handleTimeMs);
     }
 }
