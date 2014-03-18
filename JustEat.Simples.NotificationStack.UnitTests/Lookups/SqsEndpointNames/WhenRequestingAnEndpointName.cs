@@ -1,20 +1,20 @@
 ﻿using JustEat.Simples.NotificationStack.Messaging;
-using JustEat.Simples.NotificationStack.Messaging.Lookups;
+using JustEat.Simples.NotificationStack.Stack.Lookups;
 using JustEat.Testing;
 using NSubstitute;
 using NUnit.Framework;
 
-namespace UnitTests.Lookups.SnsEndpointNames
+namespace Stack.UnitTests.Lookups.SqsEndpointNames
 {
-    public class WhenRequestingAnEndpointName : BehaviourTest<SnsPublishEndpointProvider>
+    public class WhenRequestingAnEndpointName : BehaviourTest<SqsSubscribtionEndpointProvider>
     {
         private readonly IMessagingConfig _config = Substitute.For<IMessagingConfig>();
 
         private string _result;
 
-        protected override SnsPublishEndpointProvider CreateSystemUnderTest()
+        protected override SqsSubscribtionEndpointProvider CreateSystemUnderTest()
         {
-            return new SnsPublishEndpointProvider(_config);
+            return new SqsSubscribtionEndpointProvider(_config);
         }
 
         protected override void Given()
@@ -25,13 +25,13 @@ namespace UnitTests.Lookups.SnsEndpointNames
 
         protected override void When()
         {
-            _result = SystemUnderTest.GetLocationName("OrderDispatch");
+            _result = SystemUnderTest.GetLocationName("BoxHandler", "OrderDispatch");
         }
 
         [Then]
         public void LocationIsBuiltInCorrectStructure()
         {
-            Assert.AreEqual("outerhebredies-qaxx-orderdispatch", _result);
+            Assert.AreEqual("outerhebredies-qaxx-boxhandler-orderdispatch", _result);
         }
     }
 }

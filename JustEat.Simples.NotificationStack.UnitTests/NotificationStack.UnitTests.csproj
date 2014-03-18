@@ -73,6 +73,10 @@
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoEnvironmentIsProvided.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoTenantIsProvided.cs" />
     <Compile Include="FluentNotificationStackTests\Publishing\WhenPublishing.cs" />
+    <Compile Include="Lookups\SnsEndpointNames\WhenRequestingAnEndpointName.cs" />
+    <Compile Include="Lookups\SqsEndpointNames\WhenRequestingAnEndpointName.cs" />
+    <Compile Include="Lookups\SqsEndpointNames\WhenRequestingAnEndpointNameForASpecificInstance.cs" />
+    <Compile Include="Lookups\SqsEndpointNames\WhenRequestingAnEndpointNameForASpecificInstanceNumberOfZero.cs" />
     <Compile Include="NotificationStack\NotificationStackBaseTest.cs" />
     <Compile Include="NotificationStack\WhenAddingAPublisherWithNoTopic.cs" />
     <Compile Include="NotificationStack\WhenPublishingFails.cs" />

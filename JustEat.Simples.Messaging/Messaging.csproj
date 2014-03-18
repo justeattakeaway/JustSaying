@@ -54,8 +54,6 @@
     <Compile Include="IMessagePublisher.cs" />
     <Compile Include="IMessagingConfig.cs" />
     <Compile Include="INotificationSubscriber.cs" />
-    <Compile Include="Lookups\IPublishEndpointProvider.cs" />
-    <Compile Include="Lookups\IPublishSubscribtionEndpointProvider.cs" />
     <Compile Include="MessageHandling\DelegateAdjuster.cs" />
     <Compile Include="MessageHandling\IHandler.cs" />
     <Compile Include="MessageSerialisation\IMessageSerialisationRegister.cs" />

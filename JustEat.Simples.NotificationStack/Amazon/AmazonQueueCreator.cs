@@ -2,8 +2,8 @@ using System;
 using Amazon;
 using JustEat.Simples.NotificationStack.AwsTools;
 using JustEat.Simples.NotificationStack.Messaging;
-using JustEat.Simples.NotificationStack.Messaging.Lookups;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
+using JustEat.Simples.NotificationStack.Stack.Lookups;
 
 namespace JustEat.Simples.NotificationStack.Stack.Amazon
 {

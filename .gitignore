@@ -114,3 +114,5 @@ Backup*/
 UpgradeLog*.XML
 AWSSDK.1.5.25.0.nupkg
 AWSSDK.1.5.25.0.nuspec
+
+Gemfile.lock

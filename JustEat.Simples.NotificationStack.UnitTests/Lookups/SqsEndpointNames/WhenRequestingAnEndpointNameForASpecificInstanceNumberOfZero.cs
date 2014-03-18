@@ -1,16 +1,15 @@
+using System;
 using JustEat.Simples.NotificationStack.Messaging;
-using JustEat.Simples.NotificationStack.Messaging.Lookups;
+using JustEat.Simples.NotificationStack.Stack.Lookups;
 using JustEat.Testing;
 using NSubstitute;
 using NUnit.Framework;
 
 namespace UnitTests.Lookups.SqsEndpointNames
 {
-    public class WhenRequestingAnEndpointNameForASpecificInstance : BehaviourTest<SqsSubscribtionEndpointProvider>
+    public class WhenRequestingAnEndpointNameForASpecificInstanceNumberOfZero : BehaviourTest<SqsSubscribtionEndpointProvider>
     {
         private readonly IMessagingConfig _config = Substitute.For<IMessagingConfig>();
-
-        private string _result;
 
         protected override SqsSubscribtionEndpointProvider CreateSystemUnderTest()
         {
@@ -21,17 +20,18 @@ namespace UnitTests.Lookups.SqsEndpointNames
         {
             _config.Environment.Returns("QAxx");
             _config.Tenant.Returns("OuterHebredies");
+            RecordAnyExceptionsThrown();
         }
 
         protected override void When()
         {
-            _result = SystemUnderTest.GetLocationName("BoxHandler", "OrderDispatch", 99);
+            SystemUnderTest.GetLocationName("BoxHandler", "OrderDispatch", 0);
         }
 
         [Then]
-        public void LocationIsBuiltInCorrectStructure()
+        public void SillyInstancePositionsAreNotAllowed()
         {
-            Assert.AreEqual("outerhebredies-qaxx-boxhandler-99-orderdispatch", _result);
+            Assert.IsInstanceOf<ArgumentOutOfRangeException>(ThrownException);
         }
     }
 }

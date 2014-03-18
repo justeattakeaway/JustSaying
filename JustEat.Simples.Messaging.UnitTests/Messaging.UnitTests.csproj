@@ -62,10 +62,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Lookups\SnsEndpointNames\WhenRequestingAnEndpointName.cs" />
-    <Compile Include="Lookups\SqsEndpointNames\WhenRequestingAnEndpointName.cs" />
-    <Compile Include="Lookups\SqsEndpointNames\WhenRequestingAnEndpointNameForASpecificInstance.cs" />
-    <Compile Include="Lookups\SqsEndpointNames\WhenRequestingAnEndpointNameForASpecificInstanceNumberOfZero.cs" />
     <Compile Include="MessageHandling\DelegateAdjusters\WhenSerialisingAndDeserialising.cs" />
     <Compile Include="MessageProcessingStrategies\ThrottledTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
