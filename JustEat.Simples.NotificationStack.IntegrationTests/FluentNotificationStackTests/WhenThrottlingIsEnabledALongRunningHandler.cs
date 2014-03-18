@@ -38,7 +38,6 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
                 c.Tenant = "Wherever";
                 c.Environment = "integration";
                 c.PublishFailureBackoffMilliseconds = 1;
-                c.PublishFailureReAttempts = 3;
             })
                                                                         .WithMonitoring(Substitute.For<IMessageMonitor>())
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
