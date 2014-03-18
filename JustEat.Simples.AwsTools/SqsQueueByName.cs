@@ -1,85 +1,42 @@
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Threading;
 using Amazon.SQS;
-using Amazon.SQS.Model;
 using Amazon.SQS.Util;
-using NLog;
 
 namespace JustEat.Simples.NotificationStack.AwsTools
 {
-    public class SqsQueueByName : SqsQueueBase
+    public class SqsQueueByName : SqsQueueByNameBase
     {
-        private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
-
         public SqsQueueByName(string queueName, IAmazonSQS client)
-            : base(client)
+            : base(queueName, client)
         {
-            QueueNamePrefix = queueName;
-            Exists();
+            ErrorQueue = new ErrorQueue(queueName, client);
         }
 
-        public override bool Exists()
+        protected override Dictionary<string, string> GetCreateQueueAttributes(int retentionPeriodSeconds, int visibilityTimeoutSeconds)
         {
-            var result = Client.ListQueues(new ListQueuesRequest{ QueueNamePrefix = QueueNamePrefix });
-            if (result.QueueUrls.Any())
+            return new Dictionary<string, string>
             {
-                Url = result.QueueUrls.First();
-                SetArn();
-                return true;
-            }
-
-            return false;
+                { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD , retentionPeriodSeconds.ToString(CultureInfo.InvariantCulture)},
+                { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , visibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture)},
+                { NotificationStackConstants.ATTRIBUTE_REDRIVE_POLICY, "{\"maxReceiveCount\":\"1\", \"deadLetterTargetArn\":\""+ErrorQueue.Arn+"\"}"}
+            };
         }
 
-        public bool Create(int retentionPeriodSeconds, int attempt = 0, int visibilityTimeoutSeconds = 30)
+        public override bool Create(int retentionPeriodSeconds, int attempt = NotificationStackConstants.DEFAULT_CREATE_REATTEMPT, int visibilityTimeoutSeconds = NotificationStackConstants.DEFAULT_VISIBILITY_TIMEOUT, bool createErrorQueue = false, int retryCountBeforeSendingToErrorQueue = NotificationStackConstants.DEFAULT_HANDLER_RETRY_COUNT)
         {
-            try
+            if (!ErrorQueue.Exists())
             {
-                var result = Client.CreateQueue(new CreateQueueRequest{
-                    QueueName = QueueNamePrefix,
-                    Attributes = new Dictionary<string,string>
-                    {
-                        { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD , retentionPeriodSeconds.ToString(CultureInfo.InvariantCulture)},
-                        { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , visibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture)},
-                    }});
-
-                if (!string.IsNullOrWhiteSpace(result.QueueUrl))
-                {
-                    Url = result.QueueUrl;
-                    SetArn();
-
-                    Log.Info(string.Format("Created Queue: {0} on Arn: {1}", QueueNamePrefix, Arn));
-                    return true;
-                }
+                ErrorQueue.Create(NotificationStackConstants.MAXIMUM_RETENTION_PERIOD, NotificationStackConstants.DEFAULT_CREATE_REATTEMPT, NotificationStackConstants.DEFAULT_VISIBILITY_TIMEOUT, errorQueueOptOut: true);
             }
-            catch (AmazonSQSException ex)
-            {
-                if (ex.ErrorCode == "AWS.SimpleQueueService.QueueDeletedRecently")
-                {
-                    // Ensure we wait for queue delete timeout to expire.
-                    Log.Info(string.Format("Waiting to create Queue due to AWS time restriction - Queue: {0}, AttemptCount: {1}", QueueNamePrefix, attempt + 1));
-                    Thread.Sleep(60000);
-                    Create(retentionPeriodSeconds, attempt++, visibilityTimeoutSeconds);
-                }
-                else
-                {
-                    // Throw all errors which are not delete timeout related.
-                    Log.ErrorException(string.Format("Create Queue error: {0}", QueueNamePrefix), ex);
-                    throw;
-                }
+            return base.Create(retentionPeriodSeconds, attempt, visibilityTimeoutSeconds);
+        }
 
-                // If we're on a delete timeout, throw after 2 attempts.
-                if (attempt >= 2)
-                {
-                    Log.ErrorException(string.Format("Create Queue error, max retries exceeded for delay - Queue: {0}", QueueNamePrefix), ex);
-                    throw;
-                }
-            }
-
-            Log.Info(string.Format("Failed to create Queue: {0}", QueueNamePrefix));
-            return false;
+        public override void Delete()
+        {
+            if(ErrorQueue != null)
+                ErrorQueue.Delete();
+            base.Delete();
         }
     }
 }

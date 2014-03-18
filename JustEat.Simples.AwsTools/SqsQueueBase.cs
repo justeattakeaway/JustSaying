@@ -14,6 +14,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         public string Url { get; protected set; }
         public IAmazonSQS Client { get; private set; }
         public string QueueNamePrefix { get; protected set; }
+        public ErrorQueue ErrorQueue { get; protected set; }
         private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
 
         public SqsQueueBase(IAmazonSQS client)
@@ -23,7 +24,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
 
         public abstract bool Exists();
 
-        public void Delete()
+        public virtual void Delete()
         {
             Arn = null;
             Url = null;

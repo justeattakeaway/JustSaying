@@ -173,7 +173,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             }
             catch (KeyNotFoundException ex)
             {
-                Log.Trace("Didn't handle message {0}. No serialiser setup", rawMessage ?? "null");
+                Log.Trace("Didn't handle message {0}. No serialiser setup", rawMessage ?? "");
                 _queue.Client.DeleteMessage(new DeleteMessageRequest
                 {
                     QueueUrl = _queue.Url,

@@ -73,6 +73,7 @@
     <Compile Include="FluentNotificationStackTests\WhenAHandlerThrowsAnException.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="FluentNotificationStackTests\WhenHandlersThrowAnException.cs" />
     <Compile Include="WhenRegisteringAPublisher\WhenPublishingAndNotInstantiated.cs" />
     <Compile Include="WhenRegisteringASqsSubscriber\WhenRegisteringASqsTopicSubscriberInADefaultRegion.cs" />
     <Compile Include="WhenRegisteringASqsSubscriber\WhenRegisteringASqsTopicSubscriber.cs" />

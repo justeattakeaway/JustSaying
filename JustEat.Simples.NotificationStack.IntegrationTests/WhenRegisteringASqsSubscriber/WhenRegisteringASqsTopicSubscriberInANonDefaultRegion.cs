@@ -16,14 +16,14 @@ namespace NotificationStack.IntegrationTests.WhenRegisteringASqsSubscriber
 
         protected override void Given()
         {
-            _topicName = "NonDefaultTopicSubscriptionTest";
+            _topicName = "IntegrationTest";
             _regionEndpoint = RegionEndpoint.SAEast1;
 
             MockNotidicationStack();
 
             Configuration = new MessagingConfig
             {
-                Component = "intergrationtestcomponent",
+                Component = "test",
                 Environment = "integrationtest",
                 Tenant = "all",
                 Region = _regionEndpoint.SystemName
