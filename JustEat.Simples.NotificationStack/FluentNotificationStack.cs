@@ -77,28 +77,42 @@ namespace JustEat.Simples.NotificationStack.Stack
         /// <returns></returns>
         public IFluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30, int? instancePosition = null, Action<Exception> onError = null, int? maxAllowedMessagesInFlight = null, IMessageProcessingStrategy messageProcessingStrategy = null)
         {
+            return WithSqsTopicSubscriber(cf =>
+            {
+                cf.Topic = topic;
+                cf.MessageRetentionSeconds = messageRetentionSeconds;
+                cf.VisibilityTimeoutSeconds = visibilityTimeoutSeconds;
+                cf.InstancePosition = instancePosition;
+                cf.OnError = onError;
+                cf.MaxAllowedMessagesInFlight = maxAllowedMessagesInFlight;
+                cf.MessageProcessingStrategy = messageProcessingStrategy;
+            });
+        }
+
+        public IFluentSubscription WithSqsTopicSubscriber(Action<SqsConfiguration> confBuilder)
+        {
+            var config = new SqsConfiguration();
+            confBuilder(config);
+            config.Validate();
             var endpointProvider = new SqsSubscribtionEndpointProvider(_stack.Config);
+
+            config.QueueName = config.InstancePosition.HasValue
+                                ? endpointProvider.GetLocationName(_stack.Config.Component, config.Topic, config.InstancePosition.Value)
+                                : endpointProvider.GetLocationName(_stack.Config.Component, config.Topic);
+
+            var queue = _amazonQueueCreator.VerifyOrCreateQueue(_stack.Config, _stack.SerialisationRegister, config);
+
+            var sqsSubscriptionListener = new SqsNotificationListener(queue, _stack.SerialisationRegister, new NullMessageFootprintStore(), _stack.Monitor, config.OnError);
+            _stack.AddNotificationTopicSubscriber(config.Topic, sqsSubscriptionListener);
             
-            var queueName = instancePosition.HasValue
-                                ? endpointProvider.GetLocationName(_stack.Config.Component, topic, instancePosition.Value)
-                                : endpointProvider.GetLocationName(_stack.Config.Component, topic);
-            
-            var queue = _amazonQueueCreator.VerifyOrCreateQueue(_stack.Config, _stack.SerialisationRegister, queueName, topic, messageRetentionSeconds, visibilityTimeoutSeconds, instancePosition);
-            
-            var sqsSubscriptionListener = new SqsNotificationListener(queue, _stack.SerialisationRegister, new NullMessageFootprintStore(), _stack.Monitor, onError);
-            _stack.AddNotificationTopicSubscriber(topic, sqsSubscriptionListener);
+            if (config.MaxAllowedMessagesInFlight.HasValue)
+                sqsSubscriptionListener.WithMaximumConcurrentLimitOnMessagesInFlightOf(config.MaxAllowedMessagesInFlight.Value);
 
-            if (maxAllowedMessagesInFlight.HasValue && messageProcessingStrategy != null)
-                throw new ConfigurationErrorsException("You have provided both 'maxAllowedMessagesInFlight' and 'messageProcessingStrategy' - these settings are mutually exclusive.");
+            if (config.MessageProcessingStrategy != null)
+                sqsSubscriptionListener.WithMessageProcessingStrategy(config.MessageProcessingStrategy);
 
-            if (maxAllowedMessagesInFlight.HasValue)
-                sqsSubscriptionListener.WithMaximumConcurrentLimitOnMessagesInFlightOf(maxAllowedMessagesInFlight.Value);
-
-            if (messageProcessingStrategy != null)
-                sqsSubscriptionListener.WithMessageProcessingStrategy(messageProcessingStrategy);
-
-            Log.Info(string.Format("Created SQS topic subscription - Component: {0}, Topic: {1}, QueueName: {2}", _stack.Config.Component, topic, queueName));
-            _currnetTopic = topic;
+            Log.Info(string.Format("Created SQS topic subscription - Component: {0}, Topic: {1}, QueueName: {2}", _stack.Config.Component, config.Topic, config.QueueName));
+            _currnetTopic = config.Topic;
 
             return this;
         }
@@ -226,6 +240,7 @@ namespace JustEat.Simples.NotificationStack.Stack
             int visibilityTimeoutSeconds = 30, int? instancePosition = null, Action<Exception> onError = null,
             int? maxAllowedMessagesInFlight = null, IMessageProcessingStrategy messageProcessingStrategy = null);
         IFluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, IMessageProcessingStrategy messageProcessingStrategy);
+        IFluentSubscription WithSqsTopicSubscriber(Action<SqsConfiguration> confBuilder);
 
         void StartListening();
         void StopListening();

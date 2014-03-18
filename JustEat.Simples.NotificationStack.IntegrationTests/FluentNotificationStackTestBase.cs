@@ -144,7 +144,7 @@ namespace NotificationStack.IntegrationTests
 
             while ((DateTime.Now - start).TotalSeconds <= maxSleepTime) 
             {
-                queueUrl = GetAllQueues(regionEndpoint, queueName).SingleOrDefault();
+                queueUrl = GetAllQueues(regionEndpoint, queueName).FirstOrDefault();
 
                 if (!String.IsNullOrEmpty(queueUrl))
                     return true;

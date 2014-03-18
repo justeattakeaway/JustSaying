@@ -24,7 +24,7 @@ namespace Stack.UnitTests.FluentNotificationStackTests.AddingHandlers
 
         protected override void When()
         {
-            SystemUnderTest.WithSqsTopicSubscriber(Topic, 1).WithMessageHandler(_handler);
+            SystemUnderTest.WithSqsTopicSubscriber(Topic, 60).WithMessageHandler(_handler);
         }
 
         [Then]

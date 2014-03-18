@@ -2,51 +2,94 @@
 using System.Threading;
 using Amazon;
 using JustEat.Simples.NotificationStack.AwsTools;
+using JustEat.Testing;
 using NUnit.Framework;
 
 namespace AwsTools.IntegrationTests
 {
-    [TestFixture]
-    public class SqsQueueIntegrationTests
+    public abstract class WhenCreatingQueuesByName : BehaviourTest<SqsQueueByName>
     {
-        private SqsQueueByName _queue;
-        private string _queueUniqueKey;
+        protected string _queueUniqueKey;
 
-        [SetUp]
-        public void DeleteAnyExistingQueue()
-        {
-            _queueUniqueKey = "test" + DateTime.Now.Ticks.ToString();
-            _queue = new SqsQueueByName(_queueUniqueKey, AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
-        }
+        protected override void Given()
+        { }
 
-        [Test]
-        public void CreatingAQueue()
+        public void PatientlyAssert(Func<bool> expression)
         {
-            Assert.True(_queue.Create(600));
-            AssertCreated();
-        }
-
-        [TestFixtureTearDown]
-        public void Teardown()
-        {
-            if (_queue.Exists())
-                _queue.Delete();
-        }
-
-        private void AssertCreated()
-        {
-            bool created;
+            bool result;
             bool timedOut;
             var started = DateTime.Now;
             do
             {
-                created = _queue.Exists();
+                result = expression.Invoke();
                 timedOut = TimeSpan.FromSeconds(90) < DateTime.Now - started;
                 Thread.Sleep(TimeSpan.FromSeconds(5));
                 Console.WriteLine("{0} - Still Checking...", (DateTime.Now - started).TotalSeconds);
-            } while (!created && !timedOut);
+            } while (!result && !timedOut);
 
-            Assert.True(created);
+            Assert.True(result);
+        }
+
+        protected override SqsQueueByName CreateSystemUnderTest()
+        {
+            _queueUniqueKey = "test" + DateTime.Now.Ticks;
+            return new SqsQueueByName(_queueUniqueKey, AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1));
+        }
+        public override void PostAssertTeardown()
+        {
+            SystemUnderTest.Delete();
+            base.PostAssertTeardown();
+        }
+    }
+
+    public class WhenICreateAQueueByName : WhenCreatingQueuesByName
+    {
+        private bool _isQueueCreated;
+
+        protected override void When()
+        {
+            _isQueueCreated = SystemUnderTest.Create(60, attempt: 0, visibilityTimeoutSeconds: 30);
+        }
+
+        [Then]
+        public void TheQueueISCreated()
+        {
+            Assert.IsTrue(_isQueueCreated);
+        }
+
+        [Then]
+        public void DeadLetterQueueIsCreated()
+        {
+            PatientlyAssert(() => SystemUnderTest.ErrorQueue.Exists());
+        }
+    }
+
+    public class WhenIAccessAnExistingQueueWithoutAnErrorQueue : WhenCreatingQueuesByName
+    {
+        protected override void When()
+        {
+            SystemUnderTest.Create(600, attempt: 0, visibilityTimeoutSeconds: 30, createErrorQueue: false);
+        }
+
+        [Then]
+        public void ThereIsNoErrorQueue()
+        {
+            PatientlyAssert(() => !SystemUnderTest.ErrorQueue.Exists());
+        }
+    }
+
+    public class WhenQueueIsDeleted : WhenCreatingQueuesByName
+    {
+        protected override void When()
+        {
+            SystemUnderTest.Create(600);
+            SystemUnderTest.Delete();
+        }
+
+        [Test]
+        public void TheErrorQueueIsDeleted()
+        {
+            PatientlyAssert(() => !SystemUnderTest.ErrorQueue.Exists());
         }
     }
 }
