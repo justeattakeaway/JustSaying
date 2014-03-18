@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Amazon.SQS.Model;
-using JustEat.Simples.NotificationStack.AwsTools.MessageProcessingStrategies;
-using JustEat.Simples.NotificationStack.AwsTools.MessageProcessingStrategies.JustEat.Simples.NotificationStack.AwsTools.MessageProcessingStrategies;
+using JustEat.Simples.NotificationStack.Messaging.MessageProcessingStrategies;
 using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 using NLog;
 using Newtonsoft.Json.Linq;

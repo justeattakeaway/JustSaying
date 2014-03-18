@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace JustEat.Simples.NotificationStack.AwsTools.MessageProcessingStrategies.JustEat.Simples.NotificationStack.AwsTools.MessageProcessingStrategies
+namespace JustEat.Simples.NotificationStack.Messaging.MessageProcessingStrategies
 {
     public class MaximumThroughput : IMessageProcessingStrategy
     {

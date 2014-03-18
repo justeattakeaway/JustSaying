@@ -1,7 +1,7 @@
 using System;
 using System.Configuration;
 using JustEat.Simples.NotificationStack.AwsTools;
-using JustEat.Simples.NotificationStack.AwsTools.MessageProcessingStrategies;
+using JustEat.Simples.NotificationStack.Messaging.MessageProcessingStrategies;
 
 namespace JustEat.Simples.NotificationStack.Stack.Amazon
 {

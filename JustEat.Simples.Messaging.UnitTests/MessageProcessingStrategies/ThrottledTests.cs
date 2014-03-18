@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using JustEat.Simples.NotificationStack.AwsTools.MessageProcessingStrategies;
+using JustEat.Simples.NotificationStack.Messaging.MessageProcessingStrategies;
 using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 using NSubstitute;
 using NUnit.Framework;

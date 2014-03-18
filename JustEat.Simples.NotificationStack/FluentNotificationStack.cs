@@ -1,8 +1,7 @@
 using System;
-using System.Configuration;
 using Amazon;
 using JustEat.Simples.NotificationStack.AwsTools;
-using JustEat.Simples.NotificationStack.AwsTools.MessageProcessingStrategies;
+using JustEat.Simples.NotificationStack.Messaging.MessageProcessingStrategies;
 using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.Lookups;
 using JustEat.Simples.NotificationStack.Messaging.MessageHandling;

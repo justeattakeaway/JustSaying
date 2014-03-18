@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 
-namespace JustEat.Simples.NotificationStack.AwsTools.MessageProcessingStrategies
+namespace JustEat.Simples.NotificationStack.Messaging.MessageProcessingStrategies
 {
     public class Throttled : IMessageProcessingStrategy
     {
