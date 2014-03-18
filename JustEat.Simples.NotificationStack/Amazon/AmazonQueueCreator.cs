@@ -30,7 +30,7 @@ namespace JustEat.Simples.NotificationStack.Stack.Amazon
 
             var queue = new SqsQueueByName(queueConfig.QueueName, sqsclient);
 
-            var eventTopic = new SnsTopicByName(new SnsPublishEndpointProvider(configuration).GetLocationName(queueConfig.Topic), snsclient, serialisationRegister);
+            var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsclient, serialisationRegister);
 
             if (!queue.Exists())
                 queue.Create(queueConfig.MessageRetentionSeconds, 0, queueConfig.VisibilityTimeoutSeconds, queueConfig.ErrorQueueOptOut, queueConfig.RetryCountBeforeSendingToErrorQueue);
