@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{899CD315-37B3-46D0-B2DC-FB94C552D968}</ProjectGuid>
+    <ProjectGuid>{A36B7ECF-A2AA-44CC-9538-7BC28BDDE4E0}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>JustEat.Simples.NotificationStack.Messaging</RootNamespace>
-    <AssemblyName>JustEat.Simples.NotificationStack.Messaging</AssemblyName>
+    <RootNamespace>JustEat.Simples.NotificationStack.Stack</RootNamespace>
+    <AssemblyName>JustEat.Simples.NotificationStack.Stack</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
@@ -31,14 +31,24 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.5.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="AWSSDK, Version=2.0.3.1, Culture=neutral, PublicKeyToken=9f476d3089b52be3, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\AWSSDK.2.0.3.1\lib\net35\AWSSDK.dll</HintPath>
     </Reference>
-    <Reference Include="ServiceStack.Text">
-      <HintPath>..\packages\ServiceStack.Text.3.9.56\lib\net35\ServiceStack.Text.dll</HintPath>
+    <Reference Include="JustEat.StatsD, Version=1.0.0.96, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\JustEat.StatsD.1.0.0.96\lib\JustEat.StatsD.dll</HintPath>
+    </Reference>
+    <Reference Include="NLog, Version=2.1.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\NLog.2.1.0\lib\net40\NLog.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -47,34 +57,35 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MessageProcessingStrategies\IMessageProcessingStrategy.cs" />
-    <Compile Include="MessageProcessingStrategies\MaximumThroughput.cs" />
-    <Compile Include="MessageProcessingStrategies\Throttled.cs" />
-    <Compile Include="Monitoring\IMessageMonitor.cs" />
-    <Compile Include="IMessagePublisher.cs" />
-    <Compile Include="INotificationSubscriber.cs" />
-    <Compile Include="MessageHandling\DelegateAdjuster.cs" />
-    <Compile Include="MessageHandling\IHandler.cs" />
-    <Compile Include="MessageSerialisation\IMessageSerialisationRegister.cs" />
-    <Compile Include="MessageSerialisation\IMessageSerialiser.cs" />
-    <Compile Include="MessageSerialisation\MessageSerialisationRegister.cs" />
-    <Compile Include="MessageSerialisation\NewtonsoftSerialiser.cs" />
-    <Compile Include="MessageSerialisation\ReflectedMessageSerialisationRegister.cs" />
-    <Compile Include="MessageSerialisation\ServiceStackSerialiser.cs" />
-    <Compile Include="Messages\Message.cs" />
+    <Compile Include="FluentNotificationStack.cs" />
+    <Compile Include="INotificationStackConfiguration.cs" />
+    <Compile Include="Lookups\IPublishEndpointProvider.cs" />
+    <Compile Include="Lookups\IPublishSubscribtionEndpointProvider.cs" />
+    <Compile Include="MessagingConfig.cs" />
+    <Compile Include="Monitoring\StatsDMessageMonitor.cs" />
+    <Compile Include="NotificationStack.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JustEat.Simples.AwsTools\AwsTools.csproj">
+      <Project>{CBF2110B-C3A4-45E8-BBD6-301D77567043}</Project>
+      <Name>AwsTools</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\JustEat.Simples.Messaging\Messaging.csproj">
+      <Project>{899CD315-37B3-46D0-B2DC-FB94C552D968}</Project>
+      <Name>Messaging</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Target Name="BeforeBuild" Condition="!Exists('Properties\AssemblyInfo.cs')">
-    <Exec Command="bundle exec rake bootstrap" WorkingDirectory="..\" />
-  </Target>
-  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
 </Project>

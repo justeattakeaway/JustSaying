@@ -1,25 +1,29 @@
 ﻿using System;
-using JustEat.Simples.NotificationStack.Messaging;
+using JustEat.Simples.NotificationStack.AwsTools.QueueCreation;
+using SimpleMessageMule.Lookups;
 
 namespace JustEat.Simples.NotificationStack.Stack.Lookups
 {
-    public interface IPublishEndpointProvider
-    {
-        string GetLocationName(string location);
-    }
 
     public class SnsPublishEndpointProvider : IPublishEndpointProvider
     {
-        private readonly IMessagingConfig _config;
+        private readonly IMessagingConfig _publisherConfig;
+        private readonly SqsConfiguration _subscriptionConfig;
 
-        public SnsPublishEndpointProvider(IMessagingConfig config)
+        public SnsPublishEndpointProvider(IMessagingConfig publisherConfig, SqsConfiguration subscriptionConfig)
         {
-            _config = config;
+            _publisherConfig = publisherConfig;
+            _subscriptionConfig = subscriptionConfig;
         }
 
         public string GetLocationName(string location)
         {
-            return String.Join("-", new[] { _config.Tenant, _config.Environment, location }).ToLower();
+            return String.Join("-", new[] { _publisherConfig.Tenant, _publisherConfig.Environment, location }).ToLower();
+        }
+
+        public string GetLocationName()
+        {
+            return String.Join("-", new[] { _publisherConfig.Tenant, _publisherConfig.Environment, _subscriptionConfig.Topic }).ToLower();
         }
     }
 }

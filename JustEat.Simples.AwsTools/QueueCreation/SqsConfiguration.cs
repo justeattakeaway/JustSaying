@@ -11,6 +11,7 @@ namespace JustEat.Simples.NotificationStack.AwsTools.QueueCreation
             VisibilityTimeoutSeconds = NotificationStackConstants.DEFAULT_VISIBILITY_TIMEOUT;
             RetryCountBeforeSendingToErrorQueue = NotificationStackConstants.DEFAULT_HANDLER_RETRY_COUNT;
         }
+
         public string QueueName { get; set; }
         public string Topic { get; set; }
         public int MessageRetentionSeconds { get; set; }

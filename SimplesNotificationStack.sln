@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messaging", "JustEat.Simples.Messaging\Messaging.csproj", "{899CD315-37B3-46D0-B2DC-FB94C552D968}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AwsTools", "JustEat.Simples.AwsTools\AwsTools.csproj", "{CBF2110B-C3A4-45E8-BBD6-301D77567043}"
@@ -18,6 +20,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.MessageStubs", "Tests.MessageStubs\Tests.MessageStubs.csproj", "{26E0A5AC-EE6E-4C82-A859-35964C3FFB94}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AwsTools.IntegrationTests", "AwsTools.IntegrationTests\AwsTools.IntegrationTests.csproj", "{23E76404-BE2D-4A2A-952B-2683780E1565}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleMessageMule", "SimpleMessageMule\SimpleMessageMule.csproj", "{3B428F71-9AEF-4E46-8D56-644FC0E808D4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -61,6 +65,10 @@ Global
 		{23E76404-BE2D-4A2A-952B-2683780E1565}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{23E76404-BE2D-4A2A-952B-2683780E1565}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{23E76404-BE2D-4A2A-952B-2683780E1565}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B428F71-9AEF-4E46-8D56-644FC0E808D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B428F71-9AEF-4E46-8D56-644FC0E808D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B428F71-9AEF-4E46-8D56-644FC0E808D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B428F71-9AEF-4E46-8D56-644FC0E808D4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

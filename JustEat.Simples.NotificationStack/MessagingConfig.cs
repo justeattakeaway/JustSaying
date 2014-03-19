@@ -1,20 +1,19 @@
-using JustEat.Simples.NotificationStack.AwsTools;
 using JustEat.Simples.NotificationStack.Messaging;
 
 namespace JustEat.Simples.NotificationStack.Stack
 {
-    public class MessagingConfig : IMessagingConfig, INotificationStackConfiguration
+    public interface IMessagingConfig
     {
-        public MessagingConfig()
-        {
-            PublishFailureReAttempts = NotificationStackConstants.DEFAULT_PUBLISHER_RETRY_COUNT;
-            PublishFailureBackoffMilliseconds = NotificationStackConstants.DEFAULT_PUBLISHER_RETRY_INTERVAL;
-        }
+        string Component { get; set; }
+        string Tenant { get; set; }
+        string Environment { get; set; }
+    }
+
+    public class MessagingConfig : SimpleMessageMule.MessagingConfig, IMessagingConfig, INotificationStackConfiguration, SimpleMessageMule.IMessagingConfig
+    {
         public string Component { get; set; }
         public string Tenant { get; set; }
         public string Environment { get; set; }
-        public int PublishFailureReAttempts { get; set; }
-        public int PublishFailureBackoffMilliseconds { get; set; }
-        public string Region { get; set; }
+
     }
 }

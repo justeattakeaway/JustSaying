@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{899CD315-37B3-46D0-B2DC-FB94C552D968}</ProjectGuid>
+    <ProjectGuid>{3B428F71-9AEF-4E46-8D56-644FC0E808D4}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>JustEat.Simples.NotificationStack.Messaging</RootNamespace>
-    <AssemblyName>JustEat.Simples.NotificationStack.Messaging</AssemblyName>
+    <RootNamespace>SimpleMessageMule</RootNamespace>
+    <AssemblyName>SimpleMessageMule</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
@@ -32,11 +32,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.5.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="AWSSDK">
+      <HintPath>..\packages\AWSSDK.2.0.3.1\lib\net35\AWSSDK.dll</HintPath>
     </Reference>
-    <Reference Include="ServiceStack.Text">
-      <HintPath>..\packages\ServiceStack.Text.3.9.56\lib\net35\ServiceStack.Text.dll</HintPath>
+    <Reference Include="NLog">
+      <HintPath>..\packages\NLog.2.1.0\lib\net40\NLog.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -47,34 +47,34 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MessageProcessingStrategies\IMessageProcessingStrategy.cs" />
-    <Compile Include="MessageProcessingStrategies\MaximumThroughput.cs" />
-    <Compile Include="MessageProcessingStrategies\Throttled.cs" />
-    <Compile Include="Monitoring\IMessageMonitor.cs" />
-    <Compile Include="IMessagePublisher.cs" />
-    <Compile Include="INotificationSubscriber.cs" />
-    <Compile Include="MessageHandling\DelegateAdjuster.cs" />
-    <Compile Include="MessageHandling\IHandler.cs" />
-    <Compile Include="MessageSerialisation\IMessageSerialisationRegister.cs" />
-    <Compile Include="MessageSerialisation\IMessageSerialiser.cs" />
-    <Compile Include="MessageSerialisation\MessageSerialisationRegister.cs" />
-    <Compile Include="MessageSerialisation\NewtonsoftSerialiser.cs" />
-    <Compile Include="MessageSerialisation\ReflectedMessageSerialisationRegister.cs" />
-    <Compile Include="MessageSerialisation\ServiceStackSerialiser.cs" />
-    <Compile Include="Messages\Message.cs" />
+    <Compile Include="FluentMessagingMule.cs" />
+    <Compile Include="INotificationStackConfiguration.cs" />
+    <Compile Include="Lookups\IPublishEndpointProvider.cs" />
+    <Compile Include="Lookups\IPublishSubscribtionEndpointProvider.cs" />
+    <Compile Include="MessagingConfig.cs" />
+    <Compile Include="NotificationStack.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JustEat.Simples.AwsTools\AwsTools.csproj">
+      <Project>{cbf2110b-c3a4-45e8-bbd6-301d77567043}</Project>
+      <Name>AwsTools</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\JustEat.Simples.Messaging\Messaging.csproj">
+      <Project>{899cd315-37b3-46d0-b2dc-fb94c552d968}</Project>
+      <Name>Messaging</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Target Name="BeforeBuild" Condition="!Exists('Properties\AssemblyInfo.cs')">
-    <Exec Command="bundle exec rake bootstrap" WorkingDirectory="..\" />
-  </Target>
-  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
 </Project>

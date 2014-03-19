@@ -1,47 +1,35 @@
 using System;
 using System.Globalization;
-using JustEat.Simples.NotificationStack.Messaging;
+using JustEat.Simples.NotificationStack.AwsTools.QueueCreation;
+using SimpleMessageMule.Lookups;
 
 namespace JustEat.Simples.NotificationStack.Stack.Lookups
 {
-    public interface IPublishSubscribtionEndpointProvider
-    {
-        string GetLocationName(string component, string topic);
-        string GetLocationName(string component, string topic, int instancePosition);
-    }
 
     /// <summary>
     /// Provides endpoint locations for SQS queues subscribed to topics
     /// </summary>
     public class SqsSubscribtionEndpointProvider : IPublishSubscribtionEndpointProvider
     {
-        private readonly IMessagingConfig _config;
+        private readonly SqsConfiguration _subscriptionConfig;
+        private readonly IMessagingConfig _publishingConfiguration;
 
-        public SqsSubscribtionEndpointProvider(IMessagingConfig config)
+        public SqsSubscribtionEndpointProvider(SqsConfiguration subscriptionConfig, IMessagingConfig publishingConfiguration)
         {
-            _config = config;
+            _subscriptionConfig = subscriptionConfig;
+            _publishingConfiguration = publishingConfiguration;
         }
 
-        public string GetLocationName(string component, string topic)
+        public string GetLocationName()
         {
-            return GetLocationNameInternal(component, topic);
-        }
+            if (_subscriptionConfig.InstancePosition.HasValue && _subscriptionConfig.InstancePosition.Value <= 0)
+                throw new Exception("Cannot have an instance position less than 1. Check your configuration.");
 
-        public string GetLocationName(string component, string topic, int instancePosition)
-        {
-            return GetLocationNameInternal(component, topic, instancePosition);
-        }
-
-        private string GetLocationNameInternal(string component, string topic, int? instancePosition = null)
-        {
-            if (instancePosition.HasValue && instancePosition.Value <= 0)
-                throw new ArgumentOutOfRangeException("instancePosition", "Cannot have an instance position less than 1. Check your configuration.");
-
-            var instancePositionValue = instancePosition.HasValue
-                                            ? instancePosition.Value.ToString(CultureInfo.InvariantCulture)
+            var instancePositionValue = _subscriptionConfig.InstancePosition.HasValue
+                                            ? _subscriptionConfig.InstancePosition.Value.ToString(CultureInfo.InvariantCulture)
                                             : string.Empty;
 
-            return String.Join("-", new[] { _config.Tenant, _config.Environment, component, instancePositionValue, topic }).ToLower().Replace("--", "-");
+            return String.Join("-", new[] { _publishingConfiguration.Tenant, _publishingConfiguration.Environment, _publishingConfiguration.Component, instancePositionValue, _subscriptionConfig.Topic }).ToLower().Replace("--", "-");
         }
     }
 }

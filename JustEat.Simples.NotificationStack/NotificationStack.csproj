@@ -63,7 +63,6 @@
     <Compile Include="Lookups\IPublishSubscribtionEndpointProvider.cs" />
     <Compile Include="MessagingConfig.cs" />
     <Compile Include="Monitoring\StatsDMessageMonitor.cs" />
-    <Compile Include="NotificationStack.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -74,6 +73,10 @@
     <ProjectReference Include="..\JustEat.Simples.Messaging\Messaging.csproj">
       <Project>{899CD315-37B3-46D0-B2DC-FB94C552D968}</Project>
       <Name>Messaging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SimpleMessageMule\SimpleMessageMule.csproj">
+      <Project>{3b428f71-9aef-4e46-8d56-644fc0e808d4}</Project>
+      <Name>SimpleMessageMule</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
