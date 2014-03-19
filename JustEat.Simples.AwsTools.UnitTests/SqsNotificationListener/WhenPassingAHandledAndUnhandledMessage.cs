@@ -29,6 +29,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         [Then]
         public void MonitoringToldMessageHandlingTime()
         {
+            Thread.Sleep(50);
             Monitor.Received().HandleTime(Arg.Is<long>(x => x > 0));
         }
 

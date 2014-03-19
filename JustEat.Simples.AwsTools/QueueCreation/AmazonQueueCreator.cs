@@ -1,10 +1,8 @@
 using System;
 using Amazon;
-using JustEat.Simples.NotificationStack.AwsTools;
-using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 
-namespace JustEat.Simples.NotificationStack.Stack.Amazon
+namespace JustEat.Simples.NotificationStack.AwsTools.QueueCreation
 {
     public class AmazonQueueCreator : IVerifyAmazonQueues
     {

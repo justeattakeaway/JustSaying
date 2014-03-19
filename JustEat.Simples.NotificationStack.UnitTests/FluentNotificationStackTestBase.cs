@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
+using JustEat.Simples.NotificationStack.AwsTools.QueueCreation;
 using JustEat.Simples.NotificationStack.Stack;
-using JustEat.Simples.NotificationStack.Stack.Amazon;
 using JustEat.Testing;
 using NSubstitute;
 

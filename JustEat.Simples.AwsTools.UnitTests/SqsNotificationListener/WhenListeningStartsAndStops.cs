@@ -18,7 +18,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
             SystemUnderTest.StopListening();
             Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid()), x => new ReceiveMessageResponse{ Messages = new List<Message>()});
             SystemUnderTest.Listen();
-            Thread.Sleep(20);
+            Thread.Sleep(150);
             SystemUnderTest.StopListening();
         }
 

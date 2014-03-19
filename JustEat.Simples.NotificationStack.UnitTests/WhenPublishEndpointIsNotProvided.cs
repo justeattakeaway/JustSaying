@@ -1,5 +1,5 @@
 ﻿using JustEat.Simples.NotificationStack.AwsTools;
-using JustEat.Simples.NotificationStack.Stack.Amazon;
+using JustEat.Simples.NotificationStack.AwsTools.QueueCreation;
 using JustEat.Testing;
 using NUnit.Framework;
 

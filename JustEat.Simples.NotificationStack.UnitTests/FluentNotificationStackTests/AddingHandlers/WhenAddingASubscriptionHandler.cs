@@ -3,7 +3,6 @@ using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
 using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
 using JustEat.Simples.NotificationStack.Stack;
-using JustEat.Simples.NotificationStack.Stack.Amazon;
 using JustEat.Testing;
 using NSubstitute;
 

@@ -1,9 +1,9 @@
 ﻿using JustEat.Simples.NotificationStack.AwsTools;
-using JustEat.Simples.NotificationStack.Stack.Amazon;
+using JustEat.Simples.NotificationStack.AwsTools.QueueCreation;
 using JustEat.Testing;
 using NUnit.Framework;
 
-namespace Stack.UnitTests
+namespace AwsTools.UnitTests.SqsQueueConfiguration.Validation
 {
     class WhenPublishEndpointIsNotProvided : BehaviourTest<SqsConfiguration>
     {

@@ -8,7 +8,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
     {
         protected override void Given()
         {
-            TestWaitTime = 100;
+            TestWaitTime = 150;
             Handler.Handle(null).ReturnsForAnyArgs(true);
             base.Given();
         }

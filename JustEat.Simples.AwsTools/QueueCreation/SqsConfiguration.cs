@@ -1,9 +1,8 @@
 using System;
 using System.Configuration;
-using JustEat.Simples.NotificationStack.AwsTools;
 using JustEat.Simples.NotificationStack.Messaging.MessageProcessingStrategies;
 
-namespace JustEat.Simples.NotificationStack.Stack.Amazon
+namespace JustEat.Simples.NotificationStack.AwsTools.QueueCreation
 {
     public class SqsConfiguration
     {

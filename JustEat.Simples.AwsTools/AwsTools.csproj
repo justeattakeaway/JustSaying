@@ -53,9 +53,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Amazon\AmazonQueueCreator.cs" />
-    <Compile Include="Amazon\IVerifyAmazonQueues.cs" />
-    <Compile Include="Amazon\SqsConfiguration.cs" />
+    <Compile Include="QueueCreation\AmazonQueueCreator.cs" />
+    <Compile Include="QueueCreation\IVerifyAmazonQueues.cs" />
+    <Compile Include="QueueCreation\SqsConfiguration.cs" />
     <Compile Include="DynamoTable.cs" />
     <Compile Include="DynamoDbConfig.cs" />
     <Compile Include="DynamoStore.cs" />
