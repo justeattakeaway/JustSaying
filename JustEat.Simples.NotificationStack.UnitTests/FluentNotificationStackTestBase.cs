@@ -1,9 +1,13 @@
 using System;
 using System.Reflection;
 using JustEat.Simples.NotificationStack.AwsTools.QueueCreation;
+using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Stack;
 using JustEat.Testing;
 using NSubstitute;
+using SimpleMessageMule;
+using INotificationStackConfiguration = JustEat.Simples.NotificationStack.Stack.INotificationStackConfiguration;
+using MessagingConfig = JustEat.Simples.NotificationStack.Stack.MessagingConfig;
 
 namespace Stack.UnitTests
 {
@@ -11,6 +15,10 @@ namespace Stack.UnitTests
     {
         protected INotificationStackConfiguration Configuration;
         protected INotificationStack NotificationStack;
+        protected string Component = "OrderEngine";
+        protected string Tenant = "LosAlamos";
+        protected string Environment = "unitest";
+
         protected override void Given()
         {
             throw new NotImplementedException();
@@ -22,9 +30,9 @@ namespace Stack.UnitTests
             {
                 Configuration = new MessagingConfig
                 {
-                    Component = "OrderEngine",
-                    Tenant = "LosAlamos",
-                    Environment = "unitest"
+                    Component = Component,
+                    Tenant = Tenant,
+                    Environment = Environment
                 };
             }
 
@@ -46,13 +54,14 @@ namespace Stack.UnitTests
             return fns;
         }
 
+        // ToDo: Surely this can be made better?
         private void ConfigureNotificationStackMock(FluentNotificationStack fns)
         {
             NotificationStack = Substitute.For<INotificationStack>();
 
-            var notificationStackField = fns.GetType().GetField("_stack", BindingFlags.Instance | BindingFlags.NonPublic);
+            var notificationStackField = fns.GetType().GetField("Stack", BindingFlags.Instance | BindingFlags.NonPublic);
 
-            var constructedStack = (JustEat.Simples.NotificationStack.Stack.NotificationStack)notificationStackField.GetValue(fns);
+            var constructedStack = (NotificationStack)notificationStackField.GetValue(fns);
 
             NotificationStack.Config.Returns(constructedStack.Config);
 
@@ -61,7 +70,7 @@ namespace Stack.UnitTests
 
         private void ConfigureAmazonQueueCreator(FluentNotificationStack fns)
         {
-            fns.GetType()
+            fns.GetType().BaseType
                 .GetField("_amazonQueueCreator", BindingFlags.Instance | BindingFlags.NonPublic)
                 .SetValue(fns, Substitute.For<IVerifyAmazonQueues>());
         }

@@ -1,4 +1,5 @@
 ﻿using JustEat.Simples.NotificationStack.Messaging;
+using JustEat.Simples.NotificationStack.Stack;
 using JustEat.Simples.NotificationStack.Stack.Lookups;
 using JustEat.Testing;
 using NSubstitute;
@@ -14,7 +15,7 @@ namespace Stack.UnitTests.Lookups.SnsEndpointNames
 
         protected override SnsPublishEndpointProvider CreateSystemUnderTest()
         {
-            return new SnsPublishEndpointProvider(_config);
+            return new SnsPublishEndpointProvider(_config, null);
         }
 
         protected override void Given()

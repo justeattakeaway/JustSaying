@@ -23,7 +23,7 @@ namespace JustEat.Simples.NotificationStack.Stack.Lookups
         public string GetLocationName()
         {
             if (_subscriptionConfig.InstancePosition.HasValue && _subscriptionConfig.InstancePosition.Value <= 0)
-                throw new Exception("Cannot have an instance position less than 1. Check your configuration.");
+                throw new ArgumentOutOfRangeException("config.InstancePosition", "Cannot have an instance position less than 1. Check your configuration.");
 
             var instancePositionValue = _subscriptionConfig.InstancePosition.HasValue
                                             ? _subscriptionConfig.InstancePosition.Value.ToString(CultureInfo.InvariantCulture)

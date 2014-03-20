@@ -1,5 +1,7 @@
 using System;
+using JustEat.Simples.NotificationStack.AwsTools.QueueCreation;
 using JustEat.Simples.NotificationStack.Messaging;
+using JustEat.Simples.NotificationStack.Stack;
 using JustEat.Simples.NotificationStack.Stack.Lookups;
 using JustEat.Testing;
 using NSubstitute;
@@ -9,23 +11,28 @@ namespace UnitTests.Lookups.SqsEndpointNames
 {
     public class WhenRequestingAnEndpointNameForASpecificInstanceNumberOfZero : BehaviourTest<SqsSubscribtionEndpointProvider>
     {
-        private readonly IMessagingConfig _config = Substitute.For<IMessagingConfig>();
+        private readonly IMessagingConfig _publishConfig = Substitute.For<IMessagingConfig>();
+        private readonly SqsConfiguration _sqsConfiguration = new SqsConfiguration();
 
         protected override SqsSubscribtionEndpointProvider CreateSystemUnderTest()
         {
-            return new SqsSubscribtionEndpointProvider(_config);
+            return new SqsSubscribtionEndpointProvider(_sqsConfiguration, _publishConfig);
         }
 
         protected override void Given()
         {
-            _config.Environment.Returns("QAxx");
-            _config.Tenant.Returns("OuterHebredies");
+            _publishConfig.Environment.Returns("QAxx");
+            _publishConfig.Tenant.Returns("OuterHebredies");
+
+            _sqsConfiguration.Topic = "OrderDispatch";
+            _sqsConfiguration.InstancePosition = 0;
+
             RecordAnyExceptionsThrown();
         }
 
         protected override void When()
         {
-            SystemUnderTest.GetLocationName("BoxHandler", "OrderDispatch", 0);
+            SystemUnderTest.GetLocationName();
         }
 
         [Then]

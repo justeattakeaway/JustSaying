@@ -1,6 +1,8 @@
+using System;
 using Amazon;
 using JustEat.Simples.NotificationStack.AwsTools.QueueCreation;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
+using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
 using SimpleMessageMule;
 using SimpleMessageMule.Lookups;
 using IPublishEndpointProvider = SimpleMessageMule.Lookups.IPublishEndpointProvider;
@@ -18,13 +20,18 @@ namespace JustEat.Simples.NotificationStack.Stack
     /// </summary>
     public class FluentNotificationStack : FluentMessagingMule
     {
-        public static string DefaultEndpoint
-        {
-            get { return RegionEndpoint.EUWest1.SystemName; }
-        }
-
         private FluentNotificationStack(INotificationStack stack, IVerifyAmazonQueues queueCreator): base(stack, queueCreator)
         {
+        }
+
+        public static IFluentMonitoring Register(Action<INotificationStackConfiguration> configuration)
+        {
+            var config = new MessagingConfig();
+            configuration.Invoke(config);
+
+            config.Validate();
+
+            return new FluentNotificationStack(new SimpleMessageMule.NotificationStack(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
         }
 
         public override IPublishEndpointProvider CreatePublisherEndpointProvider(SqsConfiguration subscriptionConfig)
