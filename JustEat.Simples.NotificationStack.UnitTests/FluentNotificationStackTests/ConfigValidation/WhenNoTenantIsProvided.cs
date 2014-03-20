@@ -13,6 +13,7 @@ namespace Stack.UnitTests.FluentNotificationStackTests.ConfigValidation
             FluentNotificationStack.Register(
                 configuration =>
                 {
+                    configuration.Region = "DefaultRegion";
                     configuration.Environment = "x";
                 });
         }

@@ -42,6 +42,7 @@ namespace SimpleMessageMule
         {
             var config = new MessagingConfig();
             configuration.Invoke(config);
+            config.Validate();
 
             if (string.IsNullOrWhiteSpace(config.Region))
             {

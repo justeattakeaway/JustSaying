@@ -30,6 +30,7 @@ namespace Stack.UnitTests
             {
                 Configuration = new MessagingConfig
                 {
+                    Region = "DefaultRegion",
                     Component = Component,
                     Tenant = Tenant,
                     Environment = Environment

@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A21D19BF-487E-4AB7-8F81-E7E4D659AACD}</ProjectGuid>
+    <ProjectGuid>{17BC16D6-121C-4F30-B7D1-0768BEE201F2}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>NotificationStack.IntegrationTests</RootNamespace>
-    <AssemblyName>NotificationStack.IntegrationTests</AssemblyName>
+    <RootNamespace>SimpleMessageMule.UnitTests</RootNamespace>
+    <AssemblyName>SimpleMessageMule.UnitTests</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
@@ -32,10 +32,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AWSSDK, Version=2.0.3.1, Culture=neutral, PublicKeyToken=9f476d3089b52be3, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\AWSSDK.2.0.3.1\lib\net35\AWSSDK.dll</HintPath>
-    </Reference>
     <Reference Include="JustEat.StatsD, Version=1.0.0.96, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\JustEat.StatsD.1.0.0.96\lib\JustEat.StatsD.dll</HintPath>
@@ -67,37 +63,63 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FluentMessagingMuleTestBase.cs" />
+    <Compile Include="SimpleMessageMuleTests\AddingHandlers\WhenAddingASubscriptionHandler.cs" />
+    <Compile Include="SimpleMessageMuleTests\AddingMonitoring\WhenAddingACustomMonitor.cs" />
+    <Compile Include="SimpleMessageMuleTests\ConfigValidation\WhenNoRegionIsProvided.cs" />
+    <Compile Include="SimpleMessageMuleTests\Publishing\WhenPublishing.cs" />
+    <Compile Include="Lookups\SnsEndpointNames\WhenRequestingAnEndpointName.cs" />
+    <Compile Include="Lookups\SqsEndpointNames\WhenRequestingAnEndpointName.cs" />
+    <Compile Include="Lookups\SqsEndpointNames\WhenRequestingAnEndpointNameForASpecificInstance.cs" />
+    <Compile Include="Lookups\SqsEndpointNames\WhenRequestingAnEndpointNameForASpecificInstanceNumberOfZero.cs" />
+    <Compile Include="NotificationStack\NotificationStackBaseTest.cs" />
+    <Compile Include="NotificationStack\WhenAddingAPublisherWithNoTopic.cs" />
+    <Compile Include="NotificationStack\WhenPublishingFails.cs" />
+    <Compile Include="NotificationStack\WhenPublishingMessages.cs" />
+    <Compile Include="NotificationStack\WhenRegisteringMessageHandlersAndNotPassingTopic.cs" />
+    <Compile Include="NotificationStack\WhenSubscribingAndNotPassingATopic.cs" />
+    <Compile Include="NotificationStack\WhenPublishingWithoutRegistering.cs" />
+    <Compile Include="NotificationStack\WhenRegisteringMessageHandlers.cs" />
+    <Compile Include="NotificationStack\WhenRegisteringPublishers.cs" />
+    <Compile Include="NotificationStack\WhenRegisteringSubscribers.cs" />
+    <Compile Include="NotificationStack\WhenRegisteringTheSamePublisherTwice.cs" />
+    <Compile Include="NotificationStack\WhenStartingThenStopping.cs" />
+    <Compile Include="NotificationStack\WhenStopping.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
+    <Compile Include="WhenPublishEndpointIsNotProvided.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JustEat.Simples.AwsTools\AwsTools.csproj">
-      <Project>{cbf2110b-c3a4-45e8-bbd6-301d77567043}</Project>
+      <Project>{CBF2110B-C3A4-45E8-BBD6-301D77567043}</Project>
       <Name>AwsTools</Name>
     </ProjectReference>
     <ProjectReference Include="..\JustEat.Simples.Messaging\Messaging.csproj">
-      <Project>{899CD315-37B3-46D0-B2DC-FB94C552D968}</Project>
+      <Project>{899cd315-37b3-46d0-b2dc-fb94c552d968}</Project>
       <Name>Messaging</Name>
     </ProjectReference>
-    <ProjectReference Include="..\JustEat.Simples.NotificationStack\NotificationStack.csproj">
-      <Project>{A36B7ECF-A2AA-44CC-9538-7BC28BDDE4E0}</Project>
-      <Name>NotificationStack</Name>
+    <ProjectReference Include="..\SimpleMessageMule\SimpleMessageMule.csproj">
+      <Project>{3b428f71-9aef-4e46-8d56-644fc0e808d4}</Project>
+      <Name>SimpleMessageMule</Name>
     </ProjectReference>
     <ProjectReference Include="..\Tests.MessageStubs\Tests.MessageStubs.csproj">
       <Project>{26E0A5AC-EE6E-4C82-A859-35964C3FFB94}</Project>
       <Name>Tests.MessageStubs</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="SimpleMessageMuleTests\RegisteringPublishers\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Target Name="BeforeBuild" Condition="!Exists('Properties\AssemblyInfo.cs')">
-    <Exec Command="bundle exec rake bootstrap" WorkingDirectory="..\" />
-  </Target>
 </Project>

@@ -55,6 +55,7 @@
       <HintPath>..\packages\AutoFixture.3.16.1\lib\net40\Ploeh.AutoFixture.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -88,6 +89,10 @@
     <ProjectReference Include="..\JustEat.Simples.NotificationStack\NotificationStack.csproj">
       <Project>{a36b7ecf-a2aa-44cc-9538-7bc28bdde4e0}</Project>
       <Name>NotificationStack</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SimpleMessageMule\SimpleMessageMule.csproj">
+      <Project>{3b428f71-9aef-4e46-8d56-644fc0e808d4}</Project>
+      <Name>SimpleMessageMule</Name>
     </ProjectReference>
     <ProjectReference Include="..\Tests.MessageStubs\Tests.MessageStubs.csproj">
       <Project>{26E0A5AC-EE6E-4C82-A859-35964C3FFB94}</Project>

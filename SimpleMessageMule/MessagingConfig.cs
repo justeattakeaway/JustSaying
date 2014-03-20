@@ -1,3 +1,4 @@
+using System;
 using JustEat.Simples.NotificationStack.AwsTools;
 
 namespace SimpleMessageMule
@@ -24,13 +25,8 @@ namespace SimpleMessageMule
 
         public virtual void Validate()
         {
-            //ToDo: Impl.
-            //if (string.IsNullOrWhiteSpace(config.Region))
-            //{
-            //    config.Region = RegionEndpoint.EUWest1.SystemName;
-            //    Log.Info("No Region was specified, using {0} by default.", config.Region);
-            //}
-            //throw new System.NotImplementedException();
+            if (string.IsNullOrWhiteSpace(Region))
+                throw new ArgumentNullException("config.Region", "Cannot have a blank entry for config.Region");
         }
     }
 }
