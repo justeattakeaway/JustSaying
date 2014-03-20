@@ -126,7 +126,7 @@ namespace SimpleMessageMule
         /// <typeparam name="T"></typeparam>
         /// <param name="topic"></param>
         /// <returns></returns>
-        public IFluentNotificationStack WithSnsMessagePublisher<T>(string topic) where T : Message
+        public IFluentMessageMule WithSnsMessagePublisher<T>(string topic) where T : Message
         {
             Log.Info("Added publisher");
 
@@ -209,7 +209,7 @@ namespace SimpleMessageMule
         /// </summary>
         /// <param name="messageMonitor">Monitoring class to be used</param>
         /// <returns></returns>
-        public IFluentNotificationStack WithMonitoring(IMessageMonitor messageMonitor)
+        public IFluentMessageMule WithMonitoring(IMessageMonitor messageMonitor)
         {
             Stack.Monitor = messageMonitor;
             return this;
@@ -218,9 +218,9 @@ namespace SimpleMessageMule
         #endregion
     }
 
-    public interface IFluentNotificationStack : IMessagePublisher
+    public interface IFluentMessageMule : IMessagePublisher
     {
-        IFluentNotificationStack WithSnsMessagePublisher<T>(string topic) where T : Message;
+        IFluentMessageMule WithSnsMessagePublisher<T>(string topic) where T : Message;
 
         IFluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds,
             int visibilityTimeoutSeconds = 30, int? instancePosition = null, Action<Exception> onError = null,
@@ -235,10 +235,10 @@ namespace SimpleMessageMule
 
     public interface IFluentMonitoring
     {
-        IFluentNotificationStack WithMonitoring(IMessageMonitor messageMonitor);
+        IFluentMessageMule WithMonitoring(IMessageMonitor messageMonitor);
     }
 
-    public interface IFluentSubscription : IFluentNotificationStack
+    public interface IFluentSubscription : IFluentMessageMule
     {
         IFluentSubscription WithMessageHandler<T>(IHandler<T> handler) where T : Message;
     }
