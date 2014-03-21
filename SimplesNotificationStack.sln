@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleMessageMule", "Simple
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleMessageMule.UnitTests", "SimpleMessagingMule.UnitTests\SimpleMessageMule.UnitTests.csproj", "{17BC16D6-121C-4F30-B7D1-0768BEE201F2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleMessageMule.IntegrationTests", "SimpleMessageMule.IntegrationTests\SimpleMessageMule.IntegrationTests.csproj", "{45717185-E959-48C6-926F-DC8B394F5680}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +77,10 @@ Global
 		{17BC16D6-121C-4F30-B7D1-0768BEE201F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{17BC16D6-121C-4F30-B7D1-0768BEE201F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{17BC16D6-121C-4F30-B7D1-0768BEE201F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45717185-E959-48C6-926F-DC8B394F5680}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45717185-E959-48C6-926F-DC8B394F5680}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45717185-E959-48C6-926F-DC8B394F5680}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45717185-E959-48C6-926F-DC8B394F5680}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
