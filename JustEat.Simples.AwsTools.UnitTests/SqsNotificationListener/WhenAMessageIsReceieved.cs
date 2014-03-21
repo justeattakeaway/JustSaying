@@ -1,9 +1,9 @@
 using System;
-using System.Threading;
 using Amazon.SQS.Model;
 using AwsTools.UnitTests.MessageStubs;
 using JustEat.Testing;
 using NSubstitute;
+using SimpleMessageMule.TestingFramework;
 
 namespace AwsTools.UnitTests.SqsNotificationListener
 {
@@ -13,7 +13,6 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
         protected override void Given()
         {
-            TestWaitTime = 1000;
             _messageId = Guid.NewGuid();
             DeserialisedMessage = new GenericMessage { Id = _messageId };
             Serialiser.Deserialise(Arg.Any<string>()).Returns(x => DeserialisedMessage);
@@ -30,8 +29,12 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         [Then]
         public void MessageIsMarkedAsRecieved()
         {
-            Thread.Sleep(50);
-            MessageFootprintStore.Received().MarkMessageAsRecieved(_messageId);
+            Patiently.VerifyExpectation(() => MessageFootprintStore.Received().MarkMessageAsRecieved(_messageId));
         }
+
+        
+        
+
+        
     }
 }

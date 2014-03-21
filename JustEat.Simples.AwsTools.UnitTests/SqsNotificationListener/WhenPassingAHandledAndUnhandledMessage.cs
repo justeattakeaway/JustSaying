@@ -2,6 +2,7 @@
 using Amazon.SQS.Model;
 using JustEat.Testing;
 using NSubstitute;
+using SimpleMessageMule.TestingFramework;
 
 namespace AwsTools.UnitTests.SqsNotificationListener
 {
@@ -9,35 +10,33 @@ namespace AwsTools.UnitTests.SqsNotificationListener
     {
         protected override void Given()
         {
-            TestWaitTime = 100;
-            Handler.Handle(null).ReturnsForAnyArgs(info => true).AndDoes(x => Thread.Sleep(1)); // Ensure at least one ms wait on processing
             base.Given();
+            Handler.Handle(null).ReturnsForAnyArgs(info => true).AndDoes(x => Thread.Sleep(1)); // Ensure at least one ms wait on processing
         }
 
         [Then]
         public void MessagesGetDeserialisedByCorrectHandler()
         {
-            Serialiser.Received().Deserialise(MessageBody);
+            Patiently.VerifyExpectation(() =>Serialiser.Received().Deserialise(MessageBody));
         }
 
         [Then]
         public void ProcessingIsPassedToTheHandlerForCorrectMessage()
         {
-            Handler.Received().Handle(DeserialisedMessage);
+            Patiently.VerifyExpectation(() =>Handler.Received().Handle(DeserialisedMessage));
         }
 
         [Then]
         public void MonitoringToldMessageHandlingTime()
         {
-            Thread.Sleep(50);
-            Monitor.Received().HandleTime(Arg.Is<long>(x => x > 0));
+            Patiently.VerifyExpectation(() =>Monitor.Received().HandleTime(Arg.Is<long>(x => x > 0)));
         }
 
         [Then]
         public void AllMessagesAreClearedFromQueue()
         {
-            Serialiser.Received(1).Deserialise(Arg.Any<string>());
-            Sqs.Received(2).DeleteMessage(Arg.Any<DeleteMessageRequest>());
+            Patiently.VerifyExpectation(() =>Serialiser.Received(1).Deserialise(Arg.Any<string>()));
+            Patiently.VerifyExpectation(() =>Sqs.Received(2).DeleteMessage(Arg.Any<DeleteMessageRequest>()));
         }
     }
 

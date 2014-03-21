@@ -1,6 +1,7 @@
 using Amazon.SQS.Model;
 using JustEat.Testing;
 using NSubstitute;
+using SimpleMessageMule.TestingFramework;
 
 namespace AwsTools.UnitTests.SqsNotificationListener
 {
@@ -8,16 +9,15 @@ namespace AwsTools.UnitTests.SqsNotificationListener
     {
         protected override void Given()
         {
-            Handler.Handle(null).ReturnsForAnyArgs(false);
-            TestWaitTime = 120;
             base.Given();
+            Handler.Handle(null).ReturnsForAnyArgs(false);
         }
 
         [Then]
         public void FailedMessageIsNotRemovedFromQueue()
         {
             // The un-handled one is however.
-            Sqs.Received(1).DeleteMessage(Arg.Any<DeleteMessageRequest>());
+            Patiently.VerifyExpectation(() => Sqs.Received(1).DeleteMessage(Arg.Any<DeleteMessageRequest>()));
         }
     }
 }

@@ -1,7 +1,7 @@
-using System.Threading;
 using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Testing;
 using NSubstitute;
+using SimpleMessageMule.TestingFramework;
 using Tests.MessageStubs;
 
 namespace SimpleMessageMule.UnitTests.NotificationStack
@@ -19,7 +19,6 @@ namespace SimpleMessageMule.UnitTests.NotificationStack
             SystemUnderTest.AddMessagePublisher<GenericMessage>("OrderDispatch", _publisher);
 
             SystemUnderTest.Publish(new GenericMessage());
-            Thread.Sleep(20);
         }
 
         [Then]
@@ -31,7 +30,7 @@ namespace SimpleMessageMule.UnitTests.NotificationStack
         [Then]
         public void PublishMessageTimeStatsSent()
         {
-            Monitor.Received(1).PublishMessageTime(Arg.Any<long>());
+            Patiently.VerifyExpectation(() => Monitor.Received(1).PublishMessageTime(Arg.Any<long>()), 10.Seconds());
         }
     }
 }

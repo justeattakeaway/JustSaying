@@ -40,6 +40,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\JustEat.Testing.6.3.0.67\lib\net40\JustEat.Testing.dll</HintPath>
     </Reference>
+    <Reference Include="Magnum.TestFramework">
+      <HintPath>..\..\MassTransit\lib\Magnum\net-4.0\TestFramework\Magnum.TestFramework.dll</HintPath>
+    </Reference>
     <Reference Include="NLog, Version=2.1.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NLog.2.1.0\lib\net40\NLog.dll</HintPath>
@@ -89,6 +92,10 @@
     <ProjectReference Include="..\JustEat.Simples.Messaging\Messaging.csproj">
       <Project>{899cd315-37b3-46d0-b2dc-fb94c552d968}</Project>
       <Name>Messaging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SimpleMessageMule.TestingFramework\SimpleMessageMule.TestingFramework.csproj">
+      <Project>{78E23D08-913E-491F-87AF-ADE5AA007F9A}</Project>
+      <Name>SimpleMessageMule.TestingFramework</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
