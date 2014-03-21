@@ -30,5 +30,11 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         {
             Sqs.Received(2).DeleteMessage(Arg.Any<DeleteMessageRequest>());
         }
+
+        [Then]
+        public void ReceiveMessageTimeStatsSent()
+        {
+            Monitor.Received().ReceiveMessageTime(Arg.Any<long>());
+        }
     }
 }

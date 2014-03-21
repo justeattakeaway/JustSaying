@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 using JustEat.Simples.NotificationStack.AwsTools.QueueCreation;
 using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Stack;
@@ -15,6 +16,7 @@ namespace Stack.UnitTests
     {
         protected INotificationStackConfiguration Configuration;
         protected INotificationStack NotificationStack;
+        protected IMessageMonitor Monitor = Substitute.For<IMessageMonitor>();
         protected string Component = "OrderEngine";
         protected string Tenant = "LosAlamos";
         protected string Environment = "unitest";
@@ -45,7 +47,7 @@ namespace Stack.UnitTests
                 x.PublishFailureReAttempts = Configuration.PublishFailureReAttempts;
                 x.Region = Configuration.Region;
                 x.Tenant = Configuration.Tenant;
-            }).WithMonitoring(null) as FluentNotificationStack;
+            }).WithMonitoring(Monitor) as FluentNotificationStack;
 
 
             ConfigureNotificationStackMock(fns);

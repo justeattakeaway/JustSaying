@@ -37,5 +37,15 @@ namespace JustEat.Simples.NotificationStack.Stack.Monitoring
         {
             _publisher.Timing(TimeSpan.FromMilliseconds(handleTimeMs), "notificationstack-message-throttle");
         }
+
+        public void PublishMessageTime(long handleTimeMs)
+        {
+            _publisher.Timing(TimeSpan.FromMilliseconds(handleTimeMs), "notificationstack-message-publish");
+        }
+
+        public void ReceiveMessageTime(long handleTimeMs)
+        {
+            _publisher.Timing(TimeSpan.FromMilliseconds(handleTimeMs), "notificationstack-message-receive");
+        }
     }
 }

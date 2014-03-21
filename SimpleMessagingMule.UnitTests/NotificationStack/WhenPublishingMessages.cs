@@ -27,5 +27,11 @@ namespace SimpleMessageMule.UnitTests.NotificationStack
         {
             _publisher.Received().Publish(Arg.Any<GenericMessage>());
         }
+
+        [Then]
+        public void PublishMessageTimeStatsSent()
+        {
+            Monitor.Received(1).PublishMessageTime(Arg.Any<long>());
+        }
     }
 }

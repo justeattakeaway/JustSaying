@@ -94,12 +94,19 @@ namespace JustEat.Simples.NotificationStack.AwsTools
             {
                 _messageProcessingStrategy.BeforeGettingMoreMessages();
 
+                var watch = new System.Diagnostics.Stopwatch();
+                watch.Start();
+
                 var sqsMessageResponse = _queue.Client.ReceiveMessage(new ReceiveMessageRequest
                 {
                     QueueUrl = _queue.Url,
                     MaxNumberOfMessages = MaxAmazonMessageCap,
                     WaitTimeSeconds = 20
                 });
+
+                watch.Stop();
+
+                _messagingMonitor.ReceiveMessageTime(watch.ElapsedMilliseconds);
 
                 var messageCount = sqsMessageResponse.Messages.Count;
 
