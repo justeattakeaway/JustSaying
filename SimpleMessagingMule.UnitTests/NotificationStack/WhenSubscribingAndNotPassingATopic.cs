@@ -4,7 +4,7 @@ using NUnit.Framework;
 
 namespace SimpleMessageMule.UnitTests.NotificationStack
 {
-    public class WhenSubscribingAndNotPassingATopic : NotificationStackBaseTest
+    public class WhenSubscribingAndNotPassingATopic : GivenAServiceBus
     {
         protected override void Given()
         {

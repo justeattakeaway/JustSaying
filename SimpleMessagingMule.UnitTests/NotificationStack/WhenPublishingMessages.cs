@@ -6,7 +6,7 @@ using Tests.MessageStubs;
 
 namespace SimpleMessageMule.UnitTests.NotificationStack
 {
-    public class WhenPublishingMessages : NotificationStackBaseTest
+    public class WhenPublishingMessages : GivenAServiceBus
     {
         private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
         

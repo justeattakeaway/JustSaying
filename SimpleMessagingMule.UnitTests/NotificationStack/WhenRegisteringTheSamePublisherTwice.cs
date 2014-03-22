@@ -4,7 +4,7 @@ using NUnit.Framework;
 
 namespace SimpleMessageMule.UnitTests.NotificationStack
 {
-    public class WhenRegisteringTheSamePublisherTwice : NotificationStackBaseTest
+    public class WhenRegisteringTheSamePublisherTwice : GivenAServiceBus
     {
         protected override void Given()
         {

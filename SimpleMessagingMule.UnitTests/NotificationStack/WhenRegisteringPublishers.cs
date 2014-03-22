@@ -1,4 +1,3 @@
-using System.Threading;
 using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Testing;
 using NSubstitute;
@@ -7,7 +6,7 @@ using Tests.MessageStubs;
 
 namespace SimpleMessageMule.UnitTests.NotificationStack
 {
-    public class WhenRegisteringPublishers : NotificationStackBaseTest
+    public class WhenRegisteringPublishers : GivenAServiceBus
     {
         private IMessagePublisher _publisher;
 

@@ -8,7 +8,7 @@ using Tests.MessageStubs;
 
 namespace SimpleMessageMule.UnitTests.NotificationStack
 {
-    public class WhenPublishingFails : NotificationStackBaseTest
+    public class WhenPublishingFails : GivenAServiceBus
     {
         private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
         private const int PublishAttempts = 4;

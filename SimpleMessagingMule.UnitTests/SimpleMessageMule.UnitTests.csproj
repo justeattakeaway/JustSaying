@@ -70,7 +70,7 @@
     <Compile Include="SimpleMessageMuleTests\Publishing\WhenPublishing.cs" />
     <Compile Include="Lookups\SnsEndpointNames\WhenRequestingAnEndpointName.cs" />
     <Compile Include="Lookups\SqsEndpointNames\WhenRequestingAnEndpointName.cs" />
-    <Compile Include="NotificationStack\NotificationStackBaseTest.cs" />
+    <Compile Include="NotificationStack\GivenAServiceBus.cs" />
     <Compile Include="NotificationStack\WhenAddingAPublisherWithNoTopic.cs" />
     <Compile Include="NotificationStack\WhenPublishingFails.cs" />
     <Compile Include="NotificationStack\WhenPublishingMessages.cs" />

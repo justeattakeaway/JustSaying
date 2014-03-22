@@ -7,7 +7,7 @@ using NSubstitute.Experimental;
 
 namespace SimpleMessageMule.UnitTests.NotificationStack
 {
-    public class WhenRegisteringMessageHandlers : NotificationStackBaseTest
+    public class WhenRegisteringMessageHandlers : GivenAServiceBus
     {
         private INotificationSubscriber _subscriber;
         private IHandler<Message> _handler1;

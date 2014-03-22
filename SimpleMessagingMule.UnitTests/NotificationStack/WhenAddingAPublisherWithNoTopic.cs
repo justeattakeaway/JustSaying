@@ -7,7 +7,7 @@ using Tests.MessageStubs;
 
 namespace SimpleMessageMule.UnitTests.NotificationStack
 {
-    public class WhenAddingAPublisherWithNoTopic : NotificationStackBaseTest
+    public class WhenAddingAPublisherWithNoTopic : GivenAServiceBus
     {
         protected override void Given()
         {

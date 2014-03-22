@@ -4,7 +4,7 @@ using NSubstitute;
 
 namespace SimpleMessageMule.UnitTests.NotificationStack
 {
-    public class WhenStopping : NotificationStackBaseTest
+    public class WhenStopping : GivenAServiceBus
     {
         private INotificationSubscriber _subscriber1;
         private INotificationSubscriber _subscriber2;

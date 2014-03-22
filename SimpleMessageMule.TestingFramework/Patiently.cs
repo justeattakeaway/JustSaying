@@ -38,15 +38,15 @@ namespace SimpleMessageMule.TestingFramework
         public static void AssertThat(Func<bool> func, TimeSpan timeout)
         {
             bool result;
-            bool timedOut;
+            bool hasTimedOut;
             var started = DateTime.Now;
             do
             {
                 result = func.Invoke();
-                timedOut = timeout < DateTime.Now - started;
-                Thread.Sleep(TimeSpan.FromSeconds(5));
-                Console.WriteLine("{0} - Still Checking...", (DateTime.Now - started).TotalSeconds);
-            } while (!result && !timedOut);
+                hasTimedOut = timeout < DateTime.Now - started;
+                Thread.Sleep(TimeSpan.FromMilliseconds(50));
+                Console.WriteLine("Waiting for {0} ms - Still Checking.", (DateTime.Now - started).TotalMilliseconds);
+            } while (!result && !hasTimedOut);
 
             Assert.True(result);
         }

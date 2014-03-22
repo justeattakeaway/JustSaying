@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace SimpleMessageMule.UnitTests.NotificationStack
 {
-    public class WhenStartingThenStopping : NotificationStackBaseTest
+    public class WhenStartingThenStopping : GivenAServiceBus
     {
         private INotificationSubscriber _subscriber1;
 
