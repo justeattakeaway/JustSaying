@@ -14,6 +14,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
         protected override void Given()
         {
+            base.Given();
             _messageId = Guid.NewGuid();
             DeserialisedMessage = new GenericMessage { Id = _messageId };
             Serialiser.Deserialise(Arg.Any<string>()).Returns(x => DeserialisedMessage);

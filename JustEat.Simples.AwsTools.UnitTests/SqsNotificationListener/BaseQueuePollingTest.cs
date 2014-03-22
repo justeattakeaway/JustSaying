@@ -53,7 +53,6 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         {
             SystemUnderTest.AddMessageHandler(Handler);
             SystemUnderTest.Listen();
-            SystemUnderTest.StopListening();
         }
 
         protected ReceiveMessageResponse GenerateResponseMessage(string messageType, Guid messageId)
@@ -72,6 +71,11 @@ namespace AwsTools.UnitTests.SqsNotificationListener
                         Body = "{\"Subject\":\"SOME_UNKNOWN_MESSAGE\"," + "\"Message\":\"SOME_RANDOM_MESSAGE\"}"
                     }}
             };
+        }
+
+        public override void PostAssertTeardown()
+        {
+            SystemUnderTest.StopListening();
         }
     }
 }

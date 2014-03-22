@@ -11,6 +11,7 @@ namespace SimpleMessageMule.UnitTests.NotificationStack
 
         protected override void Given()
         {
+            base.Given();
             _subscriber1 = Substitute.For<INotificationSubscriber>();
             _subscriber2 = Substitute.For<INotificationSubscriber>();
         }
@@ -19,7 +20,6 @@ namespace SimpleMessageMule.UnitTests.NotificationStack
         {
             SystemUnderTest.AddNotificationTopicSubscriber("OrderDispatch", _subscriber1);
             SystemUnderTest.AddNotificationTopicSubscriber("CustomerCommunication", _subscriber2);
-
             SystemUnderTest.Start();
             SystemUnderTest.Stop();
         }

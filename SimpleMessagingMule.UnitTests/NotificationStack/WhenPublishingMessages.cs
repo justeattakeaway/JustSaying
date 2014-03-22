@@ -9,11 +9,7 @@ namespace SimpleMessageMule.UnitTests.NotificationStack
     public class WhenPublishingMessages : NotificationStackBaseTest
     {
         private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
-
-        protected override void Given()
-        {
-        }
-
+        
         protected override void When()
         {
             SystemUnderTest.AddMessagePublisher<GenericMessage>("OrderDispatch", _publisher);
@@ -24,12 +20,13 @@ namespace SimpleMessageMule.UnitTests.NotificationStack
         [Then]
         public void PublisherIsCalledToPublish()
         {
-            _publisher.Received().Publish(Arg.Any<GenericMessage>());
+            Patiently.VerifyExpectation(() => _publisher.Received().Publish(Arg.Any<GenericMessage>()));
         }
 
         [Then]
         public void PublishMessageTimeStatsSent()
         {
+            //todo: failing for the right reason. Must make sure Maxim's recent commit is merged.
             Patiently.VerifyExpectation(() => Monitor.Received(1).PublishMessageTime(Arg.Any<long>()), 10.Seconds());
         }
     }

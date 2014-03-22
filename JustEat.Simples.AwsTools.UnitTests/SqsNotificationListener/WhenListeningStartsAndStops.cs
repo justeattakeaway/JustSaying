@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using Amazon.SQS.Model;
 using JustEat.Testing;
 using NSubstitute;
+using SimpleMessageMule.TestingFramework;
 
 namespace AwsTools.UnitTests.SqsNotificationListener
 {
@@ -18,26 +18,30 @@ namespace AwsTools.UnitTests.SqsNotificationListener
             SystemUnderTest.StopListening();
             Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid()), x => new ReceiveMessageResponse{ Messages = new List<Message>()});
             SystemUnderTest.Listen();
-            Thread.Sleep(150);
-            SystemUnderTest.StopListening();
         }
 
         [Then]
         public void CorrectQueueIsPolled()
         {
-            Sqs.Received().ReceiveMessage(Arg.Is<ReceiveMessageRequest>(x => x.QueueUrl == QueueUrl));
+            Patiently.VerifyExpectation(() => Sqs.Received().ReceiveMessage(Arg.Is<ReceiveMessageRequest>(x => x.QueueUrl == QueueUrl)));
         }
 
         [Then]
         public void TheMaxMessageAllowanceIsGrabbed()
         {
-            Sqs.Received().ReceiveMessage(Arg.Is<ReceiveMessageRequest>(x => x.MaxNumberOfMessages == 10));
+            Patiently.VerifyExpectation(() => Sqs.Received().ReceiveMessage(Arg.Is<ReceiveMessageRequest>(x => x.MaxNumberOfMessages == 10)));
         }
 
         [Then]
         public void MessageIsProcessed()
         {
-            SerialisationRegister.Received().GetSerialiser(SubjectOfMessageAfterStop);
+            Patiently.VerifyExpectation(() => SerialisationRegister.Received().GetSerialiser(SubjectOfMessageAfterStop));
+        }
+
+        public override void PostAssertTeardown()
+        {
+            base.PostAssertTeardown();
+            SystemUnderTest.StopListening();
         }
     }
 }

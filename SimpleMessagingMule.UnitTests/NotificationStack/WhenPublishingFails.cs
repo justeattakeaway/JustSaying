@@ -15,6 +15,7 @@ namespace SimpleMessageMule.UnitTests.NotificationStack
 
         protected override void Given()
         {
+            base.Given();
             Config.PublishFailureReAttempts.Returns(4);
             Config.PublishFailureBackoffMilliseconds.Returns(1);
             RecordAnyExceptionsThrown();

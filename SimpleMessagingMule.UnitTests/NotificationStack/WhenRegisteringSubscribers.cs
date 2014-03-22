@@ -12,6 +12,7 @@ namespace SimpleMessageMule.UnitTests.NotificationStack
 
         protected override void Given()
         {
+            base.Given();
             _subscriber1 = Substitute.For<INotificationSubscriber>();
             _subscriber2 = Substitute.For<INotificationSubscriber>();
         }

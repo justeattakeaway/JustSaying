@@ -12,6 +12,7 @@ namespace SimpleMessageMule.UnitTests.NotificationStack
     {
         protected override void Given()
         {
+            base.Given();
             RecordAnyExceptionsThrown();
         }
 

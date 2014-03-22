@@ -6,8 +6,15 @@ namespace SimpleMessageMule.UnitTests.NotificationStack
 {
     public abstract class NotificationStackBaseTest : BehaviourTest<SimpleMessageMule.NotificationStack>
     {
-        protected readonly IMessagingConfig Config = Substitute.For<IMessagingConfig>();
-        protected readonly IMessageMonitor Monitor = Substitute.For<IMessageMonitor>();
+        protected IMessagingConfig Config;
+        protected IMessageMonitor Monitor;
+
+        protected override void Given()
+        {
+            
+            Config = Substitute.For<IMessagingConfig>();
+            Monitor = Substitute.For<IMessageMonitor>();
+        }
 
         protected override SimpleMessageMule.NotificationStack CreateSystemUnderTest()
         {
