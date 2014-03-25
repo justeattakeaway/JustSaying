@@ -11,12 +11,18 @@ namespace AwsTools.UnitTests.SqsNotificationListener
     {
         private const string SubjectOfMessageAfterStop = "POST_STOP_MESSAGE";
 
+        protected override void Given()
+        {
+            base.Given();
+            Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid()), x => new ReceiveMessageResponse { Messages = new List<Message>() });
+        }
+
         protected override void When()
         {
             base.When();
 
             SystemUnderTest.StopListening();
-            Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid()), x => new ReceiveMessageResponse{ Messages = new List<Message>()});
+            
             SystemUnderTest.Listen();
         }
 
