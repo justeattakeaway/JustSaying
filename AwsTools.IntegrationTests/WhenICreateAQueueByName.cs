@@ -19,10 +19,10 @@ namespace AwsTools.IntegrationTests
             Assert.IsTrue(_isQueueCreated);
         }
 
-        [Then]
+        [Then, Explicit("Extremely long running test")]
         public void DeadLetterQueueIsCreated()
         {
-            Patiently.AssertThat(() => SystemUnderTest.ErrorQueue.Exists(), 10.Seconds());
+            Patiently.AssertThat(() => SystemUnderTest.ErrorQueue.Exists(), 40.Seconds());
         }
     }
 }

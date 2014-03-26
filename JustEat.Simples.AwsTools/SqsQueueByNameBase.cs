@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -21,8 +22,10 @@ namespace JustEat.Simples.NotificationStack.AwsTools
         public override bool Exists()
         {
             var result = Client.ListQueues(new ListQueuesRequest{ QueueNamePrefix = QueueNamePrefix });
+            Console.WriteLine("polling for {0}", QueueNamePrefix);
             if (result.QueueUrls.Any())
             {
+                Console.WriteLine("found " + result.QueueUrls.First());
                 Url = result.QueueUrls.First();
                 SetArn();
                 return true;

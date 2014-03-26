@@ -117,8 +117,16 @@ namespace NotificationStack.IntegrationTests
         private static List<Topic> GetAllTopics(RegionEndpoint regionEndpoint, string topicName)
         {
             var client = AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(regionEndpoint);
-            var topics = client.ListTopics(new ListTopicsRequest());
-            return topics.Topics.Where(x => x.TopicArn.IndexOf(topicName, StringComparison.InvariantCultureIgnoreCase) >= 0).ToList();
+            var topics = new List<Topic>();
+            string nextToken = null;
+            do
+            {
+                ListTopicsResponse topicsResponse = client.ListTopics(new ListTopicsRequest{NextToken = nextToken});
+                nextToken = topicsResponse.NextToken;
+                topics.AddRange(topicsResponse.Topics);
+            } while (nextToken != null);
+
+            return topics.Where(x => x.TopicArn.IndexOf(topicName, StringComparison.InvariantCultureIgnoreCase) >= 0).ToList();
         }
 
         private static List<string> GetAllQueues(RegionEndpoint regionEndpoint, string queueName)
