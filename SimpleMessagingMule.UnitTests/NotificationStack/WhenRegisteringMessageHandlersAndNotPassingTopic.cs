@@ -8,10 +8,11 @@ using NUnit.Framework;
 
 namespace SimpleMessageMule.UnitTests.NotificationStack
 {
-    public class WhenRegisteringMessageHandlersAndNotPassingTopic : NotificationStackBaseTest
+    public class WhenRegisteringMessageHandlersAndNotPassingTopic : GivenAServiceBus
     {
         protected override void Given()
         {
+            base.Given();
             RecordAnyExceptionsThrown();
         }
 

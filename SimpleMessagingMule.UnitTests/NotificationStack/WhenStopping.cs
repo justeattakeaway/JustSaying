@@ -4,13 +4,14 @@ using NSubstitute;
 
 namespace SimpleMessageMule.UnitTests.NotificationStack
 {
-    public class WhenStopping : NotificationStackBaseTest
+    public class WhenStopping : GivenAServiceBus
     {
         private INotificationSubscriber _subscriber1;
         private INotificationSubscriber _subscriber2;
 
         protected override void Given()
         {
+            base.Given();
             _subscriber1 = Substitute.For<INotificationSubscriber>();
             _subscriber2 = Substitute.For<INotificationSubscriber>();
         }
@@ -19,7 +20,6 @@ namespace SimpleMessageMule.UnitTests.NotificationStack
         {
             SystemUnderTest.AddNotificationTopicSubscriber("OrderDispatch", _subscriber1);
             SystemUnderTest.AddNotificationTopicSubscriber("CustomerCommunication", _subscriber2);
-
             SystemUnderTest.Start();
             SystemUnderTest.Stop();
         }

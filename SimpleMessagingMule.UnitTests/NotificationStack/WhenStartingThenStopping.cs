@@ -5,12 +5,13 @@ using NUnit.Framework;
 
 namespace SimpleMessageMule.UnitTests.NotificationStack
 {
-    public class WhenStartingThenStopping : NotificationStackBaseTest
+    public class WhenStartingThenStopping : GivenAServiceBus
     {
         private INotificationSubscriber _subscriber1;
 
         protected override void Given()
         {
+            base.Given();
             _subscriber1 = Substitute.For<INotificationSubscriber>();
         }
 

@@ -17,7 +17,9 @@ group :build do
   gem 'log4r-color'
   gem 'nokogiri'
   gem 'rake'
+  gem 'rubyzip', '< 1.0.0'
 end
+
 
 #group :debugging do
 #  gem 'pry'

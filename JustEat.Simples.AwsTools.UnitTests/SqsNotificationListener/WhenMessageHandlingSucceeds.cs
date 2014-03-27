@@ -1,6 +1,7 @@
 using Amazon.SQS.Model;
 using JustEat.Testing;
 using NSubstitute;
+using SimpleMessageMule.TestingFramework;
 
 namespace AwsTools.UnitTests.SqsNotificationListener
 {
@@ -8,33 +9,32 @@ namespace AwsTools.UnitTests.SqsNotificationListener
     {
         protected override void Given()
         {
-            TestWaitTime = 150;
-            Handler.Handle(null).ReturnsForAnyArgs(true);
             base.Given();
+            Handler.Handle(null).ReturnsForAnyArgs(true);
         }
 
         [Then]
         public void MessagesGetDeserialisedByCorrectHandler()
         {
-            Serialiser.Received().Deserialise(MessageBody);
+            Patiently.VerifyExpectation(() => Serialiser.Received().Deserialise(MessageBody));
         }
 
         [Then]
         public void ProcessingIsPassedToTheHandlerForCorrectMessage()
         {
-            Handler.Received().Handle(DeserialisedMessage);
+            Patiently.VerifyExpectation(() => Handler.Received().Handle(DeserialisedMessage));
         }
 
         [Then]
         public void AllMessagesAreClearedFromQueue()
         {
-            Sqs.Received(2).DeleteMessage(Arg.Any<DeleteMessageRequest>());
+            Patiently.VerifyExpectation(() => Sqs.Received(2).DeleteMessage(Arg.Any<DeleteMessageRequest>()));
         }
 
         [Then]
         public void ReceiveMessageTimeStatsSent()
         {
-            Monitor.Received().ReceiveMessageTime(Arg.Any<long>());
+            Patiently.VerifyExpectation(() => Monitor.Received().ReceiveMessageTime(Arg.Any<long>()));
         }
     }
 }

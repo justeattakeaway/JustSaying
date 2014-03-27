@@ -17,26 +17,31 @@ namespace AwsTools.UnitTests.SqsNotificationListener
     public class BaseQueuePollingTest : BehaviourTest<JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener>
     {
         protected const string QueueUrl = "url";
-        protected readonly IAmazonSQS Sqs = Substitute.For<IAmazonSQS>();
-        protected readonly IMessageSerialiser<GenericMessage> Serialiser = Substitute.For<IMessageSerialiser<GenericMessage>>();
+        protected IAmazonSQS Sqs;
+        protected IMessageSerialiser<GenericMessage> Serialiser;
         protected GenericMessage DeserialisedMessage;
         protected const string MessageBody = "object";
-        protected readonly IHandler<GenericMessage> Handler = Substitute.For<IHandler<GenericMessage>>();
-        protected readonly IMessageMonitor Monitor = Substitute.For<IMessageMonitor>();
-        protected readonly IMessageSerialisationRegister SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
-        protected readonly IMessageFootprintStore MessageFootprintStore = Substitute.For<IMessageFootprintStore>();
+        protected IHandler<GenericMessage> Handler;
+        protected IMessageMonitor Monitor;
+        protected IMessageSerialisationRegister SerialisationRegister;
+        protected IMessageFootprintStore MessageFootprintStore;
         private readonly string _messageTypeString = typeof(GenericMessage).ToString();
-        protected int TestWaitTime = 1000;
 
         protected override JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
+            
             return new JustEat.Simples.NotificationStack.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), SerialisationRegister, MessageFootprintStore, Monitor);
         }
 
         protected override void Given()
         {
+            Sqs = Substitute.For<IAmazonSQS>();
+            Serialiser = Substitute.For<IMessageSerialiser<GenericMessage>>();
+            MessageFootprintStore = Substitute.For<IMessageFootprintStore>();
+            SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
+            Monitor = Substitute.For<IMessageMonitor>();
+            Handler = Substitute.For<IHandler<GenericMessage>>();
             var response = GenerateResponseMessage(_messageTypeString, Guid.NewGuid());
-
             Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => response, x => new ReceiveMessageResponse());
 
             SerialisationRegister.GetSerialiser(_messageTypeString).Returns(Serialiser);
@@ -48,10 +53,6 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         {
             SystemUnderTest.AddMessageHandler(Handler);
             SystemUnderTest.Listen();
-
-            Thread.Sleep(TestWaitTime);
-
-            SystemUnderTest.StopListening();
         }
 
         protected ReceiveMessageResponse GenerateResponseMessage(string messageType, Guid messageId)
@@ -70,6 +71,11 @@ namespace AwsTools.UnitTests.SqsNotificationListener
                         Body = "{\"Subject\":\"SOME_UNKNOWN_MESSAGE\"," + "\"Message\":\"SOME_RANDOM_MESSAGE\"}"
                     }}
             };
+        }
+
+        public override void PostAssertTeardown()
+        {
+            SystemUnderTest.StopListening();
         }
     }
 }

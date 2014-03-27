@@ -63,9 +63,9 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
             return ServiceBus;
         }
 
-        [TearDown]
-        protected virtual void Teardown()
+        public override void PostAssertTeardown()
         {
+            base.PostAssertTeardown();
             _stopwatch.Stop();
             base.Teardown();
             Console.WriteLine("The test took {0} seconds.", _stopwatch.ElapsedMilliseconds / 1000);

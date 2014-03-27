@@ -7,7 +7,7 @@ using Tests.MessageStubs;
 
 namespace SimpleMessageMule.UnitTests.NotificationStack
 {
-    public class WhenAddingAPublisherWithNoTopic : NotificationStackBaseTest
+    public class WhenAddingAPublisherWithNoTopic : GivenAServiceBus
     {
         protected override void Given()
         {
@@ -20,9 +20,9 @@ namespace SimpleMessageMule.UnitTests.NotificationStack
         }
 
         [Then]
-        public void ArgExceptionThrown()
+        public void ExceptionThrown()
         {
-            Assert.AreEqual(((ArgumentException)ThrownException).ParamName, "topic");
+            Assert.That(ThrownException, Is.Not.Null);
         }
     }
 }

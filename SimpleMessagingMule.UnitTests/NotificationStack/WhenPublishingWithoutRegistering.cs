@@ -6,10 +6,11 @@ using NUnit.Framework;
 
 namespace SimpleMessageMule.UnitTests.NotificationStack
 {
-    public class WhenPublishingWithoutRegistering : NotificationStackBaseTest
+    public class WhenPublishingWithoutRegistering : GivenAServiceBus
     {
         protected override void Given()
         {
+            base.Given();
             RecordAnyExceptionsThrown();
         }
 

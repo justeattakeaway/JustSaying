@@ -4,17 +4,19 @@ using JustEat.Simples.NotificationStack.Messaging;
 using JustEat.Simples.NotificationStack.Messaging.Messages;
 using JustEat.Testing;
 using NSubstitute;
+using SimpleMessageMule.TestingFramework;
 using Tests.MessageStubs;
 
 namespace SimpleMessageMule.UnitTests.NotificationStack
 {
-    public class WhenPublishingFails : NotificationStackBaseTest
+    public class WhenPublishingFails : GivenAServiceBus
     {
         private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
         private const int PublishAttempts = 4;
 
         protected override void Given()
         {
+            base.Given();
             Config.PublishFailureReAttempts.Returns(4);
             Config.PublishFailureBackoffMilliseconds.Returns(1);
             RecordAnyExceptionsThrown();
@@ -26,13 +28,12 @@ namespace SimpleMessageMule.UnitTests.NotificationStack
             SystemUnderTest.AddMessagePublisher<GenericMessage>("OrderDispatch", _publisher);
 
             SystemUnderTest.Publish(new GenericMessage());
-            Thread.Sleep(100);
         }
 
         [Then]
         public void EventPublicationWasAttemptedTheConfiguredNumberOfTimes()
         {
-            _publisher.Received(PublishAttempts).Publish(Arg.Any<GenericMessage>());
+            Patiently.VerifyExpectation(() => _publisher.Received(PublishAttempts).Publish(Arg.Any<GenericMessage>()));
         }
     }
 }
