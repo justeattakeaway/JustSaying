@@ -11,8 +11,6 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
     public class WhenHandlersThrowAnException : GivenANotificationStack
     {
         private readonly Future<GenericMessage> _handler = new Future<GenericMessage>(() => { throw new Exception(""); });
-        private SqsQueueByName _queue;
-        private string _component;
 
         protected override void Given()
         {
@@ -34,10 +32,6 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
            Patiently.VerifyExpectation(()=> Monitoring.Received().HandleException(Arg.Any<string>()));
         }
 
-        public override void PostAssertTeardown()
-        {
-            if(_queue!= null)
-                 _queue.Delete();
-        }
+       
     }
 }

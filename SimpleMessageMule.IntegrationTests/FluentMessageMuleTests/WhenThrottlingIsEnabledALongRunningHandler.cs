@@ -12,6 +12,7 @@ using Tests.MessageStubs;
 
 namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
 {
+    //Todo: Must rewrite using a loopback transport.
     [TestFixture]
     public class WhenThrottlingIsEnabledALongRunningHandler
     {
