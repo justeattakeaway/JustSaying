@@ -7,6 +7,7 @@ using JustEat.Testing;
 using NSubstitute;
 using NUnit.Framework;
 using SimpleMessageMule;
+using SimpleMessageMule.TestingFramework;
 using Tests.MessageStubs;
 
 namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
@@ -45,10 +46,9 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
         public void CustomExceptionHandlingIsCalled()
         {
             _publisher.Publish(new GenericMessage());
-            Thread.Sleep(1000);
 
-            _handler.Received().Handle(Arg.Any<GenericMessage>());
-            Assert.That(_handledException, Is.EqualTo(true));
+            Patiently.VerifyExpectation(() => _handler.Received().Handle(Arg.Any<GenericMessage>()));
+            Patiently.AssertThat(() => _handledException == true);
         }
 
         [TearDown]
