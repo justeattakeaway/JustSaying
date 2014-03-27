@@ -3,6 +3,7 @@ using System.Threading;
 using JustEat.Simples.NotificationStack.AwsTools;
 using JustEat.Testing;
 using NUnit.Framework;
+using SimpleMessageMule.TestingFramework;
 
 namespace AwsTools.UnitTests.SqsNotificationListener.HandlingExceptions
 {
@@ -19,7 +20,6 @@ namespace AwsTools.UnitTests.SqsNotificationListener.HandlingExceptions
                                                        _globalErrorHandler);
 
             listener.HandleMessage(null);
-            Thread.Sleep(200);
         }
 
         [Then]
@@ -31,7 +31,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener.HandlingExceptions
         [Then]
         public void CustomExceptionHandlingIsCalled()
         {
-            Assert.That(_handledException, Is.EqualTo(true));
+            Patiently.AssertThat(() => _handledException);
         }
 
         protected override void Given()

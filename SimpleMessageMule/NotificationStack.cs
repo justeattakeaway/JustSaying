@@ -149,7 +149,7 @@ namespace SimpleMessageMule
                         throw;
                     }
 
-                    Thread.Sleep(Config.PublishFailureBackoffMilliseconds * attemptCount); // Increase back off each time
+                    Thread.Sleep(Config.PublishFailureBackoffMilliseconds * attemptCount); // ToDo: Increase back off each time (exponential)
                     Publish(publisher, message, attemptCount);
                 }
             };

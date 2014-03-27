@@ -9,6 +9,7 @@ using JustEat.Simples.NotificationStack.Messaging.Monitoring;
 using JustEat.Testing;
 using NSubstitute;
 using NUnit.Framework;
+using SimpleMessageMule.TestingFramework;
 
 namespace AwsTools.UnitTests.SqsNotificationListener
 {
@@ -34,14 +35,18 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected override void When()
         {
             SystemUnderTest.Listen();
-            Thread.Sleep(50);
-            SystemUnderTest.StopListening();
         }
 
         [Then]
         public void TheListenerDoesNotDie()
         {
-            Assert.GreaterOrEqual(_callCount, 3);
+            Patiently.AssertThat(() => _callCount >= 3);
+        }
+
+        public override void PostAssertTeardown()
+        {
+            base.PostAssertTeardown();
+            SystemUnderTest.StopListening();
         }
 
         private ReceiveMessageResponse GenerateEmptyMessage()
