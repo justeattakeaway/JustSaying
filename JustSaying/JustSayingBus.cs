@@ -19,7 +19,7 @@ namespace JustSaying
         public IMessagingConfig Config { get; private set; }
         public IMessageMonitor Monitor { get; set; }
         public IMessageSerialisationRegister SerialisationRegister { get; private set; }
-        private static readonly Logger Log = LogManager.GetLogger("JustSaying");
+        private static readonly Logger Log = LogManager.GetLogger("JustSaying"); //ToDo: danger!
 
         public JustSayingBus(IMessagingConfig config, IMessageSerialisationRegister serialisationRegister)
         {

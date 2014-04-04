@@ -53,6 +53,8 @@
     <Compile Include="JustSayingBus.cs" />
     <Compile Include="Lookups\IPublishEndpointProvider.cs" />
     <Compile Include="Lookups\IPublishSubscribtionEndpointProvider.cs" />
+    <Compile Include="Lookups\SnsPublishEndpointProvider.cs" />
+    <Compile Include="Lookups\SqsSubscribtionEndpointProvider.cs" />
     <Compile Include="MessagingConfig.cs" />
     <Compile Include="IAmJustSaying.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
