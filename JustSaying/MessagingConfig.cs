@@ -3,7 +3,7 @@ using JustSaying.AwsTools;
 
 namespace JustSaying
 {
-    public interface IMessagingConfig
+    public interface IMessagingConfig //ToDo: This vs publish config. Clean it up. not good.
     {
         int PublishFailureReAttempts { get; }
         int PublishFailureBackoffMilliseconds { get; }
