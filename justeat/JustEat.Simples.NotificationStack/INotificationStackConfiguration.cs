@@ -1,4 +1,4 @@
-namespace JustEat.Simples.NotificationStack.Stack
+namespace JustSaying.Stack
 {
     public interface INotificationStackConfiguration
     {

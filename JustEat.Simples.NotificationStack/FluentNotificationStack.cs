@@ -1,15 +1,15 @@
 using System;
 using Amazon;
-using JustEat.Simples.NotificationStack.AwsTools.QueueCreation;
-using JustEat.Simples.NotificationStack.Messaging.Messages;
-using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
-using SimpleMessageMule;
-using SimpleMessageMule.Lookups;
-using IPublishEndpointProvider = SimpleMessageMule.Lookups.IPublishEndpointProvider;
-using SnsPublishEndpointProvider = JustEat.Simples.NotificationStack.Stack.Lookups.SnsPublishEndpointProvider;
-using SqsSubscribtionEndpointProvider = JustEat.Simples.NotificationStack.Stack.Lookups.SqsSubscribtionEndpointProvider;
+using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging.Messages;
+using JustSaying.Messaging.MessageSerialisation;
+using JustSaying;
+using JustSaying.Lookups;
+using IPublishEndpointProvider = JustSaying.Lookups.IPublishEndpointProvider;
+using SnsPublishEndpointProvider = JustSaying.Stack.Lookups.SnsPublishEndpointProvider;
+using SqsSubscribtionEndpointProvider = JustSaying.Stack.Lookups.SqsSubscribtionEndpointProvider;
 
-namespace JustEat.Simples.NotificationStack.Stack
+namespace JustSaying.Stack
 {
     /// <summary>
     /// This is not the perfect shining example of a fluent API YET!
@@ -31,7 +31,7 @@ namespace JustEat.Simples.NotificationStack.Stack
 
             config.Validate();
 
-            return new FluentNotificationStack(new SimpleMessageMule.NotificationStack(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
+            return new FluentNotificationStack(new JustSaying.NotificationStack(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
         }
 
         public override IPublishEndpointProvider CreatePublisherEndpointProvider(SqsConfiguration subscriptionConfig)
@@ -55,7 +55,7 @@ namespace JustEat.Simples.NotificationStack.Stack
 
     public static class Extensions
     {
-        public static IMessagingConfig AsJustEatConfig(this SimpleMessageMule.IMessagingConfig config)
+        public static IMessagingConfig AsJustEatConfig(this JustSaying.IMessagingConfig config)
         {
             return (IMessagingConfig) config;
         }

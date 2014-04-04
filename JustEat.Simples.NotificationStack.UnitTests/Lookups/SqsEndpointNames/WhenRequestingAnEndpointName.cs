@@ -1,7 +1,7 @@
-﻿using JustEat.Simples.NotificationStack.AwsTools.QueueCreation;
-using JustEat.Simples.NotificationStack.Messaging;
-using JustEat.Simples.NotificationStack.Stack;
-using JustEat.Simples.NotificationStack.Stack.Lookups;
+﻿using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging;
+using JustSaying.Stack;
+using JustSaying.Stack.Lookups;
 using JustEat.Testing;
 using NSubstitute;
 using NUnit.Framework;

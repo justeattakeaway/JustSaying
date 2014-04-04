@@ -78,11 +78,11 @@
     <Compile Include="WhenPublishEndpointIsNotProvided.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JustEat.Simples.AwsTools\AwsTools.csproj">
+    <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj">
       <Project>{CBF2110B-C3A4-45E8-BBD6-301D77567043}</Project>
       <Name>AwsTools</Name>
     </ProjectReference>
-    <ProjectReference Include="..\JustEat.Simples.Messaging\Messaging.csproj">
+    <ProjectReference Include="..\JustSaying.Messaging\JustSaying.Messaging.csproj">
       <Project>{899cd315-37b3-46d0-b2dc-fb94c552d968}</Project>
       <Name>Messaging</Name>
     </ProjectReference>
@@ -90,13 +90,13 @@
       <Project>{a36b7ecf-a2aa-44cc-9538-7bc28bdde4e0}</Project>
       <Name>NotificationStack</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SimpleMessageMule\SimpleMessageMule.csproj">
-      <Project>{3b428f71-9aef-4e46-8d56-644fc0e808d4}</Project>
-      <Name>SimpleMessageMule</Name>
+    <ProjectReference Include="..\JustSaying.Tests.MessageStubs\JustSaying.Tests.MessageStubs.csproj">
+      <Project>{ba54f6d7-be82-4b35-b24d-16eea466cb40}</Project>
+      <Name>JustSaying.Tests.MessageStubs</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Tests.MessageStubs\Tests.MessageStubs.csproj">
-      <Project>{26E0A5AC-EE6E-4C82-A859-35964C3FFB94}</Project>
-      <Name>Tests.MessageStubs</Name>
+    <ProjectReference Include="..\JustSaying\JustSaying.csproj">
+      <Project>{3b428f71-9aef-4e46-8d56-644fc0e808d4}</Project>
+      <Name>JustSaying</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

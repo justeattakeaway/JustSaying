@@ -1,5 +1,5 @@
-﻿using JustEat.Simples.NotificationStack.AwsTools;
-using JustEat.Simples.NotificationStack.AwsTools.QueueCreation;
+﻿using JustSaying.AwsTools;
+using JustSaying.AwsTools.QueueCreation;
 using JustEat.Testing;
 using NUnit.Framework;
 
@@ -28,7 +28,7 @@ namespace Stack.UnitTests
 
         protected override SqsConfiguration CreateSystemUnderTest()
         {
-            return new SqsConfiguration() { MessageRetentionSeconds = NotificationStackConstants.MINIMUM_RETENTION_PERIOD +1, Topic = "ATopic", PublishEndpoint = null };
+            return new SqsConfiguration() { MessageRetentionSeconds = JustSayingConstants.MINIMUM_RETENTION_PERIOD +1, Topic = "ATopic", PublishEndpoint = null };
         }
     }
 }

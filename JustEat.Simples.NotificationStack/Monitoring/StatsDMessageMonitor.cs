@@ -1,8 +1,8 @@
 using System;
-using JustEat.Simples.NotificationStack.Messaging.Monitoring;
+using JustSaying.Messaging.Monitoring;
 using JustEat.StatsD;
 
-namespace JustEat.Simples.NotificationStack.Stack.Monitoring
+namespace JustSaying.Stack.Monitoring
 {
     public class StatsDMessageMonitor : IMessageMonitor
     {

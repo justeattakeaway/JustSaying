@@ -1,14 +1,14 @@
 using System;
 using System.Reflection;
-using JustEat.Simples.NotificationStack.Messaging.Monitoring;
-using JustEat.Simples.NotificationStack.AwsTools.QueueCreation;
-using JustEat.Simples.NotificationStack.Messaging;
-using JustEat.Simples.NotificationStack.Stack;
+using JustSaying.Messaging.Monitoring;
+using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging;
+using JustSaying.Stack;
 using JustEat.Testing;
 using NSubstitute;
-using SimpleMessageMule;
-using INotificationStackConfiguration = JustEat.Simples.NotificationStack.Stack.INotificationStackConfiguration;
-using MessagingConfig = JustEat.Simples.NotificationStack.Stack.MessagingConfig;
+using JustSaying;
+using INotificationStackConfiguration = JustSaying.Stack.INotificationStackConfiguration;
+using MessagingConfig = JustSaying.Stack.MessagingConfig;
 
 namespace Stack.UnitTests
 {
