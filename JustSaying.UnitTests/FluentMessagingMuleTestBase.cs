@@ -9,7 +9,7 @@ namespace JustSaying.UnitTests
     public abstract class FluentMessageMuleTestBase : BehaviourTest<JustSayingFluently>
     {
         protected INotificationStackConfiguration Configuration;
-        protected INotificationStack NotificationStack;
+        protected IAmJustSaying NotificationStack;
         protected override void Given()
         {
             throw new NotImplementedException();
@@ -40,11 +40,11 @@ namespace JustSaying.UnitTests
         // ToDo: Must do btter!!
         private void ConfigureNotificationStackMock(JustSayingFluently fns)
         {
-            NotificationStack = Substitute.For<INotificationStack>();
+            NotificationStack = Substitute.For<IAmJustSaying>();
 
             var notificationStackField = fns.GetType().GetField("Stack", BindingFlags.Instance | BindingFlags.NonPublic);
 
-            var constructedStack = (JustSaying.NotificationStack)notificationStackField.GetValue(fns);
+            var constructedStack = (JustSaying.JustSayingBus)notificationStackField.GetValue(fns);
 
             NotificationStack.Config.Returns(constructedStack.Config);
 

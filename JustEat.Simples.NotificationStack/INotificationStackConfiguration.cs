@@ -6,4 +6,4 @@ namespace JustSaying.Stack
         string Tenant { get; set; }
         string Environment { get; set; }
     }
-}
+}   

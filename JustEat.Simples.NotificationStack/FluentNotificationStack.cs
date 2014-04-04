@@ -20,7 +20,7 @@ namespace JustSaying.Stack
     /// </summary>
     public class FluentNotificationStack : JustSayingFluently
     {
-        private FluentNotificationStack(INotificationStack stack, IVerifyAmazonQueues queueCreator): base(stack, queueCreator)
+        private FluentNotificationStack(IAmJustSaying stack, IVerifyAmazonQueues queueCreator): base(stack, queueCreator)
         {
         }
 
@@ -31,7 +31,7 @@ namespace JustSaying.Stack
 
             config.Validate();
 
-            return new FluentNotificationStack(new JustSaying.NotificationStack(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
+            return new FluentNotificationStack(new JustSaying.JustSayingBus(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
         }
 
         public override IPublishEndpointProvider CreatePublisherEndpointProvider(SqsConfiguration subscriptionConfig)

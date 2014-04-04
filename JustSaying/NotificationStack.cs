@@ -10,7 +10,7 @@ using NLog;
 
 namespace JustSaying
 {
-    public interface INotificationStack : IMessagePublisher
+    public interface IAmJustSaying : IMessagePublisher
     {
         bool Listening { get; }
         void AddNotificationTopicSubscriber(string topic, INotificationSubscriber subscriber);
@@ -23,7 +23,7 @@ namespace JustSaying
         IMessageSerialisationRegister SerialisationRegister { get; }
     }
 
-    public class NotificationStack : INotificationStack
+    public class JustSayingBus : IAmJustSaying
     {
         public bool Listening { get; private set; }
 
@@ -34,7 +34,7 @@ namespace JustSaying
         public IMessageSerialisationRegister SerialisationRegister { get; private set; }
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
 
-        public NotificationStack(IMessagingConfig config, IMessageSerialisationRegister serialisationRegister)
+        public JustSayingBus(IMessagingConfig config, IMessageSerialisationRegister serialisationRegister)
         {
             if (config.PublishFailureReAttempts == 0)
                 Log.Warn("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may loose messages!");

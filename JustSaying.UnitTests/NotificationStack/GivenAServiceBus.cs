@@ -4,7 +4,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.NotificationStack
 {
-    public abstract class GivenAServiceBus : BehaviourTest<JustSaying.NotificationStack>
+    public abstract class GivenAServiceBus : BehaviourTest<JustSaying.JustSayingBus>
     {
         protected IMessagingConfig Config;
         protected IMessageMonitor Monitor;
@@ -15,9 +15,9 @@ namespace JustSaying.UnitTests.NotificationStack
             Monitor = Substitute.For<IMessageMonitor>();
         }
 
-        protected override JustSaying.NotificationStack CreateSystemUnderTest()
+        protected override JustSaying.JustSayingBus CreateSystemUnderTest()
         {
-            return new JustSaying.NotificationStack(Config, null) {Monitor = Monitor};
+            return new JustSaying.JustSayingBus(Config, null) {Monitor = Monitor};
         }
     }
 }

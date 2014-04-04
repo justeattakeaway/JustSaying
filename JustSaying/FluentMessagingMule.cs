@@ -32,7 +32,7 @@ namespace JustSaying
                 Log.Info("No Region was specified, using {0} by default.", config.Region);
             }
 
-            return new JustSayingFluently(new NotificationStack(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
+            return new JustSayingFluently(new JustSayingBus(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
         }
     }
 
@@ -49,7 +49,7 @@ namespace JustSaying
     {
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
-        protected readonly INotificationStack Stack;
+        protected readonly IAmJustSaying Stack;
         private string _currnetTopic;
 
         public static string DefaultEndpoint
@@ -57,7 +57,7 @@ namespace JustSaying
             get { return RegionEndpoint.EUWest1.SystemName; }
         }
 
-        internal protected JustSayingFluently(INotificationStack stack, IVerifyAmazonQueues queueCreator)
+        internal protected JustSayingFluently(IAmJustSaying stack, IVerifyAmazonQueues queueCreator)
         {
             Stack = stack;
             _amazonQueueCreator = queueCreator;

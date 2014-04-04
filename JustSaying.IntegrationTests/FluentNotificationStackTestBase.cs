@@ -14,7 +14,7 @@ namespace JustSaying.IntegrationTests
     public abstract class FluentNotificationStackTestBase : BehaviourTest<JustSayingFluently>
     {
         protected INotificationStackConfiguration Configuration;
-        protected INotificationStack NotificationStack { get; private set; }
+        protected IAmJustSaying NotificationStack { get; private set; }
         private bool _mockNotificationStack;
         protected const int QueueCreationDelayMilliseconds = 10 * 1000;
         public RegionEndpoint DefaultRegion = RegionEndpoint.EUWest1;
@@ -35,11 +35,11 @@ namespace JustSaying.IntegrationTests
 
             if (_mockNotificationStack)
             {
-                NotificationStack = Substitute.For<INotificationStack>();
+                NotificationStack = Substitute.For<IAmJustSaying>();
 
                 var notificationStackField = fns.GetType().GetField("Stack", BindingFlags.Instance | BindingFlags.NonPublic);
 
-                var constructedStack = (JustSaying.NotificationStack)notificationStackField.GetValue(fns);
+                var constructedStack = (JustSaying.JustSayingBus)notificationStackField.GetValue(fns);
 
                 NotificationStack.Config.Returns(constructedStack.Config);
 

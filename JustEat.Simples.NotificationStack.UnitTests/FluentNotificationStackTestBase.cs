@@ -15,7 +15,7 @@ namespace Stack.UnitTests
     public abstract class FluentNotificationStackTestBase : BehaviourTest<FluentNotificationStack>
     {
         protected INotificationStackConfiguration Configuration;
-        protected INotificationStack NotificationStack;
+        protected IAmJustSaying NotificationStack;
         protected IMessageMonitor Monitor = Substitute.For<IMessageMonitor>();
         protected string Component = "OrderEngine";
         protected string Tenant = "LosAlamos";
@@ -60,11 +60,11 @@ namespace Stack.UnitTests
         // ToDo: Surely this can be made better?
         private void ConfigureNotificationStackMock(FluentNotificationStack fns)
         {
-            NotificationStack = Substitute.For<INotificationStack>();
+            NotificationStack = Substitute.For<IAmJustSaying>();
 
             var notificationStackField = fns.GetType().GetField("Stack", BindingFlags.Instance | BindingFlags.NonPublic);
 
-            var constructedStack = (NotificationStack)notificationStackField.GetValue(fns);
+            var constructedStack = (JustSayingBus)notificationStackField.GetValue(fns);
 
             NotificationStack.Config.Returns(constructedStack.Config);
 
