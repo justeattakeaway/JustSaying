@@ -47,12 +47,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FluentMessagingMule.cs" />
+    <Compile Include="Factory.cs" />
+    <Compile Include="JustSayingFluently.cs" />
     <Compile Include="INotificationStackConfiguration.cs" />
+    <Compile Include="JustSayingBus.cs" />
     <Compile Include="Lookups\IPublishEndpointProvider.cs" />
     <Compile Include="Lookups\IPublishSubscribtionEndpointProvider.cs" />
     <Compile Include="MessagingConfig.cs" />
-    <Compile Include="NotificationStack.cs" />
+    <Compile Include="IAmJustSaying.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
