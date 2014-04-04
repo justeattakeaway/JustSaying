@@ -25,7 +25,7 @@ namespace JustSaying
     {
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
-        protected readonly IAmJustSaying Stack;
+        protected readonly IAmJustSaying Bus;
         private string _currnetTopic;
 
         public static string DefaultEndpoint
@@ -33,9 +33,9 @@ namespace JustSaying
             get { return RegionEndpoint.EUWest1.SystemName; }
         }
 
-        internal protected JustSayingFluently(IAmJustSaying stack, IVerifyAmazonQueues queueCreator)
+        internal protected JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator)
         {
-            Stack = stack;
+            Bus = bus;
             _amazonQueueCreator = queueCreator;
         }
 
@@ -64,6 +64,7 @@ namespace JustSaying
             });
         }
 
+        // ToDo: Move these into the factory class?
         public virtual IPublishSubscribtionEndpointProvider CreateSubscriptiuonEndpointProvider(SqsConfiguration subscriptionConfig)
         {
             return new SqsSubscribtionEndpointProvider(subscriptionConfig);
@@ -84,10 +85,10 @@ namespace JustSaying
             subscriptionConfig.PublishEndpoint = publishEndpointProvider.GetLocationName();
             subscriptionConfig.Validate();
 
-            var queue = _amazonQueueCreator.VerifyOrCreateQueue(Stack.Config.Region, Stack.SerialisationRegister, subscriptionConfig);
+            var queue = _amazonQueueCreator.VerifyOrCreateQueue(Bus.Config.Region, Bus.SerialisationRegister, subscriptionConfig);
 
-            var sqsSubscriptionListener = new SqsNotificationListener(queue, Stack.SerialisationRegister, new NullMessageFootprintStore(), Stack.Monitor, subscriptionConfig.OnError);
-            Stack.AddNotificationTopicSubscriber(subscriptionConfig.Topic, sqsSubscriptionListener);
+            var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, new NullMessageFootprintStore(), Bus.Monitor, subscriptionConfig.OnError);
+            Bus.AddNotificationTopicSubscriber(subscriptionConfig.Topic, sqsSubscriptionListener);
             
             if (subscriptionConfig.MaxAllowedMessagesInFlight.HasValue)
                 sqsSubscriptionListener.WithMaximumConcurrentLimitOnMessagesInFlightOf(subscriptionConfig.MaxAllowedMessagesInFlight.Value);
@@ -120,14 +121,14 @@ namespace JustSaying
             var endpointProvider = new SnsPublishEndpointProvider(topic);
             var eventPublisher = new SnsTopicByName(
                 endpointProvider.GetLocationName(),
-                AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(Stack.Config.Region)),
-                Stack.SerialisationRegister);
+                AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(Bus.Config.Region)),
+                Bus.SerialisationRegister);
 
             if (!eventPublisher.Exists())
                 eventPublisher.Create();
 
-            Stack.SerialisationRegister.AddSerialiser<T>(new ServiceStackSerialiser<T>());
-            Stack.AddMessagePublisher<T>(topic, eventPublisher);
+            Bus.SerialisationRegister.AddSerialiser<T>(new ServiceStackSerialiser<T>());
+            Bus.AddMessagePublisher<T>(topic, eventPublisher);
 
             Log.Info(string.Format("Created SNS topic publisher - Topic: {0}", topic));
 
@@ -139,7 +140,7 @@ namespace JustSaying
         /// </summary>
         public void StartListening()
         {
-            Stack.Start();
+            Bus.Start();
             Log.Info("Started listening for messages");
         }
 
@@ -148,7 +149,7 @@ namespace JustSaying
         /// </summary>
         public void StopListening()
         {
-            Stack.Stop();
+            Bus.Stop();
             Log.Info("Stopped listening for messages");
         }
 
@@ -158,16 +159,16 @@ namespace JustSaying
         /// <param name="message"></param>
         public virtual void Publish(Message message)
         {
-            if (Stack == null)
+            if (Bus == null)
                 throw new InvalidOperationException("You must register for message publication before publishing a message");
             
-            Stack.Publish(message);
+            Bus.Publish(message);
         }
 
         /// <summary>
         /// States whether the stack is listening for messages (subscriptions are running)
         /// </summary>
-        public bool Listening { get { return (Stack != null) && Stack.Listening; } }
+        public bool Listening { get { return (Bus != null) && Bus.Listening; } }
         
         #region Implementation of IFluentSubscription
 
@@ -179,8 +180,8 @@ namespace JustSaying
         /// <returns></returns>
         public IFluentSubscription WithMessageHandler<T>(IHandler<T> handler) where T : Message
         {
-            Stack.SerialisationRegister.AddSerialiser<T>(new ServiceStackSerialiser<T>());
-            Stack.AddMessageHandler(_currnetTopic, handler);
+            Bus.SerialisationRegister.AddSerialiser<T>(new ServiceStackSerialiser<T>());
+            Bus.AddMessageHandler(_currnetTopic, handler);
 
             Log.Info(string.Format("Added a message handler - Topic: {0}, MessageType: {1}, HandlerName: {2}", _currnetTopic, typeof(T).Name, handler.GetType().Name));
 
@@ -198,7 +199,7 @@ namespace JustSaying
         /// <returns></returns>
         public IAmJustSayingFluently WithMonitoring(IMessageMonitor messageMonitor)
         {
-            Stack.Monitor = messageMonitor;
+            Bus.Monitor = messageMonitor;
             return this;
         }
 

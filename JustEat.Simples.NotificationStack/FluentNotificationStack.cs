@@ -36,17 +36,17 @@ namespace JustSaying.Stack
 
         public override IPublishEndpointProvider CreatePublisherEndpointProvider(SqsConfiguration subscriptionConfig)
         {
-            return new SnsPublishEndpointProvider((IMessagingConfig)Stack.Config, subscriptionConfig);
+            return new SnsPublishEndpointProvider((IMessagingConfig)Bus.Config, subscriptionConfig);
         }
 
         public override IPublishSubscribtionEndpointProvider CreateSubscriptiuonEndpointProvider(SqsConfiguration subscriptionConfig)
         {
-            return new SqsSubscribtionEndpointProvider(subscriptionConfig, (IMessagingConfig)Stack.Config);
+            return new SqsSubscribtionEndpointProvider(subscriptionConfig, (IMessagingConfig)Bus.Config);
         }
         
         public override void Publish(Message message)
         {
-            var config = Stack.Config.AsJustEatConfig();
+            var config = Bus.Config.AsJustEatConfig();
             message.RaisingComponent = config.Component;
             message.Tenant = config.Tenant;
             base.Publish(message);

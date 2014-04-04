@@ -37,7 +37,7 @@ namespace JustSaying.IntegrationTests
             {
                 NotificationStack = Substitute.For<IAmJustSaying>();
 
-                var notificationStackField = fns.GetType().GetField("Stack", BindingFlags.Instance | BindingFlags.NonPublic);
+                var notificationStackField = fns.GetType().GetField("Bus", BindingFlags.Instance | BindingFlags.NonPublic);
 
                 var constructedStack = (JustSaying.JustSayingBus)notificationStackField.GetValue(fns);
 
