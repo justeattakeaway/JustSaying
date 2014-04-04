@@ -21,7 +21,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
                 Region = DefaultRegion.SystemName
             };
 
-            DeleteTopicIfItAlreadyExists(JustSayingFluently.DefaultEndpoint, _topicName);
+            DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName);
         }
 
         protected override void When()
@@ -38,7 +38,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         [TearDown]
         public void TearDown()
         {
-            DeleteTopicIfItAlreadyExists(JustSayingFluently.DefaultEndpoint, _topicName);
+            DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName);
         }
     }
 }

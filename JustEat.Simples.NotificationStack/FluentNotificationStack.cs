@@ -20,6 +20,11 @@ namespace JustSaying.Stack
     /// </summary>
     public class FluentNotificationStack : JustSayingFluently
     {
+        public static string DefaultEndpoint // ToDO: This ain't wired up. Why? Neds checking for back compatability
+        {
+            get { return RegionEndpoint.EUWest1.SystemName; }
+        }
+
         private FluentNotificationStack(IAmJustSaying stack, IVerifyAmazonQueues queueCreator): base(stack, queueCreator)
         {
         }
@@ -31,7 +36,7 @@ namespace JustSaying.Stack
 
             config.Validate();
 
-            return new FluentNotificationStack(new JustSaying.JustSayingBus(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
+            return new FluentNotificationStack(new JustSayingBus(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
         }
 
         public override IPublishEndpointProvider CreatePublisherEndpointProvider(SqsConfiguration subscriptionConfig)

@@ -13,6 +13,11 @@ namespace JustSaying.IntegrationTests
 {
     public abstract class FluentNotificationStackTestBase : BehaviourTest<JustSayingFluently>
     {
+        public static string TestEndpoint
+        {
+            get { return RegionEndpoint.EUWest1.SystemName; }
+        }
+
         protected IPublishConfiguration Configuration;
         protected IAmJustSaying NotificationStack { get; private set; }
         private bool _mockNotificationStack;

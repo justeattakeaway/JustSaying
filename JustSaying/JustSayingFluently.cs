@@ -28,11 +28,6 @@ namespace JustSaying
         protected readonly IAmJustSaying Bus;
         private string _currnetTopic;
 
-        public static string DefaultEndpoint
-        {
-            get { return RegionEndpoint.EUWest1.SystemName; }
-        }
-
         internal protected JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator)
         {
             Bus = bus;
@@ -169,7 +164,7 @@ namespace JustSaying
         /// States whether the stack is listening for messages (subscriptions are running)
         /// </summary>
         public bool Listening { get { return (Bus != null) && Bus.Listening; } }
-        
+
         #region Implementation of IFluentSubscription
 
         /// <summary>
