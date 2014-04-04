@@ -11,7 +11,7 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests
 {
-    public abstract class FluentNotificationStackTestBase : BehaviourTest<FluentMessagingMule>
+    public abstract class FluentNotificationStackTestBase : BehaviourTest<JustSayingFluently>
     {
         protected INotificationStackConfiguration Configuration;
         protected INotificationStack NotificationStack { get; private set; }
@@ -24,14 +24,14 @@ namespace JustSaying.IntegrationTests
             throw new NotImplementedException();
         }
 
-        protected override FluentMessagingMule CreateSystemUnderTest()
+        protected override JustSayingFluently CreateSystemUnderTest()
         {
             var fns =  Factory.JustSaying(x =>
             {
                 x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;
                 x.PublishFailureReAttempts = Configuration.PublishFailureReAttempts;
                 x.Region = Configuration.Region;
-            }).WithMonitoring(null) as FluentMessagingMule;
+            }).WithMonitoring(null) as JustSayingFluently;
 
             if (_mockNotificationStack)
             {

@@ -6,7 +6,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests
 {
-    public abstract class FluentMessageMuleTestBase : BehaviourTest<FluentMessagingMule>
+    public abstract class FluentMessageMuleTestBase : BehaviourTest<JustSayingFluently>
     {
         protected INotificationStackConfiguration Configuration;
         protected INotificationStack NotificationStack;
@@ -15,7 +15,7 @@ namespace JustSaying.UnitTests
             throw new NotImplementedException();
         }
 
-        protected override FluentMessagingMule CreateSystemUnderTest()
+        protected override JustSayingFluently CreateSystemUnderTest()
         {
             if (Configuration == null)
             {
@@ -27,7 +27,7 @@ namespace JustSaying.UnitTests
                 x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;
                 x.PublishFailureReAttempts = Configuration.PublishFailureReAttempts;
                 x.Region = Configuration.Region;
-            }).WithMonitoring(null) as FluentMessagingMule;
+            }).WithMonitoring(null) as JustSayingFluently;
 
 
             ConfigureNotificationStackMock(fns);
@@ -38,7 +38,7 @@ namespace JustSaying.UnitTests
         }
 
         // ToDo: Must do btter!!
-        private void ConfigureNotificationStackMock(FluentMessagingMule fns)
+        private void ConfigureNotificationStackMock(JustSayingFluently fns)
         {
             NotificationStack = Substitute.For<INotificationStack>();
 
@@ -51,7 +51,7 @@ namespace JustSaying.UnitTests
             notificationStackField.SetValue(fns, NotificationStack);
         }
 
-        private void ConfigureAmazonQueueCreator(FluentMessagingMule fns)
+        private void ConfigureAmazonQueueCreator(JustSayingFluently fns)
         {
             fns.GetType()
                 .GetField("_amazonQueueCreator", BindingFlags.Instance | BindingFlags.NonPublic)

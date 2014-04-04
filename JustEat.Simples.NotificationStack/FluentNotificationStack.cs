@@ -18,7 +18,7 @@ namespace JustSaying.Stack
     /// 2. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class FluentNotificationStack : FluentMessagingMule
+    public class FluentNotificationStack : JustSayingFluently
     {
         private FluentNotificationStack(INotificationStack stack, IVerifyAmazonQueues queueCreator): base(stack, queueCreator)
         {

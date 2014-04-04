@@ -39,7 +39,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         [TearDown]
         public void TearDown()
         {
-            DeleteTopicIfItAlreadyExists(FluentMessagingMule.DefaultEndpoint, _topicName);
+            DeleteTopicIfItAlreadyExists(JustSayingFluently.DefaultEndpoint, _topicName);
         }
     }
 }

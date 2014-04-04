@@ -32,19 +32,20 @@ namespace JustSaying
                 Log.Info("No Region was specified, using {0} by default.", config.Region);
             }
 
-            return new FluentMessagingMule(new NotificationStack(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
+            return new JustSayingFluently(new NotificationStack(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
         }
     }
 
 
     /// <summary>
-    /// This is not the perfect shining example of a fluent API YET!
+    /// Fluently configure a JustSaying message bus.
     /// Intended usage:
-    /// 1. Call Register()
-    /// 2. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc
+    /// 1. Factory.JustSaying(); // Gimme a bus
+    /// 2. WithMonitoring(instance) // Ensure you monitor the messaging status
+    /// 3. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc // ToDo: Shouldn't be enforced in base! Is a JE concern.
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class FluentMessagingMule : IFluentMonitoring, IFluentSubscription
+    public class JustSayingFluently : IFluentMonitoring, IFluentSubscription
     {
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
@@ -56,7 +57,7 @@ namespace JustSaying
             get { return RegionEndpoint.EUWest1.SystemName; }
         }
 
-        internal protected FluentMessagingMule(INotificationStack stack, IVerifyAmazonQueues queueCreator)
+        internal protected JustSayingFluently(INotificationStack stack, IVerifyAmazonQueues queueCreator)
         {
             Stack = stack;
             _amazonQueueCreator = queueCreator;
@@ -136,7 +137,7 @@ namespace JustSaying
         /// <typeparam name="T"></typeparam>
         /// <param name="topic"></param>
         /// <returns></returns>
-        public IFluentMessageMule WithSnsMessagePublisher<T>(string topic) where T : Message
+        public IAmJustSayingFluently WithSnsMessagePublisher<T>(string topic) where T : Message
         {
             Log.Info("Added publisher");
 
@@ -219,7 +220,7 @@ namespace JustSaying
         /// </summary>
         /// <param name="messageMonitor">Monitoring class to be used</param>
         /// <returns></returns>
-        public IFluentMessageMule WithMonitoring(IMessageMonitor messageMonitor)
+        public IAmJustSayingFluently WithMonitoring(IMessageMonitor messageMonitor)
         {
             Stack.Monitor = messageMonitor;
             return this;
@@ -228,9 +229,9 @@ namespace JustSaying
         #endregion
     }
 
-    public interface IFluentMessageMule : IMessagePublisher
+    public interface IAmJustSayingFluently : IMessagePublisher
     {
-        IFluentMessageMule WithSnsMessagePublisher<T>(string topic) where T : Message;
+        IAmJustSayingFluently WithSnsMessagePublisher<T>(string topic) where T : Message;
 
         IFluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds,
             int visibilityTimeoutSeconds = 30, int? instancePosition = null, Action<Exception> onError = null,
@@ -245,10 +246,10 @@ namespace JustSaying
 
     public interface IFluentMonitoring
     {
-        IFluentMessageMule WithMonitoring(IMessageMonitor messageMonitor);
+        IAmJustSayingFluently WithMonitoring(IMessageMonitor messageMonitor);
     }
 
-    public interface IFluentSubscription : IFluentMessageMule
+    public interface IFluentSubscription : IAmJustSayingFluently
     {
         IFluentSubscription WithMessageHandler<T>(IHandler<T> handler) where T : Message;
     }

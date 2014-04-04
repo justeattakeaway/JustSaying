@@ -21,7 +21,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
                 Region = DefaultRegion.SystemName
             };
 
-            DeleteTopicIfItAlreadyExists(FluentMessagingMule.DefaultEndpoint, _topicName);
+            DeleteTopicIfItAlreadyExists(JustSayingFluently.DefaultEndpoint, _topicName);
         }
 
         protected override void When()
@@ -39,7 +39,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         [TearDown]
         public void TearDown()
         {
-            DeleteTopicIfItAlreadyExists(FluentMessagingMule.DefaultEndpoint, _topicName);
+            DeleteTopicIfItAlreadyExists(JustSayingFluently.DefaultEndpoint, _topicName);
         }
     }
 }

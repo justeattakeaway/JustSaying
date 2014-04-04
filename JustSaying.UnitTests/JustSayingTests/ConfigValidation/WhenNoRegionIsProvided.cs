@@ -6,7 +6,7 @@ namespace JustSaying.UnitTests.JustSayingTests.ConfigValidation
 {
     public class WhenNoRegionIsProvided : FluentMessageMuleTestBase
     {
-        protected override FluentMessagingMule CreateSystemUnderTest()
+        protected override JustSayingFluently CreateSystemUnderTest()
         {
             return null;
         }

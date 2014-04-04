@@ -10,7 +10,7 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.FluentMessageMuleTests
 {
-    public abstract class GivenANotificationStack : BehaviourTest<IFluentMessageMule>
+    public abstract class GivenANotificationStack : BehaviourTest<IAmJustSayingFluently>
     {
         readonly Stopwatch _stopwatch = new Stopwatch();
         protected IFluentSubscription ServiceBus;
@@ -33,7 +33,7 @@ namespace JustSaying.IntegrationTests.FluentMessageMuleTests
             _stopwatch.Start();
         }
 
-        protected override IFluentMessageMule CreateSystemUnderTest()
+        protected override IAmJustSayingFluently CreateSystemUnderTest()
         {
             Monitoring = Substitute.For<IMessageMonitor>();
             ServiceBus = Factory.JustSaying(c =>

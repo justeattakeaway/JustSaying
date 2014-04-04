@@ -14,7 +14,7 @@ namespace JustSaying.IntegrationTests.FluentMessageMuleTests
     public class WhenAHandlerThrowsAnException
     {
         private readonly IHandler<GenericMessage> _handler = Substitute.For<IHandler<GenericMessage>>();
-        private IFluentMessageMule _publisher;
+        private IAmJustSayingFluently _publisher;
         private Action<Exception> _globalErrorHandler;
         private bool _handledException;
         private IMessageMonitor _monitoring;
