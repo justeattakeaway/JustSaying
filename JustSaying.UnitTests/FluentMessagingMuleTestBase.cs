@@ -22,7 +22,7 @@ namespace JustSaying.UnitTests
                 Configuration = new MessagingConfig { Region = "defaultRegion" };
             }
 
-            var fns = FluentMessagingMule.Register(x =>
+            var fns = Factory.JustSaying(x =>
             {
                 x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;
                 x.PublishFailureReAttempts = Configuration.PublishFailureReAttempts;

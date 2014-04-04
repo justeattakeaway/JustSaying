@@ -18,7 +18,7 @@ namespace JustSaying.UnitTests.JustSayingTests.ConfigValidation
 
         protected override void When()
         {
-            FluentMessagingMule.Register(configuration => { });
+            Factory.JustSaying(configuration => { });
         }
 
         [Then]

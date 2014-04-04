@@ -26,7 +26,7 @@ namespace JustSaying.IntegrationTests
 
         protected override FluentMessagingMule CreateSystemUnderTest()
         {
-            var fns = FluentMessagingMule.Register(x =>
+            var fns =  Factory.JustSaying(x =>
             {
                 x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;
                 x.PublishFailureReAttempts = Configuration.PublishFailureReAttempts;

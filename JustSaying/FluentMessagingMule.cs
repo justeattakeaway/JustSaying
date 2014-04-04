@@ -14,31 +14,13 @@ using JustSaying.Lookups;
 namespace JustSaying
 {
     /// <summary>
-    /// This is not the perfect shining example of a fluent API YET!
-    /// Intended usage:
-    /// 1. Call Register()
-    /// 2. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc
-    /// 3. Set Handlers - WithTopicMessageHandler()
+    /// Factory providing a messaging bus
     /// </summary>
-    public class FluentMessagingMule : IFluentMonitoring, IFluentSubscription
+    public static class Factory
     {
-        private static readonly Logger Log = LogManager.GetLogger("JustSaying");
-        private readonly IVerifyAmazonQueues _amazonQueueCreator;
-        protected readonly INotificationStack Stack;
-        private string _currnetTopic;
+        private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
 
-        public static string DefaultEndpoint
-        {
-            get { return RegionEndpoint.EUWest1.SystemName; }
-        }
-
-        protected FluentMessagingMule(INotificationStack stack, IVerifyAmazonQueues queueCreator)
-        {
-            Stack = stack;
-            _amazonQueueCreator = queueCreator;
-        }
-
-        public static IFluentMonitoring Register(Action<INotificationStackConfiguration> configuration)
+        public static IFluentMonitoring JustSaying(Action<INotificationStackConfiguration> configuration)
         {
             var config = new MessagingConfig();
             configuration.Invoke(config);
@@ -51,6 +33,33 @@ namespace JustSaying
             }
 
             return new FluentMessagingMule(new NotificationStack(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
+        }
+    }
+
+
+    /// <summary>
+    /// This is not the perfect shining example of a fluent API YET!
+    /// Intended usage:
+    /// 1. Call Register()
+    /// 2. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc
+    /// 3. Set Handlers - WithTopicMessageHandler()
+    /// </summary>
+    public class FluentMessagingMule : IFluentMonitoring, IFluentSubscription
+    {
+        private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
+        private readonly IVerifyAmazonQueues _amazonQueueCreator;
+        protected readonly INotificationStack Stack;
+        private string _currnetTopic;
+
+        public static string DefaultEndpoint
+        {
+            get { return RegionEndpoint.EUWest1.SystemName; }
+        }
+
+        internal protected FluentMessagingMule(INotificationStack stack, IVerifyAmazonQueues queueCreator)
+        {
+            Stack = stack;
+            _amazonQueueCreator = queueCreator;
         }
 
         /// <summary>
