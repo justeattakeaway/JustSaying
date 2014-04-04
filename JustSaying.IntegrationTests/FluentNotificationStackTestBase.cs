@@ -13,7 +13,7 @@ namespace JustSaying.IntegrationTests
 {
     public abstract class FluentNotificationStackTestBase : BehaviourTest<JustSayingFluently>
     {
-        protected INotificationStackConfiguration Configuration;
+        protected IPublishConfiguration Configuration;
         protected IAmJustSaying NotificationStack { get; private set; }
         private bool _mockNotificationStack;
         protected const int QueueCreationDelayMilliseconds = 10 * 1000;

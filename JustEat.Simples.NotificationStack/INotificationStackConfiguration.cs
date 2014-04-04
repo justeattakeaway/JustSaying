@@ -1,6 +1,6 @@
 namespace JustSaying.Stack
 {
-    public interface INotificationStackConfiguration : JustSaying.INotificationStackConfiguration
+    public interface INotificationStackConfiguration : JustSaying.IPublishConfiguration
     {
         string Component { get; set; }
         string Tenant { get; set; }

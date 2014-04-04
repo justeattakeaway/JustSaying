@@ -49,7 +49,7 @@
   <ItemGroup>
     <Compile Include="Factory.cs" />
     <Compile Include="JustSayingFluently.cs" />
-    <Compile Include="INotificationStackConfiguration.cs" />
+    <Compile Include="IPublishConfiguration.cs" />
     <Compile Include="JustSayingBus.cs" />
     <Compile Include="Lookups\IPublishEndpointProvider.cs" />
     <Compile Include="Lookups\IPublishSubscribtionEndpointProvider.cs" />

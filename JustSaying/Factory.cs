@@ -13,7 +13,7 @@ namespace JustSaying
     {
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
 
-        public static IFluentMonitoring JustSaying(Action<INotificationStackConfiguration> configuration)
+        public static IFluentMonitoring JustSaying(Action<IPublishConfiguration> configuration)
         {
             var config = new MessagingConfig();
             configuration.Invoke(config);
@@ -21,7 +21,7 @@ namespace JustSaying
 
             if (string.IsNullOrWhiteSpace(config.Region))
             {
-                config.Region = RegionEndpoint.EUWest1.SystemName;
+                config.Region = RegionEndpoint.EUWest1.SystemName; // ToDo: Why is this in the base impl?
                 Log.Info("No Region was specified, using {0} by default.", config.Region);
             }
 

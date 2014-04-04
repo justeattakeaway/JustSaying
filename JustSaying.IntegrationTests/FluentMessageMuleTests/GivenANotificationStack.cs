@@ -16,14 +16,14 @@ namespace JustSaying.IntegrationTests.FluentMessageMuleTests
         protected IFluentSubscription ServiceBus;
         protected IMessageMonitor Monitoring;
         private Future<GenericMessage> _handler;
-        private  INotificationStackConfiguration _config = new MessagingConfig { PublishFailureBackoffMilliseconds = 1, PublishFailureReAttempts = 3};
+        private  IPublishConfiguration _config = new MessagingConfig { PublishFailureBackoffMilliseconds = 1, PublishFailureReAttempts = 3};
 
         protected void RegisterHandler(Future<GenericMessage> handler)
         {
             _handler = handler;
         }
 
-        protected void RegisterConfig(INotificationStackConfiguration config)
+        protected void RegisterConfig(IPublishConfiguration config)
         {
             _config = config;
         }

@@ -8,7 +8,7 @@ namespace JustSaying.UnitTests
 {
     public abstract class FluentMessageMuleTestBase : BehaviourTest<JustSayingFluently>
     {
-        protected INotificationStackConfiguration Configuration;
+        protected IPublishConfiguration Configuration;
         protected IAmJustSaying NotificationStack;
         protected override void Given()
         {

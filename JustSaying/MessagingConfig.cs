@@ -12,7 +12,7 @@ namespace JustSaying
         void Validate();
     }
 
-    public class MessagingConfig : INotificationStackConfiguration, IMessagingConfig
+    public class MessagingConfig : IPublishConfiguration, IMessagingConfig
     {
         public MessagingConfig()
         {
