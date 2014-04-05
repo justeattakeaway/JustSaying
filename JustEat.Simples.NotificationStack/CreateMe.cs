@@ -19,7 +19,7 @@ namespace JustSayingExtensions
             configuration.Invoke(config);
             if (string.IsNullOrWhiteSpace(config.Region))
             {
-                config.Region = RegionEndpoint.EUWest1.SystemName; // ToDo: Why is this in the base impl?
+                config.Region = RegionEndpoint.EUWest1.SystemName; 
                 Log.Info("No Region was specified, using {0} by default.", config.Region);
             }
             config.Validate();
