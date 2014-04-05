@@ -73,11 +73,11 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JustEat.Simples.AwsTools\AwsTools.csproj">
+    <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj">
       <Project>{cbf2110b-c3a4-45e8-bbd6-301d77567043}</Project>
       <Name>AwsTools</Name>
     </ProjectReference>
-    <ProjectReference Include="..\JustEat.Simples.Messaging\Messaging.csproj">
+    <ProjectReference Include="..\JustSaying.Messaging\JustSaying.Messaging.csproj">
       <Project>{899CD315-37B3-46D0-B2DC-FB94C552D968}</Project>
       <Name>Messaging</Name>
     </ProjectReference>

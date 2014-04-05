@@ -7,8 +7,8 @@
     <ProjectGuid>{A36B7ECF-A2AA-44CC-9538-7BC28BDDE4E0}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>JustEat.Simples.NotificationStack.Stack</RootNamespace>
-    <AssemblyName>JustEat.Simples.NotificationStack.Stack</AssemblyName>
+    <RootNamespace>JustSaying.Stack</RootNamespace>
+    <AssemblyName>JustSaying.Stack</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
@@ -57,6 +57,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CreateMe.cs" />
     <Compile Include="FluentNotificationStack.cs" />
     <Compile Include="INotificationStackConfiguration.cs" />
     <Compile Include="Lookups\IPublishEndpointProvider.cs" />
@@ -66,17 +67,17 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JustEat.Simples.AwsTools\AwsTools.csproj">
+    <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj">
       <Project>{CBF2110B-C3A4-45E8-BBD6-301D77567043}</Project>
       <Name>AwsTools</Name>
     </ProjectReference>
-    <ProjectReference Include="..\JustEat.Simples.Messaging\Messaging.csproj">
+    <ProjectReference Include="..\JustSaying.Messaging\JustSaying.Messaging.csproj">
       <Project>{899CD315-37B3-46D0-B2DC-FB94C552D968}</Project>
       <Name>Messaging</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SimpleMessageMule\SimpleMessageMule.csproj">
+    <ProjectReference Include="..\JustSaying\JustSaying.csproj">
       <Project>{3b428f71-9aef-4e46-8d56-644fc0e808d4}</Project>
-      <Name>SimpleMessageMule</Name>
+      <Name>JustSaying</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

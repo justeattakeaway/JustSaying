@@ -17,7 +17,7 @@ def setup_nuget opts={}
     nuspec.working_directory = package_dir
     nuspec.output_file = "#{name}.#{version}.nuspec"
     nuspec.tags = ""
-    if (name == "JustEat.Simples.NotificationStack")
+    if (name == "JustSaying")
       nuspec.description = "Simples Notification Stack is a set of tools and the messages required by team simples for our order fulfilment messaging stack"
       nuspec.summary = "Messaging / Eventing / Notifications"
       nuspec.dependency "AWSSDK", "[2.0]"

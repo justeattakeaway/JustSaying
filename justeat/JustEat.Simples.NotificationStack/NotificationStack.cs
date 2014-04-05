@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Runtime.Remoting.Messaging;
 using System.Threading;
-using JustEat.Simples.NotificationStack.Messaging;
-using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
-using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
-using JustEat.Simples.NotificationStack.Messaging.Messages;
-using JustEat.Simples.NotificationStack.Messaging.Monitoring;
+using JustSaying.Messaging;
+using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.Messages;
+using JustSaying.Messaging.Monitoring;
 using NLog;
 
-namespace JustEat.Simples.NotificationStack.Stack
+namespace JustSaying.Stack
 {
     public interface INotificationStack : IMessagePublisher
     {
@@ -33,7 +33,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         public IMessagingConfig Config { get; private set; }
         public IMessageMonitor Monitor { get; set; }
         public IMessageSerialisationRegister SerialisationRegister { get; private set; }
-        private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
+        private static readonly Logger Log = LogManager.GetLogger("JustSaying");
 
         public NotificationStack(IMessagingConfig config, IMessageSerialisationRegister serialisationRegister)
         {

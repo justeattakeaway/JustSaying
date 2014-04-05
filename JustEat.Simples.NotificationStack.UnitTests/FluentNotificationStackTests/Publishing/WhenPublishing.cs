@@ -1,9 +1,7 @@
-using JustEat.Simples.NotificationStack.Messaging.Messages;
-using JustEat.Simples.NotificationStack.Stack;
+using JustSaying.Messaging.Messages;
 using JustEat.Testing;
+using JustSaying.Tests.MessageStubs;
 using NSubstitute;
-using NUnit.Framework;
-using Tests.MessageStubs;
 
 namespace Stack.UnitTests.FluentNotificationStackTests.Publishing
 {

@@ -1,6 +1,6 @@
 ﻿using System;
-using JustEat.Simples.NotificationStack.Messaging;
-using JustEat.Simples.NotificationStack.Stack;
+using JustSaying.Messaging;
+using JustSaying.Stack;
 using JustEat.Testing;
 using NUnit.Framework;
 

@@ -1,7 +1,7 @@
-using JustEat.Simples.NotificationStack.AwsTools;
-using JustEat.Simples.NotificationStack.Messaging;
+using JustSaying.AwsTools;
+using JustSaying.Messaging;
 
-namespace JustEat.Simples.NotificationStack.Stack
+namespace JustSaying.Stack
 {
     public class MessagingConfig : IMessagingConfig, INotificationStackConfiguration
     {

@@ -1,8 +1,8 @@
 using System;
 using System.Globalization;
-using JustEat.Simples.NotificationStack.Messaging;
+using JustSaying.Messaging;
 
-namespace JustEat.Simples.NotificationStack.Stack.Lookups
+namespace JustSaying.Stack.Lookups
 {
     public interface IPublishSubscribtionEndpointProvider
     {

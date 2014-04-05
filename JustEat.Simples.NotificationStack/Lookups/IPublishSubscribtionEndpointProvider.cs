@@ -1,9 +1,9 @@
 using System;
 using System.Globalization;
-using JustEat.Simples.NotificationStack.AwsTools.QueueCreation;
-using SimpleMessageMule.Lookups;
+using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Lookups;
 
-namespace JustEat.Simples.NotificationStack.Stack.Lookups
+namespace JustSaying.Stack.Lookups
 {
 
     /// <summary>

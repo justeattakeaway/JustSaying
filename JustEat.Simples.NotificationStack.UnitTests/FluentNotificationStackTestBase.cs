@@ -1,21 +1,21 @@
 using System;
 using System.Reflection;
-using JustEat.Simples.NotificationStack.Messaging.Monitoring;
-using JustEat.Simples.NotificationStack.AwsTools.QueueCreation;
-using JustEat.Simples.NotificationStack.Messaging;
-using JustEat.Simples.NotificationStack.Stack;
+using JustSaying.Messaging.Monitoring;
+using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging;
+using JustSaying.Stack;
 using JustEat.Testing;
 using NSubstitute;
-using SimpleMessageMule;
-using INotificationStackConfiguration = JustEat.Simples.NotificationStack.Stack.INotificationStackConfiguration;
-using MessagingConfig = JustEat.Simples.NotificationStack.Stack.MessagingConfig;
+using JustSaying;
+using INotificationStackConfiguration = JustSaying.Stack.INotificationStackConfiguration;
+using MessagingConfig = JustSaying.Stack.MessagingConfig;
 
 namespace Stack.UnitTests
 {
     public abstract class FluentNotificationStackTestBase : BehaviourTest<FluentNotificationStack>
     {
         protected INotificationStackConfiguration Configuration;
-        protected INotificationStack NotificationStack;
+        protected IAmJustSaying NotificationStack;
         protected IMessageMonitor Monitor = Substitute.For<IMessageMonitor>();
         protected string Component = "OrderEngine";
         protected string Tenant = "LosAlamos";
@@ -60,11 +60,11 @@ namespace Stack.UnitTests
         // ToDo: Surely this can be made better?
         private void ConfigureNotificationStackMock(FluentNotificationStack fns)
         {
-            NotificationStack = Substitute.For<INotificationStack>();
+            NotificationStack = Substitute.For<IAmJustSaying>();
 
-            var notificationStackField = fns.GetType().GetField("Stack", BindingFlags.Instance | BindingFlags.NonPublic);
+            var notificationStackField = fns.GetType().GetField("Bus", BindingFlags.Instance | BindingFlags.NonPublic);
 
-            var constructedStack = (NotificationStack)notificationStackField.GetValue(fns);
+            var constructedStack = (JustSayingBus)notificationStackField.GetValue(fns);
 
             NotificationStack.Config.Returns(constructedStack.Config);
 

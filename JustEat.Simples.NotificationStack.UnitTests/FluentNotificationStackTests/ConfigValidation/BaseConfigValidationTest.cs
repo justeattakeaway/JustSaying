@@ -1,4 +1,4 @@
-using JustEat.Simples.NotificationStack.Stack;
+using JustSaying.Stack;
 using JustEat.Testing;
 
 namespace Stack.UnitTests.FluentNotificationStackTests.ConfigValidation

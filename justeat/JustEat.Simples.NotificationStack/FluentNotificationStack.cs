@@ -1,19 +1,19 @@
 using System;
 using Amazon;
-using JustEat.Simples.NotificationStack.AwsTools;
-using JustEat.Simples.NotificationStack.AwsTools.QueueCreation;
-using JustEat.Simples.NotificationStack.Messaging.MessageProcessingStrategies;
-using JustEat.Simples.NotificationStack.Messaging;
-using JustEat.Simples.NotificationStack.Messaging.MessageHandling;
-using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
-using JustEat.Simples.NotificationStack.Messaging.Messages;
-using JustEat.Simples.NotificationStack.Messaging.Monitoring;
-using JustEat.Simples.NotificationStack.Stack.Lookups;
-using JustEat.Simples.NotificationStack.Stack.Monitoring;
+using JustSaying.AwsTools;
+using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging.MessageProcessingStrategies;
+using JustSaying.Messaging;
+using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.Messages;
+using JustSaying.Messaging.Monitoring;
+using JustSaying.Stack.Lookups;
+using JustSaying.Stack.Monitoring;
 using JustEat.StatsD;
 using NLog;
 
-namespace JustEat.Simples.NotificationStack.Stack
+namespace JustSaying.Stack
 {
     /// <summary>
     /// This is not the perfect shining example of a fluent API YET!
@@ -24,7 +24,7 @@ namespace JustEat.Simples.NotificationStack.Stack
     /// </summary>
     public class FluentNotificationStack : IFluentMonitoring, IFluentSubscription
     {
-        private static readonly Logger Log = LogManager.GetLogger("JustEat.Simples.NotificationStack");
+        private static readonly Logger Log = LogManager.GetLogger("JustSaying");
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
         private readonly INotificationStack _stack;
         private string _currnetTopic;

@@ -1,4 +1,4 @@
-#JustEat.Simples.NotificationStack
+#JustSaying
 
 A helpful library for publishing and consuming events / messages over SNS from Just-Eat applications.
 
@@ -115,7 +115,7 @@ To enable throttling you need to specify optional parameter when setting SqsTopi
 ## Logging
 
 Notification stack will throw out the following named logs from NLog:
-* "JustEat.Simples.NotificationStack"
+* "JustSaying"
         * Information on the setup & your configuration (Info level). This includes all subscriptions, tennants, publication registrations etc.
         * Information on the number of messages handled & heartbeat of queue polling (Trace level). You can use this to confirm you're receiving messages. Beware, it can get big!
 * "EventLog"
@@ -126,7 +126,7 @@ Here's a snippet of the expected configuration:
 
 ````xml
     <logger name="EventLog" minlevel="Trace" writeTo="logger-specfic-log" final="true" />
-    <logger name="JustEat.Simples.NotificationStack" minlevel="Trace" writeTo="logger-specfic-log" final="true" />
+    <logger name="JustSaying" minlevel="Trace" writeTo="logger-specfic-log" final="true" />
     
       <target
          name="logger-specfic-log"

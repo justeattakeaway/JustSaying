@@ -1,6 +1,6 @@
 using System;
 
-namespace JustEat.Simples.NotificationStack.Stack
+namespace JustSaying.Stack
 {
     public interface IMessagingConfig
     {
@@ -9,7 +9,7 @@ namespace JustEat.Simples.NotificationStack.Stack
         string Environment { get; set; }
     }
 
-    public class MessagingConfig : SimpleMessageMule.MessagingConfig, IMessagingConfig, INotificationStackConfiguration
+    public class MessagingConfig : JustSaying.MessagingConfig, IMessagingConfig, INotificationStackConfiguration
     {
         public string Component { get; set; }
         public string Tenant { get; set; }

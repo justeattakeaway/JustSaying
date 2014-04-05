@@ -1,15 +1,13 @@
 using System;
 using Amazon;
-using JustEat.Simples.NotificationStack.AwsTools.QueueCreation;
-using JustEat.Simples.NotificationStack.Messaging.Messages;
-using JustEat.Simples.NotificationStack.Messaging.MessageSerialisation;
-using SimpleMessageMule;
-using SimpleMessageMule.Lookups;
-using IPublishEndpointProvider = SimpleMessageMule.Lookups.IPublishEndpointProvider;
-using SnsPublishEndpointProvider = JustEat.Simples.NotificationStack.Stack.Lookups.SnsPublishEndpointProvider;
-using SqsSubscribtionEndpointProvider = JustEat.Simples.NotificationStack.Stack.Lookups.SqsSubscribtionEndpointProvider;
+using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging.Messages;
+using JustSaying.Lookups;
+using IPublishEndpointProvider = JustSaying.Lookups.IPublishEndpointProvider;
+using SnsPublishEndpointProvider = JustSaying.Stack.Lookups.SnsPublishEndpointProvider;
+using SqsSubscribtionEndpointProvider = JustSaying.Stack.Lookups.SqsSubscribtionEndpointProvider;
 
-namespace JustEat.Simples.NotificationStack.Stack
+namespace JustSaying.Stack
 {
     /// <summary>
     /// This is not the perfect shining example of a fluent API YET!
@@ -18,35 +16,35 @@ namespace JustEat.Simples.NotificationStack.Stack
     /// 2. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class FluentNotificationStack : FluentMessagingMule
+    public class FluentNotificationStack : JustSayingFluently
     {
-        private FluentNotificationStack(INotificationStack stack, IVerifyAmazonQueues queueCreator): base(stack, queueCreator)
+        public static string DefaultEndpoint // ToDO: This ain't wired up. Why? Neds checking for back compatability
+        {
+            get { return RegionEndpoint.EUWest1.SystemName; }
+        }
+
+        internal FluentNotificationStack(IAmJustSaying stack, IVerifyAmazonQueues queueCreator): base(stack, queueCreator)
         {
         }
 
         public static IFluentMonitoring Register(Action<INotificationStackConfiguration> configuration)
         {
-            var config = new MessagingConfig();
-            configuration.Invoke(config);
-
-            config.Validate();
-
-            return new FluentNotificationStack(new SimpleMessageMule.NotificationStack(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
+            return JustSayingExtensions.CreateMe.AJustEatBus(configuration);
         }
 
         public override IPublishEndpointProvider CreatePublisherEndpointProvider(SqsConfiguration subscriptionConfig)
         {
-            return new SnsPublishEndpointProvider((IMessagingConfig)Stack.Config, subscriptionConfig);
+            return new SnsPublishEndpointProvider((IMessagingConfig)Bus.Config, subscriptionConfig);
         }
 
         public override IPublishSubscribtionEndpointProvider CreateSubscriptiuonEndpointProvider(SqsConfiguration subscriptionConfig)
         {
-            return new SqsSubscribtionEndpointProvider(subscriptionConfig, (IMessagingConfig)Stack.Config);
+            return new SqsSubscribtionEndpointProvider(subscriptionConfig, (IMessagingConfig)Bus.Config);
         }
         
         public override void Publish(Message message)
         {
-            var config = Stack.Config.AsJustEatConfig();
+            var config = Bus.Config.AsJustEatConfig();
             message.RaisingComponent = config.Component;
             message.Tenant = config.Tenant;
             base.Publish(message);
@@ -55,7 +53,7 @@ namespace JustEat.Simples.NotificationStack.Stack
 
     public static class Extensions
     {
-        public static IMessagingConfig AsJustEatConfig(this SimpleMessageMule.IMessagingConfig config)
+        public static IMessagingConfig AsJustEatConfig(this JustSaying.IMessagingConfig config)
         {
             return (IMessagingConfig) config;
         }

@@ -1,9 +1,9 @@
-namespace JustEat.Simples.NotificationStack.Stack
+namespace JustSaying.Stack
 {
-    public interface INotificationStackConfiguration : SimpleMessageMule.INotificationStackConfiguration
+    public interface INotificationStackConfiguration : IPublishConfiguration
     {
         string Component { get; set; }
         string Tenant { get; set; }
         string Environment { get; set; }
     }
-}
+}   
