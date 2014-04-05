@@ -7,9 +7,6 @@ namespace Stack.UnitTests
 {
     class WhenPublishEndpointIsNotProvided : BehaviourTest<SqsConfiguration>
     {
-        private SqsConfiguration _sut;
-
-
         protected override void Given()
         {
             RecordAnyExceptionsThrown();
