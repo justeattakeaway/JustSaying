@@ -2,6 +2,7 @@ using System;
 using Amazon;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.Monitoring;
 using NLog;
 
 namespace JustSaying
@@ -21,11 +22,14 @@ namespace JustSaying
 
             if (string.IsNullOrWhiteSpace(config.Region))
             {
-                config.Region = RegionEndpoint.EUWest1.SystemName; // ToDo: Why is this in the base impl?
+                config.Region = RegionEndpoint.EUWest1.SystemName; // ToDo: Why is this in the base impl rather than JE? Config validation does it for us no?
                 Log.Info("No Region was specified, using {0} by default.", config.Region);
             }
 
-            return new JustSayingFluently(new JustSayingBus(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
+            var bus = new JustSayingFluently(new JustSayingBus(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
+            bus.WithMonitoring(new NullOpMessageMonitor());
+
+            return bus;
         }
     }
 }

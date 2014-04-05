@@ -62,6 +62,7 @@
     <Compile Include="MessageSerialisation\ReflectedMessageSerialisationRegister.cs" />
     <Compile Include="MessageSerialisation\ServiceStackSerialiser.cs" />
     <Compile Include="Messages\Message.cs" />
+    <Compile Include="Monitoring\NullOpMessageMonitor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -11,7 +11,7 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests
 {
-    public abstract class FluentNotificationStackTestBase : BehaviourTest<JustSayingFluently>
+    public abstract class FluentNotificationStackTestBase : BehaviourTest<JustSaying.JustSayingFluently>
     {
         public static string TestEndpoint
         {
@@ -29,14 +29,14 @@ namespace JustSaying.IntegrationTests
             throw new NotImplementedException();
         }
 
-        protected override JustSayingFluently CreateSystemUnderTest()
+        protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
-            var fns =  CreateMe.ABus(x =>
+            var fns = CreateMe.ABus(x =>
             {
                 x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;
                 x.PublishFailureReAttempts = Configuration.PublishFailureReAttempts;
                 x.Region = Configuration.Region;
-            }).WithMonitoring(null) as JustSayingFluently;
+            }).WithMonitoring(null) as JustSaying.JustSayingFluently;
 
             if (_mockNotificationStack)
             {
