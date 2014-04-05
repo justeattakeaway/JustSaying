@@ -7,9 +7,6 @@ namespace AwsTools.UnitTests.SqsQueueConfiguration.Validation
 {
     class WhenPublishEndpointIsNotProvided : BehaviourTest<SqsConfiguration>
     {
-        private SqsConfiguration _sut;
-
-
         protected override void Given()
         {
             RecordAnyExceptionsThrown();

@@ -55,7 +55,6 @@
       <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="Ploeh.AutoFixture, Version=3.16.1.0, Culture=neutral, PublicKeyToken=b24654c590009d4f, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\AutoFixture.3.16.1\lib\net40\Ploeh.AutoFixture.dll</HintPath>
     </Reference>
     <Reference Include="System" />
@@ -85,9 +84,9 @@
       <Project>{A36B7ECF-A2AA-44CC-9538-7BC28BDDE4E0}</Project>
       <Name>NotificationStack</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Tests.MessageStubs\Tests.MessageStubs.csproj">
-      <Project>{26E0A5AC-EE6E-4C82-A859-35964C3FFB94}</Project>
-      <Name>Tests.MessageStubs</Name>
+    <ProjectReference Include="..\JustSaying.Tests.MessageStubs\JustSaying.Tests.MessageStubs.csproj">
+      <Project>{ba54f6d7-be82-4b35-b24d-16eea466cb40}</Project>
+      <Name>JustSaying.Tests.MessageStubs</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
