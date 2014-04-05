@@ -57,6 +57,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CreateMe.cs" />
     <Compile Include="FluentNotificationStack.cs" />
     <Compile Include="INotificationStackConfiguration.cs" />
     <Compile Include="Lookups\IPublishEndpointProvider.cs" />

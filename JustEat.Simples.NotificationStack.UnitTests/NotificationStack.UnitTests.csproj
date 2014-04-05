@@ -64,6 +64,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CreateMe\WhenCreatingABus.cs" />
     <Compile Include="FluentNotificationStackTestBase.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\BaseConfigValidationTest.cs" />
     <Compile Include="FluentNotificationStackTests\ConfigValidation\WhenNoComponentIsProvided.cs" />

@@ -36,7 +36,7 @@ namespace JustSaying.IntegrationTests.FluentMessageMuleTests
         protected override IAmJustSayingFluently CreateSystemUnderTest()
         {
             Monitoring = Substitute.For<IMessageMonitor>();
-            ServiceBus = Factory.JustSaying(c =>
+            ServiceBus = CreateMe.ABus(c =>
             {
                 c.PublishFailureBackoffMilliseconds = _config.PublishFailureBackoffMilliseconds;
                 c.PublishFailureReAttempts = _config.PublishFailureReAttempts;

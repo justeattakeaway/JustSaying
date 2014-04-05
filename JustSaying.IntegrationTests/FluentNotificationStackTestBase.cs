@@ -31,7 +31,7 @@ namespace JustSaying.IntegrationTests
 
         protected override JustSayingFluently CreateSystemUnderTest()
         {
-            var fns =  Factory.JustSaying(x =>
+            var fns =  CreateMe.ABus(x =>
             {
                 x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;
                 x.PublishFailureReAttempts = Configuration.PublishFailureReAttempts;

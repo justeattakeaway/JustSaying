@@ -25,7 +25,7 @@ namespace JustSaying.IntegrationTests.FluentMessageMuleTests
             _handler.Handle(Arg.Any<GenericMessage>()).Returns(true).AndDoes(ex => { throw new Exception("My Ex"); });
             _globalErrorHandler = ex => { _handledException = true; };
             _monitoring = Substitute.For<IMessageMonitor>();
-            var publisher =  Factory.JustSaying(c =>
+            var publisher =  CreateMe.ABus(c =>
                                                                         {
                                                                             c.PublishFailureBackoffMilliseconds = 1;
                                                                             c.PublishFailureReAttempts = 3;

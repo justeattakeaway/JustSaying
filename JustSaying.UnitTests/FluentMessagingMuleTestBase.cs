@@ -6,7 +6,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests
 {
-    public abstract class FluentMessageMuleTestBase : BehaviourTest<JustSayingFluently>
+    public abstract class FluentMessageMuleTestBase : BehaviourTest<JustSaying.JustSayingFluently>
     {
         protected IPublishConfiguration Configuration;
         protected IAmJustSaying NotificationStack;
@@ -15,19 +15,19 @@ namespace JustSaying.UnitTests
             throw new NotImplementedException();
         }
 
-        protected override JustSayingFluently CreateSystemUnderTest()
+        protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
             if (Configuration == null)
             {
                 Configuration = new MessagingConfig { Region = "defaultRegion" };
             }
 
-            var fns = Factory.JustSaying(x =>
+            var fns = JustSaying.CreateMe.ABus(x =>
             {
                 x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;
                 x.PublishFailureReAttempts = Configuration.PublishFailureReAttempts;
                 x.Region = Configuration.Region;
-            }).WithMonitoring(null) as JustSayingFluently;
+            }).WithMonitoring(null) as JustSaying.JustSayingFluently;
 
 
             ConfigureNotificationStackMock(fns);
@@ -38,7 +38,7 @@ namespace JustSaying.UnitTests
         }
 
         // ToDo: Must do btter!!
-        private void ConfigureNotificationStackMock(JustSayingFluently fns)
+        private void ConfigureNotificationStackMock(JustSaying.JustSayingFluently fns)
         {
             NotificationStack = Substitute.For<IAmJustSaying>();
 
@@ -51,7 +51,7 @@ namespace JustSaying.UnitTests
             notificationStackField.SetValue(fns, NotificationStack);
         }
 
-        private void ConfigureAmazonQueueCreator(JustSayingFluently fns)
+        private void ConfigureAmazonQueueCreator(JustSaying.JustSayingFluently fns)
         {
             fns.GetType()
                 .GetField("_amazonQueueCreator", BindingFlags.Instance | BindingFlags.NonPublic)

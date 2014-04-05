@@ -34,7 +34,7 @@ namespace JustSaying.IntegrationTests.FluentMessageMuleTests
 
 
 
-            var publisher = Factory.JustSaying(c =>
+            var publisher = CreateMe.ABus(c =>
             {
                 c.Region = RegionEndpoint.EUWest1.SystemName;
                 c.PublishFailureBackoffMilliseconds = 1;

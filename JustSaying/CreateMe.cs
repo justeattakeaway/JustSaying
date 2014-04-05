@@ -9,11 +9,11 @@ namespace JustSaying
     /// <summary>
     /// Factory providing a messaging bus
     /// </summary>
-    public static class Factory
+    public static class CreateMe
     {
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
 
-        public static IFluentMonitoring JustSaying(Action<IPublishConfiguration> configuration)
+        public static IAmJustSayingFluently ABus(Action<IPublishConfiguration> configuration)
         {
             var config = new MessagingConfig();
             configuration.Invoke(config);

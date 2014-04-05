@@ -2,12 +2,14 @@ using System;
 using Amazon;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.Messages;
-using JustSaying.Messaging.MessageSerialisation;
-using JustSaying;
 using JustSaying.Lookups;
 using IPublishEndpointProvider = JustSaying.Lookups.IPublishEndpointProvider;
 using SnsPublishEndpointProvider = JustSaying.Stack.Lookups.SnsPublishEndpointProvider;
 using SqsSubscribtionEndpointProvider = JustSaying.Stack.Lookups.SqsSubscribtionEndpointProvider;
+
+namespace JustSayingExtensions
+{
+}
 
 namespace JustSaying.Stack
 {
@@ -25,18 +27,13 @@ namespace JustSaying.Stack
             get { return RegionEndpoint.EUWest1.SystemName; }
         }
 
-        private FluentNotificationStack(IAmJustSaying stack, IVerifyAmazonQueues queueCreator): base(stack, queueCreator)
+        internal FluentNotificationStack(IAmJustSaying stack, IVerifyAmazonQueues queueCreator): base(stack, queueCreator)
         {
         }
 
         public static IFluentMonitoring Register(Action<INotificationStackConfiguration> configuration)
         {
-            var config = new MessagingConfig();
-            configuration.Invoke(config);
-
-            config.Validate();
-
-            return new FluentNotificationStack(new JustSayingBus(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
+            return JustSayingExtensions.CreateMe.AJustEatBus(configuration);
         }
 
         public override IPublishEndpointProvider CreatePublisherEndpointProvider(SqsConfiguration subscriptionConfig)
