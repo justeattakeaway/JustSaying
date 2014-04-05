@@ -10,10 +10,6 @@ namespace JustSaying.UnitTests
     {
         protected IPublishConfiguration Configuration;
         protected IAmJustSaying NotificationStack;
-        protected override void Given()
-        {
-            throw new NotImplementedException();
-        }
 
         protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
@@ -27,9 +23,8 @@ namespace JustSaying.UnitTests
                 x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;
                 x.PublishFailureReAttempts = Configuration.PublishFailureReAttempts;
                 x.Region = Configuration.Region;
-            }).WithMonitoring(null) as JustSaying.JustSayingFluently;
-
-
+            }) as JustSaying.JustSayingFluently;
+            
             ConfigureNotificationStackMock(fns);
 
             ConfigureAmazonQueueCreator(fns);
