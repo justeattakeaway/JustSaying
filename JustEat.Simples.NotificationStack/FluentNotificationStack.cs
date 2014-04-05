@@ -7,10 +7,6 @@ using IPublishEndpointProvider = JustSaying.Lookups.IPublishEndpointProvider;
 using SnsPublishEndpointProvider = JustSaying.Stack.Lookups.SnsPublishEndpointProvider;
 using SqsSubscribtionEndpointProvider = JustSaying.Stack.Lookups.SqsSubscribtionEndpointProvider;
 
-namespace JustSayingExtensions
-{
-}
-
 namespace JustSaying.Stack
 {
     /// <summary>

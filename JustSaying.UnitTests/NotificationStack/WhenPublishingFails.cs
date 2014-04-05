@@ -12,13 +12,13 @@ namespace JustSaying.UnitTests.NotificationStack
     public class WhenPublishingFails : GivenAServiceBus
     {
         private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
-        private const int PublishAttempts = 4;
+        private const int PublishAttempts = 2;
 
         protected override void Given()
         {
             base.Given();
-            Config.PublishFailureReAttempts.Returns(4);
-            Config.PublishFailureBackoffMilliseconds.Returns(1);
+            Config.PublishFailureReAttempts.Returns(PublishAttempts);
+            Config.PublishFailureBackoffMilliseconds.Returns(0);
             RecordAnyExceptionsThrown();
             _publisher.When(x => x.Publish(Arg.Any<Message>())).Do(x => { throw new Exception(); });
         }

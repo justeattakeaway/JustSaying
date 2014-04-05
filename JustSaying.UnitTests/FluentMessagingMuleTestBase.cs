@@ -57,10 +57,5 @@ namespace JustSaying.UnitTests
                 .GetField("_amazonQueueCreator", BindingFlags.Instance | BindingFlags.NonPublic)
                 .SetValue(fns, Substitute.For<IVerifyAmazonQueues>());
         }
-
-        protected override void When()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

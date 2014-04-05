@@ -26,7 +26,6 @@ namespace JustSaying.UnitTests.NotificationStack
         [Then]
         public void PublishMessageTimeStatsSent()
         {
-            //todo: failing for the right reason. Must make sure Maxim's recent commit is merged.
             Patiently.VerifyExpectation(() => Monitor.Received(1).PublishMessageTime(Arg.Any<long>()), 10.Seconds());
         }
     }

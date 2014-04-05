@@ -9,10 +9,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.Publishing
     {
         private readonly Message _message = new GenericMessage();
 
-        protected override void Given()
-        {
-            
-        }
+        protected override void Given(){}
 
         protected override void When()
         {
