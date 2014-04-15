@@ -37,6 +37,7 @@ namespace JustSaying.AwsTools
             _messageProcessingStrategy = new MaximumThroughput();
         }
 
+        // ToDo: This should not be here.
         public SqsNotificationListener WithMaximumConcurrentLimitOnMessagesInFlightOf(int maximumAllowedMesagesInFlight)
         {
             _messageProcessingStrategy = new Throttled(maximumAllowedMesagesInFlight, MaxAmazonMessageCap, _messagingMonitor);
@@ -139,6 +140,7 @@ namespace JustSaying.AwsTools
             string rawMessage = null;
             try
             {
+                // ToDo: No no no...
                 string messageType = JObject.Parse(message.Body)["Subject"].ToString();
 
                 rawMessage = JObject.Parse(message.Body)["Message"].ToString();

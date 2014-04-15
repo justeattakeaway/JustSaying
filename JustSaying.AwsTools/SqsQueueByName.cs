@@ -23,6 +23,7 @@ namespace JustSaying.AwsTools
             };
         }
 
+        // ToDO: int attempt because it's recursive. Let's clean that up for peeps.
         public override bool Create(int retentionPeriodSeconds, int attempt = JustSayingConstants.DEFAULT_CREATE_REATTEMPT, int visibilityTimeoutSeconds = JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT, bool createErrorQueue = false, int retryCountBeforeSendingToErrorQueue = JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT)
         {
             if (!ErrorQueue.Exists())

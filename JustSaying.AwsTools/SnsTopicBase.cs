@@ -9,7 +9,7 @@ namespace JustSaying.AwsTools
 {
     public abstract class SnsTopicBase
     {
-        private readonly IMessageSerialisationRegister _serialisationRegister;
+        private readonly IMessageSerialisationRegister _serialisationRegister; // ToDo: Grrr...why is this here even. GET OUT!
         public string Arn { get; protected set; }
         public IAmazonSimpleNotificationService Client { get; protected set; }
         private static readonly Logger EventLog = LogManager.GetLogger("EventLog");
