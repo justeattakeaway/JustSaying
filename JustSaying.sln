@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationStack.UnitTests
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationStack.IntegrationTests", "JustEat.Simples.NotificationStack.IntegrationTests\NotificationStack.IntegrationTests.csproj", "{A21D19BF-487E-4AB7-8F81-E7E4D659AACD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.Tools", "JustSaying.Tools\JustSaying.Tools.csproj", "{108342FE-33C8-4F41-ACBD-35541A80E8F5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +89,10 @@ Global
 		{A21D19BF-487E-4AB7-8F81-E7E4D659AACD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A21D19BF-487E-4AB7-8F81-E7E4D659AACD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A21D19BF-487E-4AB7-8F81-E7E4D659AACD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{108342FE-33C8-4F41-ACBD-35541A80E8F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{108342FE-33C8-4F41-ACBD-35541A80E8F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{108342FE-33C8-4F41-ACBD-35541A80E8F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{108342FE-33C8-4F41-ACBD-35541A80E8F5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

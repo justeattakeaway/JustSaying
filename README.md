@@ -141,6 +141,17 @@ Here's a snippet of the expected configuration:
       />
 ````
 
+## Dead letter Queue (Error queue)
+
+JustSaying supports error queues and this option is enabled by default. When a handler is unable to handle a message, JustSaying will attempt to re-deliver the message up to 5 times (Handler retry count is configurable) and if the handler is still unable to handle the message then the message will be moved to an error queue. 
+
+## Power tool
+
+JustSaying comes with a power tool console app that helps you mange your SQS queues from the command line.
+At this point, the power tool is only able to move arbitary number of messages from one queue to another.
+````
+JustSaying.Tools.exe move -from "source_queue_name" -to "destination_queue_name" -count "1"
+````
 
 ## Ruby Testing (functional tests) snippet
 
