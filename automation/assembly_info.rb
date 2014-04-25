@@ -40,22 +40,10 @@ class AssemblyInfoGenerator
     end
     @log.info "asm:ca = #{asm.custom_attributes}"
     asm.com_visible = false
-    asm.description = assembly_description.to_json
+    asm.description = "JustSaying is a light-weight service bus on top of AWS services that allows communication via messaging in a distributed architecture."
     asm.output_file = output
   end
   CLEAN.include output
-end
-
-def assembly_description
-  {
-   branch: read_branch,
-   revision: read_revision,
-   build: {
-    at: Time.now.utc,
-    by: ENV['username'],
-    on: `hostname`.chomp
-  }
-}
 end
 
 def read_branch
