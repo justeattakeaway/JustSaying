@@ -22,7 +22,7 @@ namespace JustSaying.AwsTools.QueueCreation
         public int? MaxAllowedMessagesInFlight { get; set; }
         public IMessageProcessingStrategy MessageProcessingStrategy { get; set; }
         public Action<Exception> OnError { get; set; }
-        public string PublishEndpoint { get; set; }
+        internal string PublishEndpoint { get; set; }
 
         public void Validate()
         {

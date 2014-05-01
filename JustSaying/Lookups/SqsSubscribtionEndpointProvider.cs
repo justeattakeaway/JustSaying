@@ -14,6 +14,7 @@ namespace JustSaying.Lookups
             _config = config;
         }
 
+        // ToDo: Add validate to this?
         public string GetLocationName()
         {
             return _config.Topic.ToLower();
