@@ -13,7 +13,7 @@ namespace JustSaying.AwsTools.QueueCreation
             MessageRetentionSeconds = JustSayingConstants.DEFAULT_RETENTION_PERIOD;
         }
 
-        public string QueueName { get; set; }
+        internal string QueueName { get; set; }
         public string Topic { get; set; }
         public int MessageRetentionSeconds { get; set; }
         public int VisibilityTimeoutSeconds { get; set; }
