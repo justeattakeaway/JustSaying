@@ -14,7 +14,9 @@ namespace JustSaying.AwsTools.QueueCreation
         }
 
         internal string QueueName { get; set; }
-        public string Topic { get; set; }
+        internal string Topic { get; set; }
+        internal string PublishEndpoint { get; set; }
+
         public int MessageRetentionSeconds { get; set; }
         public int VisibilityTimeoutSeconds { get; set; }
         public int? InstancePosition { get; set; }
@@ -23,7 +25,6 @@ namespace JustSaying.AwsTools.QueueCreation
         public int? MaxAllowedMessagesInFlight { get; set; }
         public IMessageProcessingStrategy MessageProcessingStrategy { get; set; }
         public Action<Exception> OnError { get; set; }
-        internal string PublishEndpoint { get; set; }
 
         public void Validate()
         {
