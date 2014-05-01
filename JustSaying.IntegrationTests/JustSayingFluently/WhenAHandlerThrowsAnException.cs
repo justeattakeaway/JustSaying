@@ -32,7 +32,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                                                                         })
                                                                         .WithMonitoring(_monitoring)
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
-                .WithSqsTopicSubscriber("CustomerCommunication", 60, instancePosition: 1, onError: _globalErrorHandler)
+                .WithSqsTopicSubscriber("CustomerCommunication")
+                .IntoQueue("queuename").ConfigureSubscriptionWith(cfg =>
+                    {
+                        cfg.MessageRetentionSeconds = 60;
+                        cfg.InstancePosition = 1;
+                        cfg.OnError = _globalErrorHandler;
+                    })
                 .WithMessageHandler(_handler);
 
             bus.StartListening();

@@ -43,9 +43,10 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             })
                 .WithMonitoring(Monitoring)
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
-                .WithSqsTopicSubscriber(cf =>
+                .WithSqsTopicSubscriber("CustomerCommunication")
+                .IntoQueue("queuename")
+                .ConfigureSubscriptionWith(cf =>
                 {
-                    cf.Topic = "CustomerCommunication";
                     cf.MessageRetentionSeconds = 60;
                     cf.VisibilityTimeoutSeconds = JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT;
                     cf.InstancePosition = 1;

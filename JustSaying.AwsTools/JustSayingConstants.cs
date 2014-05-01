@@ -9,6 +9,7 @@ namespace JustSaying.AwsTools
         public const int DEFAULT_PUBLISHER_RETRY_COUNT = 3;
         public const int DEFAULT_PUBLISHER_RETRY_INTERVAL = 100;//100 milliseconds
         public const int MINIMUM_RETENTION_PERIOD = 60;         //1 minute
+        public const int DEFAULT_RETENTION_PERIOD = 60 * 10;    //10 minutes
         public const int MAXIMUM_RETENTION_PERIOD = 1209600;    //14 days
 
     }

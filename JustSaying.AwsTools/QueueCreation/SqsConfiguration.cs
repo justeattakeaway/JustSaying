@@ -10,6 +10,7 @@ namespace JustSaying.AwsTools.QueueCreation
         {
             VisibilityTimeoutSeconds = JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT;
             RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT;
+            MessageRetentionSeconds = JustSayingConstants.DEFAULT_RETENTION_PERIOD;
         }
 
         public string QueueName { get; set; }

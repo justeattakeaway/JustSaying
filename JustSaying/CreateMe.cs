@@ -16,7 +16,7 @@ namespace JustSaying
             _config = config;
         }
 
-        public IAmJustSayingFluently ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder)
+        public ISqsSubscriber ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder)
         {
             confBuilder(_config);
             _config.Validate();
@@ -41,6 +41,6 @@ namespace JustSaying
 
     public interface IConfigurePublisher
     {
-        IAmJustSayingFluently ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder);
+        ISqsSubscriber ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder);
     }
 }
