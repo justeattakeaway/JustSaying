@@ -36,11 +36,10 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         protected override IAmJustSayingFluently CreateSystemUnderTest()
         {
             Monitoring = Substitute.For<IMessageMonitor>();
-            ServiceBus = CreateMe.ABus(c =>
+            ServiceBus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName).ConfigurePublisherWith(c =>
             {
                 c.PublishFailureBackoffMilliseconds = _config.PublishFailureBackoffMilliseconds;
-                c.PublishFailureReAttempts = _config.PublishFailureReAttempts;
-                c.Region = RegionEndpoint.EUWest1.SystemName;
+                c.PublishFailureReAttempts = _config.PublishFailureReAttempts;    
             })
                 .WithMonitoring(Monitoring)
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")

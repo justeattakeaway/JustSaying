@@ -6,30 +6,35 @@ namespace JustSaying.UnitTests.CreateMe
     public class WhenCreatingABus
     {
         private Action<IPublishConfiguration> _config;
+        private string _region;
 
         [TestFixtureSetUp]
         public void Given()
         {
-            _config = x => { x.Region = "region-1"; };
+            _region = "region-1";
+            _config = x =>
+            {
+                x.Region = _region;
+            };
         }
 
         [Test]
         public void StandardConfigurationIsRequired()
         {
-            JustSaying.CreateMe.ABus(_config);
+            JustSaying.CreateMeABus.InRegion(_region).ConfigurePublisherWith(_config);
         }
 
         [Test]
         public void ThenICanProvideMonitoring()
         {
-            JustSaying.CreateMe.ABus(_config).WithMonitoring(null);
+            JustSaying.CreateMeABus.InRegion(_region).ConfigurePublisherWith(_config).WithMonitoring(null);
         }
 
         [Test]
         public void MonitoringIsNotEnforced()
         {
             // Enforced by the fact we can do other configurations on the bus.
-            JustSaying.CreateMe.ABus(_config).StopListening();
+            JustSaying.CreateMeABus.InRegion(_region).ConfigurePublisherWith(_config).StopListening();
         }
     }
 }

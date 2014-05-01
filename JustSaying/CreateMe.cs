@@ -7,21 +7,40 @@ using NLog;
 
 namespace JustSaying
 {
-    /// <summary>
-    /// Factory providing a messaging bus
-    /// </summary>
-    public static class CreateMe
+    public class CreateMeABus : ICreateBus
     {
-        public static IAmJustSayingFluently ABus(Action<IPublishConfiguration> configuration)
-        {
-            var config = new MessagingConfig();
-            configuration.Invoke(config);
-            config.Validate();
+        private MessagingConfig _config;
 
-            var bus = new JustSayingFluently(new JustSayingBus(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
+        public CreateMeABus(MessagingConfig config)
+        {
+            _config = config;
+        }
+
+        public IAmJustSayingFluently ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder)
+        {
+            confBuilder(_config);
+            _config.Validate();
+
+            var bus = new JustSayingFluently(new JustSayingBus(_config, new MessageSerialisationRegister()), new AmazonQueueCreator());
             bus.WithMonitoring(new NullOpMessageMonitor());
 
             return bus;
         }
+
+        public static ICreateBus InRegion(string region)
+        {
+            var config = new MessagingConfig() {Region = region};
+
+            return new CreateMeABus(config);
+        }
+    }
+    public interface ICreateBus : IConfigurePublisher
+    {
+
+    }
+
+    public interface IConfigurePublisher
+    {
+        IAmJustSayingFluently ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder);
     }
 }

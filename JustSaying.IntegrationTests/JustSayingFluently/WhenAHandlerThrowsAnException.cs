@@ -25,11 +25,10 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             _handler.Handle(Arg.Any<GenericMessage>()).Returns(true).AndDoes(ex => { throw new Exception("My Ex"); });
             _globalErrorHandler = ex => { _handledException = true; };
             _monitoring = Substitute.For<IMessageMonitor>();
-            var bus =  CreateMe.ABus(c =>
+            var bus =  CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName).ConfigurePublisherWith(c =>
                                                                         {
                                                                             c.PublishFailureBackoffMilliseconds = 1;
                                                                             c.PublishFailureReAttempts = 3;
-                                                                            c.Region = RegionEndpoint.EUWest1.SystemName;
                                                                         })
                                                                         .WithMonitoring(_monitoring)
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")

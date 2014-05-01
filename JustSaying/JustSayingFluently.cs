@@ -199,6 +199,16 @@ namespace JustSaying
         }
 
         #endregion
+
+        public IAmJustSayingFluently ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder)
+        {
+            return this;
+        }
+
+        public IFluentSubscription WithSqsTopicSubscriber(string topic)
+        {
+            return this;
+        }
     }
 
     public interface IAmJustSayingFluently : IMessagePublisher, IFluentMonitoring
@@ -210,6 +220,7 @@ namespace JustSaying
             int? maxAllowedMessagesInFlight = null, IMessageProcessingStrategy messageProcessingStrategy = null);
         IFluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, IMessageProcessingStrategy messageProcessingStrategy);
         IFluentSubscription WithSqsTopicSubscriber(Action<SqsConfiguration> confBuilder);
+        IFluentSubscription WithSqsTopicSubscriber(string topic);
 
         void StartListening();
         void StopListening();

@@ -17,11 +17,11 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         [TestFixtureSetUp]
         public void Given()
         {
-            var bus = CreateMe.ABus(c =>
+            var bus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName).ConfigurePublisherWith(c =>
             {
                 c.PublishFailureBackoffMilliseconds = 1;
                 c.PublishFailureReAttempts = 1;
-                c.Region = RegionEndpoint.EUWest1.SystemName;
+                
             })
                 .WithSnsMessagePublisher<GenericMessage>("SomeTopic")
                 .WithSqsTopicSubscriber("SomeTopic", 60, instancePosition: 1)
