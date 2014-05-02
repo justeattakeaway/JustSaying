@@ -50,7 +50,7 @@ namespace JustSaying
         /// <typeparam name="T"></typeparam>
         /// <param name="topic"></param>
         /// <returns></returns>
-        public IAmJustSayingFluently WithSnsMessagePublisher<T>(string topic) where T : Message
+        public IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>(string topic) where T : Message
         {
             Log.Info("Added publisher");
 
@@ -218,7 +218,7 @@ namespace JustSaying
 
     public interface IHaveFulfilledPublishRequirements : IAmJustSayingFluently
     {
-        IAmJustSayingFluently WithSnsMessagePublisher<T>(string topic) where T : Message;
+        IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>(string topic) where T : Message;
     }
 
 
