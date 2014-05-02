@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("NotificationStack")]
-[assembly: AssemblyDescription("{\"branch\":\"master\",\"revision\":\"537b9ae8c4077bb1581cde484dc66bb952bcb37e\",\"build\":{\"at\":\"2014-04-14 13:56:05 UTC\",\"by\":\"anton.jefcoate\",\"on\":\"JEUKFPHPC1605\"}}")]
+[assembly: AssemblyDescription("JustSaying is a light-weight service bus on top of AWS services that allows communication via messaging in a distributed architecture.")]
 [assembly: AssemblyCompany("Just-Eat Holding Ltd")]
 [assembly: AssemblyCopyright("Copyright 2014, by Just-Eat Holding Ltd")]
 [assembly: ComVisible(false)]
