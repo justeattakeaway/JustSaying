@@ -41,12 +41,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
             Monitoring = Substitute.For<IMessageMonitor>();
 
-            ServiceBus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName).ConfigurePublisherWith(c =>
+            ServiceBus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+                .WithMonitoring(Monitoring)
+                .ConfigurePublisherWith(c =>
             {
                 c.PublishFailureBackoffMilliseconds = _config.PublishFailureBackoffMilliseconds;
                 c.PublishFailureReAttempts = _config.PublishFailureReAttempts;    
             })
-                .WithMonitoring(Monitoring)
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
                 .WithSqsTopicSubscriber("CustomerCommunication")
                 .IntoQueue("queuename")

@@ -5,7 +5,7 @@ using JustSaying.Messaging.Monitoring;
 
 namespace JustSaying
 {
-    public class CreateMeABus : ICreateBus
+    public class CreateMeABus
     {
         private readonly MessagingConfig _config;
 
@@ -14,31 +14,16 @@ namespace JustSaying
             _config = config;
         }
 
-        public IAmJustSayingFluently ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder)
+        public static IAmJustSayingFluently InRegion(string region)
         {
-            confBuilder(_config);
-            _config.Validate();
+            var config = new MessagingConfig {Region = region};
 
-            var bus = new JustSayingFluently(new JustSayingBus(_config, new MessageSerialisationRegister()), new AmazonQueueCreator());
+            config.Validate();
+
+            var bus = new JustSayingFluently(new JustSayingBus(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
             bus.WithMonitoring(new NullOpMessageMonitor());
 
             return bus;
         }
-
-        public static ICreateBus InRegion(string region)
-        {
-            var config = new MessagingConfig {Region = region};
-
-            return new CreateMeABus(config);
-        }
-    }
-    public interface ICreateBus : IConfigurePublisher
-    {
-
-    }
-
-    public interface IConfigurePublisher
-    {
-        IAmJustSayingFluently ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder);
     }
 }

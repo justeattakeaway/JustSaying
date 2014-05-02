@@ -38,7 +38,6 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             {
                 c.PublishFailureBackoffMilliseconds = 1;
             })
-                                                                        .WithMonitoring(Substitute.For<IMessageMonitor>())
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
                 .WithSqsTopicSubscriber("CustomerCommunication").IntoQueue("queuename").ConfigureSubscriptionWith(
                     cfg =>
@@ -46,7 +45,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                         cfg.InstancePosition = 1;
                         cfg.MaxAllowedMessagesInFlight = 25;
                     })
-                .WithMessageHandler(_handler);
+                .WithMessageHandler(_handler)
+                .WithMonitoring(Substitute.For<IMessageMonitor>());
 
             publisher.StartListening();
             _publisher = publisher;

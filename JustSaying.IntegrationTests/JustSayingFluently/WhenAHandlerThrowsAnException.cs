@@ -30,7 +30,6 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                                                                             c.PublishFailureBackoffMilliseconds = 1;
                                                                             c.PublishFailureReAttempts = 3;
                                                                         })
-                                                                        .WithMonitoring(_monitoring)
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
                 .WithSqsTopicSubscriber("CustomerCommunication")
                 .IntoQueue("queuename")
@@ -40,7 +39,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                         cfg.InstancePosition = 1;
                         cfg.OnError = _globalErrorHandler;
                     })
-                .WithMessageHandler(_handler);
+                .WithMessageHandler(_handler)
+                .WithMonitoring(_monitoring);
 
             bus.StartListening();
             _bus = bus;

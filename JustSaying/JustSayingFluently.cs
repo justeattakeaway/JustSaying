@@ -21,7 +21,7 @@ namespace JustSaying
     /// 3. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc // ToDo: Shouldn't be enforced in base! Is a JE concern.
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements
+    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements
     {
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
@@ -177,15 +177,18 @@ namespace JustSaying
 
         #endregion
 
-        public IAmJustSayingFluently ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder)
+        public IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder)
         {
+            confBuilder(Bus.Config as IPublishConfiguration);
+            Bus.Config.Validate();
+
             return this;
         }
     }
 
     public interface IAmJustSayingFluently : IMessagePublisher, IFluentMonitoring
     {
-        IAmJustSayingFluently WithSnsMessagePublisher<T>(string topic) where T : Message;
+        IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder);
         ISubscriberIntoQueue WithSqsTopicSubscriber(string topic);
         void StartListening();
         void StopListening();
@@ -212,4 +215,11 @@ namespace JustSaying
     {
         IFluentSubscription IntoQueue(string queuename);
     }
+
+    public interface IHaveFulfilledPublishRequirements : IAmJustSayingFluently
+    {
+        IAmJustSayingFluently WithSnsMessagePublisher<T>(string topic) where T : Message;
+    }
+
+
 }

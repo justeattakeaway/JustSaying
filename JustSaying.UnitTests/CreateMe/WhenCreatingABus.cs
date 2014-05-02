@@ -20,7 +20,14 @@ namespace JustSaying.UnitTests.CreateMe
         }
 
         [Test]
-        public void StandardConfigurationIsRequired()
+        public void PublishConfigurationIsOptional()
+        {
+            // Enforced by the fact we can do other configurations on the bus.
+            JustSaying.CreateMeABus.InRegion(_region).StopListening();
+        }
+
+        [Test]
+        public void PublishConfigurationCanBeProvided()
         {
             JustSaying.CreateMeABus.InRegion(_region).ConfigurePublisherWith(_config);
         }
