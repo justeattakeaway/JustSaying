@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.Globalization;
 using Amazon.SQS;
+using Amazon.SQS.Model;
 using Amazon.SQS.Util;
+using JustSaying.AwsTools.QueueCreation;
 
 namespace JustSaying.AwsTools
 {
@@ -22,7 +24,7 @@ namespace JustSaying.AwsTools
             {
                 { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD , retentionPeriodSeconds.ToString(CultureInfo.InvariantCulture)},
                 { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , visibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture)},
-                { JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY, "{\"maxReceiveCount\":\""+_retryCountBeforeSendingToErrorQueue+"\", \"deadLetterTargetArn\":\""+ErrorQueue.Arn+"\"}"}
+                { JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY, new RedrivePolicy(_retryCountBeforeSendingToErrorQueue, ErrorQueue.Arn).ToString()}
             };
         }
 
@@ -41,6 +43,19 @@ namespace JustSaying.AwsTools
             if(ErrorQueue != null)
                 ErrorQueue.Delete();
             base.Delete();
+        }
+
+        public void UpdateRedrivePolicy(RedrivePolicy requestedRedrivePolicy)
+        {
+            if (RedrivePolicy.MaximumReceives != requestedRedrivePolicy.MaximumReceives)
+            {
+                Client.SetQueueAttributes(
+                new SetQueueAttributesRequest
+                {
+                    QueueUrl = Url,
+                    Attributes = new Dictionary<string, string> { { JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY, requestedRedrivePolicy.ToString() } }
+                });
+            }
         }
     }
 }

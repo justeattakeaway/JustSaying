@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using JustSaying.AwsTools.QueueCreation;
 using NLog;
 using Newtonsoft.Json.Linq;
 using JustSaying.Messaging.MessageSerialisation;
@@ -100,6 +101,14 @@ namespace JustSaying.AwsTools
 															}
                                                          }
                                                     }";
+        }
+
+        internal RedrivePolicy RedrivePolicy
+        {
+            get
+            {
+                return RedrivePolicy.ConvertFromString(GetAttrs(new[] { JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY }).Attributes[JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY]);
+            }
         }
     }
 }
