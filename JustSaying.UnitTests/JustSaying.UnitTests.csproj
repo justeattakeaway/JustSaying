@@ -69,6 +69,7 @@
     <Compile Include="CreateMe\WhenCreatingABus.cs" />
     <Compile Include="FluentMessagingMuleTestBase.cs" />
     <Compile Include="JustSayingFluently\AddingHandlers\WhenAddingASubscriptionHandler.cs" />
+    <Compile Include="JustSayingFluently\AddingHandlers\WhenAddingASubscriptionHandlerWithoutCustomConfig.cs" />
     <Compile Include="JustSayingFluently\AddingMonitoring\WhenAddingACustomMonitor.cs" />
     <Compile Include="JustSayingFluently\ConfigValidation\WhenNoRegionIsProvided.cs" />
     <Compile Include="JustSayingFluently\Publishing\WhenPublishing.cs" />

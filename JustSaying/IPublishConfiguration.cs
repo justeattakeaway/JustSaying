@@ -4,6 +4,6 @@ namespace JustSaying
     {
         int PublishFailureReAttempts { get; set; }
         int PublishFailureBackoffMilliseconds { get; set; }
-        string Region { get; set; }
+        string Region { get; }
     }
 }

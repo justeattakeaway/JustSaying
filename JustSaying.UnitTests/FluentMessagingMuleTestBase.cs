@@ -18,11 +18,11 @@ namespace JustSaying.UnitTests
                 Configuration = new MessagingConfig { Region = "defaultRegion" };
             }
 
-            var fns = JustSaying.CreateMe.ABus(x =>
+            var fns = JustSaying.CreateMeABus.InRegion(Configuration.Region).ConfigurePublisherWith(x =>
             {
                 x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;
                 x.PublishFailureReAttempts = Configuration.PublishFailureReAttempts;
-                x.Region = Configuration.Region;
+                
             }) as JustSaying.JustSayingFluently;
             
             ConfigureNotificationStackMock(fns);

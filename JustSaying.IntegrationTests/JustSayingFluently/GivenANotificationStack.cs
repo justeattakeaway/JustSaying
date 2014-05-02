@@ -13,7 +13,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
     public abstract class GivenANotificationStack : BehaviourTest<IAmJustSayingFluently>
     {
         readonly Stopwatch _stopwatch = new Stopwatch();
-        protected IFluentSubscription ServiceBus;
+        protected IAmJustSayingFluently ServiceBus;
         protected IMessageMonitor Monitoring;
         private Future<GenericMessage> _handler;
         private  IPublishConfiguration _config = new MessagingConfig { PublishFailureBackoffMilliseconds = 1, PublishFailureReAttempts = 3};
@@ -35,28 +35,30 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
         protected override IAmJustSayingFluently CreateSystemUnderTest()
         {
-            Monitoring = Substitute.For<IMessageMonitor>();
-            ServiceBus = CreateMe.ABus(c =>
-            {
-                c.PublishFailureBackoffMilliseconds = _config.PublishFailureBackoffMilliseconds;
-                c.PublishFailureReAttempts = _config.PublishFailureReAttempts;
-                c.Region = RegionEndpoint.EUWest1.SystemName;
-            })
-                .WithMonitoring(Monitoring)
-                .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
-                .WithSqsTopicSubscriber(cf =>
-                {
-                    cf.Topic = "CustomerCommunication";
-                    cf.MessageRetentionSeconds = 60;
-                    cf.VisibilityTimeoutSeconds = JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT;
-                    cf.InstancePosition = 1;
-                });
-            
             var handler = Substitute.For<IHandler<GenericMessage>>();
             handler.When(x => x.Handle(Arg.Any<GenericMessage>()))
                     .Do(x => _handler.Complete((GenericMessage)x.Args()[0]));
 
-            ServiceBus.WithMessageHandler(handler);
+            Monitoring = Substitute.For<IMessageMonitor>();
+
+            ServiceBus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+                .WithMonitoring(Monitoring)
+                .ConfigurePublisherWith(c =>
+            {
+                c.PublishFailureBackoffMilliseconds = _config.PublishFailureBackoffMilliseconds;
+                c.PublishFailureReAttempts = _config.PublishFailureReAttempts;    
+            })
+                .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
+                .WithSqsTopicSubscriber("CustomerCommunication")
+                .IntoQueue("queuename")
+                .ConfigureSubscriptionWith(cf =>
+                {
+                    cf.MessageRetentionSeconds = 60;
+                    cf.VisibilityTimeoutSeconds = JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT;
+                    cf.InstancePosition = 1;
+                })
+                .WithMessageHandler(handler);
+
             ServiceBus.StartListening();
             return ServiceBus;
         }

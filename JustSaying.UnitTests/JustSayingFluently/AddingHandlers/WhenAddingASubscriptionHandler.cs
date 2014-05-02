@@ -17,7 +17,11 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
 
         protected override void When()
         {
-            _response = SystemUnderTest.WithSqsTopicSubscriber(Topic, 60).WithMessageHandler(_handler);
+            _response = SystemUnderTest.WithSqsTopicSubscriber(Topic).IntoQueue("queuename").ConfigureSubscriptionWith(
+                cfg =>
+                {
+                    cfg.MessageRetentionSeconds = 60;
+                }).WithMessageHandler(_handler);
         }
 
         [Then]
