@@ -21,7 +21,7 @@ namespace JustSaying
     /// 3. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc // ToDo: Shouldn't be enforced in base! Is a JE concern.
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class JustSayingFluently : IFluentSubscription, ISqsSubscriber, ISubscriberIntoQueue, ISubscriberConfigurator
+    public class JustSayingFluently : IFluentSubscription, ISqsSubscriber, ISubscriberIntoQueue
     {
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
@@ -130,7 +130,7 @@ namespace JustSaying
             return this;
         }
 
-        public ISubscriberConfigurator IntoQueue(string queuename)
+        public IFluentSubscription IntoQueue(string queuename)
         {
             _subscriptionConfig.QueueName = queuename;
             return this;
@@ -138,7 +138,7 @@ namespace JustSaying
 
         public ISubscriberIntoQueue WithSqsTopicSubscriber(string topic)
         {
-            _subscriptionConfig = new SqsConfiguration() {Topic = topic};
+            _subscriptionConfig = new SqsConfiguration {Topic = topic};
             return this;
         }
 
@@ -200,17 +200,15 @@ namespace JustSaying
     public interface IFluentSubscription : IAmJustSayingFluently
     {
         IFluentSubscription WithMessageHandler<T>(IHandler<T> handler) where T : Message;
+        IFluentSubscription ConfigureSubscriptionWith(Action<SqsConfiguration> config);
     }
 
     public interface ISqsSubscriber : IAmJustSayingFluently
     {
     }
-    public interface ISubscriberIntoQueue : IAmJustSayingFluently
+
+    public interface ISubscriberIntoQueue
     {
-        ISubscriberConfigurator IntoQueue(string queuename);
-    }
-    public interface ISubscriberConfigurator : IAmJustSayingFluently
-    {
-        IFluentSubscription ConfigureSubscriptionWith(Action<SqsConfiguration> config);
+        IFluentSubscription IntoQueue(string queuename);
     }
 }
