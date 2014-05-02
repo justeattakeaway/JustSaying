@@ -80,7 +80,6 @@
     <Compile Include="JustSayingFluently\WhenThrottlingIsEnabledALongRunningHandler.cs" />
     <Compile Include="WhenRegisteringAPublisher\WhenPublishingAndNotInstantiated.cs" />
     <Compile Include="WhenRegisteringASqsSubscriber\WhenRegisteringASqsTopicSubscriber.cs" />
-    <Compile Include="WhenRegisteringAPublisher\WhenRegisteringAPublisherASerialiserIsAddedForTheMessageType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="FluentNotificationStackTestBase.cs" />
     <Compile Include="WhenRegisteringAPublisher\WhenRegisteringAPublisherAPublisherIsAddedToTheNotificationStack.cs" />
