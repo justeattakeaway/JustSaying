@@ -35,7 +35,7 @@ namespace JustSaying.UnitTests.CreateMe
         [Test]
         public void ThenICanProvideMonitoring()
         {
-            JustSaying.CreateMeABus.InRegion(_region).ConfigurePublisherWith(_config).WithMonitoring(null);
+            JustSaying.CreateMeABus.InRegion(_region).WithMonitoring(null).ConfigurePublisherWith(_config);
         }
 
         [Test]

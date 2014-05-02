@@ -34,10 +34,12 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
 
 
-            var publisher = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName).ConfigurePublisherWith(c =>
-            {
-                c.PublishFailureBackoffMilliseconds = 1;
-            })
+            var publisher = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+                .WithMonitoring(Substitute.For<IMessageMonitor>())
+                .ConfigurePublisherWith(c =>
+                {
+                    c.PublishFailureBackoffMilliseconds = 1;
+                })
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
                 .WithSqsTopicSubscriber("CustomerCommunication").IntoQueue("queuename").ConfigureSubscriptionWith(
                     cfg =>
@@ -45,8 +47,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                         cfg.InstancePosition = 1;
                         cfg.MaxAllowedMessagesInFlight = 25;
                     })
-                .WithMessageHandler(_handler)
-                .WithMonitoring(Substitute.For<IMessageMonitor>());
+                .WithMessageHandler(_handler);
 
             publisher.StartListening();
             _publisher = publisher;

@@ -31,12 +31,14 @@ namespace JustSaying.IntegrationTests
 
         protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
-            var fns = CreateMeABus.InRegion(Configuration.Region).ConfigurePublisherWith(x =>
-            {
-                x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;
-                x.PublishFailureReAttempts = Configuration.PublishFailureReAttempts;
+            var fns = CreateMeABus.InRegion(Configuration.Region)
+                .WithMonitoring(null)
+                .ConfigurePublisherWith(x =>
+                {
+                    x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;
+                    x.PublishFailureReAttempts = Configuration.PublishFailureReAttempts;
                 
-            }).WithMonitoring(null) as JustSaying.JustSayingFluently;
+                }) as JustSaying.JustSayingFluently;
 
             if (_mockNotificationStack)
             {

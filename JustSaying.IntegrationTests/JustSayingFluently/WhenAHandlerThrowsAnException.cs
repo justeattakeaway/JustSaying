@@ -25,7 +25,9 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             _handler.Handle(Arg.Any<GenericMessage>()).Returns(true).AndDoes(ex => { throw new Exception("My Ex"); });
             _globalErrorHandler = ex => { _handledException = true; };
             _monitoring = Substitute.For<IMessageMonitor>();
-            var bus =  CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName).ConfigurePublisherWith(c =>
+            var bus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+                .WithMonitoring(_monitoring)
+                .ConfigurePublisherWith(c =>
                                                                         {
                                                                             c.PublishFailureBackoffMilliseconds = 1;
                                                                             c.PublishFailureReAttempts = 3;
@@ -39,8 +41,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                         cfg.InstancePosition = 1;
                         cfg.OnError = _globalErrorHandler;
                     })
-                .WithMessageHandler(_handler)
-                .WithMonitoring(_monitoring);
+                .WithMessageHandler(_handler);
 
             bus.StartListening();
             _bus = bus;

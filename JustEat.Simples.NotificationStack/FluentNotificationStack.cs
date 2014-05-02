@@ -27,7 +27,7 @@ namespace JustSaying.Stack
         {
         }
 
-        public static IFluentMonitoring Register(Action<INotificationStackConfiguration> configuration)
+        public static IMayWantMonitoring Register(Action<INotificationStackConfiguration> configuration)
         {
             return JustSayingExtensions.CreateMe.AJustEatBus(configuration);
         }

@@ -14,7 +14,7 @@ namespace JustSaying
             _config = config;
         }
 
-        public static IAmJustSayingFluently InRegion(string region)
+        public static IMayWantMonitoring InRegion(string region)
         {
             var config = new MessagingConfig {Region = region};
 
