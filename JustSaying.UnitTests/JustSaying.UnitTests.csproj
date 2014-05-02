@@ -73,6 +73,7 @@
     <Compile Include="JustSayingFluently\AddingMonitoring\WhenAddingACustomMonitor.cs" />
     <Compile Include="JustSayingFluently\ConfigValidation\WhenNoRegionIsProvided.cs" />
     <Compile Include="JustSayingFluently\Publishing\WhenPublishing.cs" />
+    <Compile Include="JustSayingFluently\RegisteringPublishers\WhenAddingASubscriptionHandler.cs" />
     <Compile Include="Lookups\SnsEndpointNames\WhenRequestingAnEndpointName.cs" />
     <Compile Include="Lookups\SqsEndpointNames\WhenRequestingAnEndpointName.cs" />
     <Compile Include="JustSayingBus\GivenAServiceBus.cs" />
@@ -117,9 +118,7 @@
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="JustSayingFluently\RegisteringPublishers\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
