@@ -36,7 +36,6 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
             var publisher = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName).ConfigurePublisherWith(c =>
             {
-                c.Region = RegionEndpoint.EUWest1.SystemName;
                 c.PublishFailureBackoffMilliseconds = 1;
             })
                                                                         .WithMonitoring(Substitute.For<IMessageMonitor>())

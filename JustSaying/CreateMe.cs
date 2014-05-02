@@ -1,15 +1,13 @@
 using System;
-using Amazon;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
-using NLog;
 
 namespace JustSaying
 {
     public class CreateMeABus : ICreateBus
     {
-        private MessagingConfig _config;
+        private readonly MessagingConfig _config;
 
         public CreateMeABus(MessagingConfig config)
         {
@@ -29,7 +27,7 @@ namespace JustSaying
 
         public static ICreateBus InRegion(string region)
         {
-            var config = new MessagingConfig() {Region = region};
+            var config = new MessagingConfig {Region = region};
 
             return new CreateMeABus(config);
         }
