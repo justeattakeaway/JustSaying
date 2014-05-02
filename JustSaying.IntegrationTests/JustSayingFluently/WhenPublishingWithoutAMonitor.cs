@@ -40,7 +40,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         }
 
         [Then]
-        public void AMessageanStillBePublishedAndPopsOutTheOtherEnd()
+        public void AMessageCanStillBePublishedAndPopsOutTheOtherEnd()
         {
             Patiently.VerifyExpectation(() => _handler.Received().Handle(Arg.Any<GenericMessage>()));
         }
