@@ -7,9 +7,12 @@ namespace JustSaying.AwsTools
 {
     public class SqsQueueByName : SqsQueueByNameBase
     {
-        public SqsQueueByName(string queueName, IAmazonSQS client)
+        private readonly int _retryCountBeforeSendingToErrorQueue;
+
+        public SqsQueueByName(string queueName, IAmazonSQS client, int retryCountBeforeSendingToErrorQueue)
             : base(queueName, client)
         {
+            _retryCountBeforeSendingToErrorQueue = retryCountBeforeSendingToErrorQueue;
             ErrorQueue = new ErrorQueue(queueName, client);
         }
 
@@ -19,7 +22,7 @@ namespace JustSaying.AwsTools
             {
                 { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD , retentionPeriodSeconds.ToString(CultureInfo.InvariantCulture)},
                 { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , visibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture)},
-                { JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY, "{\"maxReceiveCount\":\"1\", \"deadLetterTargetArn\":\""+ErrorQueue.Arn+"\"}"}
+                { JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY, "{\"maxReceiveCount\":\""+_retryCountBeforeSendingToErrorQueue+"\", \"deadLetterTargetArn\":\""+ErrorQueue.Arn+"\"}"}
             };
         }
 
