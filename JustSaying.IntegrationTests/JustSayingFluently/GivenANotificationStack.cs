@@ -13,7 +13,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
     public abstract class GivenANotificationStack : BehaviourTest<IAmJustSayingFluently>
     {
         readonly Stopwatch _stopwatch = new Stopwatch();
-        protected IFluentSubscription ServiceBus;
+        protected IAmJustSayingFluently ServiceBus;
         protected IMessageMonitor Monitoring;
         private Future<GenericMessage> _handler;
         private  IPublishConfiguration _config = new MessagingConfig { PublishFailureBackoffMilliseconds = 1, PublishFailureReAttempts = 3};
@@ -35,7 +35,12 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
         protected override IAmJustSayingFluently CreateSystemUnderTest()
         {
+            var handler = Substitute.For<IHandler<GenericMessage>>();
+            handler.When(x => x.Handle(Arg.Any<GenericMessage>()))
+                    .Do(x => _handler.Complete((GenericMessage)x.Args()[0]));
+
             Monitoring = Substitute.For<IMessageMonitor>();
+
             ServiceBus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName).ConfigurePublisherWith(c =>
             {
                 c.PublishFailureBackoffMilliseconds = _config.PublishFailureBackoffMilliseconds;
@@ -50,13 +55,9 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                     cf.MessageRetentionSeconds = 60;
                     cf.VisibilityTimeoutSeconds = JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT;
                     cf.InstancePosition = 1;
-                });
-            
-            var handler = Substitute.For<IHandler<GenericMessage>>();
-            handler.When(x => x.Handle(Arg.Any<GenericMessage>()))
-                    .Do(x => _handler.Complete((GenericMessage)x.Args()[0]));
+                })
+                .WithMessageHandler(handler);
 
-            ServiceBus.WithMessageHandler(handler);
             ServiceBus.StartListening();
             return ServiceBus;
         }

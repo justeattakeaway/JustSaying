@@ -21,7 +21,7 @@ namespace JustSaying
     /// 3. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc // ToDo: Shouldn't be enforced in base! Is a JE concern.
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class JustSayingFluently : IFluentSubscription, ISubscriberIntoQueue
+    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements
     {
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
@@ -150,7 +150,7 @@ namespace JustSaying
         /// <typeparam name="T">Message type to be handled</typeparam>
         /// <param name="handler">Handler for the message type</param>
         /// <returns></returns>
-        public IFluentSubscription WithMessageHandler<T>(IHandler<T> handler) where T : Message
+        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message
         {
             Bus.SerialisationRegister.AddSerialiser<T>(new ServiceStackSerialiser<T>());
             Bus.AddMessageHandler(_subscriptionConfig.Topic, handler);
@@ -197,10 +197,15 @@ namespace JustSaying
         IAmJustSayingFluently WithMonitoring(IMessageMonitor messageMonitor);
     }
 
-    public interface IFluentSubscription : IAmJustSayingFluently
+    public interface IFluentSubscription
     {
-        IFluentSubscription WithMessageHandler<T>(IHandler<T> handler) where T : Message;
+        IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message;
         IFluentSubscription ConfigureSubscriptionWith(Action<SqsConfiguration> config);
+    }
+
+    public interface IHaveFulfilledSubscriptionRequirements : IAmJustSayingFluently, IFluentSubscription
+    {
+        
     }
 
     public interface ISubscriberIntoQueue
