@@ -1,4 +1,5 @@
-﻿using Amazon;
+﻿using System;
+using Amazon;
 using Amazon.SimpleNotificationService.Model;
 using JustEat.Testing;
 using JustSaying.Messaging.MessageHandling;
@@ -11,11 +12,13 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
     public class WhenRegisteringASqsTopicSubscriberInANonDefaultRegion : FluentNotificationStackTestBase
     {
         private string _topicName;
+        private string _queueName;
         private RegionEndpoint _regionEndpoint;
 
         protected override void Given()
         {
             _topicName = "IntegrationTest";
+            _queueName = "queue" + DateTime.Now.Ticks;
             _regionEndpoint = RegionEndpoint.SAEast1;
 
             MockNotidicationStack();
@@ -25,14 +28,14 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
                 Region = _regionEndpoint.SystemName
             };
 
-            DeleteQueueIfItAlreadyExists(_regionEndpoint, _topicName);
+            DeleteQueueIfItAlreadyExists(_regionEndpoint, _queueName);
             DeleteTopicIfItAlreadyExists(_regionEndpoint, _topicName);
         }
 
         protected override void When()
         {
             SystemUnderTest.WithSqsTopicSubscriber(_topicName)
-            .IntoQueue("queuename")
+            .IntoQueue(_queueName)
             .ConfigureSubscriptionWith(cfg => cfg.MessageRetentionSeconds = 60)
                 .WithMessageHandler(Substitute.For<IHandler<Message>>());
         }
@@ -46,7 +49,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             Assert.IsTrue(TryGetTopic(_regionEndpoint, _topicName, out topic), "Topic does not exist");
 
             string queueUrl;
-            Assert.IsTrue(WaitForQueueToExist(_regionEndpoint, _topicName, out queueUrl), "Queue does not exist");
+            Assert.IsTrue(WaitForQueueToExist(_regionEndpoint, _queueName, out queueUrl), "Queue does not exist");
 
             Assert.IsTrue(IsQueueSubscribedToTopic(_regionEndpoint, topic, queueUrl), "Queue is not subscribed to the topic");
 
@@ -57,7 +60,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         [TestFixtureTearDown]
         public void TearDown()
         {
-            DeleteQueueIfItAlreadyExists(_regionEndpoint, _topicName);
+            DeleteQueueIfItAlreadyExists(_regionEndpoint, _queueName);
             DeleteTopicIfItAlreadyExists(_regionEndpoint, _topicName);
         }
     }
