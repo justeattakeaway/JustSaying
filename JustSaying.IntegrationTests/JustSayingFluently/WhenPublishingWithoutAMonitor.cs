@@ -17,14 +17,16 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         [TestFixtureSetUp]
         public void Given()
         {
-            var bus = CreateMe.ABus(c =>
+            var bus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName).ConfigurePublisherWith(c =>
             {
                 c.PublishFailureBackoffMilliseconds = 1;
                 c.PublishFailureReAttempts = 1;
-                c.Region = RegionEndpoint.EUWest1.SystemName;
+                
             })
                 .WithSnsMessagePublisher<GenericMessage>("SomeTopic")
-                .WithSqsTopicSubscriber("SomeTopic", 60, instancePosition: 1)
+                .WithSqsTopicSubscriber("SomeTopic")
+                .IntoQueue("queuename")
+                .ConfigureSubscriptionWith(cfg => cfg.InstancePosition = 1)
                 .WithMessageHandler(_handler);
 
             _bus = bus;
@@ -38,7 +40,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         }
 
         [Then]
-        public void AMessageanStillBePublishedAndPopsOutTheOtherEnd()
+        public void AMessageCanStillBePublishedAndPopsOutTheOtherEnd()
         {
             Patiently.VerifyExpectation(() => _handler.Received().Handle(Arg.Any<GenericMessage>()));
         }

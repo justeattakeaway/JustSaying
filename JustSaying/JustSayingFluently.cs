@@ -21,42 +21,17 @@ namespace JustSaying
     /// 3. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc // ToDo: Shouldn't be enforced in base! Is a JE concern.
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class JustSayingFluently : IFluentSubscription
+    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantMonitoring
     {
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
         protected readonly IAmJustSaying Bus;
-        private string _currnetTopic;
+        private SqsConfiguration _subscriptionConfig;
 
         internal protected JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator)
         {
             Bus = bus;
             _amazonQueueCreator = queueCreator;
-        }
-
-        /// <summary>
-        /// Subscribe to a topic using SQS.
-        /// </summary>
-        /// <param name="topic">Topic to listen in on</param>
-        /// <param name="messageRetentionSeconds">Time messages should be kept in this queue</param>
-        /// <param name="visibilityTimeoutSeconds">Seconds message should be invisible to other other receiving components</param>
-        /// <param name="instancePosition">Optional instance position as tagged by paas tools in AWS. Using this will cause the message to get handled by EACH instance in your cluster</param>
-        /// <param name="onError">Optional error handler. Use this param to inject custom error handling from within the consuming application</param>
-        /// <param name="maxAllowedMessagesInFlight">Configures the stack to use the Throttled handling strategy, configured to this level of concurrent messages in flight</param>
-        /// <param name="messageProcessingStrategy">Hook to supply your own IMessageProcessingStrategy</param>
-        /// <returns></returns>
-        public IFluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30, int? instancePosition = null, Action<Exception> onError = null, int? maxAllowedMessagesInFlight = null, IMessageProcessingStrategy messageProcessingStrategy = null)
-        {
-            return WithSqsTopicSubscriber(cf =>
-            {
-                cf.Topic = topic;
-                cf.MessageRetentionSeconds = messageRetentionSeconds;
-                cf.VisibilityTimeoutSeconds = visibilityTimeoutSeconds;
-                cf.InstancePosition = instancePosition;
-                cf.OnError = onError;
-                cf.MaxAllowedMessagesInFlight = maxAllowedMessagesInFlight;
-                cf.MessageProcessingStrategy = messageProcessingStrategy;
-            });
         }
 
         // ToDo: Move these into the factory class?
@@ -68,48 +43,14 @@ namespace JustSaying
         {
             return new SnsPublishEndpointProvider(subscriptionConfig.Topic);
         }
-        public IFluentSubscription WithSqsTopicSubscriber(Action<SqsConfiguration> confBuilder)
-        {
-            var subscriptionConfig = new SqsConfiguration();
-            confBuilder(subscriptionConfig);
-
-            var subscriptionEndpointProvider = CreateSubscriptiuonEndpointProvider(subscriptionConfig);
-            var publishEndpointProvider = CreatePublisherEndpointProvider(subscriptionConfig);
-
-            subscriptionConfig.QueueName = subscriptionEndpointProvider.GetLocationName();
-            subscriptionConfig.PublishEndpoint = publishEndpointProvider.GetLocationName();
-            subscriptionConfig.Validate();
-
-            var queue = _amazonQueueCreator.VerifyOrCreateQueue(Bus.Config.Region, Bus.SerialisationRegister, subscriptionConfig);
-
-            var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, new NullMessageFootprintStore(), Bus.Monitor, subscriptionConfig.OnError);
-            Bus.AddNotificationTopicSubscriber(subscriptionConfig.Topic, sqsSubscriptionListener);
-            
-            if (subscriptionConfig.MaxAllowedMessagesInFlight.HasValue)
-                sqsSubscriptionListener.WithMaximumConcurrentLimitOnMessagesInFlightOf(subscriptionConfig.MaxAllowedMessagesInFlight.Value);
-
-            if (subscriptionConfig.MessageProcessingStrategy != null)
-                sqsSubscriptionListener.WithMessageProcessingStrategy(subscriptionConfig.MessageProcessingStrategy);
-
-            Log.Info(string.Format("Created SQS topic subscription - Topic: {0}, QueueName: {1}", subscriptionConfig.Topic, subscriptionConfig.QueueName));
-            _currnetTopic = subscriptionConfig.Topic;
-
-            return this;
-        }
-
-        public IFluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, IMessageProcessingStrategy messageProcessingStrategy)
-        {
-            return WithSqsTopicSubscriber(topic, messageRetentionSeconds, 30, null, null, null,
-                messageProcessingStrategy);
-        }
-
+        
         /// <summary>
         /// Register for publishing messages to SNS
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="topic"></param>
         /// <returns></returns>
-        public IAmJustSayingFluently WithSnsMessagePublisher<T>(string topic) where T : Message
+        public IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>(string topic) where T : Message
         {
             Log.Info("Added publisher");
 
@@ -165,6 +106,42 @@ namespace JustSaying
         /// </summary>
         public bool Listening { get { return (Bus != null) && Bus.Listening; } }
 
+        public IFluentSubscription ConfigureSubscriptionWith(Action<SqsConfiguration> configBuilder)
+        {
+            configBuilder(_subscriptionConfig);
+            var publishEndpointProvider = CreatePublisherEndpointProvider(_subscriptionConfig);
+
+            _subscriptionConfig.PublishEndpoint = publishEndpointProvider.GetLocationName();
+            _subscriptionConfig.Validate();
+
+            var queue = _amazonQueueCreator.VerifyOrCreateQueue(Bus.Config.Region, Bus.SerialisationRegister, _subscriptionConfig);
+
+            var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, new NullMessageFootprintStore(), Bus.Monitor, _subscriptionConfig.OnError);
+            Bus.AddNotificationTopicSubscriber(_subscriptionConfig.Topic, sqsSubscriptionListener);
+
+            if (_subscriptionConfig.MaxAllowedMessagesInFlight.HasValue)
+                sqsSubscriptionListener.WithMaximumConcurrentLimitOnMessagesInFlightOf(_subscriptionConfig.MaxAllowedMessagesInFlight.Value);
+
+            if (_subscriptionConfig.MessageProcessingStrategy != null)
+                sqsSubscriptionListener.WithMessageProcessingStrategy(_subscriptionConfig.MessageProcessingStrategy);
+
+            Log.Info(string.Format("Created SQS topic subscription - Topic: {0}, QueueName: {1}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName));
+
+            return this;
+        }
+
+        public IFluentSubscription IntoQueue(string queuename)
+        {
+            _subscriptionConfig.QueueName = queuename;
+            return this;
+        }
+
+        public ISubscriberIntoQueue WithSqsTopicSubscriber(string topic)
+        {
+            _subscriptionConfig = new SqsConfiguration {Topic = topic};
+            return this;
+        }
+
         #region Implementation of IFluentSubscription
 
         /// <summary>
@@ -173,12 +150,12 @@ namespace JustSaying
         /// <typeparam name="T">Message type to be handled</typeparam>
         /// <param name="handler">Handler for the message type</param>
         /// <returns></returns>
-        public IFluentSubscription WithMessageHandler<T>(IHandler<T> handler) where T : Message
+        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message
         {
             Bus.SerialisationRegister.AddSerialiser<T>(new ServiceStackSerialiser<T>());
-            Bus.AddMessageHandler(_currnetTopic, handler);
+            Bus.AddMessageHandler(_subscriptionConfig.Topic, handler);
 
-            Log.Info(string.Format("Added a message handler - Topic: {0}, MessageType: {1}, HandlerName: {2}", _currnetTopic, typeof(T).Name, handler.GetType().Name));
+            Log.Info(string.Format("Added a message handler - Topic: {0}, MessageType: {1}, HandlerName: {2}", _subscriptionConfig.Topic, typeof(T).Name, handler.GetType().Name));
 
             return this;
         }
@@ -199,30 +176,50 @@ namespace JustSaying
         }
 
         #endregion
+
+        public IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder)
+        {
+            confBuilder(Bus.Config as IPublishConfiguration);
+            Bus.Config.Validate();
+
+            return this;
+        }
     }
 
-    public interface IAmJustSayingFluently : IMessagePublisher, IFluentMonitoring
+    public interface IMayWantMonitoring : IAmJustSayingFluently
     {
-        IAmJustSayingFluently WithSnsMessagePublisher<T>(string topic) where T : Message;
+        IAmJustSayingFluently WithMonitoring(IMessageMonitor messageMonitor);
+    }
 
-        IFluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds,
-            int visibilityTimeoutSeconds = 30, int? instancePosition = null, Action<Exception> onError = null,
-            int? maxAllowedMessagesInFlight = null, IMessageProcessingStrategy messageProcessingStrategy = null);
-        IFluentSubscription WithSqsTopicSubscriber(string topic, int messageRetentionSeconds, IMessageProcessingStrategy messageProcessingStrategy);
-        IFluentSubscription WithSqsTopicSubscriber(Action<SqsConfiguration> confBuilder);
-
+    public interface IAmJustSayingFluently : IMessagePublisher
+    {
+        IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder);
+        ISubscriberIntoQueue WithSqsTopicSubscriber(string topic);
         void StartListening();
         void StopListening();
         bool Listening { get; }
     }
 
-    public interface IFluentMonitoring
+    public interface IFluentSubscription
     {
-        IAmJustSayingFluently WithMonitoring(IMessageMonitor messageMonitor);
+        IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message;
+        IFluentSubscription ConfigureSubscriptionWith(Action<SqsConfiguration> config);
     }
 
-    public interface IFluentSubscription : IAmJustSayingFluently
+    public interface IHaveFulfilledSubscriptionRequirements : IAmJustSayingFluently, IFluentSubscription
     {
-        IFluentSubscription WithMessageHandler<T>(IHandler<T> handler) where T : Message;
+        
     }
+
+    public interface ISubscriberIntoQueue
+    {
+        IFluentSubscription IntoQueue(string queuename);
+    }
+
+    public interface IHaveFulfilledPublishRequirements : IAmJustSayingFluently
+    {
+        IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>(string topic) where T : Message;
+    }
+
+
 }

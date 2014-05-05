@@ -1,5 +1,6 @@
 using System;
 using Amazon;
+using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageSerialisation;
 
 namespace JustSaying.AwsTools.QueueCreation
@@ -25,12 +26,13 @@ namespace JustSaying.AwsTools.QueueCreation
             var sqsclient = AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(region));
             var snsclient = AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(region));
 
-            var queue = new SqsQueueByName(queueConfig.QueueName, sqsclient);
+            var queue = new SqsQueueByName(queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue);
 
             var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsclient, serialisationRegister);
 
             if (!queue.Exists())
                 queue.Create(queueConfig.MessageRetentionSeconds, 0, queueConfig.VisibilityTimeoutSeconds, queueConfig.ErrorQueueOptOut, queueConfig.RetryCountBeforeSendingToErrorQueue);
+            queue.UpdateRedrivePolicy(new RedrivePolicy(queueConfig.RetryCountBeforeSendingToErrorQueue, queue.ErrorQueue.Arn));
 
             if (!eventTopic.Exists())
                 eventTopic.Create();

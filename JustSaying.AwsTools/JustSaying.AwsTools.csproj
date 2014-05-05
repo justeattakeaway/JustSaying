@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="QueueCreation\AmazonQueueCreator.cs" />
     <Compile Include="QueueCreation\IVerifyAmazonQueues.cs" />
+    <Compile Include="QueueCreation\RedrivePolicy.cs" />
     <Compile Include="QueueCreation\SqsConfiguration.cs" />
     <Compile Include="DynamoTable.cs" />
     <Compile Include="DynamoDbConfig.cs" />

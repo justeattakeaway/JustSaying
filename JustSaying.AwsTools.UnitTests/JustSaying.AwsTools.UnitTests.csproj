@@ -68,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MessageStubs.cs" />
+    <Compile Include="QueueCreation\WhenSerializingRedrivePolicy.cs" />
     <Compile Include="SqsNotificationListener\HandlingExceptions\WhenErrorHandlingActionIsNotProvided.cs" />
     <Compile Include="SqsNotificationListener\HandlingExceptions\WhenErrorHandlingActionIsProvided.cs" />
     <Compile Include="SqsNotificationListener\WhenListeningStartsAndStops.cs" />

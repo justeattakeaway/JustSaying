@@ -1,12 +1,13 @@
 using JustEat.Testing;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Messages;
+using JustSaying.Messaging.MessageSerialisation;
 using NSubstitute;
 using NUnit.Framework;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 {
-    public class WhenRegisteringAPublisherAPublisherIsAddedToTheNotificationStack : FluentNotificationStackTestBase
+    public class WhenRegisteringAPublisher : FluentNotificationStackTestBase
     {
         private string _topicName;
 
@@ -33,6 +34,13 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         public void APublisherIsAddedToTheStack()
         {
             NotificationStack.Received().AddMessagePublisher<Message>(_topicName, Arg.Any<IMessagePublisher>());
+        }
+
+        [Then]
+        public void SerialisationIsRegisteredForMessage()
+        {
+            NotificationStack.SerialisationRegister.Received()
+                .AddSerialiser<Message>(Arg.Any<IMessageSerialiser<Message>>());
         }
 
         [TearDown]

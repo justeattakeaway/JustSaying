@@ -13,7 +13,7 @@ namespace JustSayingExtensions
     {
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
 
-        public static IFluentMonitoring AJustEatBus(Action<INotificationStackConfiguration> configuration)
+        public static IMayWantMonitoring AJustEatBus(Action<INotificationStackConfiguration> configuration)
         {
             var config = new MessagingConfig();
             configuration.Invoke(config);

@@ -25,15 +25,22 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             _handler.Handle(Arg.Any<GenericMessage>()).Returns(true).AndDoes(ex => { throw new Exception("My Ex"); });
             _globalErrorHandler = ex => { _handledException = true; };
             _monitoring = Substitute.For<IMessageMonitor>();
-            var bus =  CreateMe.ABus(c =>
+            var bus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+                .WithMonitoring(_monitoring)
+                .ConfigurePublisherWith(c =>
                                                                         {
                                                                             c.PublishFailureBackoffMilliseconds = 1;
                                                                             c.PublishFailureReAttempts = 3;
-                                                                            c.Region = RegionEndpoint.EUWest1.SystemName;
                                                                         })
-                                                                        .WithMonitoring(_monitoring)
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
-                .WithSqsTopicSubscriber("CustomerCommunication", 60, instancePosition: 1, onError: _globalErrorHandler)
+                .WithSqsTopicSubscriber("CustomerCommunication")
+                .IntoQueue("queuename")
+                .ConfigureSubscriptionWith(cfg =>
+                    {
+                        cfg.MessageRetentionSeconds = 60;
+                        cfg.InstancePosition = 1;
+                        cfg.OnError = _globalErrorHandler;
+                    })
                 .WithMessageHandler(_handler);
 
             bus.StartListening();

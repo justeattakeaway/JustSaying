@@ -18,7 +18,7 @@ namespace JustSaying.UnitTests.Lookups.SqsEndpointNames
 
         protected override void Given()
         {
-            _sqsConfiguration.Topic = "OrderDispatch";
+            _sqsConfiguration.QueueName = "OrderDispatch";
         }
 
         protected override void When()

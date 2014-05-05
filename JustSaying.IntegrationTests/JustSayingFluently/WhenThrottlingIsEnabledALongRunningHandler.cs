@@ -34,14 +34,19 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
 
 
-            var publisher = CreateMe.ABus(c =>
-            {
-                c.Region = RegionEndpoint.EUWest1.SystemName;
-                c.PublishFailureBackoffMilliseconds = 1;
-            })
-                                                                        .WithMonitoring(Substitute.For<IMessageMonitor>())
+            var publisher = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+                .WithMonitoring(Substitute.For<IMessageMonitor>())
+                .ConfigurePublisherWith(c =>
+                {
+                    c.PublishFailureBackoffMilliseconds = 1;
+                })
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
-                .WithSqsTopicSubscriber("CustomerCommunication", 60, instancePosition: 1, maxAllowedMessagesInFlight: 25)
+                .WithSqsTopicSubscriber("CustomerCommunication").IntoQueue("queuename").ConfigureSubscriptionWith(
+                    cfg =>
+                    {
+                        cfg.InstancePosition = 1;
+                        cfg.MaxAllowedMessagesInFlight = 25;
+                    })
                 .WithMessageHandler(_handler);
 
             publisher.StartListening();

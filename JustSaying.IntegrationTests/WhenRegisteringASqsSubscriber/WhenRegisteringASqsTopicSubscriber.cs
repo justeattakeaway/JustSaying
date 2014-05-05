@@ -27,7 +27,12 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
         protected override void When()
         {
-            SystemUnderTest.WithSqsTopicSubscriber(_topicName, 60).WithMessageHandler(Substitute.For<IHandler<Message>>());
+            SystemUnderTest.WithSqsTopicSubscriber(_topicName)
+                .IntoQueue("queuename")
+                .ConfigureSubscriptionWith(cfg =>
+            {
+                cfg.MessageRetentionSeconds = 60;
+            }).WithMessageHandler(Substitute.For<IHandler<Message>>());
         }
 
         [Then]
