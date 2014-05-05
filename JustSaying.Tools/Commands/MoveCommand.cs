@@ -32,17 +32,13 @@ namespace JustSaying.Tools.Commands
             var sourceQueue = new SqsQueueByName(SourceQueueName, client);
             var destinationQueue = new SqsQueueByName(DestinationQueueName, client);
 
-            var receiveResponse= sourceQueue.Client.ReceiveMessage(new ReceiveMessageRequest
-            {
-                QueueUrl = sourceQueue.Url,
-                MaxNumberOfMessages = Count,
-            });
-            var receiptHandles = receiveResponse.Messages.ToDictionary(m => m.MessageId, m => m.ReceiptHandle);
+            var messages = PopMessagesFromSourceQueue(sourceQueue);
+            var receiptHandles = messages.ToDictionary(m => m.MessageId, m => m.ReceiptHandle);
             
             var sendResponse = destinationQueue.Client.SendMessageBatch(new SendMessageBatchRequest()
             {
                 QueueUrl = destinationQueue.Url,
-                Entries = receiveResponse.Messages.Select(x => new SendMessageBatchRequestEntry { Id = x.MessageId, MessageBody = x.Body }).ToList()
+                Entries = messages.Select(x => new SendMessageBatchRequestEntry { Id = x.MessageId, MessageBody = x.Body }).ToList()
             });
 
             var deleteResponse = sourceQueue.Client.DeleteMessageBatch(new DeleteMessageBatchRequest
@@ -57,6 +53,24 @@ namespace JustSaying.Tools.Commands
 
             Console.WriteLine("Moved {0} messages from {1} to {2}", sendResponse.Successful.Count, SourceQueueName, DestinationQueueName);
             return true;
+        }
+
+        private List<Message> PopMessagesFromSourceQueue(SqsQueueByName sourceQueue)
+        {
+            List<Message> messages = new List<Message>();
+            ReceiveMessageResponse receiveResponse;
+            do
+            {
+                receiveResponse = sourceQueue.Client.ReceiveMessage(new ReceiveMessageRequest
+                {
+                    QueueUrl = sourceQueue.Url,
+                    MaxNumberOfMessages = Count,
+                });
+                messages.AddRange(receiveResponse.Messages);
+            } while (messages.Count < Count && receiveResponse.Messages.Any());
+
+            
+            return messages;
         }
     }
 }
