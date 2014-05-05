@@ -29,8 +29,8 @@ namespace JustSaying.Tools.Commands
             Console.WriteLine("Moving {0} messages from {1} to {2}", Count, SourceQueueName, DestinationQueueName);
 
             var client = AWSClientFactory.CreateAmazonSQSClient(_configuration.AWSAccessKey, _configuration.AWSSecretKey, RegionEndpoint.GetBySystemName(_configuration.Region));
-            var sourceQueue = new SqsQueueByName(SourceQueueName, client);
-            var destinationQueue = new SqsQueueByName(DestinationQueueName, client);
+            var sourceQueue = new SqsQueueByName(SourceQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT);
+            var destinationQueue = new SqsQueueByName(DestinationQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT);
 
             var messages = PopMessagesFromSourceQueue(sourceQueue);
             var receiptHandles = messages.ToDictionary(m => m.MessageId, m => m.ReceiptHandle);
