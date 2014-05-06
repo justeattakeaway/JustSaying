@@ -5,7 +5,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingFluently.Publishing
 {
-    public class WhenPublishing : FluentMessageMuleTestBase
+    public class WhenPublishing : JustSayingFluentlyTestBase
     {
         private readonly Message _message = new GenericMessage();
 

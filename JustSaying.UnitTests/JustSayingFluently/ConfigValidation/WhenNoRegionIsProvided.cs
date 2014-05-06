@@ -4,7 +4,7 @@ using NUnit.Framework;
 
 namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
 {
-    public class WhenNoRegionIsProvided : FluentMessageMuleTestBase
+    public class WhenNoRegionIsProvided : JustSayingFluentlyTestBase
     {
         protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {

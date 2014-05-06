@@ -67,7 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CreateMe\WhenCreatingABus.cs" />
-    <Compile Include="FluentMessagingMuleTestBase.cs" />
+    <Compile Include="JustSayingFluentlyTestBase.cs" />
     <Compile Include="JustSayingFluently\AddingHandlers\WhenAddingASubscriptionHandler.cs" />
     <Compile Include="JustSayingFluently\AddingHandlers\WhenAddingASubscriptionHandlerWithoutCustomConfig.cs" />
     <Compile Include="JustSayingFluently\AddingMonitoring\WhenAddingACustomMonitor.cs" />
