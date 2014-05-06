@@ -52,7 +52,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         [Then, Timeout(70000)] // ToDo: Sorry about this, but SQS is a little slow to verify againse. Can be better I'm sure? ;)
         public void QueueIsCreated()
         {
-            var queue = new SqsQueueByName(_queueName, new AmazonSQSClient(RegionEndpoint.EUWest1));
+            var queue = new SqsQueueByName(_queueName, new AmazonSQSClient(RegionEndpoint.EUWest1), 0);
 
             Patiently.AssertThat(queue.Exists, TimeSpan.FromSeconds(65));
         }
