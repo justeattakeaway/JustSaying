@@ -5,7 +5,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
 {
-    public class WhenAddingASubscriptionHandlerWithoutCustomConfig : FluentMessageMuleTestBase
+    public class WhenAddingASubscriptionHandlerWithoutCustomConfig : JustSayingFluentlyTestBase
     {
         private readonly IHandler<Message> _handler = Substitute.For<IHandler<Message>>();
         private const string Topic = "CustomerCommunication";

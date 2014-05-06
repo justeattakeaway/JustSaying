@@ -127,12 +127,7 @@ namespace JustSaying
 
             Log.Info(string.Format("Created SQS topic subscription - Topic: {0}, QueueName: {1}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName));
 
-            return this;
-        }
-
-        public IFluentSubscription IntoQueue(string queuename)
-        {
-            _subscriptionConfig.QueueName = queuename;
+            _subscriptionConfigured = true;
             return this;
         }
 
@@ -142,7 +137,16 @@ namespace JustSaying
             return this;
         }
 
-        #region Implementation of IFluentSubscription
+        #region Implementation of Queue Subscription
+
+        private bool _subscriptionConfigured;
+
+        public IFluentSubscription IntoQueue(string queuename)
+        {
+            _subscriptionConfigured = false;
+            _subscriptionConfig.QueueName = queuename;
+            return this;
+        }
 
         /// <summary>
         /// Set message handlers for the given topic
@@ -152,6 +156,9 @@ namespace JustSaying
         /// <returns></returns>
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message
         {
+            if (!_subscriptionConfigured)
+                ConfigureSubscriptionWith(conf => conf.ErrorQueueOptOut = false);
+
             Bus.SerialisationRegister.AddSerialiser<T>(new ServiceStackSerialiser<T>());
             Bus.AddMessageHandler(_subscriptionConfig.Topic, handler);
 

@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace JustSaying.UnitTests.JustSayingFluently.AddingMonitoring
 {
-    public class WhenAddingACustomMonitor : FluentMessageMuleTestBase
+    public class WhenAddingACustomMonitor : JustSayingFluentlyTestBase
     {
         readonly IMessageMonitor _monitor = Substitute.For<IMessageMonitor>();
         private object _response;
