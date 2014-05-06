@@ -75,6 +75,7 @@
     <Compile Include="WhenIAccessAnExistingQueueWithoutAnErrorQueue.cs" />
     <Compile Include="WhenICreateAQueueByName.cs" />
     <Compile Include="WhenQueueIsDeleted.cs" />
+    <Compile Include="WhenUpdatingRedrivePolicy.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

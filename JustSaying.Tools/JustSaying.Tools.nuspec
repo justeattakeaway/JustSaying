@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+    <metadata>
+        <id>$id$</id>
+        <version>$version$</version>
+        <title>JustSaying.Tools</title>
+        <authors>$author$</authors>
+        <owners>Just-Eat Holding Ltd</owners>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>$description$</description>
+        <copyright>Copyright 2014, by Just-Eat Holding Ltd</copyright>
+        <dependencies>
+            <dependency id="AWSSDK" version="[2.0.3.1]" />
+            <dependency id="Magnum" version="2.1.2" />
+            <dependency id="NLog" version="2.1.0" />
+            <dependency id="ServiceStack.Text" version="3.9.56" />
+        </dependencies>
+    </metadata>
+</package>

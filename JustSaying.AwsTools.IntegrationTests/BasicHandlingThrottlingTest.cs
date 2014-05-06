@@ -25,7 +25,7 @@ namespace JustSaying.AwsTools.IntegrationTests
             var locker = new object();
             var awsQueueClient = AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.EUWest1);
  
-            var q = new SqsQueueByName("throttle_test", awsQueueClient);
+            var q = new SqsQueueByName("throttle_test", awsQueueClient, 1);
             if (!q.Exists())
             {
                 q.Create(60 * 2);
