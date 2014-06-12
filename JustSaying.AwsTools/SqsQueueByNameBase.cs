@@ -23,15 +23,20 @@ namespace JustSaying.AwsTools
         {
             var result = Client.ListQueues(new ListQueuesRequest{ QueueNamePrefix = QueueNamePrefix });
             Console.WriteLine("polling for {0}", QueueNamePrefix);
-            if (result.QueueUrls.Any())
+            Url = result.QueueUrls.SingleOrDefault(x => Matches(x, QueueNamePrefix));
+
+            if (Url != null)
             {
-                Console.WriteLine("found " + result.QueueUrls.First());
-                Url = result.QueueUrls.First();
                 SetArn();
                 return true;
             }
 
             return false;
+        }
+        private static bool Matches(string queueUrl, string queueName)
+        {
+            return queueUrl.Substring(queueUrl.LastIndexOf("/", StringComparison.InvariantCulture) + 1)
+                .Equals(queueName, StringComparison.InvariantCultureIgnoreCase);
         }
 
         public virtual bool Create(int retentionPeriodSeconds, int attempt = 0, int visibilityTimeoutSeconds = 30, bool errorQueueOptOut = false, int retryCountBeforeSendingToErrorQueue = JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT)
