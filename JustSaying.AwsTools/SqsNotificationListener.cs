@@ -140,10 +140,10 @@ namespace JustSaying.AwsTools
             string rawMessage = null;
             try
             {
-                // ToDo: No no no...
-                string messageType = JObject.Parse(message.Body)["Subject"].ToString();
+                var body = JObject.Parse(message.Body);
+                string messageType = body["Subject"].ToString();
 
-                rawMessage = JObject.Parse(message.Body)["Message"].ToString();
+                rawMessage = body["Message"].ToString();
                 typedMessage = _serialisationRegister
                     .GetSerialiser(messageType)
                     .Deserialise(rawMessage);
