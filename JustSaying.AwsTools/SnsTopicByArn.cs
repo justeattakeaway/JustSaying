@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
@@ -19,6 +20,12 @@ namespace JustSaying.AwsTools
         {
             var topicCheck = Client.ListTopics(new ListTopicsRequest());
             return topicCheck.Topics.Any(x => x.TopicArn == Arn);
+        }
+        public bool Matches(string topicName)
+        {
+            return Arn
+                .Substring(Arn.LastIndexOf(":", StringComparison.InvariantCulture) + 1)
+                .Equals(topicName, StringComparison.InvariantCultureIgnoreCase);
         }
     }
 }
