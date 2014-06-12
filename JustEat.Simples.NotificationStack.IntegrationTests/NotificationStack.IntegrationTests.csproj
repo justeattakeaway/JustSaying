@@ -74,7 +74,6 @@
     <Compile Include="FluentNotificationStackTests\Future.cs" />
     <Compile Include="FluentNotificationStackTests\GivenANotificationStack.cs" />
     <Compile Include="FluentNotificationStackTests\TestExtensions.cs" />
-    <Compile Include="FluentNotificationStackTests\WhenAHandlerThrowsAnException.cs" />
     <Compile Include="FluentNotificationStackTests\WhenAMessageIsPublishedViaSnsToSqsSubscriber.cs" />
     <Compile Include="FluentNotificationStackTests\WhenHandlersThrowAnException.cs" />
     <Compile Include="FluentNotificationStackTests\WhenThrottlingIsEnabledALongRunningHandler.cs" />
