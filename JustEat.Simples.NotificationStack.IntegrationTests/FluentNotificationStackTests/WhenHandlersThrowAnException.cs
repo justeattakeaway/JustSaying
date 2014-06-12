@@ -1,7 +1,5 @@
 using System;
-using System.Threading;
 using JustEat.Testing;
-using JustSaying.AwsTools;
 using JustSaying.Tests.MessageStubs;
 using NSubstitute;
 
@@ -26,8 +24,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
         [Then]
         public void ThenExceptionIsRecordedInStatsD()
         {
-            _handler.WaitUntilCompletion(10.Seconds()).ShouldBeTrue();
-            Thread.Sleep(2000);
+            _handler.WaitUntilCompletion(2.Seconds()).ShouldBeFalse();
             Monitoring.Received().HandleException(Arg.Any<string>());
         }
     }

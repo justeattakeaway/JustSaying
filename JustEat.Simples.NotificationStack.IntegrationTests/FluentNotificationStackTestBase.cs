@@ -41,7 +41,7 @@ namespace NotificationStack.IntegrationTests
             {
                 NotificationStack = Substitute.For<IAmJustSaying>();
 
-                var notificationStackField = fns.GetType().GetField("_stack", BindingFlags.Instance | BindingFlags.NonPublic);
+                var notificationStackField = fns.GetType().GetField("Bus", BindingFlags.Instance | BindingFlags.NonPublic);
 
                 var constructedStack = (IAmJustSaying)notificationStackField.GetValue(fns);
 

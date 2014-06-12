@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
@@ -9,12 +10,14 @@ namespace JustSaying.AwsTools
 {
     public class SnsTopicByName : SnsTopicBase, IMessagePublisher
     {
+        private readonly IMessageSerialisationRegister _serialisationRegister;
         public string TopicName { get; private set; }
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
 
         public SnsTopicByName(string topicName, IAmazonSimpleNotificationService client, IMessageSerialisationRegister serialisationRegister)
             : base(serialisationRegister)
         {
+            _serialisationRegister = serialisationRegister;
             TopicName = topicName;
             Client = client;
             Exists();
@@ -25,23 +28,23 @@ namespace JustSaying.AwsTools
             var topicCheck = Client.ListTopics(new ListTopicsRequest());
             if (topicCheck.Topics.Any())
             {
-                var topic = topicCheck.Topics.FirstOrDefault(x => x.TopicArn.Contains(TopicName));
+                var topic = topicCheck.Topics.Select(x => new SnsTopicByArn(x.TopicArn, Client, _serialisationRegister)).FirstOrDefault(x => x.Matches(TopicName));
 
                 while (topic == null && !string.IsNullOrEmpty(topicCheck.NextToken))
                 {
                     topicCheck = Client.ListTopics(new ListTopicsRequest(topicCheck.NextToken));
-                    topic = topicCheck.Topics.FirstOrDefault(x => x.TopicArn.Contains(TopicName));
-                    
+                    topic = topicCheck.Topics.Select(x => new SnsTopicByArn(x.TopicArn, Client, _serialisationRegister)).FirstOrDefault(x => x.Matches(TopicName));
+
                     if (topic != null)
                     {
-                        Arn = topic.TopicArn;
+                        Arn = topic.Arn;
                         return true;
                     }
                 }
 
                 if (topic != null)
                 {
-                    Arn = topic.TopicArn;
+                    Arn = topic.Arn;
                     return true;
                 }
             }
@@ -66,5 +69,6 @@ namespace JustSaying.AwsTools
         {
             //No need to delete a topic ever.
         }
+        
     }
 }

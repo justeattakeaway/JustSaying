@@ -1,12 +1,17 @@
 using System;
+using NUnit.Framework;
 
 namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
 {
     public static class TestExtensions
     {
-        public static bool ShouldBeTrue(this bool boolean)
+        public static void ShouldBeTrue(this bool boolean)
         {
-            return boolean;
+            Assert.IsTrue(boolean);
+        }
+        public static void ShouldBeFalse(this bool boolean)
+        {
+            Assert.IsFalse(boolean);
         }
 
         public static TimeSpan Seconds(this int numberOfSeconds)

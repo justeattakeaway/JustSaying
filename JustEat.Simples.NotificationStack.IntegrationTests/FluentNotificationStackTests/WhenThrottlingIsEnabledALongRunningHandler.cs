@@ -65,7 +65,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
             });
         }
 
-        [Test]
+        [Test, Explicit]
         public void ThenItGetsHandled()
         {
             //Publish the message with a long running handler

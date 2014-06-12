@@ -25,7 +25,7 @@ namespace JustSaying
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
         protected readonly IAmJustSaying Bus;
-        private SqsConfiguration _subscriptionConfig;
+        private SqsConfiguration _subscriptionConfig = new SqsConfiguration();
 
         internal protected JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator)
         {
@@ -52,10 +52,10 @@ namespace JustSaying
         public IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>(string topic) where T : Message
         {
             Log.Info("Added publisher");
-
-            var endpointProvider = new SnsPublishEndpointProvider(topic);
+            _subscriptionConfig.Topic = topic;
+            var publishEndpointProvider = CreatePublisherEndpointProvider(_subscriptionConfig);
             var eventPublisher = new SnsTopicByName(
-                endpointProvider.GetLocationName(),
+                publishEndpointProvider.GetLocationName(),
                 AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(Bus.Config.Region)),
                 Bus.SerialisationRegister);
 

@@ -54,7 +54,7 @@ namespace NotificationStack.IntegrationTests.FluentNotificationStackTests
                 .ConfigurePublisherWith(x => {})
                 .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
                 .WithSqsTopicSubscriber("CustomerCommunication")
-                .IntoQueue("CustomerCommunication")
+                .IntoQueue("integrationtestqueue")
                 .ConfigureSubscriptionWith(cf =>
                 {
 
