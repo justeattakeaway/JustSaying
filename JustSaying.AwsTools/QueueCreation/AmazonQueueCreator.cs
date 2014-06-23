@@ -32,6 +32,10 @@ namespace JustSaying.AwsTools.QueueCreation
 
             if (!queue.Exists())
                 queue.Create(queueConfig.MessageRetentionSeconds, 0, queueConfig.VisibilityTimeoutSeconds, queueConfig.ErrorQueueOptOut, queueConfig.RetryCountBeforeSendingToErrorQueue);
+
+            //Create an error queue for existing queues if they don't already have one
+            if(queue.ErrorQueue != null && !queue.ErrorQueue.Exists())
+                queue.ErrorQueue.Create(JustSayingConstants.MAXIMUM_RETENTION_PERIOD, JustSayingConstants.DEFAULT_CREATE_REATTEMPT, JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT, errorQueueOptOut: true);
             queue.UpdateRedrivePolicy(new RedrivePolicy(queueConfig.RetryCountBeforeSendingToErrorQueue, queue.ErrorQueue.Arn));
 
             if (!eventTopic.Exists())
