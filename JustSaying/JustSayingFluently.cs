@@ -113,6 +113,8 @@ namespace JustSaying
             _subscriptionConfig.PublishEndpoint = publishEndpointProvider.GetLocationName();
             _subscriptionConfig.Validate();
 
+            var subscriptionEndpointProvider = CreateSubscriptiuonEndpointProvider(_subscriptionConfig);
+            _subscriptionConfig.QueueName = subscriptionEndpointProvider.GetLocationName();
             var queue = _amazonQueueCreator.VerifyOrCreateQueue(Bus.Config.Region, Bus.SerialisationRegister, _subscriptionConfig);
 
             var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, new NullMessageFootprintStore(), Bus.Monitor, _subscriptionConfig.OnError);
