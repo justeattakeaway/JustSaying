@@ -107,7 +107,10 @@ namespace JustSaying.AwsTools
         {
             get
             {
-                return RedrivePolicy.ConvertFromString(GetAttrs(new[] { JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY }).Attributes[JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY]);
+                var queueAttributes = GetAttrs(new[] { JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY }).Attributes;
+                if(!queueAttributes.ContainsKey(JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY))
+                    return null;
+                return RedrivePolicy.ConvertFromString(queueAttributes[JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY]);
             }
         }
     }

@@ -47,7 +47,7 @@ namespace JustSaying.AwsTools
 
         public void UpdateRedrivePolicy(RedrivePolicy requestedRedrivePolicy)
         {
-            if (RedrivePolicy.MaximumReceives != requestedRedrivePolicy.MaximumReceives)
+            if (RedrivePolicyNeedsUpdating(requestedRedrivePolicy))
             {
                 Client.SetQueueAttributes(
                 new SetQueueAttributesRequest
@@ -56,6 +56,11 @@ namespace JustSaying.AwsTools
                     Attributes = new Dictionary<string, string> { { JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY, requestedRedrivePolicy.ToString() } }
                 });
             }
+        }
+
+        private bool RedrivePolicyNeedsUpdating(RedrivePolicy requestedRedrivePolicy)
+        {
+            return RedrivePolicy == null || RedrivePolicy.MaximumReceives != requestedRedrivePolicy.MaximumReceives;
         }
     }
 }
