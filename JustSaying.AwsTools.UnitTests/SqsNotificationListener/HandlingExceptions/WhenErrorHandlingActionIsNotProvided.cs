@@ -1,6 +1,5 @@
 using JustSaying.AwsTools;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.Messages;
 using JustEat.Testing;
 using NSubstitute;
 using NUnit.Framework;

@@ -1,9 +1,9 @@
 using System;
 using JustEat.Testing;
 using JustSaying.Messaging;
-using JustSaying.Messaging.Messages;
 using JustSaying.TestingFramework;
 using JustSaying.Tests.MessageStubs;
+using JustSaying.Models;
 using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus

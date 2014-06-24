@@ -1,8 +1,8 @@
 using Amazon;
 using Amazon.SimpleNotificationService.Model;
-using JustSaying.Messaging.Messages;
 using JustSaying.Stack;
 using JustEat.Testing;
+using JustSaying.Models;
 using NUnit.Framework;
 
 namespace NotificationStack.IntegrationTests.WhenRegisteringAPublisher

@@ -1,6 +1,6 @@
-using JustSaying.Messaging.Messages;
 using JustEat.Testing;
 using JustSaying.Tests.MessageStubs;
+using JustSaying.Models;
 using NSubstitute;
 
 namespace Stack.UnitTests.FluentNotificationStackTests.Publishing

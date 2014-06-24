@@ -1,4 +1,4 @@
-using JustSaying.Messaging.Messages;
+using JustSaying.Models;
 using Newtonsoft.Json;
 
 namespace JustSaying.Messaging.MessageSerialisation

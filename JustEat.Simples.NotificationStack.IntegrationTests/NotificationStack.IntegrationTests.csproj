@@ -93,17 +93,17 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JustSaying,Models\JustSaying,Models.csproj">
+    <ProjectReference Include="..\JustSaying,Models\JustSaying.Models.csproj">
       <Project>{A9FD2BAC-5B4B-4408-9253-16813BC87727}</Project>
-      <Name>JustSaying,Models</Name>
+      <Name>JustSaying.Models</Name>
     </ProjectReference>
     <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj">
       <Project>{cbf2110b-c3a4-45e8-bbd6-301d77567043}</Project>
-      <Name>AwsTools</Name>
+      <Name>JustSaying.AwsTools</Name>
     </ProjectReference>
     <ProjectReference Include="..\JustSaying.Messaging\JustSaying.Messaging.csproj">
       <Project>{899CD315-37B3-46D0-B2DC-FB94C552D968}</Project>
-      <Name>Messaging</Name>
+      <Name>JustSaying.Messaging</Name>
     </ProjectReference>
     <ProjectReference Include="..\JustEat.Simples.NotificationStack\NotificationStack.csproj">
       <Project>{A36B7ECF-A2AA-44CC-9538-7BC28BDDE4E0}</Project>

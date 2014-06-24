@@ -1,7 +1,7 @@
 ﻿using JustEat.Testing;
-using JustSaying.Messaging.Messages;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Stack;
+using JustSaying.Models;
 using NSubstitute;
 using NUnit.Framework;
 using JustSaying.Messaging.MessageHandling;

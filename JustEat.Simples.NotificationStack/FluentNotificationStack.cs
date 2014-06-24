@@ -1,8 +1,8 @@
 using System;
 using Amazon;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Messaging.Messages;
 using JustSaying.Lookups;
+using JustSaying.Models;
 using IPublishEndpointProvider = JustSaying.Lookups.IPublishEndpointProvider;
 using SnsPublishEndpointProvider = JustSaying.Stack.Lookups.SnsPublishEndpointProvider;
 using SqsSubscribtionEndpointProvider = JustSaying.Stack.Lookups.SqsSubscribtionEndpointProvider;

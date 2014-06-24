@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using JustSaying.Messaging.Messages;
+using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialisation
 {

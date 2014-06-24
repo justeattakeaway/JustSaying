@@ -82,17 +82,17 @@
     <Compile Include="WhenPublishEndpointIsNotProvided.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JustSaying,Models\JustSaying,Models.csproj">
+    <ProjectReference Include="..\JustSaying,Models\JustSaying.Models.csproj">
       <Project>{A9FD2BAC-5B4B-4408-9253-16813BC87727}</Project>
-      <Name>JustSaying,Models</Name>
+      <Name>JustSaying.Models</Name>
     </ProjectReference>
     <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj">
       <Project>{CBF2110B-C3A4-45E8-BBD6-301D77567043}</Project>
-      <Name>AwsTools</Name>
+      <Name>JustSaying.AwsTools</Name>
     </ProjectReference>
     <ProjectReference Include="..\JustSaying.Messaging\JustSaying.Messaging.csproj">
       <Project>{899cd315-37b3-46d0-b2dc-fb94c552d968}</Project>
-      <Name>Messaging</Name>
+      <Name>JustSaying.Messaging</Name>
     </ProjectReference>
     <ProjectReference Include="..\JustEat.Simples.NotificationStack\NotificationStack.csproj">
       <Project>{a36b7ecf-a2aa-44cc-9538-7bc28bdde4e0}</Project>

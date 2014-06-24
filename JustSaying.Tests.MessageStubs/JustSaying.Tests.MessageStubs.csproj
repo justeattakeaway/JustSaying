@@ -43,9 +43,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JustSaying,Models\JustSaying,Models.csproj">
+    <ProjectReference Include="..\JustSaying,Models\JustSaying.Models.csproj">
       <Project>{A9FD2BAC-5B4B-4408-9253-16813BC87727}</Project>
-      <Name>JustSaying,Models</Name>
+      <Name>JustSaying.Models</Name>
     </ProjectReference>
     <ProjectReference Include="..\JustSaying.Messaging\JustSaying.Messaging.csproj">
       <Project>{899CD315-37B3-46D0-B2DC-FB94C552D968}</Project>

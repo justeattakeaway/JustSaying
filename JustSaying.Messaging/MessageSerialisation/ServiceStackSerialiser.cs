@@ -1,4 +1,4 @@
-using JustSaying.Messaging.Messages;
+using JustSaying.Models;
 using ServiceStack.Text;
 
 namespace JustSaying.Messaging.MessageSerialisation

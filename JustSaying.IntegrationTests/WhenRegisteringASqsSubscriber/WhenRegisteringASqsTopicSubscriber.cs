@@ -4,9 +4,9 @@ using Amazon.SQS;
 using JustEat.Testing;
 using JustSaying.AwsTools;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.Messages;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.TestingFramework;
+using JustSaying.Models;
 using NSubstitute;
 using NUnit.Framework;
 

@@ -1,11 +1,11 @@
 using System;
 using Newtonsoft.Json;
 
-namespace JustSaying.Messaging.Messages
+namespace JustSaying.Models
 {
     public abstract class Message
     {
-        public Message()
+        protected Message()
         {
             TimeStamp = DateTime.UtcNow;
         }

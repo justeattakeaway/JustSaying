@@ -1,6 +1,6 @@
 using JustEat.Testing;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.Messages;
+using JustSaying.Models;
 using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
