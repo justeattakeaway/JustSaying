@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>JustSaying.Models</id>
+    <version>0.0.0.0</version>
+    <authors>JUST EAT plc</authors>
+    <owners>JUST EAT plc</owners>
+    <projectUrl>https://github.je-labs.com/Simples/JustEat.Simples.DataAccess</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>JustSaying is a light-weight service bus on top of AWS services that allows communication via messaging in a distributed architecture.</description>
+    <summary>Simples</summary>
+    <releaseNotes />
+    <copyright />
+  </metadata>
+  <files>
+    <file src="merged\JustSaying.Models.dll" target="lib\net40\JustEat.Models.dll" />
+  </files>
+</package>

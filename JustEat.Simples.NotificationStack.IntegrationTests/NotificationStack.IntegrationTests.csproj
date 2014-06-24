@@ -93,7 +93,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JustSaying,Models\JustSaying.Models.csproj">
+    <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj">
       <Project>{A9FD2BAC-5B4B-4408-9253-16813BC87727}</Project>
       <Name>JustSaying.Models</Name>
     </ProjectReference>

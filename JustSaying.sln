@@ -31,7 +31,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationStack.Integrati
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.Tools", "JustSaying.Tools\JustSaying.Tools.csproj", "{108342FE-33C8-4F41-ACBD-35541A80E8F5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.Models", "JustSaying,Models\JustSaying.Models.csproj", "{A9FD2BAC-5B4B-4408-9253-16813BC87727}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.Models", "JustSaying.Models\JustSaying.Models.csproj", "{A9FD2BAC-5B4B-4408-9253-16813BC87727}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
