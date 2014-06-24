@@ -96,8 +96,5 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Target Name="BeforeBuild" Condition="!Exists('Properties\AssemblyInfo.cs')">
-    <Exec Command="bundle exec rake bootstrap" WorkingDirectory="..\" />
-  </Target>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
 </Project>

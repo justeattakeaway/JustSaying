@@ -93,7 +93,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Target Name="BeforeBuild" Condition="!Exists('Properties\AssemblyInfo.cs')">
-    <Exec Command="bundle exec rake bootstrap" WorkingDirectory="..\" />
-  </Target>
 </Project>
