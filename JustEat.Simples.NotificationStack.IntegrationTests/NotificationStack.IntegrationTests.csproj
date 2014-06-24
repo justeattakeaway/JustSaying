@@ -93,6 +93,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\JustSaying,Models\JustSaying,Models.csproj">
+      <Project>{A9FD2BAC-5B4B-4408-9253-16813BC87727}</Project>
+      <Name>JustSaying,Models</Name>
+    </ProjectReference>
     <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj">
       <Project>{cbf2110b-c3a4-45e8-bbd6-301d77567043}</Project>
       <Name>AwsTools</Name>

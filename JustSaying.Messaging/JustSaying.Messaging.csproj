@@ -50,7 +50,6 @@
     <Compile Include="MessageProcessingStrategies\IMessageProcessingStrategy.cs" />
     <Compile Include="MessageProcessingStrategies\MaximumThroughput.cs" />
     <Compile Include="MessageProcessingStrategies\Throttled.cs" />
-    <Compile Include="Messages\Message.cs" />
     <Compile Include="Monitoring\IMeasureHandlerExecutionTime.cs" />
     <Compile Include="Monitoring\IMessageMonitor.cs" />
     <Compile Include="IMessagePublisher.cs" />
@@ -69,6 +68,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\JustSaying,Models\JustSaying,Models.csproj">
+      <Project>{A9FD2BAC-5B4B-4408-9253-16813BC87727}</Project>
+      <Name>JustSaying,Models</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

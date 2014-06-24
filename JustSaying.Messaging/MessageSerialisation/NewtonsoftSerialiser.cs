@@ -1,5 +1,5 @@
-using Newtonsoft.Json;
 using JustSaying.Messaging.Messages;
+using Newtonsoft.Json;
 
 namespace JustSaying.Messaging.MessageSerialisation
 {
