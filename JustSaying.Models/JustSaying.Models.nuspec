@@ -13,6 +13,7 @@
     <copyright />
   </metadata>
   <files>
-    <file src="merged\JustSaying.Models.dll" target="lib\net40\JustEat.Models.dll" />
+    <file src="merged\JustSaying.Models.dll" target="lib\net40\" />
+    <file src="merged\JustSaying.Models.pdb" target="lib\net40\" />
   </files>
 </package>
