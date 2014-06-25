@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Monitoring;
@@ -19,13 +20,15 @@ namespace JustSaying.AwsTools
         private readonly IMessageMonitor _messagingMonitor;
         private readonly Action<Exception> _onError;
         private readonly Dictionary<Type, List<Func<Message, bool>>> _handlers;
+        private readonly IMessageLock _messageLock;
+
         private bool _listen = true;
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
 
         private const int MaxAmazonMessageCap = 10;
         private IMessageProcessingStrategy _messageProcessingStrategy;
 
-        public SqsNotificationListener(SqsQueueBase queue, IMessageSerialisationRegister serialisationRegister, IMessageMonitor messagingMonitor, Action<Exception> onError = null)
+        public SqsNotificationListener(SqsQueueBase queue, IMessageSerialisationRegister serialisationRegister, IMessageMonitor messagingMonitor, Action<Exception> onError = null, IMessageLock messageLock = null)
         {
             _queue = queue;
             _serialisationRegister = serialisationRegister;
@@ -33,6 +36,7 @@ namespace JustSaying.AwsTools
             _onError = onError ?? (ex => { });
             _handlers = new Dictionary<Type, List<Func<Message, bool>>>();
             _messageProcessingStrategy = new MaximumThroughput();
+            _messageLock = messageLock;
         }
 
         // ToDo: This should not be here.
@@ -56,7 +60,14 @@ namespace JustSaying.AwsTools
                 handlers = new List<Func<Message, bool>>();
                 _handlers.Add(typeof(T), handlers);
             }
+            if (Attribute.IsDefined(handler.GetType(), typeof(ExactlyOnceAttribute)))
+            {
+                if(_messageLock == null)
+                    throw new Exception("IMessageLock is null. You need to specify an implementation for IMessageLock.");
 
+                handler = new ExactlyOnceHandler<T>(handler, _messageLock);
+            }
+            
             handlers.Add(DelegateAdjuster.CastArgument<Message, T>(x => handler.Handle(x)));
         }
 

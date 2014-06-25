@@ -14,13 +14,13 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 {
     public class WhenRegisteringASqsTopicSubscriber : FluentNotificationStackTestBase
     {
-        protected string _topicName;
-        protected string _queueName;
+        protected string TopicName;
+        protected string QueueName;
 
         protected override void Given()
         {
-            _topicName = "CustomerCommunication";
-            _queueName = "queuename-" + DateTime.Now.Ticks;
+            TopicName = "CustomerCommunication";
+            QueueName = "queuename-" + DateTime.Now.Ticks;
 
             MockNotidicationStack();
 
@@ -29,14 +29,14 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
                 Region = DefaultRegion.SystemName
             };
 
-            DeleteTopicIfItAlreadyExists(DefaultRegion, _topicName);
-            DeleteQueueIfItAlreadyExists(DefaultRegion, _queueName);
+            DeleteTopicIfItAlreadyExists(DefaultRegion, TopicName);
+            DeleteQueueIfItAlreadyExists(DefaultRegion, QueueName);
         }
 
         protected override void When()
         {
-            SystemUnderTest.WithSqsTopicSubscriber(_topicName)
-                .IntoQueue(_queueName)
+            SystemUnderTest.WithSqsTopicSubscriber(TopicName)
+                .IntoQueue(QueueName)
                 .ConfigureSubscriptionWith(cfg =>
             {
                 cfg.MessageRetentionSeconds = 60;
@@ -52,7 +52,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         [Then, Timeout(70000)] // ToDo: Sorry about this, but SQS is a little slow to verify againse. Can be better I'm sure? ;)
         public void QueueIsCreated()
         {
-            var queue = new SqsQueueByName(_queueName, new AmazonSQSClient(RegionEndpoint.EUWest1), 0);
+            var queue = new SqsQueueByName(QueueName, new AmazonSQSClient(RegionEndpoint.EUWest1), 0);
 
             Patiently.AssertThat(queue.Exists, TimeSpan.FromSeconds(65));
         }
@@ -60,8 +60,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         [TearDown]
         public void TearDown()
         {
-            DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName);
-            DeleteQueueIfItAlreadyExists(DefaultRegion, _queueName);
+            DeleteTopicIfItAlreadyExists(TestEndpoint, TopicName);
+            DeleteQueueIfItAlreadyExists(DefaultRegion, QueueName);
         }
     }
 
@@ -69,8 +69,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
     {
         protected override void When()
         {
-            SystemUnderTest.WithSqsTopicSubscriber(_topicName)
-                .IntoQueue(_queueName)
+            SystemUnderTest.WithSqsTopicSubscriber(TopicName)
+                .IntoQueue(QueueName)
                 .WithMessageHandler(Substitute.For<IHandler<Message>>());
         }
     }
