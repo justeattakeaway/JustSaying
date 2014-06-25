@@ -40,6 +40,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\JustEat.Testing.6.4.0.83\lib\net40\JustEat.Testing.dll</HintPath>
     </Reference>
+    <Reference Include="JustSaying.Models">
+      <HintPath>..\packages\JustSaying.Models.1.0.0\lib\net40\JustSaying.Models.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="NLog, Version=2.1.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NLog.2.1.0\lib\net40\NLog.dll</HintPath>
@@ -93,10 +97,6 @@
     <Compile Include="WhenPublishEndpointIsNotProvided.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj">
-      <Project>{a9fd2bac-5b4b-4408-9253-16813bc87727}</Project>
-      <Name>JustSaying.Models</Name>
-    </ProjectReference>
     <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj">
       <Project>{CBF2110B-C3A4-45E8-BBD6-301D77567043}</Project>
       <Name>JustSaying.AwsTools</Name>

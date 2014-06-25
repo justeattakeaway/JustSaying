@@ -35,6 +35,9 @@
     <Reference Include="AWSSDK">
       <HintPath>..\packages\AWSSDK.2.0.3.1\lib\net35\AWSSDK.dll</HintPath>
     </Reference>
+    <Reference Include="JustSaying.Models">
+      <HintPath>..\packages\JustSaying.Models.1.0.0\lib\net40\JustSaying.Models.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.5.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
@@ -68,10 +71,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj">
-      <Project>{a9fd2bac-5b4b-4408-9253-16813bc87727}</Project>
-      <Name>JustSaying.Models</Name>
-    </ProjectReference>
     <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj">
       <Project>{cbf2110b-c3a4-45e8-bbd6-301d77567043}</Project>
       <Name>JustSaying.AwsTools</Name>

@@ -36,6 +36,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\JustEat.Testing.6.4.0.83\lib\net40\JustEat.Testing.dll</HintPath>
     </Reference>
+    <Reference Include="JustSaying.Models">
+      <HintPath>..\packages\JustSaying.Models.1.0.0\lib\net40\JustSaying.Models.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.5.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -77,10 +81,6 @@
     <Compile Include="Serialisation\ServiceStack\WhenSerialisingAndDeserialising.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj">
-      <Project>{A9FD2BAC-5B4B-4408-9253-16813BC87727}</Project>
-      <Name>JustSaying.Models</Name>
-    </ProjectReference>
     <ProjectReference Include="..\JustSaying.Messaging\JustSaying.Messaging.csproj">
       <Project>{899cd315-37b3-46d0-b2dc-fb94c552d968}</Project>
       <Name>JustSaying.Messaging</Name>
