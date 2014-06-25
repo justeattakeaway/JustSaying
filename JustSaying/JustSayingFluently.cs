@@ -20,12 +20,13 @@ namespace JustSaying
     /// 3. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc // ToDo: Shouldn't be enforced in base! Is a JE concern.
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantMonitoring
+    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings
     {
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
         protected readonly IAmJustSaying Bus;
         private SqsConfiguration _subscriptionConfig = new SqsConfiguration();
+        
 
         internal protected JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator)
         {
@@ -105,6 +106,12 @@ namespace JustSaying
         /// </summary>
         public bool Listening { get { return (Bus != null) && Bus.Listening; } }
 
+        public IMayWantOptionalSettings WithMessageLockStoreOf(IMessageLock messageLock)
+        {
+            Bus.MessageLock = messageLock;
+            return this;
+        }
+
         public IFluentSubscription ConfigureSubscriptionWith(Action<SqsConfiguration> configBuilder)
         {
             configBuilder(_subscriptionConfig);
@@ -117,7 +124,7 @@ namespace JustSaying
             _subscriptionConfig.QueueName = subscriptionEndpointProvider.GetLocationName();
             var queue = _amazonQueueCreator.VerifyOrCreateQueue(Bus.Config.Region, Bus.SerialisationRegister, _subscriptionConfig);
 
-            var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, Bus.Monitor, _subscriptionConfig.OnError);
+            var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, Bus.Monitor, _subscriptionConfig.OnError, Bus.MessageLock);
             Bus.AddNotificationTopicSubscriber(_subscriptionConfig.Topic, sqsSubscriptionListener);
 
             if (_subscriptionConfig.MaxAllowedMessagesInFlight.HasValue)
@@ -177,7 +184,7 @@ namespace JustSaying
         /// </summary>
         /// <param name="messageMonitor">Monitoring class to be used</param>
         /// <returns></returns>
-        public IAmJustSayingFluently WithMonitoring(IMessageMonitor messageMonitor)
+        public IMayWantOptionalSettings WithMonitoring(IMessageMonitor messageMonitor)
         {
             Bus.Monitor = messageMonitor;
             return this;
@@ -193,10 +200,15 @@ namespace JustSaying
             return this;
         }
     }
-
+    public interface IMayWantOptionalSettings : IMayWantMonitoring, IMayWantMessageLockStore { }
     public interface IMayWantMonitoring : IAmJustSayingFluently
     {
-        IAmJustSayingFluently WithMonitoring(IMessageMonitor messageMonitor);
+        IMayWantOptionalSettings WithMonitoring(IMessageMonitor messageMonitor);
+    }
+
+    public interface IMayWantMessageLockStore : IAmJustSayingFluently
+    {
+        IMayWantOptionalSettings WithMessageLockStoreOf(IMessageLock messageLock);
     }
 
     public interface IAmJustSayingFluently : IMessagePublisher

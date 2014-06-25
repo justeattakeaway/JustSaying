@@ -17,5 +17,6 @@ namespace JustSaying
         IMessagingConfig Config { get; }
         IMessageMonitor Monitor { get; set; }
         IMessageSerialisationRegister SerialisationRegister { get; }
+        IMessageLock MessageLock { get; set; }
     }
 }

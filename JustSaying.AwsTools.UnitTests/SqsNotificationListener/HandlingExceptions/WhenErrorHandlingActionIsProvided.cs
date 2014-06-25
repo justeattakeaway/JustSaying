@@ -15,7 +15,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener.HandlingExceptions
             _globalErrorHandler = ex => { _handledException = true; };
 
             var listener = new JustSaying.AwsTools.SqsNotificationListener(null, null, null,
-                                                       _globalErrorHandler);
+                                                       onError: _globalErrorHandler);
 
             listener.HandleMessage(null);
         }
