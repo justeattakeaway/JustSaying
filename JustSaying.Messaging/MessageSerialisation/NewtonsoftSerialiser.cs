@@ -14,7 +14,13 @@ namespace JustSaying.Messaging.MessageSerialisation
 
         public string Serialise(Message message)
         {
-            return JsonConvert.SerializeObject(message, _enumConverter);
+            var settings = new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+                Converters = new[] { _enumConverter }
+            };
+
+            return JsonConvert.SerializeObject(message, settings);
         }
     }
 }
