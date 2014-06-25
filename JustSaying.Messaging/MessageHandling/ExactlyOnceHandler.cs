@@ -1,5 +1,5 @@
 ﻿using System;
-using JustSaying.Messaging.Messages;
+using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageHandling
 {
@@ -17,7 +17,7 @@ namespace JustSaying.Messaging.MessageHandling
 
         public bool Handle(T message)
         {
-            var lockKey = message.UniqueKey();
+            var lockKey = message.Id.ToString();
             bool canLock = _messageLock.TryAquire(lockKey, TimeSpan.FromSeconds(TEMPORARY_LOCK_SECONDS));
             if (!canLock)
                 return true;
