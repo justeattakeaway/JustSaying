@@ -2,7 +2,6 @@ using System;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using AwsTools.UnitTests.MessageStubs;
-using JustSaying.AwsTools;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
@@ -20,11 +19,10 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         {
             Sqs = Substitute.For<IAmazonSQS>();
             Serialiser = Substitute.For<IMessageSerialiser<GenericMessage>>();
-            MessageFootprintStore = Substitute.For<IMessageFootprintStore>();
             SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
             Monitor = Substitute.For<IMessageMonitor>();
             Handler = Substitute.For<IHandler<GenericMessage>>();
-            var response = GenerateResponseMessage(_messageTypeString, Guid.NewGuid());
+            GenerateResponseMessage(_messageTypeString, Guid.NewGuid());
 
             SerialisationRegister.GetSerialiser(_messageTypeString).Returns(Serialiser);
             DeserialisedMessage = new GenericMessage { RaisingComponent = "Component" };

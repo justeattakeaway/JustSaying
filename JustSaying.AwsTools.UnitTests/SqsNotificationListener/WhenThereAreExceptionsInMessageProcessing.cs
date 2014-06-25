@@ -1,6 +1,4 @@
 using System;
-using System.Linq;
-using System.Threading;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools;
@@ -8,7 +6,6 @@ using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustEat.Testing;
 using NSubstitute;
-using NUnit.Framework;
 using JustSaying.TestingFramework;
 
 namespace AwsTools.UnitTests.SqsNotificationListener
@@ -22,7 +19,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
         protected override JustSaying.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
-            return new JustSaying.AwsTools.SqsNotificationListener(new SqsQueueByUrl("", _sqs), _serialisationRegister, new NullMessageFootprintStore(), Substitute.For<IMessageMonitor>());
+            return new JustSaying.AwsTools.SqsNotificationListener(new SqsQueueByUrl("", _sqs), _serialisationRegister, Substitute.For<IMessageMonitor>());
         }
 
         protected override void Given()

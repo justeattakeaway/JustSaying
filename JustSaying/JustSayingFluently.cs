@@ -117,7 +117,7 @@ namespace JustSaying
             _subscriptionConfig.QueueName = subscriptionEndpointProvider.GetLocationName();
             var queue = _amazonQueueCreator.VerifyOrCreateQueue(Bus.Config.Region, Bus.SerialisationRegister, _subscriptionConfig);
 
-            var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, new NullMessageFootprintStore(), Bus.Monitor, _subscriptionConfig.OnError);
+            var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, Bus.Monitor, _subscriptionConfig.OnError);
             Bus.AddNotificationTopicSubscriber(_subscriptionConfig.Topic, sqsSubscriptionListener);
 
             if (_subscriptionConfig.MaxAllowedMessagesInFlight.HasValue)

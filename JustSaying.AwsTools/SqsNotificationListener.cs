@@ -16,7 +16,6 @@ namespace JustSaying.AwsTools
     {
         private readonly SqsQueueBase _queue;
         private readonly IMessageSerialisationRegister _serialisationRegister;
-        private readonly IMessageFootprintStore _messageFootprintStore;
         private readonly IMessageMonitor _messagingMonitor;
         private readonly Action<Exception> _onError;
         private readonly Dictionary<Type, List<Func<Message, bool>>> _handlers;
@@ -26,11 +25,10 @@ namespace JustSaying.AwsTools
         private const int MaxAmazonMessageCap = 10;
         private IMessageProcessingStrategy _messageProcessingStrategy;
 
-        public SqsNotificationListener(SqsQueueBase queue, IMessageSerialisationRegister serialisationRegister, IMessageFootprintStore messageFootprintStore, IMessageMonitor messagingMonitor, Action<Exception> onError = null)
+        public SqsNotificationListener(SqsQueueBase queue, IMessageSerialisationRegister serialisationRegister, IMessageMonitor messagingMonitor, Action<Exception> onError = null)
         {
             _queue = queue;
             _serialisationRegister = serialisationRegister;
-            _messageFootprintStore = messageFootprintStore;
             _messagingMonitor = messagingMonitor;
             _onError = onError ?? (ex => { });
             _handlers = new Dictionary<Type, List<Func<Message, bool>>>();
@@ -59,19 +57,7 @@ namespace JustSaying.AwsTools
                 _handlers.Add(typeof(T), handlers);
             }
 
-            handlers.Add(DelegateAdjuster.CastArgument<Message, T>(x => RepeatCallSafe(x, handler)));
-        }
-
-        private bool RepeatCallSafe<T>(T message, IHandler<T> handler) where T : Message
-        {
-            if (_messageFootprintStore.IsMessageReceieved(message.Id))
-            {
-                return true;
-            }
-
-            var result = handler.Handle(message);
-            _messageFootprintStore.MarkMessageAsRecieved(message.Id);
-            return result;
+            handlers.Add(DelegateAdjuster.CastArgument<Message, T>(x => handler.Handle(x)));
         }
 
         public void Listen()

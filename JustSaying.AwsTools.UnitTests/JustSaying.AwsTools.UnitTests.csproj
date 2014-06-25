@@ -75,7 +75,6 @@
     <Compile Include="SqsNotificationListener\WhenListeningStartsAndStops.cs" />
     <Compile Include="Sns\TopicByArn\WhenPublishing.cs" />
     <Compile Include="SqsNotificationListener\BaseQueuePollingTest.cs" />
-    <Compile Include="SqsNotificationListener\WhenAMessageIsReceieved.cs" />
     <Compile Include="SqsNotificationListener\WhenAMessageIsReceievedMoreThanOnce.cs" />
     <Compile Include="SqsNotificationListener\WhenMessageHandlingFails.cs" />
     <Compile Include="SqsNotificationListener\WhenMessageHandlingSucceeds.cs" />

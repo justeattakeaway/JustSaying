@@ -62,8 +62,6 @@
     <Compile Include="ErrorQueue.cs" />
     <Compile Include="IDynamoStore.cs" />
     <Compile Include="InstanceMetaData.cs" />
-    <Compile Include="MessageFootprint.cs" />
-    <Compile Include="IMessageFootprintStore.cs" />
     <Compile Include="JustSayingConstants.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SnsTopicByName.cs" />

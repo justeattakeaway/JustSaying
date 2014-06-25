@@ -1,8 +1,4 @@
-using JustSaying.AwsTools;
-using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.Messages;
 using JustEat.Testing;
-using NSubstitute;
 using NUnit.Framework;
 
 namespace AwsTools.UnitTests.SqsNotificationListener.HandlingExceptions
@@ -12,7 +8,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener.HandlingExceptions
 
         protected override void When()
         {
-            var listener = new JustSaying.AwsTools.SqsNotificationListener(null, null, new NullMessageFootprintStore(), null);
+            var listener = new JustSaying.AwsTools.SqsNotificationListener(null, null, null);
 
             listener.HandleMessage(null);
         }
