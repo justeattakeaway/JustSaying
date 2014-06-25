@@ -83,6 +83,7 @@
     <Compile Include="JustSayingFluently\WhenPublishingWithoutAMonitor.cs" />
     <Compile Include="JustSayingFluently\WhenThrottlingIsEnabledALongRunningHandler.cs" />
     <Compile Include="WhenRegisteringAPublisher\WhenPublishingAndNotInstantiated.cs" />
+    <Compile Include="WhenRegisteringASqsSubscriber\WhenHandlerHasExactlyOnceAttribute.cs" />
     <Compile Include="WhenRegisteringASqsSubscriber\WhenRegisteringASqsTopicSubscriber.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="FluentNotificationStackTestBase.cs" />

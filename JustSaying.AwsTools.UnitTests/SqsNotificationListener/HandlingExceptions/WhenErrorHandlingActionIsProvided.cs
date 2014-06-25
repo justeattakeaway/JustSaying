@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Threading;
-using JustSaying.AwsTools;
 using JustEat.Testing;
 using NUnit.Framework;
 using JustSaying.TestingFramework;
@@ -16,8 +14,8 @@ namespace AwsTools.UnitTests.SqsNotificationListener.HandlingExceptions
         {
             _globalErrorHandler = ex => { _handledException = true; };
 
-            var listener = new JustSaying.AwsTools.SqsNotificationListener(null, null, new NullMessageFootprintStore(), null,
-                                                       _globalErrorHandler);
+            var listener = new JustSaying.AwsTools.SqsNotificationListener(null, null, null,
+                                                       onError: _globalErrorHandler);
 
             listener.HandleMessage(null);
         }

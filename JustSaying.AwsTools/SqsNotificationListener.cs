@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Monitoring;
@@ -16,25 +17,26 @@ namespace JustSaying.AwsTools
     {
         private readonly SqsQueueBase _queue;
         private readonly IMessageSerialisationRegister _serialisationRegister;
-        private readonly IMessageFootprintStore _messageFootprintStore;
         private readonly IMessageMonitor _messagingMonitor;
         private readonly Action<Exception> _onError;
         private readonly Dictionary<Type, List<Func<Message, bool>>> _handlers;
+        private readonly IMessageLock _messageLock;
+
         private bool _listen = true;
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
 
         private const int MaxAmazonMessageCap = 10;
         private IMessageProcessingStrategy _messageProcessingStrategy;
 
-        public SqsNotificationListener(SqsQueueBase queue, IMessageSerialisationRegister serialisationRegister, IMessageFootprintStore messageFootprintStore, IMessageMonitor messagingMonitor, Action<Exception> onError = null)
+        public SqsNotificationListener(SqsQueueBase queue, IMessageSerialisationRegister serialisationRegister, IMessageMonitor messagingMonitor, Action<Exception> onError = null, IMessageLock messageLock = null)
         {
             _queue = queue;
             _serialisationRegister = serialisationRegister;
-            _messageFootprintStore = messageFootprintStore;
             _messagingMonitor = messagingMonitor;
             _onError = onError ?? (ex => { });
             _handlers = new Dictionary<Type, List<Func<Message, bool>>>();
             _messageProcessingStrategy = new MaximumThroughput();
+            _messageLock = messageLock;
         }
 
         // ToDo: This should not be here.
@@ -58,20 +60,15 @@ namespace JustSaying.AwsTools
                 handlers = new List<Func<Message, bool>>();
                 _handlers.Add(typeof(T), handlers);
             }
-
-            handlers.Add(DelegateAdjuster.CastArgument<Message, T>(x => RepeatCallSafe(x, handler)));
-        }
-
-        private bool RepeatCallSafe<T>(T message, IHandler<T> handler) where T : Message
-        {
-            if (_messageFootprintStore.IsMessageReceieved(message.Id))
+            if (Attribute.IsDefined(handler.GetType(), typeof(ExactlyOnceAttribute)))
             {
-                return true;
-            }
+                if(_messageLock == null)
+                    throw new Exception("IMessageLock is null. You need to specify an implementation for IMessageLock.");
 
-            var result = handler.Handle(message);
-            _messageFootprintStore.MarkMessageAsRecieved(message.Id);
-            return result;
+                handler = new ExactlyOnceHandler<T>(handler, _messageLock);
+            }
+            
+            handlers.Add(DelegateAdjuster.CastArgument<Message, T>(x => handler.Handle(x)));
         }
 
         public void Listen()

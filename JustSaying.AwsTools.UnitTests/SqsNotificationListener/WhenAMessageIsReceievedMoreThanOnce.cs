@@ -20,8 +20,6 @@ namespace AwsTools.UnitTests.SqsNotificationListener
             DeserialisedMessage = new GenericMessage { Id = _messageId };
             Serialiser.Deserialise(Arg.Any<string>()).Returns(x => DeserialisedMessage);
             SerialisationRegister.GetSerialiser(Arg.Any<string>()).Returns(Serialiser);
-            
-            MessageFootprintStore.IsMessageReceieved(Arg.Any<Guid>()).Returns(true);
         }
         protected override void When()
         {

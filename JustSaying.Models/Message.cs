@@ -19,5 +19,11 @@ namespace JustSaying.Models
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string Conversation { get; set; }
+        
+        //footprint in order to avoid the same message being processed multiple times.
+        public virtual string UniqueKey()
+        {
+            return Id.ToString();
+        }
     }
 }

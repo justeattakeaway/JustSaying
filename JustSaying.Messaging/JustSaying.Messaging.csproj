@@ -51,6 +51,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MessageHandling\ExactlyOnceAttribute.cs" />
+    <Compile Include="MessageHandling\ExactlyOnceHandler.cs" />
+    <Compile Include="MessageHandling\IMessageLock.cs" />
     <Compile Include="MessageProcessingStrategies\IMessageProcessingStrategy.cs" />
     <Compile Include="MessageProcessingStrategies\MaximumThroughput.cs" />
     <Compile Include="MessageProcessingStrategies\Throttled.cs" />

@@ -62,11 +62,11 @@ namespace JustSaying.AwsTools.IntegrationTests
             var monitor = Substitute.For<IMessageMonitor>();
             var handler = Substitute.For<IHandler<GenericMessage>>();
             handler.Handle(null).ReturnsForAnyArgs(true).AndDoes(x => {lock (locker) { Thread.Sleep(10);handleCount++; } });
-            //handler.Handle(null).ReturnsForAnyArgs(true).AndDoes(x => { throw new Exception(); });
+            
             var serialiser = Substitute.For<IMessageSerialiser<GenericMessage>>();
             serialiser.Deserialise(string.Empty).ReturnsForAnyArgs(new GenericMessage());
             serialisations.GetSerialiser(string.Empty).ReturnsForAnyArgs(serialiser);
-            var listener = new SqsNotificationListener(q, serialisations, new NullMessageFootprintStore(), monitor);
+            var listener = new SqsNotificationListener(q, serialisations, monitor);
 
             listener.AddMessageHandler(handler);
 

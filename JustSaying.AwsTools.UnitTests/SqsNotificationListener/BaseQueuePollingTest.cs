@@ -24,20 +24,18 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected IHandler<GenericMessage> Handler;
         protected IMessageMonitor Monitor;
         protected IMessageSerialisationRegister SerialisationRegister;
-        protected IMessageFootprintStore MessageFootprintStore;
         private readonly string _messageTypeString = typeof(GenericMessage).ToString();
 
         protected override JustSaying.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
             
-            return new JustSaying.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), SerialisationRegister, MessageFootprintStore, Monitor);
+            return new JustSaying.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), SerialisationRegister, Monitor);
         }
 
         protected override void Given()
         {
             Sqs = Substitute.For<IAmazonSQS>();
             Serialiser = Substitute.For<IMessageSerialiser<GenericMessage>>();
-            MessageFootprintStore = Substitute.For<IMessageFootprintStore>();
             SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
             Monitor = Substitute.For<IMessageMonitor>();
             Handler = Substitute.For<IHandler<GenericMessage>>();
