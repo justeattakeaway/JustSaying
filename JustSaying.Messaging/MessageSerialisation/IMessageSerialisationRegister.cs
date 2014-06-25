@@ -1,5 +1,5 @@
 using System;
-using JustSaying.Messaging.Messages;
+using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialisation
 {

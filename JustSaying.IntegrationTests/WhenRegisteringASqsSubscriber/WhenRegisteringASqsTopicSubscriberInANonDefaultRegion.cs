@@ -3,7 +3,7 @@ using Amazon;
 using Amazon.SimpleNotificationService.Model;
 using JustEat.Testing;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.Messages;
+using JustSaying.Models;
 using NSubstitute;
 using NUnit.Framework;
 

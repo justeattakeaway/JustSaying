@@ -2,9 +2,6 @@
 [Bb]in/
 [Oo]bj/
 
-# Assembly info
-*/Properties/
-
 # mstest test results
 TestResults
 

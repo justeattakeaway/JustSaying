@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.AwsTools", "JustSaying.AwsTools\JustSaying.AwsTools.csproj", "{CBF2110B-C3A4-45E8-BBD6-301D77567043}"
 EndProject
@@ -24,6 +24,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.IntegrationTests", "JustSaying.IntegrationTests\JustSaying.IntegrationTests.csproj", "{45717185-E959-48C6-926F-DC8B394F5680}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.Tools", "JustSaying.Tools\JustSaying.Tools.csproj", "{108342FE-33C8-4F41-ACBD-35541A80E8F5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.Models", "JustSaying.Models\JustSaying.Models.csproj", "{A9FD2BAC-5B4B-4408-9253-16813BC87727}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,6 +77,10 @@ Global
 		{108342FE-33C8-4F41-ACBD-35541A80E8F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{108342FE-33C8-4F41-ACBD-35541A80E8F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{108342FE-33C8-4F41-ACBD-35541A80E8F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9FD2BAC-5B4B-4408-9253-16813BC87727}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9FD2BAC-5B4B-4408-9253-16813BC87727}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9FD2BAC-5B4B-4408-9253-16813BC87727}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9FD2BAC-5B4B-4408-9253-16813BC87727}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

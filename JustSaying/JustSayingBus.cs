@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Threading;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.Messages;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.Models;
 using NLog;
 
 namespace JustSaying

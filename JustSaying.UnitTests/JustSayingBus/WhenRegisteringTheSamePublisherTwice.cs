@@ -1,5 +1,5 @@
 using JustEat.Testing;
-using JustSaying.Messaging.Messages;
+using JustSaying.Models;
 using NUnit.Framework;
 
 namespace JustSaying.UnitTests.JustSayingBus

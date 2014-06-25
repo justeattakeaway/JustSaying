@@ -2,7 +2,7 @@ using System.Linq;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.Messaging.MessageSerialisation;
-using JustSaying.Messaging.Messages;
+using JustSaying.Models;
 using NLog;
 
 namespace JustSaying.AwsTools

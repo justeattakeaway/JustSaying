@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
-using Message = JustSaying.Messaging.Messages.Message;
+using Message = JustSaying.Models.Message;
 
 namespace JustSaying.AwsTools
 {

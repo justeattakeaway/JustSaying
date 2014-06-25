@@ -32,6 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="JustSaying.Models">
+      <HintPath>..\packages\JustSaying.Models.1.0.0\lib\net40\JustSaying.Models.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.5.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -65,7 +69,6 @@
     <Compile Include="MessageSerialisation\NewtonsoftSerialiser.cs" />
     <Compile Include="MessageSerialisation\ReflectedMessageSerialisationRegister.cs" />
     <Compile Include="MessageSerialisation\ServiceStackSerialiser.cs" />
-    <Compile Include="Messages\Message.cs" />
     <Compile Include="Monitoring\NullOpMessageMonitor.cs" />
     <Compile Include="Monitoring\StopwatchHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -73,14 +76,12 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Target Name="BeforeBuild" Condition="!Exists('Properties\AssemblyInfo.cs')">
-    <Exec Command="bundle exec rake bootstrap" WorkingDirectory="..\" />
-  </Target>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
 </Project>
