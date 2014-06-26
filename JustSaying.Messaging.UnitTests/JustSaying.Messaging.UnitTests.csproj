@@ -36,9 +36,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\JustEat.Testing.6.4.0.83\lib\net40\JustEat.Testing.dll</HintPath>
     </Reference>
-    <Reference Include="JustSaying.Models">
-      <HintPath>..\packages\JustSaying.Models.1.0.0\lib\net40\JustSaying.Models.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="JustSaying.Models, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\JustSaying.Models.1.2.0\lib\net40\JustSaying.Models.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.5.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>

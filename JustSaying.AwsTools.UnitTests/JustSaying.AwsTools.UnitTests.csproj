@@ -40,9 +40,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\JustEat.Testing.6.4.0.83\lib\net40\JustEat.Testing.dll</HintPath>
     </Reference>
-    <Reference Include="JustSaying.Models">
-      <HintPath>..\packages\JustSaying.Models.1.0.0\lib\net40\JustSaying.Models.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="JustSaying.Models, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\JustSaying.Models.1.2.0\lib\net40\JustSaying.Models.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=2.1.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
