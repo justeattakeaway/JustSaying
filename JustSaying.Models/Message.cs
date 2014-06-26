@@ -1,5 +1,4 @@
 using System;
-using Newtonsoft.Json;
 
 namespace JustSaying.Models
 {
@@ -16,8 +15,6 @@ namespace JustSaying.Models
         public string Version{ get; private set; }
         public string SourceIp { get; private set; }
         public string Tenant { get; set; }
-
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string Conversation { get; set; }
         
         //footprint in order to avoid the same message being processed multiple times.
