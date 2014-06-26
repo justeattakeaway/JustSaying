@@ -67,6 +67,11 @@ namespace JustSaying.AwsTools
 
                 handler = new ExactlyOnceHandler<T>(handler, _messageLock);
             }
+            var executionTimeMonitoring = _messagingMonitor as IMeasureHandlerExecutionTime;
+            if (executionTimeMonitoring != null)
+            {
+                handler = new StopwatchHandler<T>(handler, executionTimeMonitoring);
+            }
             
             handlers.Add(DelegateAdjuster.CastArgument<Message, T>(x => handler.Handle(x)));
         }
