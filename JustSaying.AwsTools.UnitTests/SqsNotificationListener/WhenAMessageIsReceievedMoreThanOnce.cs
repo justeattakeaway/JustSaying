@@ -32,7 +32,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         [Then]
         public void MessageIsNotReceivedAgain()
         {
-            Patiently.VerifyExpectation(() => Handler.DidNotReceive().Handle(Arg.Any<GenericMessage>()));
+            Patiently.VerifyExpectation(() => Handler.DidNotReceive().Handle(Arg.Is<GenericMessage>(m => m.Id == _messageId)));
         }
     }
 }
