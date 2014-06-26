@@ -17,7 +17,7 @@ namespace JustSaying.Messaging.MessageHandling
 
         public bool Handle(T message)
         {
-            var lockKey = message.Id.ToString();
+            var lockKey = message.UniqueKey();
             bool canLock = _messageLock.TryAquire(lockKey, TimeSpan.FromSeconds(TEMPORARY_LOCK_SECONDS));
             if (!canLock)
                 return true;
