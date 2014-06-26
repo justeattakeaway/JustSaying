@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.Tests.MessageStubs;
 using NUnit.Framework;
@@ -48,6 +49,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
                 .WithSnsMessagePublisher<GenericMessage>(TopicName);
 
             var bus = CreateMeABus.InRegion(region)
+                .WithMonitoring(new Monitoring())
                 .WithMessageLockStoreOf(new MessageLockStore())
                 .WithSqsTopicSubscriber(TopicName)
                 .IntoQueue(QueueName)
@@ -70,28 +72,41 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             Thread.Sleep(5.Seconds());
             Assert.That(_sampleHandler.NumberOfTimesIHaveBeenCalled(), Is.EqualTo(1));
         }
+
+        internal class MessageLockStore : IMessageLock
+        {
+            private readonly Dictionary<string, int> _store = new Dictionary<string, int>();
+            public bool TryAquire(string key)
+            {
+                int value;
+                bool canAquire = !_store.TryGetValue(key, out value);
+                if (canAquire)
+                    _store.Add(key, 1);
+                return canAquire;
+            }
+
+            public bool TryAquire(string key, TimeSpan howLong)
+            {
+                return TryAquire(key);
+            }
+
+            public void Release(string key)
+            {
+                _store.Remove(key);
+            }
+        }
+        internal class Monitoring : IMessageMonitor, IMeasureHandlerExecutionTime
+        {
+            public void HandleException(string messageType) { }
+            public void HandleTime(long handleTimeMs) { }
+            public void IssuePublishingMessage() { }
+            public void IncrementThrottlingStatistic() { }
+            public void HandleThrottlingTime(long handleTimeMs) { }
+            public void PublishMessageTime(long handleTimeMs) { }
+            public void ReceiveMessageTime(long handleTimeMs) { }
+            public void HandlerExecutionTime(string typeName, string eventName, TimeSpan executionTime) { }
+        }
     }
 
-    public class MessageLockStore : IMessageLock
-    {
-        private readonly Dictionary<string, int> _store = new Dictionary<string, int>();
-        public bool TryAquire(string key)
-        {
-            int value;
-            bool canAquire = !_store.TryGetValue(key, out value);
-            if(canAquire)
-                _store.Add(key, 1);
-            return canAquire;
-        }
-
-        public bool TryAquire(string key, TimeSpan howLong)
-        {
-            return TryAquire(key);
-        }
-
-        public void Release(string key)
-        {
-            _store.Remove(key);
-        }
-}
+    
 }
