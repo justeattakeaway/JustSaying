@@ -5,7 +5,7 @@ using System.Threading;
 using Amazon;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.Tests.MessageStubs;
+using JustSaying.TestingFramework;
 using NSubstitute;
 using NUnit.Framework;
 

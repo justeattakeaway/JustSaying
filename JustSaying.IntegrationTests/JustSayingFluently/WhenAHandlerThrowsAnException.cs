@@ -4,7 +4,6 @@ using JustEat.Testing;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
-using JustSaying.Tests.MessageStubs;
 using NSubstitute;
 using NUnit.Framework;
 

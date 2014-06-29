@@ -107,10 +107,6 @@
       <Project>{78E23D08-913E-491F-87AF-ADE5AA007F9A}</Project>
       <Name>JustSaying.TestingFramework</Name>
     </ProjectReference>
-    <ProjectReference Include="..\JustSaying.Tests.MessageStubs\JustSaying.Tests.MessageStubs.csproj">
-      <Project>{ba54f6d7-be82-4b35-b24d-16eea466cb40}</Project>
-      <Name>JustSaying.Tests.MessageStubs</Name>
-    </ProjectReference>
     <ProjectReference Include="..\JustSaying\JustSaying.csproj">
       <Project>{3b428f71-9aef-4e46-8d56-644fc0e808d4}</Project>
       <Name>JustSaying</Name>

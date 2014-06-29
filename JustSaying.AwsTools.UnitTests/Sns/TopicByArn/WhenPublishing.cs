@@ -1,10 +1,10 @@
 ﻿using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
-using AwsTools.UnitTests.MessageStubs;
 using JustSaying.AwsTools;
 using JustSaying.Messaging.MessageSerialisation;
 using JustEat.Testing;
 using JustSaying.Models;
+using JustSaying.TestingFramework;
 using NSubstitute;
 
 namespace AwsTools.UnitTests.Sns.TopicByArn

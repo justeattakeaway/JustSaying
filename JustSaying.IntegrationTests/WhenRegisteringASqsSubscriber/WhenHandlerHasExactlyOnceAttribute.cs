@@ -4,7 +4,6 @@ using System.Threading;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
-using JustSaying.Tests.MessageStubs;
 using NUnit.Framework;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
@@ -45,7 +44,6 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         {
             _sampleHandler = new SampleHandler();
             var publisher = CreateMeABus.InRegion(region)
-                .ConfigurePublisherWith(_ => { })
                 .WithSnsMessagePublisher<GenericMessage>(TopicName);
 
             var bus = CreateMeABus.InRegion(region)

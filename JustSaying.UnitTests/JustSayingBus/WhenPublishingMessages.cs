@@ -1,7 +1,6 @@
 using JustEat.Testing;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
-using JustSaying.Tests.MessageStubs;
 using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus

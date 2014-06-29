@@ -1,6 +1,6 @@
 ﻿using JustEat.Testing;
 using JustSaying.Messaging.MessageSerialisation;
-using JustSaying.Tests.MessageStubs;
+using JustSaying.TestingFramework;
 using NUnit.Framework;
 
 namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft

@@ -7,7 +7,7 @@ using JustSaying.AwsTools;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.Tests.MessageStubs;
+using JustSaying.TestingFramework;
 using NSubstitute;
 using NUnit.Framework;
 

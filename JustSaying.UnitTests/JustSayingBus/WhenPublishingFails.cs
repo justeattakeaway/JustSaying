@@ -2,7 +2,6 @@ using System;
 using JustEat.Testing;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
-using JustSaying.Tests.MessageStubs;
 using JustSaying.Models;
 using NSubstitute;
 

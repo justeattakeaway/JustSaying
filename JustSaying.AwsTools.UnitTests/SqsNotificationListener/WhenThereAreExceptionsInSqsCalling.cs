@@ -1,7 +1,6 @@
 using System;
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using AwsTools.UnitTests.MessageStubs;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;

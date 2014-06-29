@@ -37,6 +37,9 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="JustSaying.Models">
+      <HintPath>..\packages\JustSaying.Models.1.2.0\lib\net40\JustSaying.Models.dll</HintPath>
+    </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
     </Reference>
@@ -49,6 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MessageStubs.cs" />
     <Compile Include="Patiently.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

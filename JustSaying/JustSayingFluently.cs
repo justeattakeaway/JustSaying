@@ -214,6 +214,7 @@ namespace JustSaying
     public interface IAmJustSayingFluently : IMessagePublisher
     {
         IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder);
+        IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>(string topic) where T : Message;
         ISubscriberIntoQueue WithSqsTopicSubscriber(string topic);
         void StartListening();
         void StopListening();
@@ -238,7 +239,6 @@ namespace JustSaying
 
     public interface IHaveFulfilledPublishRequirements : IAmJustSayingFluently
     {
-        IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>(string topic) where T : Message;
     }
 
 
