@@ -1,6 +1,6 @@
 using JustEat.Testing;
 using JustSaying.Messaging;
-using JustSaying.Tests.MessageStubs;
+using JustSaying.TestingFramework;
 using NSubstitute;
 using NUnit.Framework;
 

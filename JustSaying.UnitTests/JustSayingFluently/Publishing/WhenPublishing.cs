@@ -1,6 +1,6 @@
 using JustEat.Testing;
-using JustSaying.Tests.MessageStubs;
 using JustSaying.Models;
+using JustSaying.TestingFramework;
 using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingFluently.Publishing

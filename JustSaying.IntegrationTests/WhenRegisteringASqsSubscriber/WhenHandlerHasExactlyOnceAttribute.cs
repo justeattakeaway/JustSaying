@@ -4,7 +4,6 @@ using System.Threading;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
-using JustSaying.Tests.MessageStubs;
 using NUnit.Framework;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber

@@ -97,10 +97,6 @@
       <Project>{78e23d08-913e-491f-87af-ade5aa007f9a}</Project>
       <Name>JustSaying.TestingFramework</Name>
     </ProjectReference>
-    <ProjectReference Include="..\JustSaying.Tests.MessageStubs\JustSaying.Tests.MessageStubs.csproj">
-      <Project>{ba54f6d7-be82-4b35-b24d-16eea466cb40}</Project>
-      <Name>JustSaying.Tests.MessageStubs</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />

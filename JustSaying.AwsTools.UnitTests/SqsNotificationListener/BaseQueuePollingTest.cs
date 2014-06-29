@@ -1,13 +1,11 @@
 using System;
-using System.Linq;
-using System.Threading;
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using AwsTools.UnitTests.MessageStubs;
 using JustSaying.AwsTools;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustEat.Testing;
+using JustSaying.TestingFramework;
 using NSubstitute;
 using JustSaying.Messaging.MessageSerialisation;
 using System.Collections.Generic;

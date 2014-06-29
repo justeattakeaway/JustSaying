@@ -1,6 +1,6 @@
 ﻿using System;
 using JustEat.Testing;
-using JustSaying.Tests.MessageStubs;
+using JustSaying.TestingFramework;
 using NUnit.Framework;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher

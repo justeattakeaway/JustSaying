@@ -1,8 +1,8 @@
 ﻿using System;
 using JustEat.Testing;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Tests.MessageStubs;
 using JustSaying.Models;
+using JustSaying.TestingFramework;
 using NSubstitute;
 using NUnit.Framework;
 
