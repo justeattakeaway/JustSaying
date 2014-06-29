@@ -45,7 +45,6 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         {
             _sampleHandler = new SampleHandler();
             var publisher = CreateMeABus.InRegion(region)
-                .ConfigurePublisherWith(_ => { })
                 .WithSnsMessagePublisher<GenericMessage>(TopicName);
 
             var bus = CreateMeABus.InRegion(region)
