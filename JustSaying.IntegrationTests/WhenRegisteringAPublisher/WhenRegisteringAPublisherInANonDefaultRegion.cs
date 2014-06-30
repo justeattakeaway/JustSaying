@@ -12,7 +12,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 
         protected override void Given()
         {
-            _topicName = "NonDefaultRegionTestTopic";
+            _topicName = "message";
 
             Configuration = new MessagingConfig
             {
@@ -25,7 +25,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 
         protected override void When()
         {
-            SystemUnderTest.WithSnsMessagePublisher<Message>(_topicName);
+            SystemUnderTest.WithSnsMessagePublisher<Message>();
         }
 
         [Then]

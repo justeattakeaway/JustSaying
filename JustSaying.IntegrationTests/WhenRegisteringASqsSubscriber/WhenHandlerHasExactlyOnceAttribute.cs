@@ -44,12 +44,12 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         {
             _sampleHandler = new SampleHandler();
             var publisher = CreateMeABus.InRegion(region)
-                .WithSnsMessagePublisher<GenericMessage>(TopicName);
+                .WithSnsMessagePublisher<GenericMessage>();
 
             var bus = CreateMeABus.InRegion(region)
                 .WithMonitoring(new Monitoring())
                 .WithMessageLockStoreOf(new MessageLockStore())
-                .WithSqsTopicSubscriber(TopicName)
+                .WithSqsTopicSubscriber()
                 .IntoQueue(QueueName)
                 .ConfigureSubscriptionWith(cfg =>
                 {

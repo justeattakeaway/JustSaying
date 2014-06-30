@@ -12,6 +12,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         private INotificationSubscriber _subscriber;
         private IHandler<Message> _handler1;
         private IHandler<Message> _handler2;
+        private string _topic;
 
         protected override void Given()
         {
@@ -19,13 +20,14 @@ namespace JustSaying.UnitTests.JustSayingBus
             _subscriber = Substitute.For<INotificationSubscriber>();
             _handler1 = Substitute.For<IHandler<Message>>();
             _handler2 = Substitute.For<IHandler<Message>>();
+            _topic = "message"; //same as message name
         }
 
         protected override void When()
         {
-            SystemUnderTest.AddNotificationTopicSubscriber("OrderDispatch", _subscriber);
-            SystemUnderTest.AddMessageHandler("OrderDispatch", _handler1);
-            SystemUnderTest.AddMessageHandler("OrderDispatch", _handler2);
+            SystemUnderTest.AddNotificationTopicSubscriber(_topic, _subscriber);
+            SystemUnderTest.AddMessageHandler(_handler1);
+            SystemUnderTest.AddMessageHandler(_handler2);
             SystemUnderTest.Start();
         }
 

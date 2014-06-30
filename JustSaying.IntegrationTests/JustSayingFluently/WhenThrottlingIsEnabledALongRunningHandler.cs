@@ -40,8 +40,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 {
                     c.PublishFailureBackoffMilliseconds = 1;
                 })
-                .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
-                .WithSqsTopicSubscriber("CustomerCommunication").IntoQueue("queuename").ConfigureSubscriptionWith(
+                .WithSnsMessagePublisher<GenericMessage>()
+                .WithSqsTopicSubscriber().IntoQueue("queuename").ConfigureSubscriptionWith(
                     cfg =>
                     {
                         cfg.InstancePosition = 1;

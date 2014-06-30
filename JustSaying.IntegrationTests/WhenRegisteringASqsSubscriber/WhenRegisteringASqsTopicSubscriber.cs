@@ -35,7 +35,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
         protected override void When()
         {
-            SystemUnderTest.WithSqsTopicSubscriber(TopicName)
+            SystemUnderTest.WithSqsTopicSubscriber()
                 .IntoQueue(QueueName)
                 .ConfigureSubscriptionWith(cfg =>
             {
@@ -69,7 +69,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
     {
         protected override void When()
         {
-            SystemUnderTest.WithSqsTopicSubscriber(TopicName)
+            SystemUnderTest.WithSqsTopicSubscriber()
                 .IntoQueue(QueueName)
                 .WithMessageHandler(Substitute.For<IHandler<Message>>());
         }

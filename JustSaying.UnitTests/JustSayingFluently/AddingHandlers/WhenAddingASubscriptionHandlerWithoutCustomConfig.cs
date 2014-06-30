@@ -15,7 +15,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
 
         protected override void When()
         {
-            _bus = SystemUnderTest.WithSqsTopicSubscriber(Topic).IntoQueue("queuename");
+            _bus = SystemUnderTest.WithSqsTopicSubscriber().IntoQueue("queuename");
         }
 
         [Then]

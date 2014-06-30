@@ -39,15 +39,15 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         public void APublisherCanBeSetup()
         {
             SystemUnderTest.ConfigurePublisherWith(conf => conf.PublishFailureBackoffMilliseconds = 50)
-                .WithSnsMessagePublisher<GenericMessage>(Topic);
+                .WithSnsMessagePublisher<GenericMessage>();
         }
 
         [Then, Ignore]
         public void MultiplePublishersCanBeSetup()
         {
             SystemUnderTest.ConfigurePublisherWith(conf => conf.PublishFailureBackoffMilliseconds = 50)
-                .WithSnsMessagePublisher<GenericMessage>(Topic)
-                .WithSnsMessagePublisher<GenericMessage>(Topic);
+                .WithSnsMessagePublisher<GenericMessage>()
+                .WithSnsMessagePublisher<GenericMessage>();
         }
     }
 }

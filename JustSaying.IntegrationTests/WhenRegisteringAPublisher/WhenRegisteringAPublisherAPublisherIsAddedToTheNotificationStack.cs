@@ -27,13 +27,13 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 
         protected override void When()
         {
-            SystemUnderTest.WithSnsMessagePublisher<Message>(_topicName);
+            SystemUnderTest.WithSnsMessagePublisher<Message>();
         }
 
         [Then]
         public void APublisherIsAddedToTheStack()
         {
-            NotificationStack.Received().AddMessagePublisher<Message>(_topicName, Arg.Any<IMessagePublisher>());
+            NotificationStack.Received().AddMessagePublisher<Message>(Arg.Any<IMessagePublisher>());
         }
 
         [Then]
