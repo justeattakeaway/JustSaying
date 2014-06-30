@@ -48,8 +48,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 c.PublishFailureBackoffMilliseconds = _config.PublishFailureBackoffMilliseconds;
                 c.PublishFailureReAttempts = _config.PublishFailureReAttempts;    
             })
-                .WithSnsMessagePublisher<GenericMessage>("CustomerCommunication")
-                .WithSqsTopicSubscriber("CustomerCommunication")
+                .WithSnsMessagePublisher<GenericMessage>()
+                .WithSqsTopicSubscriber()
                 .IntoQueue("queuename")
                 .ConfigureSubscriptionWith(cf =>
                 {

@@ -23,7 +23,7 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override void When()
         {
-            SystemUnderTest.AddMessagePublisher<GenericMessage>("OrderDispatch", _publisher);
+            SystemUnderTest.AddMessagePublisher<GenericMessage>(_publisher);
 
             SystemUnderTest.Publish(new GenericMessage());
         }

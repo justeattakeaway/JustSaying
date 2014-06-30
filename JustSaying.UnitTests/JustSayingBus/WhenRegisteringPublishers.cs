@@ -17,10 +17,10 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override void When()
         {
-            SystemUnderTest.AddMessagePublisher<OrderAccepted>("OrderDispatch", _publisher);
-            SystemUnderTest.AddMessagePublisher<OrderRejected>("OrderDispatch", _publisher);
-            SystemUnderTest.AddMessagePublisher<OrderRejected>("CustomerCommunication", _publisher);
+            SystemUnderTest.AddMessagePublisher<OrderAccepted>(_publisher);
+            SystemUnderTest.AddMessagePublisher<OrderRejected>(_publisher);
             SystemUnderTest.Publish(new OrderAccepted());
+            SystemUnderTest.Publish(new OrderRejected());
             SystemUnderTest.Publish(new OrderRejected());
         }
 

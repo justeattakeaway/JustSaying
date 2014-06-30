@@ -17,7 +17,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
         protected override void Given()
         {
-            _topicName = "IntegrationTest";
+            _topicName = "message";
             _queueName = "queue" + DateTime.Now.Ticks;
             _regionEndpoint = RegionEndpoint.SAEast1;
 
@@ -34,7 +34,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
         protected override void When()
         {
-            SystemUnderTest.WithSqsTopicSubscriber(_topicName)
+            SystemUnderTest.WithSqsTopicSubscriber()
             .IntoQueue(_queueName)
             .ConfigureSubscriptionWith(cfg => cfg.MessageRetentionSeconds = 60)
                 .WithMessageHandler(Substitute.For<IHandler<Message>>());

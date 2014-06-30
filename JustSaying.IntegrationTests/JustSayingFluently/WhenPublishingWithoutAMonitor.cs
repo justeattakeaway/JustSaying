@@ -22,8 +22,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 c.PublishFailureReAttempts = 1;
                 
             })
-                .WithSnsMessagePublisher<GenericMessage>("SomeTopic")
-                .WithSqsTopicSubscriber("SomeTopic")
+                .WithSnsMessagePublisher<GenericMessage>()
+                .WithSqsTopicSubscriber()
                 .IntoQueue("queuename")
                 .ConfigureSubscriptionWith(cfg => cfg.InstancePosition = 1)
                 .WithMessageHandler(_handler);

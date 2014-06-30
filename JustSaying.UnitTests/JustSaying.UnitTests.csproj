@@ -84,7 +84,6 @@
     <Compile Include="JustSayingBus\WhenAddingAPublisherWithNoTopic.cs" />
     <Compile Include="JustSayingBus\WhenPublishingFails.cs" />
     <Compile Include="JustSayingBus\WhenPublishingMessages.cs" />
-    <Compile Include="JustSayingBus\WhenRegisteringMessageHandlersAndNotPassingTopic.cs" />
     <Compile Include="JustSayingBus\WhenSubscribingAndNotPassingATopic.cs" />
     <Compile Include="JustSayingBus\WhenPublishingWithoutRegistering.cs" />
     <Compile Include="JustSayingBus\WhenRegisteringMessageHandlers.cs" />

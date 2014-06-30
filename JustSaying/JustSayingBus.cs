@@ -50,18 +50,16 @@ namespace JustSaying
             }
         }
 
-        public void AddMessageHandler<T>(string topic, IHandler<T> handler) where T : Message
+        public void AddMessageHandler<T>(IHandler<T> handler) where T : Message
         {
-            if (string.IsNullOrWhiteSpace(topic))
-                throw new ArgumentNullException("topic");
+            var topic = typeof(T).Name.ToLower();
 
             _notificationSubscribers[topic].AddMessageHandler(handler);
         }
 
-        public void AddMessagePublisher<T>(string topic, IMessagePublisher messagePublisher) where T : Message
+        public void AddMessagePublisher<T>(IMessagePublisher messagePublisher) where T : Message
         {
-            if (string.IsNullOrWhiteSpace(topic))
-                throw new ArgumentNullException("topic");
+            var topic = typeof (T).Name.ToLower();
 
             if (! _messagePublishers.ContainsKey(topic))
                 _messagePublishers.Add(topic, new Dictionary<Type, IMessagePublisher>());
