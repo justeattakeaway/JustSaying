@@ -17,7 +17,12 @@ namespace JustSaying
         private readonly Dictionary<string, INotificationSubscriber> _notificationSubscribers;
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _messagePublishers;
         public IMessagingConfig Config { get; private set; }
-        public IMessageMonitor Monitor { get; set; }
+
+        private IMessageMonitor _monitor;
+        public IMessageMonitor Monitor { 
+            get { return _monitor;  }
+            set { _monitor = value ?? new NullOpMessageMonitor(); }
+        }
         public IMessageSerialisationRegister SerialisationRegister { get; private set; }
         public IMessageLock MessageLock { get; set; }
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); //ToDo: danger!
@@ -30,6 +35,8 @@ namespace JustSaying
             Log.Info(string.Format("Registering with stack."));
 
             Config = config;
+            Monitor = new NullOpMessageMonitor();
+
             _notificationSubscribers = new Dictionary<string, INotificationSubscriber>();
             _messagePublishers = new Dictionary<string, Dictionary<Type, IMessagePublisher>>();
             SerialisationRegister = serialisationRegister;
@@ -128,9 +135,13 @@ namespace JustSaying
                 }
                 catch (Exception ex)
                 {
+                    if(Monitor == null)
+                        Log.Error("Publish: Monitor was null - duplicates will occur!");
+
                     if (attemptCount == Config.PublishFailureReAttempts)
                     {
                         Monitor.IssuePublishingMessage();
+
                         Log.ErrorException(string.Format("Unable to publish message {0}", message.GetType().Name), ex);
                         throw;
                     }

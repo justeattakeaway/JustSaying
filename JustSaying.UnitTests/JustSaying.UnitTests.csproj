@@ -71,6 +71,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CreateMe\WhenCreatingABus.cs" />
+    <Compile Include="JustSayingBus\CustomMonitor.cs" />
+    <Compile Include="JustSayingBus\GivenAServiceBusWithoutMonitoring.cs" />
+    <Compile Include="JustSayingBus\WhenPublishingMessageWithoutMonitor.cs" />
     <Compile Include="JustSayingFluentlyTestBase.cs" />
     <Compile Include="JustSayingFluently\AddingHandlers\WhenAddingASubscriptionHandler.cs" />
     <Compile Include="JustSayingFluently\AddingHandlers\WhenAddingASubscriptionHandlerWithoutCustomConfig.cs" />
