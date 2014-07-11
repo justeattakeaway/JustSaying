@@ -1,6 +1,6 @@
 ﻿using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
-using JustEat.Testing;
+using JustBehave;
 using NUnit.Framework;
 
 namespace AwsTools.UnitTests.SqsQueueConfiguration.Validation

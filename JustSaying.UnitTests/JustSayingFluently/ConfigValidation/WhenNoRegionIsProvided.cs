@@ -1,5 +1,5 @@
 using System;
-using JustEat.Testing;
+using JustBehave;
 using NUnit.Framework;
 
 namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation

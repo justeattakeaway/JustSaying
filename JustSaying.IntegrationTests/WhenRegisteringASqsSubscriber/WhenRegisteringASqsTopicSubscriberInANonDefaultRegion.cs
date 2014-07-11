@@ -1,7 +1,7 @@
 ﻿using System;
 using Amazon;
 using Amazon.SimpleNotificationService.Model;
-using JustEat.Testing;
+using JustBehave;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 using NSubstitute;

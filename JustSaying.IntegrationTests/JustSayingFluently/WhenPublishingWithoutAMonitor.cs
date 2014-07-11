@@ -1,5 +1,5 @@
 ﻿using Amazon;
-using JustEat.Testing;
+using JustBehave;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using NSubstitute;

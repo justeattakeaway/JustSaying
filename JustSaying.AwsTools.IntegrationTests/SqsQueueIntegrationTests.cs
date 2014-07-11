@@ -1,7 +1,7 @@
 ﻿using System;
 using Amazon;
 using JustSaying.AwsTools;
-using JustEat.Testing;
+using JustBehave;
 
 namespace JustSaying.AwsTools.IntegrationTests
 {

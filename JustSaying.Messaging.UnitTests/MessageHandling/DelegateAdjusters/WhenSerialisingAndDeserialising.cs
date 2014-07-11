@@ -1,5 +1,5 @@
 ﻿using System;
-using JustEat.Testing;
+using JustBehave;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
