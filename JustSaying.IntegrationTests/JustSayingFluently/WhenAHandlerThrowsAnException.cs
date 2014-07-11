@@ -1,6 +1,6 @@
 ﻿using System;
 using Amazon;
-using JustEat.Testing;
+using JustBehave;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;

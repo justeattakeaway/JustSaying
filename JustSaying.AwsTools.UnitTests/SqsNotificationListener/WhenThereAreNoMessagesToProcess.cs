@@ -3,7 +3,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools;
 using JustSaying.Messaging.Monitoring;
-using JustEat.Testing;
+using JustBehave;
 using NSubstitute;
 using JustSaying.TestingFramework;
 

@@ -6,7 +6,7 @@ using System.Threading;
 using Amazon;
 using Amazon.SimpleNotificationService.Model;
 using Amazon.SQS.Model;
-using JustEat.Testing;
+using JustBehave;
 using NSubstitute;
 
 namespace JustSaying.IntegrationTests
