@@ -23,7 +23,56 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             return _count;
         }
     }
+    [ExactlyOnce]
+    public class AnotherSampleHandler : SampleHandler { }
 
+    [TestFixture]
+    public class WhenTwoDifferentHanldersHandleAMessageWithExactlyOnceAttribute
+    {
+        protected string TopicName;
+        protected string QueueName;
+        private GenericMessage _message;
+        private SampleHandler _handler1;
+        private SampleHandler _handler2;
+        private const string region = "eu-west-1";
+
+        [SetUp]
+        protected void SetUp()
+        {
+            TopicName = "genericmessage";
+            QueueName = "queuename-" + DateTime.Now.Ticks;
+            _message = new GenericMessage { Id = Guid.NewGuid() };
+        }
+        protected void Act()
+        {
+            _handler1 = new SampleHandler();
+            _handler2 = new AnotherSampleHandler();
+            var publisher = CreateMeABus.InRegion(region)
+                .ConfigurePublisherWith(_ => { })
+                .WithSnsMessagePublisher<GenericMessage>(TopicName);
+
+            var bus = CreateMeABus.InRegion(region)
+                .WithMonitoring(new Monitoring())
+                .WithMessageLockStoreOf(new MessageLockStore())
+                .WithSqsTopicSubscriber(TopicName).IntoQueue(QueueName)
+                .WithMessageHandler(_handler1)
+                .WithMessageHandler(_handler2);
+            publisher.StartListening();
+            bus.StartListening();
+
+            publisher.Publish(_message);
+        }
+
+        [Test]
+        public void BothHandlersAreTriggered()
+        {
+            Act();
+
+            Thread.Sleep(5.Seconds());
+            Assert.That(_handler1.NumberOfTimesIHaveBeenCalled(), Is.EqualTo(1));
+            Assert.That(_handler2.NumberOfTimesIHaveBeenCalled(), Is.EqualTo(1));
+        }
+    }
     [TestFixture]
     public class WhenHandlerHasExactlyOnceAttribute
     {
@@ -71,7 +120,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             Assert.That(_sampleHandler.NumberOfTimesIHaveBeenCalled(), Is.EqualTo(1));
         }
 
-        internal class MessageLockStore : IMessageLock
+        
+    }
+    internal class MessageLockStore : IMessageLock
         {
             private readonly Dictionary<string, int> _store = new Dictionary<string, int>();
             public bool TryAquire(string key)
@@ -93,7 +144,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
                 _store.Remove(key);
             }
         }
-        internal class Monitoring : IMessageMonitor, IMeasureHandlerExecutionTime
+    internal class Monitoring : IMessageMonitor, IMeasureHandlerExecutionTime
         {
             public void HandleException(string messageType) { }
             public void HandleTime(long handleTimeMs) { }
@@ -104,7 +155,5 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             public void ReceiveMessageTime(long handleTimeMs) { }
             public void HandlerExecutionTime(string typeName, string eventName, TimeSpan executionTime) { }
         }
-    }
-
     
 }

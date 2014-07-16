@@ -7,6 +7,7 @@ namespace JustSaying.Models
         protected Message()
         {
             TimeStamp = DateTime.UtcNow;
+            Id = Guid.NewGuid();
         }
 
         public Guid Id { get; set; }
