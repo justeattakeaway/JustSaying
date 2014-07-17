@@ -1,7 +1,7 @@
 ﻿using System;
 using Amazon;
 using Amazon.SQS;
-using JustEat.Testing;
+using JustBehave;
 using JustSaying.AwsTools;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;

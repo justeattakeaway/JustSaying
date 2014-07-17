@@ -1,6 +1,6 @@
 using System.Reflection;
 using JustSaying.AwsTools.QueueCreation;
-using JustEat.Testing;
+using JustBehave;
 using NSubstitute;
 
 namespace JustSaying.UnitTests

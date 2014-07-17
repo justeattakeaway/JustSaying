@@ -4,7 +4,7 @@ using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
-using JustEat.Testing;
+using JustBehave;
 using NSubstitute;
 using JustSaying.TestingFramework;
 

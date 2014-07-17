@@ -1,4 +1,4 @@
-using JustEat.Testing;
+using JustBehave;
 using JustSaying.Messaging;
 using NSubstitute;
 using NUnit.Framework;

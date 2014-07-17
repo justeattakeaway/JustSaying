@@ -1,5 +1,5 @@
 using System;
-using JustEat.Testing;
+using JustBehave;
 using JustSaying.Models;
 using NSubstitute;
 using NUnit.Framework;

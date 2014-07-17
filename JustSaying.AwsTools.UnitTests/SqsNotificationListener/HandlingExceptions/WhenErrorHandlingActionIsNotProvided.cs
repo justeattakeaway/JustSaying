@@ -1,4 +1,4 @@
-using JustEat.Testing;
+using JustBehave;
 using NUnit.Framework;
 
 namespace AwsTools.UnitTests.SqsNotificationListener.HandlingExceptions

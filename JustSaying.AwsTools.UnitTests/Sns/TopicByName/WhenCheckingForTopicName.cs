@@ -1,5 +1,5 @@
 ﻿using Amazon.SimpleNotificationService;
-using JustEat.Testing;
+using JustBehave;
 using JustSaying.Messaging.MessageSerialisation;
 using NSubstitute;
 using NUnit.Framework;
