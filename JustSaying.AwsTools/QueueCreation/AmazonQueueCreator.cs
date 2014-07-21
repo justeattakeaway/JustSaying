@@ -16,8 +16,7 @@ namespace JustSaying.AwsTools.QueueCreation
                     QueueName = queueName,
                     Topic = topic,
                     MessageRetentionSeconds = messageRetentionSeconds,
-                    VisibilityTimeoutSeconds = visibilityTimeoutSeconds,
-                    InstancePosition = instancePosition
+                    VisibilityTimeoutSeconds = visibilityTimeoutSeconds
                 });
         }
 

@@ -8,7 +8,6 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
     public class WhenAddingASubscriptionHandlerWithoutCustomConfig : JustSayingFluentlyTestBase
     {
         private readonly IHandler<Message> _handler = Substitute.For<IHandler<Message>>();
-        private const string Topic = "CustomerCommunication";
         private IFluentSubscription _bus;
 
         protected override void Given() { }
@@ -29,7 +28,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         [Then]
         public void ConfigurationCanBeProvided()
         {
-            _bus.ConfigureSubscriptionWith(conf => conf.InstancePosition = 1);
+            _bus.ConfigureSubscriptionWith(conf => conf.RetryCountBeforeSendingToErrorQueue = 1);
         }
     }
 }

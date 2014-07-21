@@ -49,12 +49,12 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             _handler2 = new AnotherSampleHandler();
             var publisher = CreateMeABus.InRegion(region)
                 .ConfigurePublisherWith(_ => { })
-                .WithSnsMessagePublisher<GenericMessage>(TopicName);
+                .WithSnsMessagePublisher<GenericMessage>();
 
             var bus = CreateMeABus.InRegion(region)
                 .WithMonitoring(new Monitoring())
                 .WithMessageLockStoreOf(new MessageLockStore())
-                .WithSqsTopicSubscriber(TopicName).IntoQueue(QueueName)
+                .WithSqsTopicSubscriber().IntoQueue(QueueName)
                 .WithMessageHandler(_handler1)
                 .WithMessageHandler(_handler2);
             publisher.StartListening();

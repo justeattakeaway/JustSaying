@@ -25,7 +25,6 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .WithSnsMessagePublisher<GenericMessage>()
                 .WithSqsTopicSubscriber()
                 .IntoQueue("queuename")
-                .ConfigureSubscriptionWith(cfg => cfg.InstancePosition = 1)
                 .WithMessageHandler(_handler);
 
             _bus = bus;
