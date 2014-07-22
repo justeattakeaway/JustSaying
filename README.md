@@ -112,15 +112,15 @@ That's it. By calling StartListening() we are telling the stack to begin polling
 ````
 
 
-###3. Enabling Throttling
+###2.(b) Enabling Throttling
 By default throttling is off which means NotificationStack will create as many threads as it needs to process messages as fast as it can. 
 By enabling throttling you can limit the amount of messages passed to application (useful for web apps with TCP thread restrictions).
 To enable throttling you need to specify optional parameter when setting SqsTopicSubcriber
 
 ````c#
 
-            .WithSqsTopicSubscriber(Topic.OrderDispatch, 60, maxAllowedMessagesInFlight: 100)
-                .WithMessageHandler<OrderAccepted>(new CustomerNotificationHandler())
+            .ConfigureSubscriptionWith(c => { c.MaxAllowedMessagesInFlight = 100; })
+                .WithMessageHandler<OrderAccepted>(new NotifyCustomerOfAcceptedOrder())
 
 ````
 
