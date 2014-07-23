@@ -77,7 +77,6 @@
     <Compile Include="Serialisation\SerialisationRegister\WhenAddingAGenericSerialiser.cs" />
     <Compile Include="Serialisation\SerialisationRegister\WhenAddingASerialiser.cs" />
     <Compile Include="Serialisation\SerialisationRegister\WhenAddingASerialiserTwice.cs" />
-    <Compile Include="Serialisation\ServiceStack\WhenSerialisingAndDeserialising.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JustSaying.Messaging\JustSaying.Messaging.csproj">
