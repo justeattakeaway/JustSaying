@@ -26,7 +26,7 @@ namespace JustSaying
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
         protected readonly IAmJustSaying Bus;
         private SqsConfiguration _subscriptionConfig = new SqsConfiguration();
-        
+        private IMessageSerialisationFactory _serialisationFactory;
 
         internal protected JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator)
         {
@@ -62,18 +62,13 @@ namespace JustSaying
             if (!eventPublisher.Exists())
                 eventPublisher.Create();
 
-            Bus.SerialisationRegister.AddSerialiser<T>(GetSerialiser(() => new NewtonsoftSerialiser<T>()));
+            Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
 
             Bus.AddMessagePublisher<T>(eventPublisher);
 
             Log.Info(string.Format("Created SNS topic publisher - Topic: {0}", _subscriptionConfig.Topic));
 
             return this;
-        }
-
-        private static IMessageSerialiser<T> GetSerialiser<T>(Func<IMessageSerialiser<T>> act) where T : Message
-        {
-            return act();
         }
 
         /// <summary>
@@ -110,6 +105,12 @@ namespace JustSaying
         /// States whether the stack is listening for messages (subscriptions are running)
         /// </summary>
         public bool Listening { get { return (Bus != null) && Bus.Listening; } }
+
+        public IMayWantOptionalSettings WithSerialisationFactory(IMessageSerialisationFactory factory)
+        {
+            _serialisationFactory = factory;
+            return this;
+        }
 
         public IMayWantOptionalSettings WithMessageLockStoreOf(IMessageLock messageLock)
         {
@@ -174,7 +175,7 @@ namespace JustSaying
             if (!_subscriptionConfigured)
                 ConfigureSubscriptionWith(conf => conf.ErrorQueueOptOut = false);
 
-            Bus.SerialisationRegister.AddSerialiser<T>(GetSerialiser(() => new NewtonsoftSerialiser<T>()));
+            Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
             Bus.AddMessageHandler(handler);
 
             Log.Info(string.Format("Added a message handler - Topic: {0}, MessageType: {1}, HandlerName: {2}", _subscriptionConfig.Topic, typeof(T).Name, handler.GetType().Name));
@@ -207,7 +208,7 @@ namespace JustSaying
             return this;
         }
     }
-    public interface IMayWantOptionalSettings : IMayWantMonitoring, IMayWantMessageLockStore { }
+    public interface IMayWantOptionalSettings : IMayWantMonitoring, IMayWantMessageLockStore, IMayWantCustomSerialisation { }
     public interface IMayWantMonitoring : IAmJustSayingFluently
     {
         IMayWantOptionalSettings WithMonitoring(IMessageMonitor messageMonitor);
@@ -216,6 +217,11 @@ namespace JustSaying
     public interface IMayWantMessageLockStore : IAmJustSayingFluently
     {
         IMayWantOptionalSettings WithMessageLockStoreOf(IMessageLock messageLock);
+    }
+
+    public interface IMayWantCustomSerialisation : IAmJustSayingFluently
+    {
+        IMayWantOptionalSettings WithSerialisationFactory(IMessageSerialisationFactory factory);
     }
 
     public interface IAmJustSayingFluently : IMessagePublisher
@@ -247,6 +253,4 @@ namespace JustSaying
     public interface IHaveFulfilledPublishRequirements : IAmJustSayingFluently
     {
     }
-
-
 }

@@ -22,6 +22,7 @@ namespace JustSaying
 
             var bus = new JustSayingFluently(new JustSayingBus(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
             bus.WithMonitoring(new NullOpMessageMonitor());
+            bus.WithSerialisationFactory(new NewtonsoftSerialisationFactory());
 
             return bus;
         }
