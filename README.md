@@ -27,7 +27,7 @@ Here's how to get up & running with simple message publishing.
 * The topic will be the message type.
 
 ````c#
-          var ServiceBus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+          var publisher = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithSnsMessagePublisher<OrderAccepted>();
 ````
 
@@ -89,7 +89,7 @@ We currently support SQS subscriptions only, but keep checking back for other me
             CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithSqsTopicSubscriber()
                 .IntoQueue("CustomerOrders")
-                .WithMessageHandler<OrderAccepted>(new NotifyCustomerOfAcceptedOrder())
+                .WithMessageHandler<OrderAccepted>(new OrderNotifier())
                 .StartListening();
 ````
 
