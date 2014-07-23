@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace JustSaying.Messaging.UnitTests.Serialisation.ServiceStack
 {
-    public class WhenSerialisingAndDeserialising : BehaviourTest<ServiceStackSerialiser<MessageWithEnum>>
+    public class WhenSerialisingAndDeserialising : BehaviourTest<NewtonsoftSerialiser<MessageWithEnum>>
     {
         private MessageWithEnum _messageOut;
         private MessageWithEnum _messageIn;

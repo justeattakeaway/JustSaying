@@ -7,7 +7,7 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.SerialisationRegister
 {
     public class WhenAddingAGenericSerialiser : BehaviourTest<MessageSerialisationRegister>
     {
-        private readonly ServiceStackSerialiser<Message> _serialiser = new ServiceStackSerialiser<Message>();
+        private readonly NewtonsoftSerialiser<Message> _serialiser = new NewtonsoftSerialiser<Message>();
 
         protected override void Given() { }
 

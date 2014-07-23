@@ -62,12 +62,18 @@ namespace JustSaying
             if (!eventPublisher.Exists())
                 eventPublisher.Create();
 
-            Bus.SerialisationRegister.AddSerialiser<T>(new ServiceStackSerialiser<T>());
+            Bus.SerialisationRegister.AddSerialiser<T>(GetSerialiser(() => new NewtonsoftSerialiser<T>()));
+
             Bus.AddMessagePublisher<T>(eventPublisher);
 
             Log.Info(string.Format("Created SNS topic publisher - Topic: {0}", _subscriptionConfig.Topic));
 
             return this;
+        }
+
+        private static IMessageSerialiser<T> GetSerialiser<T>(Func<IMessageSerialiser<T>> act) where T : Message
+        {
+            return act();
         }
 
         /// <summary>
@@ -168,7 +174,7 @@ namespace JustSaying
             if (!_subscriptionConfigured)
                 ConfigureSubscriptionWith(conf => conf.ErrorQueueOptOut = false);
 
-            Bus.SerialisationRegister.AddSerialiser<T>(new ServiceStackSerialiser<T>());
+            Bus.SerialisationRegister.AddSerialiser<T>(GetSerialiser(() => new NewtonsoftSerialiser<T>()));
             Bus.AddMessageHandler(handler);
 
             Log.Info(string.Format("Added a message handler - Topic: {0}, MessageType: {1}, HandlerName: {2}", _subscriptionConfig.Topic, typeof(T).Name, handler.GetType().Name));
