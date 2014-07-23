@@ -56,6 +56,8 @@
     <Compile Include="MessageProcessingStrategies\IMessageProcessingStrategy.cs" />
     <Compile Include="MessageProcessingStrategies\MaximumThroughput.cs" />
     <Compile Include="MessageProcessingStrategies\Throttled.cs" />
+    <Compile Include="MessageSerialisation\IMessageSerialisationFactory.cs" />
+    <Compile Include="MessageSerialisation\NewtonsoftSerialisationFactory.cs" />
     <Compile Include="Monitoring\IMeasureHandlerExecutionTime.cs" />
     <Compile Include="Monitoring\IMessageMonitor.cs" />
     <Compile Include="IMessagePublisher.cs" />
@@ -66,7 +68,6 @@
     <Compile Include="MessageSerialisation\IMessageSerialiser.cs" />
     <Compile Include="MessageSerialisation\MessageSerialisationRegister.cs" />
     <Compile Include="MessageSerialisation\NewtonsoftSerialiser.cs" />
-    <Compile Include="MessageSerialisation\ServiceStackSerialiser.cs" />
     <Compile Include="Monitoring\NullOpMessageMonitor.cs" />
     <Compile Include="Monitoring\StopwatchHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
