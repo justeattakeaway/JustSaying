@@ -40,9 +40,9 @@
     <Reference Include="JustBehave">
       <HintPath>..\packages\JustBehave.0.57\lib\net40\JustBehave.dll</HintPath>
     </Reference>
-    <Reference Include="JustSaying.Models, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="JustSaying.Models, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\JustSaying.Models.1.2.0\lib\net40\JustSaying.Models.dll</HintPath>
+      <HintPath>..\packages\JustSaying.Models.2.0.0.43\lib\net40\JustSaying.Models.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=2.1.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
