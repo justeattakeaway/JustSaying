@@ -72,12 +72,11 @@
     <Compile Include="MessageProcessingStrategies\ThrottledTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serialisation\Newtonsoft\DealingWithPotentiallyMissingConversation.cs" />
+    <Compile Include="Serialisation\Newtonsoft\WhenAskingForAnewSerialiser.cs" />
     <Compile Include="Serialisation\Newtonsoft\WhenSerialisingAndDeserialising.cs" />
     <Compile Include="Serialisation\SerialisationRegister\WhenAddingAGenericSerialiser.cs" />
     <Compile Include="Serialisation\SerialisationRegister\WhenAddingASerialiser.cs" />
     <Compile Include="Serialisation\SerialisationRegister\WhenAddingASerialiserTwice.cs" />
-    <Compile Include="Serialisation\ServiceStack\DealingWithPotentiallyMissingConversation.cs" />
-    <Compile Include="Serialisation\ServiceStack\WhenSerialisingAndDeserialising.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JustSaying.Messaging\JustSaying.Messaging.csproj">

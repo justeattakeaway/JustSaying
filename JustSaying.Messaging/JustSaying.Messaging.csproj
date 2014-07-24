@@ -38,9 +38,6 @@
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.5.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="ServiceStack.Text">
-      <HintPath>..\packages\ServiceStack.Text.3.9.56\lib\net35\ServiceStack.Text.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -56,6 +53,8 @@
     <Compile Include="MessageProcessingStrategies\IMessageProcessingStrategy.cs" />
     <Compile Include="MessageProcessingStrategies\MaximumThroughput.cs" />
     <Compile Include="MessageProcessingStrategies\Throttled.cs" />
+    <Compile Include="MessageSerialisation\IMessageSerialisationFactory.cs" />
+    <Compile Include="MessageSerialisation\NewtonsoftSerialisationFactory.cs" />
     <Compile Include="Monitoring\IMeasureHandlerExecutionTime.cs" />
     <Compile Include="Monitoring\IMessageMonitor.cs" />
     <Compile Include="IMessagePublisher.cs" />
@@ -66,8 +65,6 @@
     <Compile Include="MessageSerialisation\IMessageSerialiser.cs" />
     <Compile Include="MessageSerialisation\MessageSerialisationRegister.cs" />
     <Compile Include="MessageSerialisation\NewtonsoftSerialiser.cs" />
-    <Compile Include="MessageSerialisation\ReflectedMessageSerialisationRegister.cs" />
-    <Compile Include="MessageSerialisation\ServiceStackSerialiser.cs" />
     <Compile Include="Monitoring\NullOpMessageMonitor.cs" />
     <Compile Include="Monitoring\StopwatchHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

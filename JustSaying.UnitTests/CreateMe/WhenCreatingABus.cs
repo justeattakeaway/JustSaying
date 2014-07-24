@@ -44,5 +44,18 @@ namespace JustSaying.UnitTests.CreateMe
             // Enforced by the fact we can do other configurations on the bus.
             JustSaying.CreateMeABus.InRegion(_region).ConfigurePublisherWith(_config).StopListening();
         }
+
+        [Test]
+        public void ThenICanProvideCustomSerialisation()
+        {
+            JustSaying.CreateMeABus.InRegion(_region).WithSerialisationFactory(null);
+        }
+
+        [Test]
+        public void CustomSerialisationIsNotEnforced()
+        {
+            // Enforced by the fact we can do other configurations on the bus.
+            JustSaying.CreateMeABus.InRegion(_region).WithSerialisationFactory(null).StopListening();
+        }
     }
 }

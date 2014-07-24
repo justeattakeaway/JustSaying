@@ -10,7 +10,6 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
         private MessageWithEnum _messageOut;
         private MessageWithEnum _messageIn;
         private string _jsonMessage;
-
         protected override void Given()
         {
             _messageOut = new MessageWithEnum(Values.Two);
@@ -31,6 +30,7 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
         [Then]
         public void MessagesContainSameDetails()
         {
+            Assert.AreEqual(_messageIn.EnumVal, _messageOut.EnumVal);
             Assert.AreEqual(_messageIn.RaisingComponent, _messageOut.RaisingComponent);
             //Assert.AreEqual(_messageIn.TimeStamp, _messageOut.TimeStamp);
             // ToDo: Sort timestamp issue!
