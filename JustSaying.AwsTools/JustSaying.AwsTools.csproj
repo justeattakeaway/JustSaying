@@ -35,9 +35,9 @@
     <Reference Include="AWSSDK, Version=2.0.3.1, Culture=neutral, PublicKeyToken=9f476d3089b52be3, processorArchitecture=MSIL">
       <HintPath>..\packages\AWSSDK.2.0.3.1\lib\net35\AWSSDK.dll</HintPath>
     </Reference>
-    <Reference Include="JustSaying.Models, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="JustSaying.Models, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\JustSaying.Models.1.2.0\lib\net40\JustSaying.Models.dll</HintPath>
+      <HintPath>..\packages\JustSaying.Models.2.0.0.43\lib\net40\JustSaying.Models.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.5.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
