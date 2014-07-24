@@ -8,7 +8,7 @@
     <projectUrl>https://github.com/justeat/JustSaying</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>JustSaying is a light-weight service bus on top of AWS services that allows communication via messaging in a distributed architecture.</description>
-    <summary></summary>
+    <tags>event eventbus event-driven aws aws-sns aws-sqs messaging message-registry messaging-transport wrapper</tags>
     <releaseNotes />
     <copyright />
   </metadata>
