@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
 {
-    public class WhenAskingForAnewSerialiser : BehaviourTest<NewtonsoftSerialisationFactory>
+    public class WhenAskingForANewSerialiser : BehaviourTest<NewtonsoftSerialisationFactory>
     {
         private IMessageSerialiser<Message> _result;
 
