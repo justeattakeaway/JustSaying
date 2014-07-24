@@ -9,6 +9,7 @@
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>$description$</description>
         <copyright>Copyright 2014, by Just-Eat Holding Ltd</copyright>
+        <tags>event eventbus event-driven aws aws-sns aws-sqs messaging message-registry messaging-transport wrapper</tags>
         <dependencies>
             <dependency id="AWSSDK" version="[2.0.3.1]" />
             <dependency id="Magnum" version="2.1.2" />
