@@ -44,7 +44,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             Received.InOrder(() =>
                                  {
                                      _subscriber.AddMessageHandler(Arg.Any<IHandler<Message>>());
-                                     _subscriber.AddMessageHandler(Arg.Any<IHandler<Message>>());
+                                     _subscriber.AddMessageHandler(Arg.Any<IHandler<Message2>>());
                                      _subscriber.Listen();
                                  });
         }
