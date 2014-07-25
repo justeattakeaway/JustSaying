@@ -11,7 +11,7 @@ namespace JustSaying.UnitTests.JustSayingBus
     {
         private INotificationSubscriber _subscriber;
         private IHandler<Message> _handler1;
-        private IHandler<Message> _handler2;
+        private IHandler<Message2> _handler2;
         private string _topic;
 
         protected override void Given()
@@ -19,7 +19,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             base.Given();
             _subscriber = Substitute.For<INotificationSubscriber>();
             _handler1 = Substitute.For<IHandler<Message>>();
-            _handler2 = Substitute.For<IHandler<Message>>();
+            _handler2 = Substitute.For<IHandler<Message2>>();
             _topic = "message"; //same as message name
         }
 
@@ -48,5 +48,7 @@ namespace JustSaying.UnitTests.JustSayingBus
                                      _subscriber.Listen();
                                  });
         }
+
+        class Message2 : Message { }
     }
 }
