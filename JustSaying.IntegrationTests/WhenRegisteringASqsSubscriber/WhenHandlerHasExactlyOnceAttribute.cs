@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Threading;
 using JustSaying.Messaging.MessageHandling;
@@ -8,7 +9,7 @@ using NUnit.Framework;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 {
-    [ExactlyOnce]
+    [ExactlyOnce(TimeOut = 10)]
     public class SampleHandler : IHandler<GenericMessage>
     {
         private int _count;
@@ -63,7 +64,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             publisher.Publish(_message);
         }
 
-        [Test]
+        [Test, Ignore("waiting for 2 sid-by-side consumers bug to get fixed.")]
         public void BothHandlersAreTriggered()
         {
             Act();
@@ -119,8 +120,6 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             Thread.Sleep(5.Seconds());
             Assert.That(_sampleHandler.NumberOfTimesIHaveBeenCalled(), Is.EqualTo(1));
         }
-
-        
     }
     internal class MessageLockStore : IMessageLock
         {

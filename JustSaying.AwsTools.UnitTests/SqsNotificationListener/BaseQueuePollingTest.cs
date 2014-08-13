@@ -22,12 +22,13 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected IHandler<GenericMessage> Handler;
         protected IMessageMonitor Monitor;
         protected IMessageSerialisationRegister SerialisationRegister;
+        protected IMessageLock MessageLock;
         private readonly string _messageTypeString = typeof(GenericMessage).ToString();
 
         protected override JustSaying.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
             
-            return new JustSaying.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), SerialisationRegister, Monitor);
+            return new JustSaying.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), SerialisationRegister, Monitor, null, MessageLock);
         }
 
         protected override void Given()
