@@ -7,18 +7,19 @@ namespace JustSaying.Messaging.MessageHandling
     {
         private readonly IHandler<T> _inner;
         private readonly IMessageLock _messageLock;
-        private const int TEMPORARY_LOCK_SECONDS = 15;
+        private readonly int _timeOut;
 
-        public ExactlyOnceHandler(IHandler<T>  inner, IMessageLock messageLock)
+        public ExactlyOnceHandler(IHandler<T> inner, IMessageLock messageLock, int timeOut)
         {
             _inner = inner;
             _messageLock = messageLock;
+            _timeOut = timeOut;
         }
-
+        
         public bool Handle(T message)
         {
             var lockKey = string.Format("{0}-{1}-{2}", _inner.GetType().FullName.ToLower(), typeof(T).Name.ToLower(), message.UniqueKey());
-            bool canLock = _messageLock.TryAquire(lockKey, TimeSpan.FromSeconds(TEMPORARY_LOCK_SECONDS));
+            bool canLock = _messageLock.TryAquire(lockKey, TimeSpan.FromSeconds(_timeOut));
             if (!canLock)
                 return true;
 
