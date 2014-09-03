@@ -7,7 +7,7 @@ namespace JustSaying.UnitTests.Lookups.SqsEndpointNames
 {
     public class WhenRequestingAnEndpointName : BehaviourTest<SqsSubscribtionEndpointProvider>
     {
-        private readonly SqsConfiguration _sqsConfiguration = new SqsConfiguration();
+        private readonly SqsReadConfiguration _sqsConfiguration = new SqsReadConfiguration();
 
         private string _result;
 

@@ -8,7 +8,7 @@ using NLog;
 
 namespace JustSaying.AwsTools
 {
-    public class SnsTopicByName : SnsTopicBase, IMessagePublisher
+    public class SnsTopicByName : SnsTopicBase
     {
         private readonly IMessageSerialisationRegister _serialisationRegister;
         public string TopicName { get; private set; }

@@ -11,7 +11,7 @@ namespace JustSaying.AwsTools.QueueCreation
         public SqsQueueByName VerifyOrCreateQueue(string region, IMessageSerialisationRegister serialisationRegister, string queueName, string topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30, int? instancePosition = null)
         {
             return VerifyOrCreateQueue(region, serialisationRegister,
-                new SqsConfiguration
+                new SqsReadConfiguration
                 {
                     QueueName = queueName,
                     Topic = topic,
@@ -21,7 +21,7 @@ namespace JustSaying.AwsTools.QueueCreation
                 });
         }
 
-        public SqsQueueByName VerifyOrCreateQueue(string region, IMessageSerialisationRegister serialisationRegister, SqsConfiguration queueConfig)
+        public SqsQueueByName VerifyOrCreateQueue(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
         {
             var sqsclient = AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(region));
             var snsclient = AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(region));

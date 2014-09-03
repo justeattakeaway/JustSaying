@@ -1,13 +1,14 @@
 using System.Linq;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialisation;
-using JustSaying.Models;
 using NLog;
+using Message = JustSaying.Models.Message;
 
 namespace JustSaying.AwsTools
 {
-    public abstract class SnsTopicBase
+    public abstract class SnsTopicBase : IMessagePublisher
     {
         private readonly IMessageSerialisationRegister _serialisationRegister; // ToDo: Grrr...why is this here even. GET OUT!
         public string Arn { get; protected set; }

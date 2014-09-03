@@ -7,7 +7,7 @@ using JustSaying.Messaging.MessageSerialisation;
 
 namespace JustSaying.AwsTools
 {
-    public class SnsTopicByArn : SnsTopicBase, IMessagePublisher
+    public class SnsTopicByArn : SnsTopicBase
     {
         public SnsTopicByArn(string topicArn, IAmazonSimpleNotificationService client, IMessageSerialisationRegister serialisationRegister)
             :base(serialisationRegister)

@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace AwsTools.UnitTests.SqsQueueConfiguration.Validation
 {
-    class WhenPublishEndpointIsNotProvided : BehaviourTest<SqsConfiguration>
+    class WhenPublishEndpointIsNotProvided : BehaviourTest<SqsReadConfiguration>
     {
         protected override void Given()
         {
@@ -23,9 +23,9 @@ namespace AwsTools.UnitTests.SqsQueueConfiguration.Validation
             Assert.IsNotNull(ThrownException);
         }
 
-        protected override SqsConfiguration CreateSystemUnderTest()
+        protected override SqsReadConfiguration CreateSystemUnderTest()
         {
-            return new SqsConfiguration() { MessageRetentionSeconds = JustSayingConstants.MINIMUM_RETENTION_PERIOD +1, Topic = "ATopic", PublishEndpoint = null };
+            return new SqsReadConfiguration() { MessageRetentionSeconds = JustSayingConstants.MINIMUM_RETENTION_PERIOD +1, Topic = "ATopic", PublishEndpoint = null };
         }
     }
 }

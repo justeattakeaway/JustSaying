@@ -59,6 +59,7 @@
     <Compile Include="QueueCreation\AmazonQueueCreator.cs" />
     <Compile Include="QueueCreation\IVerifyAmazonQueues.cs" />
     <Compile Include="QueueCreation\RedrivePolicy.cs" />
+    <Compile Include="QueueCreation\SqsBasicConfiguration.cs" />
     <Compile Include="QueueCreation\SqsConfiguration.cs" />
     <Compile Include="DynamoTable.cs" />
     <Compile Include="DynamoDbConfig.cs" />
@@ -72,6 +73,7 @@
     <Compile Include="SnsTopicBase.cs" />
     <Compile Include="SnsTopicByArn.cs" />
     <Compile Include="SqsNotificationListener.cs" />
+    <Compile Include="SqsPublisher.cs" />
     <Compile Include="SqsQueueBase.cs" />
     <Compile Include="SqsQueueByName.cs" />
     <Compile Include="SqsQueueByNameBase.cs" />

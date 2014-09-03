@@ -1,15 +1,12 @@
 ﻿using JustBehave;
-using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.TestingFramework;
 using NSubstitute;
 using NUnit.Framework;
 
-namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
+namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
 {
-    public class WhenAddingSubscribers : BehaviourTest<JustSaying.JustSayingFluently>
+    public class WhenAddingPublishers : BehaviourTest<JustSaying.JustSayingFluently>
     {
-        private const string Topic = "SomeTopic";
         private readonly IAmJustSaying _bus = Substitute.For<IAmJustSaying>();
 
         protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
@@ -34,20 +31,36 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         {
             SystemUnderTest.ConfigurePublisherWith(conf => conf.PublishFailureBackoffMilliseconds = 50);
         }
+
+
+
+        /// Note: Ignored tests are here for fluent api exploration & expecting compile time issues when working on the fluent interface stuff...
         
         [Then, Ignore]
-        public void APublisherCanBeSetup()
+        public void ASqsPublisherCanBeSetup()
         {
             SystemUnderTest.ConfigurePublisherWith(conf => conf.PublishFailureBackoffMilliseconds = 50)
                 .WithSnsMessagePublisher<GenericMessage>();
         }
 
         [Then, Ignore]
-        public void MultiplePublishersCanBeSetup()
+        public void MultipleSqsPublishersCanBeSetup()
         {
             SystemUnderTest.ConfigurePublisherWith(conf => conf.PublishFailureBackoffMilliseconds = 50)
                 .WithSnsMessagePublisher<GenericMessage>()
                 .WithSnsMessagePublisher<GenericMessage>();
+        }
+
+        [Then, Ignore]
+        public void ASqsPublisherCanBeSetupWithConfiguration()
+        {
+            SystemUnderTest.WithSqsMessagePublisher<GenericMessage>(c =>
+            {
+                c.VisibilityTimeoutSeconds = 1;
+                c.RetryCountBeforeSendingToErrorQueue = 2;
+                c.MessageRetentionSeconds = 3;
+                c.ErrorQueueOptOut = true;
+            });
         }
     }
 }
