@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Amazon;
 using JustBehave;
 using JustSaying.AwsTools;
+using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;

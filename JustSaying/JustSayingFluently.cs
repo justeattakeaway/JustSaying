@@ -89,7 +89,7 @@ namespace JustSaying
             var eventPublisher = new SqsPublisher(
                 publishEndpointProvider.GetLocationName(),
                 AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(Bus.Config.Region)),
-                0, //ToDo: Think about this in context of publishing
+                config.RetryCountBeforeSendingToErrorQueue,
                 Bus.SerialisationRegister);
 
             if (!eventPublisher.Exists())

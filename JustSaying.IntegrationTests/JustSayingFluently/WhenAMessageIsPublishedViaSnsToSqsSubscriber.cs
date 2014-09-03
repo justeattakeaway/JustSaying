@@ -1,4 +1,5 @@
-﻿using JustSaying.TestingFramework;
+﻿using Amazon.SQS.Model;
+using JustSaying.TestingFramework;
 using NUnit.Framework;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
@@ -11,29 +12,6 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         {
             base.Given();
             _handler= new Future<GenericMessage>();
-            RegisterHandler(_handler);
-        }
-
-        protected override void When()
-        {
-            ServiceBus.Publish(new GenericMessage());
-        }
-
-        [Test]
-        public void ThenItGetsHandled()
-        {
-            _handler.WaitUntilCompletion(2.Seconds()).ShouldBeTrue();
-        }
-    }
-
-    public class WhenAMessageIsPublishedViaSqsToSqsSubscriber : GivenANotificationStack
-    {
-        private Future<GenericMessage> _handler;
-
-        protected override void Given()
-        {
-            base.Given();
-            _handler = new Future<GenericMessage>();
             RegisterHandler(_handler);
         }
 
