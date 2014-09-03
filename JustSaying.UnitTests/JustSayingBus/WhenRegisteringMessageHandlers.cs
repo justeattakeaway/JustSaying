@@ -49,6 +49,6 @@ namespace JustSaying.UnitTests.JustSayingBus
                                  });
         }
 
-        class Message2 : Message { }
+        public class Message2 : Message { }
     }
 }
