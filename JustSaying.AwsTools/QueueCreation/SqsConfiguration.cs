@@ -25,7 +25,7 @@ namespace JustSaying.AwsTools.QueueCreation
         public int RetryCountBeforeSendingToErrorQueue { get; set; }
         public int? MaxAllowedMessagesInFlight { get; set; }
         public IMessageProcessingStrategy MessageProcessingStrategy { get; set; }
-        public Action<Exception> OnError { get; set; }
+        public Action<Exception, Amazon.SQS.Model.Message> OnError { get; set; }
         public int ErrorQueueRetentionPeriodSeconds { get; set; }
 
         public void Validate()
