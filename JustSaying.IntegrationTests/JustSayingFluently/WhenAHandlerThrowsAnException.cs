@@ -22,7 +22,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         public void Given()
         {
             _handler.Handle(Arg.Any<GenericMessage>()).Returns(true).AndDoes(ex => { throw new Exception("My Ex"); });
-            _globalErrorHandler = (ex,m) => { _handledException = true; };
+            _globalErrorHandler = (ex, m) => { _handledException = true; };
             _monitoring = Substitute.For<IMessageMonitor>();
             var bus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithMonitoring(_monitoring)

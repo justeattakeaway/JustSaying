@@ -12,7 +12,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener.HandlingExceptions
 
         protected override void When()
         {
-            _globalErrorHandler = (ex,m) => { _handledException = true; };
+            _globalErrorHandler = (ex, m) => { _handledException = true; };
 
             var listener = new JustSaying.AwsTools.SqsNotificationListener(null, null, null,
                                                        onError: _globalErrorHandler);
