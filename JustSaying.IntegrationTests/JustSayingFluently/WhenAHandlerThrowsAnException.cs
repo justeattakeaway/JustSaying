@@ -14,7 +14,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
     {
         private readonly IHandler<GenericMessage> _handler = Substitute.For<IHandler<GenericMessage>>();
         private IAmJustSayingFluently _bus;
-        private Action<Exception> _globalErrorHandler;
+        private Action<Exception, Amazon.SQS.Model.Message> _globalErrorHandler;
         private bool _handledException;
         private IMessageMonitor _monitoring;
 
@@ -22,7 +22,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         public void Given()
         {
             _handler.Handle(Arg.Any<GenericMessage>()).Returns(true).AndDoes(ex => { throw new Exception("My Ex"); });
-            _globalErrorHandler = ex => { _handledException = true; };
+            _globalErrorHandler = (ex,m) => { _handledException = true; };
             _monitoring = Substitute.For<IMessageMonitor>();
             var bus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithMonitoring(_monitoring)
