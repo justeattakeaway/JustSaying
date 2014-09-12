@@ -16,6 +16,10 @@ namespace JustSaying.AwsTools
         public IAmazonSQS Client { get; private set; }
         public string QueueNamePrefix { get; protected set; }
         public ErrorQueue ErrorQueue { get; protected set; }
+        internal int MessageRetentionPeriod { get; set; }
+        internal int VisibilityTimeout { get; set; }
+        internal RedrivePolicy RedrivePolicy { get; set; }
+        
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
 
         public SqsQueueBase(IAmazonSQS client)
@@ -39,9 +43,27 @@ namespace JustSaying.AwsTools
             Url = null;
         }
 
-        protected void SetArn()
+        protected void SetQueueProperties()
         {
-            Arn = GetAttrs(new[] { "QueueArn" }).QueueARN;
+            var attributes = GetAttrs(new[]
+            {
+                JustSayingConstants.ATTRIBUTE_ARN, 
+                JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY,
+                JustSayingConstants.ATTRIBUTE_POLICY,
+                JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD,
+                JustSayingConstants.ATTRIBUTE_VISIBILITY_TIMEOUT
+            });
+            Arn = attributes.QueueARN;
+            MessageRetentionPeriod = attributes.MessageRetentionPeriod;
+            VisibilityTimeout = attributes.VisibilityTimeout;
+            RedrivePolicy = ExtractRedrivePolicyFromQueueAttributes(attributes.Attributes);
+        }
+
+        private RedrivePolicy ExtractRedrivePolicyFromQueueAttributes(Dictionary<string, string> queueAttributes)
+        {
+            if (!queueAttributes.ContainsKey(JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY))
+                return null;
+            return RedrivePolicy.ConvertFromString(queueAttributes[JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY]);
         }
 
         protected GetQueueAttributesResult GetAttrs(IEnumerable<string> attrKeys)
@@ -101,17 +123,6 @@ namespace JustSaying.AwsTools
 															}
                                                          }
                                                     }";
-        }
-
-        internal RedrivePolicy RedrivePolicy
-        {
-            get
-            {
-                var queueAttributes = GetAttrs(new[] { JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY }).Attributes;
-                if(!queueAttributes.ContainsKey(JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY))
-                    return null;
-                return RedrivePolicy.ConvertFromString(queueAttributes[JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY]);
-            }
         }
     }
 }

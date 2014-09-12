@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Globalization;
+using System.Net;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Amazon.SQS.Util;
@@ -49,18 +50,27 @@ namespace JustSaying.AwsTools
         {
             if (RedrivePolicyNeedsUpdating(requestedRedrivePolicy))
             {
-                Client.SetQueueAttributes(
+                var response = Client.SetQueueAttributes(
                 new SetQueueAttributesRequest
                 {
                     QueueUrl = Url,
                     Attributes = new Dictionary<string, string> { { JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY, requestedRedrivePolicy.ToString() } }
                 });
+                if (response.HttpStatusCode == HttpStatusCode.OK)
+                {
+                    RedrivePolicy = requestedRedrivePolicy;
+                }
             }
         }
 
         private bool RedrivePolicyNeedsUpdating(RedrivePolicy requestedRedrivePolicy)
         {
             return RedrivePolicy == null || RedrivePolicy.MaximumReceives != requestedRedrivePolicy.MaximumReceives;
+        }
+
+        public void UpdateQueueAttribute(SqsConfiguration queueConfig)
+        {
+            
         }
     }
 }

@@ -28,7 +28,7 @@ namespace JustSaying.AwsTools
 
             if (Url != null)
             {
-                SetArn();
+                SetQueueProperties();
                 return true;
             }
 
@@ -51,7 +51,7 @@ namespace JustSaying.AwsTools
                 if (!string.IsNullOrWhiteSpace(result.QueueUrl))
                 {
                     Url = result.QueueUrl;
-                    SetArn();
+                    SetQueueProperties();
 
                     Log.Info(string.Format("Created Queue: {0} on Arn: {1}", QueueNamePrefix, Arn));
                     return true;

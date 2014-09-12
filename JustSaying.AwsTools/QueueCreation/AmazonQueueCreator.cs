@@ -32,6 +32,10 @@ namespace JustSaying.AwsTools.QueueCreation
 
             if (!queue.Exists())
                 queue.Create(queueConfig);
+            else
+            {
+                queue.UpdateQueueAttribute(queueConfig);
+            }
 
             //Create an error queue for existing queues if they don't already have one
             if(queue.ErrorQueue != null && !queue.ErrorQueue.Exists())
