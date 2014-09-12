@@ -38,8 +38,23 @@ namespace JustSaying.AwsTools.QueueCreation
             }
 
             //Create an error queue for existing queues if they don't already have one
-            if(queue.ErrorQueue != null && !queue.ErrorQueue.Exists())
-                queue.ErrorQueue.Create(new SqsConfiguration(){ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds, ErrorQueueOptOut = true});
+            if (queue.ErrorQueue != null)
+            {
+                var errorQueueConfig = new SqsConfiguration
+                {
+                    ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds,
+                    ErrorQueueOptOut = true
+                };
+                if (!queue.ErrorQueue.Exists())
+                {
+                    
+                    queue.ErrorQueue.Create(errorQueueConfig);
+                }
+                else
+                {
+                    queue.ErrorQueue.UpdateQueueAttribute(errorQueueConfig);
+                }
+            }
             queue.UpdateRedrivePolicy(new RedrivePolicy(queueConfig.RetryCountBeforeSendingToErrorQueue, queue.ErrorQueue.Arn));
 
             if (!eventTopic.Exists())

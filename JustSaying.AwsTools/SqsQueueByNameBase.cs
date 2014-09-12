@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -83,6 +84,34 @@ namespace JustSaying.AwsTools
 
             Log.Info(string.Format("Failed to create Queue: {0}", QueueNamePrefix));
             return false;
+        }
+
+
+        public void UpdateQueueAttribute(SqsConfiguration queueConfig)
+        {
+            if (QueueNeedsUpdating(queueConfig))
+            {
+                var response = Client.SetQueueAttributes(
+                    new SetQueueAttributesRequest
+                    {
+                        QueueUrl = Url,
+                        Attributes = new Dictionary<string, string>
+                        {
+                            {JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD, queueConfig.MessageRetentionSeconds.ToString()},
+                            {JustSayingConstants.ATTRIBUTE_VISIBILITY_TIMEOUT, queueConfig.VisibilityTimeoutSeconds.ToString()},
+                        }
+                    });
+                if (response.HttpStatusCode == HttpStatusCode.OK)
+                {
+                    MessageRetentionPeriod = queueConfig.MessageRetentionSeconds;
+                    VisibilityTimeout = queueConfig.VisibilityTimeoutSeconds;
+                }
+            }
+        }
+        private bool QueueNeedsUpdating(SqsConfiguration queueConfig)
+        {
+            return MessageRetentionPeriod != queueConfig.MessageRetentionSeconds
+                   || VisibilityTimeout != queueConfig.VisibilityTimeoutSeconds;
         }
 
         protected abstract Dictionary<string, string> GetCreateQueueAttributes(int retentionPeriodSeconds,
