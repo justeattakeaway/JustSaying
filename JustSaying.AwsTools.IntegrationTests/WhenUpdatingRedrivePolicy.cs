@@ -30,4 +30,31 @@ namespace JustSaying.AwsTools.IntegrationTests
             Assert.AreEqual(_newMaximumReceived, SystemUnderTest.RedrivePolicy.MaximumReceives);
         }
     }
+    public class WhenUpdatingRetentionPeriod : WhenCreatingQueuesByName
+    {
+        private int _oldRetentionPeriod;
+        private int _newRetentionPeriod;
+
+        protected override void Given()
+        {
+            _oldRetentionPeriod = 600;
+            _newRetentionPeriod = 700;
+
+            base.Given();
+        }
+
+        protected override void When()
+        {
+
+            SystemUnderTest.Create(new SqsConfiguration(){MessageRetentionSeconds = _oldRetentionPeriod});
+
+            SystemUnderTest.UpdateQueueAttribute(new SqsConfiguration(){MessageRetentionSeconds = _newRetentionPeriod});
+        }
+
+        [Test]
+        public void TheRedrivePolicyIsUpdatedWithTheNewValue()
+        {
+            Assert.AreEqual(_newRetentionPeriod, SystemUnderTest.MessageRetentionPeriod);
+        }
+    }
 }
