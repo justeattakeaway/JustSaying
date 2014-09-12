@@ -29,13 +29,13 @@ namespace JustSaying.AwsTools
         }
 
         // ToDO: int attempt because it's recursive. Let's clean that up for peeps.
-        public override bool Create(int retentionPeriodSeconds, int attempt = JustSayingConstants.DEFAULT_CREATE_REATTEMPT, int visibilityTimeoutSeconds = JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT, bool createErrorQueue = false, int retryCountBeforeSendingToErrorQueue = JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT)
+        public override bool Create(SqsConfiguration queueConfig, int attempt = 0)
         {
             if (!ErrorQueue.Exists())
             {
-                ErrorQueue.Create(JustSayingConstants.MAXIMUM_RETENTION_PERIOD, JustSayingConstants.DEFAULT_CREATE_REATTEMPT, JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT, errorQueueOptOut: true);
+                ErrorQueue.Create(new SqsConfiguration(){ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds, ErrorQueueOptOut = true});
             }
-            return base.Create(retentionPeriodSeconds, attempt, visibilityTimeoutSeconds);
+            return base.Create(queueConfig, attempt: attempt);
         }
 
         public override void Delete()

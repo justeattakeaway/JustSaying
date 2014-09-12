@@ -31,11 +31,11 @@ namespace JustSaying.AwsTools.QueueCreation
             var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsclient, serialisationRegister);
 
             if (!queue.Exists())
-                queue.Create(queueConfig.MessageRetentionSeconds, 0, queueConfig.VisibilityTimeoutSeconds, queueConfig.ErrorQueueOptOut, queueConfig.RetryCountBeforeSendingToErrorQueue);
+                queue.Create(queueConfig);
 
             //Create an error queue for existing queues if they don't already have one
             if(queue.ErrorQueue != null && !queue.ErrorQueue.Exists())
-                queue.ErrorQueue.Create(JustSayingConstants.MAXIMUM_RETENTION_PERIOD, JustSayingConstants.DEFAULT_CREATE_REATTEMPT, JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT, errorQueueOptOut: true);
+                queue.ErrorQueue.Create(new SqsConfiguration(){ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds, ErrorQueueOptOut = true});
             queue.UpdateRedrivePolicy(new RedrivePolicy(queueConfig.RetryCountBeforeSendingToErrorQueue, queue.ErrorQueue.Arn));
 
             if (!eventTopic.Exists())

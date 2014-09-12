@@ -4,6 +4,7 @@ using System.Threading;
 using Amazon;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools;
+using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
@@ -28,7 +29,7 @@ namespace JustSaying.AwsTools.IntegrationTests
             var q = new SqsQueueByName("throttle_test", awsQueueClient, 1);
             if (!q.Exists())
             {
-                q.Create(60 * 2);
+                q.Create(new SqsConfiguration());
                 Thread.Sleep(TimeSpan.FromMinutes(1));  // wait 60 secs for queue creation to be guaranteed completed by aws. :(
             }
 

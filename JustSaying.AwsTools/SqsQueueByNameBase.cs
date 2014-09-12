@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using JustSaying.AwsTools.QueueCreation;
 using NLog;
 
 namespace JustSaying.AwsTools
@@ -39,13 +40,13 @@ namespace JustSaying.AwsTools
                 .Equals(queueName, StringComparison.InvariantCultureIgnoreCase);
         }
 
-        public virtual bool Create(int retentionPeriodSeconds, int attempt = 0, int visibilityTimeoutSeconds = 30, bool errorQueueOptOut = false, int retryCountBeforeSendingToErrorQueue = JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT)
+        public virtual bool Create(SqsConfiguration queueConfig, int attempt = 0)
         {
             try
             {
                 var result = Client.CreateQueue(new CreateQueueRequest{
                     QueueName = QueueNamePrefix,
-                    Attributes = GetCreateQueueAttributes(retentionPeriodSeconds, visibilityTimeoutSeconds)});
+                    Attributes = GetCreateQueueAttributes(queueConfig.MessageRetentionSeconds, queueConfig.VisibilityTimeoutSeconds)});
 
                 if (!string.IsNullOrWhiteSpace(result.QueueUrl))
                 {
@@ -63,7 +64,7 @@ namespace JustSaying.AwsTools
                     // Ensure we wait for queue delete timeout to expire.
                     Log.Info(string.Format("Waiting to create Queue due to AWS time restriction - Queue: {0}, AttemptCount: {1}", QueueNamePrefix, attempt + 1));
                     Thread.Sleep(60000);
-                    Create(retentionPeriodSeconds, attempt++, visibilityTimeoutSeconds);
+                    Create(queueConfig, attempt: attempt++);
                 }
                 else
                 {
