@@ -19,24 +19,13 @@ namespace JustSaying.AwsTools
             ErrorQueue = new ErrorQueue(queueName, client);
         }
 
-        protected override Dictionary<string, string> GetCreateQueueAttributes(int retentionPeriodSeconds, int visibilityTimeoutSeconds)
-        {
-            return new Dictionary<string, string>
-            {
-                { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD , retentionPeriodSeconds.ToString(CultureInfo.InvariantCulture)},
-                { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , visibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture)},
-                { JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY, new RedrivePolicy(_retryCountBeforeSendingToErrorQueue, ErrorQueue.Arn).ToString()}
-            };
-        }
-
-        // ToDO: int attempt because it's recursive. Let's clean that up for peeps.
         public override bool Create(SqsConfiguration queueConfig, int attempt = 0)
         {
             if (!ErrorQueue.Exists())
             {
                 ErrorQueue.Create(new SqsConfiguration(){ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds, ErrorQueueOptOut = true});
             }
-            return base.Create(queueConfig, attempt: attempt);
+            return base.Create(queueConfig, attempt);
         }
 
         public override void Delete()
@@ -61,6 +50,47 @@ namespace JustSaying.AwsTools
                     RedrivePolicy = requestedRedrivePolicy;
                 }
             }
+        }
+
+        public void EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdated(SqsConfiguration queueConfig)
+        {
+            if (!Exists())
+                Create(queueConfig);
+            else
+            {
+                UpdateQueueAttribute(queueConfig);
+            }
+
+            //Create an error queue for existing queues if they don't already have one
+            if (ErrorQueue != null)
+            {
+                var errorQueueConfig = new SqsConfiguration
+                {
+                    ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds,
+                    ErrorQueueOptOut = true
+                };
+                if (ErrorQueue.Exists())
+                {
+
+                    ErrorQueue.Create(errorQueueConfig);
+                }
+                else
+                {
+                    ErrorQueue.UpdateQueueAttribute(errorQueueConfig);
+                }
+            }
+            UpdateRedrivePolicy(new RedrivePolicy(queueConfig.RetryCountBeforeSendingToErrorQueue, ErrorQueue.Arn));
+
+        }
+
+        protected override Dictionary<string, string> GetCreateQueueAttributes(int retentionPeriodSeconds, int visibilityTimeoutSeconds)
+        {
+            return new Dictionary<string, string>
+            {
+                { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD , retentionPeriodSeconds.ToString(CultureInfo.InvariantCulture)},
+                { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , visibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture)},
+                { JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY, new RedrivePolicy(_retryCountBeforeSendingToErrorQueue, ErrorQueue.Arn).ToString()}
+            };
         }
 
         private bool RedrivePolicyNeedsUpdating(RedrivePolicy requestedRedrivePolicy)

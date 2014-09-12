@@ -30,33 +30,8 @@ namespace JustSaying.AwsTools.QueueCreation
 
             var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsclient, serialisationRegister);
 
-            if (!queue.Exists())
-                queue.Create(queueConfig);
-            else
-            {
-                queue.UpdateQueueAttribute(queueConfig);
-            }
-
-            //Create an error queue for existing queues if they don't already have one
-            if (queue.ErrorQueue != null)
-            {
-                var errorQueueConfig = new SqsConfiguration
-                {
-                    ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds,
-                    ErrorQueueOptOut = true
-                };
-                if (!queue.ErrorQueue.Exists())
-                {
-                    
-                    queue.ErrorQueue.Create(errorQueueConfig);
-                }
-                else
-                {
-                    queue.ErrorQueue.UpdateQueueAttribute(errorQueueConfig);
-                }
-            }
-            queue.UpdateRedrivePolicy(new RedrivePolicy(queueConfig.RetryCountBeforeSendingToErrorQueue, queue.ErrorQueue.Arn));
-
+            queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdated(queueConfig);
+            
             if (!eventTopic.Exists())
                 eventTopic.Create();
 

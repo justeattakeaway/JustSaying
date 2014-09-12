@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Net;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
 using NLog;
-using Newtonsoft.Json.Linq;
-using JustSaying.Messaging.MessageSerialisation;
 
 namespace JustSaying.AwsTools
 {
@@ -22,7 +20,7 @@ namespace JustSaying.AwsTools
         
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
 
-        public SqsQueueBase(IAmazonSQS client)
+        protected SqsQueueBase(IAmazonSQS client)
         {
             Client = client;
         }
@@ -41,41 +39,6 @@ namespace JustSaying.AwsTools
             //return result.IsSetResponseMetadata();
             Arn = null;
             Url = null;
-        }
-
-        protected void SetQueueProperties()
-        {
-            var attributes = GetAttrs(new[]
-            {
-                JustSayingConstants.ATTRIBUTE_ARN, 
-                JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY,
-                JustSayingConstants.ATTRIBUTE_POLICY,
-                JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD,
-                JustSayingConstants.ATTRIBUTE_VISIBILITY_TIMEOUT
-            });
-            Arn = attributes.QueueARN;
-            MessageRetentionPeriod = attributes.MessageRetentionPeriod;
-            VisibilityTimeout = attributes.VisibilityTimeout;
-            RedrivePolicy = ExtractRedrivePolicyFromQueueAttributes(attributes.Attributes);
-        }
-
-        private RedrivePolicy ExtractRedrivePolicyFromQueueAttributes(Dictionary<string, string> queueAttributes)
-        {
-            if (!queueAttributes.ContainsKey(JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY))
-                return null;
-            return RedrivePolicy.ConvertFromString(queueAttributes[JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY]);
-        }
-
-        protected GetQueueAttributesResult GetAttrs(IEnumerable<string> attrKeys)
-        {
-            var request = new GetQueueAttributesRequest { 
-                QueueUrl = Url,
-                AttributeNames = new List<string>(attrKeys)
-            };
-            
-            var result = Client.GetQueueAttributes(request);
-
-            return result;
         }
 
         public void AddPermission(SnsTopicBase snsTopic)
@@ -102,6 +65,34 @@ namespace JustSaying.AwsTools
             return policyResponse.Policy.Contains(snsTopic.Arn);
         }
 
+        protected void SetQueueProperties()
+        {
+            var attributes = GetAttrs(new[]
+            {
+                JustSayingConstants.ATTRIBUTE_ARN, 
+                JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY,
+                JustSayingConstants.ATTRIBUTE_POLICY,
+                JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD,
+                JustSayingConstants.ATTRIBUTE_VISIBILITY_TIMEOUT
+            });
+            Arn = attributes.QueueARN;
+            MessageRetentionPeriod = attributes.MessageRetentionPeriod;
+            VisibilityTimeout = attributes.VisibilityTimeout;
+            RedrivePolicy = ExtractRedrivePolicyFromQueueAttributes(attributes.Attributes);
+        }
+
+        protected GetQueueAttributesResult GetAttrs(IEnumerable<string> attrKeys)
+        {
+            var request = new GetQueueAttributesRequest { 
+                QueueUrl = Url,
+                AttributeNames = new List<string>(attrKeys)
+            };
+            
+            var result = Client.GetQueueAttributes(request);
+
+            return result;
+        }
+
         protected string GetQueueSubscriptionPilocy(SnsTopicBase topic)
         {
             return @"{
@@ -123,6 +114,41 @@ namespace JustSaying.AwsTools
 															}
                                                          }
                                                     }";
+        }
+
+        protected internal void UpdateQueueAttribute(SqsConfiguration queueConfig)
+        {
+            if (QueueNeedsUpdating(queueConfig))
+            {
+                var response = Client.SetQueueAttributes(
+                    new SetQueueAttributesRequest
+                    {
+                        QueueUrl = Url,
+                        Attributes = new Dictionary<string, string>
+                        {
+                            {JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD, queueConfig.MessageRetentionSeconds.ToString()},
+                            {JustSayingConstants.ATTRIBUTE_VISIBILITY_TIMEOUT, queueConfig.VisibilityTimeoutSeconds.ToString()},
+                        }
+                    });
+                if (response.HttpStatusCode == HttpStatusCode.OK)
+                {
+                    MessageRetentionPeriod = queueConfig.MessageRetentionSeconds;
+                    VisibilityTimeout = queueConfig.VisibilityTimeoutSeconds;
+                }
+            }
+        }
+
+        private bool QueueNeedsUpdating(SqsConfiguration queueConfig)
+        {
+            return MessageRetentionPeriod != queueConfig.MessageRetentionSeconds
+                   || VisibilityTimeout != queueConfig.VisibilityTimeoutSeconds;
+        }
+
+        private RedrivePolicy ExtractRedrivePolicyFromQueueAttributes(Dictionary<string, string> queueAttributes)
+        {
+            if (!queueAttributes.ContainsKey(JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY))
+                return null;
+            return RedrivePolicy.ConvertFromString(queueAttributes[JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY]);
         }
     }
 }
