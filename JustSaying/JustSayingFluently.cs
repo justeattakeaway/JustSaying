@@ -173,7 +173,7 @@ namespace JustSaying
             _subscriptionConfigured = true;
 
             if (!_subscriptionConfigured)
-                ConfigureSubscriptionWith(conf => conf.ErrorQueueOptOut = false);
+                ConfigureSubscriptionWith(conf => conf.ErrorQueueOptOut = _subscriptionConfig.ErrorQueueOptOut);
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
             Bus.AddMessageHandler(handler);
