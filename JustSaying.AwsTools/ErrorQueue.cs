@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Amazon.SQS;
 using Amazon.SQS.Util;
+using JustSaying.AwsTools.QueueCreation;
 
 namespace JustSaying.AwsTools
 {
@@ -23,17 +24,12 @@ namespace JustSaying.AwsTools
             };
         }
 
-        public override bool Create(
-            int retentionPeriodSeconds,
-            int attempt = JustSayingConstants.DEFAULT_CREATE_REATTEMPT,
-            int visibilityTimeoutSeconds = JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT,
-            bool errorQueueOptOut = false,
-            int retryCountBeforeSendingToErrorQueue = JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT)
+        public override bool Create(SqsConfiguration queueConfig, int attempt = 0)
         {
-            if (!errorQueueOptOut)
+            if (!queueConfig.ErrorQueueOptOut)
                 throw new InvalidOperationException("Cannot create a dead letter queue for a dead letter queue.");
 
-            return base.Create(retentionPeriodSeconds, attempt, visibilityTimeoutSeconds, true);
+            return base.Create(queueConfig, attempt: attempt);
         }
     }
 }

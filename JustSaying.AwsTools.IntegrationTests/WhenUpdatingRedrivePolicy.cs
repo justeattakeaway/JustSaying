@@ -5,12 +5,10 @@ namespace JustSaying.AwsTools.IntegrationTests
 {
     public class WhenUpdatingRedrivePolicy : WhenCreatingQueuesByName
     {
-        private int _oldMaximumReceives;
         private int _newMaximumReceived;
 
         protected override void Given()
         {
-            _oldMaximumReceives = 1;
             _newMaximumReceived = 2;
 
             base.Given();
@@ -19,7 +17,7 @@ namespace JustSaying.AwsTools.IntegrationTests
         protected override void When()
         {
 
-            SystemUnderTest.Create(60, attempt: 0, visibilityTimeoutSeconds: 30, createErrorQueue: false, retryCountBeforeSendingToErrorQueue: _oldMaximumReceives);
+            SystemUnderTest.Create(new SqsConfiguration());
 
             SystemUnderTest.UpdateRedrivePolicy(new RedrivePolicy(_newMaximumReceived, SystemUnderTest.ErrorQueue.Arn));
         }
