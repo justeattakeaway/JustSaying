@@ -69,7 +69,7 @@ namespace JustSaying.AwsTools
                     ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds,
                     ErrorQueueOptOut = true
                 };
-                if (ErrorQueue.Exists())
+                if (!ErrorQueue.Exists())
                 {
 
                     ErrorQueue.Create(errorQueueConfig);
