@@ -20,7 +20,6 @@ namespace JustSaying.AwsTools.QueueCreation
 
         public int MessageRetentionSeconds { get; set; }
         public int VisibilityTimeoutSeconds { get; set; }
-        public int? InstancePosition { get; set; }
         public bool ErrorQueueOptOut { get; set; }
         public int RetryCountBeforeSendingToErrorQueue { get; set; }
         public int? MaxAllowedMessagesInFlight { get; set; }

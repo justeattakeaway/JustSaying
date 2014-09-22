@@ -44,7 +44,6 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .WithSqsTopicSubscriber().IntoQueue("queuename").ConfigureSubscriptionWith(
                     cfg =>
                     {
-                        cfg.InstancePosition = 1;
                         cfg.MaxAllowedMessagesInFlight = 25;
                     })
                 .WithMessageHandler(_handler);

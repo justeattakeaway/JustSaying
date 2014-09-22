@@ -37,7 +37,6 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .ConfigureSubscriptionWith(cfg =>
                     {
                         cfg.MessageRetentionSeconds = 60;
-                        cfg.InstancePosition = 1;
                         cfg.OnError = _globalErrorHandler;
                     })
                 .WithMessageHandler(_handler);

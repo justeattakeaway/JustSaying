@@ -55,7 +55,6 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 {
                     cf.MessageRetentionSeconds = 60;
                     cf.VisibilityTimeoutSeconds = JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT;
-                    cf.InstancePosition = 1;
                 })
                 .WithMessageHandler(handler);
 
