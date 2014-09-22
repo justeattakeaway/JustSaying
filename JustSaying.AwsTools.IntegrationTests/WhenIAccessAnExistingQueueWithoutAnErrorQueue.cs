@@ -1,4 +1,5 @@
 ﻿using JustBehave;
+using JustSaying.AwsTools.QueueCreation;
 using JustSaying.TestingFramework;
 
 namespace JustSaying.AwsTools.IntegrationTests
@@ -7,7 +8,7 @@ namespace JustSaying.AwsTools.IntegrationTests
     {
         protected override void When()
         {
-            SystemUnderTest.Create(600, attempt: 0, visibilityTimeoutSeconds: 30, createErrorQueue: false);
+            SystemUnderTest.Create(new SqsConfiguration(), attempt: 0);
         }
 
         [Then]

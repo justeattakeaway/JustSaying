@@ -17,7 +17,7 @@ namespace JustSaying.AwsTools
             var result = Client.ListQueues(new ListQueuesRequest());
             if (result.QueueUrls.Any(x => x == Url))
             {
-                SetArn();
+                SetQueueProperties();
                 // Need to set the prefix yet!
                 return true;
             }

@@ -18,7 +18,7 @@ namespace JustSaying.AwsTools
         private readonly SqsQueueBase _queue;
         private readonly IMessageSerialisationRegister _serialisationRegister;
         private readonly IMessageMonitor _messagingMonitor;
-        private readonly Action<Exception> _onError;
+        private readonly Action<Exception, Amazon.SQS.Model.Message> _onError;
         private readonly Dictionary<Type, List<Func<Message, bool>>> _handlers;
         private readonly IMessageLock _messageLock;
 
@@ -28,12 +28,12 @@ namespace JustSaying.AwsTools
         private const int MaxAmazonMessageCap = 10;
         private IMessageProcessingStrategy _messageProcessingStrategy;
 
-        public SqsNotificationListener(SqsQueueBase queue, IMessageSerialisationRegister serialisationRegister, IMessageMonitor messagingMonitor, Action<Exception> onError = null, IMessageLock messageLock = null)
+        public SqsNotificationListener(SqsQueueBase queue, IMessageSerialisationRegister serialisationRegister, IMessageMonitor messagingMonitor, Action<Exception, Amazon.SQS.Model.Message> onError = null, IMessageLock messageLock = null)
         {
             _queue = queue;
             _serialisationRegister = serialisationRegister;
             _messagingMonitor = messagingMonitor;
-            _onError = onError ?? (ex => { });
+            _onError = onError ?? ((ex,message) => { });
             _handlers = new Dictionary<Type, List<Func<Message, bool>>>();
             _messageProcessingStrategy = new MaximumThroughput();
             _messageLock = messageLock;
@@ -60,12 +60,13 @@ namespace JustSaying.AwsTools
                 handlers = new List<Func<Message, bool>>();
                 _handlers.Add(typeof(T), handlers);
             }
-            if (Attribute.IsDefined(handler.GetType(), typeof(ExactlyOnceAttribute)))
+            var guaranteedDelivery = new GuaranteedOnceDelivery<T>(handler);
+            if (guaranteedDelivery.Enabled)
             {
                 if(_messageLock == null)
                     throw new Exception("IMessageLock is null. You need to specify an implementation for IMessageLock.");
 
-                handler = new ExactlyOnceHandler<T>(handler, _messageLock);
+                handler = new ExactlyOnceHandler<T>(handler, _messageLock, guaranteedDelivery.TimeOut);
             }
             var executionTimeMonitoring = _messagingMonitor as IMeasureHandlerExecutionTime;
             if (executionTimeMonitoring != null)
@@ -182,7 +183,7 @@ namespace JustSaying.AwsTools
                     QueueUrl = _queue.Url,
                     ReceiptHandle = message.ReceiptHandle
                 });
-                _onError(ex);
+                _onError(ex, message);
             }
             catch (Exception ex)
             {
@@ -191,7 +192,7 @@ namespace JustSaying.AwsTools
                 {
                     _messagingMonitor.HandleException(typedMessage.GetType().Name);
                 }
-                _onError(ex);
+                _onError(ex, message);
                 
             }
         }

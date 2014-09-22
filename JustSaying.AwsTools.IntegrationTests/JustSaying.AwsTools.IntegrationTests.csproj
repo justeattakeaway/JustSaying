@@ -79,6 +79,7 @@
     <Compile Include="WhenICreateAQueueByName.cs" />
     <Compile Include="WhenQueueIsDeleted.cs" />
     <Compile Include="WhenUpdatingRedrivePolicy.cs" />
+    <Compile Include="WhenUpdatingRetentionPeriod.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
