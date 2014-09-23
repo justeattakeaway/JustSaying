@@ -11,7 +11,7 @@ namespace JustSaying.AwsTools.IntegrationTests
 
         protected override void When()
         {
-            _isQueueCreated = SystemUnderTest.Create(new SqsConfiguration(), attempt: 0);
+            _isQueueCreated = SystemUnderTest.Create(new SqsBasicConfiguration(), attempt: 0);
         }
 
         [Then]

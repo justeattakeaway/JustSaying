@@ -17,7 +17,7 @@ namespace JustSaying.AwsTools.IntegrationTests
         protected override void When()
         {
 
-            SystemUnderTest.Create(new SqsConfiguration());
+            SystemUnderTest.Create(new SqsBasicConfiguration());
 
             SystemUnderTest.UpdateRedrivePolicy(new RedrivePolicy(_newMaximumReceived, SystemUnderTest.ErrorQueue.Arn));
         }

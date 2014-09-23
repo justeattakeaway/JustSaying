@@ -5,6 +5,7 @@ namespace JustSaying.AwsTools.QueueCreation
     public class SqsBasicConfiguration
     {
         public int MessageRetentionSeconds { get; set; }
+        public int ErrorQueueRetentionPeriodSeconds { get; set; }
         public int VisibilityTimeoutSeconds { get; set; }
         public int RetryCountBeforeSendingToErrorQueue { get; set; }
         public bool ErrorQueueOptOut { get; set; }

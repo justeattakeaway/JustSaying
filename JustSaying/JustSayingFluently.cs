@@ -26,6 +26,7 @@ namespace JustSaying
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
         protected readonly IAmJustSaying Bus;
         private SqsReadConfiguration _subscriptionConfig = new SqsReadConfiguration();
+        private SqsWriteConfiguration _publishConfig = new SqsWriteConfiguration();
         private IMessageSerialisationFactory _serialisationFactory;
 
         internal protected JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator)
@@ -39,9 +40,15 @@ namespace JustSaying
         {
             return new SqsSubscribtionEndpointProvider(subscriptionConfig);
         }
+
         public virtual IPublishEndpointProvider CreatePublisherEndpointProvider(SqsReadConfiguration subscriptionConfig)
         {
             return new SnsPublishEndpointProvider(subscriptionConfig.Topic);
+        }
+
+        public virtual IPublishEndpointProvider CreatePublisherEndpointProvider(SqsWriteConfiguration subscriptionConfig)
+        {
+            return new SqsPublishEndpointProvider(subscriptionConfig.QueueName);
         }
 
         /// <summary>
@@ -71,7 +78,6 @@ namespace JustSaying
             return this;
         }
 
-
         /// <summary>
         /// Register for publishing messages to SQS
         /// </summary>
@@ -84,8 +90,8 @@ namespace JustSaying
             var config = new SqsBasicConfiguration();
             configBuilder(config);
 
-            _subscriptionConfig.Topic = typeof(T).Name.ToLower();
-            var publishEndpointProvider = CreatePublisherEndpointProvider(_subscriptionConfig);
+            _publishConfig.QueueName = typeof(T).Name.ToLower();
+            var publishEndpointProvider = CreatePublisherEndpointProvider(_publishConfig);
             var eventPublisher = new SqsPublisher(
                 publishEndpointProvider.GetLocationName(),
                 AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(Bus.Config.Region)),
@@ -93,7 +99,7 @@ namespace JustSaying
                 Bus.SerialisationRegister);
 
             if (!eventPublisher.Exists())
-                eventPublisher.Create(config.MessageRetentionSeconds, 0, config.VisibilityTimeoutSeconds, config.ErrorQueueOptOut, config.RetryCountBeforeSendingToErrorQueue);
+                eventPublisher.Create(config);
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
 

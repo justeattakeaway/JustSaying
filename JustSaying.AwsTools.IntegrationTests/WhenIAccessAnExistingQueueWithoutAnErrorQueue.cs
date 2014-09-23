@@ -8,7 +8,7 @@ namespace JustSaying.AwsTools.IntegrationTests
     {
         protected override void When()
         {
-            SystemUnderTest.Create(new SqsConfiguration(), attempt: 0);
+            SystemUnderTest.Create(new SqsBasicConfiguration(), attempt: 0);
         }
 
         [Then]

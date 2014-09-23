@@ -40,7 +40,7 @@ namespace JustSaying.AwsTools
                 .Equals(queueName, StringComparison.InvariantCultureIgnoreCase);
         }
 
-        public virtual bool Create(SqsConfiguration queueConfig, int attempt = 0)
+        public virtual bool Create(SqsBasicConfiguration queueConfig, int attempt = 0)
         {
             try
             {

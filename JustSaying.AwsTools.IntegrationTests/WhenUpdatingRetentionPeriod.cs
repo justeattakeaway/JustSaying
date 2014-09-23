@@ -19,9 +19,9 @@ namespace JustSaying.AwsTools.IntegrationTests
         protected override void When()
         {
 
-            SystemUnderTest.Create(new SqsConfiguration{MessageRetentionSeconds = _oldRetentionPeriod});
+            SystemUnderTest.Create(new SqsBasicConfiguration { MessageRetentionSeconds = _oldRetentionPeriod });
 
-            SystemUnderTest.UpdateQueueAttribute(new SqsConfiguration{MessageRetentionSeconds = _newRetentionPeriod});
+            SystemUnderTest.UpdateQueueAttribute(new SqsBasicConfiguration { MessageRetentionSeconds = _newRetentionPeriod });
         }
 
         [Test]

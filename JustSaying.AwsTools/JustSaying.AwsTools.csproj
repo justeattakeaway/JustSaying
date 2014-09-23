@@ -70,6 +70,7 @@
     <Compile Include="InstanceMetaData.cs" />
     <Compile Include="JustSayingConstants.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QueueCreation\SqsWriteConfiguration.cs" />
     <Compile Include="SnsTopicByName.cs" />
     <Compile Include="SnsTopicBase.cs" />
     <Compile Include="SnsTopicByArn.cs" />
