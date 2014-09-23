@@ -25,7 +25,8 @@ namespace JustSaying
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
         protected readonly IAmJustSaying Bus;
-        private SqsConfiguration _subscriptionConfig = new SqsConfiguration();
+        private SqsReadConfiguration _subscriptionConfig = new SqsReadConfiguration();
+        private SqsWriteConfiguration _publishConfig = new SqsWriteConfiguration();
         private IMessageSerialisationFactory _serialisationFactory;
 
         internal protected JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator)
@@ -35,13 +36,19 @@ namespace JustSaying
         }
 
         // ToDo: Move these into the factory class?
-        public virtual IPublishSubscribtionEndpointProvider CreateSubscriptiuonEndpointProvider(SqsConfiguration subscriptionConfig)
+        public virtual IPublishSubscribtionEndpointProvider CreateSubscriptiuonEndpointProvider(SqsReadConfiguration subscriptionConfig)
         {
             return new SqsSubscribtionEndpointProvider(subscriptionConfig);
         }
-        public virtual IPublishEndpointProvider CreatePublisherEndpointProvider(SqsConfiguration subscriptionConfig)
+
+        public virtual IPublishEndpointProvider CreatePublisherEndpointProvider(SqsReadConfiguration subscriptionConfig)
         {
             return new SnsPublishEndpointProvider(subscriptionConfig.Topic);
+        }
+
+        public virtual IPublishEndpointProvider CreatePublisherEndpointProvider(SqsWriteConfiguration subscriptionConfig)
+        {
+            return new SqsPublishEndpointProvider(subscriptionConfig.QueueName);
         }
 
         /// <summary>
@@ -51,7 +58,7 @@ namespace JustSaying
         /// <returns></returns>
         public IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>() where T : Message
         {
-            Log.Info("Added publisher");
+            Log.Info("Adding SNS publisher");
             _subscriptionConfig.Topic = typeof(T).Name.ToLower();
             var publishEndpointProvider = CreatePublisherEndpointProvider(_subscriptionConfig);
             var eventPublisher = new SnsTopicByName(
@@ -67,6 +74,38 @@ namespace JustSaying
             Bus.AddMessagePublisher<T>(eventPublisher);
 
             Log.Info(string.Format("Created SNS topic publisher - Topic: {0}", _subscriptionConfig.Topic));
+
+            return this;
+        }
+
+        /// <summary>
+        /// Register for publishing messages to SQS
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsBasicConfiguration> configBuilder) where T : Message
+        {
+            Log.Info("Adding SQS publisher");
+
+            var config = new SqsBasicConfiguration();
+            configBuilder(config);
+
+            _publishConfig.QueueName = typeof(T).Name.ToLower();
+            var publishEndpointProvider = CreatePublisherEndpointProvider(_publishConfig);
+            var eventPublisher = new SqsPublisher(
+                publishEndpointProvider.GetLocationName(),
+                AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(Bus.Config.Region)),
+                config.RetryCountBeforeSendingToErrorQueue,
+                Bus.SerialisationRegister);
+
+            if (!eventPublisher.Exists())
+                eventPublisher.Create(config);
+
+            Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
+
+            Bus.AddMessagePublisher<T>(eventPublisher);
+
+            Log.Info(string.Format("Created SQS publisher - MessageName: {0}", _subscriptionConfig.Topic));
 
             return this;
         }
@@ -118,7 +157,7 @@ namespace JustSaying
             return this;
         }
 
-        public IFluentSubscription ConfigureSubscriptionWith(Action<SqsConfiguration> configBuilder)
+        public IFluentSubscription ConfigureSubscriptionWith(Action<SqsReadConfiguration> configBuilder)
         {
             configBuilder(_subscriptionConfig);
             return this;
@@ -126,7 +165,7 @@ namespace JustSaying
 
         public ISubscriberIntoQueue WithSqsTopicSubscriber()
         {
-            _subscriptionConfig = new SqsConfiguration();
+            _subscriptionConfig = new SqsReadConfiguration();
             return this;
         }
 
@@ -208,7 +247,9 @@ namespace JustSaying
             return this;
         }
     }
+
     public interface IMayWantOptionalSettings : IMayWantMonitoring, IMayWantMessageLockStore, IMayWantCustomSerialisation { }
+
     public interface IMayWantMonitoring : IAmJustSayingFluently
     {
         IMayWantOptionalSettings WithMonitoring(IMessageMonitor messageMonitor);
@@ -228,6 +269,7 @@ namespace JustSaying
     {
         IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder);
         IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>() where T : Message;
+        IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsBasicConfiguration> config) where T : Message;
         ISubscriberIntoQueue WithSqsTopicSubscriber();
         void StartListening();
         void StopListening();
@@ -237,7 +279,7 @@ namespace JustSaying
     public interface IFluentSubscription
     {
         IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message;
-        IFluentSubscription ConfigureSubscriptionWith(Action<SqsConfiguration> config);
+        IFluentSubscription ConfigureSubscriptionWith(Action<SqsReadConfiguration> config);
     }
 
     public interface IHaveFulfilledSubscriptionRequirements : IAmJustSayingFluently, IFluentSubscription

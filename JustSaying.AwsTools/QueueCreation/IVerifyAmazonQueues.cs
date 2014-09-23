@@ -7,6 +7,6 @@ namespace JustSaying.AwsTools.QueueCreation
     {
         [Obsolete("Please use the other overload that takes SqsConfiguration as parameter.")]
         SqsQueueByName VerifyOrCreateQueue(string region, IMessageSerialisationRegister serialisationRegister, string queueName, string topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30, int? instancePosition = null);
-        SqsQueueByName VerifyOrCreateQueue(string region, IMessageSerialisationRegister serialisationRegister, SqsConfiguration queueConfig);
+        SqsQueueByName VerifyOrCreateQueue(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig);
     }
 }

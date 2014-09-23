@@ -19,11 +19,11 @@ namespace JustSaying.AwsTools
             ErrorQueue = new ErrorQueue(queueName, client);
         }
 
-        public override bool Create(SqsConfiguration queueConfig, int attempt = 0)
+        public override bool Create(SqsBasicConfiguration queueConfig, int attempt = 0)
         {
             if (!ErrorQueue.Exists())
             {
-                ErrorQueue.Create(new SqsConfiguration(){ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds, ErrorQueueOptOut = true});
+                ErrorQueue.Create(new SqsBasicConfiguration { ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds, ErrorQueueOptOut = true });
             }
             return base.Create(queueConfig, attempt);
         }
@@ -52,7 +52,7 @@ namespace JustSaying.AwsTools
             }
         }
 
-        public void EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdated(SqsConfiguration queueConfig)
+        public void EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdated(SqsBasicConfiguration queueConfig)
         {
             if (!Exists())
                 Create(queueConfig);
@@ -64,7 +64,7 @@ namespace JustSaying.AwsTools
             //Create an error queue for existing queues if they don't already have one
             if (ErrorQueue != null)
             {
-                var errorQueueConfig = new SqsConfiguration
+                var errorQueueConfig = new SqsReadConfiguration
                 {
                     ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds,
                     ErrorQueueOptOut = true

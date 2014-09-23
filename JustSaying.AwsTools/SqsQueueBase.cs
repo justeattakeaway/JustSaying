@@ -116,7 +116,7 @@ namespace JustSaying.AwsTools
                                                     }";
         }
 
-        protected internal void UpdateQueueAttribute(SqsConfiguration queueConfig)
+        protected internal void UpdateQueueAttribute(SqsBasicConfiguration queueConfig)
         {
             if (QueueNeedsUpdating(queueConfig))
             {
@@ -138,7 +138,7 @@ namespace JustSaying.AwsTools
             }
         }
 
-        private bool QueueNeedsUpdating(SqsConfiguration queueConfig)
+        private bool QueueNeedsUpdating(SqsBasicConfiguration queueConfig)
         {
             return MessageRetentionPeriod != queueConfig.MessageRetentionSeconds
                    || VisibilityTimeout != queueConfig.VisibilityTimeoutSeconds;

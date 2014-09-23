@@ -74,6 +74,7 @@
     <Compile Include="JustSayingFluently\TestExtensions.cs" />
     <Compile Include="JustSayingFluently\WhenAHandlerThrowsAnException.cs" />
     <Compile Include="JustSayingFluently\WhenAMessageIsPublishedViaSnsToSqsSubscriber.cs" />
+    <Compile Include="JustSayingFluently\WhenAMessageIsPublishedViaSqsToSqsSubscriber.cs" />
     <Compile Include="JustSayingFluently\WhenHandlersThrowAnException.cs" />
     <Compile Include="JustSayingFluently\WhenPublishingWithoutAMonitor.cs" />
     <Compile Include="JustSayingFluently\WhenThrottlingIsEnabledALongRunningHandler.cs" />

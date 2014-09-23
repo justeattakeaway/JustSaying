@@ -24,7 +24,7 @@ namespace JustSaying.AwsTools
             };
         }
 
-        public override bool Create(SqsConfiguration queueConfig, int attempt = 0)
+        public override bool Create(SqsBasicConfiguration queueConfig, int attempt = 0)
         {
             if (!queueConfig.ErrorQueueOptOut)
                 throw new InvalidOperationException("Cannot create a dead letter queue for a dead letter queue.");

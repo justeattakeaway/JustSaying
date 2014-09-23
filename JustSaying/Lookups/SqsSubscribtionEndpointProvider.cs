@@ -7,9 +7,9 @@ namespace JustSaying.Lookups
     /// </summary>
     public class SqsSubscribtionEndpointProvider : IPublishSubscribtionEndpointProvider
     {
-        private readonly SqsConfiguration _config;
+        private readonly SqsReadConfiguration _config;
 
-        public SqsSubscribtionEndpointProvider(SqsConfiguration config)
+        public SqsSubscribtionEndpointProvider(SqsReadConfiguration config)
         {
             _config = config;
         }

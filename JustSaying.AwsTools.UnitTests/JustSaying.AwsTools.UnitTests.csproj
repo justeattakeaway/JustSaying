@@ -87,6 +87,7 @@
     <Compile Include="SqsNotificationListener\WhenThereAreNoMessagesToProcess.cs" />
     <Compile Include="SqsQueueConfiguration\Validation\WhenPublishEndpointIsNotProvided.cs" />
     <Compile Include="Sqs\WhenFetchingQueueByName.cs" />
+    <Compile Include="Sqs\WhenPublishing.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj">

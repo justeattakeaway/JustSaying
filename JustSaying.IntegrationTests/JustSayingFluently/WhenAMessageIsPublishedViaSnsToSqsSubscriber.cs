@@ -1,4 +1,5 @@
-﻿using JustSaying.TestingFramework;
+﻿using Amazon.SQS.Model;
+using JustSaying.TestingFramework;
 using NUnit.Framework;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
