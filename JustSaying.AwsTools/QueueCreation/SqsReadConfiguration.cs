@@ -8,10 +8,10 @@ namespace JustSaying.AwsTools.QueueCreation
     {
         public SqsReadConfiguration()
         {
-            VisibilityTimeoutSeconds = JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT;
-            RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT;
             MessageRetentionSeconds = JustSayingConstants.DEFAULT_RETENTION_PERIOD;
             ErrorQueueRetentionPeriodSeconds = JustSayingConstants.MAXIMUM_RETENTION_PERIOD;
+            VisibilityTimeoutSeconds = JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT;
+            RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT;
         }
 
         internal string QueueName { get; set; }
@@ -29,12 +29,6 @@ namespace JustSaying.AwsTools.QueueCreation
 
             if (string.IsNullOrWhiteSpace(Topic))
                 throw new ConfigurationErrorsException("Invalid configuration. Topic must be provided.");
-            
-            if (MessageRetentionSeconds < JustSayingConstants.MINIMUM_RETENTION_PERIOD || MessageRetentionSeconds > JustSayingConstants.MAXIMUM_RETENTION_PERIOD)
-                throw new ConfigurationErrorsException(string.Format("Invalid configuration. MessageRetentionSeconds must be between {0} and {1}.", JustSayingConstants.MINIMUM_RETENTION_PERIOD, JustSayingConstants.MAXIMUM_RETENTION_PERIOD));
-
-            if (ErrorQueueRetentionPeriodSeconds < JustSayingConstants.MINIMUM_RETENTION_PERIOD || ErrorQueueRetentionPeriodSeconds > JustSayingConstants.MAXIMUM_RETENTION_PERIOD)
-                throw new ConfigurationErrorsException(string.Format("Invalid configuration. ErrorQueueRetentionPeriodSeconds must be between {0} and {1}.", JustSayingConstants.MINIMUM_RETENTION_PERIOD, JustSayingConstants.MAXIMUM_RETENTION_PERIOD));
             
             if (MaxAllowedMessagesInFlight.HasValue && MessageProcessingStrategy != null)
                 throw new ConfigurationErrorsException("You have provided both 'maxAllowedMessagesInFlight' and 'messageProcessingStrategy' - these settings are mutually exclusive.");
