@@ -196,7 +196,7 @@ namespace JustSaying
 
             var subscriptionEndpointProvider = CreateSubscriptiuonEndpointProvider(_subscriptionConfig);
             _subscriptionConfig.QueueName = subscriptionEndpointProvider.GetLocationName();
-            var queue = _amazonQueueCreator.VerifyOrCreateQueue(Bus.Config.Region, Bus.SerialisationRegister, _subscriptionConfig);
+            var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribed(Bus.Config.Region, Bus.SerialisationRegister, _subscriptionConfig);
 
             var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, Bus.Monitor, _subscriptionConfig.OnError, Bus.MessageLock);
             Bus.AddNotificationTopicSubscriber(_subscriptionConfig.Topic, sqsSubscriptionListener);
