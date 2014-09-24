@@ -171,11 +171,8 @@ namespace JustSaying
 
         #region Implementation of Queue Subscription
 
-        private bool _subscriptionConfigured;
-
         public IFluentSubscription IntoQueue(string queuename)
         {
-            _subscriptionConfigured = false;
             _subscriptionConfig.QueueName = queuename;
             return this;
         }
@@ -208,11 +205,6 @@ namespace JustSaying
                 sqsSubscriptionListener.WithMessageProcessingStrategy(_subscriptionConfig.MessageProcessingStrategy);
 
             Log.Info(string.Format("Created SQS topic subscription - Topic: {0}, QueueName: {1}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName));
-
-            _subscriptionConfigured = true;
-
-            if (!_subscriptionConfigured)
-                ConfigureSubscriptionWith(conf => conf.ErrorQueueOptOut = _subscriptionConfig.ErrorQueueOptOut);
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
             Bus.AddMessageHandler(handler);
