@@ -13,7 +13,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         {
             RecordAnyExceptionsThrown();
             base.Given();
-            RegisterHandler(_handler);
+            RegisterSnsHandler(_handler);
         }
 
         protected override void When()

@@ -9,7 +9,14 @@ namespace JustSaying.TestingFramework
     { }
 
     public class GenericMessage : Message
-    { }
+    {
+        public string Content { get; set; }
+    }
+
+    public class AnotherGenericMessage : Message
+    {
+        public string Content { get; set; }
+    }
 
     public class MessageWithEnum : Message
     {

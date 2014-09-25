@@ -41,6 +41,11 @@ namespace JustSaying
             return new SqsSubscribtionEndpointProvider(subscriptionConfig);
         }
 
+        public virtual IPublishSubscribtionEndpointProvider CreateSqsSubscriptionEndpointProvider(SqsReadConfiguration subscriptionConfig)
+        {
+            return new SqsSubscribtionEndpointProvider(subscriptionConfig);
+        }
+
         public virtual IPublishEndpointProvider CreatePublisherEndpointProvider(SqsReadConfiguration subscriptionConfig)
         {
             return new SnsPublishEndpointProvider(subscriptionConfig.Topic);
@@ -83,17 +88,22 @@ namespace JustSaying
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsBasicConfiguration> configBuilder) where T : Message
+        public IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsWriteConfiguration> configBuilder) where T : Message
         {
             Log.Info("Adding SQS publisher");
 
-            var config = new SqsBasicConfiguration();
+            var config = new SqsWriteConfiguration();
             configBuilder(config);
 
-            _publishConfig.QueueName = typeof(T).Name.ToLower();
+            var messageTypeName = typeof(T).Name.ToLower();
+            var queueName = string.IsNullOrWhiteSpace(config.QueueName) ? messageTypeName : messageTypeName + "-" + config.QueueName;
+            _publishConfig.QueueName = queueName;
+
             var publishEndpointProvider = CreatePublisherEndpointProvider(_publishConfig);
+            var locationName = publishEndpointProvider.GetLocationName();
+
             var eventPublisher = new SqsPublisher(
-                publishEndpointProvider.GetLocationName(),
+                locationName,
                 AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(Bus.Config.Region)),
                 config.RetryCountBeforeSendingToErrorQueue,
                 Bus.SerialisationRegister);
@@ -105,7 +115,7 @@ namespace JustSaying
 
             Bus.AddMessagePublisher<T>(eventPublisher);
 
-            Log.Info(string.Format("Created SQS publisher - MessageName: {0}", _subscriptionConfig.Topic));
+            Log.Info(string.Format("Created SQS publisher - MessageName: {0}, QueueName: {1}", messageTypeName, locationName));
 
             return this;
         }
@@ -185,33 +195,77 @@ namespace JustSaying
         /// <returns></returns>
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message
         {
-            _subscriptionConfig.Topic = typeof (T).Name.ToLower();
-            var publishEndpointProvider = CreatePublisherEndpointProvider(_subscriptionConfig);
+            var messageTypeName = typeof(T).Name.ToLower();
+            ConfigureSqsSubscriptionViaTopic(messageTypeName);
 
+            var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribed(Bus.Config.Region, Bus.SerialisationRegister, _subscriptionConfig);
+
+            CreateSubscriptionListener(queue, _subscriptionConfig.Topic);
+            Log.Info(string.Format("Created SQS topic subscription - Topic: {0}, QueueName: {1}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName));
+
+            Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
+            Bus.AddMessageHandler(handler);
+            Log.Info(string.Format("Added a message handler - Topic: {0}, QueueName: {1}, HandlerName: {2}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName, handler.GetType().Name));
+
+            return this;
+        }
+
+        public IHaveFulfilledSubscriptionRequirements WithSqsMessageHandler<T>(IHandler<T> handler) where T : Message
+        {
+            var messageTypeName = typeof(T).Name.ToLower();
+            ConfigureSqsSubscription(messageTypeName);
+
+            var queue = _amazonQueueCreator.EnsureQueueExists(Bus.Config.Region, _subscriptionConfig);
+
+            CreateSubscriptionListener(queue, messageTypeName);
+            Log.Info(string.Format("Created SQS subscriber - MessageName: {0}, QueueName: {1}", messageTypeName, _subscriptionConfig.QueueName));
+
+            Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
+            Bus.AddMessageHandler(handler);
+            Log.Info(string.Format("Added an SQS message handler - MessageName: {0}, QueueName: {1}, HandlerName: {2}", messageTypeName, _subscriptionConfig.QueueName, handler.GetType().Name));
+
+            return this;
+        }
+
+        private void CreateSubscriptionListener(SqsQueueBase queue, string messageTypeName)
+        {
+            var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, Bus.Monitor, _subscriptionConfig.OnError, Bus.MessageLock);
+            Bus.AddNotificationTopicSubscriber(messageTypeName, sqsSubscriptionListener);
+
+            if (_subscriptionConfig.MaxAllowedMessagesInFlight.HasValue)
+            {
+                sqsSubscriptionListener.WithMaximumConcurrentLimitOnMessagesInFlightOf(_subscriptionConfig.MaxAllowedMessagesInFlight.Value);
+            }
+
+            if (_subscriptionConfig.MessageProcessingStrategy != null)
+            {
+                sqsSubscriptionListener.WithMessageProcessingStrategy(_subscriptionConfig.MessageProcessingStrategy);
+            }
+        }
+
+        private void ConfigureSqsSubscriptionViaTopic(string messageTypeName)
+        {
+            _subscriptionConfig.Topic = messageTypeName;
+
+            var publishEndpointProvider = CreatePublisherEndpointProvider(_subscriptionConfig);
             _subscriptionConfig.PublishEndpoint = publishEndpointProvider.GetLocationName();
             _subscriptionConfig.Validate();
 
             var subscriptionEndpointProvider = CreateSubscriptiuonEndpointProvider(_subscriptionConfig);
             _subscriptionConfig.QueueName = subscriptionEndpointProvider.GetLocationName();
-            var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribed(Bus.Config.Region, Bus.SerialisationRegister, _subscriptionConfig);
+        }
 
-            var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, Bus.Monitor, _subscriptionConfig.OnError, Bus.MessageLock);
-            Bus.AddNotificationTopicSubscriber(_subscriptionConfig.Topic, sqsSubscriptionListener);
+        private void ConfigureSqsSubscription(string messageTypeName)
+        {
+            var queueName = string.IsNullOrWhiteSpace(_subscriptionConfig.QueueName)
+                ? messageTypeName
+                : messageTypeName + "-" + _subscriptionConfig.QueueName;
+            _subscriptionConfig.QueueName = queueName;
+            _subscriptionConfig.ValidateSqsConfiguration();
 
-            if (_subscriptionConfig.MaxAllowedMessagesInFlight.HasValue)
-                sqsSubscriptionListener.WithMaximumConcurrentLimitOnMessagesInFlightOf(_subscriptionConfig.MaxAllowedMessagesInFlight.Value);
-
-            if (_subscriptionConfig.MessageProcessingStrategy != null)
-                sqsSubscriptionListener.WithMessageProcessingStrategy(_subscriptionConfig.MessageProcessingStrategy);
-
-            Log.Info(string.Format("Created SQS topic subscription - Topic: {0}, QueueName: {1}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName));
-
-            Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
-            Bus.AddMessageHandler(handler);
-
-            Log.Info(string.Format("Added a message handler - Topic: {0}, MessageType: {1}, HandlerName: {2}", _subscriptionConfig.Topic, typeof(T).Name, handler.GetType().Name));
-
-            return this;
+            var subscriptionEndpointProvider = CreateSqsSubscriptionEndpointProvider(_subscriptionConfig);
+            var locationName = subscriptionEndpointProvider.GetLocationName();
+            _subscriptionConfig.QueueName = locationName;
         }
 
         #endregion
@@ -261,7 +315,7 @@ namespace JustSaying
     {
         IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder);
         IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>() where T : Message;
-        IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsBasicConfiguration> config) where T : Message;
+        IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsWriteConfiguration> config) where T : Message;
         ISubscriberIntoQueue WithSqsTopicSubscriber();
         void StartListening();
         void StopListening();
@@ -271,6 +325,7 @@ namespace JustSaying
     public interface IFluentSubscription
     {
         IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message;
+        IHaveFulfilledSubscriptionRequirements WithSqsMessageHandler<T>(IHandler<T> handler) where T : Message;
         IFluentSubscription ConfigureSubscriptionWith(Action<SqsReadConfiguration> config);
     }
 

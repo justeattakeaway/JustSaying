@@ -1,5 +1,4 @@
-﻿using Amazon.SQS.Model;
-using JustSaying.TestingFramework;
+﻿using JustSaying.TestingFramework;
 using NUnit.Framework;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
@@ -11,8 +10,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         protected override void Given()
         {
             base.Given();
-            _handler= new Future<GenericMessage>();
-            RegisterHandler(_handler);
+            _handler = new Future<GenericMessage>();
+            RegisterSnsHandler(_handler);
         }
 
         protected override void When()
