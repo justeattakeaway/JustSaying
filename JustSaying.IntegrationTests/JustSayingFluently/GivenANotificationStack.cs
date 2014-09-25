@@ -42,24 +42,25 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         protected override IAmJustSayingFluently CreateSystemUnderTest()
         {
             var snsHandler = Substitute.For<IHandler<GenericMessage>>();
-            snsHandler.When(x => x.Handle(Arg.Is<GenericMessage>(message => message.Content == "Hello")))
+            snsHandler.When(x => x.Handle(Arg.Any<GenericMessage>()))
                     .Do(x => _snsHandler.Complete((GenericMessage)x.Args()[0]));
 
             var sqsHandler = Substitute.For<IHandler<AnotherGenericMessage>>();
-            sqsHandler.When(x => x.Handle(Arg.Is<AnotherGenericMessage>(message => message.Content == "Hello")))
+            sqsHandler.When(x => x.Handle(Arg.Any<AnotherGenericMessage>()))
                     .Do(x => _sqsHandler.Complete((AnotherGenericMessage)x.Args()[0]));
 
             Monitoring = Substitute.For<IMessageMonitor>();
 
             ServiceBus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithMonitoring(Monitoring)
+
                 .ConfigurePublisherWith(c =>
-            {
-                c.PublishFailureBackoffMilliseconds = _config.PublishFailureBackoffMilliseconds;
-                c.PublishFailureReAttempts = _config.PublishFailureReAttempts;    
-            })
+                {
+                    c.PublishFailureBackoffMilliseconds = _config.PublishFailureBackoffMilliseconds;
+                    c.PublishFailureReAttempts = _config.PublishFailureReAttempts;
+                })
+
                 .WithSnsMessagePublisher<GenericMessage>()
-                .WithSqsMessagePublisher<AnotherGenericMessage>(configuration => { })
                 .WithSqsTopicSubscriber()
                 .IntoQueue("queuename")
                 .ConfigureSubscriptionWith(cf =>
@@ -69,6 +70,10 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                     cf.InstancePosition = 1;
                 })
                 .WithMessageHandler(snsHandler)
+
+                .WithSqsMessagePublisher<AnotherGenericMessage>(configuration => { })
+                .WithSqsTopicSubscriber()
+                .IntoQueue(string.Empty)
                 .WithSqsMessageHandler(sqsHandler);
 
             ServiceBus.StartListening();

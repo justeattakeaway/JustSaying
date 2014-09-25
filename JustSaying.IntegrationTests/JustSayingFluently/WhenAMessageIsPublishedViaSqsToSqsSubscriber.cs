@@ -1,5 +1,6 @@
 ﻿using JustSaying.TestingFramework;
 using NUnit.Framework;
+using Shouldly;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
@@ -16,13 +17,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
         protected override void When()
         {
-            ServiceBus.Publish(new AnotherGenericMessage {Content = "Hello"});
+            ServiceBus.Publish(new AnotherGenericMessage());
         }
 
         [Test]
         public void ThenItGetsHandled()
         {
-            _handler.WaitUntilCompletion(2.Seconds()).ShouldBeTrue();
+            _handler.WaitUntilCompletion(10.Seconds()).ShouldBe(true);
         }
     }
 }

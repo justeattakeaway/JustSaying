@@ -1,18 +1,21 @@
 using System;
-using JustBehave;
 using JustSaying.TestingFramework;
 using NSubstitute;
+using NUnit.Framework;
+using Shouldly;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
     public class WhenHandlersThrowAnException : GivenANotificationStack
     {
-        private readonly Future<GenericMessage> _handler = new Future<GenericMessage>(() => { throw new Exception(""); });
+        private Future<GenericMessage> _handler;
 
         protected override void Given()
         {
             RecordAnyExceptionsThrown();
+
             base.Given();
+            _handler = new Future<GenericMessage>(() => { throw new Exception("Test Exception"); });
             RegisterSnsHandler(_handler);
         }
 
@@ -21,12 +24,12 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             ServiceBus.Publish(new GenericMessage());
         }
 
-        [Then]
+        [Test]
         public void ThenExceptionIsRecordedInMonitoring()
         {
-            _handler.WaitUntilCompletion(10.Seconds()).ShouldBeTrue();
-            
-           Patiently.VerifyExpectation(()=> Monitoring.Received().HandleException(Arg.Any<string>()));
+            _handler.WaitUntilCompletion(10.Seconds()).ShouldBe(true);
+
+            Patiently.VerifyExpectation(() => Monitoring.Received().HandleException(Arg.Any<string>()));
         }
 
        

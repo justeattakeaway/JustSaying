@@ -20,19 +20,24 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
         public void Complete(TMessage message)
         {
+            _event.Set();
+
             Value = message;
             if (_action != null)
             {
                 _action();
             }
-            _event.Set();
-            IsCompleted = true;
         }
 
         public Exception RecordedException { get; set; }
 
         public TMessage Value { get; set; }
-        public bool IsCompleted { get; private set; }
+
+        public bool IsCompleted
+        {
+            get { return _event.WaitOne(0); }
+            
+        }
 
         public bool WaitUntilCompletion(TimeSpan seconds)
         {
