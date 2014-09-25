@@ -1,6 +1,5 @@
 using System;
 using Amazon;
-using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageSerialisation;
 
 namespace JustSaying.AwsTools.QueueCreation
@@ -30,7 +29,7 @@ namespace JustSaying.AwsTools.QueueCreation
             return queue;
         }
 
-        private static SqsQueueByName EnsureQueueExists(string region, SqsReadConfiguration queueConfig)
+        public SqsQueueByName EnsureQueueExists(string region, SqsReadConfiguration queueConfig)
         {
             var sqsclient = AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(region));
             var queue = new SqsQueueByName(queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue);
