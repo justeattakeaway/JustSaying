@@ -46,7 +46,7 @@ namespace JustSaying.AwsTools
             Client.SetQueueAttributes(
                 new SetQueueAttributesRequest{
                     QueueUrl = Url,
-                    Attributes = new Dictionary<string,string>{ {"Policy", GetQueueSubscriptionPilocy(snsTopic) } }
+                    Attributes = new Dictionary<string,string>{ {"Policy", GetQueueSubscriptionPolicy(snsTopic) } }
                 });
                 
             Log.Info(string.Format("Added Queue permission for SNS topic to publish to Queue: {0}, Topic: {1}", Arn, snsTopic.Arn));
@@ -93,7 +93,7 @@ namespace JustSaying.AwsTools
             return result;
         }
 
-        protected string GetQueueSubscriptionPilocy(SnsTopicBase topic)
+        protected string GetQueueSubscriptionPolicy(SnsTopicBase topic)
         {
             return @"{
                                                       ""Version"": ""2012-10-17"",
