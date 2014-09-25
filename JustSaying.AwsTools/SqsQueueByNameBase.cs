@@ -16,15 +16,15 @@ namespace JustSaying.AwsTools
         public SqsQueueByNameBase(string queueName, IAmazonSQS client)
             : base(client)
         {
-            QueueNamePrefix = queueName;
+            QueueName = queueName;
             Exists();
         }
 
         public override bool Exists()
         {
-            var result = Client.ListQueues(new ListQueuesRequest{ QueueNamePrefix = QueueNamePrefix });
-            Console.WriteLine("polling for {0}", QueueNamePrefix);
-            Url = result.QueueUrls.SingleOrDefault(x => Matches(x, QueueNamePrefix));
+            var result = Client.ListQueues(new ListQueuesRequest{ QueueNamePrefix = QueueName });
+            Console.WriteLine("polling for {0}", QueueName);
+            Url = result.QueueUrls.SingleOrDefault(x => Matches(x, QueueName));
 
             if (Url != null)
             {
@@ -45,7 +45,7 @@ namespace JustSaying.AwsTools
             try
             {
                 var result = Client.CreateQueue(new CreateQueueRequest{
-                    QueueName = QueueNamePrefix,
+                    QueueName = QueueName,
                     Attributes = GetCreateQueueAttributes(queueConfig.MessageRetentionSeconds, queueConfig.VisibilityTimeoutSeconds)});
 
                 if (!string.IsNullOrWhiteSpace(result.QueueUrl))
@@ -53,7 +53,7 @@ namespace JustSaying.AwsTools
                     Url = result.QueueUrl;
                     SetQueueProperties();
 
-                    Log.Info(string.Format("Created Queue: {0} on Arn: {1}", QueueNamePrefix, Arn));
+                    Log.Info(string.Format("Created Queue: {0} on Arn: {1}", QueueName, Arn));
                     return true;
                 }
             }
@@ -62,26 +62,26 @@ namespace JustSaying.AwsTools
                 if (ex.ErrorCode == "AWS.SimpleQueueService.QueueDeletedRecently")
                 {
                     // Ensure we wait for queue delete timeout to expire.
-                    Log.Info(string.Format("Waiting to create Queue due to AWS time restriction - Queue: {0}, AttemptCount: {1}", QueueNamePrefix, attempt + 1));
+                    Log.Info(string.Format("Waiting to create Queue due to AWS time restriction - Queue: {0}, AttemptCount: {1}", QueueName, attempt + 1));
                     Thread.Sleep(60000);
                     Create(queueConfig, attempt: attempt++);
                 }
                 else
                 {
                     // Throw all errors which are not delete timeout related.
-                    Log.ErrorException(string.Format("Create Queue error: {0}", QueueNamePrefix), ex);
+                    Log.ErrorException(string.Format("Create Queue error: {0}", QueueName), ex);
                     throw;
                 }
 
                 // If we're on a delete timeout, throw after 2 attempts.
                 if (attempt >= 2)
                 {
-                    Log.ErrorException(string.Format("Create Queue error, max retries exceeded for delay - Queue: {0}", QueueNamePrefix), ex);
+                    Log.ErrorException(string.Format("Create Queue error, max retries exceeded for delay - Queue: {0}", QueueName), ex);
                     throw;
                 }
             }
 
-            Log.Info(string.Format("Failed to create Queue: {0}", QueueNamePrefix));
+            Log.Info(string.Format("Failed to create Queue: {0}", QueueName));
             return false;
         }
 

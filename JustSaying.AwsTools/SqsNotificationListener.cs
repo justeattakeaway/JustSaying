@@ -83,13 +83,13 @@ namespace JustSaying.AwsTools
             Action run = () => { while (_listen) { ListenLoop(); } };
             run.BeginInvoke(null, null);
 
-            Log.Info("Starting Listening - Queue: " + _queue.QueueNamePrefix);
+            Log.Info("Starting Listening - Queue: " + _queue.QueueName);
         }
 
         public void StopListening()
         {
             _listen = false;
-            Log.Info("Stopped Listening - Queue: " + _queue.QueueNamePrefix);
+            Log.Info("Stopped Listening - Queue: " + _queue.QueueName);
         }
 
         internal void ListenLoop()
@@ -114,7 +114,7 @@ namespace JustSaying.AwsTools
 
                 var messageCount = sqsMessageResponse.Messages.Count;
 
-                Log.Trace(string.Format("Polled for messages - Queue: {0}, MessageCount: {1}", _queue.QueueNamePrefix, messageCount));
+                Log.Trace(string.Format("Polled for messages - Queue: {0}, MessageCount: {1}", _queue.QueueName, messageCount));
 
                 foreach (var message in sqsMessageResponse.Messages)
                 {

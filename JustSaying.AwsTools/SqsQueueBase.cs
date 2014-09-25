@@ -12,7 +12,7 @@ namespace JustSaying.AwsTools
         public string Arn { get; protected set; }
         public string Url { get; protected set; }
         public IAmazonSQS Client { get; private set; }
-        public string QueueNamePrefix { get; protected set; }
+        public string QueueName { get; protected set; }
         public ErrorQueue ErrorQueue { get; protected set; }
         internal int MessageRetentionPeriod { get; set; }
         internal int VisibilityTimeout { get; set; }
