@@ -12,7 +12,7 @@ namespace JustSaying.AwsTools.QueueCreation
             RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT;
         }
 
-        internal string QueueName { get; set; }
+        public string QueueName { get; set; }
 
         public override void Validate()
         {
