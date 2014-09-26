@@ -96,7 +96,9 @@ namespace JustSaying
             configBuilder(config);
 
             var messageTypeName = typeof(T).Name.ToLower();
-            var queueName = string.IsNullOrWhiteSpace(config.QueueName) ? messageTypeName : messageTypeName + "-" + config.QueueName;
+            var queueName = string.IsNullOrWhiteSpace(config.QueueName)
+                ? messageTypeName
+                : messageTypeName + "-" + config.QueueName;
             _publishConfig.QueueName = queueName;
 
             var publishEndpointProvider = CreatePublisherEndpointProvider(_publishConfig);
