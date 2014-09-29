@@ -64,7 +64,7 @@ namespace JustSaying.AwsTools
             //Create an error queue for existing queues if they don't already have one
             if (ErrorQueue != null)
             {
-                var errorQueueConfig = new SqsReadConfiguration
+                var errorQueueConfig = new SqsReadConfiguration(SubscriptionType.ToTopic)
                 {
                     ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds,
                     ErrorQueueOptOut = true

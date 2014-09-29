@@ -53,7 +53,7 @@ namespace JustSaying
             }
             catch (ArgumentException)
             {
-                throw new ArgumentException("You cannot declare more than one subscriber service for the same topic per component. Topic: {0}", topic.ToString());
+                throw new ArgumentException("You cannot declare more than one subscriber service for the same topic per component. Topic: {0}", topic);
             }
         }
 

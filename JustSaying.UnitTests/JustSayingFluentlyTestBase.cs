@@ -9,6 +9,7 @@ namespace JustSaying.UnitTests
     {
         protected IPublishConfiguration Configuration;
         protected IAmJustSaying NotificationStack;
+        protected IVerifyAmazonQueues QueueVerifier= Substitute.For<IVerifyAmazonQueues>();
 
         protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
@@ -49,7 +50,7 @@ namespace JustSaying.UnitTests
         {
             fns.GetType()
                 .GetField("_amazonQueueCreator", BindingFlags.Instance | BindingFlags.NonPublic)
-                .SetValue(fns, Substitute.For<IVerifyAmazonQueues>());
+                .SetValue(fns, QueueVerifier);
         }
     }
 }

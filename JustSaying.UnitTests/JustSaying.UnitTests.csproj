@@ -70,6 +70,7 @@
     <Compile Include="JustSayingBus\GivenAServiceBusWithoutMonitoring.cs" />
     <Compile Include="JustSayingBus\WhenPublishingMessageWithoutMonitor.cs" />
     <Compile Include="JustSayingFluentlyTestBase.cs" />
+    <Compile Include="JustSayingFluently\AddingHandlers\WhenSubscribingPointToPoint.cs" />
     <Compile Include="JustSayingFluently\AddingHandlers\WhenAddingASubscriptionHandler.cs" />
     <Compile Include="JustSayingFluently\AddingHandlers\WhenAddingASubscriptionHandlerWithoutCustomConfig.cs" />
     <Compile Include="JustSayingFluently\AddingMonitoring\WhenAddingACustomMonitor.cs" />

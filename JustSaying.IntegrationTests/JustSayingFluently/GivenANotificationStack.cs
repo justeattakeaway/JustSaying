@@ -3,7 +3,6 @@ using System.Diagnostics;
 using Amazon;
 using JustBehave;
 using JustSaying.AwsTools;
-using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
@@ -16,12 +15,18 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         readonly Stopwatch _stopwatch = new Stopwatch();
         protected IAmJustSayingFluently ServiceBus;
         protected IMessageMonitor Monitoring;
-        private Future<GenericMessage> _handler;
-        private  IPublishConfiguration _config = new MessagingConfig { PublishFailureBackoffMilliseconds = 1, PublishFailureReAttempts = 3};
+        private Future<GenericMessage> _snsHandler;
+        private Future<AnotherGenericMessage> _sqsHandler;
+        private IPublishConfiguration _config = new MessagingConfig {PublishFailureBackoffMilliseconds = 1, PublishFailureReAttempts = 3};
 
-        protected void RegisterHandler(Future<GenericMessage> handler)
+        protected void RegisterSnsHandler(Future<GenericMessage> handler)
         {
-            _handler = handler;
+            _snsHandler = handler;
+        }
+
+        protected void RegisterSqsHandler(Future<AnotherGenericMessage> handler)
+        {
+            _sqsHandler = handler;
         }
 
         protected void RegisterConfig(IPublishConfiguration config)
@@ -36,19 +41,25 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
         protected override IAmJustSayingFluently CreateSystemUnderTest()
         {
-            var handler = Substitute.For<IHandler<GenericMessage>>();
-            handler.When(x => x.Handle(Arg.Any<GenericMessage>()))
-                    .Do(x => _handler.Complete((GenericMessage)x.Args()[0]));
+            var snsHandler = Substitute.For<IHandler<GenericMessage>>();
+            snsHandler.When(x => x.Handle(Arg.Any<GenericMessage>()))
+                    .Do(x => _snsHandler.Complete((GenericMessage)x.Args()[0]));
+
+            var sqsHandler = Substitute.For<IHandler<AnotherGenericMessage>>();
+            sqsHandler.When(x => x.Handle(Arg.Any<AnotherGenericMessage>()))
+                    .Do(x => _sqsHandler.Complete((AnotherGenericMessage)x.Args()[0]));
 
             Monitoring = Substitute.For<IMessageMonitor>();
 
             ServiceBus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithMonitoring(Monitoring)
+
                 .ConfigurePublisherWith(c =>
-            {
-                c.PublishFailureBackoffMilliseconds = _config.PublishFailureBackoffMilliseconds;
-                c.PublishFailureReAttempts = _config.PublishFailureReAttempts;    
-            })
+                {
+                    c.PublishFailureBackoffMilliseconds = _config.PublishFailureBackoffMilliseconds;
+                    c.PublishFailureReAttempts = _config.PublishFailureReAttempts;
+                })
+
                 .WithSnsMessagePublisher<GenericMessage>()
                 .WithSqsTopicSubscriber()
                 .IntoQueue("queuename")
@@ -58,7 +69,12 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                     cf.VisibilityTimeoutSeconds = JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT;
                     cf.InstancePosition = 1;
                 })
-                .WithMessageHandler(handler);
+                .WithMessageHandler(snsHandler)
+
+                .WithSqsMessagePublisher<AnotherGenericMessage>(configuration => { })
+                .WithSqsPointToPointSubscriber()
+                .IntoQueue(string.Empty)
+                .WithMessageHandler(sqsHandler);
 
             ServiceBus.StartListening();
             return ServiceBus;

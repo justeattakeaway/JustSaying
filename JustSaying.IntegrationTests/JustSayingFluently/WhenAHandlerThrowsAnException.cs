@@ -64,7 +64,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             Patiently.AssertThat(() => _handledException == true);
         }
 
-        [TearDown]
+        [TestFixtureTearDown]
         public void ByeBye()
         {
             _bus.StopListening();

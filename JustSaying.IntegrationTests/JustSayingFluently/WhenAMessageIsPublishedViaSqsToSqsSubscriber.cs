@@ -1,45 +1,29 @@
-﻿using JustSaying.Messaging.MessageHandling;
-using NSubstitute;
+﻿using JustSaying.TestingFramework;
 using NUnit.Framework;
+using Shouldly;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
     public class WhenAMessageIsPublishedViaSqsToSqsSubscriber : GivenANotificationStack
     {
-        private readonly Future<SqsPublishedMessage> _sqsHandler = new Future<SqsPublishedMessage>();
+        private Future<AnotherGenericMessage> _handler;
 
         protected override void Given()
         {
             base.Given();
-            var handler = Substitute.For<IHandler<SqsPublishedMessage>>();
-            handler.When(x => x.Handle(Arg.Is<SqsPublishedMessage>(y => y.HelloText == "Hiya...")))
-                .Do(x => _sqsHandler.Complete((SqsPublishedMessage)x.Args()[0]));
-        }
-
-        protected override IAmJustSayingFluently CreateSystemUnderTest()
-        {
-            var sut =  base.CreateSystemUnderTest();
-            
-            ServiceBus
-                .WithSqsMessagePublisher<SqsPublishedMessage>(x => { });
-
-            return sut;
+            _handler = new Future<AnotherGenericMessage>();
+            RegisterSqsHandler(_handler);
         }
 
         protected override void When()
         {
-            ServiceBus.Publish(new SqsPublishedMessage{HelloText = "Hiya..."});
+            ServiceBus.Publish(new AnotherGenericMessage());
         }
 
         [Test]
         public void ThenItGetsHandled()
         {
-            _sqsHandler.WaitUntilCompletion(2.Seconds()).ShouldBeTrue();
-        }
-
-        public class SqsPublishedMessage : Models.Message
-        {
-            public string HelloText { get; set; }
+            _handler.WaitUntilCompletion(10.Seconds()).ShouldBe(true);
         }
     }
 }
