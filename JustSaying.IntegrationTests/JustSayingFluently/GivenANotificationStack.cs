@@ -72,9 +72,9 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .WithMessageHandler(snsHandler)
 
                 .WithSqsMessagePublisher<AnotherGenericMessage>(configuration => { })
-                .WithSqsTopicSubscriber()
+                .WithSqsPointToPointSubscriber()
                 .IntoQueue(string.Empty)
-                .WithSqsMessageHandler(sqsHandler);
+                .WithMessageHandler(sqsHandler);
 
             ServiceBus.StartListening();
             return ServiceBus;

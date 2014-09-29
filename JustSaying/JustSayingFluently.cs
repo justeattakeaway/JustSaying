@@ -25,7 +25,7 @@ namespace JustSaying
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
         protected readonly IAmJustSaying Bus;
-        private SqsReadConfiguration _subscriptionConfig = new SqsReadConfiguration();
+        private SqsReadConfiguration _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic);
         private SqsWriteConfiguration _publishConfig = new SqsWriteConfiguration();
         private IMessageSerialisationFactory _serialisationFactory;
 
@@ -177,7 +177,13 @@ namespace JustSaying
 
         public ISubscriberIntoQueue WithSqsTopicSubscriber()
         {
-            _subscriptionConfig = new SqsReadConfiguration();
+            _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic);
+            return this;
+        }
+
+        public ISubscriberIntoQueue WithSqsPointToPointSubscriber()
+        {
+            _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.PointToPoint);
             return this;
         }
 
@@ -197,6 +203,13 @@ namespace JustSaying
         /// <returns></returns>
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message
         {
+            return _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
+                ? PointToPointHandler(handler)
+                : TopicHandler(handler);
+        }
+
+        private IHaveFulfilledSubscriptionRequirements TopicHandler<T>(IHandler<T> handler) where T : Message
+        {
             var messageTypeName = typeof(T).Name.ToLower();
             ConfigureSqsSubscriptionViaTopic(messageTypeName);
 
@@ -212,7 +225,7 @@ namespace JustSaying
             return this;
         }
 
-        public IHaveFulfilledSubscriptionRequirements WithSqsMessageHandler<T>(IHandler<T> handler) where T : Message
+        private IHaveFulfilledSubscriptionRequirements PointToPointHandler<T>(IHandler<T> handler) where T : Message
         {
             var messageTypeName = typeof(T).Name.ToLower();
             ConfigureSqsSubscription(messageTypeName);
@@ -319,6 +332,7 @@ namespace JustSaying
         IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>() where T : Message;
         IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsWriteConfiguration> config) where T : Message;
         ISubscriberIntoQueue WithSqsTopicSubscriber();
+        ISubscriberIntoQueue WithSqsPointToPointSubscriber();
         void StartListening();
         void StopListening();
         bool Listening { get; }
@@ -327,7 +341,6 @@ namespace JustSaying
     public interface IFluentSubscription
     {
         IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message;
-        IHaveFulfilledSubscriptionRequirements WithSqsMessageHandler<T>(IHandler<T> handler) where T : Message;
         IFluentSubscription ConfigureSubscriptionWith(Action<SqsReadConfiguration> config);
     }
 

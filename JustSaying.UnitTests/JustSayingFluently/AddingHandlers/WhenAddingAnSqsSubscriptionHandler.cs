@@ -1,4 +1,5 @@
 ﻿using JustBehave;
+using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Models;
@@ -7,7 +8,7 @@ using NUnit.Framework;
 
 namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
 {
-    public class WhenAddingAnSqsSubscriptionHandler : JustSayingFluentlyTestBase
+    public class WhenSubscribingPointToPoint : JustSayingFluentlyTestBase
     {
         private readonly IHandler<Message> _handler = Substitute.For<IHandler<Message>>();
         private object _response;
@@ -16,11 +17,11 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
 
         protected override void When()
         {
-            _response = SystemUnderTest.WithSqsTopicSubscriber().IntoQueue("queuename").ConfigureSubscriptionWith(
+            _response = SystemUnderTest.WithSqsPointToPointSubscriber().IntoQueue("queuename").ConfigureSubscriptionWith(
                 cfg =>
                 {
                     cfg.MessageRetentionSeconds = 60;
-                }).WithSqsMessageHandler(_handler);
+                }).WithMessageHandler(_handler);
         }
 
         [Then]
@@ -39,6 +40,18 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         public void ICanContinueConfiguringTheBus()
         {
             Assert.IsInstanceOf<IFluentSubscription>(_response);
+        }
+
+        [Then]
+        public void NoTopicIsCreated()
+        {
+            QueueVerifier.DidNotReceiveWithAnyArgs().EnsureTopicExistsWithQueueSubscribed(null, null, null);
+        }
+
+        [Then]
+        public void TheQueueIsCreated()
+        {
+            QueueVerifier.Received().EnsureQueueExists(Configuration.Region, Arg.Any<SqsReadConfiguration>());
         }
     }
 }

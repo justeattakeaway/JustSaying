@@ -10,7 +10,7 @@ namespace JustSaying.AwsTools.QueueCreation
         public SqsQueueByName EnsureTopicExistsWithQueueSubscribed(string region, IMessageSerialisationRegister serialisationRegister, string queueName, string topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30, int? instancePosition = null)
         {
             return EnsureTopicExistsWithQueueSubscribed(region, serialisationRegister,
-                new SqsReadConfiguration
+                new SqsReadConfiguration(SubscriptionType.ToTopic)
                 {
                     QueueName = queueName,
                     Topic = topic,

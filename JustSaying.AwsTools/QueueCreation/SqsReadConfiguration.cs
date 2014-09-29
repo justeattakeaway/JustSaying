@@ -4,16 +4,21 @@ using JustSaying.Messaging.MessageProcessingStrategies;
 
 namespace JustSaying.AwsTools.QueueCreation
 {
+    public enum SubscriptionType { ToTopic, PointToPoint };
+
     public class SqsReadConfiguration : SqsBasicConfiguration
     {
-        public SqsReadConfiguration()
+        
+        public SqsReadConfiguration(SubscriptionType subscriptionType)
         {
+            SubscriptionType = subscriptionType;
             MessageRetentionSeconds = JustSayingConstants.DEFAULT_RETENTION_PERIOD;
             ErrorQueueRetentionPeriodSeconds = JustSayingConstants.MAXIMUM_RETENTION_PERIOD;
             VisibilityTimeoutSeconds = JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT;
             RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT;
         }
 
+        internal SubscriptionType SubscriptionType { get; private set; }
         internal string QueueName { get; set; }
         internal string Topic { get; set; }
         internal string PublishEndpoint { get; set; }
