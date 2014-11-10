@@ -46,13 +46,13 @@ Here's how to get up & running with simple message publishing.
 
 * This can be done wherever you want within your application.
 * Simply pass the publisher object through using your IOC container.
-* In this case, we are publishing the fact that a given order has beenAccepted.
+* In this case, we are publishing the fact that a given order has been accepted.
 
 ````c#
         publisher.Publish(new OrderAccepted(123456));
 ````
 
-BOOM! You're don publishing!
+BOOM! You're done publishing!
 
 ## Consuming messages
 Here's how to get up & running with message comsumption.
