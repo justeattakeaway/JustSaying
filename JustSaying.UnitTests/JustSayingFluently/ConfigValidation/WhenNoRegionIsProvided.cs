@@ -30,7 +30,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
         [Then]
         public void RegionIsRequested()
         {
-            Assert.AreEqual(((ArgumentException)ThrownException).ParamName, "config.Region");
+            Assert.AreEqual(((ArgumentException)ThrownException).ParamName, "config.Regions");
         }
     }
 }

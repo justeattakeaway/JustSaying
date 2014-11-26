@@ -1,4 +1,5 @@
-﻿using JustBehave;
+﻿using System.Collections.Generic;
+using JustBehave;
 using JustSaying.TestingFramework;
 using NSubstitute;
 using NUnit.Framework;
@@ -18,7 +19,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
         {
             RecordAnyExceptionsThrown();
 
-            var config = new MessagingConfig {Region = "fake_region"};
+            var config = new MessagingConfig {Region = "fake_region", Regions = new List<string> {"fake_region"}};
             _bus.Config.Returns(config);
         }
 
@@ -26,7 +27,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
         {
         }
 
-        [Then]
+        [Test]
         public void ConfigurationIsRequired()
         {
             SystemUnderTest.ConfigurePublisherWith(conf => conf.PublishFailureBackoffMilliseconds = 50);

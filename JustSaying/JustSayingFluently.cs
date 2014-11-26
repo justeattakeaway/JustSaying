@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
@@ -66,9 +67,10 @@ namespace JustSaying
             Log.Info("Adding SNS publisher");
             _subscriptionConfig.Topic = typeof(T).Name.ToLower();
             var publishEndpointProvider = CreatePublisherEndpointProvider(_subscriptionConfig);
+
             var eventPublisher = new SnsTopicByName(
                 publishEndpointProvider.GetLocationName(),
-                AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(Bus.Config.Region)),
+                AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(Bus.Config.Regions.First())),
                 Bus.SerialisationRegister);
 
             if (!eventPublisher.Exists())
@@ -106,7 +108,7 @@ namespace JustSaying
 
             var eventPublisher = new SqsPublisher(
                 locationName,
-                AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(Bus.Config.Region)),
+                AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(Bus.Config.Regions.First())),
                 config.RetryCountBeforeSendingToErrorQueue,
                 Bus.SerialisationRegister);
 
@@ -213,10 +215,12 @@ namespace JustSaying
             var messageTypeName = typeof(T).Name.ToLower();
             ConfigureSqsSubscriptionViaTopic(messageTypeName);
 
-            var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribed(Bus.Config.Region, Bus.SerialisationRegister, _subscriptionConfig);
-
-            CreateSubscriptionListener(queue, _subscriptionConfig.Topic);
-            Log.Info(string.Format("Created SQS topic subscription - Topic: {0}, QueueName: {1}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName));
+            foreach (var region in Bus.Config.Regions)
+            {
+                var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribed(region, Bus.SerialisationRegister, _subscriptionConfig);
+                CreateSubscriptionListener(queue, _subscriptionConfig.Topic);
+                Log.Info(string.Format("Created SQS topic subscription - Topic: {0}, QueueName: {1}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName));
+            }
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
             Bus.AddMessageHandler(handler);
@@ -230,10 +234,12 @@ namespace JustSaying
             var messageTypeName = typeof(T).Name.ToLower();
             ConfigureSqsSubscription(messageTypeName);
 
-            var queue = _amazonQueueCreator.EnsureQueueExists(Bus.Config.Region, _subscriptionConfig);
-
-            CreateSubscriptionListener(queue, messageTypeName);
-            Log.Info(string.Format("Created SQS subscriber - MessageName: {0}, QueueName: {1}", messageTypeName, _subscriptionConfig.QueueName));
+            foreach (var region in Bus.Config.Regions)
+            {
+                var queue = _amazonQueueCreator.EnsureQueueExists(region, _subscriptionConfig);
+                CreateSubscriptionListener(queue, messageTypeName);
+                Log.Info(string.Format("Created SQS subscriber - MessageName: {0}, QueueName: {1}", messageTypeName, _subscriptionConfig.QueueName));
+            }
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
             Bus.AddMessageHandler(handler);
@@ -307,9 +313,20 @@ namespace JustSaying
 
             return this;
         }
+
+        public IMayWantOptionalSettings WithFailoverRegion(string region)
+        {
+            Bus.Config.Regions.Add(region);
+            return this;
+        }
     }
 
-    public interface IMayWantOptionalSettings : IMayWantMonitoring, IMayWantMessageLockStore, IMayWantCustomSerialisation { }
+    public interface IMayWantOptionalSettings : IMayWantAFailoverRegion, IMayWantMonitoring, IMayWantMessageLockStore, IMayWantCustomSerialisation { }
+
+    public interface IMayWantAFailoverRegion
+    {
+        IMayWantOptionalSettings WithFailoverRegion(string region);
+    }
 
     public interface IMayWantMonitoring : IAmJustSayingFluently
     {

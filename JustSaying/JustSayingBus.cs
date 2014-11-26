@@ -14,7 +14,7 @@ namespace JustSaying
     {
         public bool Listening { get; private set; }
 
-        private readonly Dictionary<string, INotificationSubscriber> _notificationSubscribers;
+        private readonly Dictionary<string, IList<INotificationSubscriber>> _notificationSubscribers;
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _messagePublishers;
         public IMessagingConfig Config { get; private set; }
 
@@ -37,7 +37,7 @@ namespace JustSaying
             Config = config;
             Monitor = new NullOpMessageMonitor();
 
-            _notificationSubscribers = new Dictionary<string, INotificationSubscriber>();
+            _notificationSubscribers = new Dictionary<string, IList<INotificationSubscriber>>();
             _messagePublishers = new Dictionary<string, Dictionary<Type, IMessagePublisher>>();
             SerialisationRegister = serialisationRegister;
         }
@@ -47,21 +47,24 @@ namespace JustSaying
             if (string.IsNullOrWhiteSpace(topic))
                 throw new ArgumentNullException("topic");
 
-            try
+            IList<INotificationSubscriber> subscribersForTopic;
+            if (!_notificationSubscribers.TryGetValue(topic, out subscribersForTopic))
             {
-                _notificationSubscribers.Add(topic, subscriber);
+                subscribersForTopic = new List<INotificationSubscriber>();
+                _notificationSubscribers.Add(topic, subscribersForTopic);
             }
-            catch (ArgumentException)
-            {
-                throw new ArgumentException("You cannot declare more than one subscriber service for the same topic per component. Topic: {0}", topic);
-            }
+
+            subscribersForTopic.Add(subscriber);
         }
 
         public void AddMessageHandler<T>(IHandler<T> handler) where T : Message
         {
             var topic = typeof(T).Name.ToLower();
 
-            _notificationSubscribers[topic].AddMessageHandler(handler);
+            foreach (var subscriber in _notificationSubscribers[topic])
+            {
+                subscriber.AddMessageHandler(handler);                
+            }
         }
 
         public void AddMessagePublisher<T>(IMessagePublisher messagePublisher) where T : Message
@@ -79,10 +82,14 @@ namespace JustSaying
             if (Listening)
                 return;
             
-            foreach (var subscription in _notificationSubscribers)
+            foreach (var subscriptions in _notificationSubscribers)
             {
-                subscription.Value.Listen();
+                foreach (var subscriber in subscriptions.Value)
+                {
+                    subscriber.Listen();
+                }
             }
+
             Listening = true;
         }
 
@@ -91,9 +98,12 @@ namespace JustSaying
             if (!Listening)
                 return;
 
-            foreach (var subscription in _notificationSubscribers)
+            foreach (var subscribers in _notificationSubscribers)
             {
-                subscription.Value.StopListening();
+                foreach (var subscriber in subscribers.Value)
+                {
+                    subscriber.StopListening();
+                }
             }
             Listening = false;
         }

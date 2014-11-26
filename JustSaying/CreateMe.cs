@@ -1,4 +1,3 @@
-using System;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
@@ -16,7 +15,8 @@ namespace JustSaying
 
         public static IMayWantOptionalSettings InRegion(string region)
         {
-            var config = new MessagingConfig {Region = region};
+            var config = new MessagingConfig();
+            config.Regions.Add(region);
 
             config.Validate();
 
