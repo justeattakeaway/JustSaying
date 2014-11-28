@@ -71,12 +71,14 @@
   <ItemGroup>
     <Compile Include="JustSayingFluently\Future.cs" />
     <Compile Include="JustSayingFluently\GivenANotificationStack.cs" />
+    <Compile Include="JustSayingFluently\MultiRegion\PublishToTwoRegionsWillBeReceivedByConsumer.cs" />
     <Compile Include="JustSayingFluently\TestExtensions.cs" />
     <Compile Include="JustSayingFluently\WhenAHandlerThrowsAnException.cs" />
     <Compile Include="JustSayingFluently\WhenAMessageIsPublishedViaSnsToSqsSubscriber.cs" />
     <Compile Include="JustSayingFluently\WhenAMessageIsPublishedViaSqsToSqsSubscriber.cs" />
     <Compile Include="JustSayingFluently\WhenHandlersThrowAnException.cs" />
     <Compile Include="JustSayingFluently\WhenPublishingWithoutAMonitor.cs" />
+    <Compile Include="JustSayingFluently\MultiRegion\WhenSubscribingToTwoRegions.cs" />
     <Compile Include="JustSayingFluently\WhenThrottlingIsEnabledALongRunningHandler.cs" />
     <Compile Include="WhenRegisteringAPublisher\WhenPublishingAndNotInstantiated.cs" />
     <Compile Include="WhenRegisteringASqsSubscriber\WhenHandlerHasExactlyOnceAttribute.cs" />
