@@ -27,7 +27,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
 
             WhenMessagesArePublishedToBothRegions();
 
-            ThenTheyAreReceivedByBothSubscribers();
+            ThenTheSubscriberReceivesBothMessages();
         }
 
         private void GivenASubscriptionToAQueueInTwoRegions(string primaryRegion, string secondaryRegion)
@@ -69,7 +69,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
             _publisher2.Publish(_message2);
         }
 
-        private void ThenTheyAreReceivedByBothSubscribers()
+        private void ThenTheSubscriberReceivesBothMessages()
         {
             Patiently.AssertThat(() => _handler.HasReceived(_message1));
             Patiently.AssertThat(() => _handler.HasReceived(_message2));
