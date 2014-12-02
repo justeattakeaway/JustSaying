@@ -2,7 +2,7 @@ using Amazon;
 using JustSaying.TestingFramework;
 using NUnit.Framework;
 
-namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion
+namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopicSubscriber
 {
     public class PublishToTwoRegionsWillBeReceivedByConsumer : WhenSubscribingToTwoRegions
     {

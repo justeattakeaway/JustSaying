@@ -8,7 +8,7 @@ using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using NSubstitute;
 
-namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion
+namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopicSubscriber
 {
     public abstract class WhenSubscribingToTwoRegions : BehaviourTest<IAmJustSayingFluently>
     {

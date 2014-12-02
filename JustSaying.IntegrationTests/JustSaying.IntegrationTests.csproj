@@ -71,14 +71,15 @@
   <ItemGroup>
     <Compile Include="JustSayingFluently\Future.cs" />
     <Compile Include="JustSayingFluently\GivenANotificationStack.cs" />
-    <Compile Include="JustSayingFluently\MultiRegion\PublishToTwoRegionsWillBeReceivedByConsumer.cs" />
+    <Compile Include="JustSayingFluently\MultiRegion\WithSqsPointToPointSubscriber\WhenSubscribedToTwoRegions.cs" />
+    <Compile Include="JustSayingFluently\MultiRegion\WithSqsTopicSubscriber\PublishToTwoRegionsWillBeReceivedByConsumer.cs" />
     <Compile Include="JustSayingFluently\TestExtensions.cs" />
     <Compile Include="JustSayingFluently\WhenAHandlerThrowsAnException.cs" />
     <Compile Include="JustSayingFluently\WhenAMessageIsPublishedViaSnsToSqsSubscriber.cs" />
     <Compile Include="JustSayingFluently\WhenAMessageIsPublishedViaSqsToSqsSubscriber.cs" />
     <Compile Include="JustSayingFluently\WhenHandlersThrowAnException.cs" />
     <Compile Include="JustSayingFluently\WhenPublishingWithoutAMonitor.cs" />
-    <Compile Include="JustSayingFluently\MultiRegion\WhenSubscribingToTwoRegions.cs" />
+    <Compile Include="JustSayingFluently\MultiRegion\WithSqsTopicSubscriber\WhenSubscribingToTwoRegions.cs" />
     <Compile Include="JustSayingFluently\WhenThrottlingIsEnabledALongRunningHandler.cs" />
     <Compile Include="WhenRegisteringAPublisher\WhenPublishingAndNotInstantiated.cs" />
     <Compile Include="WhenRegisteringASqsSubscriber\WhenHandlerHasExactlyOnceAttribute.cs" />
@@ -110,6 +111,7 @@
       <Name>JustSaying</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
