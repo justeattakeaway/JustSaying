@@ -5,16 +5,7 @@ using JustSaying.AwsTools;
 
 namespace JustSaying
 {
-    public interface IMessagingConfig //ToDo: This vs publish config. Clean it up. not good.
-    {
-        int PublishFailureReAttempts { get; }
-        int PublishFailureBackoffMilliseconds { get; }
-        IList<string> Regions { get; }
-
-        void Validate();
-    }
-
-    public class MessagingConfig : IPublishConfiguration, IMessagingConfig
+    public class MessagingConfig : IMessagingConfig
     {
         public MessagingConfig()
         {
@@ -25,7 +16,6 @@ namespace JustSaying
 
         public int PublishFailureReAttempts { get; set; }
         public int PublishFailureBackoffMilliseconds { get; set; }
-        public string Region { get; set; }
         public IList<string> Regions { get; set; }
 
         public virtual void Validate()

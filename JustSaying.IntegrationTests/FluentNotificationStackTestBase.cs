@@ -13,16 +13,14 @@ namespace JustSaying.IntegrationTests
 {
     public abstract class FluentNotificationStackTestBase : BehaviourTest<JustSaying.JustSayingFluently>
     {
-        public static string TestEndpoint
+        protected static RegionEndpoint TestEndpoint
         {
-            get { return RegionEndpoint.EUWest1.SystemName; }
+            get { return RegionEndpoint.EUWest1; }
         }
 
         protected IPublishConfiguration Configuration;
         protected IAmJustSaying NotificationStack { get; private set; }
         private bool _mockNotificationStack;
-        protected const int QueueCreationDelayMilliseconds = 10 * 1000;
-        public RegionEndpoint DefaultRegion = RegionEndpoint.EUWest1;
         
         protected override void Given()
         {
@@ -31,7 +29,7 @@ namespace JustSaying.IntegrationTests
 
         protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
-            var fns = CreateMeABus.InRegion(Configuration.Region)
+            var fns = CreateMeABus.InRegion(TestEndpoint.SystemName)
                 .WithMonitoring(null)
                 .ConfigurePublisherWith(x =>
                 {
@@ -42,18 +40,23 @@ namespace JustSaying.IntegrationTests
 
             if (_mockNotificationStack)
             {
-                NotificationStack = Substitute.For<IAmJustSaying>();
-
-                var notificationStackField = fns.GetType().GetField("Bus", BindingFlags.Instance | BindingFlags.NonPublic);
-
-                var constructedStack = (JustSaying.JustSayingBus)notificationStackField.GetValue(fns);
-
-                NotificationStack.Config.Returns(constructedStack.Config);
-
-                notificationStackField.SetValue(fns, NotificationStack);
+                InjectMockJustSayingBus(fns);
             }
 
             return fns;
+        }
+
+        private void InjectMockJustSayingBus(JustSaying.JustSayingFluently fns)
+        {
+            NotificationStack = Substitute.For<IAmJustSaying>();
+
+            var notificationStackField = fns.GetType().GetField("Bus", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            var constructedStack = (JustSayingBus) notificationStackField.GetValue(fns);
+
+            NotificationStack.Config.Returns(constructedStack.Config);
+
+            notificationStackField.SetValue(fns, NotificationStack);
         }
 
         protected override void When()

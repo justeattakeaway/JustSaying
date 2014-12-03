@@ -17,10 +17,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 
             MockNotidicationStack();
 
-            Configuration = new MessagingConfig
-            {
-                Region = DefaultRegion.SystemName
-            };
+            Configuration = new MessagingConfig();
 
             DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName);
         }

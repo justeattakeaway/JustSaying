@@ -9,10 +9,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
     {
         protected override void Given()
         {
-            Configuration = new MessagingConfig
-            {
-                Region = DefaultRegion.SystemName
-            };
+            Configuration = new MessagingConfig();
 
             RecordAnyExceptionsThrown();
         }

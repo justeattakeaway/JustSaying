@@ -1,4 +1,5 @@
-﻿using JustBehave;
+﻿using System.Linq;
+using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
@@ -51,7 +52,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         [Then]
         public void TheQueueIsCreated()
         {
-            QueueVerifier.Received().EnsureQueueExists(Configuration.Region, Arg.Any<SqsReadConfiguration>());
+            QueueVerifier.Received().EnsureQueueExists(NotificationStack.Config.Regions.Single(), Arg.Any<SqsReadConfiguration>());
         }
     }
 }

@@ -19,7 +19,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
         {
             RecordAnyExceptionsThrown();
 
-            var config = new MessagingConfig {Region = "fake_region", Regions = new List<string> {"fake_region"}};
+            var config = new MessagingConfig {Regions = new List<string> {"fake_region"}};
             _bus.Config.Returns(config);
         }
 
@@ -33,10 +33,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
             SystemUnderTest.ConfigurePublisherWith(conf => conf.PublishFailureBackoffMilliseconds = 50);
         }
 
-
-
         /// Note: Ignored tests are here for fluent api exploration & expecting compile time issues when working on the fluent interface stuff...
-        
         [Then, Ignore]
         public void ASqsPublisherCanBeSetup()
         {

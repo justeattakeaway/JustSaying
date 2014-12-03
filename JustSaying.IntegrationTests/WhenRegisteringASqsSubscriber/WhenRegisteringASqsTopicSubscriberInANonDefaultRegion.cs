@@ -23,10 +23,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
             MockNotidicationStack();
 
-            Configuration = new MessagingConfig
-            {
-                Region = _regionEndpoint.SystemName
-            };
+            Configuration = new MessagingConfig();
 
             DeleteQueueIfItAlreadyExists(_regionEndpoint, _queueName);
             DeleteTopicIfItAlreadyExists(_regionEndpoint, _topicName);

@@ -57,6 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CreateMe.cs" />
+    <Compile Include="IMessagingConfig.cs" />
     <Compile Include="JustSayingFluently.cs" />
     <Compile Include="IPublishConfiguration.cs" />
     <Compile Include="JustSayingBus.cs" />

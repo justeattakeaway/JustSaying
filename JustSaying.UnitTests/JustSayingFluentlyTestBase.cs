@@ -15,10 +15,10 @@ namespace JustSaying.UnitTests
         {
             if (Configuration == null)
             {
-                Configuration = new MessagingConfig { Region = "defaultRegion" };
+                Configuration = new MessagingConfig();
             }
 
-            var fns = JustSaying.CreateMeABus.InRegion(Configuration.Region).ConfigurePublisherWith(x =>
+            var fns = JustSaying.CreateMeABus.InRegion("defaultRegion").ConfigurePublisherWith(x =>
             {
                 x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;
                 x.PublishFailureReAttempts = Configuration.PublishFailureReAttempts;

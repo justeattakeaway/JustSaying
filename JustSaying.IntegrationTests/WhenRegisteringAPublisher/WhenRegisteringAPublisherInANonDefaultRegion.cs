@@ -14,12 +14,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         {
             _topicName = "message";
 
-            Configuration = new MessagingConfig
-            {
-                Region = DefaultRegion.SystemName
-            };
+            Configuration = new MessagingConfig();
 
-            DeleteTopicIfItAlreadyExists(DefaultRegion, _topicName);
+            DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName);
 
         }
 
@@ -31,7 +28,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         [Then]
         public void ASnsTopicIsCreatedInTheNonDefaultRegion()
         {
-            Assert.IsTrue(TryGetTopic(DefaultRegion, _topicName, out _topic));
+            Assert.IsTrue(TryGetTopic(TestEndpoint, _topicName, out _topic));
         }
 
         [TearDown]
@@ -39,7 +36,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         {
             if (_topic != null)
             {
-                DeleteTopic(DefaultRegion, _topic);
+                DeleteTopic(TestEndpoint, _topic);
             }
         }
     }
