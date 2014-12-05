@@ -326,6 +326,7 @@ namespace JustSaying
 
         public IMayWantOptionalSettings WithActiveRegion(Func<string> getActiveRegion)
         {
+            Bus.Config.GetActiveRegion = getActiveRegion;
             return this;
         }
     }
