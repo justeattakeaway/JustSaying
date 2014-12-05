@@ -15,7 +15,7 @@ namespace JustSaying
         public bool Listening { get; private set; }
 
         private readonly Dictionary<string, IList<INotificationSubscriber>> _notificationSubscribers;
-        private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _messagePublishers;
+        private readonly Dictionary<string, IList<IMessagePublisher>> _messagePublishers;
         public IMessagingConfig Config { get; private set; }
 
         private IMessageMonitor _monitor;
@@ -38,7 +38,7 @@ namespace JustSaying
             Monitor = new NullOpMessageMonitor();
 
             _notificationSubscribers = new Dictionary<string, IList<INotificationSubscriber>>();
-            _messagePublishers = new Dictionary<string, Dictionary<Type, IMessagePublisher>>();
+            _messagePublishers = new Dictionary<string, IList<IMessagePublisher>>();
             SerialisationRegister = serialisationRegister;
         }
 
@@ -67,14 +67,19 @@ namespace JustSaying
             }
         }
 
+        // previously, a Topic would have multiple types of Message going through it, but not any more
         public void AddMessagePublisher<T>(IMessagePublisher messagePublisher) where T : Message
         {
             var topic = typeof (T).Name.ToLower();
 
-            if (! _messagePublishers.ContainsKey(topic))
-                _messagePublishers.Add(topic, new Dictionary<Type, IMessagePublisher>());
+            IList<IMessagePublisher> publishersForTopic;
+            if (!_messagePublishers.TryGetValue(topic, out publishersForTopic))
+            {
+                publishersForTopic = new List<IMessagePublisher>();
+                _messagePublishers.Add(topic, publishersForTopic);
+            }
 
-            _messagePublishers[topic].Add(typeof(T), messagePublisher);
+            _messagePublishers[topic].Add(messagePublisher);
         }
 
         public void Start()
@@ -111,12 +116,11 @@ namespace JustSaying
         public void Publish(Message message)
         {
             var published = false;
-            foreach (var topicPublisher in _messagePublishers.Values)
-            {
-                if (!topicPublisher.ContainsKey(message.GetType()))
-                    continue;
 
-                Publish(topicPublisher[message.GetType()], message);
+            var topic = message.GetType().Name.ToLower();
+            foreach (var publisher in _messagePublishers[topic])
+            {
+                Publish(publisher, message);
                 published = true;
             }
 

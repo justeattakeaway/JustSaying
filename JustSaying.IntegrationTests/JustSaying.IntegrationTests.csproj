@@ -71,7 +71,8 @@
   <ItemGroup>
     <Compile Include="JustSayingFluently\Future.cs" />
     <Compile Include="JustSayingFluently\GivenANotificationStack.cs" />
-    <Compile Include="JustSayingFluently\MultiRegion\WithSqsPointToPointSubscriber\WhenSubscribedToTwoRegions.cs" />
+    <Compile Include="JustSayingFluently\MultiRegion\WithSqsPointToPointSubscriber\WhenAFailoverRegionIsSetup.cs" />
+    <Compile Include="JustSayingFluently\MultiRegion\WithSqsPointToPointSubscriber\WhenOneBusIsSubscribedToTwoRegions.cs" />
     <Compile Include="JustSayingFluently\MultiRegion\WithSqsTopicSubscriber\PublishToTwoRegionsWillBeReceivedByConsumer.cs" />
     <Compile Include="JustSayingFluently\TestExtensions.cs" />
     <Compile Include="JustSayingFluently\WhenAHandlerThrowsAnException.cs" />

@@ -21,7 +21,7 @@ namespace JustSaying
     /// 3. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc // ToDo: Shouldn't be enforced in base! Is a JE concern.
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings
+    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings, IMayWantARegionPicker
     {
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
@@ -29,6 +29,7 @@ namespace JustSaying
         private SqsReadConfiguration _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic);
         private SqsWriteConfiguration _publishConfig = new SqsWriteConfiguration();
         private IMessageSerialisationFactory _serialisationFactory;
+        private Func<string> _pickerFunc = () => "";
 
         internal protected JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator)
         {
@@ -106,18 +107,21 @@ namespace JustSaying
             var publishEndpointProvider = CreatePublisherEndpointProvider(_publishConfig);
             var locationName = publishEndpointProvider.GetLocationName();
 
-            var eventPublisher = new SqsPublisher(
-                locationName,
-                AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(Bus.Config.Regions.First())),
-                config.RetryCountBeforeSendingToErrorQueue,
-                Bus.SerialisationRegister);
-
-            if (!eventPublisher.Exists())
-                eventPublisher.Create(config);
-
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
 
-            Bus.AddMessagePublisher<T>(eventPublisher);
+            foreach (var region in Bus.Config.Regions)
+            {
+                var eventPublisher = new SqsPublisher(
+                    locationName,
+                    AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(region)),
+                    config.RetryCountBeforeSendingToErrorQueue,
+                    Bus.SerialisationRegister);
+
+                if (!eventPublisher.Exists())
+                    eventPublisher.Create(config);
+
+                Bus.AddMessagePublisher<T>(eventPublisher);
+            }
 
             Log.Info(string.Format("Created SQS publisher - MessageName: {0}, QueueName: {1}", messageTypeName, locationName));
 
@@ -314,18 +318,28 @@ namespace JustSaying
             return this;
         }
 
-        public IMayWantOptionalSettings WithFailoverRegion(string region)
+        public IMayWantARegionPicker WithFailoverRegion(string region)
         {
             Bus.Config.Regions.Add(region);
             return this;
         }
+
+        public IMayWantOptionalSettings WithActiveRegion(Func<string> getActiveRegion)
+        {
+            return this;
+        }
     }
 
-    public interface IMayWantOptionalSettings : IMayWantAFailoverRegion, IMayWantMonitoring, IMayWantMessageLockStore, IMayWantCustomSerialisation { }
+    public interface IMayWantOptionalSettings : IMayWantMonitoring, IMayWantMessageLockStore, IMayWantCustomSerialisation, IMayWantAFailoverRegion { }
 
     public interface IMayWantAFailoverRegion
     {
-        IMayWantOptionalSettings WithFailoverRegion(string region);
+        IMayWantARegionPicker WithFailoverRegion(string region);
+    }
+
+    public interface IMayWantARegionPicker : IMayWantAFailoverRegion
+    {
+        IMayWantOptionalSettings WithActiveRegion(Func<string> getActiveRegion);
     }
 
     public interface IMayWantMonitoring : IAmJustSayingFluently

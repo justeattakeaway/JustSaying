@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPointToPointSubscriber
 {
     [TestFixture]
-    public class WhenSubscribedToTwoRegions
+    public class WhenOneBusIsSubscribedToTwoRegions
     {
         private readonly Future<GenericMessage> _handler = new Future<GenericMessage>();
 
@@ -40,6 +40,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
             CreateMeABus
                 .InRegion(primaryRegion)
                 .WithFailoverRegion(secondaryRegion)
+                .WithActiveRegion(() => primaryRegion)
                 .WithSqsPointToPointSubscriber()
                 .IntoQueue(string.Empty)
                 .WithMessageHandler(handler)

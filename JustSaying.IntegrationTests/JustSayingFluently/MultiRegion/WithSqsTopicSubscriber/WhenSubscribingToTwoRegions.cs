@@ -48,6 +48,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             ServiceBus = CreateMeABus
                 .InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithFailoverRegion(RegionEndpoint.USEast1.SystemName)
+                .WithActiveRegion(() => RegionEndpoint.USEast1.SystemName)
                 .WithMonitoring(Monitoring)
                 .WithSqsTopicSubscriber()
                 .IntoQueue("queuename3")
