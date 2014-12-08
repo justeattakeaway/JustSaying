@@ -22,7 +22,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             TopicName = "CustomerCommunication";
             QueueName = "queuename-" + DateTime.Now.Ticks;
 
-            MockNotidicationStack();
+            EnableMockedBus();
 
             Configuration = new MessagingConfig();
 

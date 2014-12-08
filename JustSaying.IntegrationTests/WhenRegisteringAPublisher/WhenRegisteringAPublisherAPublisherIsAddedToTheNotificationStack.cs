@@ -15,7 +15,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         {
             _topicName = "CustomerCommunication";
 
-            MockNotidicationStack();
+            EnableMockedBus();
 
             Configuration = new MessagingConfig();
 

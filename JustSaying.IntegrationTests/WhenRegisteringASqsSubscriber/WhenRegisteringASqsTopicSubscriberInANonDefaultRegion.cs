@@ -21,7 +21,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             _queueName = "queue" + DateTime.Now.Ticks;
             _regionEndpoint = RegionEndpoint.SAEast1;
 
-            MockNotidicationStack();
+            EnableMockedBus();
 
             Configuration = new MessagingConfig();
 

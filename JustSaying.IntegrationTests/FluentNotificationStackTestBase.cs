@@ -18,7 +18,7 @@ namespace JustSaying.IntegrationTests
 
         protected IPublishConfiguration Configuration;
         protected IAmJustSaying NotificationStack { get; private set; }
-        private bool _mockNotificationStack;
+        private bool _enableMockedBus;
         
         protected override void Given()
         {
@@ -37,7 +37,7 @@ namespace JustSaying.IntegrationTests
                 
                 }) as JustSaying.JustSayingFluently;
 
-            if (_mockNotificationStack)
+            if (_enableMockedBus)
             {
                 InjectMockJustSayingBus(fns);
             }
@@ -63,9 +63,9 @@ namespace JustSaying.IntegrationTests
             throw new NotImplementedException();
         }
 
-        public void MockNotidicationStack()
+        protected void EnableMockedBus()
         {
-            _mockNotificationStack = true;
+            _enableMockedBus = true;
         }
 
         public static void DeleteTopicIfItAlreadyExists(string regionEndpointName, string topicName)
