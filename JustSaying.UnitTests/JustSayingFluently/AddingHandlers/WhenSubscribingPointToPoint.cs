@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using JustBehave;
+﻿using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
@@ -18,23 +17,22 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
 
         protected override void When()
         {
-            _response = SystemUnderTest.WithSqsPointToPointSubscriber().IntoQueue("queuename").ConfigureSubscriptionWith(
-                cfg =>
-                {
-                    cfg.MessageRetentionSeconds = 60;
-                }).WithMessageHandler(_handler);
+            _response = SystemUnderTest
+                .WithSqsPointToPointSubscriber().IntoQueue("queuename")
+                .ConfigureSubscriptionWith(cfg => { })
+                .WithMessageHandler(_handler);
         }
 
         [Then]
         public void HandlerIsAddedToBus()
         {
-            NotificationStack.Received().AddMessageHandler(_handler);
+            Bus.Received().AddMessageHandler(_handler);
         }
         
         [Then]
         public void SerialisationIsRegisteredForMessage()
         {
-            NotificationStack.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser<Message>>());
+            Bus.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser<Message>>());
         }
 
         [Then]
@@ -46,13 +44,15 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         [Then]
         public void NoTopicIsCreated()
         {
-            QueueVerifier.DidNotReceiveWithAnyArgs().EnsureTopicExistsWithQueueSubscribed(null, null, null);
+            QueueVerifier
+                .DidNotReceiveWithAnyArgs()
+                .EnsureTopicExistsWithQueueSubscribed(Arg.Any<string>(), Arg.Any<IMessageSerialisationRegister>(), Arg.Any<SqsReadConfiguration>());
         }
 
         [Then]
         public void TheQueueIsCreated()
         {
-            QueueVerifier.Received().EnsureQueueExists(NotificationStack.Config.Regions.Single(), Arg.Any<SqsReadConfiguration>());
+            QueueVerifier.Received().EnsureQueueExists("defaultRegion", Arg.Any<SqsReadConfiguration>());
         }
     }
 }

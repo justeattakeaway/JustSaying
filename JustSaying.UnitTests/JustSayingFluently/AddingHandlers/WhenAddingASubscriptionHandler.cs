@@ -16,23 +16,23 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
 
         protected override void When()
         {
-            _response = SystemUnderTest.WithSqsTopicSubscriber().IntoQueue("queuename").ConfigureSubscriptionWith(
-                cfg =>
-                {
-                    cfg.MessageRetentionSeconds = 60;
-                }).WithMessageHandler(_handler);
+            _response = SystemUnderTest
+                .WithSqsTopicSubscriber()
+                .IntoQueue(string.Empty)
+                .ConfigureSubscriptionWith(cfg => { })
+                .WithMessageHandler(_handler);
         }
 
         [Then]
         public void HandlerIsAddedToBus()
         {
-            NotificationStack.Received().AddMessageHandler(_handler);
+            Bus.Received().AddMessageHandler(_handler);
         }
         
         [Then]
         public void SerialisationIsRegisteredForMessage()
         {
-            NotificationStack.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser<Message>>());
+            Bus.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser<Message>>());
         }
 
         [Then]

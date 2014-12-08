@@ -18,7 +18,9 @@ namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
 
         protected override void When()
         {
-            JustSaying.CreateMeABus.InRegion(null).ConfigurePublisherWith(configuration => { });
+            CreateMeABus
+                .InRegion(null)
+                .ConfigurePublisherWith(configuration => { });
         }
 
         [Then]
