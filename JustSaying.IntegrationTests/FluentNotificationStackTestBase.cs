@@ -13,10 +13,8 @@ namespace JustSaying.IntegrationTests
 {
     public abstract class FluentNotificationStackTestBase : BehaviourTest<JustSaying.JustSayingFluently>
     {
-        protected static RegionEndpoint TestEndpoint
-        {
-            get { return RegionEndpoint.EUWest1; }
-        }
+        private static readonly RegionEndpoint DefaultEndpoint = RegionEndpoint.EUWest1;
+        protected static RegionEndpoint TestEndpoint { get; set; }
 
         protected IPublishConfiguration Configuration;
         protected IAmJustSaying NotificationStack { get; private set; }
@@ -24,6 +22,7 @@ namespace JustSaying.IntegrationTests
         
         protected override void Given()
         {
+            TestEndpoint = DefaultEndpoint;
             throw new NotImplementedException();
         }
 

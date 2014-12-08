@@ -30,7 +30,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         [Then]
         public void APublisherIsAddedToTheStack()
         {
-            NotificationStack.Received().AddMessagePublisher<Message>(Arg.Any<IMessagePublisher>());
+            NotificationStack.Received().AddMessagePublisher<Message>(Arg.Any<IMessagePublisher>(), TestEndpoint.SystemName);
         }
 
         [Then]

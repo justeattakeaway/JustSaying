@@ -25,6 +25,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
             Configuration = new MessagingConfig();
 
+            TestEndpoint = _regionEndpoint;
+
             DeleteQueueIfItAlreadyExists(_regionEndpoint, _queueName);
             DeleteTopicIfItAlreadyExists(_regionEndpoint, _topicName);
         }

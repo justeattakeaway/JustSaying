@@ -20,6 +20,16 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
         private static string _activeRegion;
         private readonly Func<string> _getActiveRegion = () => _activeRegion;
 
+        private IHaveFulfilledSubscriptionRequirements _primaryBus;
+        private IHaveFulfilledSubscriptionRequirements _secondaryBus;
+
+        [TearDown]
+        public void TearDown()
+        {
+            _primaryBus.StopListening();
+            _secondaryBus.StopListening();
+        }
+
         [Test]
         public void MessagesArePublishedToTheActiveRegion()
         {
@@ -38,28 +48,30 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
         private void GivenSubscriptionsToAQueueInTwoRegions()
         {
             var primaryHandler = Substitute.For<IHandler<GenericMessage>>();
+            primaryHandler.Handle(Arg.Any<GenericMessage>()).Returns(true);
             primaryHandler
                 .When(x => x.Handle(Arg.Any<GenericMessage>()))
                 .Do(x => _primaryHandler.Complete((GenericMessage)x.Args()[0]));
 
-            CreateMeABus
+            _primaryBus = CreateMeABus
                 .InRegion(PrimaryRegion)
                 .WithSqsPointToPointSubscriber()
                 .IntoQueue(string.Empty)
-                .WithMessageHandler(primaryHandler)
-                .StartListening();
+                .WithMessageHandler(primaryHandler);
+            _primaryBus.StartListening();
 
             var secondaryHandler = Substitute.For<IHandler<GenericMessage>>();
+            secondaryHandler.Handle(Arg.Any<GenericMessage>()).Returns(true);
             secondaryHandler
                 .When(x => x.Handle(Arg.Any<GenericMessage>()))
                 .Do(x => _secondaryHandler.Complete((GenericMessage)x.Args()[0]));
 
-            CreateMeABus
+            _secondaryBus = CreateMeABus
                 .InRegion(SecondaryRegion)
                 .WithSqsPointToPointSubscriber()
                 .IntoQueue(string.Empty)
-                .WithMessageHandler(secondaryHandler)
-                .StartListening();
+                .WithMessageHandler(secondaryHandler);
+            _secondaryBus.StartListening();
         }
 
         private void AndAPublisherWithAFailoverRegion()

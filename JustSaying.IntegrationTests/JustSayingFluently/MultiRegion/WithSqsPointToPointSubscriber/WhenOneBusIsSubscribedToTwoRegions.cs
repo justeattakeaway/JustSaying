@@ -12,11 +12,18 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
     {
         private readonly Future<GenericMessage> _handler = new Future<GenericMessage>();
 
-        private IHaveFulfilledPublishRequirements _publisher1;
-        private IHaveFulfilledPublishRequirements _publisher2;
+        private IHaveFulfilledPublishRequirements _primaryPublisher;
+        private IHaveFulfilledPublishRequirements _secondaryPublisher;
+        private IHaveFulfilledSubscriptionRequirements _subscriber;
 
         private GenericMessage _message1;
         private GenericMessage _message2;
+
+        [TearDown]
+        public void TearDown()
+        {
+            _subscriber.StopListening();
+        }
 
         [Test]
         public void AMessagedPublishedToBothRegionsWillBeReceived()
@@ -33,30 +40,31 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
         private void GivenASubscriptionToAQueueInTwoRegions(string primaryRegion, string secondaryRegion)
         {
             var handler = Substitute.For<IHandler<GenericMessage>>();
+            handler.Handle(Arg.Any<GenericMessage>()).Returns(true);
             handler
                 .When(x => x.Handle(Arg.Any<GenericMessage>()))
                 .Do(x => _handler.Complete((GenericMessage) x.Args()[0]));
 
-            CreateMeABus
+            _subscriber = CreateMeABus
                 .InRegion(primaryRegion)
                 .WithFailoverRegion(secondaryRegion)
                 .WithActiveRegion(() => primaryRegion)
                 .WithSqsPointToPointSubscriber()
                 .IntoQueue(string.Empty)
-                .WithMessageHandler(handler)
-                .StartListening();
+                .WithMessageHandler(handler);
+            _subscriber.StartListening();
         }
 
         private void AndAPublisherToThePrimaryRegion(string primaryRegion)
         {
-            _publisher1 = CreateMeABus
+            _primaryPublisher = CreateMeABus
                 .InRegion(primaryRegion)
                 .WithSqsMessagePublisher<GenericMessage>(configuration => { });
         }
 
         private void AndAPublisherToTheSecondaryRegion(string secondaryRegion)
         {
-            _publisher2 = CreateMeABus
+            _secondaryPublisher = CreateMeABus
                 .InRegion(secondaryRegion)
                 .WithSqsMessagePublisher<GenericMessage>(configuration => { });
         }
@@ -66,8 +74,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
             _message1 = new GenericMessage {Id = Guid.NewGuid()};
             _message2 = new GenericMessage {Id = Guid.NewGuid()};
 
-            _publisher1.Publish(_message1);
-            _publisher2.Publish(_message2);
+            _primaryPublisher.Publish(_message1);
+            _secondaryPublisher.Publish(_message2);
         }
 
         private void ThenTheSubscriberReceivesBothMessages()

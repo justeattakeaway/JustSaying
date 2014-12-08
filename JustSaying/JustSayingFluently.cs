@@ -69,17 +69,20 @@ namespace JustSaying
             _subscriptionConfig.Topic = typeof(T).Name.ToLower();
             var publishEndpointProvider = CreatePublisherEndpointProvider(_subscriptionConfig);
 
-            var eventPublisher = new SnsTopicByName(
-                publishEndpointProvider.GetLocationName(),
-                AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(Bus.Config.Regions.First())),
-                Bus.SerialisationRegister);
-
-            if (!eventPublisher.Exists())
-                eventPublisher.Create();
-
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
 
-            Bus.AddMessagePublisher<T>(eventPublisher);
+            foreach (var region in Bus.Config.Regions)
+            {
+                var eventPublisher = new SnsTopicByName(
+                    publishEndpointProvider.GetLocationName(),
+                    AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(Bus.Config.Regions.First())),
+                    Bus.SerialisationRegister);
+
+                if (!eventPublisher.Exists())
+                    eventPublisher.Create();
+
+                Bus.AddMessagePublisher<T>(eventPublisher, region);
+            }
 
             Log.Info(string.Format("Created SNS topic publisher - Topic: {0}", _subscriptionConfig.Topic));
 
@@ -120,7 +123,7 @@ namespace JustSaying
                 if (!eventPublisher.Exists())
                     eventPublisher.Create(config);
 
-                Bus.AddMessagePublisher<T>(eventPublisher);
+                Bus.AddMessagePublisher<T>(eventPublisher, region);
             }
 
             Log.Info(string.Format("Created SQS publisher - MessageName: {0}, QueueName: {1}", messageTypeName, locationName));
