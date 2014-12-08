@@ -29,7 +29,6 @@ namespace JustSaying
         private SqsReadConfiguration _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic);
         private SqsWriteConfiguration _publishConfig = new SqsWriteConfiguration();
         private IMessageSerialisationFactory _serialisationFactory;
-        private Func<string> _pickerFunc = () => "";
 
         internal protected JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator)
         {
