@@ -1,4 +1,6 @@
 ﻿using JustBehave;
+using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Models;
@@ -12,7 +14,9 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         private readonly IHandler<Message> _handler = Substitute.For<IHandler<Message>>();
         private object _response;
 
-        protected override void Given(){}
+        protected override void Given()
+        {
+        }
 
         protected override void When()
         {
@@ -24,11 +28,24 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         }
 
         [Then]
+        public void TheTopicAndQueueIsCreatedInEachRegion()
+        {
+            QueueVerifier.Received().EnsureTopicExistsWithQueueSubscribed("defaultRegion", Bus.SerialisationRegister, Arg.Any<SqsReadConfiguration>());
+            QueueVerifier.Received().EnsureTopicExistsWithQueueSubscribed("failoverRegion", Bus.SerialisationRegister, Arg.Any<SqsReadConfiguration>());
+        }
+
+        [Then]
+        public void TheSubscriptionIsCreatedInEachRegion()
+        {
+            Bus.Received(2).AddNotificationTopicSubscriber(Arg.Any<string>(), Arg.Any<INotificationSubscriber>());
+        }
+
+        [Then]
         public void HandlerIsAddedToBus()
         {
             Bus.Received().AddMessageHandler(_handler);
         }
-        
+
         [Then]
         public void SerialisationIsRegisteredForMessage()
         {

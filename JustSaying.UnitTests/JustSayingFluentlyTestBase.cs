@@ -20,6 +20,8 @@ namespace JustSaying.UnitTests
 
             var fns = CreateMeABus
                 .InRegion("defaultRegion")
+                .WithFailoverRegion("failoverRegion")
+                .WithActiveRegion(() => "defaultRegion")
                 .ConfigurePublisherWith(x =>
                 {
                     x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;

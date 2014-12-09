@@ -1,5 +1,6 @@
 ﻿using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Models;
@@ -13,14 +14,30 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         private readonly IHandler<Message> _handler = Substitute.For<IHandler<Message>>();
         private object _response;
 
-        protected override void Given(){}
+        protected override void Given()
+        {
+        }
 
         protected override void When()
         {
             _response = SystemUnderTest
-                .WithSqsPointToPointSubscriber().IntoQueue("queuename")
+                .WithSqsPointToPointSubscriber()
+                .IntoQueue(string.Empty)
                 .ConfigureSubscriptionWith(cfg => { })
                 .WithMessageHandler(_handler);
+        }
+
+        [Then]
+        public void TheQueueIsCreatedInEachRegion()
+        {
+            QueueVerifier.Received().EnsureQueueExists("defaultRegion", Arg.Any<SqsReadConfiguration>());
+            QueueVerifier.Received().EnsureQueueExists("failoverRegion", Arg.Any<SqsReadConfiguration>());
+        }
+
+        [Then]
+        public void TheSubscriptionIsCreatedInEachRegion()
+        {
+            Bus.Received(2).AddNotificationTopicSubscriber(Arg.Any<string>(), Arg.Any<INotificationSubscriber>());
         }
 
         [Then]
@@ -47,12 +64,6 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
             QueueVerifier
                 .DidNotReceiveWithAnyArgs()
                 .EnsureTopicExistsWithQueueSubscribed(Arg.Any<string>(), Arg.Any<IMessageSerialisationRegister>(), Arg.Any<SqsReadConfiguration>());
-        }
-
-        [Then]
-        public void TheQueueIsCreated()
-        {
-            QueueVerifier.Received().EnsureQueueExists("defaultRegion", Arg.Any<SqsReadConfiguration>());
         }
     }
 }
