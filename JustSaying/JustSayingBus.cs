@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
@@ -14,8 +15,8 @@ namespace JustSaying
     {
         public bool Listening { get; private set; }
 
-        private readonly Dictionary<string, INotificationSubscriber> _notificationSubscribers;
-        private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _messagePublishers;
+        private readonly Dictionary<string, IList<INotificationSubscriber>> _subscribersByTopic;
+        private readonly Dictionary<string, Dictionary<string, IMessagePublisher>> _publishersByRegionAndTopic;
         public IMessagingConfig Config { get; private set; }
 
         private IMessageMonitor _monitor;
@@ -37,8 +38,8 @@ namespace JustSaying
             Config = config;
             Monitor = new NullOpMessageMonitor();
 
-            _notificationSubscribers = new Dictionary<string, INotificationSubscriber>();
-            _messagePublishers = new Dictionary<string, Dictionary<Type, IMessagePublisher>>();
+            _subscribersByTopic = new Dictionary<string, IList<INotificationSubscriber>>();
+            _publishersByRegionAndTopic = new Dictionary<string, Dictionary<string, IMessagePublisher>>();
             SerialisationRegister = serialisationRegister;
         }
 
@@ -47,31 +48,37 @@ namespace JustSaying
             if (string.IsNullOrWhiteSpace(topic))
                 throw new ArgumentNullException("topic");
 
-            try
+            IList<INotificationSubscriber> subscribersForTopic;
+            if (!_subscribersByTopic.TryGetValue(topic, out subscribersForTopic))
             {
-                _notificationSubscribers.Add(topic, subscriber);
+                subscribersForTopic = new List<INotificationSubscriber>();
+                _subscribersByTopic.Add(topic, subscribersForTopic);
             }
-            catch (ArgumentException)
-            {
-                throw new ArgumentException("You cannot declare more than one subscriber service for the same topic per component. Topic: {0}", topic);
-            }
+
+            subscribersForTopic.Add(subscriber);
         }
 
         public void AddMessageHandler<T>(IHandler<T> handler) where T : Message
         {
             var topic = typeof(T).Name.ToLower();
 
-            _notificationSubscribers[topic].AddMessageHandler(handler);
+            foreach (var subscriber in _subscribersByTopic[topic])
+            {
+                subscriber.AddMessageHandler(handler);                
+            }
         }
 
-        public void AddMessagePublisher<T>(IMessagePublisher messagePublisher) where T : Message
+        public void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message
         {
-            var topic = typeof (T).Name.ToLower();
+            Dictionary<string, IMessagePublisher> publishersByTopic;
+            if (!_publishersByRegionAndTopic.TryGetValue(region, out publishersByTopic))
+            {
+                publishersByTopic = new Dictionary<string, IMessagePublisher>();
+                _publishersByRegionAndTopic.Add(region, publishersByTopic);
+            }
 
-            if (! _messagePublishers.ContainsKey(topic))
-                _messagePublishers.Add(topic, new Dictionary<Type, IMessagePublisher>());
-
-            _messagePublishers[topic].Add(typeof(T), messagePublisher);
+            var topic = typeof(T).Name.ToLower();
+            publishersByTopic[topic] = messagePublisher;
         }
 
         public void Start()
@@ -79,10 +86,14 @@ namespace JustSaying
             if (Listening)
                 return;
             
-            foreach (var subscription in _notificationSubscribers)
+            foreach (var subscriptions in _subscribersByTopic)
             {
-                subscription.Value.Listen();
+                foreach (var subscriber in subscriptions.Value)
+                {
+                    subscriber.Listen();
+                }
             }
+
             Listening = true;
         }
 
@@ -91,30 +102,51 @@ namespace JustSaying
             if (!Listening)
                 return;
 
-            foreach (var subscription in _notificationSubscribers)
+            foreach (var subscribers in _subscribersByTopic)
             {
-                subscription.Value.StopListening();
+                foreach (var subscriber in subscribers.Value)
+                {
+                    subscriber.StopListening();
+                }
             }
             Listening = false;
         }
 
         public void Publish(Message message)
         {
-            var published = false;
-            foreach (var topicPublisher in _messagePublishers.Values)
-            {
-                if (!topicPublisher.ContainsKey(message.GetType()))
-                    continue;
+            var publisher = GetActivePublisherForMessage(message);
+            Publish(publisher, message);
+        }
 
-                Publish(topicPublisher[message.GetType()], message);
-                published = true;
+        private IMessagePublisher GetActivePublisherForMessage(Message message)
+        {
+            string activeRegion;
+            if (Config.GetActiveRegion == null)
+            {
+                activeRegion = Config.Regions.First();
+            }
+            else
+            {
+                activeRegion = Config.GetActiveRegion();
             }
 
-            if (!published)
+            if (!_publishersByRegionAndTopic.ContainsKey(activeRegion))
             {
-                Log.Error("Error publishing message, no publisher registered for message type: {0}.", message.ToString());
-                throw new InvalidOperationException(string.Format("This message is not registered for publication: '{0}'", message));
+                var errorMessage = string.Format("Error publishing message, no publishers registered for region {0}.", activeRegion);
+                Log.Error(errorMessage);
+                throw new InvalidOperationException(errorMessage);
             }
+
+            var topic = message.GetType().Name.ToLower();
+            var publishersByTopic = _publishersByRegionAndTopic[activeRegion];
+            if (!publishersByTopic.ContainsKey(topic))
+            {
+                var errorMessage = string.Format("Error publishing message, no publishers registered for message type {0} in {1}.", message, activeRegion);
+                Log.Error(errorMessage);
+                throw new InvalidOperationException(errorMessage);
+            }
+
+            return publishersByTopic[topic];
         }
 
         private void Publish(IMessagePublisher publisher, Message message, int attemptCount = 0)

@@ -13,25 +13,22 @@ namespace JustSaying.IntegrationTests
 {
     public abstract class FluentNotificationStackTestBase : BehaviourTest<JustSaying.JustSayingFluently>
     {
-        public static string TestEndpoint
-        {
-            get { return RegionEndpoint.EUWest1.SystemName; }
-        }
+        private static readonly RegionEndpoint DefaultEndpoint = RegionEndpoint.EUWest1;
+        protected static RegionEndpoint TestEndpoint { get; set; }
 
         protected IPublishConfiguration Configuration;
         protected IAmJustSaying NotificationStack { get; private set; }
-        private bool _mockNotificationStack;
-        protected const int QueueCreationDelayMilliseconds = 10 * 1000;
-        public RegionEndpoint DefaultRegion = RegionEndpoint.EUWest1;
+        private bool _enableMockedBus;
         
         protected override void Given()
         {
+            TestEndpoint = DefaultEndpoint;
             throw new NotImplementedException();
         }
 
         protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
-            var fns = CreateMeABus.InRegion(Configuration.Region)
+            var fns = CreateMeABus.InRegion(TestEndpoint.SystemName)
                 .WithMonitoring(null)
                 .ConfigurePublisherWith(x =>
                 {
@@ -40,20 +37,25 @@ namespace JustSaying.IntegrationTests
                 
                 }) as JustSaying.JustSayingFluently;
 
-            if (_mockNotificationStack)
+            if (_enableMockedBus)
             {
-                NotificationStack = Substitute.For<IAmJustSaying>();
-
-                var notificationStackField = fns.GetType().GetField("Bus", BindingFlags.Instance | BindingFlags.NonPublic);
-
-                var constructedStack = (JustSaying.JustSayingBus)notificationStackField.GetValue(fns);
-
-                NotificationStack.Config.Returns(constructedStack.Config);
-
-                notificationStackField.SetValue(fns, NotificationStack);
+                InjectMockJustSayingBus(fns);
             }
 
             return fns;
+        }
+
+        private void InjectMockJustSayingBus(JustSaying.JustSayingFluently fns)
+        {
+            NotificationStack = Substitute.For<IAmJustSaying>();
+
+            var notificationStackField = fns.GetType().GetField("Bus", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            var constructedStack = (JustSayingBus) notificationStackField.GetValue(fns);
+
+            NotificationStack.Config.Returns(constructedStack.Config);
+
+            notificationStackField.SetValue(fns, NotificationStack);
         }
 
         protected override void When()
@@ -61,9 +63,9 @@ namespace JustSaying.IntegrationTests
             throw new NotImplementedException();
         }
 
-        public void MockNotidicationStack()
+        protected void EnableMockedBus()
         {
-            _mockNotificationStack = true;
+            _enableMockedBus = true;
         }
 
         public static void DeleteTopicIfItAlreadyExists(string regionEndpointName, string topicName)

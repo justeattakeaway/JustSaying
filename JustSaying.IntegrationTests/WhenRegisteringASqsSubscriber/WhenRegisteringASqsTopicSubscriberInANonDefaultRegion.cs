@@ -21,12 +21,11 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             _queueName = "queue" + DateTime.Now.Ticks;
             _regionEndpoint = RegionEndpoint.SAEast1;
 
-            MockNotidicationStack();
+            EnableMockedBus();
 
-            Configuration = new MessagingConfig
-            {
-                Region = _regionEndpoint.SystemName
-            };
+            Configuration = new MessagingConfig();
+
+            TestEndpoint = _regionEndpoint;
 
             DeleteQueueIfItAlreadyExists(_regionEndpoint, _queueName);
             DeleteTopicIfItAlreadyExists(_regionEndpoint, _topicName);

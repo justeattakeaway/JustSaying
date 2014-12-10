@@ -19,7 +19,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.Publishing
         [Then]
         public void TheMessageIsPublished()
         {
-            NotificationStack.Received().Publish(_message);
+            Bus.Received().Publish(_message);
         }
     }
 }

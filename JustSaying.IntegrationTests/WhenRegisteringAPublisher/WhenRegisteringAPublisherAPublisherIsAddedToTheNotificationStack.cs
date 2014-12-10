@@ -15,12 +15,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         {
             _topicName = "CustomerCommunication";
 
-            MockNotidicationStack();
+            EnableMockedBus();
 
-            Configuration = new MessagingConfig
-            {
-                Region = DefaultRegion.SystemName
-            };
+            Configuration = new MessagingConfig();
 
             DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName);
         }
@@ -33,7 +30,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         [Then]
         public void APublisherIsAddedToTheStack()
         {
-            NotificationStack.Received().AddMessagePublisher<Message>(Arg.Any<IMessagePublisher>());
+            NotificationStack.Received().AddMessagePublisher<Message>(Arg.Any<IMessagePublisher>(), TestEndpoint.SystemName);
         }
 
         [Then]
