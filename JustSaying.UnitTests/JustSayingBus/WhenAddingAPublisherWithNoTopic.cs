@@ -15,7 +15,7 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override void When()
         {
-            SystemUnderTest.AddMessagePublisher<GenericMessage>(Substitute.For<IMessagePublisher>());
+            SystemUnderTest.AddMessagePublisher<GenericMessage>(Substitute.For<IMessagePublisher>(), string.Empty);
         }
 
         [Then]

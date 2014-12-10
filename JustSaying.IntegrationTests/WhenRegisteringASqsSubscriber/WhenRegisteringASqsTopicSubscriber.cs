@@ -22,15 +22,12 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             TopicName = "CustomerCommunication";
             QueueName = "queuename-" + DateTime.Now.Ticks;
 
-            MockNotidicationStack();
+            EnableMockedBus();
 
-            Configuration = new MessagingConfig
-            {
-                Region = DefaultRegion.SystemName
-            };
+            Configuration = new MessagingConfig();
 
-            DeleteTopicIfItAlreadyExists(DefaultRegion, TopicName);
-            DeleteQueueIfItAlreadyExists(DefaultRegion, QueueName);
+            DeleteTopicIfItAlreadyExists(TestEndpoint, TopicName);
+            DeleteQueueIfItAlreadyExists(TestEndpoint, QueueName);
         }
 
         protected override void When()
@@ -61,7 +58,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         public void TearDown()
         {
             DeleteTopicIfItAlreadyExists(TestEndpoint, TopicName);
-            DeleteQueueIfItAlreadyExists(DefaultRegion, QueueName);
+            DeleteQueueIfItAlreadyExists(TestEndpoint, QueueName);
         }
     }
 

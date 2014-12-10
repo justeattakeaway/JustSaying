@@ -1,4 +1,3 @@
-using System;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
@@ -7,22 +6,22 @@ namespace JustSaying
 {
     public class CreateMeABus
     {
-        private readonly MessagingConfig _config;
-
-        public CreateMeABus(MessagingConfig config)
-        {
-            _config = config;
-        }
-
         public static IMayWantOptionalSettings InRegion(string region)
         {
-            var config = new MessagingConfig {Region = region};
+            var config = new MessagingConfig();
+            config.Regions.Add(region);
 
             config.Validate();
 
-            var bus = new JustSayingFluently(new JustSayingBus(config, new MessageSerialisationRegister()), new AmazonQueueCreator());
-            bus.WithMonitoring(new NullOpMessageMonitor());
-            bus.WithSerialisationFactory(new NewtonsoftSerialisationFactory());
+            var messageSerialisationRegister = new MessageSerialisationRegister();
+            var justSayingBus = new JustSayingBus(config, messageSerialisationRegister);
+
+            var amazonQueueCreator = new AmazonQueueCreator();
+            var bus = new JustSayingFluently(justSayingBus, amazonQueueCreator);
+
+            bus
+                .WithMonitoring(new NullOpMessageMonitor())
+                .WithSerialisationFactory(new NewtonsoftSerialisationFactory());
 
             return bus;
         }

@@ -20,7 +20,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingMonitoring
         [Then]
         public void ThatMonitorIsAddedToTheStack()
         {
-            NotificationStack.Received().Monitor = _monitor;
+            Bus.Received().Monitor = _monitor;
         }
 
         [Then]

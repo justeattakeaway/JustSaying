@@ -1,5 +1,6 @@
 ﻿using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Models;
@@ -13,27 +14,42 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         private readonly IHandler<Message> _handler = Substitute.For<IHandler<Message>>();
         private object _response;
 
-        protected override void Given(){}
+        protected override void Given()
+        {
+        }
 
         protected override void When()
         {
-            _response = SystemUnderTest.WithSqsPointToPointSubscriber().IntoQueue("queuename").ConfigureSubscriptionWith(
-                cfg =>
-                {
-                    cfg.MessageRetentionSeconds = 60;
-                }).WithMessageHandler(_handler);
+            _response = SystemUnderTest
+                .WithSqsPointToPointSubscriber()
+                .IntoQueue(string.Empty)
+                .ConfigureSubscriptionWith(cfg => { })
+                .WithMessageHandler(_handler);
+        }
+
+        [Then]
+        public void TheQueueIsCreatedInEachRegion()
+        {
+            QueueVerifier.Received().EnsureQueueExists("defaultRegion", Arg.Any<SqsReadConfiguration>());
+            QueueVerifier.Received().EnsureQueueExists("failoverRegion", Arg.Any<SqsReadConfiguration>());
+        }
+
+        [Then]
+        public void TheSubscriptionIsCreatedInEachRegion()
+        {
+            Bus.Received(2).AddNotificationTopicSubscriber(Arg.Any<string>(), Arg.Any<INotificationSubscriber>());
         }
 
         [Then]
         public void HandlerIsAddedToBus()
         {
-            NotificationStack.Received().AddMessageHandler(_handler);
+            Bus.Received().AddMessageHandler(_handler);
         }
         
         [Then]
         public void SerialisationIsRegisteredForMessage()
         {
-            NotificationStack.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser<Message>>());
+            Bus.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser<Message>>());
         }
 
         [Then]
@@ -45,13 +61,9 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         [Then]
         public void NoTopicIsCreated()
         {
-            QueueVerifier.DidNotReceiveWithAnyArgs().EnsureTopicExistsWithQueueSubscribed(null, null, null);
-        }
-
-        [Then]
-        public void TheQueueIsCreated()
-        {
-            QueueVerifier.Received().EnsureQueueExists(Configuration.Region, Arg.Any<SqsReadConfiguration>());
+            QueueVerifier
+                .DidNotReceiveWithAnyArgs()
+                .EnsureTopicExistsWithQueueSubscribed(Arg.Any<string>(), Arg.Any<IMessageSerialisationRegister>(), Arg.Any<SqsReadConfiguration>());
         }
     }
 }

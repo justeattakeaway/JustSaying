@@ -1,4 +1,6 @@
 ﻿using JustBehave;
+using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Models;
@@ -12,27 +14,42 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         private readonly IHandler<Message> _handler = Substitute.For<IHandler<Message>>();
         private object _response;
 
-        protected override void Given(){}
+        protected override void Given()
+        {
+        }
 
         protected override void When()
         {
-            _response = SystemUnderTest.WithSqsTopicSubscriber().IntoQueue("queuename").ConfigureSubscriptionWith(
-                cfg =>
-                {
-                    cfg.MessageRetentionSeconds = 60;
-                }).WithMessageHandler(_handler);
+            _response = SystemUnderTest
+                .WithSqsTopicSubscriber()
+                .IntoQueue(string.Empty)
+                .ConfigureSubscriptionWith(cfg => { })
+                .WithMessageHandler(_handler);
+        }
+
+        [Then]
+        public void TheTopicAndQueueIsCreatedInEachRegion()
+        {
+            QueueVerifier.Received().EnsureTopicExistsWithQueueSubscribed("defaultRegion", Bus.SerialisationRegister, Arg.Any<SqsReadConfiguration>());
+            QueueVerifier.Received().EnsureTopicExistsWithQueueSubscribed("failoverRegion", Bus.SerialisationRegister, Arg.Any<SqsReadConfiguration>());
+        }
+
+        [Then]
+        public void TheSubscriptionIsCreatedInEachRegion()
+        {
+            Bus.Received(2).AddNotificationTopicSubscriber(Arg.Any<string>(), Arg.Any<INotificationSubscriber>());
         }
 
         [Then]
         public void HandlerIsAddedToBus()
         {
-            NotificationStack.Received().AddMessageHandler(_handler);
+            Bus.Received().AddMessageHandler(_handler);
         }
-        
+
         [Then]
         public void SerialisationIsRegisteredForMessage()
         {
-            NotificationStack.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser<Message>>());
+            Bus.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser<Message>>());
         }
 
         [Then]

@@ -18,7 +18,9 @@ namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
 
         protected override void When()
         {
-            JustSaying.CreateMeABus.InRegion(null).ConfigurePublisherWith(configuration => { });
+            CreateMeABus
+                .InRegion(null)
+                .ConfigurePublisherWith(configuration => { });
         }
 
         [Then]
@@ -30,7 +32,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
         [Then]
         public void RegionIsRequested()
         {
-            Assert.AreEqual(((ArgumentException)ThrownException).ParamName, "config.Region");
+            Assert.AreEqual(((ArgumentException)ThrownException).ParamName, "config.Regions");
         }
     }
 }
