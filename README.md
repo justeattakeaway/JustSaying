@@ -82,8 +82,8 @@ We currently support SQS subscriptions only, but keep checking back for other me
 * This can be done at the same time as your publications are set up.
 * There is no limit to the number of handlers you add to a subscription.
 * You can specify message retention policies etc in your subscription for resiliency purposes.
-* In this case, we are telling JustSaying to keep 'OrderAccepted' messages for one minutethe default time. They will be thrown away if not handled in this time.
-* We are telling it to keep 'OrderFailed' messages for 2 mins, and not to handle them again on failure for 30 seconds
+* In this case, we are telling JustSaying to keep 'OrderAccepted' messages for the default time, which is one minute. They will be thrown away if not handled in this time.
+* We are telling it to keep 'OrderFailed' messages for 1 minute and not to handle them again on failure for 30 seconds. These are the default values.
 
 ````c#
             CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
@@ -97,7 +97,7 @@ That's it. By calling StartListening() we are telling the stack to begin polling
 
 
 ###2.(a) Subscription Configuration
-* In this case, we are telling JustSaying to keep 'OrderAccepted' messages for one minutethe. They will be thrown away if not handled in this time.
+* In this case, we are telling JustSaying to keep 'OrderAccepted' messages for the default time, which is one minute. They will be thrown away if not handled in this time.
 * We are telling it to keep 'OrderFailed' messages for 5 mins, and not to handle them again on failure for 60 seconds
 
 ````c#
