@@ -74,7 +74,7 @@ namespace JustSaying
             {
                 var eventPublisher = new SnsTopicByName(
                     publishEndpointProvider.GetLocationName(),
-                    AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(Bus.Config.Regions.First())),
+                    AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(region)),
                     Bus.SerialisationRegister);
 
                 if (!eventPublisher.Exists())
