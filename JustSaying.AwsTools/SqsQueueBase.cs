@@ -41,30 +41,6 @@ namespace JustSaying.AwsTools
             Url = null;
         }
 
-        public void AddPermission(SnsTopicBase snsTopic)
-        {
-            Client.SetQueueAttributes(
-                new SetQueueAttributesRequest{
-                    QueueUrl = Url,
-                    Attributes = new Dictionary<string,string>{ {"Policy", GetQueueSubscriptionPolicy(snsTopic) } }
-                });
-                
-            Log.Info(string.Format("Added Queue permission for SNS topic to publish to Queue: {0}, Topic: {1}", Arn, snsTopic.Arn));
-        }
-
-        public bool HasPermission(SnsTopicBase snsTopic)
-        {
-            var policyResponse = Client.GetQueueAttributes(
-                new GetQueueAttributesRequest{
-                 QueueUrl = Url,
-                 AttributeNames = new List<string> { "Policy" }});
-
-            if (string.IsNullOrEmpty(policyResponse.Policy))
-                return false;
-
-            return policyResponse.Policy.Contains(snsTopic.Arn);
-        }
-
         protected void SetQueueProperties()
         {
             var attributes = GetAttrs(new[]
@@ -91,29 +67,6 @@ namespace JustSaying.AwsTools
             var result = Client.GetQueueAttributes(request);
 
             return result;
-        }
-
-        protected string GetQueueSubscriptionPolicy(SnsTopicBase topic)
-        {
-            return @"{
-                                                      ""Version"": ""2012-10-17"",
-                                                      ""Id"": ""Sns_Subsciption_Policy"",
-                                                      ""Statement"": 
-                                                        {
-                                                           ""Sid"":""Send_Message"",
-                                                           ""Effect"": ""Allow"",
-                                                           ""Principal"": {
-                                                                ""AWS"": ""*""
-                                                             },
-                                                            ""Action"": ""SQS:SendMessage"",
-                                                            ""Resource"": """ + Arn + @""",
-                                                            ""Condition"" : {
-															   ""ArnEquals"" : {
-																  ""aws:SourceArn"":""" + topic.Arn + @"""
-															   }
-															}
-                                                         }
-                                                    }";
         }
 
         protected internal void UpdateQueueAttribute(SqsBasicConfiguration queueConfig)

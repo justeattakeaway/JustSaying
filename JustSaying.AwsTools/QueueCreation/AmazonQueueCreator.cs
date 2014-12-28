@@ -24,7 +24,7 @@ namespace JustSaying.AwsTools.QueueCreation
         {
             var queue = EnsureQueueExists(region, queueConfig);
             var eventTopic = EnsureTopicExists(region, serialisationRegister, queueConfig);
-            EnsureQueueIsSubscribedToTopic(eventTopic, queue);
+            EnsureQueueIsSubscribedToTopic(region, eventTopic, queue);
 
             return queue;
         }
@@ -48,13 +48,11 @@ namespace JustSaying.AwsTools.QueueCreation
             return eventTopic;
         }
 
-        private static void EnsureQueueIsSubscribedToTopic(SnsTopicByName eventTopic, SqsQueueByName queue)
+        private static void EnsureQueueIsSubscribedToTopic(string region, SnsTopicByName eventTopic, SqsQueueByName queue)
         {
-            if (!eventTopic.IsSubscribed(queue))
-                eventTopic.Subscribe(queue);
+            var sqsclient = AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(region));
+            eventTopic.Subscribe(sqsclient, queue);
 
-            if (!queue.HasPermission(eventTopic))
-                queue.AddPermission(eventTopic);
         }
     }
 }
