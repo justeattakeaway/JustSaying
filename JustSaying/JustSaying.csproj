@@ -56,7 +56,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CreateMe.cs" />
+    <Compile Include="CreateMeABus.cs" />
     <Compile Include="JustSayingFluently.cs" />
     <Compile Include="IPublishConfiguration.cs" />
     <Compile Include="JustSayingBus.cs" />
