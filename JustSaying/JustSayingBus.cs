@@ -114,8 +114,14 @@ namespace JustSaying
 
         public void Publish(Message message)
         {
+            var watch = new System.Diagnostics.Stopwatch();
+            watch.Start();
+
             var publisher = GetActivePublisherForMessage(message);
             Publish(publisher, message);
+
+            watch.Stop();
+            Monitor.PublishMessageTime(watch.ElapsedMilliseconds);
         }
 
         private IMessagePublisher GetActivePublisherForMessage(Message message)
@@ -156,14 +162,7 @@ namespace JustSaying
                 attemptCount++;
                 try
                 {
-                    var watch = new System.Diagnostics.Stopwatch();
-                    watch.Start();
-
                     publisher.Publish(message);
-
-                    watch.Stop();
-
-                    Monitor.PublishMessageTime(watch.ElapsedMilliseconds);
                 }
                 catch (Exception ex)
                 {
