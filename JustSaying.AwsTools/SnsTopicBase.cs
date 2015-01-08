@@ -1,6 +1,7 @@
 using System.Linq;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
+using Amazon.SQS;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialisation;
 using NLog;
@@ -30,15 +31,14 @@ namespace JustSaying.AwsTools
             return result.Subscriptions.Any(x => !string.IsNullOrEmpty(x.SubscriptionArn) && x.Endpoint == queue.Arn);
         }
 
-        public bool Subscribe(SqsQueueBase queue)
+        public bool Subscribe(IAmazonSQS amazonSQSClient, SqsQueueBase queue)
         {
-            var response = Client.Subscribe(new SubscribeRequest(Arn, "sqs", queue.Arn));
-            if (!string.IsNullOrEmpty(response.SubscriptionArn))
+            var subscriptionArn = Client.SubscribeQueue(Arn, amazonSQSClient, queue.Url);
+            if (!string.IsNullOrEmpty(subscriptionArn))
             {
-                queue.AddPermission(this);
-                Log.Info(string.Format("Subscribed Queue to Topic - Queue: {0}, Topic: {1}", queue.Arn, Arn));
                 return true;
             }
+
             Log.Info(string.Format("Failed to subscribe Queue to Topic: {0}, Topic: {1}", queue.Arn, Arn));
             return false;
         }
