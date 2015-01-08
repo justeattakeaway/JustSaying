@@ -49,7 +49,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .InRegion(primaryRegion)
                 .WithFailoverRegion(secondaryRegion)
                 .WithActiveRegion(() => primaryRegion)
-                .WithSqsPointToPointSubscriber()
+                .WithSqsTopicSubscriber()
                 .IntoQueue("queuename")
                 .WithMessageHandler(handler);
             _subscriber.StartListening();
@@ -59,14 +59,14 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         {
             _primaryPublisher = CreateMeABus
                 .InRegion(primaryRegion)
-                .WithSqsMessagePublisher<GenericMessage>(configuration => { });
+                .WithSnsMessagePublisher<GenericMessage>();
         }
 
         private void AndAPublisherToTheSecondaryRegion(string secondaryRegion)
         {
             _secondaryPublisher = CreateMeABus
                 .InRegion(secondaryRegion)
-                .WithSqsMessagePublisher<GenericMessage>(configuration => { });
+                .WithSnsMessagePublisher<GenericMessage>();
         }
 
         private void WhenMessagesArePublishedToBothRegions()
