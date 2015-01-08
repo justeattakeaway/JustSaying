@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
@@ -314,7 +313,7 @@ namespace JustSaying
 
         public IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder)
         {
-            confBuilder(Bus.Config as IPublishConfiguration);
+            confBuilder(Bus.Config);
             Bus.Config.Validate();
 
             return this;
