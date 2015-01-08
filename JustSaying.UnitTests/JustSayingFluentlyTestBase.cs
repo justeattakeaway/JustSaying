@@ -30,7 +30,6 @@ namespace JustSaying.UnitTests
                 }) as JustSaying.JustSayingFluently;
             
             ConfigureNotificationStackMock(fns);
-
             ConfigureAmazonQueueCreator(fns);
 
             return fns;

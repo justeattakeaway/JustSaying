@@ -4,7 +4,7 @@ using JustSaying.Messaging.Monitoring;
 
 namespace JustSaying
 {
-    public class CreateMeABus
+    public static class CreateMeABus
     {
         public static IMayWantOptionalSettings InRegion(string region)
         {

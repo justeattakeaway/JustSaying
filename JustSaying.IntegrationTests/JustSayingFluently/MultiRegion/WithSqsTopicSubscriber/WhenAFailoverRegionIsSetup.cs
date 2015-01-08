@@ -5,7 +5,7 @@ using JustSaying.TestingFramework;
 using NSubstitute;
 using NUnit.Framework;
 
-namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPointToPointSubscriber
+namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopicSubscriber
 {
     [TestFixture]
     public class WhenAFailoverRegionIsSetup
@@ -56,8 +56,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
 
             _primaryBus = CreateMeABus
                 .InRegion(PrimaryRegion)
-                .WithSqsPointToPointSubscriber()
-                .IntoQueue(string.Empty)
+                .WithSqsTopicSubscriber()
+                .IntoQueue("queuename")
                 .WithMessageHandler(primaryHandler);
             _primaryBus.StartListening();
 
@@ -69,8 +69,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
 
             _secondaryBus = CreateMeABus
                 .InRegion(SecondaryRegion)
-                .WithSqsPointToPointSubscriber()
-                .IntoQueue(string.Empty)
+                .WithSqsTopicSubscriber()
+                .IntoQueue("queuename")
                 .WithMessageHandler(secondaryHandler);
             _secondaryBus.StartListening();
         }
@@ -81,7 +81,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
                 .InRegion(PrimaryRegion)
                 .WithFailoverRegion(SecondaryRegion)
                 .WithActiveRegion(_getActiveRegion)
-                .WithSqsMessagePublisher<GenericMessage>(configuration => { });
+                .WithSnsMessagePublisher<GenericMessage>();
         }
 
         private void WhenThePrimaryRegionIsActive()

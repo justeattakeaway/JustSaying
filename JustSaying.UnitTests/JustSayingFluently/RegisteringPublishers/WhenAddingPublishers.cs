@@ -19,7 +19,8 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
         {
             RecordAnyExceptionsThrown();
 
-            var config = new MessagingConfig {Regions = new List<string> {"fake_region"}};
+            var config = new MessagingConfig();
+            config.Regions.Add("fake_region");
             _bus.Config.Returns(config);
         }
 
