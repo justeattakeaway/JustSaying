@@ -52,7 +52,6 @@ namespace JustSaying.AwsTools.QueueCreation
         {
             var sqsclient = AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(region));
             eventTopic.Subscribe(sqsclient, queue);
-
         }
     }
 }

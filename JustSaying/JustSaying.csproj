@@ -56,6 +56,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+
+    <Compile Include="IMessagingConfig.cs" />
     <Compile Include="CreateMeABus.cs" />
     <Compile Include="JustSayingFluently.cs" />
     <Compile Include="IPublishConfiguration.cs" />

@@ -1,12 +1,16 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using JustSaying.Models;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
-    public class Future<TMessage>
+    public class Future<TMessage> where TMessage : Message
     {
         private readonly Action _action;
         private readonly ManualResetEvent _event;
+        private readonly List<TMessage> _messages = new List<TMessage>();
 
         public Future(): this(null)
         {
@@ -23,6 +27,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             _event.Set();
 
             Value = message;
+            _messages.Add(message);
             if (_action != null)
             {
                 _action();
@@ -43,6 +48,11 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         {
             var completed =  _event.WaitOne(seconds);
             return completed;
+        }
+
+        public bool HasReceived(TMessage message)
+        {
+            return _messages.Any(m => m.Id == message.Id);
         }
     }
 }

@@ -13,8 +13,8 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override void When()
         {
-            SystemUnderTest.AddMessagePublisher<Message>(null);
-            SystemUnderTest.AddMessagePublisher<Message>(null);
+            SystemUnderTest.AddMessagePublisher<Message>(null, string.Empty);
+            SystemUnderTest.AddMessagePublisher<Message>(null, string.Empty);
         }
 
         [Then]

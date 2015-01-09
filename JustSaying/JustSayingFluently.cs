@@ -20,7 +20,7 @@ namespace JustSaying
     /// 3. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc // ToDo: Shouldn't be enforced in base! Is a JE concern.
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings
+    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings, IMayWantARegionPicker
     {
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
@@ -66,17 +66,21 @@ namespace JustSaying
             Log.Info("Adding SNS publisher");
             _subscriptionConfig.Topic = typeof(T).Name.ToLower();
             var publishEndpointProvider = CreatePublisherEndpointProvider(_subscriptionConfig);
-            var eventPublisher = new SnsTopicByName(
-                publishEndpointProvider.GetLocationName(),
-                AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(Bus.Config.Region)),
-                Bus.SerialisationRegister);
-
-            if (!eventPublisher.Exists())
-                eventPublisher.Create();
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
 
-            Bus.AddMessagePublisher<T>(eventPublisher);
+            foreach (var region in Bus.Config.Regions)
+            {
+                var eventPublisher = new SnsTopicByName(
+                    publishEndpointProvider.GetLocationName(),
+                    AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(region)),
+                    Bus.SerialisationRegister);
+
+                if (!eventPublisher.Exists())
+                    eventPublisher.Create();
+
+                Bus.AddMessagePublisher<T>(eventPublisher, region);
+            }
 
             Log.Info(string.Format("Created SNS topic publisher - Topic: {0}", _subscriptionConfig.Topic));
 
@@ -104,18 +108,21 @@ namespace JustSaying
             var publishEndpointProvider = CreatePublisherEndpointProvider(_publishConfig);
             var locationName = publishEndpointProvider.GetLocationName();
 
-            var eventPublisher = new SqsPublisher(
-                locationName,
-                AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(Bus.Config.Region)),
-                config.RetryCountBeforeSendingToErrorQueue,
-                Bus.SerialisationRegister);
-
-            if (!eventPublisher.Exists())
-                eventPublisher.Create(config);
-
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
 
-            Bus.AddMessagePublisher<T>(eventPublisher);
+            foreach (var region in Bus.Config.Regions)
+            {
+                var eventPublisher = new SqsPublisher(
+                    locationName,
+                    AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(region)),
+                    config.RetryCountBeforeSendingToErrorQueue,
+                    Bus.SerialisationRegister);
+
+                if (!eventPublisher.Exists())
+                    eventPublisher.Create(config);
+
+                Bus.AddMessagePublisher<T>(eventPublisher, region);
+            }
 
             Log.Info(string.Format("Created SQS publisher - MessageName: {0}, QueueName: {1}", messageTypeName, locationName));
 
@@ -213,10 +220,12 @@ namespace JustSaying
             var messageTypeName = typeof(T).Name.ToLower();
             ConfigureSqsSubscriptionViaTopic(messageTypeName);
 
-            var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribed(Bus.Config.Region, Bus.SerialisationRegister, _subscriptionConfig);
-
-            CreateSubscriptionListener(queue, _subscriptionConfig.Topic);
-            Log.Info(string.Format("Created SQS topic subscription - Topic: {0}, QueueName: {1}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName));
+            foreach (var region in Bus.Config.Regions)
+            {
+                var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribed(region, Bus.SerialisationRegister, _subscriptionConfig);
+                CreateSubscriptionListener(queue, _subscriptionConfig.Topic);
+                Log.Info(string.Format("Created SQS topic subscription - Topic: {0}, QueueName: {1}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName));
+            }
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
             Bus.AddMessageHandler(handler);
@@ -230,10 +239,12 @@ namespace JustSaying
             var messageTypeName = typeof(T).Name.ToLower();
             ConfigureSqsSubscription(messageTypeName);
 
-            var queue = _amazonQueueCreator.EnsureQueueExists(Bus.Config.Region, _subscriptionConfig);
-
-            CreateSubscriptionListener(queue, messageTypeName);
-            Log.Info(string.Format("Created SQS subscriber - MessageName: {0}, QueueName: {1}", messageTypeName, _subscriptionConfig.QueueName));
+            foreach (var region in Bus.Config.Regions)
+            {
+                var queue = _amazonQueueCreator.EnsureQueueExists(region, _subscriptionConfig);
+                CreateSubscriptionListener(queue, messageTypeName);
+                Log.Info(string.Format("Created SQS subscriber - MessageName: {0}, QueueName: {1}", messageTypeName, _subscriptionConfig.QueueName));
+            }
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
             Bus.AddMessageHandler(handler);
@@ -302,14 +313,36 @@ namespace JustSaying
 
         public IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder)
         {
-            confBuilder(Bus.Config as IPublishConfiguration);
+            confBuilder(Bus.Config);
             Bus.Config.Validate();
 
             return this;
         }
+
+        public IMayWantARegionPicker WithFailoverRegion(string region)
+        {
+            Bus.Config.Regions.Add(region);
+            return this;
+        }
+
+        public IMayWantOptionalSettings WithActiveRegion(Func<string> getActiveRegion)
+        {
+            Bus.Config.GetActiveRegion = getActiveRegion;
+            return this;
+        }
     }
 
-    public interface IMayWantOptionalSettings : IMayWantMonitoring, IMayWantMessageLockStore, IMayWantCustomSerialisation { }
+    public interface IMayWantOptionalSettings : IMayWantMonitoring, IMayWantMessageLockStore, IMayWantCustomSerialisation, IMayWantAFailoverRegion { }
+
+    public interface IMayWantAFailoverRegion
+    {
+        IMayWantARegionPicker WithFailoverRegion(string region);
+    }
+
+    public interface IMayWantARegionPicker : IMayWantAFailoverRegion
+    {
+        IMayWantOptionalSettings WithActiveRegion(Func<string> getActiveRegion);
+    }
 
     public interface IMayWantMonitoring : IAmJustSayingFluently
     {

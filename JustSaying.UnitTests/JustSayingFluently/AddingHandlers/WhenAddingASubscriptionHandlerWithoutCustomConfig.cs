@@ -8,14 +8,15 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
     public class WhenAddingASubscriptionHandlerWithoutCustomConfig : JustSayingFluentlyTestBase
     {
         private readonly IHandler<Message> _handler = Substitute.For<IHandler<Message>>();
-        private const string Topic = "CustomerCommunication";
         private IFluentSubscription _bus;
 
         protected override void Given() { }
 
         protected override void When()
         {
-            _bus = SystemUnderTest.WithSqsTopicSubscriber().IntoQueue("queuename");
+            _bus = SystemUnderTest
+                .WithSqsTopicSubscriber()
+                .IntoQueue("queuename");
         }
 
         [Then]
