@@ -71,11 +71,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="QueueCreation\WhenSerializingRedrivePolicy.cs" />
+    <Compile Include="Sns\TopicByArn\WhenPublishing.cs" />
     <Compile Include="SqsNotificationListener\HandlingExceptions\WhenErrorHandlingActionIsNotProvided.cs" />
     <Compile Include="SqsNotificationListener\HandlingExceptions\WhenErrorHandlingActionIsProvided.cs" />
     <Compile Include="SqsNotificationListener\WhenExactlyOnceIsAppliedToHandler.cs" />
     <Compile Include="SqsNotificationListener\WhenListeningStartsAndStops.cs" />
-    <Compile Include="Sns\TopicByArn\WhenPublishing.cs" />
     <Compile Include="SqsNotificationListener\BaseQueuePollingTest.cs" />
     <Compile Include="SqsNotificationListener\WhenMessageHandlingFails.cs" />
     <Compile Include="SqsNotificationListener\WhenMessageHandlingSucceeds.cs" />

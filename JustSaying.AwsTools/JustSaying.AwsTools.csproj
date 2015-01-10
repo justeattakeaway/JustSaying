@@ -74,7 +74,6 @@
     <Compile Include="QueueCreation\SqsWriteConfiguration.cs" />
     <Compile Include="SnsTopicByName.cs" />
     <Compile Include="SnsTopicBase.cs" />
-    <Compile Include="SnsTopicByArn.cs" />
     <Compile Include="SqsNotificationListener.cs" />
     <Compile Include="SqsPublisher.cs" />
     <Compile Include="SqsQueueBase.cs" />
