@@ -25,30 +25,13 @@ namespace JustSaying.AwsTools
 
         public override bool Exists()
         {
-            var topicCheck = Client.ListTopics(new ListTopicsRequest());
-            if (topicCheck.Topics.Any())
+            var topic = Client.FindTopic(TopicName);
+
+            if (topic != null)
             {
-                var topic = topicCheck.Topics.Select(x => new SnsTopicByArn(x.TopicArn, Client, _serialisationRegister)).FirstOrDefault(x => x.Matches(TopicName));
-
-                while (topic == null && !string.IsNullOrEmpty(topicCheck.NextToken))
-                {
-                    topicCheck = Client.ListTopics(new ListTopicsRequest(topicCheck.NextToken));
-                    topic = topicCheck.Topics.Select(x => new SnsTopicByArn(x.TopicArn, Client, _serialisationRegister)).FirstOrDefault(x => x.Matches(TopicName));
-
-                    if (topic != null)
-                    {
-                        Arn = topic.Arn;
-                        return true;
-                    }
-                }
-
-                if (topic != null)
-                {
-                    Arn = topic.Arn;
-                    return true;
-                }
+                Arn = topic.TopicArn;
             }
-
+            
             return false;
         }
 
