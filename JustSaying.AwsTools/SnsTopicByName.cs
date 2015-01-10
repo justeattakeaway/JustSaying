@@ -30,6 +30,7 @@ namespace JustSaying.AwsTools
             if (topic != null)
             {
                 Arn = topic.TopicArn;
+                return true;
             }
             
             return false;
