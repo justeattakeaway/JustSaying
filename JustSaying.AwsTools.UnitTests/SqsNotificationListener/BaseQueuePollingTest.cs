@@ -16,7 +16,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
     {
         protected const string QueueUrl = "url";
         protected IAmazonSQS Sqs;
-        protected IMessageSerialiser<GenericMessage> Serialiser;
+        protected IMessageSerialiser Serialiser;
         protected GenericMessage DeserialisedMessage;
         protected const string MessageBody = "object";
         protected IHandler<GenericMessage> Handler;
@@ -34,16 +34,16 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected override void Given()
         {
             Sqs = Substitute.For<IAmazonSQS>();
-            Serialiser = Substitute.For<IMessageSerialiser<GenericMessage>>();
+            Serialiser = Substitute.For<IMessageSerialiser>();
             SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
             Monitor = Substitute.For<IMessageMonitor>();
             Handler = Substitute.For<IHandler<GenericMessage>>();
             var response = GenerateResponseMessage(_messageTypeString, Guid.NewGuid());
             Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => response, x => new ReceiveMessageResponse());
 
-            SerialisationRegister.GetSerialiser(_messageTypeString).Returns(Serialiser);
+            SerialisationRegister.GeTypeSerialiser(_messageTypeString).Returns(new TypeSerialiser(typeof(GenericMessage), Serialiser));
             DeserialisedMessage = new GenericMessage {RaisingComponent = "Component"};
-            Serialiser.Deserialise(Arg.Any<string>()).Returns(x => DeserialisedMessage);
+            Serialiser.Deserialise(Arg.Any<string>(), typeof(GenericMessage)).Returns(x => DeserialisedMessage);
         }
 
         protected override void When()

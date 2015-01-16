@@ -43,7 +43,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         [Then]
         public void SerialisationIsRegisteredForMessage()
         {
-            NotificationStack.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser<Message>>());
+            NotificationStack.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser>());
         }
 
         [Then, Timeout(70000)] // ToDo: Sorry about this, but SQS is a little slow to verify againse. Can be better I'm sure? ;)

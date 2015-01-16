@@ -17,7 +17,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         [Then]
         public void MessagesGetDeserialisedByCorrectHandler()
         {
-            Patiently.VerifyExpectation(() =>Serialiser.Received().Deserialise(MessageBody));
+            Patiently.VerifyExpectation(() =>Serialiser.Received().Deserialise(MessageBody, typeof(GenericMessage)));
         }
 
         [Then]
@@ -35,7 +35,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         [Then]
         public void AllMessagesAreClearedFromQueue()
         {
-            Patiently.VerifyExpectation(() =>Serialiser.Received(1).Deserialise(Arg.Any<string>()));
+            Patiently.VerifyExpectation(() => Serialiser.Received(1).Deserialise(Arg.Any<string>(), typeof(GenericMessage)));
             Patiently.VerifyExpectation(() =>Sqs.Received(2).DeleteMessage(Arg.Any<DeleteMessageRequest>()));
         }
     }

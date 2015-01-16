@@ -24,9 +24,9 @@ namespace AwsTools.UnitTests.Sns.TopicByName
 
         protected override void Given()
         {
-            var serialiser = Substitute.For<IMessageSerialiser<GenericMessage>>();
+            var serialiser = Substitute.For<IMessageSerialiser>();
             serialiser.Serialise(Arg.Any<Message>()).Returns(Message);
-            _serialisationRegister.GetSerialiser(typeof(GenericMessage)).Returns(serialiser);
+            _serialisationRegister.GeTypeSerialiser(typeof(GenericMessage)).Returns(new TypeSerialiser(typeof(GenericMessage), serialiser));
             _sns.FindTopic(TopicName).Returns(new Topic { TopicArn = TopicArn });
         }
 

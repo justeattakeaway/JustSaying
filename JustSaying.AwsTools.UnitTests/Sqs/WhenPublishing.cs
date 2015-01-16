@@ -25,7 +25,7 @@ namespace JustSaying.AwsTools.UnitTests.Sqs
         {
             // ToDo: We need to clean up serialisation (away from Json.Net)
             //var serialiser = Substitute.For<IMessageSerialiser<GenericMessage>>();
-            //_serialisationRegister.GetSerialiser(typeof(GenericMessage)).Returns(serialiser);
+            //_serialisationRegister.GeTypeSerialiser(typeof(GenericMessage)).Returns(serialiser);
             _sqs.ListQueues(Arg.Any<ListQueuesRequest>()).Returns(new ListQueuesResponse{QueueUrls = new List<string>{Url}});
             _sqs.GetQueueAttributes(Arg.Any<GetQueueAttributesRequest>()).Returns(new GetQueueAttributesResponse());
         }

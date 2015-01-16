@@ -41,7 +41,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         [Then]
         public void MessageIsProcessed()
         {
-            Patiently.VerifyExpectation(() => SerialisationRegister.Received().GetSerialiser(SubjectOfMessageAfterStop));
+            Patiently.VerifyExpectation(() => SerialisationRegister.Received().GeTypeSerialiser(SubjectOfMessageAfterStop));
         }
 
         public override void PostAssertTeardown()
