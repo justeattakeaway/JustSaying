@@ -35,8 +35,8 @@ namespace JustSaying.AwsTools
             if (!Exists())
                 return;
 
-            var result = Client.DeleteQueue(new DeleteQueueRequest { QueueUrl = Url });
-            //return result.IsSetResponseMetadata();
+            Client.DeleteQueue(new DeleteQueueRequest { QueueUrl = Url });
+            
             Arn = null;
             Url = null;
         }
