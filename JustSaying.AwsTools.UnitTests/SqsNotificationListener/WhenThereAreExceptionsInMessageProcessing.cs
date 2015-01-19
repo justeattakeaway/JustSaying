@@ -24,7 +24,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
         protected override void Given()
         {
-            _serialisationRegister.GetSerialiser(Arg.Any<string>()).Returns(x => { throw new Exception(); });
+            _serialisationRegister.GeTypeSerialiser(Arg.Any<string>()).Returns(x => { throw new Exception(); });
             _sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => GenerateEmptyMessage());
             _sqs.When(x => x.ReceiveMessage(Arg.Any<ReceiveMessageRequest>())).Do(x => _callCount++);
         }

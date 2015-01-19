@@ -56,6 +56,7 @@
     <Compile Include="MessageProcessingStrategies\Throttled.cs" />
     <Compile Include="MessageSerialisation\IMessageSerialisationFactory.cs" />
     <Compile Include="MessageSerialisation\NewtonsoftSerialisationFactory.cs" />
+    <Compile Include="MessageSerialisation\TypeSerialiser.cs" />
     <Compile Include="Monitoring\IMeasureHandlerExecutionTime.cs" />
     <Compile Include="Monitoring\IMessageMonitor.cs" />
     <Compile Include="IMessagePublisher.cs" />

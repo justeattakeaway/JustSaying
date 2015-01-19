@@ -147,9 +147,8 @@ namespace JustSaying.AwsTools
                 string messageType = body["Subject"].ToString();
 
                 rawMessage = body["Message"].ToString();
-                typedMessage = _serialisationRegister
-                    .GetSerialiser(messageType)
-                    .Deserialise(rawMessage);
+                var typeSerialiser = _serialisationRegister.GeTypeSerialiser(messageType);
+                typedMessage = typeSerialiser.Serialiser.Deserialise(rawMessage, typeSerialiser.Type);
 
                 var handlingSucceeded = true;
 

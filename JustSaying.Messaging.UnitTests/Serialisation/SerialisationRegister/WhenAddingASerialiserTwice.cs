@@ -15,8 +15,8 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.SerialisationRegister
 
         protected override void When()
         {
-            SystemUnderTest.AddSerialiser<Message>(Substitute.For<IMessageSerialiser<Message>>());
-            SystemUnderTest.AddSerialiser<Message>(Substitute.For<IMessageSerialiser<Message>>());
+            SystemUnderTest.AddSerialiser<Message>(Substitute.For<IMessageSerialiser>());
+            SystemUnderTest.AddSerialiser<Message>(Substitute.For<IMessageSerialiser>());
         }
 
         [Then]
@@ -28,7 +28,7 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.SerialisationRegister
         [Then]
         public void TheMappingContainsTheSerialiser()
         {
-            Assert.NotNull(SystemUnderTest.GetSerialiser(typeof(Message).Name));
+            Assert.NotNull(SystemUnderTest.GeTypeSerialiser(typeof(Message).Name));
         }
     }
 }

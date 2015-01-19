@@ -8,7 +8,7 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
 {
     public class WhenAskingForANewSerialiser : BehaviourTest<NewtonsoftSerialisationFactory>
     {
-        private IMessageSerialiser<Message> _result;
+        private IMessageSerialiser _result;
 
         protected override void Given()
         {

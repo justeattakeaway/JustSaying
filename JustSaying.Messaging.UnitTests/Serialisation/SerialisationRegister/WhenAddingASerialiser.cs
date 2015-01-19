@@ -12,19 +12,19 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.SerialisationRegister
 
         protected override void When()
         {
-            SystemUnderTest.AddSerialiser<Message>(Substitute.For<IMessageSerialiser<Message>>());
+            SystemUnderTest.AddSerialiser<Message>(Substitute.For<IMessageSerialiser>());
         }
 
         [Then]
         public void MappingsCanBeRetreivedByStringType()
         {
-            Assert.NotNull(SystemUnderTest.GetSerialiser(typeof(Message).Name));
+            Assert.NotNull(SystemUnderTest.GeTypeSerialiser(typeof(Message).Name));
         }
 
         [Test]
         public void MappingsCanBeRetreivedStronglyTyped()
         {
-            Assert.NotNull(SystemUnderTest.GetSerialiser(typeof(Message)));
+            Assert.NotNull(SystemUnderTest.GeTypeSerialiser(typeof(Message)));
         }
     }
 }

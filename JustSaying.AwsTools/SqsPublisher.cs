@@ -24,7 +24,6 @@ namespace JustSaying.AwsTools
             _client.SendMessage(new SendMessageRequest
             {
                 MessageBody = GetMessageInContext(message),
-                //MessageBody = _serialisationRegister.GetSerialiser(message.GetType()).Serialise(message),
                 QueueUrl = Url
             });
         }

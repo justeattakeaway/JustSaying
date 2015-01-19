@@ -37,7 +37,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         public void SerialisationIsRegisteredForMessage()
         {
             NotificationStack.SerialisationRegister.Received()
-                .AddSerialiser<Message>(Arg.Any<IMessageSerialiser<Message>>());
+                .AddSerialiser<Message>(Arg.Any<IMessageSerialiser>());
         }
 
         [TearDown]

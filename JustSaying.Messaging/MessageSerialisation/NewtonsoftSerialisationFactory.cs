@@ -4,9 +4,9 @@ namespace JustSaying.Messaging.MessageSerialisation
 {
     public class NewtonsoftSerialisationFactory : IMessageSerialisationFactory
     {
-        public IMessageSerialiser<Message> GetSerialiser<T>() where T : Message
+        public IMessageSerialiser GetSerialiser<T>() where T : Message
         {
-            return new NewtonsoftSerialiser<T>();
+            return new NewtonsoftSerialiser();
         }
     }
 }

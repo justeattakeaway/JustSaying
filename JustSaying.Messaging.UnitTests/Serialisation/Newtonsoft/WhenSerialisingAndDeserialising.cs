@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
 {
-    public class WhenSerialisingAndDeserialising : BehaviourTest<NewtonsoftSerialiser<MessageWithEnum>>
+    public class WhenSerialisingAndDeserialising : BehaviourTest<NewtonsoftSerialiser>
     {
         private MessageWithEnum _messageOut;
         private MessageWithEnum _messageIn;
@@ -18,7 +18,7 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
         protected override void When()
         {
             _jsonMessage = SystemUnderTest.Serialise(_messageOut);
-            _messageIn = SystemUnderTest.Deserialise(_jsonMessage) as MessageWithEnum;
+            _messageIn = SystemUnderTest.Deserialise(_jsonMessage, typeof(MessageWithEnum)) as MessageWithEnum;
         }
 
         [Then]
