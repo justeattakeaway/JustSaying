@@ -43,15 +43,19 @@ namespace JustSaying.AwsTools
         {
             var messageToSend = _serialisationRegister.GeTypeSerialiser(message.GetType()).Serialiser.Serialise(message);
             var messageType = message.GetType().Name;
+            Publish(messageType, messageToSend);
+        }
 
+        private void Publish(string subject, string message)
+        {
             Client.Publish(new PublishRequest
             {
-                Subject = messageType,
-                Message = messageToSend,
+                Subject = subject,
+                Message = message,
                 TopicArn = Arn
             });
 
-            EventLog.Info("Published message: '{0}' with content {1}", messageType, messageToSend);
+            EventLog.Info("Published message: '{0}' with content {1}", subject, message);
         }
 
         public bool Exists()
