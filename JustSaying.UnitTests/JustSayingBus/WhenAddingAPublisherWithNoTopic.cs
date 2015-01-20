@@ -1,4 +1,5 @@
 using JustBehave;
+using JustSaying.AwsTools;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
 using NSubstitute;
@@ -15,7 +16,7 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override void When()
         {
-            SystemUnderTest.AddMessagePublisher<GenericMessage>(Substitute.For<IMessagePublisher>(), string.Empty);
+            SystemUnderTest.AddMessagePublisher<GenericMessage>(Substitute.For<IPublisher>(), string.Empty);
         }
 
         [Then]

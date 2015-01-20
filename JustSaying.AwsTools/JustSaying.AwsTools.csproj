@@ -58,6 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GuaranteedOnceDelivery.cs" />
+    <Compile Include="IPublisher.cs" />
     <Compile Include="QueueCreation\AmazonQueueCreator.cs" />
     <Compile Include="QueueCreation\IVerifyAmazonQueues.cs" />
     <Compile Include="QueueCreation\RedrivePolicy.cs" />
@@ -72,8 +73,7 @@
     <Compile Include="JustSayingConstants.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QueueCreation\SqsWriteConfiguration.cs" />
-    <Compile Include="SnsTopicByName.cs" />
-    <Compile Include="SnsTopicBase.cs" />
+    <Compile Include="SnsPublisher.cs" />
     <Compile Include="SqsNotificationListener.cs" />
     <Compile Include="SqsPublisher.cs" />
     <Compile Include="SqsQueueBase.cs" />

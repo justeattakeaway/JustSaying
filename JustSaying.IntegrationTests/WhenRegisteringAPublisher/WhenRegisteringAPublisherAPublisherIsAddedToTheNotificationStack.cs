@@ -1,5 +1,5 @@
 using JustBehave;
-using JustSaying.Messaging;
+using JustSaying.AwsTools;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Models;
 using NSubstitute;
@@ -30,7 +30,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         [Then]
         public void APublisherIsAddedToTheStack()
         {
-            NotificationStack.Received().AddMessagePublisher<Message>(Arg.Any<IMessagePublisher>(), TestEndpoint.SystemName);
+            NotificationStack.Received().AddMessagePublisher<Message>(Arg.Any<IPublisher>(), TestEndpoint.SystemName);
         }
 
         [Then]

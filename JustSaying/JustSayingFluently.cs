@@ -71,13 +71,11 @@ namespace JustSaying
 
             foreach (var region in Bus.Config.Regions)
             {
-                var eventPublisher = new SnsTopicByName(
+                var eventPublisher = new SnsPublisher(
                     publishEndpointProvider.GetLocationName(),
-                    AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(region)),
-                    Bus.SerialisationRegister);
-
-                if (!eventPublisher.Exists())
-                    eventPublisher.Create();
+                    AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(region)));
+                
+                eventPublisher.Configure();
 
                 Bus.AddMessagePublisher<T>(eventPublisher, region);
             }
@@ -115,8 +113,7 @@ namespace JustSaying
                 var eventPublisher = new SqsPublisher(
                     locationName,
                     AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(region)),
-                    config.RetryCountBeforeSendingToErrorQueue,
-                    Bus.SerialisationRegister);
+                    config.RetryCountBeforeSendingToErrorQueue);
 
                 if (!eventPublisher.Exists())
                     eventPublisher.Create(config);

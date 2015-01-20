@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using JustSaying.AwsTools;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
@@ -16,7 +17,7 @@ namespace JustSaying
         public bool Listening { get; private set; }
 
         private readonly Dictionary<string, IList<INotificationSubscriber>> _subscribersByTopic;
-        private readonly Dictionary<string, Dictionary<string, IMessagePublisher>> _publishersByRegionAndTopic;
+        private readonly Dictionary<string, Dictionary<string, IPublisher>> _publishersByRegionAndTopic;
         public IMessagingConfig Config { get; private set; }
 
         private IMessageMonitor _monitor;
@@ -39,7 +40,7 @@ namespace JustSaying
             Monitor = new NullOpMessageMonitor();
 
             _subscribersByTopic = new Dictionary<string, IList<INotificationSubscriber>>();
-            _publishersByRegionAndTopic = new Dictionary<string, Dictionary<string, IMessagePublisher>>();
+            _publishersByRegionAndTopic = new Dictionary<string, Dictionary<string, IPublisher>>();
             SerialisationRegister = serialisationRegister;
         }
 
@@ -68,12 +69,12 @@ namespace JustSaying
             }
         }
 
-        public void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message
+        public void AddMessagePublisher<T>(IPublisher messagePublisher, string region) where T : Message
         {
-            Dictionary<string, IMessagePublisher> publishersByTopic;
+            Dictionary<string, IPublisher> publishersByTopic;
             if (!_publishersByRegionAndTopic.TryGetValue(region, out publishersByTopic))
             {
-                publishersByTopic = new Dictionary<string, IMessagePublisher>();
+                publishersByTopic = new Dictionary<string, IPublisher>();
                 _publishersByRegionAndTopic.Add(region, publishersByTopic);
             }
 
@@ -124,7 +125,7 @@ namespace JustSaying
             Monitor.PublishMessageTime(watch.ElapsedMilliseconds);
         }
 
-        private IMessagePublisher GetActivePublisherForMessage(Message message)
+        private IPublisher GetActivePublisherForMessage(Message message)
         {
             string activeRegion;
             if (Config.GetActiveRegion == null)
@@ -155,14 +156,16 @@ namespace JustSaying
             return publishersByTopic[topic];
         }
 
-        private void Publish(IMessagePublisher publisher, Message message, int attemptCount = 0)
+        private void Publish(IPublisher publisher, Message message, int attemptCount = 0)
         {
             Action publish = () =>
             {
                 attemptCount++;
                 try
                 {
-                    publisher.Publish(message);
+                    var messageToSend = SerialisationRegister.GeTypeSerialiser(message.GetType()).Serialiser.Serialise(message);
+                    var messageType = message.GetType().Name;
+                    publisher.Publish(messageType, messageToSend);
                 }
                 catch (Exception ex)
                 {

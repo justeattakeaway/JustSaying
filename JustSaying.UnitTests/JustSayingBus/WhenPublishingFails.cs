@@ -1,5 +1,6 @@
 using System;
 using JustBehave;
+using JustSaying.AwsTools;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
 using JustSaying.Models;
@@ -9,7 +10,7 @@ namespace JustSaying.UnitTests.JustSayingBus
 {
     public class WhenPublishingFails : GivenAServiceBus
     {
-        private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
+        private readonly IPublisher _publisher = Substitute.For<IPublisher>();
         private const int PublishAttempts = 2;
 
         protected override void Given()
@@ -18,7 +19,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             Config.PublishFailureReAttempts.Returns(PublishAttempts);
             Config.PublishFailureBackoffMilliseconds.Returns(0);
             RecordAnyExceptionsThrown();
-            _publisher.When(x => x.Publish(Arg.Any<Message>())).Do(x => { throw new Exception(); });
+            _publisher.When(x => x.Publish(Arg.Any<string>(), Arg.Any<string>())).Do(x => { throw new Exception(); });
         }
 
         protected override void When()
@@ -31,7 +32,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Then]
         public void EventPublicationWasAttemptedTheConfiguredNumberOfTimes()
         {
-            Patiently.VerifyExpectation(() => _publisher.Received(PublishAttempts).Publish(Arg.Any<GenericMessage>()));
+            Patiently.VerifyExpectation(() => _publisher.Received(PublishAttempts).Publish(Arg.Any<string>(), Arg.Any<string>()));
         }
     }
 }

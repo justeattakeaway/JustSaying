@@ -1,5 +1,5 @@
 using JustBehave;
-using JustSaying.Messaging;
+using JustSaying.AwsTools;
 using JustSaying.TestingFramework;
 using NSubstitute;
 
@@ -7,7 +7,7 @@ namespace JustSaying.UnitTests.JustSayingBus
 {
     public class WhenPublishingMessages : GivenAServiceBus
     {
-        private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
+        private readonly IPublisher _publisher = Substitute.For<IPublisher>();
         
         protected override void When()
         {
@@ -19,7 +19,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Then]
         public void PublisherIsCalledToPublish()
         {
-            Patiently.VerifyExpectation(() => _publisher.Received().Publish(Arg.Any<GenericMessage>()));
+            Patiently.VerifyExpectation(() => _publisher.Received().Publish(Arg.Any<string>(), Arg.Any<string>()));
         }
 
         [Then]

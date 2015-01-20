@@ -37,18 +37,16 @@ namespace JustSaying.AwsTools.QueueCreation
             return queue;
         }
 
-        private static SnsTopicByName EnsureTopicExists(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
+        private static SnsPublisher EnsureTopicExists(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
         {
             var snsclient = AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(region));
-            var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsclient, serialisationRegister);
-
-            if (!eventTopic.Exists())
-                eventTopic.Create();
+            var eventTopic = new SnsPublisher(queueConfig.PublishEndpoint, snsclient);
+            eventTopic.Configure();
 
             return eventTopic;
         }
 
-        private static void EnsureQueueIsSubscribedToTopic(string region, SnsTopicByName eventTopic, SqsQueueByName queue)
+        private static void EnsureQueueIsSubscribedToTopic(string region, SnsPublisher eventTopic, SqsQueueByName queue)
         {
             var sqsclient = AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(region));
             eventTopic.Subscribe(sqsclient, queue);
