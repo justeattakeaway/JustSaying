@@ -1,38 +1,38 @@
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using JustSaying.Messaging;
-using JustSaying.Messaging.MessageSerialisation;
 using Newtonsoft.Json;
-using Message = JustSaying.Models.Message;
 
 namespace JustSaying.AwsTools
 {
-    public class SqsPublisher : SqsQueueByName, IMessagePublisher
+    public class SqsPublisher : SqsQueueByName, IPublisher
     {
         private readonly IAmazonSQS _client;
-        private readonly IMessageSerialisationRegister _serialisationRegister;
 
-        public SqsPublisher(string queueName, IAmazonSQS client, int retryCountBeforeSendingToErrorQueue, IMessageSerialisationRegister serialisationRegister)
+        public SqsPublisher(string queueName, IAmazonSQS client, int retryCountBeforeSendingToErrorQueue)
             : base(queueName, client, retryCountBeforeSendingToErrorQueue)
         {
             _client = client;
-            _serialisationRegister = serialisationRegister;
         }
 
-        public void Publish(Message message)
+        private static string GetMessageInContext(string subject, string message)
+        {
+            // ToDo: No no mr JsonConvert.
+            var context = new { Subject = subject, Message = message };
+            return JsonConvert.SerializeObject(context);
+        }
+
+        public void Publish(string subject, string message)
         {
             _client.SendMessage(new SendMessageRequest
             {
-                MessageBody = GetMessageInContext(message),
+                MessageBody = GetMessageInContext(subject, message),
                 QueueUrl = Url
             });
         }
 
-        private static string GetMessageInContext(Message message)
+        public void Configure()
         {
-            // ToDo: No no mr JsonConvert.
-            var context = new { Subject = message.GetType().Name, Message = message };
-            return JsonConvert.SerializeObject(context);
+            throw new System.NotImplementedException();
         }
     }
 }

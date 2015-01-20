@@ -8,20 +8,22 @@ using NLog;
 
 namespace JustSaying.AwsTools
 {
-    public class SnsTopicByName : IMessagePublisher
+    public interface IPublisher
     {
+        void Publish(string subject, string message);
+        void Configure();
+    }
 
-        private readonly IMessageSerialisationRegister _serialisationRegister; // ToDo: Grrr...why is this here even. GET OUT!
+    public class SnsTopicByName : IPublisher
+    {
         public string Arn { get; protected set; }
         public IAmazonSimpleNotificationService Client { get; protected set; }
         private static readonly Logger EventLog = LogManager.GetLogger("EventLog");
         public string TopicName { get; private set; }
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
 
-        public SnsTopicByName(string topicName, IAmazonSimpleNotificationService client, IMessageSerialisationRegister serialisationRegister)
+        public SnsTopicByName(string topicName, IAmazonSimpleNotificationService client)
         {
-
-            _serialisationRegister = serialisationRegister;
             TopicName = topicName;
             Client = client;
             Exists();
@@ -39,14 +41,7 @@ namespace JustSaying.AwsTools
             return false;
         }
 
-        public void Publish(Message message)
-        {
-            var messageToSend = _serialisationRegister.GeTypeSerialiser(message.GetType()).Serialiser.Serialise(message);
-            var messageType = message.GetType().Name;
-            Publish(messageType, messageToSend);
-        }
-
-        private void Publish(string subject, string message)
+        public void Publish(string subject, string message)
         {
             Client.Publish(new PublishRequest
             {
@@ -56,6 +51,14 @@ namespace JustSaying.AwsTools
             });
 
             EventLog.Info("Published message: '{0}' with content {1}", subject, message);
+        }
+
+        public void Configure()
+        {
+            if (!Exists())
+            {
+                Create();
+            }
         }
 
         public bool Exists()

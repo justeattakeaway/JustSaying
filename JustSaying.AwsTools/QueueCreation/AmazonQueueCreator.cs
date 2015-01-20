@@ -40,10 +40,8 @@ namespace JustSaying.AwsTools.QueueCreation
         private static SnsTopicByName EnsureTopicExists(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
         {
             var snsclient = AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(region));
-            var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsclient, serialisationRegister);
-
-            if (!eventTopic.Exists())
-                eventTopic.Create();
+            var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsclient);
+            eventTopic.Configure();
 
             return eventTopic;
         }

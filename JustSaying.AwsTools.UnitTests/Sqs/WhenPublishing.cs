@@ -2,15 +2,14 @@ using System.Collections.Generic;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustBehave;
-using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.TestingFramework;
+using Newtonsoft.Json;
 using NSubstitute;
 
 namespace JustSaying.AwsTools.UnitTests.Sqs
 {
     public class WhenPublishing : BehaviourTest<SqsPublisher>
     {
-        private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private const string Url = "https://blablabla/" + QueueName;
         private readonly GenericMessage _message = new GenericMessage {Content = "Hello"};
@@ -18,7 +17,7 @@ namespace JustSaying.AwsTools.UnitTests.Sqs
 
         protected override SqsPublisher CreateSystemUnderTest()
         {
-            return new SqsPublisher(QueueName, _sqs, 0, _serialisationRegister);
+            return new SqsPublisher(QueueName, _sqs, 0);
         }
 
         protected override void Given()
@@ -29,14 +28,19 @@ namespace JustSaying.AwsTools.UnitTests.Sqs
 
         protected override void When()
         {
-            SystemUnderTest.Publish(_message);
+            SystemUnderTest.Publish("GenericMessage", JsonConvert.SerializeObject(_message));
         }
 
         [Then]
-        public void MessageIsPublishedToQueue()
+        public void MessageIsPublishedToQueueWithCorrectContent()
         {
-            // ToDo: Can be better...
-            _sqs.Received().SendMessage(Arg.Is<SendMessageRequest>(x => x.MessageBody.Contains("\"Message\":{\"Content\":\"Hello\",\"Id\":\"" + _message.Id)));
+            _sqs.Received().SendMessage(Arg.Is<SendMessageRequest>(x => x.MessageBody.Contains("Hello")));
+        }
+
+        [Then]
+        public void MessageIsPublishedToQueueWithCorrectId()
+        {
+            _sqs.Received().SendMessage(Arg.Is<SendMessageRequest>(x => x.MessageBody.Contains(_message.Id.ToString())));
         }
 
         [Then]

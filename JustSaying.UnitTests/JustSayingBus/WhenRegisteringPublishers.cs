@@ -1,5 +1,5 @@
 using JustBehave;
-using JustSaying.Messaging;
+using JustSaying.AwsTools;
 using JustSaying.TestingFramework;
 using NSubstitute;
 
@@ -7,12 +7,12 @@ namespace JustSaying.UnitTests.JustSayingBus
 {
     public class WhenRegisteringPublishers : GivenAServiceBus
     {
-        private IMessagePublisher _publisher;
+        private IPublisher _publisher;
 
         protected override void Given()
         {
             base.Given();
-            _publisher = Substitute.For<IMessagePublisher>();
+            _publisher = Substitute.For<IPublisher>();
         }
 
         protected override void When()
@@ -27,13 +27,13 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Then]
         public void AcceptedOrderWasPublishedOnce()
         {
-            Patiently.VerifyExpectation(() => _publisher.Received(1).Publish(Arg.Any<OrderAccepted>()));
+            Patiently.VerifyExpectation(() => _publisher.Received(1).Publish("OrderAccepted", Arg.Any<string>()));
         }
 
         [Then]
         public void RejectedOrderWasPublishedTwice()
         {
-            Patiently.VerifyExpectation(() => _publisher.Received(2).Publish(Arg.Any<OrderRejected>()));
+            Patiently.VerifyExpectation(() => _publisher.Received(2).Publish("OrderRejected", Arg.Any<string>()));
         }
     }
 }
