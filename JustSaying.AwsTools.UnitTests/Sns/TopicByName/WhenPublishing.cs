@@ -9,16 +9,16 @@ using NSubstitute;
 
 namespace AwsTools.UnitTests.Sns.TopicByName
 {
-    public class WhenPublishing : BehaviourTest<SnsTopicByName>
+    public class WhenPublishing : BehaviourTest<SnsPublisher>
     {
         private const string Message = "the_message_in_json";
         private readonly IAmazonSimpleNotificationService _sns = Substitute.For<IAmazonSimpleNotificationService>();
         private const string TopicName = "topicname";
         private const string TopicArn = "topicarn";
 
-        protected override SnsTopicByName CreateSystemUnderTest()
+        protected override SnsPublisher CreateSystemUnderTest()
         {
-            return new SnsTopicByName(TopicName, _sns);
+            return new SnsPublisher(TopicName, _sns);
         }
 
         protected override void Given()

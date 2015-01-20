@@ -71,7 +71,7 @@ namespace JustSaying
 
             foreach (var region in Bus.Config.Regions)
             {
-                var eventPublisher = new SnsTopicByName(
+                var eventPublisher = new SnsPublisher(
                     publishEndpointProvider.GetLocationName(),
                     AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(region)));
                 
