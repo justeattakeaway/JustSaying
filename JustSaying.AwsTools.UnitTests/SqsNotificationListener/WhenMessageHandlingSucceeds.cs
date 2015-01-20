@@ -16,7 +16,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         [Then]
         public void MessagesGetDeserialisedByCorrectHandler()
         {
-            Patiently.VerifyExpectation(() => Serialiser.Received().Deserialise(MessageBody));
+            Patiently.VerifyExpectation(() => Serialiser.Received().Deserialise(MessageBody, typeof(GenericMessage)));
         }
 
         [Then]

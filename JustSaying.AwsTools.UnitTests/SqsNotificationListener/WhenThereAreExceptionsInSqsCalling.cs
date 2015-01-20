@@ -17,15 +17,15 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected override void Given()
         {
             Sqs = Substitute.For<IAmazonSQS>();
-            Serialiser = Substitute.For<IMessageSerialiser<GenericMessage>>();
+            Serialiser = Substitute.For<IMessageSerialiser>();
             SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
             Monitor = Substitute.For<IMessageMonitor>();
             Handler = Substitute.For<IHandler<GenericMessage>>();
             GenerateResponseMessage(_messageTypeString, Guid.NewGuid());
 
-            SerialisationRegister.GetSerialiser(_messageTypeString).Returns(Serialiser);
+            SerialisationRegister.GeTypeSerialiser(_messageTypeString).Returns(new TypeSerialiser(typeof(GenericMessage), Serialiser));
             DeserialisedMessage = new GenericMessage { RaisingComponent = "Component" };
-            Serialiser.Deserialise(Arg.Any<string>()).Returns(x => DeserialisedMessage);
+            Serialiser.Deserialise(Arg.Any<string>(), typeof(GenericMessage)).Returns(x => DeserialisedMessage);
             Sqs.When(x => x.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()))
                 .Do(_ =>
                 {

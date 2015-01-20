@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
 {
-    public class DealingWithPotentiallyMissingConversation : BehaviourTest<NewtonsoftSerialiser<MessageWithEnum>>
+    public class DealingWithPotentiallyMissingConversation : BehaviourTest<NewtonsoftSerialiser>
     {
         private MessageWithEnum _messageOut;
         private MessageWithEnum _messageIn;
@@ -21,7 +21,7 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
 
             //add extra property to see what happens:
             _jsonMessage = _jsonMessage.Replace("{__", "{\"New\":\"Property\",__");
-            _messageIn = SystemUnderTest.Deserialise(_jsonMessage) as MessageWithEnum;
+            _messageIn = SystemUnderTest.Deserialise(_jsonMessage, typeof(MessageWithEnum)) as MessageWithEnum;
         }
 
         [Then]

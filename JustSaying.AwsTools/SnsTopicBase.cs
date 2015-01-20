@@ -45,7 +45,7 @@ namespace JustSaying.AwsTools
 
         public void Publish(Message message)
         {
-            var messageToSend = _serialisationRegister.GetSerialiser(message.GetType()).Serialise(message);
+            var messageToSend = _serialisationRegister.GeTypeSerialiser(message.GetType()).Serialiser.Serialise(message);
             var messageType = message.GetType().Name;
 
             Client.Publish(new PublishRequest

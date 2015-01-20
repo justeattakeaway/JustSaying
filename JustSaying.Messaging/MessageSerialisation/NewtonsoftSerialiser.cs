@@ -1,15 +1,16 @@
+using System;
 using JustSaying.Models;
 using Newtonsoft.Json;
 
 namespace JustSaying.Messaging.MessageSerialisation
 {
-    public class NewtonsoftSerialiser<T> : IMessageSerialiser<Message> where T : Message
+    public class NewtonsoftSerialiser : IMessageSerialiser
     {
         private readonly JsonConverter _enumConverter = new Newtonsoft.Json.Converters.StringEnumConverter();
 
-        public Message Deserialise(string message)
+        public Message Deserialise(string message, Type type)
         {
-            return JsonConvert.DeserializeObject<T>(message, _enumConverter);
+            return (Message)JsonConvert.DeserializeObject(message, type, _enumConverter);
         }
 
         public string Serialise(Message message)

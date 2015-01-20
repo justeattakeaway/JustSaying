@@ -1,10 +1,11 @@
+using System;
 using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialisation
 {
-    public interface IMessageSerialiser<out T> where T : Message
+    public interface IMessageSerialiser
     {
-        T Deserialise(string message);
+        Message Deserialise(string message, Type type);
         string Serialise(Message message);
     }
 }

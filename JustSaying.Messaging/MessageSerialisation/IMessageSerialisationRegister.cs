@@ -5,8 +5,8 @@ namespace JustSaying.Messaging.MessageSerialisation
 {
     public interface IMessageSerialisationRegister
     {
-        IMessageSerialiser<Message> GetSerialiser(string objectType);
-        IMessageSerialiser<Message> GetSerialiser(Type objectType);
-        void AddSerialiser<T>(IMessageSerialiser<Message> serialiser) where T : Message;
+        TypeSerialiser GeTypeSerialiser(string objectType);
+        TypeSerialiser GeTypeSerialiser(Type objectType);
+        void AddSerialiser<T>(IMessageSerialiser serialiser) where T : Message;
     }
 }

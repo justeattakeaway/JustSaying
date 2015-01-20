@@ -7,7 +7,7 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.SerialisationRegister
 {
     public class WhenAddingAGenericSerialiser : BehaviourTest<MessageSerialisationRegister>
     {
-        private readonly NewtonsoftSerialiser<Message> _serialiser = new NewtonsoftSerialiser<Message>();
+        private readonly NewtonsoftSerialiser _serialiser = new NewtonsoftSerialiser();
 
         protected override void Given() { }
 
@@ -19,13 +19,13 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.SerialisationRegister
         [Then]
         public void MappingsCanBeRetreivedByStringType()
         {
-            Assert.NotNull(SystemUnderTest.GetSerialiser(typeof(Message).Name));
+            Assert.NotNull(SystemUnderTest.GeTypeSerialiser(typeof(Message).Name));
         }
 
         [Test]
         public void MappingsCanBeRetreivedStronglyTyped()
         {
-            Assert.NotNull(SystemUnderTest.GetSerialiser(typeof(Message)));
+            Assert.NotNull(SystemUnderTest.GeTypeSerialiser(typeof(Message)));
         }
     }
 }
