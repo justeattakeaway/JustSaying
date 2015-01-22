@@ -129,6 +129,7 @@ namespace JustSaying
             {
                 activeRegion = Config.GetActiveRegion();
             }
+            Log.Info("Active region has been evaluated to {0}", activeRegion);
 
             if (!_publishersByRegionAndTopic.ContainsKey(activeRegion))
             {
@@ -151,38 +152,33 @@ namespace JustSaying
 
         private void Publish(IMessagePublisher publisher, Message message, int attemptCount = 0)
         {
-            Action publish = () =>
+            attemptCount++;
+            try
             {
-                attemptCount++;
-                try
+                var watch = new System.Diagnostics.Stopwatch();
+                watch.Start();
+
+                publisher.Publish(message);
+
+                watch.Stop();
+                Monitor.PublishMessageTime(watch.ElapsedMilliseconds);
+            }
+            catch (Exception ex)
+            {
+                if(Monitor == null)
+                    Log.Error("Publish: Monitor was null - duplicates will occur!");
+
+                if (attemptCount == Config.PublishFailureReAttempts)
                 {
-                    var watch = new System.Diagnostics.Stopwatch();
-                    watch.Start();
+                    Monitor.IssuePublishingMessage();
 
-                    publisher.Publish(message);
-
-                    watch.Stop();
-                    Monitor.PublishMessageTime(watch.ElapsedMilliseconds);
+                    Log.ErrorException(string.Format("Unable to publish message {0}", message.GetType().Name), ex);
+                    throw;
                 }
-                catch (Exception ex)
-                {
-                    if(Monitor == null)
-                        Log.Error("Publish: Monitor was null - duplicates will occur!");
 
-                    if (attemptCount == Config.PublishFailureReAttempts)
-                    {
-                        Monitor.IssuePublishingMessage();
-
-                        Log.ErrorException(string.Format("Unable to publish message {0}", message.GetType().Name), ex);
-                        throw;
-                    }
-
-                    Thread.Sleep(Config.PublishFailureBackoffMilliseconds * attemptCount); // ToDo: Increase back off each time (exponential)
-                    Publish(publisher, message, attemptCount);
-                }
-            };
-
-            publish.BeginInvoke(null, null);
+                Thread.Sleep(Config.PublishFailureBackoffMilliseconds * attemptCount); // ToDo: Increase back off each time (exponential)
+                Publish(publisher, message, attemptCount);
+            }
         }
     }
 }
