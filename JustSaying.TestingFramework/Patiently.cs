@@ -32,7 +32,7 @@ namespace JustSaying.TestingFramework
 
         public static void AssertThat(Func<bool> func)
         {
-            AssertThat(func, 5.Seconds());
+            AssertThat(func, 10.Seconds());
         }
 
         public static void AssertThat(Func<bool> func, TimeSpan timeout)
