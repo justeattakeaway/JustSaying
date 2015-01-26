@@ -23,13 +23,11 @@ namespace JustSaying.IntegrationTests
         protected override void Given()
         {
             TestEndpoint = DefaultEndpoint;
-            throw new NotImplementedException();
         }
 
         protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
             var fns = CreateMeABus.InRegion(TestEndpoint.SystemName)
-                .WithMonitoring(null)
                 .ConfigurePublisherWith(x =>
                 {
                     x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;

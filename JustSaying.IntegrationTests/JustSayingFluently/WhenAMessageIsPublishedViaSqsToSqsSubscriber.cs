@@ -23,7 +23,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         [Test]
         public void ThenItGetsHandled()
         {
-            _handler.WaitUntilCompletion(10.Seconds()).ShouldBe(true);
+            _handler.WaitUntilCompletion(15.Seconds()).ShouldBe(true);
         }
     }
 }

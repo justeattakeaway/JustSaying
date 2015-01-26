@@ -19,6 +19,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
         protected override void Given()
         {
+            base.Given();
+
             TopicName = "CustomerCommunication";
             QueueName = "queuename-" + DateTime.Now.Ticks;
 
