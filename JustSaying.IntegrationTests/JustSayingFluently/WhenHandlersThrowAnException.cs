@@ -27,7 +27,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         [Test]
         public void ThenExceptionIsRecordedInMonitoring()
         {
-            _handler.WaitUntilCompletion(10.Seconds()).ShouldBe(true);
+            _handler.WaitUntilCompletion(15.Seconds()).ShouldBe(true);
 
             Patiently.VerifyExpectation(() => Monitoring.Received().HandleException(Arg.Any<string>()));
         }

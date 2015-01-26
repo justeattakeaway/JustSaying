@@ -13,6 +13,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 
         protected override void Given()
         {
+            base.Given();
+
             _topicName = "CustomerCommunication";
 
             EnableMockedBus();
