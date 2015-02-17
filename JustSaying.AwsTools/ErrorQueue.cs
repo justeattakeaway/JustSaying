@@ -1,9 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Net;
+using System.Threading;
 using Amazon.SQS;
+using Amazon.SQS.Model;
 using Amazon.SQS.Util;
 using JustSaying.AwsTools.QueueCreation;
+using NLog;
 
 namespace JustSaying.AwsTools
 {
@@ -15,21 +19,38 @@ namespace JustSaying.AwsTools
             ErrorQueue = null;
         }
 
-        protected override Dictionary<string, string> GetCreateQueueAttributes(int retentionPeriodSeconds, int visibilityTimeoutSeconds)
+        protected override Dictionary<string, string> GetCreateQueueAttributes(SqsBasicConfiguration queueConfig)
         {
             return new Dictionary<string, string>
             {
-                {SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD, retentionPeriodSeconds.ToString(CultureInfo.InvariantCulture)},
-                {SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT, visibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture)}
+                { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD , queueConfig.ErrorQueueRetentionPeriodSeconds.ToString(CultureInfo.InvariantCulture)},
+                { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT.ToString(CultureInfo.InvariantCulture)},
             };
         }
 
-        public override bool Create(SqsBasicConfiguration queueConfig, int attempt = 0)
+        protected internal override void UpdateQueueAttribute(SqsBasicConfiguration queueConfig)
         {
-            if (!queueConfig.ErrorQueueOptOut)
-                throw new InvalidOperationException("Cannot create a dead letter queue for a dead letter queue.");
+            if (QueueNeedsUpdating(queueConfig))
+            {
+                var response = Client.SetQueueAttributes(
+                    new SetQueueAttributesRequest
+                    {
+                        QueueUrl = Url,
+                        Attributes = new Dictionary<string, string>
+                        {
+                            {JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD, queueConfig.ErrorQueueRetentionPeriodSeconds.ToString()},
+                        }
+                    });
+                if (response.HttpStatusCode == HttpStatusCode.OK)
+                {
+                    MessageRetentionPeriod = queueConfig.ErrorQueueRetentionPeriodSeconds;
+                }
+            }
+        }
 
-            return base.Create(queueConfig, attempt: attempt);
+        protected override bool QueueNeedsUpdating(SqsBasicConfiguration queueConfig)
+        {
+            return MessageRetentionPeriod != queueConfig.ErrorQueueRetentionPeriodSeconds;
         }
     }
 }

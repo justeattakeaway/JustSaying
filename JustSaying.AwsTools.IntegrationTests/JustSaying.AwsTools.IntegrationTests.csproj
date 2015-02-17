@@ -75,6 +75,7 @@
     <Compile Include="DynamoTableTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SqsQueueIntegrationTests.cs" />
+    <Compile Include="WhenCreatingErrorQueue.cs" />
     <Compile Include="WhenIAccessAnExistingQueueWithoutAnErrorQueue.cs" />
     <Compile Include="WhenICreateAQueueByName.cs" />
     <Compile Include="WhenQueueIsDeleted.cs" />
