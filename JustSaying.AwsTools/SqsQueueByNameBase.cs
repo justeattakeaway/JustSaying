@@ -46,7 +46,7 @@ namespace JustSaying.AwsTools
             {
                 var result = Client.CreateQueue(new CreateQueueRequest{
                     QueueName = QueueName,
-                    Attributes = GetCreateQueueAttributes(queueConfig.MessageRetentionSeconds, queueConfig.VisibilityTimeoutSeconds)});
+                    Attributes = GetCreateQueueAttributes(queueConfig)});
 
                 if (!string.IsNullOrWhiteSpace(result.QueueUrl))
                 {
@@ -85,6 +85,6 @@ namespace JustSaying.AwsTools
             return false;
         }
 
-        protected abstract Dictionary<string, string> GetCreateQueueAttributes(int retentionPeriodSeconds, int visibilityTimeoutSeconds);
+        protected abstract Dictionary<string, string> GetCreateQueueAttributes(SqsBasicConfiguration queueConfig);
     }
 }
