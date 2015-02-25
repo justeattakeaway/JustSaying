@@ -16,6 +16,7 @@ namespace JustSaying.AwsTools
         public ErrorQueue ErrorQueue { get; protected set; }
         internal int MessageRetentionPeriod { get; set; }
         internal int VisibilityTimeout { get; set; }
+        internal int DeliveryDelay { get; set; }
         internal RedrivePolicy RedrivePolicy { get; set; }
         
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
@@ -49,11 +50,13 @@ namespace JustSaying.AwsTools
                 JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY,
                 JustSayingConstants.ATTRIBUTE_POLICY,
                 JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD,
-                JustSayingConstants.ATTRIBUTE_VISIBILITY_TIMEOUT
+                JustSayingConstants.ATTRIBUTE_VISIBILITY_TIMEOUT,
+                JustSayingConstants.ATTRIBUTE_DELIVERY_DELAY
             });
             Arn = attributes.QueueARN;
             MessageRetentionPeriod = attributes.MessageRetentionPeriod;
             VisibilityTimeout = attributes.VisibilityTimeout;
+            DeliveryDelay = attributes.DelaySeconds;
             RedrivePolicy = ExtractRedrivePolicyFromQueueAttributes(attributes.Attributes);
         }
 
@@ -81,12 +84,14 @@ namespace JustSaying.AwsTools
                         {
                             {JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD, queueConfig.MessageRetentionSeconds.ToString()},
                             {JustSayingConstants.ATTRIBUTE_VISIBILITY_TIMEOUT, queueConfig.VisibilityTimeoutSeconds.ToString()},
+                            {JustSayingConstants.ATTRIBUTE_DELIVERY_DELAY, queueConfig.DeliveryDelaySeconds.ToString()}
                         }
                     });
                 if (response.HttpStatusCode == HttpStatusCode.OK)
                 {
                     MessageRetentionPeriod = queueConfig.MessageRetentionSeconds;
                     VisibilityTimeout = queueConfig.VisibilityTimeoutSeconds;
+                    DeliveryDelay = queueConfig.DeliveryDelaySeconds;
                 }
             }
         }
@@ -94,7 +99,8 @@ namespace JustSaying.AwsTools
         protected virtual bool QueueNeedsUpdating(SqsBasicConfiguration queueConfig)
         {
             return MessageRetentionPeriod != queueConfig.MessageRetentionSeconds
-                   || VisibilityTimeout != queueConfig.VisibilityTimeoutSeconds;
+                   || VisibilityTimeout != queueConfig.VisibilityTimeoutSeconds
+                   || DeliveryDelay != queueConfig.DeliveryDelaySeconds;
         }
 
         private RedrivePolicy ExtractRedrivePolicyFromQueueAttributes(Dictionary<string, string> queueAttributes)
