@@ -11,10 +11,11 @@
         <copyright>Copyright 2014, by Just-Eat Holding Ltd</copyright>
         <tags>event eventbus event-driven aws aws-sns aws-sqs messaging message-registry messaging-transport wrapper</tags>
         <dependencies>
-            <dependency id="AWSSDK" version="[2.0.3.1]" />
-            <dependency id="Magnum" version="2.1.2" />
+            <dependency id="AWSSDK" version="2.3.23.0" />
+            <dependency id="Magnum" version="2.1.3" />
             <dependency id="NLog" version="2.1.0" />
-            <dependency id="ServiceStack.Text" version="3.9.56" />
+			<dependency id="Newtonsoft.Json" version="6.0.8" />
+			<dependency id="JustSaying.Models" version="2.0.0.43" />
         </dependencies>
     </metadata>
 </package>
