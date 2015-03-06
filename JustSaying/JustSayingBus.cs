@@ -20,13 +20,15 @@ namespace JustSaying
         public IMessagingConfig Config { get; private set; }
 
         private IMessageMonitor _monitor;
-        public IMessageMonitor Monitor { 
-            get { return _monitor;  }
+        public IMessageMonitor Monitor
+        {
+            get { return _monitor; }
             set { _monitor = value ?? new NullOpMessageMonitor(); }
         }
         public IMessageSerialisationRegister SerialisationRegister { get; private set; }
         public IMessageLock MessageLock { get; set; }
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); //ToDo: danger!
+        private readonly object _syncRoot = new object();
 
         public JustSayingBus(IMessagingConfig config, IMessageSerialisationRegister serialisationRegister)
         {
@@ -64,7 +66,7 @@ namespace JustSaying
 
             foreach (var subscriber in _subscribersByTopic[topic])
             {
-                subscriber.AddMessageHandler(handler);                
+                subscriber.AddMessageHandler(handler);
             }
         }
 
@@ -83,33 +85,39 @@ namespace JustSaying
 
         public void Start()
         {
-            if (Listening)
-                return;
-            
-            foreach (var subscriptions in _subscribersByTopic)
+            lock (_syncRoot)
             {
-                foreach (var subscriber in subscriptions.Value)
+                if (!Listening)
                 {
-                    subscriber.Listen();
+                    foreach (var subscriptions in _subscribersByTopic)
+                    {
+                        foreach (var subscriber in subscriptions.Value)
+                        {
+                            subscriber.Listen();
+                        }
+                    }
+
+                    Listening = true;
                 }
             }
-
-            Listening = true;
         }
 
         public void Stop()
         {
-            if (!Listening)
-                return;
-
-            foreach (var subscribers in _subscribersByTopic)
+            lock (_syncRoot)
             {
-                foreach (var subscriber in subscribers.Value)
+                if (Listening)
                 {
-                    subscriber.StopListening();
+                    foreach (var subscribers in _subscribersByTopic)
+                    {
+                        foreach (var subscriber in subscribers.Value)
+                        {
+                            subscriber.StopListening();
+                        }
+                    }
+                    Listening = false;
                 }
             }
-            Listening = false;
         }
 
         public void Publish(Message message)
@@ -165,7 +173,7 @@ namespace JustSaying
             }
             catch (Exception ex)
             {
-                if(Monitor == null)
+                if (Monitor == null)
                     Log.Error("Publish: Monitor was null - duplicates will occur!");
 
                 if (attemptCount == Config.PublishFailureReAttempts)
