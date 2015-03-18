@@ -104,7 +104,7 @@ namespace JustSaying.AwsTools
                 var sqsMessageResponse = _queue.Client.ReceiveMessage(new ReceiveMessageRequest
                 {
                     QueueUrl = _queue.Url,
-                    MaxNumberOfMessages = MaxAmazonMessageCap,
+                    MaxNumberOfMessages = GetMaxBatchSize(),
                     WaitTimeSeconds = 20
                 });
 
@@ -129,6 +129,17 @@ namespace JustSaying.AwsTools
             {
                 Log.ErrorException(string.Format("Issue in message handling loop for queue {0}", _queue.QueueName), ex);
             }
+        }
+
+        private int GetMaxBatchSize()
+        {
+            var maxMessageBatchSize = _messageProcessingStrategy as IMessageMaxBatchSizeProcessingStrategy;
+
+            if (maxMessageBatchSize == null || (maxMessageBatchSize.MaxBatchSize <= 0 || maxMessageBatchSize.MaxBatchSize > MaxAmazonMessageCap))
+            {
+                return MaxAmazonMessageCap;
+            }
+            return maxMessageBatchSize.MaxBatchSize;
         }
 
         public void HandleMessage(Amazon.SQS.Model.Message message)
