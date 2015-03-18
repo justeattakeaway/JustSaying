@@ -138,7 +138,6 @@ namespace JustSaying.AwsTools
             if (maxMessageBatchSize == null || (maxMessageBatchSize.MaxBatchSize <= 0 || maxMessageBatchSize.MaxBatchSize > MaxAmazonMessageCap))
             {
                 return MaxAmazonMessageCap;
-     
             }
             return maxMessageBatchSize.MaxBatchSize;
         }
