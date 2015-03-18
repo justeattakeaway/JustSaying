@@ -7,7 +7,7 @@ using JustSaying.Messaging.Monitoring;
 
 namespace JustSaying.Messaging.MessageProcessingStrategies
 {
-    public class Throttled : IMessageProcessingStrategy
+    public class Throttled : IMessageProcessingStrategy, IMessageMaxBatchSizeProcessingStrategy
     {
         private readonly Func<int> _maximumAllowedMesagesInFlightProducer;
         private const int MinimumThreshold = 1;
@@ -89,6 +89,10 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             }
 
             Interlocked.Decrement(ref _activeTaskCount);
+        }
+
+        public int MaxBatchSize {
+            get { return _maximumBatchSize; }
         }
     }
 }
