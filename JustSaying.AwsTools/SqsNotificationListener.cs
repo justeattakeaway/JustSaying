@@ -123,11 +123,11 @@ namespace JustSaying.AwsTools
             }
             catch (InvalidOperationException ex)
             {
-                Log.Trace("Suspected no messaged in queue. Ex: {0}", ex);
+                Log.Trace("Suspected no message in queue {0}. Ex: {1}", _queue.QueueName, ex);
             }
             catch (Exception ex)
             {
-                Log.ErrorException("Issue in message handling loop", ex);
+                Log.ErrorException(string.Format("Issue in message handling loop for queue {0}", _queue.QueueName), ex);
             }
         }
 
