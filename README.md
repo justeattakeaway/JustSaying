@@ -55,7 +55,7 @@ Here's how to get up & running with simple message publishing.
 BOOM! You're done publishing!
 
 ## Consuming messages
-Here's how to get up & running with message comsumption.
+Here's how to get up & running with message consumption.
 We currently support SQS subscriptions only, but keep checking back for other methods too (http, Kinesis)
 (although we are kinda at the mercy of AWS here for internal HTTP delivery...)
 
