@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
@@ -215,6 +216,29 @@ namespace JustSaying
                 : TopicHandler(handler);
         }
 
+        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message
+        {
+            var messageTypeName = typeof(T).Name.ToLower();
+            ConfigureSqsSubscriptionViaTopic(messageTypeName);
+
+            foreach (var region in Bus.Config.Regions)
+            {
+                var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribed(region, Bus.SerialisationRegister, _subscriptionConfig);
+                CreateSubscriptionListener(queue, _subscriptionConfig.Topic);
+                Log.Info(string.Format("Created SQS topic subscription - Topic: {0}, QueueName: {1}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName));
+            }
+
+            Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
+            var handlers = handlerResolver.ResolveHandlers<T>();
+            foreach (var handler in handlers)
+            {
+                Bus.AddMessageHandler(handler);
+                Log.Info(string.Format("Added a message handler - Topic: {0}, QueueName: {1}, HandlerName: {2}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName, handler.GetType().Name));
+            }
+
+            return this;
+        }
+
         private IHaveFulfilledSubscriptionRequirements TopicHandler<T>(IHandler<T> handler) where T : Message
         {
             var messageTypeName = typeof(T).Name.ToLower();
@@ -359,6 +383,11 @@ namespace JustSaying
         IMayWantOptionalSettings WithSerialisationFactory(IMessageSerialisationFactory factory);
     }
 
+    public interface IHandlerResolver
+    {
+        IEnumerable<IHandler<T>> ResolveHandlers<T>();
+    }
+
     public interface IAmJustSayingFluently : IMessagePublisher
     {
         IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder);
@@ -374,6 +403,7 @@ namespace JustSaying
     public interface IFluentSubscription
     {
         IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message;
+        IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message;
         IFluentSubscription ConfigureSubscriptionWith(Action<SqsReadConfiguration> config);
     }
 
