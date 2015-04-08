@@ -63,7 +63,6 @@
     <Compile Include="Monitoring\IMessageMonitor.cs" />
     <Compile Include="IMessagePublisher.cs" />
     <Compile Include="INotificationSubscriber.cs" />
-    <Compile Include="MessageHandling\DelegateAdjuster.cs" />
     <Compile Include="MessageHandling\IHandler.cs" />
     <Compile Include="MessageSerialisation\IMessageSerialisationRegister.cs" />
     <Compile Include="MessageSerialisation\IMessageSerialiser.cs" />
