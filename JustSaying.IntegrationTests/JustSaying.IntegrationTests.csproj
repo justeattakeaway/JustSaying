@@ -100,6 +100,7 @@
     <Compile Include="WhenRegisteringHandlersViaResolver\MultipleHandlerRegistry.cs" />
     <Compile Include="WhenRegisteringHandlersViaResolver\SingleHandlerRegistry.cs" />
     <Compile Include="WhenRegisteringHandlersViaResolver\StructureMapHandlerResolver.cs" />
+    <Compile Include="WhenRegisteringHandlersViaResolver\WhenRegisteringAHandlerViaContainerWithMissingRegistration.cs" />
     <Compile Include="WhenRegisteringHandlersViaResolver\WhenRegisteringASingleHandlerViaContainer.cs" />
     <Compile Include="WhenRegisteringHandlersViaResolver\MessageHandlers.cs" />
     <Compile Include="WhenRegisteringHandlersViaResolver\WhenRegisteringMultipleHandlersViaContainer.cs" />

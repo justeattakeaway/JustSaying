@@ -41,7 +41,6 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         public void SecondHandlerWillReceiveTheMessage()
         {
             Assert.IsTrue(_handler2Future.WaitUntilCompletion(TimeSpan.FromSeconds(20)));
-
         }
     }
 }

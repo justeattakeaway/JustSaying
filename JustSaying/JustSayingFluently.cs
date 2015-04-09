@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
@@ -230,7 +231,11 @@ namespace JustSaying
                 : TopicHandler<T>();
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
-            var handlers = handlerResolver.ResolveHandlers<T>();
+            var handlers = handlerResolver.ResolveHandlers<T>().ToList();
+            if (!handlers.Any())
+            {
+                throw new HandlerNotRegisteredWithContainerException(string.Format("IHandler<{0}> is not regsistered in the container.", typeof(T).Name));
+            }
             foreach (var handler in handlers)
             {
                 Bus.AddMessageHandler(handler);
