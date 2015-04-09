@@ -60,6 +60,12 @@
     <Reference Include="Shouldly">
       <HintPath>..\packages\Shouldly.1.1.1.1\lib\35\Shouldly.dll</HintPath>
     </Reference>
+    <Reference Include="StructureMap">
+      <HintPath>..\packages\structuremap.3.1.4.143\lib\net40\StructureMap.dll</HintPath>
+    </Reference>
+    <Reference Include="StructureMap.Net4">
+      <HintPath>..\packages\structuremap.3.1.4.143\lib\net40\StructureMap.Net4.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -90,6 +96,14 @@
     <Compile Include="WhenRegisteringAPublisher\WhenRegisteringAPublisherAPublisherIsAddedToTheNotificationStack.cs" />
     <Compile Include="WhenRegisteringAPublisher\WhenRegisteringAPublisherInANonDefaultRegion.cs" />
     <Compile Include="WhenRegisteringASqsSubscriber\WhenRegisteringASqsTopicSubscriberInANonDefaultRegion.cs" />
+    <Compile Include="WhenRegisteringHandlersViaResolver\GivenAPublisher.cs" />
+    <Compile Include="WhenRegisteringHandlersViaResolver\MultipleHandlerRegistry.cs" />
+    <Compile Include="WhenRegisteringHandlersViaResolver\SingleHandlerRegistry.cs" />
+    <Compile Include="WhenRegisteringHandlersViaResolver\StructureMapHandlerResolver.cs" />
+    <Compile Include="WhenRegisteringHandlersViaResolver\WhenRegisteringAHandlerViaContainerWithMissingRegistration.cs" />
+    <Compile Include="WhenRegisteringHandlersViaResolver\WhenRegisteringASingleHandlerViaContainer.cs" />
+    <Compile Include="WhenRegisteringHandlersViaResolver\MessageHandlers.cs" />
+    <Compile Include="WhenRegisteringHandlersViaResolver\WhenRegisteringMultipleHandlersViaContainer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

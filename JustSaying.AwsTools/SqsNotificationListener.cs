@@ -74,7 +74,7 @@ namespace JustSaying.AwsTools
                 handler = new StopwatchHandler<T>(handler, executionTimeMonitoring);
             }
             
-            handlers.Add(DelegateAdjuster.CastArgument<Message, T>(x => handler.Handle(x)));
+            handlers.Add(message => handler.Handle((T)message));
         }
 
         public void Listen()
