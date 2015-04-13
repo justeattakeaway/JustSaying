@@ -124,6 +124,15 @@ To enable throttling you need to specify optional parameter when setting SqsTopi
 
 ````
 
+###2.(c) Control Handlers' life cycle
+You can tell JustSaying to delegate the creation of your handlers to an IoC container. All you need to do is to implement IHandlerResolver interface and pass it along when registering your handlers.
+````c#
+CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+                .WithSqsTopicSubscriber()
+                .IntoQueue("CustomerOrders")
+		.WithMessageHandler<OrderAccepted>(new HandlerResolver())
+````
+
 ## Logging
 
 JustSaying stack will throw out the following named logs from NLog:
