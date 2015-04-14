@@ -21,7 +21,7 @@ namespace JustSaying.Messaging.MessageHandling
             var lockKey = string.Format("{0}-{1}-{2}", _inner.GetType().FullName.ToLower(), typeof(T).Name.ToLower(), message.UniqueKey());
             bool canLock = _messageLock.TryAquire(lockKey, TimeSpan.FromSeconds(_timeOut));
             if (!canLock)
-                return true;
+                return false;
 
             try
             {
