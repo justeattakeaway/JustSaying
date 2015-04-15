@@ -1,3 +1,4 @@
+using System;
 using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
@@ -14,6 +15,14 @@ namespace JustSaying.UnitTests.JustSayingBus
         private IHandler<Message2> _handler2;
         private string _topic;
         private string _topic2;
+        private Func<IHandler<Message>> _futureHandler1;
+        private Func<IHandler<Message2>> _futureHandler2;
+
+        public WhenRegisteringMessageHandlers()
+        {
+            _futureHandler1 = () => _handler1;
+            _futureHandler2 = () => _handler2;
+        }
 
         protected override void Given()
         {
@@ -29,16 +38,16 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             SystemUnderTest.AddNotificationTopicSubscriber(_topic, _subscriber);
             SystemUnderTest.AddNotificationTopicSubscriber(_topic2, _subscriber);
-            SystemUnderTest.AddMessageHandler(_handler1);
-            SystemUnderTest.AddMessageHandler(_handler2);
+            SystemUnderTest.AddMessageHandler(_futureHandler1);
+            SystemUnderTest.AddMessageHandler(_futureHandler2);
             SystemUnderTest.Start();
         }
 
         [Then]
         public void HandlersAreAdded()
         {
-            _subscriber.Received().AddMessageHandler(_handler1);
-            _subscriber.Received().AddMessageHandler(_handler2);
+            _subscriber.Received().AddMessageHandler(_futureHandler1);
+            _subscriber.Received().AddMessageHandler(_futureHandler2);
         }
 
         [Then]
@@ -46,8 +55,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             Received.InOrder(() =>
                                  {
-                                     _subscriber.AddMessageHandler(Arg.Any<IHandler<Message>>());
-                                     _subscriber.AddMessageHandler(Arg.Any<IHandler<Message2>>());
+                                     _subscriber.AddMessageHandler(Arg.Any<Func<IHandler<Message>>>());
+                                     _subscriber.AddMessageHandler(Arg.Any<Func<IHandler<Message2>>>());
                                      _subscriber.Listen();
                                      _subscriber.Listen();
                                  });

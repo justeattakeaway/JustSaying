@@ -68,7 +68,7 @@ namespace JustSaying.AwsTools.IntegrationTests
             serialisations.GeTypeSerialiser(string.Empty).ReturnsForAnyArgs(new TypeSerialiser(typeof(GenericMessage), serialiser));
             var listener = new SqsNotificationListener(q, serialisations, monitor);
 
-            listener.AddMessageHandler(handler);
+            listener.AddMessageHandler(() => handler);
 
             listener.Listen();
 

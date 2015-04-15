@@ -48,7 +48,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
         protected override void When()
         {
-            SystemUnderTest.AddMessageHandler(Handler);
+            SystemUnderTest.AddMessageHandler(() => Handler);
             SystemUnderTest.Listen();
         }
 

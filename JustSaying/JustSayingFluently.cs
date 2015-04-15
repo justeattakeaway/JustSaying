@@ -217,7 +217,7 @@ namespace JustSaying
                 : TopicHandler<T>();
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
-            Bus.AddMessageHandler(handler);
+            Bus.AddMessageHandler(() => handler);
             var messageTypeName = typeof(T).Name.ToLower();
             Log.Info(string.Format("Added a message handler - MessageName: {0}, QueueName: {1}, HandlerName: {2}", messageTypeName, _subscriptionConfig.QueueName, handler.GetType().Name));
 
@@ -231,16 +231,18 @@ namespace JustSaying
                 : TopicHandler<T>();
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
-            var handlers = handlerResolver.ResolveHandlers<T>().ToList();
-            if (!handlers.Any())
+            if(!handlerResolver.ResolveHandlers<T>().Any())
             {
                 throw new HandlerNotRegisteredWithContainerException(string.Format("IHandler<{0}> is not regsistered in the container.", typeof(T).Name));
             }
-            foreach (var handler in handlers)
+            if (handlerResolver.ResolveHandlers<T>().Count() > 1)
             {
-                Bus.AddMessageHandler(handler);
-                Log.Info(string.Format("Added a message handler - Topic: {0}, QueueName: {1}, HandlerName: {2}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName, handler.GetType().Name));
+                throw new NotSupportedException(string.Format("There are more than one registration for IHandler<{0}>. JustSaying currently does not support multiple registration for IHandler<T>.", typeof(T).Name));
             }
+            
+            Bus.AddMessageHandler(() => handlerResolver.ResolveHandlers<T>().Single());
+
+            Log.Info(string.Format("Added a message handler - Topic: {0}, QueueName: {1}, HandlerName: IHandler<{2}>", _subscriptionConfig.Topic, _subscriptionConfig.QueueName, typeof(T)));
 
             return thing;
         }

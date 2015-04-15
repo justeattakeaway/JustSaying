@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using JustSaying.IntegrationTests.JustSayingFluently;
 using NUnit.Framework;
 using StructureMap;
@@ -15,7 +16,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
             var handlerResolver = new StructureMapHandlerResolver();
 
-            _handlerFuture = ((OrderProcessor)handlerResolver.ResolveHandlers<OrderPlaced>()).Future;
+            _handlerFuture = ((OrderProcessor)handlerResolver.ResolveHandlers<OrderPlaced>().Single()).Future;
 
             var subscriber = JustSaying.CreateMeABus.InRegion("eu-west-1")
                 .WithSqsTopicSubscriber()
