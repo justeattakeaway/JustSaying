@@ -60,13 +60,13 @@ namespace JustSaying
             subscribersForTopic.Add(subscriber);
         }
 
-        public void AddMessageHandler<T>(IHandler<T> handler) where T : Message
+        public void AddMessageHandler<T>(Func<IHandler<T>> futureHandler) where T : Message
         {
             var topic = typeof(T).Name.ToLower();
 
             foreach (var subscriber in _subscribersByTopic[topic])
             {
-                subscriber.AddMessageHandler(handler);
+                subscriber.AddMessageHandler(futureHandler);
             }
         }
 

@@ -10,6 +10,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         {
             For<IHandler<OrderPlaced>>().Transient().Use<OrderProcessor>()
                 .Ctor<Future<OrderPlaced>>().Is(new Future<OrderPlaced>());
+            
             For<IHandler<OrderPlaced>>().Transient().Use<OrderDispatcher>()
                 .Ctor<Future<OrderPlaced>>().Is(new Future<OrderPlaced>());
         }

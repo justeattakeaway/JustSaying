@@ -9,6 +9,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
     {
         protected override void Given()
         {
+            base.Given();
+
             Configuration = new MessagingConfig();
 
             RecordAnyExceptionsThrown();
