@@ -15,26 +15,38 @@ namespace JustSaying.Messaging.MessageHandling
             _messageLock = messageLock;
             _timeOut = timeOut;
         }
+
+        private const bool RemoveTheMessageFromTheQueue = true;
+        private const bool LeaveItInTheQueue = false;
         
         public bool Handle(T message)
         {
             var lockKey = string.Format("{0}-{1}-{2}", _inner.GetType().FullName.ToLower(), typeof(T).Name.ToLower(), message.UniqueKey());
-            bool canLock = _messageLock.TryAquire(lockKey, TimeSpan.FromSeconds(_timeOut));
-            if (!canLock)
-                return false;
+            var lockResponse = _messageLock.TryAquireLock(lockKey, TimeSpan.FromSeconds(_timeOut));
+            if (!lockResponse.DoIHaveExclusiveLock)
+            {
+                if (lockResponse.IsMessagePermanentlyLocked)
+                {
+                    return RemoveTheMessageFromTheQueue;
+                }
+                else
+                {
+                    return LeaveItInTheQueue;
+                }
+            }
 
             try
             {
                 var successfullyHandled = _inner.Handle(message);
                 if (successfullyHandled)
                 {
-                    _messageLock.TryAquire(lockKey);
+                    _messageLock.TryAquireLockPermanently(lockKey);
                 }
                 return successfullyHandled;
             }
             catch
             {
-                _messageLock.Release(lockKey);
+                _messageLock.ReleaseLock(lockKey);
                 throw;
             }
         }
