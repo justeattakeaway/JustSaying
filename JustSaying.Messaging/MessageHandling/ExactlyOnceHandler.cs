@@ -19,22 +19,24 @@ namespace JustSaying.Messaging.MessageHandling
         public bool Handle(T message)
         {
             var lockKey = string.Format("{0}-{1}-{2}", _inner.GetType().FullName.ToLower(), typeof(T).Name.ToLower(), message.UniqueKey());
-            bool canLock = _messageLock.TryAquire(lockKey, TimeSpan.FromSeconds(_timeOut));
-            if (!canLock)
-                return false;
+            var lockResponse = _messageLock.TryAquireLock(lockKey, TimeSpan.FromSeconds(_timeOut));
+            if (!lockResponse.DoIHaveExclusiveLock)
+            {
+                return lockResponse.IsMessagePermanentlyLocked;
+            }
 
             try
             {
                 var successfullyHandled = _inner.Handle(message);
                 if (successfullyHandled)
                 {
-                    _messageLock.TryAquire(lockKey);
+                    _messageLock.TryAquireLockPermanently(lockKey);
                 }
                 return successfullyHandled;
             }
             catch
             {
-                _messageLock.Release(lockKey);
+                _messageLock.ReleaseLock(lockKey);
                 throw;
             }
         }

@@ -124,21 +124,21 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
     internal class MessageLockStore : IMessageLock
         {
             private readonly Dictionary<string, int> _store = new Dictionary<string, int>();
-            public bool TryAquire(string key)
+            public MessageLockResponse TryAquireLockPermanently(string key)
             {
                 int value;
                 bool canAquire = !_store.TryGetValue(key, out value);
                 if (canAquire)
                     _store.Add(key, 1);
-                return canAquire;
+                return new MessageLockResponse(){DoIHaveExclusiveLock = canAquire};
             }
 
-            public bool TryAquire(string key, TimeSpan howLong)
+            public MessageLockResponse TryAquireLock(string key, TimeSpan howLong)
             {
-                return TryAquire(key);
+                return TryAquireLockPermanently(key);
             }
 
-            public void Release(string key)
+            public void ReleaseLock(string key)
             {
                 _store.Remove(key);
             }
