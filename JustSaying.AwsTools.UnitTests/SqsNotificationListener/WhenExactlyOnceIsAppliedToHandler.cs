@@ -37,7 +37,7 @@ namespace JustSaying.AwsTools.UnitTests.SqsNotificationListener
         public void MessageIsLockedWithCorrectTimeout()
         {
             Patiently.VerifyExpectation(() =>
-                MessageLock.Received().TryAquireLock(Arg.Any<string>(), TimeSpan.FromSeconds(5)));
+                MessageLock.Received().TryAquireLock(Arg.Any<string>(), TimeSpan.FromSeconds(_expectedtimeout)));
         }
     }
 
