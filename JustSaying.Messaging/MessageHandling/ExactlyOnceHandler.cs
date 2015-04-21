@@ -15,6 +15,9 @@ namespace JustSaying.Messaging.MessageHandling
             _messageLock = messageLock;
             _timeOut = timeOut;
         }
+
+        private const bool RemoveTheMessageFromTheQueue = true;
+        private const bool LeaveItInTheQueue = false;
         
         public bool Handle(T message)
         {
@@ -22,7 +25,14 @@ namespace JustSaying.Messaging.MessageHandling
             var lockResponse = _messageLock.TryAquireLock(lockKey, TimeSpan.FromSeconds(_timeOut));
             if (!lockResponse.DoIHaveExclusiveLock)
             {
-                return lockResponse.IsMessagePermanentlyLocked;
+                if (lockResponse.IsMessagePermanentlyLocked)
+                {
+                    return RemoveTheMessageFromTheQueue;
+                }
+                else
+                {
+                    return LeaveItInTheQueue;
+                }
             }
 
             try
