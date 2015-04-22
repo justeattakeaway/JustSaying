@@ -13,7 +13,7 @@ namespace JustSaying.Messaging.UnitTests.MessageHandling
         {
             var messageLock = Substitute.For<IMessageLock>();
             messageLock.TryAquireLock(Arg.Any<string>(), Arg.Any<TimeSpan>()).Returns(new MessageLockResponse(){DoIHaveExclusiveLock = false});
-            var sut = new ExactlyOnceHandler<OrderAccepted>(Substitute.For<IHandler<OrderAccepted>>(), messageLock, 1);
+            var sut = new ExactlyOnceHandler<OrderAccepted>(Substitute.For<IHandler<OrderAccepted>>(), messageLock, 1, "handlerName");
 
             var result = sut.Handle(new OrderAccepted());
 

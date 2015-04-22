@@ -60,7 +60,8 @@ namespace JustSaying.AwsTools
                 handlers = new List<Func<Message, bool>>();
                 _handlers.Add(typeof(T), handlers);
             }
-            var guaranteedDelivery = new GuaranteedOnceDelivery<T>(futureHandler());
+            var handlerInstance = futureHandler();
+            var guaranteedDelivery = new GuaranteedOnceDelivery<T>(handlerInstance);
             
             IHandler<T> handler = new FutureHandler<T>(futureHandler);
             if (guaranteedDelivery.Enabled)
@@ -68,7 +69,7 @@ namespace JustSaying.AwsTools
                 if(_messageLock == null)
                     throw new Exception("IMessageLock is null. You need to specify an implementation for IMessageLock.");
 
-                handler = new ExactlyOnceHandler<T>(handler, _messageLock, guaranteedDelivery.TimeOut);
+                handler = new ExactlyOnceHandler<T>(handler, _messageLock, guaranteedDelivery.TimeOut, handlerInstance.GetType().FullName.ToLower());
             }
             var executionTimeMonitoring = _messagingMonitor as IMeasureHandlerExecutionTime;
             if (executionTimeMonitoring != null)
