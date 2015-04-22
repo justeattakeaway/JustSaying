@@ -8,12 +8,14 @@ namespace JustSaying.Messaging.MessageHandling
         private readonly IHandler<T> _inner;
         private readonly IMessageLock _messageLock;
         private readonly int _timeOut;
+        private readonly string _handlerName;
 
-        public ExactlyOnceHandler(IHandler<T> inner, IMessageLock messageLock, int timeOut)
+        public ExactlyOnceHandler(IHandler<T> inner, IMessageLock messageLock, int timeOut, string handlerName)
         {
             _inner = inner;
             _messageLock = messageLock;
             _timeOut = timeOut;
+            _handlerName = handlerName;
         }
 
         private const bool RemoveTheMessageFromTheQueue = true;
@@ -21,7 +23,7 @@ namespace JustSaying.Messaging.MessageHandling
         
         public bool Handle(T message)
         {
-            var lockKey = string.Format("{0}-{1}-{2}", _inner.GetType().FullName.ToLower(), typeof(T).Name.ToLower(), message.UniqueKey());
+            var lockKey = string.Format("{2}-{1}-{0}", _handlerName, typeof(T).Name.ToLower(), message.UniqueKey());
             var lockResponse = _messageLock.TryAquireLock(lockKey, TimeSpan.FromSeconds(_timeOut));
             if (!lockResponse.DoIHaveExclusiveLock)
             {
