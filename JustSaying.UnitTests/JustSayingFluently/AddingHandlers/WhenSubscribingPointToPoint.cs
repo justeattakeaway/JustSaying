@@ -38,13 +38,13 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         [Then]
         public void TheSubscriptionIsCreatedInEachRegion()
         {
-            Bus.Received(2).AddNotificationTopicSubscriber(Arg.Any<string>(), Arg.Any<INotificationSubscriber>());
+            Bus.Received(2).AddNotificationSubscriber(Arg.Any<string>(), Arg.Any<INotificationSubscriber>());
         }
 
         [Then]
         public void HandlerIsAddedToBus()
         {
-            Bus.Received().AddMessageHandler(Arg.Any<Func<IHandler<Message>>>());
+            Bus.Received().AddMessageHandler(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Func<IHandler<Message>>>());
         }
         
         [Then]

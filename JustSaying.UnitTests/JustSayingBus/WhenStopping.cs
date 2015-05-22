@@ -13,13 +13,15 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             base.Given();
             _subscriber1 = Substitute.For<INotificationSubscriber>();
+            _subscriber1.Queue.Returns("queue1");
             _subscriber2 = Substitute.For<INotificationSubscriber>();
+            _subscriber2.Queue.Returns("queue2");
         }
 
         protected override void When()
         {
-            SystemUnderTest.AddNotificationTopicSubscriber("OrderDispatch", _subscriber1);
-            SystemUnderTest.AddNotificationTopicSubscriber("CustomerCommunication", _subscriber2);
+            SystemUnderTest.AddNotificationSubscriber("region1", _subscriber1);
+            SystemUnderTest.AddNotificationSubscriber("region1", _subscriber2);
             SystemUnderTest.Start();
             SystemUnderTest.Stop();
         }
