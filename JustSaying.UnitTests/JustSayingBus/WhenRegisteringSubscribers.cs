@@ -19,8 +19,8 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override void When()
         {
-            SystemUnderTest.AddNotificationTopicSubscriber("OrderDispatch", _subscriber1);
-            SystemUnderTest.AddNotificationTopicSubscriber("CustomerCommunication", _subscriber2);
+            SystemUnderTest.AddNotificationSubscriber("OrderDispatch", _subscriber1);
+            SystemUnderTest.AddNotificationSubscriber("CustomerCommunication", _subscriber2);
             SystemUnderTest.Start();
         }
 

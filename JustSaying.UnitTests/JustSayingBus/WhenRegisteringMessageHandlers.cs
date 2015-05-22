@@ -36,10 +36,10 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override void When()
         {
-            SystemUnderTest.AddNotificationTopicSubscriber(_topic, _subscriber);
-            SystemUnderTest.AddNotificationTopicSubscriber(_topic2, _subscriber);
-            SystemUnderTest.AddMessageHandler(_futureHandler1);
-            SystemUnderTest.AddMessageHandler(_futureHandler2);
+            SystemUnderTest.AddNotificationSubscriber(_topic, _subscriber);
+            SystemUnderTest.AddNotificationSubscriber(_topic, _subscriber);
+            SystemUnderTest.AddMessageHandler(_topic, _subscriber.Queue, _futureHandler1);
+            SystemUnderTest.AddMessageHandler(_topic, _subscriber.Queue, _futureHandler2);
             SystemUnderTest.Start();
         }
 
@@ -58,7 +58,7 @@ namespace JustSaying.UnitTests.JustSayingBus
                                      _subscriber.AddMessageHandler(Arg.Any<Func<IHandler<Message>>>());
                                      _subscriber.AddMessageHandler(Arg.Any<Func<IHandler<Message2>>>());
                                      _subscriber.Listen();
-                                     _subscriber.Listen();
+                                     //_subscriber.Listen();
                                  });
         }
 

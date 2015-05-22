@@ -39,6 +39,10 @@ namespace JustSaying.AwsTools
             _messageLock = messageLock;
         }
 
+        public string Queue
+        {
+            get { return this._queue.QueueName; }
+        }
         // ToDo: This should not be here.
         public SqsNotificationListener WithMaximumConcurrentLimitOnMessagesInFlightOf(int maximumAllowedMesagesInFlight)
         {
