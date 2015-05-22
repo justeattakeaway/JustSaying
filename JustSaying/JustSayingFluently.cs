@@ -14,19 +14,6 @@ using JustSaying.Lookups;
 
 namespace JustSaying
 {
-    public static class LinqExtensions
-    {
-        public static IEnumerable<T> ForEach<T>(this IEnumerable<T> enumeration, Action<T> action)
-        {
-            foreach (T item in enumeration)
-            {
-                action(item);
-                yield return item;
-            }
-        }
-    }
-
-
     /// <summary>
     /// Fluently configure a JustSaying message bus.
     /// Intended usage:
