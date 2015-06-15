@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
@@ -62,7 +63,7 @@ namespace JustSaying
 
         public void AddMessageHandler<T>(Func<IHandler<T>> futureHandler) where T : Message
         {
-            var topic = typeof(T).Name.ToLower();
+            var topic = typeof(T).ToTopicName();
 
             foreach (var subscriber in _subscribersByTopic[topic])
             {
@@ -79,7 +80,7 @@ namespace JustSaying
                 _publishersByRegionAndTopic.Add(region, publishersByTopic);
             }
 
-            var topic = typeof(T).Name.ToLower();
+            var topic = typeof(T).ToTopicName();
             publishersByTopic[topic] = messagePublisher;
         }
 
@@ -146,7 +147,7 @@ namespace JustSaying
                 throw new InvalidOperationException(errorMessage);
             }
 
-            var topic = message.GetType().Name.ToLower();
+            var topic = message.GetType().ToTopicName();
             var publishersByTopic = _publishersByRegionAndTopic[activeRegion];
             if (!publishersByTopic.ContainsKey(topic))
             {
