@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using JustSaying.Extensions;
@@ -28,6 +29,7 @@ namespace JustSaying
         }
         public IMessageSerialisationRegister SerialisationRegister { get; private set; }
         public IMessageLock MessageLock { get; set; }
+
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); //ToDo: danger!
         private readonly object _syncRoot = new object();
 
@@ -39,6 +41,7 @@ namespace JustSaying
             Log.Info(string.Format("Registering with stack."));
 
             Config = config;
+            
             Monitor = new NullOpMessageMonitor();
 
             _subscribersByTopic = new Dictionary<string, IList<INotificationSubscriber>>();
@@ -63,7 +66,7 @@ namespace JustSaying
 
         public void AddMessageHandler<T>(Func<IHandler<T>> futureHandler) where T : Message
         {
-            var topic = typeof(T).ToTopicName();
+            var topic = Config.TopicNameProvider(typeof(T));
 
             foreach (var subscriber in _subscribersByTopic[topic])
             {
@@ -80,7 +83,7 @@ namespace JustSaying
                 _publishersByRegionAndTopic.Add(region, publishersByTopic);
             }
 
-            var topic = typeof(T).ToTopicName();
+            var topic = Config.TopicNameProvider(typeof(T));
             publishersByTopic[topic] = messagePublisher;
         }
 
@@ -147,7 +150,7 @@ namespace JustSaying
                 throw new InvalidOperationException(errorMessage);
             }
 
-            var topic = message.GetType().ToTopicName();
+            var topic = Config.TopicNameProvider(message.GetType());
             var publishersByTopic = _publishersByRegionAndTopic[activeRegion];
             if (!publishersByTopic.ContainsKey(topic))
             {
@@ -164,7 +167,7 @@ namespace JustSaying
             attemptCount++;
             try
             {
-                var watch = new System.Diagnostics.Stopwatch();
+                var watch = new Stopwatch();
                 watch.Start();
 
                 publisher.Publish(message);

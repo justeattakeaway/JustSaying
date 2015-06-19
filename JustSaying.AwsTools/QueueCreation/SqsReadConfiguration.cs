@@ -1,5 +1,6 @@
 using System;
 using System.Configuration;
+using JustSaying.AwsTools.Extensions;
 using JustSaying.Messaging.MessageProcessingStrategies;
 
 namespace JustSaying.AwsTools.QueueCreation
@@ -16,11 +17,12 @@ namespace JustSaying.AwsTools.QueueCreation
             ErrorQueueRetentionPeriodSeconds = JustSayingConstants.MAXIMUM_RETENTION_PERIOD;
             VisibilityTimeoutSeconds = JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT;
             RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT;
+            TopicNameProvider = t => t.ToTopicName();
         }
 
         internal SubscriptionType SubscriptionType { get; private set; }
         internal string QueueName { get; set; }
-        internal string Topic { get; set; }
+        public Func<Type, string> TopicNameProvider { get; set; }
         internal string PublishEndpoint { get; set; }
 
         public int? InstancePosition { get; set; }
@@ -44,7 +46,7 @@ namespace JustSaying.AwsTools.QueueCreation
 
         private void ValidateSnsConfiguration()
         {
-            if (string.IsNullOrWhiteSpace(Topic))
+            if (TopicNameProvider == null)
                 throw new ConfigurationErrorsException("Invalid configuration. Topic must be provided.");
 
             if (PublishEndpoint == null)

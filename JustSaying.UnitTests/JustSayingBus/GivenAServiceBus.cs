@@ -1,4 +1,5 @@
 using JustBehave;
+using JustSaying.AwsTools.Extensions;
 using JustSaying.Messaging.Monitoring;
 using NSubstitute;
 
@@ -12,6 +13,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         protected override void Given()
         {
             Config = Substitute.For<IMessagingConfig>();
+            Config.TopicNameProvider = t => t.ToTopicName();
             Monitor = Substitute.For<IMessageMonitor>();
         }
 

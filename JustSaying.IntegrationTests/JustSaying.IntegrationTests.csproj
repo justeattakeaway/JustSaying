@@ -85,6 +85,7 @@
     <Compile Include="JustSayingFluently\WhenAHandlerThrowsAnException.cs" />
     <Compile Include="JustSayingFluently\WhenAMessageIsPublishedViaSnsToSqsSubscriber.cs" />
     <Compile Include="JustSayingFluently\WhenAMessageIsPublishedViaSqsToSqsSubscriber.cs" />
+    <Compile Include="JustSayingFluently\WhenAMessageIsPublishedWithDifferentTopicNames.cs" />
     <Compile Include="JustSayingFluently\WhenHandlersThrowAnException.cs" />
     <Compile Include="JustSayingFluently\WhenPublishingWithoutAMonitor.cs" />
     <Compile Include="JustSayingFluently\WhenThrottlingIsEnabledALongRunningHandler.cs" />
@@ -108,6 +109,7 @@
     <Compile Include="WhenRegisteringHandlersViaResolver\WhenRegisteringMultipleHandlersViaContainer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
