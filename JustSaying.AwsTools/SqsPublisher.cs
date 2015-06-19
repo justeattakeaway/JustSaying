@@ -28,10 +28,10 @@ namespace JustSaying.AwsTools
             });
         }
 
-        private static string GetMessageInContext(Message message)
+        private string GetMessageInContext(Message message)
         {
-            // ToDo: No no mr JsonConvert.
-            var context = new { Subject = message.GetType().Name, Message = message };
+            var serializedMessage = _serialisationRegister.GeTypeSerialiser(message.GetType()).Serialiser.Serialise(message);
+            var context = new { Subject = message.GetType().Name, Message = serializedMessage };
             return JsonConvert.SerializeObject(context);
         }
     }
