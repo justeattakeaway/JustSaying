@@ -75,6 +75,7 @@
     <Compile Include="Serialisation\Newtonsoft\DealingWithPotentiallyMissingConversation.cs" />
     <Compile Include="Serialisation\Newtonsoft\WhenAskingForAnewSerialiser.cs" />
     <Compile Include="Serialisation\Newtonsoft\WhenSerialisingAndDeserialising.cs" />
+    <Compile Include="Serialisation\Newtonsoft\WhenUsingCustomSettings.cs" />
     <Compile Include="Serialisation\SerialisationRegister\WhenAddingAGenericSerialiser.cs" />
     <Compile Include="Serialisation\SerialisationRegister\WhenAddingASerialiser.cs" />
     <Compile Include="Serialisation\SerialisationRegister\WhenAddingASerialiserTwice.cs" />
