@@ -109,7 +109,6 @@
     <Compile Include="WhenRegisteringHandlersViaResolver\WhenRegisteringMultipleHandlersViaContainer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

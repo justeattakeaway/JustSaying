@@ -45,7 +45,7 @@ namespace JustSaying.AwsTools.QueueCreation
 
         private void ValidateSnsConfiguration()
         {
-            if (Topic == null)
+            if (string.IsNullOrWhiteSpace(Topic))
                 throw new ConfigurationErrorsException("Invalid configuration. Topic must be provided.");
 
             if (PublishEndpoint == null)
