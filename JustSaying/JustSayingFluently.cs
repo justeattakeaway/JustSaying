@@ -4,14 +4,13 @@ using System.Linq;
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Extensions;
+using JustSaying.Lookups;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using NLog;
-using JustSaying.Lookups;
 
 namespace JustSaying
 {
@@ -67,7 +66,9 @@ namespace JustSaying
         public IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>() where T : Message
         {
             Log.Info("Adding SNS publisher");
-            _subscriptionConfig.Topic = typeof (T).ToTopicName();
+
+            _subscriptionConfig.Topic = Bus.Config.TopicNameProvider(typeof (T));
+
             var publishEndpointProvider = CreatePublisherEndpointProvider(_subscriptionConfig);
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
@@ -102,7 +103,7 @@ namespace JustSaying
             var config = new SqsWriteConfiguration();
             configBuilder(config);
 
-            var messageTypeName = typeof(T).ToTopicName();
+            var messageTypeName = Bus.Config.TopicNameProvider(typeof (T));
             var queueName = string.IsNullOrWhiteSpace(config.QueueName)
                 ? messageTypeName
                 : messageTypeName + "-" + config.QueueName;
@@ -219,7 +220,7 @@ namespace JustSaying
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
             Bus.AddMessageHandler(() => handler);
-            var messageTypeName = typeof(T).ToTopicName();
+            var messageTypeName = Bus.Config.TopicNameProvider(typeof (T));
             Log.Info(string.Format("Added a message handler - MessageName: {0}, QueueName: {1}, HandlerName: {2}", messageTypeName, _subscriptionConfig.QueueName, handler.GetType().Name));
 
             return thing;
@@ -250,7 +251,7 @@ namespace JustSaying
 
         private IHaveFulfilledSubscriptionRequirements TopicHandler<T>() where T : Message
         {
-            var messageTypeName = typeof(T).ToTopicName();
+            var messageTypeName = Bus.Config.TopicNameProvider(typeof (T));
             ConfigureSqsSubscriptionViaTopic(messageTypeName);
 
             foreach (var region in Bus.Config.Regions)
@@ -265,7 +266,7 @@ namespace JustSaying
 
         private IHaveFulfilledSubscriptionRequirements PointToPointHandler<T>() where T : Message
         {
-            var messageTypeName = typeof(T).ToTopicName();
+            var messageTypeName = Bus.Config.TopicNameProvider(typeof (T));
             ConfigureSqsSubscription(messageTypeName);
 
             foreach (var region in Bus.Config.Regions)

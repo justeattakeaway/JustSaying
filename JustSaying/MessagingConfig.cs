@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using JustSaying.AwsTools;
+using JustSaying.Extensions;
 
 namespace JustSaying
 {
@@ -11,11 +12,13 @@ namespace JustSaying
         {
             PublishFailureReAttempts = JustSayingConstants.DEFAULT_PUBLISHER_RETRY_COUNT;
             PublishFailureBackoffMilliseconds = JustSayingConstants.DEFAULT_PUBLISHER_RETRY_INTERVAL;
+            TopicNameProvider = type => type.ToTopicName();
             Regions = new List<string>();
         }
 
         public int PublishFailureReAttempts { get; set; }
         public int PublishFailureBackoffMilliseconds { get; set; }
+        public Func<Type, string> TopicNameProvider { get; set; }
         public IList<string> Regions { get; private set; }
         public Func<string> GetActiveRegion { get; set; }
 
