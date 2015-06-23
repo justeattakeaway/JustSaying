@@ -1,6 +1,6 @@
 using System;
 using System.Configuration;
-using JustSaying.AwsTools.Extensions;
+using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageProcessingStrategies;
 
 namespace JustSaying.AwsTools.QueueCreation
@@ -27,7 +27,7 @@ namespace JustSaying.AwsTools.QueueCreation
         public int? InstancePosition { get; set; }
         public int? MaxAllowedMessagesInFlight { get; set; }
         public IMessageProcessingStrategy MessageProcessingStrategy { get; set; }
-        public Action<Exception, Amazon.SQS.Model.Message> OnError { get; set; }
+        public Action<Exception, Message> OnError { get; set; }
 
         public override void Validate()
         {

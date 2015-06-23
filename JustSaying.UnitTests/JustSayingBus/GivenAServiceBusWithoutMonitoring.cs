@@ -1,5 +1,5 @@
 using JustBehave;
-using JustSaying.AwsTools.Extensions;
+using JustSaying.Extensions;
 using JustSaying.Messaging.Monitoring;
 using NSubstitute;
 

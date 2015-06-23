@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace JustSaying.AwsTools.Extensions
+namespace JustSaying.Extensions
 {
     public static class TypeExtensions
     {

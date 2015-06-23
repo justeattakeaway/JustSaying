@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using JustSaying.AwsTools;
-using JustSaying.AwsTools.Extensions;
+using JustSaying.Extensions;
 
 namespace JustSaying
 {

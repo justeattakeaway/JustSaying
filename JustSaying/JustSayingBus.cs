@@ -166,8 +166,7 @@ namespace JustSaying
             attemptCount++;
             try
             {
-                var watch = new Stopwatch();
-                watch.Start();
+                var watch = Stopwatch.StartNew();
 
                 publisher.Publish(message);
 
