@@ -18,9 +18,7 @@ namespace JustSaying
 
         public int PublishFailureReAttempts { get; set; }
         public int PublishFailureBackoffMilliseconds { get; set; }
-
         public Func<Type, string> TopicNameProvider { get; set; }
-
         public IList<string> Regions { get; private set; }
         public Func<string> GetActiveRegion { get; set; }
 
