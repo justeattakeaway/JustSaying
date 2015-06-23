@@ -1,4 +1,5 @@
-﻿using JustBehave;
+﻿using System;
+using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
@@ -43,7 +44,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         [Then]
         public void HandlerIsAddedToBus()
         {
-            Bus.Received().AddMessageHandler(_handler);
+            Bus.Received().AddMessageHandler(Arg.Any<Func<IHandler<Message>>>());
         }
         
         [Then]

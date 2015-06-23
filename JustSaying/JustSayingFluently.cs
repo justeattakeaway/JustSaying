@@ -4,13 +4,13 @@ using System.Linq;
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Lookups;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using NLog;
-using JustSaying.Lookups;
 
 namespace JustSaying
 {
@@ -66,7 +66,9 @@ namespace JustSaying
         public IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>() where T : Message
         {
             Log.Info("Adding SNS publisher");
-            _subscriptionConfig.Topic = typeof(T).Name.ToLower();
+
+            _subscriptionConfig.Topic = Bus.Config.TopicNameProvider(typeof (T));
+
             var publishEndpointProvider = CreatePublisherEndpointProvider(_subscriptionConfig);
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
@@ -101,7 +103,7 @@ namespace JustSaying
             var config = new SqsWriteConfiguration();
             configBuilder(config);
 
-            var messageTypeName = typeof(T).Name.ToLower();
+            var messageTypeName = Bus.Config.TopicNameProvider(typeof (T));
             var queueName = string.IsNullOrWhiteSpace(config.QueueName)
                 ? messageTypeName
                 : messageTypeName + "-" + config.QueueName;
@@ -217,8 +219,8 @@ namespace JustSaying
                 : TopicHandler<T>();
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
-            Bus.AddMessageHandler(handler);
-            var messageTypeName = typeof(T).Name.ToLower();
+            Bus.AddMessageHandler(() => handler);
+            var messageTypeName = Bus.Config.TopicNameProvider(typeof (T));
             Log.Info(string.Format("Added a message handler - MessageName: {0}, QueueName: {1}, HandlerName: {2}", messageTypeName, _subscriptionConfig.QueueName, handler.GetType().Name));
 
             return thing;
@@ -231,23 +233,25 @@ namespace JustSaying
                 : TopicHandler<T>();
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
-            var handlers = handlerResolver.ResolveHandlers<T>().ToList();
-            if (!handlers.Any())
+            if(!handlerResolver.ResolveHandlers<T>().Any())
             {
                 throw new HandlerNotRegisteredWithContainerException(string.Format("IHandler<{0}> is not regsistered in the container.", typeof(T).Name));
             }
-            foreach (var handler in handlers)
+            if (handlerResolver.ResolveHandlers<T>().Count() > 1)
             {
-                Bus.AddMessageHandler(handler);
-                Log.Info(string.Format("Added a message handler - Topic: {0}, QueueName: {1}, HandlerName: {2}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName, handler.GetType().Name));
+                throw new NotSupportedException(string.Format("There are more than one registration for IHandler<{0}>. JustSaying currently does not support multiple registration for IHandler<T>.", typeof(T).Name));
             }
+            
+            Bus.AddMessageHandler(() => handlerResolver.ResolveHandlers<T>().Single());
+
+            Log.Info(string.Format("Added a message handler - Topic: {0}, QueueName: {1}, HandlerName: IHandler<{2}>", _subscriptionConfig.Topic, _subscriptionConfig.QueueName, typeof(T)));
 
             return thing;
         }
 
         private IHaveFulfilledSubscriptionRequirements TopicHandler<T>() where T : Message
         {
-            var messageTypeName = typeof(T).Name.ToLower();
+            var messageTypeName = Bus.Config.TopicNameProvider(typeof (T));
             ConfigureSqsSubscriptionViaTopic(messageTypeName);
 
             foreach (var region in Bus.Config.Regions)
@@ -262,7 +266,7 @@ namespace JustSaying
 
         private IHaveFulfilledSubscriptionRequirements PointToPointHandler<T>() where T : Message
         {
-            var messageTypeName = typeof(T).Name.ToLower();
+            var messageTypeName = Bus.Config.TopicNameProvider(typeof (T));
             ConfigureSqsSubscription(messageTypeName);
 
             foreach (var region in Bus.Config.Regions)

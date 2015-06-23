@@ -12,6 +12,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 
         protected override void Given()
         {
+            base.Given();
+
             _topicName = "message";
 
             Configuration = new MessagingConfig();
