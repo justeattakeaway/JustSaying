@@ -13,7 +13,7 @@ namespace JustSaying.AwsTools.QueueCreation
                 new SqsReadConfiguration(SubscriptionType.ToTopic)
                 {
                     QueueName = queueName,
-                    TopicNameProvider = t => topic,
+                    Topic = topic,
                     MessageRetentionSeconds = messageRetentionSeconds,
                     VisibilityTimeoutSeconds = visibilityTimeoutSeconds,
                     InstancePosition = instancePosition

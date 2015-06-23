@@ -10,36 +10,37 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
     public class WhenAMessageIsPublishedWithDifferentTopicNames : GivenANotificationStack
     {
         private Future<GenericMessage> _snsHandler1;
-        protected Future<AnotherGenericMessage> _snsHandler2;
+        protected Future<GenericMessage> _snsHandler2;
 
-
+        private IAmJustSayingFluently _bus1;
         protected override void Given()
         {
             _snsHandler1 = new Future<GenericMessage>();
-            _snsHandler2 = new Future<AnotherGenericMessage>();
+            _snsHandler2 = new Future<GenericMessage>();
 
             var snsHandler1 = Substitute.For<IHandler<GenericMessage>>();
             snsHandler1.When(x => x.Handle(Arg.Any<GenericMessage>()))
                     .Do(x => _snsHandler1.Complete((GenericMessage)x.Args()[0]));
 
-            var snsHandler2 = Substitute.For<IHandler<AnotherGenericMessage>>();
-            snsHandler2.When(x => x.Handle(Arg.Any<AnotherGenericMessage>()))
-                    .Do(x => _snsHandler2.Complete((AnotherGenericMessage)x.Args()[0]));
+            var snsHandler2 = Substitute.For<IHandler<GenericMessage>>();
+            snsHandler2.When(x => x.Handle(Arg.Any<GenericMessage>()))
+                    .Do(x => _snsHandler2.Complete((GenericMessage)x.Args()[0]));
 
             ServiceBus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
-                .ConfigurePublisherWith(c => c.TopicNameProvider = t => "Test")
-
+                .ConfigurePublisherWith(c => c.TopicNameProvider = t => "Environment1")
                 .WithSnsMessagePublisher<GenericMessage>()
                 .WithSqsTopicSubscriber()
                 .IntoQueue("queuename")
-                .ConfigureSubscriptionWith(cf => cf.TopicNameProvider = t => "Test")
-                .WithMessageHandler(snsHandler1)
+                .WithMessageHandler(snsHandler1);
 
+            _bus1 = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+                .ConfigurePublisherWith(c => c.TopicNameProvider = t => "Environment2")
                 .WithSnsMessagePublisher<GenericMessage>()
                 .WithSqsTopicSubscriber()
-                .IntoQueue("queuename")
-                .ConfigureSubscriptionWith(cf => cf.TopicNameProvider = t => "Test1")
+                .IntoQueue("queuename1")
                 .WithMessageHandler(snsHandler2);
+
+            _bus1.StartListening();
 
             ServiceBus.StartListening();
 
@@ -50,6 +51,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             ServiceBus.Publish(new GenericMessage());
         }
 
+        public override void PostAssertTeardown()
+        {
+            base.PostAssertTeardown();
+            _bus1.StopListening();
+
+        }
+
         [Test]
         public void ThenItGetsHandledInHandler1()
         {
@@ -57,7 +65,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         }
 
         [Test]
-        public void ThenItDoesntGetsHandledInHandler2()
+        public void ThenItDoesntGetHandledInHandler2()
         {
             _snsHandler2.WaitUntilCompletion(10.Seconds()).ShouldBe(false);
         }

@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace JustSaying.AwsTools.Extensions
 {
-    internal static class TypeExtensions
+    public static class TypeExtensions
     {
         private const int MAX_TOPIC_NAME_LENGTH = 256;
 
@@ -25,7 +25,7 @@ namespace JustSaying.AwsTools.Extensions
 
         private static int GetInvariantHashCode(this string value)
         {
-            return value.Aggregate(5381, (current, character) => (current*397) ^ character);
+            return value.Aggregate(5381, (current, character) => (current * 397) ^ character);
         }
     }
 }
