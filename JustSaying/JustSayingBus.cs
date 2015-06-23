@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using JustSaying.Messaging;
@@ -27,6 +28,7 @@ namespace JustSaying
         }
         public IMessageSerialisationRegister SerialisationRegister { get; private set; }
         public IMessageLock MessageLock { get; set; }
+
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); //ToDo: danger!
         private readonly object _syncRoot = new object();
 
@@ -38,6 +40,7 @@ namespace JustSaying
             Log.Info(string.Format("Registering with stack."));
 
             Config = config;
+            
             Monitor = new NullOpMessageMonitor();
 
             _subscribersByTopic = new Dictionary<string, IList<INotificationSubscriber>>();
@@ -60,13 +63,13 @@ namespace JustSaying
             subscribersForTopic.Add(subscriber);
         }
 
-        public void AddMessageHandler<T>(IHandler<T> handler) where T : Message
+        public void AddMessageHandler<T>(Func<IHandler<T>> futureHandler) where T : Message
         {
-            var topic = typeof(T).Name.ToLower();
+            var topic = Config.TopicNameProvider(typeof(T));
 
             foreach (var subscriber in _subscribersByTopic[topic])
             {
-                subscriber.AddMessageHandler(handler);
+                subscriber.AddMessageHandler(futureHandler);
             }
         }
 
@@ -79,7 +82,7 @@ namespace JustSaying
                 _publishersByRegionAndTopic.Add(region, publishersByTopic);
             }
 
-            var topic = typeof(T).Name.ToLower();
+            var topic = Config.TopicNameProvider(typeof(T));
             publishersByTopic[topic] = messagePublisher;
         }
 
@@ -146,7 +149,7 @@ namespace JustSaying
                 throw new InvalidOperationException(errorMessage);
             }
 
-            var topic = message.GetType().Name.ToLower();
+            var topic = Config.TopicNameProvider(message.GetType());
             var publishersByTopic = _publishersByRegionAndTopic[activeRegion];
             if (!publishersByTopic.ContainsKey(topic))
             {
@@ -163,8 +166,7 @@ namespace JustSaying
             attemptCount++;
             try
             {
-                var watch = new System.Diagnostics.Stopwatch();
-                watch.Start();
+                var watch = Stopwatch.StartNew();
 
                 publisher.Publish(message);
 

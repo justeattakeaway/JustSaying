@@ -15,6 +15,7 @@ namespace JustSaying.AwsTools.UnitTests.Sqs
         private const string Url = "https://blablabla/" + QueueName;
         private readonly GenericMessage _message = new GenericMessage {Content = "Hello"};
         private const string QueueName = "queuename";
+        private const string SerialisedMessageBody = "<serialized message contents>";
 
         protected override SqsPublisher CreateSystemUnderTest()
         {
@@ -23,8 +24,12 @@ namespace JustSaying.AwsTools.UnitTests.Sqs
 
         protected override void Given()
         {
+            var messageSerializer = Substitute.For<IMessageSerialiser>();
+            messageSerializer.Serialise(_message).Returns(SerialisedMessageBody);
+
             _sqs.ListQueues(Arg.Any<ListQueuesRequest>()).Returns(new ListQueuesResponse{QueueUrls = new List<string>{Url}});
             _sqs.GetQueueAttributes(Arg.Any<GetQueueAttributesRequest>()).Returns(new GetQueueAttributesResponse());
+            _serialisationRegister.GeTypeSerialiser(typeof(GenericMessage)).Returns(new TypeSerialiser(typeof(GenericMessage), messageSerializer));
         }
 
         protected override void When()
@@ -36,7 +41,7 @@ namespace JustSaying.AwsTools.UnitTests.Sqs
         public void MessageIsPublishedToQueue()
         {
             // ToDo: Can be better...
-            _sqs.Received().SendMessage(Arg.Is<SendMessageRequest>(x => x.MessageBody.Contains("\"Message\":{\"Content\":\"Hello\",\"Id\":\"" + _message.Id)));
+            _sqs.Received().SendMessage(Arg.Is<SendMessageRequest>(x => x.MessageBody.Contains("{\"Subject\":\"GenericMessage\",\"Message\":\"<serialized message contents>\"}")));
         }
 
         [Then]

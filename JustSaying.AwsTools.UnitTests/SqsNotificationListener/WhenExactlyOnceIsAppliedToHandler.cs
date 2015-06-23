@@ -16,6 +16,7 @@ namespace JustSaying.AwsTools.UnitTests.SqsNotificationListener
             base.Given();
             _expectedtimeout = 5;
             MessageLock = Substitute.For<IMessageLock>();
+            MessageLock.TryAquireLock(Arg.Any<string>(), Arg.Any<TimeSpan>()).Returns(new MessageLockResponse(){DoIHaveExclusiveLock = true});
             Handler = new MyHandler();
         }
 
@@ -29,14 +30,14 @@ namespace JustSaying.AwsTools.UnitTests.SqsNotificationListener
         public void MessageIsLockedForTheRightId()
         {
             Patiently.VerifyExpectation(() => 
-                MessageLock.Received().TryAquire(Arg.Is<string>(a => a.Contains(DeserialisedMessage.Id.ToString())), Arg.Any<TimeSpan>()));
+                MessageLock.Received().TryAquireLock(Arg.Is<string>(a => a.Contains(DeserialisedMessage.Id.ToString())), Arg.Any<TimeSpan>()));
         }
 
         [Then]
         public void MessageIsLockedWithCorrectTimeout()
         {
             Patiently.VerifyExpectation(() =>
-                MessageLock.Received().TryAquire(Arg.Any<string>(), TimeSpan.FromSeconds(_expectedtimeout)));
+                MessageLock.Received().TryAquireLock(Arg.Any<string>(), TimeSpan.FromSeconds(_expectedtimeout)));
         }
     }
 
