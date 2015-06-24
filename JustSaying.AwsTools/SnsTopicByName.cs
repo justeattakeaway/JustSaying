@@ -20,6 +20,7 @@ namespace JustSaying.AwsTools
 
         public override bool Exists()
         {
+            Log.Info("Checking if topic '{0}' exists", TopicName);
             var topic = Client.FindTopic(TopicName);
 
             if (topic != null)
