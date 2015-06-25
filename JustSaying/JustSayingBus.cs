@@ -71,8 +71,6 @@ namespace JustSaying
 
         public void AddMessageHandler<T>(string region, string queue, Func<IHandler<T>> futureHandler) where T : Message
         {
-            var topic = typeof(T).Name.ToLower();
-
             var subscribersByRegion = _subscribersByRegionAndQueue[region];
             var subscriber = subscribersByRegion[queue];
             subscriber.AddMessageHandler(futureHandler);

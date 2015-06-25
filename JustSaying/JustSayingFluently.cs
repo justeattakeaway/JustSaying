@@ -266,7 +266,7 @@ namespace JustSaying
             foreach (var region in Bus.Config.Regions)
             {
                 var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribed(region, Bus.SerialisationRegister, _subscriptionConfig);
-                CreateSubscriptionListener(region, queue, _subscriptionConfig.Topic);
+                CreateSubscriptionListener(region, queue);
                 Log.Info(string.Format("Created SQS topic subscription - Topic: {0}, QueueName: {1}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName));
             }
           
@@ -281,14 +281,14 @@ namespace JustSaying
             foreach (var region in Bus.Config.Regions)
             {
                 var queue = _amazonQueueCreator.EnsureQueueExists(region, _subscriptionConfig);
-                CreateSubscriptionListener(region, queue, messageTypeName);
+                CreateSubscriptionListener(region, queue);
                 Log.Info(string.Format("Created SQS subscriber - MessageName: {0}, QueueName: {1}", messageTypeName, _subscriptionConfig.QueueName));
             }
            
             return this;
         }
 
-        private void CreateSubscriptionListener(string region, SqsQueueBase queue, string messageTypeName)
+        private void CreateSubscriptionListener(string region, SqsQueueBase queue)
         {
             var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, Bus.Monitor, _subscriptionConfig.OnError, Bus.MessageLock);
             Bus.AddNotificationSubscriber(region, sqsSubscriptionListener);
@@ -325,8 +325,7 @@ namespace JustSaying
             _subscriptionConfig.ValidateSqsConfiguration();
 
             var subscriptionEndpointProvider = CreateSqsSubscriptionEndpointProvider(_subscriptionConfig);
-            var locationName = subscriptionEndpointProvider.GetLocationName();
-            _subscriptionConfig.QueueName = locationName;
+            _subscriptionConfig.QueueName = subscriptionEndpointProvider.GetLocationName();
         }
 
         #endregion
