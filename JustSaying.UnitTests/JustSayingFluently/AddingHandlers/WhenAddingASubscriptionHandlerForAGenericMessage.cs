@@ -34,7 +34,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         [Then]
         public void HandlerIsAddedToBus()
         {
-            Bus.Received().AddMessageHandler(Arg.Any<Func<IHandler<JustSayingMessage<MyMessage>>>>());
+            Bus.Received().AddMessageHandler(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Func<IHandler<JustSayingMessage<MyMessage>>>>());
         }
     }
 }
