@@ -213,12 +213,17 @@ namespace JustSaying
         /// <returns></returns>
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message
         {
+            // TODO - Subscription listeners should be just added once per queue,
+            // and not for each message handler
             var thing =  _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
                 ? PointToPointHandler<T>()
                 : TopicHandler<T>();
-
+            
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
-            Bus.AddMessageHandler(() => handler);
+            foreach (var region in Bus.Config.Regions)
+            {
+                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handler);
+            }
             var messageTypeName = typeof(T).ToTopicName();
             Log.Info(string.Format("Added a message handler - MessageName: {0}, QueueName: {1}, HandlerName: {2}", messageTypeName, _subscriptionConfig.QueueName, handler.GetType().Name));
 
@@ -240,8 +245,14 @@ namespace JustSaying
             {
                 throw new NotSupportedException(string.Format("There are more than one registration for IHandler<{0}>. JustSaying currently does not support multiple registration for IHandler<T>.", typeof(T).Name));
             }
+
+            foreach (var region in Bus.Config.Regions)
+            {
+                Bus.AddMessageHandler(region, 
+                    _subscriptionConfig.QueueName, 
+                    () => handlerResolver.ResolveHandlers<T>().Single());
+            }
             
-            Bus.AddMessageHandler(() => handlerResolver.ResolveHandlers<T>().Single());
 
             Log.Info(string.Format("Added a message handler - Topic: {0}, QueueName: {1}, HandlerName: IHandler<{2}>", _subscriptionConfig.Topic, _subscriptionConfig.QueueName, typeof(T)));
 
@@ -256,7 +267,7 @@ namespace JustSaying
             foreach (var region in Bus.Config.Regions)
             {
                 var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribed(region, Bus.SerialisationRegister, _subscriptionConfig);
-                CreateSubscriptionListener(queue, _subscriptionConfig.Topic);
+                CreateSubscriptionListener(region, queue);
                 Log.Info(string.Format("Created SQS topic subscription - Topic: {0}, QueueName: {1}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName));
             }
           
@@ -271,17 +282,17 @@ namespace JustSaying
             foreach (var region in Bus.Config.Regions)
             {
                 var queue = _amazonQueueCreator.EnsureQueueExists(region, _subscriptionConfig);
-                CreateSubscriptionListener(queue, messageTypeName);
+                CreateSubscriptionListener(region, queue);
                 Log.Info(string.Format("Created SQS subscriber - MessageName: {0}, QueueName: {1}", messageTypeName, _subscriptionConfig.QueueName));
             }
            
             return this;
         }
 
-        private void CreateSubscriptionListener(SqsQueueBase queue, string messageTypeName)
+        private void CreateSubscriptionListener(string region, SqsQueueBase queue)
         {
             var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, Bus.Monitor, _subscriptionConfig.OnError, Bus.MessageLock);
-            Bus.AddNotificationTopicSubscriber(messageTypeName, sqsSubscriptionListener);
+            Bus.AddNotificationSubscriber(region, sqsSubscriptionListener);
 
             if (_subscriptionConfig.MaxAllowedMessagesInFlight.HasValue)
             {
@@ -315,8 +326,7 @@ namespace JustSaying
             _subscriptionConfig.ValidateSqsConfiguration();
 
             var subscriptionEndpointProvider = CreateSqsSubscriptionEndpointProvider(_subscriptionConfig);
-            var locationName = subscriptionEndpointProvider.GetLocationName();
-            _subscriptionConfig.QueueName = locationName;
+            _subscriptionConfig.QueueName = subscriptionEndpointProvider.GetLocationName();
         }
 
         #endregion

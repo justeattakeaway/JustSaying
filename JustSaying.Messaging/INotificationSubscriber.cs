@@ -9,5 +9,6 @@ namespace JustSaying.Messaging
         void AddMessageHandler<T>(Func<IHandler<T>> handler) where T : Message;
         void Listen();
         void StopListening();
+        string Queue { get; }
     }
 }

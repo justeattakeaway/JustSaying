@@ -13,8 +13,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         private INotificationSubscriber _subscriber;
         private IHandler<Message> _handler1;
         private IHandler<Message2> _handler2;
-        private string _topic;
-        private string _topic2;
+        private string _region;
         private Func<IHandler<Message>> _futureHandler1;
         private Func<IHandler<Message2>> _futureHandler2;
 
@@ -30,16 +29,15 @@ namespace JustSaying.UnitTests.JustSayingBus
             _subscriber = Substitute.For<INotificationSubscriber>();
             _handler1 = Substitute.For<IHandler<Message>>();
             _handler2 = Substitute.For<IHandler<Message2>>();
-            _topic = "message"; //same as message name
-            _topic2 = "message2"; //same as message name
+            _region = "west-1";
         }
 
         protected override void When()
         {
-            SystemUnderTest.AddNotificationTopicSubscriber(_topic, _subscriber);
-            SystemUnderTest.AddNotificationTopicSubscriber(_topic2, _subscriber);
-            SystemUnderTest.AddMessageHandler(_futureHandler1);
-            SystemUnderTest.AddMessageHandler(_futureHandler2);
+            SystemUnderTest.AddNotificationSubscriber(_region, _subscriber);
+            SystemUnderTest.AddNotificationSubscriber(_region, _subscriber);
+            SystemUnderTest.AddMessageHandler(_region, _subscriber.Queue, _futureHandler1);
+            SystemUnderTest.AddMessageHandler(_region, _subscriber.Queue, _futureHandler2);
             SystemUnderTest.Start();
         }
 
@@ -57,7 +55,6 @@ namespace JustSaying.UnitTests.JustSayingBus
                                  {
                                      _subscriber.AddMessageHandler(Arg.Any<Func<IHandler<Message>>>());
                                      _subscriber.AddMessageHandler(Arg.Any<Func<IHandler<Message2>>>());
-                                     _subscriber.Listen();
                                      _subscriber.Listen();
                                  });
         }
