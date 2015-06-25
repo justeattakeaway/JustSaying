@@ -1,5 +1,7 @@
 #JustSaying
 
+[![Join the chat at https://gitter.im/justeat/JustSaying](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/justeat/JustSaying?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 A helpful library for publishing and consuming events / messages over SNS (SNS / SQS as a message bus).
 
 ##Publishing Messages
