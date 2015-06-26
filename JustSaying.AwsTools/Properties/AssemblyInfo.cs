@@ -15,5 +15,3 @@ using System.Runtime.InteropServices;
 [assembly: InternalsVisibleTo("JustSaying.UnitTests")]
 [assembly: InternalsVisibleTo("JustSaying.AwsTools.UnitTests")]
 [assembly: InternalsVisibleTo("JustSaying.AwsTools.IntegrationTests")]
-[assembly: InternalsVisibleTo("JustSaying.NotificationStack.UnitTests")]
-[assembly: InternalsVisibleTo("JustSaying.NotificationStack")]
