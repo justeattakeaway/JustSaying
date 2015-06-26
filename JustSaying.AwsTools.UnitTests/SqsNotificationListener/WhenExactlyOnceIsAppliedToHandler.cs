@@ -1,9 +1,9 @@
+using System;
 using AwsTools.UnitTests.SqsNotificationListener;
-using JustBehave;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using NSubstitute;
-using TimeSpan = System.TimeSpan;
+using NUnit.Framework;
 
 namespace JustSaying.AwsTools.UnitTests.SqsNotificationListener
 {
@@ -20,40 +20,33 @@ namespace JustSaying.AwsTools.UnitTests.SqsNotificationListener
             Handler = new MyHandler();
         }
 
-        [Then]
+        [Test]
         public void ProcessingIsPassedToTheHandler()
         {
-            Patiently.VerifyExpectation(() => (Handler as MyHandler).Received());
+            Patiently.VerifyExpectation(() => (Handler as MyHandler).HandlerWasCalled());
         }
 
-        [Then]
-        public void MessageIsLockedForTheRightId()
-        {
-            Patiently.VerifyExpectation(() => 
-                MessageLock.Received().TryAquireLock(Arg.Is<string>(a => a.Contains(DeserialisedMessage.Id.ToString())), Arg.Any<TimeSpan>()));
-        }
-
-        [Then]
-        public void MessageIsLockedWithCorrectTimeout()
+        [Test]
+        public void MessageIsLocked()
         {
             Patiently.VerifyExpectation(() =>
-                MessageLock.Received().TryAquireLock(Arg.Any<string>(), TimeSpan.FromSeconds(_expectedtimeout)));
+                MessageLock.Received().TryAquireLock(Arg.Is<string>(a => a.Contains(DeserialisedMessage.Id.ToString())), TimeSpan.FromSeconds(_expectedtimeout)));
         }
     }
 
     [ExactlyOnce(TimeOut = 5)]
     public class MyHandler : IHandler<GenericMessage>
     {
-        private bool _received;
+        private bool _handlerWasCalled;
         public bool Handle(GenericMessage message)
         {
-            _received = true;
+            _handlerWasCalled = true;
             return true;
         }
 
-        public bool Received()
+        public bool HandlerWasCalled()
         {
-            return _received;
+            return _handlerWasCalled;
         }
 
     }
