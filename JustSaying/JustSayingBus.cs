@@ -191,7 +191,7 @@ namespace JustSaying
                     throw;
                 }
 
-                Thread.Sleep(Config.PublishFailureBackoffMilliseconds * attemptCount); // ToDo: Increase back off each time (exponential)
+                Thread.Sleep(Config.PublishFailureBackoffMilliseconds * attemptCount); // ToDo: Increase back off each time (linear)
                 Publish(publisher, message, attemptCount);
             }
         }
