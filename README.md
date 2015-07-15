@@ -1,4 +1,4 @@
-#JustSaying
+#JustSaying [![NuGet Version](http://img.shields.io/nuget/v/JustSaying.svg?style=flat)](https://www.nuget.org/packages/JustSaying/) [![NuGet Downloads](http://img.shields.io/nuget/dt/JustSaying.svg?style=flat)](https://www.nuget.org/packages/JustSaying/)
 
 [![Join the chat at https://gitter.im/justeat/JustSaying](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/justeat/JustSaying?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
