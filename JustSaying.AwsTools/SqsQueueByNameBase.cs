@@ -23,7 +23,7 @@ namespace JustSaying.AwsTools
         public override bool Exists()
         {
             var result = Client.ListQueues(new ListQueuesRequest{ QueueNamePrefix = QueueName });
-            Console.WriteLine("polling for {0}", QueueName);
+            Log.Info("Checking if queue '{0}' exists", QueueName);
             Url = result.QueueUrls.SingleOrDefault(x => Matches(x, QueueName));
 
             if (Url != null)

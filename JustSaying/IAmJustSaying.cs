@@ -10,8 +10,10 @@ namespace JustSaying
     public interface IAmJustSaying : IMessagePublisher
     {
         bool Listening { get; }
-        void AddNotificationTopicSubscriber(string topic, INotificationSubscriber subscriber);
-        void AddMessageHandler<T>(Func<IHandler<T>> handler) where T : Message;
+        void AddNotificationSubscriber(string region, INotificationSubscriber subscriber);
+        void AddMessageHandler<T>(string region, string queueName, Func<IHandler<T>> handler) where T : Message;
+
+        // TODO - swap params
         void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message;
         void Start();
         void Stop();

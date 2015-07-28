@@ -16,7 +16,7 @@ namespace JustSaying
     {
         public bool Listening { get; private set; }
 
-        private readonly Dictionary<string, IList<INotificationSubscriber>> _subscribersByTopic;
+        private readonly Dictionary<string, Dictionary<string, INotificationSubscriber>> _subscribersByRegionAndQueue;
         private readonly Dictionary<string, Dictionary<string, IMessagePublisher>> _publishersByRegionAndTopic;
         public IMessagingConfig Config { get; private set; }
 
@@ -43,35 +43,41 @@ namespace JustSaying
             
             Monitor = new NullOpMessageMonitor();
 
-            _subscribersByTopic = new Dictionary<string, IList<INotificationSubscriber>>();
+            _subscribersByRegionAndQueue = new Dictionary<string, Dictionary<string, INotificationSubscriber>>();
             _publishersByRegionAndTopic = new Dictionary<string, Dictionary<string, IMessagePublisher>>();
             SerialisationRegister = serialisationRegister;
         }
 
-        public void AddNotificationTopicSubscriber(string topic, INotificationSubscriber subscriber)
+        public void AddNotificationSubscriber(string region, INotificationSubscriber subscriber)
         {
-            if (string.IsNullOrWhiteSpace(topic))
-                throw new ArgumentNullException("topic");
+            if (string.IsNullOrWhiteSpace(region))
+                throw new ArgumentNullException("region");
 
-            IList<INotificationSubscriber> subscribersForTopic;
-            if (!_subscribersByTopic.TryGetValue(topic, out subscribersForTopic))
+            Dictionary<string, INotificationSubscriber> subscribersForRegion;
+            if (!_subscribersByRegionAndQueue.TryGetValue(region, out subscribersForRegion))
             {
-                subscribersForTopic = new List<INotificationSubscriber>();
-                _subscribersByTopic.Add(topic, subscribersForTopic);
+                subscribersForRegion = new Dictionary<string,INotificationSubscriber>();
+                _subscribersByRegionAndQueue.Add(region, subscribersForRegion);
             }
 
-            subscribersForTopic.Add(subscriber);
+            if (subscribersForRegion.ContainsKey(subscriber.Queue))
+            {
+                // TODO - no, we don't need to create a new notification subsrciber per queue
+                // JustSaying is creating subscribers per-topic per-region, but 
+                // we want to have that per-queue per-region, not 
+                // per-topic per-region.
+                // Just re-use existing subscriber instead.
+                return;
+            }
+            subscribersForRegion[subscriber.Queue] = subscriber;
         }
 
-        public void AddMessageHandler<T>(Func<IHandler<T>> futureHandler) where T : Message
-        {
-            var topic = Config.TopicNameProvider(typeof(T));
-
-            foreach (var subscriber in _subscribersByTopic[topic])
+        public void AddMessageHandler<T>(string region, string queue, Func<IHandler<T>> futureHandler) where T : Message
             {
+            var subscribersByRegion = _subscribersByRegionAndQueue[region];
+            var subscriber = subscribersByRegion[queue];
                 subscriber.AddMessageHandler(futureHandler);
             }
-        }
 
         public void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message
         {
@@ -92,11 +98,11 @@ namespace JustSaying
             {
                 if (!Listening)
                 {
-                    foreach (var subscriptions in _subscribersByTopic)
+                    foreach (var regionSubscriber in _subscribersByRegionAndQueue)
                     {
-                        foreach (var subscriber in subscriptions.Value)
+                        foreach (var queueSubscriber in regionSubscriber.Value)
                         {
-                            subscriber.Listen();
+                            queueSubscriber.Value.Listen();
                         }
                     }
 
@@ -111,11 +117,11 @@ namespace JustSaying
             {
                 if (Listening)
                 {
-                    foreach (var subscribers in _subscribersByTopic)
+                    foreach (var regionSubscriber in _subscribersByRegionAndQueue)
                     {
-                        foreach (var subscriber in subscribers.Value)
+                        foreach (var queueSubscriber in regionSubscriber.Value)
                         {
-                            subscriber.StopListening();
+                            queueSubscriber.Value.StopListening();
                         }
                     }
                     Listening = false;
@@ -186,7 +192,7 @@ namespace JustSaying
                     throw;
                 }
 
-                Thread.Sleep(Config.PublishFailureBackoffMilliseconds * attemptCount); // ToDo: Increase back off each time (exponential)
+                Thread.Sleep(Config.PublishFailureBackoffMilliseconds * attemptCount); // ToDo: Increase back off each time (linear)
                 Publish(publisher, message, attemptCount);
             }
         }

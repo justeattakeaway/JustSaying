@@ -14,13 +14,13 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override void When()
         {
-            SystemUnderTest.AddNotificationTopicSubscriber(" ", null);
+            SystemUnderTest.AddNotificationSubscriber(" ", null);
         }
 
         [Then]
         public void ArgExceptionThrown()
         {
-            Assert.AreEqual(((ArgumentException)ThrownException).ParamName, "topic");
+            Assert.AreEqual(((ArgumentException)ThrownException).ParamName, "region");
         }
     }
 }

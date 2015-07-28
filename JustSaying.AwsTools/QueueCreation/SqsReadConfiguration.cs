@@ -20,10 +20,10 @@ namespace JustSaying.AwsTools.QueueCreation
         }
 
         internal SubscriptionType SubscriptionType { get; private set; }
-        internal string QueueName { get; set; }
-        internal string Topic { get; set; }
         internal string PublishEndpoint { get; set; }
 
+        public string QueueName { get; set; }
+        public string Topic { get; set; }
         public int? InstancePosition { get; set; }
         public int? MaxAllowedMessagesInFlight { get; set; }
         public IMessageProcessingStrategy MessageProcessingStrategy { get; set; }
