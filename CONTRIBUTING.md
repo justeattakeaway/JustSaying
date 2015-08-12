@@ -20,7 +20,7 @@ If you find a bug, have a feature request or even want to contribute an enhancem
 0. Ensure that your tests work and your documentation is complete.
 
 
-### General Contributition Guidelines:
+### General Contribution Guidelines:
 We follow the standard GitHub fork & pull request approach to open source collaboration.
 You can find an awesome description on how this works on the [gun.io blog](https://gun.io/blog/how-to-github-fork-branch-and-pull-request/).
 
