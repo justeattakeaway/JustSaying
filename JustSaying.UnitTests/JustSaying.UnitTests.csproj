@@ -66,6 +66,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CreateMe\WhenCreatingABus.cs" />
+    <Compile Include="Extensions\GivenIHaveAMessageType.cs" />
+    <Compile Include="Extensions\WhenGettingATopicNameWithAGenericType.cs" />
+    <Compile Include="Extensions\WhenGettingATopicNameWithANestedGenericType.cs" />
+    <Compile Include="Extensions\WhenGettingATopicNameWithAPoco.cs" />
     <Compile Include="JustSayingBus\CustomMonitor.cs" />
     <Compile Include="JustSayingBus\GivenAServiceBusWithoutMonitoring.cs" />
     <Compile Include="JustSayingBus\WhenPublishingMessageWithoutMonitor.cs" />
