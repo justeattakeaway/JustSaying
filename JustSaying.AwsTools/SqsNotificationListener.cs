@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Collections.ObjectModel;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Monitoring;
 using NLog;
 using Newtonsoft.Json.Linq;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using Message = JustSaying.Models.Message;
@@ -37,6 +38,7 @@ namespace JustSaying.AwsTools
             _handlers = new Dictionary<Type, List<Func<Message, bool>>>();
             _messageProcessingStrategy = new MaximumThroughput();
             _messageLock = messageLock;
+            Subscribers = new Collection<ISubscriber>();
         }
 
         public string Queue
@@ -80,7 +82,8 @@ namespace JustSaying.AwsTools
             {
                 handler = new StopwatchHandler<T>(handler, executionTimeMonitoring);
             }
-            
+
+            Subscribers.Add(new Subsriber(typeof(T)));
             handlers.Add(message => handler.Handle((T)message));
         }
 
@@ -213,5 +216,6 @@ namespace JustSaying.AwsTools
                 
             }
         }
+        public ICollection<ISubscriber> Subscribers { get; }
     }
 }

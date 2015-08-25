@@ -1,7 +1,10 @@
+using System.Globalization;
+using System.Linq;
 using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
 using NSubstitute;
+using Shouldly;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -34,6 +37,16 @@ namespace JustSaying.UnitTests.JustSayingBus
         public void RejectedOrderWasPublishedTwice()
         {
             Patiently.VerifyExpectation(() => _publisher.Received(2).Publish(Arg.Any<OrderRejected>()));
+        }
+
+        [Then]
+        public void AndInterrogationShowsPublishersHaveBeenSet()
+        {
+            var response = SystemUnderTest.WhatDoIHave();
+
+            response.Publishers.Count().ShouldBe(2);
+            response.Publishers.First(x => x.MessageType == typeof (OrderAccepted)).ShouldNotBe(null);
+            response.Publishers.First(x => x.MessageType == typeof(OrderRejected)).ShouldNotBe(null);
         }
     }
 }

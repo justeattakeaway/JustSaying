@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using JustSaying.Extensions;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
@@ -12,7 +13,7 @@ using NLog;
 
 namespace JustSaying
 {
-    public class JustSayingBus : IAmJustSaying
+    public class JustSayingBus : IAmJustSaying, IAmJustInterrogating
     {
         public bool Listening { get; private set; }
 
@@ -30,6 +31,7 @@ namespace JustSaying
         public IMessageLock MessageLock { get; set; }
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); //ToDo: danger!
         private readonly object _syncRoot = new object();
+        private readonly IInterrogationResponse _interrogationResponse;
 
         public JustSayingBus(IMessagingConfig config, IMessageSerialisationRegister serialisationRegister)
         {
@@ -44,6 +46,7 @@ namespace JustSaying
             _subscribersByRegionAndQueue = new Dictionary<string, Dictionary<string, INotificationSubscriber>>();
             _publishersByRegionAndTopic = new Dictionary<string, Dictionary<string, IMessagePublisher>>();
             SerialisationRegister = serialisationRegister;
+            _interrogationResponse = new InterrogationResponse();
         }
 
         public void AddNotificationSubscriber(string region, INotificationSubscriber subscriber)
@@ -67,7 +70,18 @@ namespace JustSaying
                 // Just re-use existing subscriber instead.
                 return;
             }
+
             subscribersForRegion[subscriber.Queue] = subscriber;
+
+            AddSubscribersToInterrogationResponse(subscriber);
+        }
+
+        private void AddSubscribersToInterrogationResponse(INotificationSubscriberInterrogation interrogationSubscribers)
+        {
+            foreach (var subscriber in interrogationSubscribers.Subscribers)
+            {
+                _interrogationResponse.Subscribers.Add(subscriber);
+            }
         }
 
         public void AddMessageHandler<T>(string region, string queue, Func<IHandler<T>> futureHandler) where T : Message
@@ -87,6 +101,9 @@ namespace JustSaying
             }
 
             var topic = typeof(T).ToTopicName();
+
+            _interrogationResponse.Publishers.Add(new Publisher(typeof(T)));
+
             publishersByTopic[topic] = messagePublisher;
         }
 
@@ -194,6 +211,11 @@ namespace JustSaying
                 Thread.Sleep(Config.PublishFailureBackoffMilliseconds * attemptCount); // ToDo: Increase back off each time (linear)
                 Publish(publisher, message, attemptCount);
             }
+        }
+
+        public IInterrogationResponse WhatDoIHave()
+        {
+            return _interrogationResponse;
         }
     }
 }

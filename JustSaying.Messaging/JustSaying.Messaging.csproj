@@ -49,6 +49,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Interrogation\IAmJustInterrogating.cs" />
+    <Compile Include="Interrogation\IInterrogationResponse.cs" />
+    <Compile Include="Interrogation\INotificationSubscriberInterrogation.cs" />
+    <Compile Include="Interrogation\InterrogationResponse.cs" />
+    <Compile Include="Interrogation\IPublisher.cs" />
+    <Compile Include="Interrogation\ISubscriber.cs" />
+    <Compile Include="Interrogation\Publisher.cs" />
+    <Compile Include="Interrogation\Subsriber.cs" />
     <Compile Include="MessageHandling\ExactlyOnceAttribute.cs" />
     <Compile Include="MessageHandling\ExactlyOnceHandler.cs" />
     <Compile Include="MessageHandling\FutureHandler.cs" />
