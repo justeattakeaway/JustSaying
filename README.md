@@ -135,6 +135,17 @@ CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
 		.WithMessageHandler<OrderAccepted>(new HandlerResolver())
 ````
 
+##Interrogation
+JustSaying provides you access to the Subscribers and Publishers message types via ````IAmJustInterrogating```` interface on the message bus.
+
+```c#
+
+            IAmJustSayingFluently bus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+                .WithSnsMessagePublisher<OrderAccepted>();
+            
+            IInterrogationResponse response =((IAmJustInterrogating)bus).WhatDoIHave();
+```
+
 ## Logging
 
 JustSaying stack will throw out the following named logs from NLog:
