@@ -70,7 +70,6 @@ namespace JustSaying
                 // Just re-use existing subscriber instead.
                 return;
             }
-
             subscribersForRegion[subscriber.Queue] = subscriber;
 
             AddSubscribersToInterrogationResponse(subscriber);
@@ -101,7 +100,6 @@ namespace JustSaying
             }
 
             var topic = typeof(T).ToTopicName();
-
             _interrogationResponse.Publishers.Add(new Publisher(typeof(T)));
 
             publishersByTopic[topic] = messagePublisher;
@@ -211,8 +209,8 @@ namespace JustSaying
                 Thread.Sleep(Config.PublishFailureBackoffMilliseconds * attemptCount); // ToDo: Increase back off each time (linear)
                 Publish(publisher, message, attemptCount);
             }
+      
         }
-
         public IInterrogationResponse WhatDoIHave()
         {
             return _interrogationResponse;
