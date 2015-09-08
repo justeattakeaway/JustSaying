@@ -69,14 +69,14 @@ namespace JustSaying.AwsTools
                 else
                 {
                     // Throw all errors which are not delete timeout related.
-                    Log.ErrorException(string.Format("Create Queue error: {0}", QueueName), ex);
+                    Log.Error(ex, string.Format("Create Queue error: {0}", QueueName));
                     throw;
                 }
 
                 // If we're on a delete timeout, throw after 2 attempts.
                 if (attempt >= 2)
                 {
-                    Log.ErrorException(string.Format("Create Queue error, max retries exceeded for delay - Queue: {0}", QueueName), ex);
+                    Log.Error(ex, string.Format("Create Queue error, max retries exceeded for delay - Queue: {0}", QueueName));
                     throw;
                 }
             }
