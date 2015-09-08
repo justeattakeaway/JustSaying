@@ -134,7 +134,7 @@ namespace JustSaying.AwsTools
             }
             catch (Exception ex)
             {
-                Log.ErrorException(string.Format("Issue in message handling loop for queue {0}", _queue.QueueName), ex);
+                Log.Error(ex, string.Format("Issue in message handling loop for queue {0}", _queue.QueueName));
             }
         }
 
@@ -204,7 +204,7 @@ namespace JustSaying.AwsTools
             }
             catch (Exception ex)
             {
-                Log.ErrorException(string.Format("Issue handling message... {0}. StackTrace: {1}", message, ex.StackTrace), ex);
+                Log.Error(ex, string.Format("Issue handling message... {0}. StackTrace: {1}", message, ex.StackTrace));
                 if (typedMessage != null)
                 {
                     _messagingMonitor.HandleException(typedMessage.GetType().Name);
