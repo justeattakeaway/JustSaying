@@ -4,7 +4,6 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 using NSubstitute;
-using NSubstitute.Experimental;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
