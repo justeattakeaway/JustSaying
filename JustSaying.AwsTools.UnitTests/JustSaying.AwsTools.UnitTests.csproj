@@ -71,6 +71,7 @@
     <Compile Include="Sns\TopicByName\WhenPublishing.cs" />
     <Compile Include="SqsNotificationListener\HandlingExceptions\WhenErrorHandlingActionIsNotProvided.cs" />
     <Compile Include="SqsNotificationListener\HandlingExceptions\WhenErrorHandlingActionIsProvided.cs" />
+    <Compile Include="SqsNotificationListener\WhenAttemptingToInterrogateASubscriber.cs" />
     <Compile Include="SqsNotificationListener\WhenExactlyOnceIsAppliedToHandler.cs" />
     <Compile Include="SqsNotificationListener\WhenListeningStartsAndStops.cs" />
     <Compile Include="SqsNotificationListener\BaseQueuePollingTest.cs" />

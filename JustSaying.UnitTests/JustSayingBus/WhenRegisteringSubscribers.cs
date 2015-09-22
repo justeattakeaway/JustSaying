@@ -1,7 +1,13 @@
-﻿using JustBehave;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using JustBehave;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Interrogation;
+using JustSaying.TestingFramework;
 using NSubstitute;
 using NUnit.Framework;
+using Shouldly;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -15,8 +21,14 @@ namespace JustSaying.UnitTests.JustSayingBus
             base.Given();
             _subscriber1 = Substitute.For<INotificationSubscriber>();
             _subscriber1.Queue.Returns("queue1");
+            _subscriber1.Subscribers.Returns(new Collection<ISubscriber>
+            {
+                new Subsriber(typeof (OrderAccepted)),
+                new Subsriber(typeof (OrderRejected))
+            });
             _subscriber2 = Substitute.For<INotificationSubscriber>();
             _subscriber2.Queue.Returns("queue2");
+            _subscriber2.Subscribers.Returns(new Collection<ISubscriber> {new Subsriber(typeof (GenericMessage))});
         }
 
         protected override void When()
@@ -45,6 +57,17 @@ namespace JustSaying.UnitTests.JustSayingBus
             SystemUnderTest.Start();
             _subscriber1.Received(1).Listen();
             _subscriber2.Received(1).Listen();
+        }
+
+        [Then]
+        public void AndInterrogationShowsPublishersHaveBeenSet()
+        {
+            var response = SystemUnderTest.WhatDoIHave();
+
+            response.Subscribers.Count().ShouldBe(3);
+            response.Subscribers.First(x => x.MessageType == typeof(OrderAccepted)).ShouldNotBe(null);
+            response.Subscribers.First(x => x.MessageType == typeof(OrderRejected)).ShouldNotBe(null);
+            response.Subscribers.First(x => x.MessageType == typeof(GenericMessage)).ShouldNotBe(null);
         }
     }
 }

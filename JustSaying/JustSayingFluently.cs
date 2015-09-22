@@ -12,6 +12,7 @@ using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using NLog;
 using JustSaying.Lookups;
+using JustSaying.Messaging.Interrogation;
 
 namespace JustSaying
 {
@@ -23,7 +24,7 @@ namespace JustSaying
     /// 3. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc // ToDo: Shouldn't be enforced in base! Is a JE concern.
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings, IMayWantARegionPicker
+    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings, IMayWantARegionPicker, IAmJustInterrogating
     {
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
@@ -364,6 +365,12 @@ namespace JustSaying
         {
             Bus.Config.GetActiveRegion = getActiveRegion;
             return this;
+        }
+
+        public IInterrogationResponse WhatDoIHave()
+        {
+            var iterrogationBus = Bus as IAmJustInterrogating;
+            return iterrogationBus.WhatDoIHave();
         }
     }
 
