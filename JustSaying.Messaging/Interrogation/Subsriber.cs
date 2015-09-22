@@ -9,6 +9,6 @@ namespace JustSaying.Messaging.Interrogation
             MessageType = messageType;
         }
 
-        public Type MessageType { get; }
+        public Type MessageType { get; set; }
     }
 }

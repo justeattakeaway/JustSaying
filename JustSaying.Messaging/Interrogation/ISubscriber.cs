@@ -4,6 +4,6 @@ namespace JustSaying.Messaging.Interrogation
 {
     public interface ISubscriber
     {
-        Type MessageType { get; }
+        Type MessageType { get; set; }
     }
 }
