@@ -31,7 +31,8 @@ namespace JustSaying
         public IMessageLock MessageLock { get; set; }
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); //ToDo: danger!
         private readonly object _syncRoot = new object();
-        private readonly IInterrogationResponse _interrogationResponse;
+        private readonly IList<IPublisher> _publishers;
+        private readonly IList<ISubscriber> _subscribers;
 
         public JustSayingBus(IMessagingConfig config, IMessageSerialisationRegister serialisationRegister)
         {
@@ -46,7 +47,9 @@ namespace JustSaying
             _subscribersByRegionAndQueue = new Dictionary<string, Dictionary<string, INotificationSubscriber>>();
             _publishersByRegionAndTopic = new Dictionary<string, Dictionary<string, IMessagePublisher>>();
             SerialisationRegister = serialisationRegister;
-            _interrogationResponse = new InterrogationResponse();
+            _publishers = new List<IPublisher>();
+            _subscribers = new List<ISubscriber>();
+            _subscribers = new List<ISubscriber>();
         }
 
         public void AddNotificationSubscriber(string region, INotificationSubscriber subscriber)
@@ -79,7 +82,7 @@ namespace JustSaying
         {
             foreach (var subscriber in interrogationSubscribers.Subscribers)
             {
-                _interrogationResponse.Subscribers.Add(subscriber);
+                _subscribers.Add(subscriber);
             }
         }
 
@@ -100,7 +103,7 @@ namespace JustSaying
             }
 
             var topic = typeof(T).ToTopicName();
-            _interrogationResponse.Publishers.Add(new Publisher(typeof(T)));
+            _publishers.Add(new Publisher(typeof(T)));
 
             publishersByTopic[topic] = messagePublisher;
         }
@@ -213,7 +216,7 @@ namespace JustSaying
         }
         public IInterrogationResponse WhatDoIHave()
         {
-            return _interrogationResponse;
+            return new InterrogationResponse(_subscribers, _publishers);
         }
     }
 }

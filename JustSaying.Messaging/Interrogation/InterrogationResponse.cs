@@ -4,13 +4,13 @@ namespace JustSaying.Messaging.Interrogation
 {
     public class InterrogationResponse : IInterrogationResponse
     {
-        public InterrogationResponse()
+        public InterrogationResponse(IEnumerable<ISubscriber> subscribers, IEnumerable<IPublisher> publishers)
         {
-            Subscribers = new List<ISubscriber>();
-            Publishers = new List<IPublisher>();
+            Subscribers = subscribers;
+            Publishers = publishers;
         }
 
-        public ICollection<ISubscriber> Subscribers { get; }
-        public ICollection<IPublisher> Publishers { get; }
+        public IEnumerable<ISubscriber> Subscribers { get; }
+        public IEnumerable<IPublisher> Publishers { get; }
     }
 }
