@@ -216,6 +216,6 @@ namespace JustSaying.AwsTools
                 
             }
         }
-        public ICollection<ISubscriber> Subscribers { get; }
+        public ICollection<ISubscriber> Subscribers { get; set; }
     }
 }
