@@ -6,20 +6,6 @@ namespace JustSaying.AwsTools.QueueCreation
 {
     public class AmazonQueueCreator : IVerifyAmazonQueues
     {
-        [Obsolete("Please use the other overload that takes SqsConfiguration as parameter.")]
-        public SqsQueueByName EnsureTopicExistsWithQueueSubscribed(string region, IMessageSerialisationRegister serialisationRegister, string queueName, string topic, int messageRetentionSeconds, int visibilityTimeoutSeconds = 30, int? instancePosition = null)
-        {
-            return EnsureTopicExistsWithQueueSubscribed(region, serialisationRegister,
-                new SqsReadConfiguration(SubscriptionType.ToTopic)
-                {
-                    QueueName = queueName,
-                    Topic = topic,
-                    MessageRetentionSeconds = messageRetentionSeconds,
-                    VisibilityTimeoutSeconds = visibilityTimeoutSeconds,
-                    InstancePosition = instancePosition
-                });
-        }
-
         public SqsQueueByName EnsureTopicExistsWithQueueSubscribed(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
         {
             var queue = EnsureQueueExists(region, queueConfig);

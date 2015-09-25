@@ -75,8 +75,6 @@
     <Compile Include="JustSayingFluently\ConfigValidation\WhenNoRegionIsProvided.cs" />
     <Compile Include="JustSayingFluently\Publishing\WhenPublishing.cs" />
     <Compile Include="JustSayingFluently\RegisteringPublishers\WhenAddingPublishers.cs" />
-    <Compile Include="Lookups\SnsEndpointNames\WhenRequestingAnEndpointName.cs" />
-    <Compile Include="Lookups\SqsEndpointNames\WhenRequestingAnEndpointName.cs" />
     <Compile Include="JustSayingBus\GivenAServiceBus.cs" />
     <Compile Include="JustSayingBus\WhenAddingAPublisherWithNoTopic.cs" />
     <Compile Include="JustSayingBus\WhenPublishingFails.cs" />

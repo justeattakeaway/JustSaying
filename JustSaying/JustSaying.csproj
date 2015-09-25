@@ -53,18 +53,15 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DefaultNamingStrategy.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="HandlerNotRegisteredWithContainerException.cs" />
     <Compile Include="IMessagingConfig.cs" />
     <Compile Include="CreateMeABus.cs" />
+    <Compile Include="INamingStrategy.cs" />
     <Compile Include="JustSayingFluently.cs" />
     <Compile Include="IPublishConfiguration.cs" />
     <Compile Include="JustSayingBus.cs" />
-    <Compile Include="Lookups\IPublishEndpointProvider.cs" />
-    <Compile Include="Lookups\IPublishSubscribtionEndpointProvider.cs" />
-    <Compile Include="Lookups\SnsPublishEndpointProvider.cs" />
-    <Compile Include="Lookups\SqsPublishEndpointProvider.cs" />
-    <Compile Include="Lookups\SqsSubscribtionEndpointProvider.cs" />
     <Compile Include="MessagingConfig.cs" />
     <Compile Include="IAmJustSaying.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

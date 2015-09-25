@@ -8,8 +8,18 @@ namespace JustSaying
     {
         public static IMayWantOptionalSettings InRegion(string region)
         {
+            return InRegions(region);
+        }
+
+        public static IMayWantOptionalSettings InRegions(params string[] regions)
+        {
             var config = new MessagingConfig();
-            config.Regions.Add(region);
+            
+            if (regions != null)
+            foreach (var region in regions)
+            {
+                config.Regions.Add(region);
+            }
 
             config.Validate();
 
