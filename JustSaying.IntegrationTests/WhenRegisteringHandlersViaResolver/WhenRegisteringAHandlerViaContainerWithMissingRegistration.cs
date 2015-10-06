@@ -1,5 +1,6 @@
 using JustBehave;
 using NUnit.Framework;
+using StructureMap;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
@@ -13,14 +14,12 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         protected override void When()
         {
             base.When();
-            var handlerResolver = new StructureMapHandlerResolver();
+            var handlerResolver = new StructureMapHandlerResolver(new Container());
 
-            var subscriber = JustSaying.CreateMeABus.InRegion("eu-west-1")
+            CreateMeABus.InRegion("eu-west-1")
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);
-
-            subscriber.StartListening();
         }
 
         [Then]
