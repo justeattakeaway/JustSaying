@@ -6,9 +6,16 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
     public class StructureMapHandlerResolver : IHandlerResolver
     {
+        private readonly IContainer _container;
+
+        public StructureMapHandlerResolver(IContainer container)
+        {
+            _container = container;
+        }
+
         public IEnumerable<IHandler<T>> ResolveHandlers<T>()
         {
-            return ObjectFactory.GetAllInstances<IHandler<T>>();
+            return _container.GetAllInstances<IHandler<T>>();
         }
     }
 }
