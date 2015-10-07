@@ -45,6 +45,14 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Documentation\Documenter.cs" />
+    <Compile Include="Documentation\IAmJustDocumenting.cs" />
+    <Compile Include="Documentation\Templates\IndexPageData.cs" />
+    <Compile Include="Documentation\Templates\IndexPage.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>IndexPage.tt</DependentUpon>
+    </Compile>
     <Compile Include="Interrogation\IAmJustInterrogating.cs" />
     <Compile Include="Interrogation\IInterrogationResponse.cs" />
     <Compile Include="Interrogation\INotificationSubscriberInterrogation.cs" />
@@ -80,7 +88,15 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Documentation\Templates\IndexPage.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>IndexPage.cs</LastGenOutput>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -68,6 +68,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Documentation\WhenGeneratoringIndexPage.cs" />
     <Compile Include="MessageProcessingStrategies\ThrottledTests.cs" />
     <Compile Include="MessageHandling\WhenEnsuringMessageIsOnlyHandledExactlyOnce.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
