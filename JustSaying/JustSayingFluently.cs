@@ -6,6 +6,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Extensions;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Documentation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
@@ -22,14 +23,16 @@ namespace JustSaying
     /// 2. WithMonitoring(instance) // Ensure you monitor the messaging status
     /// 3. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc // ToDo: Shouldn't be enforced in base! Is a JE concern.
     /// 3. Set Handlers - WithTopicMessageHandler()
+    /// 5. 
     /// </summary>
-    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings, IMayWantARegionPicker, IAmJustInterrogating
+    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings, IMayWantARegionPicker, IAmJustInterrogating, IMayWantDocumentation
     {
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
         protected readonly IAmJustSaying Bus;
         private SqsReadConfiguration _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic);
         private IMessageSerialisationFactory _serialisationFactory;
+        private IAmJustDocumenting _documenter = new Documenter();
         private Func<INamingStrategy> busNamingStrategyFunc;
 
         internal protected JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator)
@@ -367,6 +370,12 @@ namespace JustSaying
             this.busNamingStrategyFunc = busNamingStrategy;
             return this;
         }
+
+        public IAmJustSayingFluently AndCreateDocumentation(string path)
+        {
+            _documenter.CreateIndexPage(path, WhatDoIHave());
+            return this;
+        }
     }
 
     public interface IMayWantOptionalSettings : IMayWantMonitoring, IMayWantMessageLockStore, IMayWantCustomSerialisation, IMayWantAFailoverRegion, IMayWantNamingStrategy { }
@@ -444,5 +453,10 @@ namespace JustSaying
 
     public interface IHaveFulfilledPublishRequirements : IAmJustSayingFluently
     {
+    }
+
+    public interface IMayWantDocumentation : IAmJustSayingFluently
+    {
+        IAmJustSayingFluently AndCreateDocumentation(string path);
     }
 }

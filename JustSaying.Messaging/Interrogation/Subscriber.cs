@@ -2,9 +2,9 @@ using System;
 
 namespace JustSaying.Messaging.Interrogation
 {
-    public class Subsriber : ISubscriber
+    public class Subscriber : ISubscriber
     {
-        public Subsriber(Type messageType)
+        public Subscriber(Type messageType)
         {
             MessageType = messageType;
         }
