@@ -18,7 +18,7 @@ namespace JustSaying.Messaging.UnitTests.Documentation
             // arrange
             const string filename = "JustSaying.html";
             IInterrogationResponse interrogationResponse = new InterrogationResponse(
-                 new [] { new Subsriber(typeof(TestMessage1)), new Subsriber(typeof(TestMessage2)) },
+                 new [] { new Subscriber(typeof(TestMessage1)), new Subscriber(typeof(TestMessage2)) },
                  new[] { new Publisher(typeof(TestMessage3)) });
 
             // act
@@ -84,7 +84,7 @@ namespace JustSaying.Messaging.UnitTests.Documentation
             // arrange
             const string filename = "JustSaying.html";
             IInterrogationResponse interrogationResponse = new InterrogationResponse(
-                 new Subsriber[0], 
+                 new Subscriber[0], 
                  new [] { new Publisher(typeof(TestMessage3)) });
 
             // act
@@ -107,7 +107,7 @@ namespace JustSaying.Messaging.UnitTests.Documentation
             // arrange
             const string filename = "JustSaying.html";
             IInterrogationResponse interrogationResponse = new InterrogationResponse(
-                 new[] { new Subsriber(typeof(TestMessage1)), new Subsriber(typeof(TestMessage2)) },
+                 new[] { new Subscriber(typeof(TestMessage1)), new Subscriber(typeof(TestMessage2)) },
                  null);
 
             // act
@@ -131,7 +131,7 @@ namespace JustSaying.Messaging.UnitTests.Documentation
             // arrange
             const string filename = "JustSaying.html";
             IInterrogationResponse interrogationResponse = new InterrogationResponse(
-                new[] { new Subsriber(typeof(TestMessage1)), new Subsriber(typeof(TestMessage2)) },
+                new[] { new Subscriber(typeof(TestMessage1)), new Subscriber(typeof(TestMessage2)) },
                 new Publisher[0]);
 
             // act

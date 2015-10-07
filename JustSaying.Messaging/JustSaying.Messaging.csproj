@@ -60,7 +60,7 @@
     <Compile Include="Interrogation\IPublisher.cs" />
     <Compile Include="Interrogation\ISubscriber.cs" />
     <Compile Include="Interrogation\Publisher.cs" />
-    <Compile Include="Interrogation\Subsriber.cs" />
+    <Compile Include="Interrogation\Subscriber.cs" />
     <Compile Include="MessageHandling\ExactlyOnceAttribute.cs" />
     <Compile Include="MessageHandling\ExactlyOnceHandler.cs" />
     <Compile Include="MessageHandling\FutureHandler.cs" />
