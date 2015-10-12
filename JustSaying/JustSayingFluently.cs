@@ -328,7 +328,7 @@ namespace JustSaying
 
         public IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder)
         {
-            confBuilder(Bus.Config);
+            confBuilder(Bus.PublishConfig);
             Bus.Config.Validate();
 
             return this;

@@ -15,8 +15,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         protected override void Given()
         {
             base.Given();
-            Config.PublishFailureReAttempts.Returns(PublishAttempts);
-            Config.PublishFailureBackoffMilliseconds.Returns(0);
+            PublishConfig.PublishFailureReAttempts.Returns(PublishAttempts);
+            PublishConfig.PublishFailureBackoffMilliseconds.Returns(0);
             RecordAnyExceptionsThrown();
             _publisher.When(x => x.Publish(Arg.Any<Message>())).Do(x => { throw new Exception(); });
         }

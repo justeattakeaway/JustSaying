@@ -11,7 +11,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         {
             base.Given();
 
-            Configuration = new MessagingConfig();
+            Configuration = new PublishConfig();
 
             RecordAnyExceptionsThrown();
         }

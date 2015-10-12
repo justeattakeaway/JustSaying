@@ -19,7 +19,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 
             EnableMockedBus();
 
-            Configuration = new MessagingConfig();
+            Configuration = new PublishConfig();
 
             DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName);
         }

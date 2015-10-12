@@ -24,7 +24,7 @@ namespace JustSaying
             config.Validate();
 
             var messageSerialisationRegister = new MessageSerialisationRegister();
-            var justSayingBus = new JustSayingBus(config, messageSerialisationRegister);
+            var justSayingBus = new JustSayingBus(config, new PublishConfig(),  messageSerialisationRegister);
 
             var amazonQueueCreator = new AmazonQueueCreator();
             var bus = new JustSayingFluently(justSayingBus, amazonQueueCreator);

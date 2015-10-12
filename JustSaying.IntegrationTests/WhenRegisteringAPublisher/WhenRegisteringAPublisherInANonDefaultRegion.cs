@@ -16,7 +16,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 
             _topicName = "message";
 
-            Configuration = new MessagingConfig();
+            Configuration = new PublishConfig();
 
             DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName);
 

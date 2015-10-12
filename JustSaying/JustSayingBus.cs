@@ -20,6 +20,7 @@ namespace JustSaying
         private readonly Dictionary<string, Dictionary<string, INotificationSubscriber>> _subscribersByRegionAndQueue;
         private readonly Dictionary<string, Dictionary<string, IMessagePublisher>> _publishersByRegionAndTopic;
         public IMessagingConfig Config { get; private set; }
+        public IPublishConfiguration PublishConfig { get; private set; }
 
         private IMessageMonitor _monitor;
         public IMessageMonitor Monitor
@@ -34,14 +35,12 @@ namespace JustSaying
         private readonly IList<IPublisher> _publishers;
         private readonly IList<ISubscriber> _subscribers;
 
-        public JustSayingBus(IMessagingConfig config, IMessageSerialisationRegister serialisationRegister)
+        public JustSayingBus(IMessagingConfig config, IPublishConfiguration publishConfig, IMessageSerialisationRegister serialisationRegister)
         {
-            if (config.PublishFailureReAttempts == 0)
-                Log.Warn("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may loose messages!");
-
-            Log.Info(string.Format("Registering with stack."));
+            Log.Info("Registering with stack.");
 
             Config = config;
+            PublishConfig = publishConfig;
             Monitor = new NullOpMessageMonitor();
 
             _subscribersByRegionAndQueue = new Dictionary<string, Dictionary<string, INotificationSubscriber>>();
@@ -201,7 +200,7 @@ namespace JustSaying
                 if (Monitor == null)
                     Log.Error("Publish: Monitor was null - duplicates will occur!");
 
-                if (attemptCount == Config.PublishFailureReAttempts)
+                if (attemptCount == PublishConfig.PublishFailureReAttempts)
                 {
                     Monitor.IssuePublishingMessage();
 
@@ -209,7 +208,7 @@ namespace JustSaying
                     throw;
                 }
 
-                Thread.Sleep(Config.PublishFailureBackoffMilliseconds * attemptCount); // ToDo: Increase back off each time (linear)
+                Thread.Sleep(PublishConfig.PublishFailureBackoffMilliseconds * attemptCount); // ToDo: Increase back off each time (linear)
                 Publish(publisher, message, attemptCount);
             }
       

@@ -26,7 +26,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
             EnableMockedBus();
 
-            Configuration = new MessagingConfig();
+            Configuration = new PublishConfig();
 
             DeleteTopicIfItAlreadyExists(TestEndpoint, TopicName);
             DeleteQueueIfItAlreadyExists(TestEndpoint, QueueName);
