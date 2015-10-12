@@ -18,7 +18,7 @@ namespace JustSaying.AwsTools.QueueCreation
             RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT;
         }
 
-        internal SubscriptionType SubscriptionType { get; private set; }
+        public SubscriptionType SubscriptionType { get; private set; }
 
         public string BaseQueueName { get; set; }
         public string QueueName { get; set; }
