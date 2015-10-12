@@ -12,13 +12,13 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
         protected override void Given()
         {
-            ObjectFactory.Initialize(x => x.AddRegistry(new SingleHandlerRegistry()));
+           var container = new Container(x => x.AddRegistry(new SingleHandlerRegistry()));
 
-            var handlerResolver = new StructureMapHandlerResolver();
+           var handlerResolver = new StructureMapHandlerResolver(container);
 
             _handlerFuture = ((OrderProcessor)handlerResolver.ResolveHandlers<OrderPlaced>().Single()).Future;
 
-            var subscriber = JustSaying.CreateMeABus.InRegion("eu-west-1")
+            var subscriber = CreateMeABus.InRegion("eu-west-1")
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);

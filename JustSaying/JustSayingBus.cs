@@ -208,7 +208,8 @@ namespace JustSaying
                 {
                     Monitor.IssuePublishingMessage();
 
-                    Log.ErrorException(string.Format("Unable to publish message {0}", message.GetType().Name), ex);
+                    var errorMessage = "Unable to publish message " + message.GetType().Name;
+                    Log.Error(ex, errorMessage);
                     throw;
                 }
 

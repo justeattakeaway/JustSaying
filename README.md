@@ -183,7 +183,7 @@ You can opt out during subscription configuration.
 ## Power tool
 
 JustSaying comes with a power tool console app that helps you mange your SQS queues from the command line.
-At this point, the power tool is only able to move arbitary number of messages from one queue to another.
+At this point, the power tool is only able to move arbitrary number of messages from one queue to another.
 ````
 JustSaying.Tools.exe move -from "source_queue_name" -to "destination_queue_name" -count "1"
 ````
