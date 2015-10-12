@@ -7,15 +7,15 @@ namespace JustSaying.UnitTests
 {
     public abstract class JustSayingFluentlyTestBase : BehaviourTest<JustSaying.JustSayingFluently>
     {
-        protected IPublishConfiguration Configuration;
+        protected IPublishConfiguration PublishConfiguration;
         protected IAmJustSaying Bus;
         protected readonly IVerifyAmazonQueues QueueVerifier = Substitute.For<IVerifyAmazonQueues>();
 
         protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
-            if (Configuration == null)
+            if (PublishConfiguration == null)
             {
-                Configuration = new MessagingConfig();
+                PublishConfiguration = new PublishConfig();
             }
 
             var fns = CreateMeABus
@@ -24,8 +24,8 @@ namespace JustSaying.UnitTests
                 .WithActiveRegion(() => "defaultRegion")
                 .ConfigurePublisherWith(x =>
                 {
-                    x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;
-                    x.PublishFailureReAttempts = Configuration.PublishFailureReAttempts;
+                    x.PublishFailureBackoffMilliseconds = PublishConfiguration.PublishFailureBackoffMilliseconds;
+                    x.PublishFailureReAttempts = PublishConfiguration.PublishFailureReAttempts;
 
                 }) as JustSaying.JustSayingFluently;
             

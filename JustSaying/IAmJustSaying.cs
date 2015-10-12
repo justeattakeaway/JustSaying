@@ -18,6 +18,7 @@ namespace JustSaying
         void Start();
         void Stop();
         IMessagingConfig Config { get; }
+        IPublishConfiguration PublishConfig { get; }
         IMessageMonitor Monitor { get; set; }
         IMessageSerialisationRegister SerialisationRegister { get; }
         IMessageLock MessageLock { get; set; }

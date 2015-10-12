@@ -3,10 +3,12 @@ using System.Diagnostics;
 using Amazon;
 using JustBehave;
 using JustSaying.AwsTools;
+using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using NSubstitute;
+using NUnit.Framework;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
@@ -17,7 +19,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         protected IMessageMonitor Monitoring;
         private Future<GenericMessage> _snsHandler;
         private Future<AnotherGenericMessage> _sqsHandler;
-        private IPublishConfiguration _config = new MessagingConfig {PublishFailureBackoffMilliseconds = 1, PublishFailureReAttempts = 3};
+        private IPublishConfiguration _config = new PublishConfig {PublishFailureBackoffMilliseconds = 1, PublishFailureReAttempts = 3};
 
         protected void RegisterSnsHandler(Future<GenericMessage> handler)
         {
@@ -53,13 +55,12 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
             ServiceBus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithMonitoring(Monitoring)
-
                 .ConfigurePublisherWith(c =>
                 {
                     c.PublishFailureBackoffMilliseconds = _config.PublishFailureBackoffMilliseconds;
                     c.PublishFailureReAttempts = _config.PublishFailureReAttempts;
                 })
-
+                
                 .WithSnsMessagePublisher<GenericMessage>()
                 .WithSqsTopicSubscriber()
                 .IntoQueue("queuename")
@@ -70,7 +71,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                     cf.InstancePosition = 1;
                 })
                 .WithMessageHandler(snsHandler)
-
+                
                 .WithSqsMessagePublisher<AnotherGenericMessage>(configuration => { })
                 .WithSqsPointToPointSubscriber()
                 .IntoQueue(string.Empty)

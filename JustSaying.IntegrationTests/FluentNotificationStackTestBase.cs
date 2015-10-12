@@ -52,6 +52,7 @@ namespace JustSaying.IntegrationTests
             var constructedStack = (JustSayingBus) notificationStackField.GetValue(fns);
 
             NotificationStack.Config.Returns(constructedStack.Config);
+            NotificationStack.PublishConfig.Returns(constructedStack.PublishConfig);
 
             notificationStackField.SetValue(fns, NotificationStack);
         }

@@ -24,7 +24,6 @@ namespace JustSaying.AwsTools.QueueCreation
         public string QueueName { get; set; }
 
         public string BaseTopicName { get; set; }
-        public string Topic { get; set; }
         public string PublishEndpoint { get; set; }
 
         public int? InstancePosition { get; set; }
@@ -48,9 +47,6 @@ namespace JustSaying.AwsTools.QueueCreation
 
         private void ValidateSnsConfiguration()
         {
-            if (string.IsNullOrWhiteSpace(Topic))
-                throw new ConfigurationErrorsException("Invalid configuration. Topic must be provided.");
-
             if (PublishEndpoint == null)
                 throw new ConfigurationErrorsException("You must provide a value for PublishEndpoint.");
         }
