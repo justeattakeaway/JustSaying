@@ -95,7 +95,7 @@ namespace JustSaying
             configBuilder(config);
 
             var messageTypeName = typeof(T).ToTopicName();
-            var queueName = GetNamingStrategy().GetQueueName(config.QueueName, messageTypeName);
+            var queueName = GetNamingStrategy().GetQueueName(new SqsReadConfiguration(SubscriptionType.PointToPoint){BaseQueueName = config.QueueName}, messageTypeName);
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
 
@@ -299,14 +299,14 @@ namespace JustSaying
             var namingStrategy = GetNamingStrategy();
             _subscriptionConfig.PublishEndpoint = namingStrategy.GetTopicName(_subscriptionConfig.BaseTopicName, messageTypeName);
             _subscriptionConfig.Topic = namingStrategy.GetTopicName(_subscriptionConfig.BaseTopicName, messageTypeName);
-            _subscriptionConfig.QueueName = namingStrategy.GetQueueName(_subscriptionConfig.BaseQueueName, messageTypeName);
+            _subscriptionConfig.QueueName = namingStrategy.GetQueueName(_subscriptionConfig, messageTypeName);
             _subscriptionConfig.Validate();
         }
 
         private void ConfigureSqsSubscription(string messageTypeName)
         {
             _subscriptionConfig.ValidateSqsConfiguration();
-            _subscriptionConfig.QueueName = GetNamingStrategy().GetQueueName(_subscriptionConfig.BaseQueueName, messageTypeName);
+            _subscriptionConfig.QueueName = GetNamingStrategy().GetQueueName(_subscriptionConfig, messageTypeName);
         }
 
         #endregion

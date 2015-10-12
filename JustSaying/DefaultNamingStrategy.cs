@@ -16,9 +16,9 @@ namespace JustSaying
             return messageType.ToLower();
         }
 
-        public string GetQueueName(string queueName, string messageType)
+        public string GetQueueName(SqsReadConfiguration sqsConfig, string messageType)
         {
-            return string.IsNullOrWhiteSpace(queueName) ? messageType.ToLower() : queueName.ToLower();
+            return string.IsNullOrWhiteSpace(sqsConfig.BaseQueueName) ? messageType.ToLower() : sqsConfig.BaseQueueName.ToLower();
         }
     }
 }
