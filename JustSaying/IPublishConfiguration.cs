@@ -4,5 +4,6 @@ namespace JustSaying
     {
         int PublishFailureReAttempts { get; set; }
         int PublishFailureBackoffMilliseconds { get; set; }
+        string Topic { get; set; }
     }
 }

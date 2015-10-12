@@ -12,5 +12,6 @@ namespace JustSaying
         }
         public int PublishFailureReAttempts { get; set; }
         public int PublishFailureBackoffMilliseconds { get; set; }
+        public string Topic { get; set; }
     }
 }

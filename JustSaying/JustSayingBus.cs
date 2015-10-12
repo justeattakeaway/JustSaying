@@ -102,6 +102,10 @@ namespace JustSaying
             }
 
             var topic = typeof(T).ToTopicName();
+            if (_publishers.Any(x => x.MessageType == typeof (T)))
+            {
+                throw new Exception(string.Format("Publisher of type '{0}' already exists.", typeof(T)));
+            }
             _publishers.Add(new Publisher(typeof(T)));
 
             publishersByTopic[topic] = messagePublisher;

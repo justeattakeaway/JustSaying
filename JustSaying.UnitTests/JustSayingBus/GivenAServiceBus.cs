@@ -19,7 +19,7 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override JustSaying.JustSayingBus CreateSystemUnderTest()
         {
-            return new JustSaying.JustSayingBus(Config, new PublishConfig(),  null) {Monitor = Monitor};
+            return new JustSaying.JustSayingBus(Config, PublishConfig,  null) {Monitor = Monitor};
         }
     }
 }
