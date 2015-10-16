@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
+using JustSaying.Messaging.Extensions;
 
 namespace JustSaying.Extensions
 {
@@ -11,20 +10,8 @@ namespace JustSaying.Extensions
 
         public static string ToTopicName(this Type type)
         {
-            var name = type.GetTopicName().TruncateTo(MAX_TOPIC_NAME_LENGTH);
+            var name = type.ToKey().TruncateTo(MAX_TOPIC_NAME_LENGTH);
             return name;
-        }
-
-        private static int GetInvariantHashCode(this string value)
-        {
-            return value.Aggregate(5381, (current, character) => (current * 397) ^ character);
-        }
-
-        private static string GetTopicName(this Type type)
-        {
-            var list = new List<string>();
-            RecursiveGetTopicName(type, list);
-            return string.Join("-", list);
         }
 
         private static string TruncateTo(this string name, int maxLength)
@@ -37,13 +24,10 @@ namespace JustSaying.Extensions
             return name;
         }
 
-        private static void RecursiveGetTopicName(Type type, ICollection<string> types)
+
+        private static int GetInvariantHashCode(this string value)
         {
-            types.Add(Regex.Replace(type.Name, "\\W", "_").ToLower());
-            foreach (var innerType in type.GetGenericArguments())
-            {
-                RecursiveGetTopicName(innerType, types);
-            }
+            return value.Aggregate(5381, (current, character) => (current*397) ^ character);
         }
     }
 }

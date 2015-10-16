@@ -3,6 +3,7 @@ using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools;
 using JustSaying.Messaging.MessageSerialisation;
 using JustBehave;
+using JustSaying.Messaging.Extensions;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using NSubstitute;
@@ -44,7 +45,7 @@ namespace AwsTools.UnitTests.Sns.TopicByName
         [Then]
         public void MessageSubjectIsObjectType()
         {
-            _sns.Received().Publish(Arg.Is<PublishRequest>(x => x.Subject == typeof(GenericMessage).Name));
+            _sns.Received().Publish(Arg.Is<PublishRequest>(x => x.Subject == typeof(GenericMessage).ToKey()));
         }
 
         [Then]

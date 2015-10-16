@@ -45,6 +45,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="Interrogation\IAmJustInterrogating.cs" />
     <Compile Include="Interrogation\IInterrogationResponse.cs" />
     <Compile Include="Interrogation\INotificationSubscriberInterrogation.cs" />

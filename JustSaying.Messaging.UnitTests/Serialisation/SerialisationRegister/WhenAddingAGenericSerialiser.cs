@@ -1,4 +1,5 @@
 using JustBehave;
+using JustSaying.Messaging.Extensions;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Models;
 using NUnit.Framework;
@@ -19,7 +20,7 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.SerialisationRegister
         [Then]
         public void MappingsCanBeRetreivedByStringType()
         {
-            Assert.NotNull(SystemUnderTest.GeTypeSerialiser(typeof(Message).Name));
+            Assert.NotNull(SystemUnderTest.GeTypeSerialiser(typeof(Message).ToKey()));
         }
 
         [Test]

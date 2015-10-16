@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using JustSaying.Messaging.Extensions;
 using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialisation
@@ -20,12 +21,12 @@ namespace JustSaying.Messaging.MessageSerialisation
 
         public TypeSerialiser GeTypeSerialiser(Type objectType)
         {
-            return _map[objectType.Name];
+            return _map[objectType.ToKey()];
         }
 
         public void AddSerialiser<T>(IMessageSerialiser serialiser) where T : Message
         {
-            var keyname = typeof (T).Name;
+            var keyname = typeof(T).ToKey();
             if (! _map.ContainsKey(keyname))
                 _map.Add(keyname, new TypeSerialiser(typeof(T), serialiser));
         }
