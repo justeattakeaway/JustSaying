@@ -7,23 +7,14 @@ namespace JustSaying.Tools
 {
     public class CommandParser
 	{
-        private readonly Configuration _configuration;
-
-        public CommandParser(Configuration configuration)
-        {
-            _configuration = configuration;
-        }
-
-        public  bool Parse(string commandText)
+        public bool Parse(string commandText)
 		{
-			return CommandLine.Parse<ICommand>(commandText, InitializeCommandLineParser)
-				.All(option =>
-				{
-				    return option.Execute();
-				});
+			return CommandLine
+                .Parse<ICommand>(commandText, InitializeCommandLineParser)
+				.All(option => option.Execute());
 		}
 
-		 void InitializeCommandLineParser(ICommandLineElementParser<ICommand> x)
+        private static void InitializeCommandLineParser(ICommandLineElementParser<ICommand> x)
 		{
 			x.Add((from arg in x.Argument("exit")
 			       select (ICommand) new ExitCommand())
@@ -33,11 +24,10 @@ namespace JustSaying.Tools
 				    select (ICommand) new HelpCommand())
 				
 				.Or(from arg in x.Argument("move")
-				    from fromUri in x.Definition("from")
-				    from toUri in x.Definition("to")
-				    from count in
-				    	(from d in x.Definition("count") select d).Optional("count", "1")
-				    select (ICommand) new MoveCommand(fromUri.Value, toUri.Value, int.Parse(count.Value), _configuration))
+				    from sourceQueueName in x.Definition("from")
+				    from destinationQueueName in x.Definition("to")
+				    from count in (from d in x.Definition("count") select d).Optional("count", "1")
+				    select (ICommand) new MoveCommand(sourceQueueName.Value, destinationQueueName.Value, int.Parse(count.Value)))
 				);
 		}
 	}
