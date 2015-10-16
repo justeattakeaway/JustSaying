@@ -57,7 +57,6 @@
     <Compile Include="Commands\ICommand.cs" />
     <Compile Include="Commands\MoveCommand.cs" />
     <Compile Include="Commands\QuitCommand.cs" />
-    <Compile Include="Configuration.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

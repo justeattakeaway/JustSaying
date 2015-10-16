@@ -3,23 +3,21 @@ using Magnum.Extensions;
 
 namespace JustSaying.Tools
 {
-    class Program
+    public static class Program
     {
-        static void Main()
+        public static void Main()
         {
-            string line = CommandLine.GetUnparsedCommandLine().Trim();
+            var line = CommandLine.GetUnparsedCommandLine().Trim();
             if (line.IsNotEmpty())
             {
                 ProcessLine(line);
             }
         }
 
-        static bool ProcessLine(string line)
+        private static bool ProcessLine(string line)
         {
-            var commandParser = new CommandParser(new Configuration());
+            var commandParser = new CommandParser();
             return commandParser.Parse(line);
         }
-
-        public static string CurrentUri { get; set; }
     }
 }

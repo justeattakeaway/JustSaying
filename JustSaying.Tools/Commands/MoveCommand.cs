@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Dynamic;
-using System.IO;
 using System.Linq;
-using Amazon;
+using Amazon.EC2;
+using Amazon.Runtime;
+using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools;
 
@@ -11,31 +11,29 @@ namespace JustSaying.Tools.Commands
 {
     public class MoveCommand : ICommand
     {
-        private readonly Configuration _configuration;
-
-        public MoveCommand(string @from, string to, int count, Configuration configuration)
+        public MoveCommand(string sourceQueueName, string destinationQueueName, int count)
         {
-            _configuration = configuration;
-            SourceQueueName = from;
-            DestinationQueueName = to;
+            SourceQueueName = sourceQueueName;
+            DestinationQueueName = destinationQueueName;
             Count = count;
         }
 
         public string SourceQueueName { get; set; }
         public string DestinationQueueName { get; set; }
         public int Count { get; set; }
+
         public bool Execute()
         {
             Console.WriteLine("Moving {0} messages from {1} to {2}", Count, SourceQueueName, DestinationQueueName);
 
-            var client = AWSClientFactory.CreateAmazonSQSClient(_configuration.AWSAccessKey, _configuration.AWSSecretKey, RegionEndpoint.GetBySystemName(_configuration.Region));
+            var client = new AmazonSQSClient();
             var sourceQueue = new SqsQueueByName(SourceQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT);
             var destinationQueue = new SqsQueueByName(DestinationQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT);
 
             var messages = PopMessagesFromSourceQueue(sourceQueue);
             var receiptHandles = messages.ToDictionary(m => m.MessageId, m => m.ReceiptHandle);
             
-            var sendResponse = destinationQueue.Client.SendMessageBatch(new SendMessageBatchRequest()
+            var sendResponse = destinationQueue.Client.SendMessageBatch(new SendMessageBatchRequest
             {
                 QueueUrl = destinationQueue.Url,
                 Entries = messages.Select(x => new SendMessageBatchRequestEntry { Id = x.MessageId, MessageBody = x.Body }).ToList()
@@ -57,7 +55,7 @@ namespace JustSaying.Tools.Commands
 
         private List<Message> PopMessagesFromSourceQueue(SqsQueueByName sourceQueue)
         {
-            List<Message> messages = new List<Message>();
+            var messages = new List<Message>();
             ReceiveMessageResponse receiveResponse;
             do
             {
