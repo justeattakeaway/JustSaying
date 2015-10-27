@@ -23,12 +23,12 @@ namespace JustSaying.UnitTests.JustSayingBus
             _subscriber1.Queue.Returns("queue1");
             _subscriber1.Subscribers.Returns(new Collection<ISubscriber>
             {
-                new Subsriber(typeof (OrderAccepted)),
-                new Subsriber(typeof (OrderRejected))
+                new Subscriber(typeof (OrderAccepted)),
+                new Subscriber(typeof (OrderRejected))
             });
             _subscriber2 = Substitute.For<INotificationSubscriber>();
             _subscriber2.Queue.Returns("queue2");
-            _subscriber2.Subscribers.Returns(new Collection<ISubscriber> {new Subsriber(typeof (GenericMessage))});
+            _subscriber2.Subscribers.Returns(new Collection<ISubscriber> {new Subscriber(typeof (GenericMessage))});
         }
 
         protected override void When()
