@@ -68,6 +68,7 @@
     <Compile Include="JustSayingBus\CustomMonitor.cs" />
     <Compile Include="JustSayingBus\GivenAServiceBusWithoutMonitoring.cs" />
     <Compile Include="JustSayingBus\WhenPublishingMessageWithoutMonitor.cs" />
+    <Compile Include="JustSayingBus\WhenUsingMultipleRegions.cs" />
     <Compile Include="JustSayingFluentlyTestBase.cs" />
     <Compile Include="JustSayingFluently\AddingHandlers\WhenAddingASubscriptionHandlerForAGenericMessage.cs" />
     <Compile Include="JustSayingFluently\AddingHandlers\WhenSubscribingPointToPoint.cs" />

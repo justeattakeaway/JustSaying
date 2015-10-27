@@ -216,7 +216,7 @@ namespace JustSaying
         }
         public IInterrogationResponse WhatDoIHave()
         {
-            return new InterrogationResponse(_subscribers, _publishers);
+            return new InterrogationResponse(Config.Regions, _subscribers, _publishers);
         }
     }
 }
