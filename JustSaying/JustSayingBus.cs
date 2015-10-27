@@ -31,8 +31,8 @@ namespace JustSaying
         public IMessageLock MessageLock { get; set; }
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); //ToDo: danger!
         private readonly object _syncRoot = new object();
-        private readonly IList<IPublisher> _publishers;
-        private readonly IList<ISubscriber> _subscribers;
+        private readonly ICollection<IPublisher> _publishers;
+        private readonly ICollection<ISubscriber> _subscribers;
 
         public JustSayingBus(IMessagingConfig config, IMessageSerialisationRegister serialisationRegister)
         {
@@ -47,9 +47,8 @@ namespace JustSaying
             _subscribersByRegionAndQueue = new Dictionary<string, Dictionary<string, INotificationSubscriber>>();
             _publishersByRegionAndTopic = new Dictionary<string, Dictionary<string, IMessagePublisher>>();
             SerialisationRegister = serialisationRegister;
-            _publishers = new List<IPublisher>();
-            _subscribers = new List<ISubscriber>();
-            _subscribers = new List<ISubscriber>();
+            _publishers = new HashSet<IPublisher>();
+            _subscribers = new HashSet<ISubscriber>();
         }
 
         public void AddNotificationSubscriber(string region, INotificationSubscriber subscriber)
@@ -217,7 +216,7 @@ namespace JustSaying
         }
         public IInterrogationResponse WhatDoIHave()
         {
-            return new InterrogationResponse(_subscribers, _publishers);
+            return new InterrogationResponse(Config.Regions, _subscribers, _publishers);
         }
     }
 }

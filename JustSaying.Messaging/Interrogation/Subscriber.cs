@@ -2,9 +2,9 @@ using System;
 
 namespace JustSaying.Messaging.Interrogation
 {
-    public class Publisher : IPublisher
+    public class Subscriber : ISubscriber
     {
-        public Publisher(Type messageType)
+        public Subscriber(Type messageType)
         {
             MessageType = messageType;
         }
@@ -13,7 +13,7 @@ namespace JustSaying.Messaging.Interrogation
 
         public override bool Equals(object obj)
         {
-            return MessageType == ((Publisher)obj).MessageType;
+            return MessageType == ((Subscriber)obj).MessageType;
         }
 
         public override int GetHashCode()

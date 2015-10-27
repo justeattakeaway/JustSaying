@@ -83,7 +83,7 @@ namespace JustSaying.AwsTools
                 handler = new StopwatchHandler<T>(handler, executionTimeMonitoring);
             }
 
-            Subscribers.Add(new Subsriber(typeof(T)));
+            Subscribers.Add(new Subscriber(typeof(T)));
             handlers.Add(message => handler.Handle((T)message));
         }
 
