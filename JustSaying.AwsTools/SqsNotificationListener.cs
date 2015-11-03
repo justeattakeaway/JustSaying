@@ -183,7 +183,7 @@ namespace JustSaying.AwsTools
                         var watch = new System.Diagnostics.Stopwatch();
                         watch.Start();
 
-                        handlingSucceeded = handle(typedMessage);
+                        handlingSucceeded &= handle(typedMessage);
 
                         watch.Stop();
                         Log.Trace("Handled message - MessageType: " + messageType);

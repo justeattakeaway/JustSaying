@@ -5,6 +5,7 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustBehave;
+using JustSaying.Messaging.Extensions;
 using NSubstitute;
 using JustSaying.TestingFramework;
 
@@ -13,7 +14,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
     public class WhenThereAreExceptionsInSqsCalling : BaseQueuePollingTest
     {
         private int _sqsCallCounter;
-        private readonly string _messageTypeString = typeof(GenericMessage).ToString();
+        private readonly string _messageTypeString = typeof(GenericMessage).ToKey();
         protected override void Given()
         {
             Sqs = Substitute.For<IAmazonSQS>();

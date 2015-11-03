@@ -3,6 +3,7 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using Amazon.SQS;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Extensions;
 using JustSaying.Messaging.MessageSerialisation;
 using NLog;
 using Message = JustSaying.Models.Message;
@@ -46,7 +47,7 @@ namespace JustSaying.AwsTools
         public void Publish(Message message)
         {
             var messageToSend = _serialisationRegister.GeTypeSerialiser(message.GetType()).Serialiser.Serialise(message);
-            var messageType = message.GetType().Name;
+            var messageType = message.GetType().ToKey();
 
             Client.Publish(new PublishRequest
                                {

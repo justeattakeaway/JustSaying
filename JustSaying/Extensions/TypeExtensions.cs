@@ -1,27 +1,29 @@
 ﻿using System;
 using System.Linq;
-using System.Text.RegularExpressions;
+using JustSaying.Messaging.Extensions;
 
 namespace JustSaying.Extensions
 {
-    internal static class TypeExtensions
+    public static class TypeExtensions
     {
         private const int MAX_TOPIC_NAME_LENGTH = 256;
 
         public static string ToTopicName(this Type type)
         {
-            var name = type.IsGenericType
-                ? Regex.Replace(type.FullName, "\\W", "_").ToLower()
-                : type.Name.ToLower();
+            var name = type.ToKey().TruncateTo(MAX_TOPIC_NAME_LENGTH);
+            return name;
+        }
 
-            if (name.Length > MAX_TOPIC_NAME_LENGTH)
-            {
-                var suffix = name.GetInvariantHashCode().ToString();
-                name = name.Substring(0, MAX_TOPIC_NAME_LENGTH - suffix.Length) + suffix;
-            }
+        private static string TruncateTo(this string name, int maxLength)
+        {
+            if (name.Length <= maxLength) return name;
+
+            var suffix = name.GetInvariantHashCode().ToString();
+            name = name.Substring(0, maxLength - suffix.Length) + suffix;
 
             return name;
         }
+
 
         private static int GetInvariantHashCode(this string value)
         {

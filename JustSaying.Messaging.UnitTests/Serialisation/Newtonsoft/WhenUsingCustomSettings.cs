@@ -1,4 +1,5 @@
 using JustBehave;
+using JustSaying.Messaging.Extensions;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.TestingFramework;
 using Newtonsoft.Json;
@@ -23,7 +24,7 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
 
         public string GetMessageInContext(MessageWithEnum message)
         {
-            var context = new { Subject = message.GetType().Name, Message = SystemUnderTest.Serialise(message) };
+            var context = new { Subject = message.GetType().ToKey(), Message = SystemUnderTest.Serialise(message) };
             return JsonConvert.SerializeObject(context);
         }
 

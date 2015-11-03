@@ -9,6 +9,7 @@ using JustSaying.TestingFramework;
 using NSubstitute;
 using JustSaying.Messaging.MessageSerialisation;
 using System.Collections.Generic;
+using JustSaying.Messaging.Extensions;
 
 namespace AwsTools.UnitTests.SqsNotificationListener
 {
@@ -23,7 +24,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected IMessageMonitor Monitor;
         protected IMessageSerialisationRegister SerialisationRegister;
         protected IMessageLock MessageLock;
-        private readonly string _messageTypeString = typeof(GenericMessage).ToString();
+        private readonly string _messageTypeString = typeof(GenericMessage).ToKey();
 
         protected override JustSaying.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {

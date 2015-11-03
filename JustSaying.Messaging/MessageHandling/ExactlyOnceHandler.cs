@@ -1,4 +1,5 @@
 ﻿using System;
+using JustSaying.Messaging.Extensions;
 using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageHandling
@@ -23,7 +24,7 @@ namespace JustSaying.Messaging.MessageHandling
         
         public bool Handle(T message)
         {
-            var lockKey = string.Format("{2}-{1}-{0}", _handlerName, typeof(T).Name.ToLower(), message.UniqueKey());
+            var lockKey = string.Format("{2}-{1}-{0}", _handlerName, typeof(T).ToKey().ToLower(), message.UniqueKey());
             var lockResponse = _messageLock.TryAquireLock(lockKey, TimeSpan.FromSeconds(_timeOut));
             if (!lockResponse.DoIHaveExclusiveLock)
             {
