@@ -281,7 +281,7 @@ namespace JustSaying
         private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue) where T : Message
         {
             var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, Bus.Monitor, _subscriptionConfig.OnError, Bus.MessageLock);
-            sqsSubscriptionListener.Subscribers = new[] { new Subscriber(typeof(T)) };
+            sqsSubscriptionListener.Subscribers.Add(new Subscriber(typeof(T)));
             Bus.AddNotificationSubscriber(region, sqsSubscriptionListener);
 
             if (_subscriptionConfig.MaxAllowedMessagesInFlight.HasValue)
