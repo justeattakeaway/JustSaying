@@ -256,7 +256,7 @@ namespace JustSaying
             foreach (var region in Bus.Config.Regions)
             {
                 var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribed(region, Bus.SerialisationRegister, _subscriptionConfig);
-                CreateSubscriptionListener(region, queue);
+                CreateSubscriptionListener<T>(region, queue);
                 Log.Info(string.Format("Created SQS topic subscription - Topic: {0}, QueueName: {1}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName));
             }
           
@@ -271,16 +271,17 @@ namespace JustSaying
             foreach (var region in Bus.Config.Regions)
             {
                 var queue = _amazonQueueCreator.EnsureQueueExists(region, _subscriptionConfig);
-                CreateSubscriptionListener(region, queue);
+                CreateSubscriptionListener<T>(region, queue);
                 Log.Info(string.Format("Created SQS subscriber - MessageName: {0}, QueueName: {1}", messageTypeName, _subscriptionConfig.QueueName));
             }
            
             return this;
         }
 
-        private void CreateSubscriptionListener(string region, SqsQueueBase queue)
+        private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue) where T : Message
         {
             var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, Bus.Monitor, _subscriptionConfig.OnError, Bus.MessageLock);
+            sqsSubscriptionListener.Subscribers = new[] { new Subscriber(typeof(T)) };
             Bus.AddNotificationSubscriber(region, sqsSubscriptionListener);
 
             if (_subscriptionConfig.MaxAllowedMessagesInFlight.HasValue)
