@@ -32,8 +32,7 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
         {
             Assert.AreEqual(_messageIn.EnumVal, _messageOut.EnumVal);
             Assert.AreEqual(_messageIn.RaisingComponent, _messageOut.RaisingComponent);
-            //Assert.AreEqual(_messageIn.TimeStamp, _messageOut.TimeStamp);
-            // ToDo: Sort timestamp issue!
+            Assert.AreEqual(_messageIn.TimeStamp, _messageOut.TimeStamp);
         }
         
         [Then]
