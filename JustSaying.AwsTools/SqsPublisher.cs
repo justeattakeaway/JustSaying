@@ -12,7 +12,7 @@ namespace JustSaying.AwsTools
         private readonly IAmazonSQS _client;
         private readonly IMessageSerialisationRegister _serialisationRegister;
 
-        public SqsPublisher(string queueName, IAmazonSQS client, int retryCountBeforeSendingToErrorQueue, IMessageSerialisationRegister serialisationRegister)
+        public SqsPublisher(string queueName, ISqsClient client, int retryCountBeforeSendingToErrorQueue, IMessageSerialisationRegister serialisationRegister)
             : base(queueName, client, retryCountBeforeSendingToErrorQueue)
         {
             _client = client;

@@ -7,6 +7,7 @@ using Amazon;
 using Amazon.SimpleNotificationService.Model;
 using Amazon.SQS.Model;
 using JustBehave;
+using JustSaying.AwsTools;
 using NSubstitute;
 
 namespace JustSaying.IntegrationTests
@@ -116,7 +117,7 @@ namespace JustSaying.IntegrationTests
 
         private static void DeleteQueue(RegionEndpoint regionEndpoint, string queueUrl)
         {
-            var client = AWSClientFactory.CreateAmazonSQSClient(regionEndpoint);
+            var client = SqsClientFactory.Create(regionEndpoint);
             client.DeleteQueue(new DeleteQueueRequest { QueueUrl = queueUrl });
         }
 
@@ -137,7 +138,7 @@ namespace JustSaying.IntegrationTests
 
         private static List<string> GetAllQueues(RegionEndpoint regionEndpoint, string queueName)
         {
-            var client = AWSClientFactory.CreateAmazonSQSClient(regionEndpoint);
+            var client = SqsClientFactory.Create(regionEndpoint);
             var topics = client.ListQueues(new ListQueuesRequest());
             return topics.QueueUrls.Where(x => x.IndexOf(queueName, StringComparison.InvariantCultureIgnoreCase) >= 0).ToList();
         }
@@ -174,7 +175,7 @@ namespace JustSaying.IntegrationTests
         {
             var request = new GetQueueAttributesRequest{ QueueUrl = queueUrl, AttributeNames = new List<string> { "QueueArn" } };
 
-            var sqsclient = AWSClientFactory.CreateAmazonSQSClient(regionEndpoint);
+            var sqsclient = SqsClientFactory.Create(regionEndpoint);
 
             var queueArn = sqsclient.GetQueueAttributes(request).QueueARN;
 
@@ -187,7 +188,7 @@ namespace JustSaying.IntegrationTests
 
         protected bool QueueHasPolicyForTopic(RegionEndpoint regionEndpoint, Topic topic, string queueUrl)
         {
-            var client = AWSClientFactory.CreateAmazonSQSClient(regionEndpoint);
+            var client = SqsClientFactory.Create(regionEndpoint);
 
             var policy = client.GetQueueAttributes(new GetQueueAttributesRequest{ QueueUrl = queueUrl, AttributeNames = new List<string>{ "Policy" }}).Policy;
 

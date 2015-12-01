@@ -13,7 +13,7 @@ namespace JustSaying.AwsTools
     {
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
 
-        public SqsQueueByNameBase(string queueName, IAmazonSQS client)
+        protected SqsQueueByNameBase(string queueName, ISqsClient client)
             : base(client)
         {
             QueueName = queueName;

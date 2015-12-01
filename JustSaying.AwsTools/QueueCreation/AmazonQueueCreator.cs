@@ -17,7 +17,7 @@ namespace JustSaying.AwsTools.QueueCreation
 
         public SqsQueueByName EnsureQueueExists(string region, SqsReadConfiguration queueConfig)
         {
-            var sqsclient = AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(region));
+            var sqsclient = SqsClientFactory.Create(RegionEndpoint.GetBySystemName(region));
             var queue = new SqsQueueByName(queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue);
             queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdated(queueConfig);
             return queue;
@@ -36,7 +36,7 @@ namespace JustSaying.AwsTools.QueueCreation
 
         private static void EnsureQueueIsSubscribedToTopic(string region, SnsTopicByName eventTopic, SqsQueueByName queue)
         {
-            var sqsclient = AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(region));
+            var sqsclient = SqsClientFactory.Create(RegionEndpoint.GetBySystemName(region));
             eventTopic.Subscribe(sqsclient, queue);
         }
     }

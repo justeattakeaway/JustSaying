@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Amazon.SQS;
+using Amazon;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools;
 using JustSaying.Messaging.Monitoring;
@@ -11,7 +11,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 {
     public class WhenThereAreNoMessagesToProcess : BehaviourTest<JustSaying.AwsTools.SqsNotificationListener>
     {
-        private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
+        private readonly ISqsClient _sqs = Substitute.For<ISqsClient>();
         private int _callCount;
 
         protected override JustSaying.AwsTools.SqsNotificationListener CreateSystemUnderTest()
@@ -23,6 +23,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         {
             _sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => GenerateEmptyMessage());
             _sqs.When(x => x.ReceiveMessage(Arg.Any<ReceiveMessageRequest>())).Do(x => _callCount++);
+            _sqs.Region.Returns(RegionEndpoint.EUWest1);
         }
 
         protected override void When()

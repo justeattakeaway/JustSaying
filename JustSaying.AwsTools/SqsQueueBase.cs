@@ -11,7 +11,7 @@ namespace JustSaying.AwsTools
     {
         public string Arn { get; protected set; }
         public string Url { get; protected set; }
-        public IAmazonSQS Client { get; private set; }
+        public ISqsClient Client { get; private set; }
         public string QueueName { get; protected set; }
         public ErrorQueue ErrorQueue { get; protected set; }
         internal int MessageRetentionPeriod { get; set; }
@@ -21,7 +21,7 @@ namespace JustSaying.AwsTools
         
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
 
-        protected SqsQueueBase(IAmazonSQS client)
+        protected SqsQueueBase(ISqsClient client)
         {
             Client = client;
         }

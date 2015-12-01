@@ -6,7 +6,7 @@ namespace JustSaying.AwsTools
 {
     public class SqsQueueByUrl : SqsQueueBase
     {
-        public SqsQueueByUrl(string queueUrl, IAmazonSQS client)
+        public SqsQueueByUrl(string queueUrl, ISqsClient client)
             : base(client)
         {
             Url = queueUrl;

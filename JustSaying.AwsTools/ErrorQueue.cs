@@ -1,19 +1,16 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
-using System.Threading;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Amazon.SQS.Util;
 using JustSaying.AwsTools.QueueCreation;
-using NLog;
 
 namespace JustSaying.AwsTools
 {
     public class ErrorQueue : SqsQueueByNameBase
     {
-        public ErrorQueue(string sourceQueueName, IAmazonSQS client)
+        public ErrorQueue(string sourceQueueName, ISqsClient client)
             : base(sourceQueueName + "_error", client)
         {
             ErrorQueue = null;
