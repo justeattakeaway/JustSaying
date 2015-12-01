@@ -26,7 +26,8 @@ namespace JustSaying.Tools.Commands
         {
             Console.WriteLine("Moving {0} messages from {1} to {2}", Count, SourceQueueName, DestinationQueueName);
 
-            var client = new AmazonSQSClient();
+            var config = new AmazonSQSConfig();
+            var client = new SqsClient(config.RegionEndpoint);
             var sourceQueue = new SqsQueueByName(SourceQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT);
             var destinationQueue = new SqsQueueByName(DestinationQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT);
 

@@ -12,7 +12,7 @@ namespace JustSaying.AwsTools
     {
         private readonly int _retryCountBeforeSendingToErrorQueue;
 
-        public SqsQueueByName(string queueName, IAmazonSQS client, int retryCountBeforeSendingToErrorQueue)
+        public SqsQueueByName(string queueName, ISqsClient client, int retryCountBeforeSendingToErrorQueue)
             : base(queueName, client)
         {
             _retryCountBeforeSendingToErrorQueue = retryCountBeforeSendingToErrorQueue;

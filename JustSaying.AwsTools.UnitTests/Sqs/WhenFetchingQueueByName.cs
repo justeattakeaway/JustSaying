@@ -9,14 +9,13 @@ namespace JustSaying.AwsTools.UnitTests.Sqs
 {
     class WhenFetchingQueueByName
     {
-        private IAmazonSQS _client;
+        private ISqsClient _client;
         private const int RetryCount = 3;
 
         [SetUp]
         protected void SetUp()
         {
-
-            _client = Substitute.For<IAmazonSQS>();
+            _client = Substitute.For<ISqsClient>();
             _client.ListQueues(Arg.Any<ListQueuesRequest>())
                 .Returns(new ListQueuesResponse() { QueueUrls = new List<string>() { "some-queue-name" } });
             _client.GetQueueAttributes(Arg.Any<GetQueueAttributesRequest>())

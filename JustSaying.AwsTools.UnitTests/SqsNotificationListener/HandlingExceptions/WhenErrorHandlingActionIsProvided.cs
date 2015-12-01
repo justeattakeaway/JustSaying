@@ -1,7 +1,10 @@
 ﻿using System;
+using Amazon;
 using JustBehave;
+using JustSaying.AwsTools;
 using NUnit.Framework;
 using JustSaying.TestingFramework;
+using NSubstitute;
 
 namespace AwsTools.UnitTests.SqsNotificationListener.HandlingExceptions
 {
@@ -10,14 +13,16 @@ namespace AwsTools.UnitTests.SqsNotificationListener.HandlingExceptions
         private Action<Exception, Amazon.SQS.Model.Message> _globalErrorHandler;
         private bool _handledException;
 
-        protected override void When()
+        protected override JustSaying.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
             _globalErrorHandler = (ex, m) => { _handledException = true; };
 
-            var listener = new JustSaying.AwsTools.SqsNotificationListener(null, null, null,
-                                                       onError: _globalErrorHandler);
+            return new JustSaying.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), SerialisationRegister, Monitor, onError: _globalErrorHandler);
+        }
 
-            listener.HandleMessage(null);
+        protected override void When()
+        {
+            SystemUnderTest.HandleMessage(null);
         }
 
         [Then]
@@ -34,6 +39,8 @@ namespace AwsTools.UnitTests.SqsNotificationListener.HandlingExceptions
 
         protected override void Given()
         {
+            Sqs = Substitute.For<ISqsClient>();
+            Sqs.Region.Returns(RegionEndpoint.EUWest1);
         }
     }
 }

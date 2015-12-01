@@ -1,5 +1,5 @@
 using System;
-using Amazon.SQS;
+using Amazon;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools;
 using JustSaying.Messaging.MessageHandling;
@@ -12,10 +12,10 @@ using System.Collections.Generic;
 
 namespace AwsTools.UnitTests.SqsNotificationListener
 {
-    public class BaseQueuePollingTest : BehaviourTest<JustSaying.AwsTools.SqsNotificationListener>
+    public abstract class BaseQueuePollingTest : BehaviourTest<JustSaying.AwsTools.SqsNotificationListener>
     {
         protected const string QueueUrl = "url";
-        protected IAmazonSQS Sqs;
+        protected ISqsClient Sqs;
         protected IMessageSerialiser Serialiser;
         protected GenericMessage DeserialisedMessage;
         protected const string MessageBody = "object";
@@ -27,19 +27,19 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
         protected override JustSaying.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
-            
             return new JustSaying.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), SerialisationRegister, Monitor, null, MessageLock);
         }
 
         protected override void Given()
         {
-            Sqs = Substitute.For<IAmazonSQS>();
+            Sqs = Substitute.For<ISqsClient>();
             Serialiser = Substitute.For<IMessageSerialiser>();
             SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
             Monitor = Substitute.For<IMessageMonitor>();
             Handler = Substitute.For<IHandler<GenericMessage>>();
             var response = GenerateResponseMessage(_messageTypeString, Guid.NewGuid());
             Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => response, x => new ReceiveMessageResponse());
+            Sqs.Region.Returns(RegionEndpoint.EUWest1);
 
             SerialisationRegister.GeTypeSerialiser(_messageTypeString).Returns(new TypeSerialiser(typeof(GenericMessage), Serialiser));
             DeserialisedMessage = new GenericMessage {RaisingComponent = "Component"};

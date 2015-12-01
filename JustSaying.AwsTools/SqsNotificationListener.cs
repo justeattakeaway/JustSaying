@@ -93,13 +93,13 @@ namespace JustSaying.AwsTools
             Action run = () => { while (_listen) { ListenLoop(); } };
             run.BeginInvoke(null, null);
 
-            Log.Info("Starting Listening - Queue: " + _queue.QueueName);
+            Log.Info(string.Format("Starting Listening - Queue: {0}, Region: {1}", _queue.QueueName, _queue.Client.Region.SystemName));
         }
 
         public void StopListening()
         {
             _listen = false;
-            Log.Info("Stopped Listening - Queue: " + _queue.QueueName);
+            Log.Info(string.Format("Stopped Listening - Queue: {0}, Region: {1}", _queue.QueueName, _queue.Client.Region.SystemName));
         }
 
         internal void ListenLoop()
@@ -124,7 +124,7 @@ namespace JustSaying.AwsTools
 
                 var messageCount = sqsMessageResponse.Messages.Count;
 
-                Log.Trace(string.Format("Polled for messages - Queue: {0}, MessageCount: {1}", _queue.QueueName, messageCount));
+                Log.Trace(string.Format("Polled for messages - Queue: {0}, Region: {1}, MessageCount: {2}", _queue.QueueName, _queue.Client.Region.SystemName, messageCount));
 
                 foreach (var message in sqsMessageResponse.Messages)
                 {
@@ -133,11 +133,11 @@ namespace JustSaying.AwsTools
             }
             catch (InvalidOperationException ex)
             {
-                Log.Trace("Suspected no message in queue {0}. Ex: {1}", _queue.QueueName, ex);
+                Log.Trace("Suspected no message in queue {0}, region: {1}. Ex: {2}", _queue.QueueName, _queue.Client.Region.SystemName, ex);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, string.Format("Issue in message handling loop for queue {0}", _queue.QueueName));
+                Log.Error(ex, string.Format("Issue in message handling loop for queue {0}, region {1}", _queue.QueueName, _queue.Client.Region.SystemName));
             }
         }
 

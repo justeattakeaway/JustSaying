@@ -1,10 +1,11 @@
 using System;
-using Amazon.SQS;
+using Amazon;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustBehave;
+using JustSaying.AwsTools;
 using NSubstitute;
 using JustSaying.TestingFramework;
 
@@ -16,7 +17,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         private readonly string _messageTypeString = typeof(GenericMessage).ToString();
         protected override void Given()
         {
-            Sqs = Substitute.For<IAmazonSQS>();
+            Sqs = Substitute.For<ISqsClient>();
             Serialiser = Substitute.For<IMessageSerialiser>();
             SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
             Monitor = Substitute.For<IMessageMonitor>();
@@ -32,13 +33,13 @@ namespace AwsTools.UnitTests.SqsNotificationListener
                     _sqsCallCounter++;
                     throw new Exception();
                 });
+            Sqs.Region.Returns(RegionEndpoint.EUWest1);
         }
 
         protected override void When()
         {
             SystemUnderTest.AddMessageHandler(() => Handler);
             SystemUnderTest.Listen();
-            
         }
 
         [Then]

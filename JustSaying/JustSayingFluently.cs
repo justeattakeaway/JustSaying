@@ -103,7 +103,7 @@ namespace JustSaying
             {
                 var eventPublisher = new SqsPublisher(
                     queueName,
-                    AWSClientFactory.CreateAmazonSQSClient(RegionEndpoint.GetBySystemName(region)),
+                    SqsClientFactory.Create(RegionEndpoint.GetBySystemName(region)),
                     config.RetryCountBeforeSendingToErrorQueue,
                     Bus.SerialisationRegister);
 
