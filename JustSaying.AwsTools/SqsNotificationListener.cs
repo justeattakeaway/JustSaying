@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading;
+using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Monitoring;
@@ -23,7 +25,7 @@ namespace JustSaying.AwsTools
         private readonly Dictionary<Type, List<Func<Message, bool>>> _handlers;
         private readonly IMessageLock _messageLock;
 
-        private bool _listen = true;
+        private CancellationTokenSource _cts = new CancellationTokenSource();
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
 
         private const int MaxAmazonMessageCap = 10;
@@ -89,20 +91,46 @@ namespace JustSaying.AwsTools
 
         public void Listen()
         {
-            _listen = true;
-            Action run = () => { while (_listen) { ListenLoop(); } };
-            run.BeginInvoke(null, null);
+            var queue = _queue.QueueName;
+            var region = _queue.Client.Region.SystemName;
+            var queueInfo = $"Queue: {queue}, Region: {region}";
+            
+            Task.Factory
+                .StartNew(
+                    async () =>
+                    {
+                        while (!_cts.IsCancellationRequested)
+                        {
+                            await ListenLoop();
+                        }
+                    })
+                .ContinueWith(
+                    t =>
+                    {
+                        if (t.IsCompleted)
+                        {
+                            Log.Info($"[Completed] Stopped Listening - {queueInfo}");
+                        }
+                        else if (t.IsFaulted)
+                        {
+                            Log.Info($"[Failed] Stopped Listening - {queueInfo}\n{t.Exception}");
+                        }
+                        else
+                        {
+                            Log.Info($"[Canceled] Stopped Listening - {queueInfo}");
+                        }
+                    });
 
-            Log.Info(string.Format("Starting Listening - Queue: {0}, Region: {1}", _queue.QueueName, _queue.Client.Region.SystemName));
+            Log.Info($"Starting Listening - {queueInfo}");
         }
 
         public void StopListening()
         {
-            _listen = false;
-            Log.Info(string.Format("Stopped Listening - Queue: {0}, Region: {1}", _queue.QueueName, _queue.Client.Region.SystemName));
+            _cts.Cancel();
+            Log.Info($"Stopped Listening - Queue: {_queue.QueueName}, Region: {_queue.Client.Region.SystemName}");
         }
 
-        internal void ListenLoop()
+        internal async Task ListenLoop()
         {
             try
             {
@@ -111,12 +139,13 @@ namespace JustSaying.AwsTools
                 var watch = new System.Diagnostics.Stopwatch();
                 watch.Start();
 
-                var sqsMessageResponse = _queue.Client.ReceiveMessage(new ReceiveMessageRequest
-                {
-                    QueueUrl = _queue.Url,
-                    MaxNumberOfMessages = GetMaxBatchSize(),
-                    WaitTimeSeconds = 20
-                });
+                var sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(
+                    new ReceiveMessageRequest
+                    {
+                        QueueUrl = _queue.Url,
+                        MaxNumberOfMessages = GetMaxBatchSize(),
+                        WaitTimeSeconds = 20
+                    });
 
                 watch.Stop();
 
@@ -124,7 +153,7 @@ namespace JustSaying.AwsTools
 
                 var messageCount = sqsMessageResponse.Messages.Count;
 
-                Log.Trace(string.Format("Polled for messages - Queue: {0}, Region: {1}, MessageCount: {2}", _queue.QueueName, _queue.Client.Region.SystemName, messageCount));
+                Log.Trace($"Polled for messages - Queue: {_queue.QueueName}, Region: {_queue.Client.Region.SystemName}, MessageCount: {messageCount}");
 
                 foreach (var message in sqsMessageResponse.Messages)
                 {
@@ -133,11 +162,11 @@ namespace JustSaying.AwsTools
             }
             catch (InvalidOperationException ex)
             {
-                Log.Trace("Suspected no message in queue {0}, region: {1}. Ex: {2}", _queue.QueueName, _queue.Client.Region.SystemName, ex);
+                Log.Trace($"Suspected no message in queue {_queue.QueueName}, region: {_queue.Client.Region.SystemName}. Ex: {ex}");
             }
             catch (Exception ex)
             {
-                Log.Error(ex, string.Format("Issue in message handling loop for queue {0}, region {1}", _queue.QueueName, _queue.Client.Region.SystemName));
+                Log.Error(ex, $"Issue in message handling loop for queue {_queue.QueueName}, region {_queue.Client.Region.SystemName}");
             }
         }
 
@@ -186,7 +215,7 @@ namespace JustSaying.AwsTools
                         handlingSucceeded = handle(typedMessage);
 
                         watch.Stop();
-                        Log.Trace("Handled message - MessageType: " + messageType);
+                        Log.Trace($"Handled message - MessageType: {messageType}");
                         _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
                     }
                 }
@@ -197,7 +226,7 @@ namespace JustSaying.AwsTools
             }
             catch (KeyNotFoundException ex)
             {
-                Log.Trace("Didn't handle message {0}. No serialiser setup", rawMessage ?? "");
+                Log.Trace($"Didn't handle message [{rawMessage ?? ""}]. No serialiser setup");
                 _queue.Client.DeleteMessage(new DeleteMessageRequest
                 {
                     QueueUrl = _queue.Url,
@@ -207,7 +236,7 @@ namespace JustSaying.AwsTools
             }
             catch (Exception ex)
             {
-                Log.Error(ex, string.Format("Issue handling message... {0}. StackTrace: {1}", message, ex.StackTrace));
+                Log.Error(ex, $"Issue handling message... {message}. StackTrace: {ex.StackTrace}");
                 if (typedMessage != null)
                 {
                     _messagingMonitor.HandleException(typedMessage.GetType().Name);

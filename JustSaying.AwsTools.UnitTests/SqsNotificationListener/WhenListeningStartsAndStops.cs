@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustBehave;
 using NSubstitute;
@@ -14,7 +15,16 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected override void Given()
         {
             base.Given();
-            Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid()), x => new ReceiveMessageResponse { Messages = new List<Message>() });
+
+            Sqs.ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>())
+               .Returns(
+                    _ => Task.FromResult(GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid())), 
+                    _ => Task.FromResult(new ReceiveMessageResponse { Messages = new List<Message>() }));
+
+            Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>())
+               .Returns(
+                    _ => GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid()), 
+                    _ => new ReceiveMessageResponse { Messages = new List<Message>() });
         }
 
         protected override void When()
@@ -35,13 +45,15 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         [Then]
         public void TheMaxMessageAllowanceIsGrabbed()
         {
-            Patiently.VerifyExpectation(() => Sqs.Received().ReceiveMessage(Arg.Is<ReceiveMessageRequest>(x => x.MaxNumberOfMessages == 10)));
+            Patiently.VerifyExpectation(
+                () => Sqs.Received().ReceiveMessage(Arg.Is<ReceiveMessageRequest>(x => x.MaxNumberOfMessages == 10)));
         }
 
         [Then]
         public void MessageIsProcessed()
         {
-            Patiently.VerifyExpectation(() => SerialisationRegister.Received().GeTypeSerialiser(SubjectOfMessageAfterStop));
+            Patiently.VerifyExpectation(
+                () => SerialisationRegister.Received().GeTypeSerialiser(SubjectOfMessageAfterStop));
         }
 
         public override void PostAssertTeardown()
