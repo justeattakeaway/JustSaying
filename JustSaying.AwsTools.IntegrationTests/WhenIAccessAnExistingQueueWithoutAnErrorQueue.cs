@@ -1,4 +1,5 @@
-﻿using JustBehave;
+﻿using System.Threading.Tasks;
+using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.TestingFramework;
 
@@ -12,9 +13,9 @@ namespace JustSaying.AwsTools.IntegrationTests
         }
 
         [Then]
-        public void ThereIsNoErrorQueue()
+        public async Task ThereIsNoErrorQueue()
         {
-            Patiently.AssertThat(() => !SystemUnderTest.ErrorQueue.Exists());
+            await Patiently.AssertThatAsync(() => !SystemUnderTest.ErrorQueue.Exists());
         }
     }
 }

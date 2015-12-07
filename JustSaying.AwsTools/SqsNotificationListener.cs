@@ -174,7 +174,9 @@ namespace JustSaying.AwsTools
         {
             var maxMessageBatchSize = _messageProcessingStrategy as IMessageMaxBatchSizeProcessingStrategy;
 
-            if (maxMessageBatchSize == null || (maxMessageBatchSize.MaxBatchSize <= 0 || maxMessageBatchSize.MaxBatchSize > MaxAmazonMessageCap))
+            if (maxMessageBatchSize == null || 
+                maxMessageBatchSize.MaxBatchSize <= 0 || 
+                maxMessageBatchSize.MaxBatchSize > MaxAmazonMessageCap)
             {
                 return MaxAmazonMessageCap;
             }

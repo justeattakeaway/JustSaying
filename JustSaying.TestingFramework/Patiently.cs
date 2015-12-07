@@ -1,20 +1,19 @@
 ﻿using System;
-using System.Threading;
-using NUnit.Framework;
+using System.Threading.Tasks;
 
 namespace JustSaying.TestingFramework
 {
     public static class Patiently
     {
-        public static void VerifyExpectation(Action expression)
+        public static async Task VerifyExpectationAsync(Action expression)
         {
-            VerifyExpectation(expression, 5.Seconds());
+            await VerifyExpectationAsync(expression, 5.Seconds());
         }
 
-        public static void VerifyExpectation(Action expression, TimeSpan timeout)
+        public static async Task VerifyExpectationAsync(Action expression, TimeSpan timeout)
         {
-            bool hasTimedOut;
             var started = DateTime.Now;
+            var timeoutAt = DateTime.Now + timeout;
             do
             {
                 try
@@ -22,40 +21,48 @@ namespace JustSaying.TestingFramework
                     expression.Invoke();
                     return;
                 }
-                catch { }
-                hasTimedOut = timeout < DateTime.Now - started;
-                Thread.Sleep(TimeSpan.FromMilliseconds(50));
-                Console.WriteLine("Waiting for {0} ms - Still Checking.", (DateTime.Now - started).TotalMilliseconds);
-            } while (!hasTimedOut);
-            expression.Invoke();
+                catch
+                {
+                    await Task.Delay(50.Milliseconds());
+                    Console.WriteLine(
+                        "Waiting for {0} ms - Still Checking.", 
+                        (DateTime.Now - started).TotalMilliseconds);
+                }
+            } while (DateTime.Now < timeoutAt);
         }
 
-        public static void AssertThat(Func<bool> func)
+        public static async Task AssertThatAsync(Func<bool> func)
         {
-            AssertThat(func, 5.Seconds());
+            await AssertThatAsync(func, 5.Seconds());
         }
 
-        public static void AssertThat(Func<bool> func, TimeSpan timeout)
+        public static async Task AssertThatAsync(Func<bool> func, TimeSpan timeout)
         {
-            bool result;
-            bool hasTimedOut;
             var started = DateTime.Now;
+            var timeoutAt = DateTime.Now + timeout;
             do
             {
-                result = func.Invoke();
-                hasTimedOut = timeout < DateTime.Now - started;
-                Thread.Sleep(TimeSpan.FromMilliseconds(50));
-                Console.WriteLine("Waiting for {0} ms - Still Checking.", (DateTime.Now - started).TotalMilliseconds);
-            } while (!result && !hasTimedOut);
+                if (func.Invoke())
+                {
+                    return;
+                }
 
-            Assert.True(result);
+                await Task.Delay(50.Milliseconds());
+                Console.WriteLine(
+                    "Waiting for {0} ms - Still Checking.",
+                    (DateTime.Now - started).TotalMilliseconds);
+            } while (DateTime.Now < timeoutAt);
         }
     }
     public static class Extensions
     {
-        public static TimeSpan Seconds(this int seconds)
+        public static TimeSpan Seconds(this int n)
         {
-            return TimeSpan.FromSeconds(seconds);
+            return TimeSpan.FromSeconds(n);
+        }
+        public static TimeSpan Milliseconds(this int n)
+        {
+            return TimeSpan.FromMilliseconds(n);
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using JustSaying.TestingFramework;
 using NSubstitute;
 using NUnit.Framework;
@@ -25,13 +26,12 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         }
 
         [Test]
-        public void ThenExceptionIsRecordedInMonitoring()
+        public async Task ThenExceptionIsRecordedInMonitoring()
         {
             _handler.WaitUntilCompletion(15.Seconds()).ShouldBe(true);
 
-            Patiently.VerifyExpectation(() => Monitoring.Received().HandleException(Arg.Any<string>()));
+            await Patiently.VerifyExpectationAsync(
+                () => Monitoring.Received().HandleException(Arg.Any<string>()));
         }
-
-       
     }
 }

@@ -51,7 +51,9 @@ namespace AwsTools.UnitTests.SqsNotificationListener
                     x => Task.FromResult(new ReceiveMessageResponse()));
             Sqs.Region.Returns(RegionEndpoint.EUWest1);
 
-            SerialisationRegister.GeTypeSerialiser(_messageTypeString).Returns(new TypeSerialiser(typeof(GenericMessage), Serialiser));
+            SerialisationRegister
+                .GeTypeSerialiser(_messageTypeString)
+                .Returns(new TypeSerialiser(typeof(GenericMessage), Serialiser));
             DeserialisedMessage = new GenericMessage {RaisingComponent = "Component"};
             Serialiser.Deserialise(Arg.Any<string>(), typeof(GenericMessage)).Returns(x => DeserialisedMessage);
         }

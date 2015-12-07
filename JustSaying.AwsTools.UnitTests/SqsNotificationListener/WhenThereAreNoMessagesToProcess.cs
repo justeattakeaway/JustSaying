@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools;
@@ -21,8 +22,16 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
         protected override void Given()
         {
-            _sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => GenerateEmptyMessage());
-            _sqs.When(x => x.ReceiveMessage(Arg.Any<ReceiveMessageRequest>())).Do(x => _callCount++);
+            _sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>())
+                .Returns(x => GenerateEmptyMessage());
+            _sqs.ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>())
+                .Returns(x => Task.FromResult(GenerateEmptyMessage()));
+
+            _sqs.When(x => x.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()))
+                .Do(x => _callCount++);
+            _sqs.When(x => x.ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>()))
+                .Do(x => _callCount++);
+
             _sqs.Region.Returns(RegionEndpoint.EUWest1);
         }
 
@@ -32,9 +41,9 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         }
 
         [Then]
-        public void ListenLoopDoesNotDie()
+        public async Task ListenLoopDoesNotDie()
         {
-            Patiently.AssertThat(() => _callCount > 3);
+            await Patiently.AssertThatAsync(() => _callCount > 3);
         }
 
         public override void PostAssertTeardown()

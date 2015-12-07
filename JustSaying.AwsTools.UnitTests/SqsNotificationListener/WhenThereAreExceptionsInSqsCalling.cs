@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageHandling;
@@ -24,10 +25,22 @@ namespace AwsTools.UnitTests.SqsNotificationListener
             Handler = Substitute.For<IHandler<GenericMessage>>();
             GenerateResponseMessage(_messageTypeString, Guid.NewGuid());
 
-            SerialisationRegister.GeTypeSerialiser(_messageTypeString).Returns(new TypeSerialiser(typeof(GenericMessage), Serialiser));
+            SerialisationRegister
+                .GeTypeSerialiser(_messageTypeString)
+                .Returns(new TypeSerialiser(typeof(GenericMessage), Serialiser));
+
             DeserialisedMessage = new GenericMessage { RaisingComponent = "Component" };
-            Serialiser.Deserialise(Arg.Any<string>(), typeof(GenericMessage)).Returns(x => DeserialisedMessage);
+            Serialiser
+                .Deserialise(Arg.Any<string>(), typeof(GenericMessage))
+                .Returns(x => DeserialisedMessage);
+
             Sqs.When(x => x.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()))
+                .Do(_ =>
+                {
+                    _sqsCallCounter++;
+                    throw new Exception();
+                });
+            Sqs.When(x => x.ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>()))
                 .Do(_ =>
                 {
                     _sqsCallCounter++;
@@ -43,9 +56,9 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         }
 
         [Then]
-        public void QueueIsPolledMoreThanOnce()
+        public async Task QueueIsPolledMoreThanOnce()
         {
-            Patiently.AssertThat(() => _sqsCallCounter > 1);
+            await Patiently.AssertThatAsync(() => _sqsCallCounter > 1);
         }
 
         public override void PostAssertTeardown()

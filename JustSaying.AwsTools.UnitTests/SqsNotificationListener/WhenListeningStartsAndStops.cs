@@ -18,13 +18,15 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
             Sqs.ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>())
                .Returns(
-                    _ => Task.FromResult(GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid())), 
-                    _ => Task.FromResult(new ReceiveMessageResponse { Messages = new List<Message>() }));
-
-            Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>())
-               .Returns(
-                    _ => GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid()), 
-                    _ => new ReceiveMessageResponse { Messages = new List<Message>() });
+                    _ => Task.FromResult(
+                            GenerateResponseMessage(
+                                SubjectOfMessageAfterStop, 
+                                Guid.NewGuid())), 
+                    _ => Task.FromResult(
+                            new ReceiveMessageResponse
+                            {
+                                Messages = new List<Message>()
+                            }));
         }
 
         protected override void When()
@@ -37,23 +39,27 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         }
 
         [Then]
-        public void CorrectQueueIsPolled()
+        public async Task CorrectQueueIsPolled()
         {
-            Patiently.VerifyExpectation(() => Sqs.Received().ReceiveMessage(Arg.Is<ReceiveMessageRequest>(x => x.QueueUrl == QueueUrl)));
+            await Patiently.VerifyExpectationAsync(() =>
+                Sqs.Received().ReceiveMessageAsync(
+                    Arg.Is<ReceiveMessageRequest>(x => x.QueueUrl == QueueUrl)));
         }
 
         [Then]
-        public void TheMaxMessageAllowanceIsGrabbed()
+        public async Task TheMaxMessageAllowanceIsGrabbed()
         {
-            Patiently.VerifyExpectation(
-                () => Sqs.Received().ReceiveMessage(Arg.Is<ReceiveMessageRequest>(x => x.MaxNumberOfMessages == 10)));
+            await Patiently.VerifyExpectationAsync(() => 
+                Sqs.Received().ReceiveMessageAsync(
+                    Arg.Is<ReceiveMessageRequest>(x => x.MaxNumberOfMessages == 10)));
         }
 
         [Then]
-        public void MessageIsProcessed()
+        public async Task MessageIsProcessed()
         {
-            Patiently.VerifyExpectation(
-                () => SerialisationRegister.Received().GeTypeSerialiser(SubjectOfMessageAfterStop));
+            await Patiently.VerifyExpectationAsync(() => 
+                SerialisationRegister.Received().GeTypeSerialiser(
+                    SubjectOfMessageAfterStop));
         }
 
         public override void PostAssertTeardown()

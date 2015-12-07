@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using JustBehave;
@@ -48,12 +49,14 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             NotificationStack.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser>());
         }
 
-        [Then, Timeout(70000)] // ToDo: Sorry about this, but SQS is a little slow to verify againse. Can be better I'm sure? ;)
-        public void QueueIsCreated()
+        [Then, Timeout(70000)] // ToDo: Sorry about this, but SQS is a little slow to verify against. Can be better I'm sure? ;)
+        public async Task QueueIsCreated()
         {
-            var queue = new SqsQueueByName(QueueName, new SqsClient(RegionEndpoint.EUWest1), 0);
+            var queue = new SqsQueueByName(
+                QueueName, new SqsClient(RegionEndpoint.EUWest1), 0);
 
-            Patiently.AssertThat(queue.Exists, TimeSpan.FromSeconds(65));
+            await Patiently.AssertThatAsync(
+                queue.Exists, TimeSpan.FromSeconds(65));
         }
 
         [TearDown]

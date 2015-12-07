@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustBehave;
 using NSubstitute;
@@ -14,27 +15,35 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         }
 
         [Then]
-        public void MessagesGetDeserialisedByCorrectHandler()
+        public async Task MessagesGetDeserialisedByCorrectHandler()
         {
-            Patiently.VerifyExpectation(() => Serialiser.Received().Deserialise(MessageBody, typeof(GenericMessage)));
+            await Patiently.VerifyExpectationAsync(
+                () => Serialiser.Received().Deserialise(
+                    MessageBody, 
+                    typeof(GenericMessage)));
         }
 
         [Then]
-        public void ProcessingIsPassedToTheHandlerForCorrectMessage()
+        public async Task ProcessingIsPassedToTheHandlerForCorrectMessage()
         {
-            Patiently.VerifyExpectation(() => Handler.Received().Handle(DeserialisedMessage));
+            await Patiently.VerifyExpectationAsync(
+                () => Handler.Received().Handle(DeserialisedMessage));
         }
 
         [Then]
-        public void AllMessagesAreClearedFromQueue()
+        public async Task AllMessagesAreClearedFromQueue()
         {
-            Patiently.VerifyExpectation(() => Sqs.Received(2).DeleteMessage(Arg.Any<DeleteMessageRequest>()));
+            await Patiently.VerifyExpectationAsync(
+                () => Sqs.Received(2).DeleteMessage(
+                    Arg.Any<DeleteMessageRequest>()));
         }
 
         [Then]
-        public void ReceiveMessageTimeStatsSent()
+        public async Task ReceiveMessageTimeStatsSent()
         {
-            Patiently.VerifyExpectation(() => Monitor.Received().ReceiveMessageTime(Arg.Any<long>()));
+            await Patiently.VerifyExpectationAsync(
+                () => Monitor.Received().ReceiveMessageTime(
+                    Arg.Any<long>()));
         }
     }
 }

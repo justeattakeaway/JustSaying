@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Amazon;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
@@ -26,7 +27,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         }
 
         [Test]
-        public void AMessagedPublishedToBothRegionsWillBeReceived()
+        public async Task AMessagedPublishedToBothRegionsWillBeReceived()
         {
             GivenASubscriptionToAQueueInTwoRegions(RegionEndpoint.EUWest1.SystemName, RegionEndpoint.USEast1.SystemName);
             AndAPublisherToThePrimaryRegion(RegionEndpoint.EUWest1.SystemName);
@@ -34,7 +35,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
 
             WhenMessagesArePublishedToBothRegions();
 
-            ThenTheSubscriberReceivesBothMessages();
+            await ThenTheSubscriberReceivesBothMessages();
         }
 
         private void GivenASubscriptionToAQueueInTwoRegions(string primaryRegion, string secondaryRegion)
@@ -78,10 +79,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             _secondaryPublisher.Publish(_message2);
         }
 
-        private void ThenTheSubscriberReceivesBothMessages()
+        private async Task ThenTheSubscriberReceivesBothMessages()
         {
-            Patiently.AssertThat(() => _handler.HasReceived(_message1));
-            Patiently.AssertThat(() => _handler.HasReceived(_message2));
+            await Patiently.AssertThatAsync(
+                () => _handler.HasReceived(_message1));
+
+            await Patiently.AssertThatAsync(
+                () => _handler.HasReceived(_message2));
         }
     }
 }

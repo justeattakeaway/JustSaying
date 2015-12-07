@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Amazon;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
@@ -32,18 +33,18 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         }
 
         [Test]
-        public void MessagesArePublishedToTheActiveRegion()
+        public async Task MessagesArePublishedToTheActiveRegion()
         {
             GivenSubscriptionsToAQueueInTwoRegions();
             AndAPublisherWithAFailoverRegion();
 
             WhenThePrimaryRegionIsActive();
             AndAMessageIsPublished();
-            ThenTheMessageIsReceivedInThatRegion(_primaryHandler);
+            await ThenTheMessageIsReceivedInThatRegion(_primaryHandler);
 
             WhenTheFailoverRegionIsActive();
             AndAMessageIsPublished();
-            ThenTheMessageIsReceivedInThatRegion(_secondaryHandler);
+            await ThenTheMessageIsReceivedInThatRegion(_secondaryHandler);
         }
 
         private void GivenSubscriptionsToAQueueInTwoRegions()
@@ -100,9 +101,9 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             _publisher.Publish(_message);
         }
 
-        private void ThenTheMessageIsReceivedInThatRegion(Future<GenericMessage> handler)
+        private async Task ThenTheMessageIsReceivedInThatRegion(Future<GenericMessage> handler)
         {
-            Patiently.AssertThat(() => handler.HasReceived(_message));
+            await Patiently.AssertThatAsync(() => handler.HasReceived(_message));
         }
     }
 }

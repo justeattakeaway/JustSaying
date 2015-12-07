@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustBehave;
 using NSubstitute;
@@ -15,28 +16,40 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         }
 
         [Then]
-        public void MessagesGetDeserialisedByCorrectHandler()
+        public async Task MessagesGetDeserialisedByCorrectHandler()
         {
-            Patiently.VerifyExpectation(() =>Serialiser.Received().Deserialise(MessageBody, typeof(GenericMessage)));
+            await Patiently.VerifyExpectationAsync(
+                () =>Serialiser.Received().Deserialise(
+                    MessageBody, 
+                    typeof(GenericMessage)));
         }
 
         [Then]
-        public void ProcessingIsPassedToTheHandlerForCorrectMessage()
+        public async Task ProcessingIsPassedToTheHandlerForCorrectMessage()
         {
-            Patiently.VerifyExpectation(() =>Handler.Received().Handle(DeserialisedMessage));
+            await Patiently.VerifyExpectationAsync(
+                () =>Handler.Received().Handle(DeserialisedMessage));
         }
 
         [Then]
-        public void MonitoringToldMessageHandlingTime()
+        public async Task MonitoringToldMessageHandlingTime()
         {
-            Patiently.VerifyExpectation(() =>Monitor.Received().HandleTime(Arg.Is<long>(x => x > 0)));
+            await Patiently.VerifyExpectationAsync(
+                () =>Monitor.Received().HandleTime(
+                    Arg.Is<long>(x => x > 0)));
         }
 
         [Then]
-        public void AllMessagesAreClearedFromQueue()
+        public async Task AllMessagesAreClearedFromQueue()
         {
-            Patiently.VerifyExpectation(() => Serialiser.Received(1).Deserialise(Arg.Any<string>(), typeof(GenericMessage)));
-            Patiently.VerifyExpectation(() =>Sqs.Received().DeleteMessage(Arg.Any<DeleteMessageRequest>()));
+            await Patiently.VerifyExpectationAsync(
+                () => Serialiser.Received(1).Deserialise(
+                    Arg.Any<string>(), 
+                    typeof(GenericMessage)));
+
+            await Patiently.VerifyExpectationAsync(
+                () =>Sqs.Received().DeleteMessage(
+                    Arg.Any<DeleteMessageRequest>()));
         }
     }
 

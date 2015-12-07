@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustBehave;
 using NSubstitute;
@@ -14,10 +15,12 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         }
 
         [Then]
-        public void FailedMessageIsNotRemovedFromQueue()
+        public async Task FailedMessageIsNotRemovedFromQueue()
         {
             // The un-handled one is however.
-            Patiently.VerifyExpectation(() => Sqs.Received(1).DeleteMessage(Arg.Any<DeleteMessageRequest>()));
+            await Patiently.VerifyExpectationAsync(
+                () => Sqs.Received(1).DeleteMessage(
+                        Arg.Any<DeleteMessageRequest>()));
         }
     }
 }
