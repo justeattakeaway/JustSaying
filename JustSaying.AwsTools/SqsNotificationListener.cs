@@ -93,7 +93,7 @@ namespace JustSaying.AwsTools
         {
             var queue = _queue.QueueName;
             var region = _queue.Client.Region.SystemName;
-            var queueInfo = $"Queue: {queue}, Region: {region}";
+            var queueInfo = string.Format("Queue: {0}, Region: {1}", queue, region);
             
             Task.Factory
                 .StartNew(
@@ -101,7 +101,7 @@ namespace JustSaying.AwsTools
                     {
                         while (!_cts.IsCancellationRequested)
                         {
-                            await ListenLoop();
+                            await ListenLoop(_cts.Token);
                         }
                     })
                 .ContinueWith(
@@ -109,29 +109,44 @@ namespace JustSaying.AwsTools
                     {
                         if (t.IsCompleted)
                         {
-                            Log.Info($"[Completed] Stopped Listening - {queueInfo}");
+                            Log.Info(
+                                "[Completed] Stopped Listening - {0}",
+                                queueInfo);
                         }
                         else if (t.IsFaulted)
                         {
-                            Log.Info($"[Failed] Stopped Listening - {queueInfo}\n{t.Exception}");
+                            Log.Info(
+                                "[Failed] Stopped Listening - {0}\n{1}",
+                                queueInfo,
+                                t.Exception);
                         }
                         else
                         {
-                            Log.Info($"[Canceled] Stopped Listening - {queueInfo}");
+                            Log.Info(
+                                "[Canceled] Stopped Listening - {0}",
+                                queueInfo);
                         }
                     });
 
-            Log.Info($"Starting Listening - {queueInfo}");
+            Log.Info(
+                "Starting Listening - {0}",
+                queueInfo);
         }
 
         public void StopListening()
         {
             _cts.Cancel();
-            Log.Info($"Stopped Listening - Queue: {_queue.QueueName}, Region: {_queue.Client.Region.SystemName}");
+            Log.Info(
+                "Stopped Listening - Queue: {0}, Region: {1}",
+                _queue.QueueName,
+                _queue.Client.Region.SystemName);
         }
 
-        internal async Task ListenLoop()
+        internal async Task ListenLoop(CancellationToken ct)
         {
+            var queueName = _queue.QueueName;
+            var region = _queue.Client.Region.SystemName;
+
             try
             {
                 _messageProcessingStrategy.BeforeGettingMoreMessages();
@@ -139,13 +154,14 @@ namespace JustSaying.AwsTools
                 var watch = new System.Diagnostics.Stopwatch();
                 watch.Start();
 
-                var sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(
+                var req =
                     new ReceiveMessageRequest
                     {
                         QueueUrl = _queue.Url,
                         MaxNumberOfMessages = GetMaxBatchSize(),
                         WaitTimeSeconds = 20
-                    });
+                    };
+                var sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(req, ct);
 
                 watch.Stop();
 
@@ -153,7 +169,11 @@ namespace JustSaying.AwsTools
 
                 var messageCount = sqsMessageResponse.Messages.Count;
 
-                Log.Trace($"Polled for messages - Queue: {_queue.QueueName}, Region: {_queue.Client.Region.SystemName}, MessageCount: {messageCount}");
+                Log.Trace(
+                    "Polled for messages - Queue: {0}, Region: {1}, MessageCount: {2}",
+                    queueName,
+                    region,
+                    messageCount);
 
                 foreach (var message in sqsMessageResponse.Messages)
                 {
@@ -162,11 +182,19 @@ namespace JustSaying.AwsTools
             }
             catch (InvalidOperationException ex)
             {
-                Log.Trace($"Suspected no message in queue {_queue.QueueName}, region: {_queue.Client.Region.SystemName}. Ex: {ex}");
+                Log.Trace(
+                    "Suspected no message in queue [{0}], region: [{1}]. Ex: {2}",
+                    queueName,
+                    region,
+                    ex);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"Issue in message handling loop for queue {_queue.QueueName}, region {_queue.Client.Region.SystemName}");
+                var msg = string.Format(
+                    "Issue in message handling loop for queue {0}, region {1}",
+                    queueName,
+                    region);
+                Log.Error(ex, msg);
             }
         }
 
@@ -217,7 +245,7 @@ namespace JustSaying.AwsTools
                         handlingSucceeded = handle(typedMessage);
 
                         watch.Stop();
-                        Log.Trace($"Handled message - MessageType: {messageType}");
+                        Log.Trace("Handled message - MessageType: {0}", messageType);
                         _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
                     }
                 }
@@ -228,7 +256,9 @@ namespace JustSaying.AwsTools
             }
             catch (KeyNotFoundException ex)
             {
-                Log.Trace($"Didn't handle message [{rawMessage ?? ""}]. No serialiser setup");
+                Log.Trace(
+                    "Didn't handle message [{0}]. No serialiser setup",
+                    rawMessage ?? "");
                 _queue.Client.DeleteMessage(new DeleteMessageRequest
                 {
                     QueueUrl = _queue.Url,
@@ -238,7 +268,11 @@ namespace JustSaying.AwsTools
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"Issue handling message... {message}. StackTrace: {ex.StackTrace}");
+                var msg = string.Format(
+                    "Issue handling message... {0}. StackTrace: {1}",
+                    message,
+                    ex.StackTrace);
+                Log.Error(ex, msg);
                 if (typedMessage != null)
                 {
                     _messagingMonitor.HandleException(typedMessage.GetType().Name);
