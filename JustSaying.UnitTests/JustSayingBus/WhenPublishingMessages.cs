@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
@@ -17,15 +18,18 @@ namespace JustSaying.UnitTests.JustSayingBus
         }
 
         [Then]
-        public void PublisherIsCalledToPublish()
+        public async Task PublisherIsCalledToPublish()
         {
-            Patiently.VerifyExpectation(() => _publisher.Received().Publish(Arg.Any<GenericMessage>()));
+            await Patiently.VerifyExpectationAsync(
+                () => _publisher.Received().Publish(Arg.Any<GenericMessage>()));
         }
 
         [Then]
-        public void PublishMessageTimeStatsSent()
+        public async Task PublishMessageTimeStatsSent()
         {
-            Patiently.VerifyExpectation(() => Monitor.Received(1).PublishMessageTime(Arg.Any<long>()), 10.Seconds());
+            await Patiently.VerifyExpectationAsync(
+                () => Monitor.Received(1).PublishMessageTime(Arg.Any<long>()), 
+                10.Seconds());
         }
     }
 }

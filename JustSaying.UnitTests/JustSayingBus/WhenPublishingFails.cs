@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
@@ -29,9 +30,12 @@ namespace JustSaying.UnitTests.JustSayingBus
         }
 
         [Then]
-        public void EventPublicationWasAttemptedTheConfiguredNumberOfTimes()
+        public async Task EventPublicationWasAttemptedTheConfiguredNumberOfTimes()
         {
-            Patiently.VerifyExpectation(() => _publisher.Received(PublishAttempts).Publish(Arg.Any<GenericMessage>()));
+            await Patiently.VerifyExpectationAsync(() => 
+                _publisher
+                    .Received(PublishAttempts)
+                    .Publish(Arg.Any<GenericMessage>()));
         }
     }
 }

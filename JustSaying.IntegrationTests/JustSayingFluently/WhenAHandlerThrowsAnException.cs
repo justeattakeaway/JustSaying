@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Amazon;
 using JustBehave;
 using JustSaying.Messaging.MessageHandling;
@@ -53,15 +54,16 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         }
 
         [Then]
-        public void MessagePopsOutAtTheOtherEnd()
+        public async Task MessagePopsOutAtTheOtherEnd()
         {
-            Patiently.VerifyExpectation(() => _handler.Received().Handle(Arg.Any<GenericMessage>()));
+            await Patiently.VerifyExpectationAsync(
+                () => _handler.Received().Handle(Arg.Any<GenericMessage>()));
         }
 
         [Then]
-        public void CustomExceptionHandlingIsCalled()
+        public async Task CustomExceptionHandlingIsCalled()
         {
-            Patiently.AssertThat(() => _handledException == true);
+            await Patiently.AssertThatAsync(() => _handledException);
         }
 
         [TestFixtureTearDown]

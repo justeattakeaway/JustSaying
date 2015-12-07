@@ -17,7 +17,12 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         protected IMessageMonitor Monitoring;
         private Future<GenericMessage> _snsHandler;
         private Future<AnotherGenericMessage> _sqsHandler;
-        private IPublishConfiguration _config = new MessagingConfig {PublishFailureBackoffMilliseconds = 1, PublishFailureReAttempts = 3};
+        private IPublishConfiguration _config = 
+            new MessagingConfig
+            {
+                PublishFailureBackoffMilliseconds = 1,
+                PublishFailureReAttempts = 3
+            };
 
         protected void RegisterSnsHandler(Future<GenericMessage> handler)
         {

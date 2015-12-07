@@ -1,4 +1,5 @@
-﻿using JustBehave;
+﻿using System.Threading.Tasks;
+using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
 using NUnit.Framework;
 using JustSaying.TestingFramework;
@@ -21,9 +22,11 @@ namespace JustSaying.AwsTools.IntegrationTests
         }
 
         [Then, Explicit("Extremely long running test")]
-        public void DeadLetterQueueIsCreated()
+        public async Task DeadLetterQueueIsCreated()
         {
-            Patiently.AssertThat(() => SystemUnderTest.ErrorQueue.Exists(), 40.Seconds());
+            await Patiently.AssertThatAsync(
+                () => SystemUnderTest.ErrorQueue.Exists(), 
+                40.Seconds());
         }
     }
 }
