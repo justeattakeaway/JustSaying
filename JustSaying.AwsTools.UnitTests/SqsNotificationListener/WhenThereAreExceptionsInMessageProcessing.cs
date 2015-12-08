@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS.Model;
@@ -37,14 +38,14 @@ namespace AwsTools.UnitTests.SqsNotificationListener
                 .GeTypeSerialiser(Arg.Any<string>())
                 .Returns(x => { throw new Exception(); });
 
-            _sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>())
-                .Returns(x => GenerateEmptyMessage());
-            _sqs.ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>())
+            _sqs.ReceiveMessageAsync(
+                    Arg.Any<ReceiveMessageRequest>(),
+                    Arg.Any<CancellationToken>())
                 .Returns(x => Task.FromResult(GenerateEmptyMessage()));
 
-            _sqs.When(x => x.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()))
-                .Do(x => _callCount++);
-            _sqs.When(x => x.ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>()))
+            _sqs.When(x => x.ReceiveMessageAsync(
+                    Arg.Any<ReceiveMessageRequest>(),
+                    Arg.Any<CancellationToken>()))
                 .Do(x => _callCount++);
 
             _sqs.Region.Returns(RegionEndpoint.EUWest1);

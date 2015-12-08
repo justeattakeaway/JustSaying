@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustBehave;
@@ -16,7 +17,9 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         {
             base.Given();
 
-            Sqs.ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>())
+            Sqs.ReceiveMessageAsync(
+                    Arg.Any<ReceiveMessageRequest>(),
+                    Arg.Any<CancellationToken>())
                .Returns(
                     _ => Task.FromResult(
                             GenerateResponseMessage(
@@ -43,7 +46,8 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         {
             await Patiently.VerifyExpectationAsync(() =>
                 Sqs.Received().ReceiveMessageAsync(
-                    Arg.Is<ReceiveMessageRequest>(x => x.QueueUrl == QueueUrl)));
+                    Arg.Is<ReceiveMessageRequest>(x => x.QueueUrl == QueueUrl),
+                    Arg.Any<CancellationToken>()));
         }
 
         [Then]
@@ -51,7 +55,8 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         {
             await Patiently.VerifyExpectationAsync(() => 
                 Sqs.Received().ReceiveMessageAsync(
-                    Arg.Is<ReceiveMessageRequest>(x => x.MaxNumberOfMessages == 10)));
+                    Arg.Is<ReceiveMessageRequest>(x => x.MaxNumberOfMessages == 10),
+                    Arg.Any<CancellationToken>()));
         }
 
         [Then]

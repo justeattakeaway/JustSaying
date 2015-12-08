@@ -9,6 +9,7 @@ using JustSaying.TestingFramework;
 using NSubstitute;
 using JustSaying.Messaging.MessageSerialisation;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AwsTools.UnitTests.SqsNotificationListener
@@ -40,12 +41,10 @@ namespace AwsTools.UnitTests.SqsNotificationListener
             Handler = Substitute.For<IHandler<GenericMessage>>();
 
             var response = GenerateResponseMessage(_messageTypeString, Guid.NewGuid());
-
-            Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>())
-               .Returns(
-                    x => response, 
-                    x => new ReceiveMessageResponse());
-            Sqs.ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>())
+            
+            Sqs.ReceiveMessageAsync(
+                    Arg.Any<ReceiveMessageRequest>(), 
+                    Arg.Any<CancellationToken>())
                 .Returns(
                     x => Task.FromResult(response),
                     x => Task.FromResult(new ReceiveMessageResponse()));

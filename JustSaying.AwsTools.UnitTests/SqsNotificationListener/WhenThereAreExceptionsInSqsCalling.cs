@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS.Model;
@@ -33,14 +34,10 @@ namespace AwsTools.UnitTests.SqsNotificationListener
             Serialiser
                 .Deserialise(Arg.Any<string>(), typeof(GenericMessage))
                 .Returns(x => DeserialisedMessage);
-
-            Sqs.When(x => x.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()))
-                .Do(_ =>
-                {
-                    _sqsCallCounter++;
-                    throw new Exception();
-                });
-            Sqs.When(x => x.ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>()))
+            
+            Sqs.When(x => x.ReceiveMessageAsync(
+                    Arg.Any<ReceiveMessageRequest>(),
+                    Arg.Any<CancellationToken>()))
                 .Do(_ =>
                 {
                     _sqsCallCounter++;

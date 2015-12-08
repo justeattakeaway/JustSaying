@@ -94,7 +94,8 @@ namespace JustSaying.AwsTools
             var queue = _queue.QueueName;
             var region = _queue.Client.Region.SystemName;
             var queueInfo = string.Format("Queue: {0}, Region: {1}", queue, region);
-            
+
+            _cts = new CancellationTokenSource();
             Task.Factory
                 .StartNew(
                     async () =>
