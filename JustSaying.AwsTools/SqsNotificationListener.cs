@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading;
+using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Monitoring;
@@ -23,7 +25,7 @@ namespace JustSaying.AwsTools
         private readonly Dictionary<Type, List<Func<Message, bool>>> _handlers;
         private readonly IMessageLock _messageLock;
 
-        private bool _listen = true;
+        private CancellationTokenSource _cts = new CancellationTokenSource();
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
 
         private const int MaxAmazonMessageCap = 10;
@@ -89,21 +91,63 @@ namespace JustSaying.AwsTools
 
         public void Listen()
         {
-            _listen = true;
-            Action run = () => { while (_listen) { ListenLoop(); } };
-            run.BeginInvoke(null, null);
+            var queue = _queue.QueueName;
+            var region = _queue.Client.Region.SystemName;
+            var queueInfo = string.Format("Queue: {0}, Region: {1}", queue, region);
 
-            Log.Info(string.Format("Starting Listening - Queue: {0}, Region: {1}", _queue.QueueName, _queue.Client.Region.SystemName));
+            _cts = new CancellationTokenSource();
+            Task.Factory
+                .StartNew(
+                    async () =>
+                    {
+                        while (!_cts.IsCancellationRequested)
+                        {
+                            await ListenLoop(_cts.Token);
+                        }
+                    })
+                .ContinueWith(
+                    t =>
+                    {
+                        if (t.IsCompleted)
+                        {
+                            Log.Info(
+                                "[Completed] Stopped Listening - {0}",
+                                queueInfo);
+                        }
+                        else if (t.IsFaulted)
+                        {
+                            Log.Info(
+                                "[Failed] Stopped Listening - {0}\n{1}",
+                                queueInfo,
+                                t.Exception);
+                        }
+                        else
+                        {
+                            Log.Info(
+                                "[Canceled] Stopped Listening - {0}",
+                                queueInfo);
+                        }
+                    });
+
+            Log.Info(
+                "Starting Listening - {0}",
+                queueInfo);
         }
 
         public void StopListening()
         {
-            _listen = false;
-            Log.Info(string.Format("Stopped Listening - Queue: {0}, Region: {1}", _queue.QueueName, _queue.Client.Region.SystemName));
+            _cts.Cancel();
+            Log.Info(
+                "Stopped Listening - Queue: {0}, Region: {1}",
+                _queue.QueueName,
+                _queue.Client.Region.SystemName);
         }
 
-        internal void ListenLoop()
+        internal async Task ListenLoop(CancellationToken ct)
         {
+            var queueName = _queue.QueueName;
+            var region = _queue.Client.Region.SystemName;
+
             try
             {
                 _messageProcessingStrategy.BeforeGettingMoreMessages();
@@ -111,12 +155,14 @@ namespace JustSaying.AwsTools
                 var watch = new System.Diagnostics.Stopwatch();
                 watch.Start();
 
-                var sqsMessageResponse = _queue.Client.ReceiveMessage(new ReceiveMessageRequest
-                {
-                    QueueUrl = _queue.Url,
-                    MaxNumberOfMessages = GetMaxBatchSize(),
-                    WaitTimeSeconds = 20
-                });
+                var req =
+                    new ReceiveMessageRequest
+                    {
+                        QueueUrl = _queue.Url,
+                        MaxNumberOfMessages = GetMaxBatchSize(),
+                        WaitTimeSeconds = 20
+                    };
+                var sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(req, ct);
 
                 watch.Stop();
 
@@ -124,7 +170,11 @@ namespace JustSaying.AwsTools
 
                 var messageCount = sqsMessageResponse.Messages.Count;
 
-                Log.Trace(string.Format("Polled for messages - Queue: {0}, Region: {1}, MessageCount: {2}", _queue.QueueName, _queue.Client.Region.SystemName, messageCount));
+                Log.Trace(
+                    "Polled for messages - Queue: {0}, Region: {1}, MessageCount: {2}",
+                    queueName,
+                    region,
+                    messageCount);
 
                 foreach (var message in sqsMessageResponse.Messages)
                 {
@@ -133,11 +183,19 @@ namespace JustSaying.AwsTools
             }
             catch (InvalidOperationException ex)
             {
-                Log.Trace("Suspected no message in queue {0}, region: {1}. Ex: {2}", _queue.QueueName, _queue.Client.Region.SystemName, ex);
+                Log.Trace(
+                    "Suspected no message in queue [{0}], region: [{1}]. Ex: {2}",
+                    queueName,
+                    region,
+                    ex);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, string.Format("Issue in message handling loop for queue {0}, region {1}", _queue.QueueName, _queue.Client.Region.SystemName));
+                var msg = string.Format(
+                    "Issue in message handling loop for queue {0}, region {1}",
+                    queueName,
+                    region);
+                Log.Error(ex, msg);
             }
         }
 
@@ -145,7 +203,9 @@ namespace JustSaying.AwsTools
         {
             var maxMessageBatchSize = _messageProcessingStrategy as IMessageMaxBatchSizeProcessingStrategy;
 
-            if (maxMessageBatchSize == null || (maxMessageBatchSize.MaxBatchSize <= 0 || maxMessageBatchSize.MaxBatchSize > MaxAmazonMessageCap))
+            if (maxMessageBatchSize == null || 
+                maxMessageBatchSize.MaxBatchSize <= 0 || 
+                maxMessageBatchSize.MaxBatchSize > MaxAmazonMessageCap)
             {
                 return MaxAmazonMessageCap;
             }
@@ -186,7 +246,7 @@ namespace JustSaying.AwsTools
                         handlingSucceeded = handle(typedMessage);
 
                         watch.Stop();
-                        Log.Trace("Handled message - MessageType: " + messageType);
+                        Log.Trace("Handled message - MessageType: {0}", messageType);
                         _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
                     }
                 }
@@ -197,7 +257,9 @@ namespace JustSaying.AwsTools
             }
             catch (KeyNotFoundException ex)
             {
-                Log.Trace("Didn't handle message {0}. No serialiser setup", rawMessage ?? "");
+                Log.Trace(
+                    "Didn't handle message [{0}]. No serialiser setup",
+                    rawMessage ?? "");
                 _queue.Client.DeleteMessage(new DeleteMessageRequest
                 {
                     QueueUrl = _queue.Url,
@@ -207,7 +269,11 @@ namespace JustSaying.AwsTools
             }
             catch (Exception ex)
             {
-                Log.Error(ex, string.Format("Issue handling message... {0}. StackTrace: {1}", message, ex.StackTrace));
+                var msg = string.Format(
+                    "Issue handling message... {0}. StackTrace: {1}",
+                    message,
+                    ex.StackTrace);
+                Log.Error(ex, msg);
                 if (typedMessage != null)
                 {
                     _messagingMonitor.HandleException(typedMessage.GetType().Name);

@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using JustSaying.AwsTools.QueueCreation;
 using NUnit.Framework;
 using JustSaying.TestingFramework;
@@ -8,14 +9,17 @@ namespace JustSaying.AwsTools.IntegrationTests
     {
         protected override void When()
         {
-            SystemUnderTest.Create(new SqsReadConfiguration(SubscriptionType.ToTopic), attempt:600);
+            SystemUnderTest.Create(
+                new SqsReadConfiguration(SubscriptionType.ToTopic), 
+                attempt:600);
             SystemUnderTest.Delete();
         }
 
         [Test]
-        public void TheErrorQueueIsDeleted()
+        public async Task TheErrorQueueIsDeleted()
         {
-            Patiently.AssertThat(() => !SystemUnderTest.ErrorQueue.Exists());
+            await Patiently.AssertThatAsync(
+                () => !SystemUnderTest.ErrorQueue.Exists());
         }
     }
 }

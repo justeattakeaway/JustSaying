@@ -9,6 +9,8 @@ using JustSaying.TestingFramework;
 using NSubstitute;
 using JustSaying.Messaging.MessageSerialisation;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AwsTools.UnitTests.SqsNotificationListener
 {
@@ -37,11 +39,20 @@ namespace AwsTools.UnitTests.SqsNotificationListener
             SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
             Monitor = Substitute.For<IMessageMonitor>();
             Handler = Substitute.For<IHandler<GenericMessage>>();
+
             var response = GenerateResponseMessage(_messageTypeString, Guid.NewGuid());
-            Sqs.ReceiveMessage(Arg.Any<ReceiveMessageRequest>()).Returns(x => response, x => new ReceiveMessageResponse());
+            
+            Sqs.ReceiveMessageAsync(
+                    Arg.Any<ReceiveMessageRequest>(), 
+                    Arg.Any<CancellationToken>())
+                .Returns(
+                    x => Task.FromResult(response),
+                    x => Task.FromResult(new ReceiveMessageResponse()));
             Sqs.Region.Returns(RegionEndpoint.EUWest1);
 
-            SerialisationRegister.GeTypeSerialiser(_messageTypeString).Returns(new TypeSerialiser(typeof(GenericMessage), Serialiser));
+            SerialisationRegister
+                .GeTypeSerialiser(_messageTypeString)
+                .Returns(new TypeSerialiser(typeof(GenericMessage), Serialiser));
             DeserialisedMessage = new GenericMessage {RaisingComponent = "Component"};
             Serialiser.Deserialise(Arg.Any<string>(), typeof(GenericMessage)).Returns(x => DeserialisedMessage);
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Amazon;
 using JustBehave;
 using JustSaying.AwsTools;
@@ -32,9 +33,9 @@ namespace AwsTools.UnitTests.SqsNotificationListener.HandlingExceptions
         }
 
         [Then]
-        public void CustomExceptionHandlingIsCalled()
+        public async Task CustomExceptionHandlingIsCalled()
         {
-            Patiently.AssertThat(() => _handledException);
+            await Patiently.AssertThatAsync(() => _handledException);
         }
 
         protected override void Given()

@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using AwsTools.UnitTests.SqsNotificationListener;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
@@ -21,16 +22,19 @@ namespace JustSaying.AwsTools.UnitTests.SqsNotificationListener
         }
 
         [Test]
-        public void ProcessingIsPassedToTheHandler()
+        public async Task ProcessingIsPassedToTheHandler()
         {
-            Patiently.VerifyExpectation(() => (Handler as MyHandler).HandlerWasCalled());
+            await Patiently.VerifyExpectationAsync(
+                () => (Handler as MyHandler).HandlerWasCalled());
         }
 
         [Test]
-        public void MessageIsLocked()
+        public async Task MessageIsLocked()
         {
-            Patiently.VerifyExpectation(() =>
-                MessageLock.Received().TryAquireLock(Arg.Is<string>(a => a.Contains(DeserialisedMessage.Id.ToString())), TimeSpan.FromSeconds(_expectedtimeout)));
+            await Patiently.VerifyExpectationAsync(
+                () => MessageLock.Received().TryAquireLock(
+                        Arg.Is<string>(a => a.Contains(DeserialisedMessage.Id.ToString())), 
+                        TimeSpan.FromSeconds(_expectedtimeout)));
         }
     }
 

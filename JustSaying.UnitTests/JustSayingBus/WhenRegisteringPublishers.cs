@@ -1,5 +1,5 @@
-using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
@@ -28,15 +28,17 @@ namespace JustSaying.UnitTests.JustSayingBus
         }
 
         [Then]
-        public void AcceptedOrderWasPublishedOnce()
+        public async Task AcceptedOrderWasPublishedOnce()
         {
-            Patiently.VerifyExpectation(() => _publisher.Received(1).Publish(Arg.Any<OrderAccepted>()));
+            await Patiently.VerifyExpectationAsync(
+                () => _publisher.Received(1).Publish(Arg.Any<OrderAccepted>()));
         }
 
         [Then]
-        public void RejectedOrderWasPublishedTwice()
+        public async Task RejectedOrderWasPublishedTwice()
         {
-            Patiently.VerifyExpectation(() => _publisher.Received(2).Publish(Arg.Any<OrderRejected>()));
+            await Patiently.VerifyExpectationAsync(
+                () => _publisher.Received(2).Publish(Arg.Any<OrderRejected>()));
         }
 
         [Then]
