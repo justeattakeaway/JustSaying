@@ -6,28 +6,35 @@ namespace JustSaying.Messaging.MessageSerialisation
 {
     public class MessageSerialisationRegister : IMessageSerialisationRegister
     {
-        private readonly Dictionary<string, TypeSerialiser> _map;
-
-        public MessageSerialisationRegister()
-        {
-            _map = new Dictionary<string, TypeSerialiser>();
-        }
-
-        public TypeSerialiser GeTypeSerialiser(string objectType)
-        {
-            return _map[objectType];
-        }
-
-        public TypeSerialiser GeTypeSerialiser(Type objectType)
-        {
-            return _map[objectType.Name];
-        }
+        private readonly Dictionary<string, TypeSerialiser> _map = new Dictionary<string, TypeSerialiser>();
 
         public void AddSerialiser<T>(IMessageSerialiser serialiser) where T : Message
         {
-            var keyname = typeof (T).Name;
-            if (! _map.ContainsKey(keyname))
+            var keyname = typeof(T).Name;
+            if (!_map.ContainsKey(keyname))
                 _map.Add(keyname, new TypeSerialiser(typeof(T), serialiser));
         }
+
+        public Message DeserializeMessage(string body)
+        {
+            foreach (var formatter in _map)
+            {
+                var stringType = formatter.Value.Serialiser.GetMessageType(body);
+                if (string.IsNullOrWhiteSpace(stringType))
+                    continue;
+                var matchedType = formatter.Value.Type;
+                if (!String.Equals(matchedType.Name, stringType, StringComparison.CurrentCultureIgnoreCase))
+                    continue;
+                return formatter.Value.Serialiser.Deserialise(body, matchedType);
+            }
+            throw new MessageFormatNotSupportedException(string.Format("Message can not be handled - type undetermined. Message body: '{0}'", body));
+        }
+
+        public string Serialise(Message message, bool serializeForSnsPublishing)
+        {
+            var formatter = _map[message.GetType().Name];
+            return formatter.Serialiser.Serialise(message, serializeForSnsPublishing);
+        }
+
     }
 }

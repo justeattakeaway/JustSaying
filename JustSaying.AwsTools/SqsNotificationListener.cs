@@ -224,12 +224,7 @@ namespace JustSaying.AwsTools
             string rawMessage = null;
             try
             {
-                var body = JObject.Parse(message.Body);
-                string messageType = body["Subject"].ToString();
-
-                rawMessage = body["Message"].ToString();
-                var typeSerialiser = _serialisationRegister.GeTypeSerialiser(messageType);
-                typedMessage = typeSerialiser.Serialiser.Deserialise(rawMessage, typeSerialiser.Type);
+                typedMessage = _serialisationRegister.DeserializeMessage(message.Body);
 
                 var handlingSucceeded = true;
 
@@ -246,7 +241,7 @@ namespace JustSaying.AwsTools
                         handlingSucceeded = handle(typedMessage);
 
                         watch.Stop();
-                        Log.Trace("Handled message - MessageType: {0}", messageType);
+                        Log.Trace("Handled message - MessageType: {0}", typedMessage.GetType().Name);
                         _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
                     }
                 }

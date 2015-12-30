@@ -23,7 +23,7 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
 
         public string GetMessageInContext(MessageWithEnum message)
         {
-            var context = new { Subject = message.GetType().Name, Message = SystemUnderTest.Serialise(message) };
+            var context = new { Subject = message.GetType().Name, Message = SystemUnderTest.Serialise(message, false) };
             return JsonConvert.SerializeObject(context);
         }
 

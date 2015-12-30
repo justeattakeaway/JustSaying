@@ -35,9 +35,8 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected override void Given()
         {
             _serialisationRegister
-                .GeTypeSerialiser(Arg.Any<string>())
+                .DeserializeMessage(Arg.Any<string>())
                 .Returns(x => { throw new Exception(); });
-
             _sqs.ReceiveMessageAsync(
                     Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>())

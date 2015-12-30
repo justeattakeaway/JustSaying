@@ -16,24 +16,15 @@ namespace AwsTools.UnitTests.SqsNotificationListener
     public class WhenThereAreExceptionsInSqsCalling : BaseQueuePollingTest
     {
         private int _sqsCallCounter;
-        private readonly string _messageTypeString = typeof(GenericMessage).ToString();
         protected override void Given()
         {
             Sqs = Substitute.For<ISqsClient>();
-            Serialiser = Substitute.For<IMessageSerialiser>();
             SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
             Monitor = Substitute.For<IMessageMonitor>();
             Handler = Substitute.For<IHandler<GenericMessage>>();
             GenerateResponseMessage(_messageTypeString, Guid.NewGuid());
 
-            SerialisationRegister
-                .GeTypeSerialiser(_messageTypeString)
-                .Returns(new TypeSerialiser(typeof(GenericMessage), Serialiser));
-
             DeserialisedMessage = new GenericMessage { RaisingComponent = "Component" };
-            Serialiser
-                .Deserialise(Arg.Any<string>(), typeof(GenericMessage))
-                .Returns(x => DeserialisedMessage);
             
             Sqs.When(x => x.ReceiveMessageAsync(
                     Arg.Any<ReceiveMessageRequest>(),

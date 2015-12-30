@@ -19,9 +19,8 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         public async Task MessagesGetDeserialisedByCorrectHandler()
         {
             await Patiently.VerifyExpectationAsync(
-                () =>Serialiser.Received().Deserialise(
-                    MessageBody, 
-                    typeof(GenericMessage)));
+                () => SerialisationRegister.Received().DeserializeMessage(
+                    SqsMessageBody(_messageTypeString)));
         }
 
         [Then]
@@ -43,9 +42,8 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         public async Task AllMessagesAreClearedFromQueue()
         {
             await Patiently.VerifyExpectationAsync(
-                () => Serialiser.Received(1).Deserialise(
-                    Arg.Any<string>(), 
-                    typeof(GenericMessage)));
+                () => SerialisationRegister.Received(2).DeserializeMessage(
+                    Arg.Any<string>()));
 
             await Patiently.VerifyExpectationAsync(
                 () =>Sqs.Received().DeleteMessage(

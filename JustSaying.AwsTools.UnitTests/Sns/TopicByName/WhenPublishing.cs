@@ -24,9 +24,7 @@ namespace AwsTools.UnitTests.Sns.TopicByName
 
         protected override void Given()
         {
-            var serialiser = Substitute.For<IMessageSerialiser>();
-            serialiser.Serialise(Arg.Any<Message>()).Returns(Message);
-            _serialisationRegister.GeTypeSerialiser(typeof(GenericMessage)).Returns(new TypeSerialiser(typeof(GenericMessage), serialiser));
+            _serialisationRegister.Serialise(Arg.Any<Message>(), Arg.Is(true)).Returns(Message);
             _sns.FindTopic(TopicName).Returns(new Topic { TopicArn = TopicArn });
         }
 
@@ -38,7 +36,12 @@ namespace AwsTools.UnitTests.Sns.TopicByName
         [Then]
         public void MessageIsPublishedToSnsTopic()
         {
-            _sns.Received().Publish(Arg.Is<PublishRequest>(x => x.Message == Message));
+            _sns.Received().Publish(Arg.Is<PublishRequest>(x => B(x)));
+        }
+
+        private static bool B(PublishRequest x)
+        {
+            return x.Message.Equals(Message);
         }
 
         [Then]

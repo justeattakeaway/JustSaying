@@ -18,9 +18,8 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         public async Task MessagesGetDeserialisedByCorrectHandler()
         {
             await Patiently.VerifyExpectationAsync(
-                () => Serialiser.Received().Deserialise(
-                    MessageBody, 
-                    typeof(GenericMessage)));
+                () => SerialisationRegister.Received().DeserializeMessage(
+                    SqsMessageBody(_messageTypeString)));
         }
 
         [Then]
