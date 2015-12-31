@@ -58,8 +58,11 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AwsClientFactoryProxy.cs" />
+    <Compile Include="DefaultAwsClientFactory.cs" />
     <Compile Include="GuaranteedOnceDelivery.cs" />
-    <Compile Include="ISqsClient.cs" />
+    <Compile Include="IAwsClientFactoryProxy.cs" />
+    <Compile Include="IAwsClientFactory.cs" />
     <Compile Include="QueueCreation\AmazonQueueCreator.cs" />
     <Compile Include="QueueCreation\IVerifyAmazonQueues.cs" />
     <Compile Include="QueueCreation\RedrivePolicy.cs" />
@@ -76,8 +79,6 @@
     <Compile Include="QueueCreation\SqsWriteConfiguration.cs" />
     <Compile Include="SnsTopicByName.cs" />
     <Compile Include="SnsTopicBase.cs" />
-    <Compile Include="SqsClient.cs" />
-    <Compile Include="SqsClientFactory.cs" />
     <Compile Include="SqsNotificationListener.cs" />
     <Compile Include="SqsPublisher.cs" />
     <Compile Include="SqsQueueBase.cs" />

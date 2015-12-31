@@ -1,3 +1,4 @@
+using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
@@ -12,8 +13,8 @@ namespace JustSaying.AwsTools
         private readonly IAmazonSQS _client;
         private readonly IMessageSerialisationRegister _serialisationRegister;
 
-        public SqsPublisher(string queueName, ISqsClient client, int retryCountBeforeSendingToErrorQueue, IMessageSerialisationRegister serialisationRegister)
-            : base(queueName, client, retryCountBeforeSendingToErrorQueue)
+        public SqsPublisher(RegionEndpoint region, string queueName, IAmazonSQS client, int retryCountBeforeSendingToErrorQueue, IMessageSerialisationRegister serialisationRegister)
+            : base(region, queueName, client, retryCountBeforeSendingToErrorQueue)
         {
             _client = client;
             _serialisationRegister = serialisationRegister;

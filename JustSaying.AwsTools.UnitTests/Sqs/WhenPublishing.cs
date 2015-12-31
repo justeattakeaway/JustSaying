@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustBehave;
@@ -11,14 +12,14 @@ namespace JustSaying.AwsTools.UnitTests.Sqs
     public class WhenPublishing : BehaviourTest<SqsPublisher>
     {
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
-        private readonly ISqsClient _sqs = Substitute.For<ISqsClient>();
+        private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private const string Url = "https://blablabla/" + QueueName;
         private readonly GenericMessage _message = new GenericMessage {Content = "Hello"};
         private const string QueueName = "queuename";
 
         protected override SqsPublisher CreateSystemUnderTest()
         {
-            return new SqsPublisher(QueueName, _sqs, 0, _serialisationRegister);
+            return new SqsPublisher(RegionEndpoint.EUWest1, QueueName, _sqs, 0, _serialisationRegister);
         }
 
         protected override void Given()

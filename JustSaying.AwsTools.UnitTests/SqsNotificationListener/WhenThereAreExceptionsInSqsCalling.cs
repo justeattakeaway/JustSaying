@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
@@ -18,7 +19,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         private int _sqsCallCounter;
         protected override void Given()
         {
-            Sqs = Substitute.For<ISqsClient>();
+            Sqs = Substitute.For<IAmazonSQS>();
             SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
             Monitor = Substitute.For<IMessageMonitor>();
             Handler = Substitute.For<IHandler<GenericMessage>>();
@@ -34,7 +35,6 @@ namespace AwsTools.UnitTests.SqsNotificationListener
                     _sqsCallCounter++;
                     throw new Exception();
                 });
-            Sqs.Region.Returns(RegionEndpoint.EUWest1);
         }
 
         protected override void When()

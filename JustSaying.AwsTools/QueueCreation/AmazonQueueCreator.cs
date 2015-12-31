@@ -6,26 +6,35 @@ namespace JustSaying.AwsTools.QueueCreation
 {
     public class AmazonQueueCreator : IVerifyAmazonQueues
     {
+        private readonly IAwsClientFactoryProxy awsClientFactory;
+
+        public AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory)
+        {
+            this.awsClientFactory = awsClientFactory;
+        }
+
         public SqsQueueByName EnsureTopicExistsWithQueueSubscribed(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
         {
+            var regionEndpoint = RegionEndpoint.GetBySystemName(region);
             var queue = EnsureQueueExists(region, queueConfig);
-            var eventTopic = EnsureTopicExists(region, serialisationRegister, queueConfig);
-            EnsureQueueIsSubscribedToTopic(region, eventTopic, queue);
+            var eventTopic = EnsureTopicExists(regionEndpoint, serialisationRegister, queueConfig);
+            EnsureQueueIsSubscribedToTopic(regionEndpoint, eventTopic, queue);
 
             return queue;
         }
 
         public SqsQueueByName EnsureQueueExists(string region, SqsReadConfiguration queueConfig)
         {
-            var sqsclient = SqsClientFactory.Create(RegionEndpoint.GetBySystemName(region));
-            var queue = new SqsQueueByName(queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue);
+            var regionEndpoint = RegionEndpoint.GetBySystemName(region);
+            var sqsclient = awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
+            var queue = new SqsQueueByName(regionEndpoint, queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue);
             queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdated(queueConfig);
             return queue;
         }
 
-        private static SnsTopicByName EnsureTopicExists(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
+        private SnsTopicByName EnsureTopicExists(RegionEndpoint region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
         {
-            var snsclient = AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(region));
+            var snsclient = awsClientFactory.GetAwsClientFactory().GetSnsClient(region);
             var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsclient, serialisationRegister);
 
             if (!eventTopic.Exists())
@@ -34,9 +43,9 @@ namespace JustSaying.AwsTools.QueueCreation
             return eventTopic;
         }
 
-        private static void EnsureQueueIsSubscribedToTopic(string region, SnsTopicByName eventTopic, SqsQueueByName queue)
+        private void EnsureQueueIsSubscribedToTopic(RegionEndpoint region, SnsTopicByName eventTopic, SqsQueueByName queue)
         {
-            var sqsclient = SqsClientFactory.Create(RegionEndpoint.GetBySystemName(region));
+            var sqsclient = awsClientFactory.GetAwsClientFactory().GetSqsClient(region);
             eventTopic.Subscribe(sqsclient, queue);
         }
     }

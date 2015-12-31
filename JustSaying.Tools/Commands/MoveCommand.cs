@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Amazon;
 using Amazon.EC2;
 using Amazon.Runtime;
 using Amazon.SQS;
@@ -27,9 +28,9 @@ namespace JustSaying.Tools.Commands
             Console.WriteLine("Moving {0} messages from {1} to {2}", Count, SourceQueueName, DestinationQueueName);
 
             var config = new AmazonSQSConfig();
-            var client = new SqsClient(config.RegionEndpoint);
-            var sourceQueue = new SqsQueueByName(SourceQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT);
-            var destinationQueue = new SqsQueueByName(DestinationQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT);
+            var client = new DefaultAwsClientFactory().GetSqsClient(config.RegionEndpoint);
+            var sourceQueue = new SqsQueueByName(config.RegionEndpoint, SourceQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT);
+            var destinationQueue = new SqsQueueByName(config.RegionEndpoint, DestinationQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT);
 
             var messages = PopMessagesFromSourceQueue(sourceQueue);
             var receiptHandles = messages.ToDictionary(m => m.MessageId, m => m.ReceiptHandle);

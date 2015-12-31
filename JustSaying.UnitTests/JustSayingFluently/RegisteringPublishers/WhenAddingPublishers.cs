@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using JustBehave;
+using JustSaying.AwsTools;
 using JustSaying.TestingFramework;
 using NSubstitute;
 using NUnit.Framework;
@@ -12,7 +13,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
 
         protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
-            return new JustSaying.JustSayingFluently(_bus, null);
+            return new JustSaying.JustSayingFluently(_bus, null, new AwsClientFactoryProxy());
         }
 
         protected override void Given()

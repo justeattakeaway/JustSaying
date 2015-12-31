@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
+using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Amazon.SQS.Util;
@@ -12,11 +13,11 @@ namespace JustSaying.AwsTools
     {
         private readonly int _retryCountBeforeSendingToErrorQueue;
 
-        public SqsQueueByName(string queueName, ISqsClient client, int retryCountBeforeSendingToErrorQueue)
-            : base(queueName, client)
+        public SqsQueueByName(RegionEndpoint region, string queueName, IAmazonSQS client, int retryCountBeforeSendingToErrorQueue)
+            : base(region, queueName, client)
         {
             _retryCountBeforeSendingToErrorQueue = retryCountBeforeSendingToErrorQueue;
-            ErrorQueue = new ErrorQueue(queueName, client);
+            ErrorQueue = new ErrorQueue(region, queueName, client);
         }
 
         public override bool Create(SqsBasicConfiguration queueConfig, int attempt = 0)

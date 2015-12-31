@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools;
 using JustSaying.Messaging.MessageSerialisation;
@@ -18,7 +19,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
     public class WhenThereAreExceptionsInMessageProcessing : 
         BehaviourTest<SqsNotificationListener>
     {
-        private readonly ISqsClient _sqs = Substitute.For<ISqsClient>();
+        private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private readonly IMessageSerialisationRegister _serialisationRegister = 
             Substitute.For<IMessageSerialisationRegister>();
         
@@ -27,7 +28,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected override SqsNotificationListener CreateSystemUnderTest()
         {
             return new SqsNotificationListener(
-                new SqsQueueByUrl("", _sqs), 
+                new SqsQueueByUrl(RegionEndpoint.EUWest1, "", _sqs), 
                 _serialisationRegister, 
                 Substitute.For<IMessageMonitor>());
         }
@@ -46,8 +47,6 @@ namespace AwsTools.UnitTests.SqsNotificationListener
                     Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>()))
                 .Do(x => _callCount++);
-
-            _sqs.Region.Returns(RegionEndpoint.EUWest1);
         }
 
         protected override void When()

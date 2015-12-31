@@ -11,13 +11,14 @@ using JustSaying.Messaging.MessageSerialisation;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.SQS;
 
 namespace AwsTools.UnitTests.SqsNotificationListener
 {
     public abstract class BaseQueuePollingTest : BehaviourTest<JustSaying.AwsTools.SqsNotificationListener>
     {
         protected const string QueueUrl = "url";
-        protected ISqsClient Sqs;
+        protected IAmazonSQS Sqs;
         protected GenericMessage DeserialisedMessage;
         protected const string MessageBody = "object";
         protected IHandler<GenericMessage> Handler;
@@ -28,12 +29,12 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 
         protected override JustSaying.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
-            return new JustSaying.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), SerialisationRegister, Monitor, null, MessageLock);
+            return new JustSaying.AwsTools.SqsNotificationListener(new SqsQueueByUrl(RegionEndpoint.EUWest1, QueueUrl, Sqs), SerialisationRegister, Monitor, null, MessageLock);
         }
 
         protected override void Given()
         {
-            Sqs = Substitute.For<ISqsClient>();
+            Sqs = Substitute.For<IAmazonSQS>();
             SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
             Monitor = Substitute.For<IMessageMonitor>();
             Handler = Substitute.For<IHandler<GenericMessage>>();
@@ -46,7 +47,6 @@ namespace AwsTools.UnitTests.SqsNotificationListener
                 .Returns(
                     x => Task.FromResult(response),
                     x => Task.FromResult(new ReceiveMessageResponse()));
-            Sqs.Region.Returns(RegionEndpoint.EUWest1);
 
             DeserialisedMessage = new GenericMessage { RaisingComponent = "Component" };
             SerialisationRegister.DeserializeMessage(Arg.Any<string>()).Returns(DeserialisedMessage);

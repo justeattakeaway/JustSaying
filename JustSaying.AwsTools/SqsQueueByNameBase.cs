@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
@@ -13,8 +14,8 @@ namespace JustSaying.AwsTools
     {
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
 
-        protected SqsQueueByNameBase(string queueName, ISqsClient client)
-            : base(client)
+        protected SqsQueueByNameBase(RegionEndpoint region, string queueName, IAmazonSQS client)
+            : base(region, client)
         {
             QueueName = queueName;
             Exists();

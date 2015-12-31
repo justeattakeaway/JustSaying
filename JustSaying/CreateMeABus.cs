@@ -1,3 +1,4 @@
+using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
@@ -26,8 +27,11 @@ namespace JustSaying
             var messageSerialisationRegister = new MessageSerialisationRegister();
             var justSayingBus = new JustSayingBus(config, messageSerialisationRegister);
 
-            var amazonQueueCreator = new AmazonQueueCreator();
-            var bus = new JustSayingFluently(justSayingBus, amazonQueueCreator);
+            var awsClientFactory = new DefaultAwsClientFactory();
+            var awsClientFactoryProxy = new AwsClientFactoryProxy(() => awsClientFactory);
+                
+            var amazonQueueCreator = new AmazonQueueCreator(awsClientFactoryProxy);
+            var bus = new JustSayingFluently(justSayingBus, amazonQueueCreator, awsClientFactoryProxy);
 
             bus
                 .WithMonitoring(new NullOpMessageMonitor())

@@ -117,7 +117,7 @@ namespace JustSaying.IntegrationTests
 
         private static void DeleteQueue(RegionEndpoint regionEndpoint, string queueUrl)
         {
-            var client = SqsClientFactory.Create(regionEndpoint);
+            var client = new DefaultAwsClientFactory().GetSqsClient(regionEndpoint);
             client.DeleteQueue(new DeleteQueueRequest { QueueUrl = queueUrl });
         }
 
@@ -138,7 +138,7 @@ namespace JustSaying.IntegrationTests
 
         private static List<string> GetAllQueues(RegionEndpoint regionEndpoint, string queueName)
         {
-            var client = SqsClientFactory.Create(regionEndpoint);
+            var client = new DefaultAwsClientFactory().GetSqsClient(regionEndpoint);
             var topics = client.ListQueues(new ListQueuesRequest());
             return topics.QueueUrls.Where(x => x.IndexOf(queueName, StringComparison.InvariantCultureIgnoreCase) >= 0).ToList();
         }
@@ -175,7 +175,7 @@ namespace JustSaying.IntegrationTests
         {
             var request = new GetQueueAttributesRequest{ QueueUrl = queueUrl, AttributeNames = new List<string> { "QueueArn" } };
 
-            var sqsclient = SqsClientFactory.Create(regionEndpoint);
+            var sqsclient = new DefaultAwsClientFactory().GetSqsClient(regionEndpoint);
 
             var queueArn = sqsclient.GetQueueAttributes(request).QueueARN;
 
@@ -188,7 +188,7 @@ namespace JustSaying.IntegrationTests
 
         protected bool QueueHasPolicyForTopic(RegionEndpoint regionEndpoint, Topic topic, string queueUrl)
         {
-            var client = SqsClientFactory.Create(regionEndpoint);
+            var client = new DefaultAwsClientFactory().GetSqsClient(regionEndpoint);
 
             var policy = client.GetQueueAttributes(new GetQueueAttributesRequest{ QueueUrl = queueUrl, AttributeNames = new List<string>{ "Policy" }}).Policy;
 

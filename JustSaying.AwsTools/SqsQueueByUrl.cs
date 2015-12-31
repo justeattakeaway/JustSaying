@@ -1,4 +1,5 @@
 using System.Linq;
+using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 
@@ -6,8 +7,8 @@ namespace JustSaying.AwsTools
 {
     public class SqsQueueByUrl : SqsQueueBase
     {
-        public SqsQueueByUrl(string queueUrl, ISqsClient client)
-            : base(client)
+        public SqsQueueByUrl(RegionEndpoint region, string queueUrl, IAmazonSQS client)
+            : base(region, client)
         {
             Url = queueUrl;
         }

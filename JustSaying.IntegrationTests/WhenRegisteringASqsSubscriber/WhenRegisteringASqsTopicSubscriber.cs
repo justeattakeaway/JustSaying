@@ -52,8 +52,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         [Then, Timeout(70000)] // ToDo: Sorry about this, but SQS is a little slow to verify against. Can be better I'm sure? ;)
         public async Task QueueIsCreated()
         {
-            var queue = new SqsQueueByName(
-                QueueName, new SqsClient(RegionEndpoint.EUWest1), 0);
+            var queue = new SqsQueueByName(RegionEndpoint.EUWest1, 
+                QueueName, new DefaultAwsClientFactory().GetSqsClient(RegionEndpoint.EUWest1), 0);
 
             await Patiently.AssertThatAsync(
                 queue.Exists, TimeSpan.FromSeconds(65));
