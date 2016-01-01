@@ -28,11 +28,9 @@ namespace JustSaying.AwsTools
             });
         }
 
-        private string GetMessageInContext(Message message)
+        public string GetMessageInContext(Message message)
         {
-            var serializedMessage = _serialisationRegister.GeTypeSerialiser(message.GetType()).Serialiser.Serialise(message);
-            var context = new { Subject = message.GetType().Name, Message = serializedMessage };
-            return JsonConvert.SerializeObject(context);
+            return _serialisationRegister.Serialise(message, serializeForSnsPublishing: false);
         }
     }
 }

@@ -66,6 +66,7 @@
     <Compile Include="MessageProcessingStrategies\MaximumThroughput.cs" />
     <Compile Include="MessageProcessingStrategies\Throttled.cs" />
     <Compile Include="MessageSerialisation\IMessageSerialisationFactory.cs" />
+    <Compile Include="MessageSerialisation\MessageFormatNotSupportedException.cs" />
     <Compile Include="MessageSerialisation\NewtonsoftSerialisationFactory.cs" />
     <Compile Include="MessageSerialisation\TypeSerialiser.cs" />
     <Compile Include="Monitoring\IMeasureHandlerExecutionTime.cs" />

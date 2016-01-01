@@ -26,9 +26,9 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.SerialisationRegister
         }
 
         [Then]
-        public void TheMappingContainsTheSerialiser()
+        public void ExceptionThrownIfFormatNotSupported()
         {
-            Assert.NotNull(SystemUnderTest.GeTypeSerialiser(typeof(Message).Name));
+            Assert.Throws<MessageFormatNotSupportedException>(() => SystemUnderTest.DeserializeMessage(string.Empty));
         }
     }
 }

@@ -1,11 +1,13 @@
 using System;
 using JustSaying.Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace JustSaying.Messaging.MessageSerialisation
 {
     public class NewtonsoftSerialiser : IMessageSerialiser
     {
+        private readonly JsonConverter _enumConverter = new Newtonsoft.Json.Converters.StringEnumConverter();
         private readonly JsonSerializerSettings _settings;
 
         public NewtonsoftSerialiser()
@@ -20,14 +22,25 @@ namespace JustSaying.Messaging.MessageSerialisation
 
         public Message Deserialise(string message, Type type)
         {
-            return (Message)JsonConvert.DeserializeObject(message, type, GetJsonSettings());
+            var jsqsMessage = JObject.Parse(message);
+            var messageBody = jsqsMessage["Message"].ToString();
+            return (Message)JsonConvert.DeserializeObject(messageBody, type, _enumConverter);
         }
 
-        public string Serialise(Message message)
+        public string Serialise(Message message, bool serializeForSnsPublishing)
         {
             var settings = GetJsonSettings();
 
-            return JsonConvert.SerializeObject(message, settings);
+            var msg = JsonConvert.SerializeObject(message, settings);
+
+            // AWS SNS service will add Subject and Message properties automatically, 
+            // so just return plain message
+            if (serializeForSnsPublishing)
+                return msg;
+
+            // for direct publishing to SQS, add Subject and Message properties manually
+            var context = new { Subject = message.GetType().Name, Message = msg };
+            return JsonConvert.SerializeObject(context);
         }
 
         private JsonSerializerSettings GetJsonSettings()
@@ -39,7 +52,14 @@ namespace JustSaying.Messaging.MessageSerialisation
                 NullValueHandling = NullValueHandling.Ignore,
                 Converters = new JsonConverter[] { new Newtonsoft.Json.Converters.StringEnumConverter() }
             };
+        }
 
+        public string GetMessageType(string sqsMessge)
+        {
+            var body = JObject.Parse(sqsMessge);
+
+            var type = body["Subject"] ?? string.Empty;
+            return type.ToString();
         }
     }
 }

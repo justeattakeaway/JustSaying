@@ -18,14 +18,13 @@ namespace AwsTools.UnitTests.SqsNotificationListener
     {
         protected const string QueueUrl = "url";
         protected ISqsClient Sqs;
-        protected IMessageSerialiser Serialiser;
         protected GenericMessage DeserialisedMessage;
         protected const string MessageBody = "object";
         protected IHandler<GenericMessage> Handler;
         protected IMessageMonitor Monitor;
         protected IMessageSerialisationRegister SerialisationRegister;
         protected IMessageLock MessageLock;
-        private readonly string _messageTypeString = typeof(GenericMessage).ToString();
+        protected readonly string _messageTypeString = typeof(GenericMessage).ToString();
 
         protected override JustSaying.AwsTools.SqsNotificationListener CreateSystemUnderTest()
         {
@@ -35,7 +34,6 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected override void Given()
         {
             Sqs = Substitute.For<ISqsClient>();
-            Serialiser = Substitute.For<IMessageSerialiser>();
             SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
             Monitor = Substitute.For<IMessageMonitor>();
             Handler = Substitute.For<IHandler<GenericMessage>>();
@@ -50,11 +48,8 @@ namespace AwsTools.UnitTests.SqsNotificationListener
                     x => Task.FromResult(new ReceiveMessageResponse()));
             Sqs.Region.Returns(RegionEndpoint.EUWest1);
 
-            SerialisationRegister
-                .GeTypeSerialiser(_messageTypeString)
-                .Returns(new TypeSerialiser(typeof(GenericMessage), Serialiser));
-            DeserialisedMessage = new GenericMessage {RaisingComponent = "Component"};
-            Serialiser.Deserialise(Arg.Any<string>(), typeof(GenericMessage)).Returns(x => DeserialisedMessage);
+            DeserialisedMessage = new GenericMessage { RaisingComponent = "Component" };
+            SerialisationRegister.DeserializeMessage(Arg.Any<string>()).Returns(DeserialisedMessage);
         }
 
         protected override void When()
@@ -71,7 +66,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
                     new Message
                     {   
                         MessageId = messageId.ToString(),
-                        Body = "{\"Subject\":\"" + messageType + "\"," + "\"Message\":\"" + MessageBody + "\"}"
+                        Body = SqsMessageBody(messageType)
                     },
                     new Message
                     {
@@ -79,6 +74,11 @@ namespace AwsTools.UnitTests.SqsNotificationListener
                         Body = "{\"Subject\":\"SOME_UNKNOWN_MESSAGE\"," + "\"Message\":\"SOME_RANDOM_MESSAGE\"}"
                     }}
             };
+        }
+
+        protected string SqsMessageBody(string messageType)
+        {
+            return "{\"Subject\":\"" + messageType + "\"," + "\"Message\":\"" + MessageBody + "\"}";
         }
 
         public override void PostAssertTeardown()

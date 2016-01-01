@@ -62,10 +62,8 @@ namespace JustSaying.AwsTools.IntegrationTests
             var monitor = Substitute.For<IMessageMonitor>();
             var handler = Substitute.For<IHandler<GenericMessage>>();
             handler.Handle(null).ReturnsForAnyArgs(true).AndDoes(x => {lock (locker) { Thread.Sleep(10);handleCount++; } });
-            
-            var serialiser = Substitute.For<IMessageSerialiser>();
-            serialiser.Deserialise(string.Empty, typeof(GenericMessage)).ReturnsForAnyArgs(new GenericMessage());
-            serialisations.GeTypeSerialiser(string.Empty).ReturnsForAnyArgs(new TypeSerialiser(typeof(GenericMessage), serialiser));
+
+            serialisations.DeserializeMessage(string.Empty).ReturnsForAnyArgs(new GenericMessage());
             var listener = new SqsNotificationListener(q, serialisations, monitor);
 
             listener.AddMessageHandler(() => handler);

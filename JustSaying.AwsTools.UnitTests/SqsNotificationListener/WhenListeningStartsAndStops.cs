@@ -11,7 +11,8 @@ namespace AwsTools.UnitTests.SqsNotificationListener
 {
     public class WhenListeningStartsAndStops : BaseQueuePollingTest
     {
-        private const string SubjectOfMessageAfterStop = "POST_STOP_MESSAGE";
+        private const string SubjectOfMessageAfterStop = @"POST_STOP_MESSAGE";
+        private const string BodyOfMessageAfterStop = @"{""Subject"":""POST_STOP_MESSAGE"",""Message"":""object""}";
 
         protected override void Given()
         {
@@ -63,8 +64,8 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         public async Task MessageIsProcessed()
         {
             await Patiently.VerifyExpectationAsync(() => 
-                SerialisationRegister.Received().GeTypeSerialiser(
-                    SubjectOfMessageAfterStop));
+                SerialisationRegister.Received().DeserializeMessage(
+                    BodyOfMessageAfterStop));
         }
 
         public override void PostAssertTeardown()
