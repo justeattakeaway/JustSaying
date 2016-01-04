@@ -23,7 +23,7 @@ namespace JustSaying.AwsTools.IntegrationTests
         public void HandlingManyMessages(int throttleMessageCount)
         {
             var locker = new object();
-            var awsQueueClient = new DefaultAwsClientFactory().GetSqsClient(RegionEndpoint.EUWest1);
+            var awsQueueClient = CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1);
  
             var q = new SqsQueueByName(RegionEndpoint.EUWest1, "throttle_test", awsQueueClient, 1);
             if (!q.Exists())

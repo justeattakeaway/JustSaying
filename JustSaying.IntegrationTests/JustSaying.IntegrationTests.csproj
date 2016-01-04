@@ -81,6 +81,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GlobalSetup.cs" />
     <Compile Include="JustSayingFluently\Future.cs" />
     <Compile Include="JustSayingFluently\GivenANotificationStack.cs" />
     <Compile Include="JustSayingFluently\MultiRegion\WithSqsPointToPointSubscriber\WhenAFailoverRegionIsSetup.cs" />

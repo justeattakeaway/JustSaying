@@ -53,7 +53,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         public async Task QueueIsCreated()
         {
             var queue = new SqsQueueByName(RegionEndpoint.EUWest1, 
-                QueueName, new DefaultAwsClientFactory().GetSqsClient(RegionEndpoint.EUWest1), 0);
+                QueueName, CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1), 0);
 
             await Patiently.AssertThatAsync(
                 queue.Exists, TimeSpan.FromSeconds(65));

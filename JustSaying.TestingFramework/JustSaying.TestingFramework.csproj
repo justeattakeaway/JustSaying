@@ -54,6 +54,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IntegrationTestConfig.cs" />
     <Compile Include="MessageStubs.cs" />
     <Compile Include="Patiently.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
