@@ -92,7 +92,7 @@ namespace JustSaying.AwsTools
         public void Listen()
         {
             var queue = _queue.QueueName;
-            var region = _queue.Client.Region.SystemName;
+            var region = _queue.Region.SystemName;
             var queueInfo = string.Format("Queue: {0}, Region: {1}", queue, region);
 
             _cts = new CancellationTokenSource();
@@ -140,13 +140,13 @@ namespace JustSaying.AwsTools
             Log.Info(
                 "Stopped Listening - Queue: {0}, Region: {1}",
                 _queue.QueueName,
-                _queue.Client.Region.SystemName);
+                _queue.Region.SystemName);
         }
 
         internal async Task ListenLoop(CancellationToken ct)
         {
             var queueName = _queue.QueueName;
-            var region = _queue.Client.Region.SystemName;
+            var region = _queue.Region.SystemName;
 
             try
             {

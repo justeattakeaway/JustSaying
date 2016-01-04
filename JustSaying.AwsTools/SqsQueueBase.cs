@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
@@ -11,8 +12,9 @@ namespace JustSaying.AwsTools
     {
         public string Arn { get; protected set; }
         public string Url { get; protected set; }
-        public ISqsClient Client { get; private set; }
+        public IAmazonSQS Client { get; private set; }
         public string QueueName { get; protected set; }
+        public RegionEndpoint Region { get; protected set; }
         public ErrorQueue ErrorQueue { get; protected set; }
         internal int MessageRetentionPeriod { get; set; }
         internal int VisibilityTimeout { get; set; }
@@ -21,8 +23,9 @@ namespace JustSaying.AwsTools
         
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
 
-        protected SqsQueueBase(ISqsClient client)
+        protected SqsQueueBase(RegionEndpoint region, IAmazonSQS client)
         {
+            this.Region = region;
             Client = client;
         }
 

@@ -27,15 +27,17 @@ namespace JustSaying
     {
         private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
+        private readonly IAwsClientFactoryProxy _awsClientFactoryProxy;
         protected readonly IAmJustSaying Bus;
         private SqsReadConfiguration _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic);
         private IMessageSerialisationFactory _serialisationFactory;
         private Func<INamingStrategy> busNamingStrategyFunc;
 
-        internal protected JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator)
+        internal protected JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator, IAwsClientFactoryProxy awsClientFactoryProxy)
         {
             Bus = bus;
             _amazonQueueCreator = queueCreator;
+            this._awsClientFactoryProxy = awsClientFactoryProxy;
         }
 
         private string GetMessageTypeName<T>()
@@ -68,7 +70,7 @@ namespace JustSaying
             {
                 var eventPublisher = new SnsTopicByName(
                     topicName,
-                    AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(region)),
+                    _awsClientFactoryProxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
                     Bus.SerialisationRegister);
 
                 if (!eventPublisher.Exists())
@@ -101,9 +103,11 @@ namespace JustSaying
 
             foreach (var region in Bus.Config.Regions)
             {
+                var regionEndpoint = RegionEndpoint.GetBySystemName(region);
                 var eventPublisher = new SqsPublisher(
+                    regionEndpoint,
                     queueName,
-                    SqsClientFactory.Create(RegionEndpoint.GetBySystemName(region)),
+                    _awsClientFactoryProxy.GetAwsClientFactory().GetSqsClient(regionEndpoint),
                     config.RetryCountBeforeSendingToErrorQueue,
                     Bus.SerialisationRegister);
 
@@ -368,9 +372,21 @@ namespace JustSaying
             this.busNamingStrategyFunc = busNamingStrategy;
             return this;
         }
+
+        public IMayWantOptionalSettings WithAwsClientFactory(Func<IAwsClientFactory> awsClientFactory)
+        {
+            this._awsClientFactoryProxy.SetAwsClientFactory(awsClientFactory);
+            return this;
+        }
     }
 
-    public interface IMayWantOptionalSettings : IMayWantMonitoring, IMayWantMessageLockStore, IMayWantCustomSerialisation, IMayWantAFailoverRegion, IMayWantNamingStrategy { }
+    public interface IMayWantOptionalSettings : IMayWantMonitoring, IMayWantMessageLockStore, IMayWantCustomSerialisation, 
+        IMayWantAFailoverRegion, IMayWantNamingStrategy, IMayWantAwsClientFactory { }
+
+    public interface IMayWantAwsClientFactory
+    {
+        IMayWantOptionalSettings WithAwsClientFactory(Func<IAwsClientFactory> awsClientFactory);
+    }
 
     public interface IMayWantNamingStrategy
     {

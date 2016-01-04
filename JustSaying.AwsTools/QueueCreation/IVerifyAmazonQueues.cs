@@ -1,4 +1,4 @@
-using System;
+using Amazon;
 using JustSaying.Messaging.MessageSerialisation;
 
 namespace JustSaying.AwsTools.QueueCreation

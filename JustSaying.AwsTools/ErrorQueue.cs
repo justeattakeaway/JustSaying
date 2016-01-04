@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
+using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Amazon.SQS.Util;
@@ -10,8 +11,8 @@ namespace JustSaying.AwsTools
 {
     public class ErrorQueue : SqsQueueByNameBase
     {
-        public ErrorQueue(string sourceQueueName, ISqsClient client)
-            : base(sourceQueueName + "_error", client)
+        public ErrorQueue(RegionEndpoint region, string sourceQueueName, IAmazonSQS client)
+            : base(region, sourceQueueName + "_error", client)
         {
             ErrorQueue = null;
         }

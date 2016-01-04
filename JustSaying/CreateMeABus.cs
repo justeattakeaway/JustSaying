@@ -1,3 +1,5 @@
+using System;
+using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
@@ -6,6 +8,11 @@ namespace JustSaying
 {
     public static class CreateMeABus
     {
+        /// <summary>
+        /// Allows to override default <see cref="IAwsClientFactory"/> globally.
+        /// </summary>
+        public static Func<IAwsClientFactory> DefaultClientFactory = () => new DefaultAwsClientFactory();
+
         public static IMayWantOptionalSettings InRegion(string region)
         {
             return InRegions(region);
@@ -26,8 +33,10 @@ namespace JustSaying
             var messageSerialisationRegister = new MessageSerialisationRegister();
             var justSayingBus = new JustSayingBus(config, messageSerialisationRegister);
 
-            var amazonQueueCreator = new AmazonQueueCreator();
-            var bus = new JustSayingFluently(justSayingBus, amazonQueueCreator);
+            var awsClientFactoryProxy = new AwsClientFactoryProxy(() => DefaultClientFactory());
+                
+            var amazonQueueCreator = new AmazonQueueCreator(awsClientFactoryProxy);
+            var bus = new JustSayingFluently(justSayingBus, amazonQueueCreator, awsClientFactoryProxy);
 
             bus
                 .WithMonitoring(new NullOpMessageMonitor())

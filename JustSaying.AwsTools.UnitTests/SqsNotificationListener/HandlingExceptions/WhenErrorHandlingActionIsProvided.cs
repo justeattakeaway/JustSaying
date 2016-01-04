@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.SQS;
 using JustBehave;
 using JustSaying.AwsTools;
 using NUnit.Framework;
@@ -18,7 +19,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener.HandlingExceptions
         {
             _globalErrorHandler = (ex, m) => { _handledException = true; };
 
-            return new JustSaying.AwsTools.SqsNotificationListener(new SqsQueueByUrl(QueueUrl, Sqs), SerialisationRegister, Monitor, onError: _globalErrorHandler);
+            return new JustSaying.AwsTools.SqsNotificationListener(new SqsQueueByUrl(RegionEndpoint.EUWest1, QueueUrl, Sqs), SerialisationRegister, Monitor, onError: _globalErrorHandler);
         }
 
         protected override void When()
@@ -40,8 +41,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener.HandlingExceptions
 
         protected override void Given()
         {
-            Sqs = Substitute.For<ISqsClient>();
-            Sqs.Region.Returns(RegionEndpoint.EUWest1);
+            Sqs = Substitute.For<IAmazonSQS>();
         }
     }
 }
