@@ -15,11 +15,13 @@ namespace JustSaying.AwsTools
         {
             TopicName = topicName;
             Client = client;
-            Exists();
         }
 
         public override bool Exists()
         {
+            if (string.IsNullOrWhiteSpace(Arn) == false)
+                return true;
+
             Log.Info("Checking if topic '{0}' exists", TopicName);
             var topic = Client.FindTopic(TopicName);
 

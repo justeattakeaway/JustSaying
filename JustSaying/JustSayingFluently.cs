@@ -31,7 +31,7 @@ namespace JustSaying
         protected readonly IAmJustSaying Bus;
         private SqsReadConfiguration _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic);
         private IMessageSerialisationFactory _serialisationFactory;
-        private Func<INamingStrategy> busNamingStrategyFunc;
+        private Func<INamingStrategy> _busNamingStrategyFunc;
 
         internal protected JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator, IAwsClientFactoryProxy awsClientFactoryProxy)
         {
@@ -47,8 +47,8 @@ namespace JustSaying
 
         public virtual INamingStrategy GetNamingStrategy()
         {
-            if (busNamingStrategyFunc != null)
-                return busNamingStrategyFunc();
+            if (_busNamingStrategyFunc != null)
+                return _busNamingStrategyFunc();
             return new DefaultNamingStrategy();
         }
 
@@ -369,7 +369,7 @@ namespace JustSaying
 
         public IMayWantOptionalSettings WithNamingStrategy(Func<INamingStrategy> busNamingStrategy)
         {
-            this.busNamingStrategyFunc = busNamingStrategy;
+            this._busNamingStrategyFunc = busNamingStrategy;
             return this;
         }
 

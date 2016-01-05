@@ -18,7 +18,6 @@ namespace JustSaying.AwsTools
             : base(region, client)
         {
             QueueName = queueName;
-            Exists();
         }
 
         public override bool Exists()

@@ -19,7 +19,9 @@ namespace JustSaying.AwsTools.UnitTests.Sqs
 
         protected override SqsPublisher CreateSystemUnderTest()
         {
-            return new SqsPublisher(RegionEndpoint.EUWest1, QueueName, _sqs, 0, _serialisationRegister);
+            var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, _sqs, 0, _serialisationRegister);
+            sqs.Exists();
+            return sqs;
         }
 
         protected override void Given()

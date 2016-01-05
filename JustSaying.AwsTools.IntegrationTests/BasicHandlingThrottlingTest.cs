@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using Amazon;
 using Amazon.SQS.Model;
@@ -18,7 +19,7 @@ namespace JustSaying.AwsTools.IntegrationTests
     [TestFixture]
     public class BasicHandlingThrottlingTest
     {
-        [TestCase(10000), Explicit]
+        [TestCase(1000), Explicit]
         // Use this to manually test the performance / throttling of getting messages out of the queue.
         public void HandlingManyMessages(int throttleMessageCount)
         {
@@ -61,15 +62,15 @@ namespace JustSaying.AwsTools.IntegrationTests
             var serialisations = Substitute.For<IMessageSerialisationRegister>();
             var monitor = Substitute.For<IMessageMonitor>();
             var handler = Substitute.For<IHandler<GenericMessage>>();
-            handler.Handle(null).ReturnsForAnyArgs(true).AndDoes(x => {lock (locker) { Thread.Sleep(10);handleCount++; } });
+            handler.Handle(null).ReturnsForAnyArgs(true).AndDoes(x => {lock (locker) { handleCount++; } });
 
             serialisations.DeserializeMessage(string.Empty).ReturnsForAnyArgs(new GenericMessage());
             var listener = new SqsNotificationListener(q, serialisations, monitor);
-
             listener.AddMessageHandler(() => handler);
 
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
             listener.Listen();
-
             var waitCount = 0;
             do
             {
@@ -80,8 +81,11 @@ namespace JustSaying.AwsTools.IntegrationTests
             while (handleCount < throttleMessageCount && waitCount < 100);
 
             listener.StopListening();
+            stopwatch.Stop();
 
             Console.WriteLine("{0} - Handled {1} messages.", DateTime.Now, handleCount);
+            Console.WriteLine("{0} - Took {1} ms", DateTime.Now, stopwatch.ElapsedMilliseconds);
+            Console.WriteLine("{0} - Throughput {1} msg/sec", DateTime.Now, (float)handleCount / stopwatch.ElapsedMilliseconds * 1000);
             Assert.AreEqual(throttleMessageCount, handleCount);
         }
         
