@@ -19,7 +19,9 @@ namespace AwsTools.UnitTests.Sns.TopicByName
 
         protected override SnsTopicByName CreateSystemUnderTest()
         {
-            return new SnsTopicByName(TopicName, _sns, _serialisationRegister);
+            var topic = new SnsTopicByName(TopicName, _sns, _serialisationRegister);
+            topic.Exists();
+            return topic;
         }
 
         protected override void Given()

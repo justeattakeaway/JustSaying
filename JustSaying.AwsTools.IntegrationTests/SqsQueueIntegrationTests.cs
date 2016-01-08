@@ -15,7 +15,9 @@ namespace JustSaying.AwsTools.IntegrationTests
         protected override SqsQueueByName CreateSystemUnderTest()
         {
             QueueUniqueKey = "test" + DateTime.Now.Ticks;
-            return new SqsQueueByName(RegionEndpoint.EUWest1, QueueUniqueKey, CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1), 1);
+            var queue = new SqsQueueByName(RegionEndpoint.EUWest1, QueueUniqueKey, CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1), 1);
+            queue.Exists();
+            return queue;
         }
         public override void PostAssertTeardown()
         {

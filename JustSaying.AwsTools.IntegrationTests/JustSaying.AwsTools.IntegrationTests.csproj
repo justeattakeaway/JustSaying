@@ -74,6 +74,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BasicHandlingThrottlingTest.cs" />
+    <Compile Include="ProxyAwsClientFactory.cs" />
     <Compile Include="DynamoDbStoreIntregrationTests.cs" />
     <Compile Include="DynamoTableTests.cs" />
     <Compile Include="GlobalSetup.cs" />
@@ -83,6 +84,7 @@
     <Compile Include="WhenIAccessAnExistingQueueWithoutAnErrorQueue.cs" />
     <Compile Include="WhenICreateAQueueByName.cs" />
     <Compile Include="WhenQueueIsDeleted.cs" />
+    <Compile Include="WhenSettingUpMultipleHandlers.cs" />
     <Compile Include="WhenUpdatingDeliveryDelay.cs" />
     <Compile Include="WhenUpdatingRedrivePolicy.cs" />
     <Compile Include="WhenUpdatingRetentionPeriod.cs" />

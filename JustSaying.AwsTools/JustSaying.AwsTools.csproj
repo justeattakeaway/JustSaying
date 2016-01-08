@@ -64,8 +64,10 @@
     <Compile Include="IAwsClientFactoryProxy.cs" />
     <Compile Include="IAwsClientFactory.cs" />
     <Compile Include="QueueCreation\AmazonQueueCreator.cs" />
+    <Compile Include="QueueCreation\IRegionResourceCache.cs" />
     <Compile Include="QueueCreation\IVerifyAmazonQueues.cs" />
     <Compile Include="QueueCreation\RedrivePolicy.cs" />
+    <Compile Include="QueueCreation\RegionResourceCache.cs" />
     <Compile Include="QueueCreation\SqsBasicConfiguration.cs" />
     <Compile Include="QueueCreation\SqsReadConfiguration.cs" />
     <Compile Include="DynamoTable.cs" />
