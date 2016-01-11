@@ -11,7 +11,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected override void Given()
         {
             base.Given();
-            Handler.Handle(null).ReturnsForAnyArgs(false);
+            Handler.Handle(Arg.Any<GenericMessage>()).ReturnsForAnyArgs(false);
         }
 
         [Then]
@@ -19,7 +19,7 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         {
             // The un-handled one is however.
             await Patiently.VerifyExpectationAsync(
-                () => Sqs.Received(1).DeleteMessage(
+                () => Sqs.DidNotReceiveWithAnyArgs().DeleteMessage(
                         Arg.Any<DeleteMessageRequest>()));
         }
     }
