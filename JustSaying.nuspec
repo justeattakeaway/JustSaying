@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>JustSaying</id>
+    <version>$version$</version>
+    <title>JustSaying</title>
+    <authors>JUST EAT plc</authors>
+    <owners>JUST EAT plc</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>JustSaying is a light-weight service bus on top of AWS services that allows communication via messaging in a distributed architecture.</description>
+    <copyright>Copyright © JUST EAT plc 2013</copyright>
+  </metadata>
+</package>
