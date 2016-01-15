@@ -18,7 +18,7 @@ build:
 test:
   assemblies: '**\*.UnitTests.dll'
 artifacts:
-- path: '**\$(APPVEYOR_PROJECT_NAME).$(APPVEYOR_BUILD_VERSION).nupkg'
+- path: 'JustSaying.{version}*.nupkg'
 notifications:
 - provider: HipChat
   room: 'Eng :: Open Source'
