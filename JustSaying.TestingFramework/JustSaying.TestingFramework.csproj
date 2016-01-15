@@ -45,10 +45,6 @@
       <HintPath>..\packages\AWSSDK.2.3.52.0\lib\net45\AWSSDK.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="JustSaying.Models, Version=2.0.0.269, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\JustSaying.Models.2.0.0.269\lib\net40\JustSaying.Models.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="nunit.framework, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
       <Private>True</Private>
@@ -71,6 +67,10 @@
     <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj">
       <Project>{cbf2110b-c3a4-45e8-bbd6-301d77567043}</Project>
       <Name>JustSaying.AwsTools</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj">
+      <Project>{a9fd2bac-5b4b-4408-9253-16813bc87727}</Project>
+      <Name>JustSaying.Models</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
