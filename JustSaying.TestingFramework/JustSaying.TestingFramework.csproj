@@ -41,6 +41,10 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AWSSDK, Version=2.3.52.0, Culture=neutral, PublicKeyToken=9f476d3089b52be3, processorArchitecture=MSIL">
+      <HintPath>..\packages\AWSSDK.2.3.52.0\lib\net45\AWSSDK.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="nunit.framework, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
       <Private>True</Private>
@@ -51,6 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IntegrationTestConfig.cs" />
+    <Compile Include="IntegrationAwsClientFactory.cs" />
     <Compile Include="MessageStubs.cs" />
     <Compile Include="Patiently.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -59,6 +64,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj">
+      <Project>{cbf2110b-c3a4-45e8-bbd6-301d77567043}</Project>
+      <Name>JustSaying.AwsTools</Name>
+    </ProjectReference>
     <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj">
       <Project>{a9fd2bac-5b4b-4408-9253-16813bc87727}</Project>
       <Name>JustSaying.Models</Name>

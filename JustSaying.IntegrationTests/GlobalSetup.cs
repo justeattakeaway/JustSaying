@@ -1,5 +1,3 @@
-using Amazon.Runtime;
-using JustSaying.AwsTools;
 using JustSaying.TestingFramework;
 using NUnit.Framework;
 
@@ -11,7 +9,7 @@ namespace JustSaying.IntegrationTests
         [SetUp]
         public void SetUp()
         {
-            CreateMeABus.DefaultClientFactory = () => new DefaultAwsClientFactory(new StoredProfileAWSCredentials(IntegrationTestConfig.AwsProfileName));
+            CreateMeABus.DefaultClientFactory = () => new IntegrationAwsClientFactory();
         }
     }
 }
