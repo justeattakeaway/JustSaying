@@ -14,12 +14,11 @@ namespace AwsTools.UnitTests.Sns.TopicByName
         private const string Message = "the_message_in_json";
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IAmazonSimpleNotificationService _sns = Substitute.For<IAmazonSimpleNotificationService>();
-        private const string TopicName = "topicname";
         private const string TopicArn = "topicarn";
 
         protected override SnsTopicByName CreateSystemUnderTest()
         {
-            var topic = new SnsTopicByName(TopicName, _sns, _serialisationRegister);
+            var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister);
             topic.Exists();
             return topic;
         }
@@ -27,7 +26,7 @@ namespace AwsTools.UnitTests.Sns.TopicByName
         protected override void Given()
         {
             _serialisationRegister.Serialise(Arg.Any<Message>(), Arg.Is(true)).Returns(Message);
-            _sns.FindTopic(TopicName).Returns(new Topic { TopicArn = TopicArn });
+            _sns.FindTopic("TopicName").Returns(new Topic { TopicArn = TopicArn });
         }
 
         protected override void When()
