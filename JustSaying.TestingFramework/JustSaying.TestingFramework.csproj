@@ -41,6 +41,10 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AWSSDK, Version=2.3.52.0, Culture=neutral, PublicKeyToken=9f476d3089b52be3, processorArchitecture=MSIL">
+      <HintPath>..\packages\AWSSDK.2.3.52.0\lib\net45\AWSSDK.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="JustSaying.Models, Version=2.0.0.269, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\JustSaying.Models.2.0.0.269\lib\net40\JustSaying.Models.dll</HintPath>
       <Private>True</Private>
@@ -55,12 +59,19 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IntegrationTestConfig.cs" />
+    <Compile Include="IntegrationAwsClientFactory.cs" />
     <Compile Include="MessageStubs.cs" />
     <Compile Include="Patiently.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj">
+      <Project>{cbf2110b-c3a4-45e8-bbd6-301d77567043}</Project>
+      <Name>JustSaying.AwsTools</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
