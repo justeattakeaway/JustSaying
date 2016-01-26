@@ -1,0 +1,117 @@
+﻿<Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+	<!-- Globals -->
+	<PropertyGroup>
+		<SolutionName>Reassure.NUnit</SolutionName>
+		<Root>$(MSBuildProjectDirectory)\..\</Root>
+		<PackagesFolder>$(Root)\packages</PackagesFolder>
+		<MsBuildCommunityTasksPath>$(PackagesFolder)\MSBuildTasks.1.4.0.88\tools</MsBuildCommunityTasksPath>
+		<CodeDir>$(Root)\src</CodeDir>
+		<MsBuildLoggingPath>teamcityLog.log</MsBuildLoggingPath>
+		<BuildFolder>$(Root)\src\$(SolutionName)\bin\$(Configuration)</BuildFolder>
+		<SolutionFile>$(Root)\$(SolutionName).sln</SolutionFile>
+	</PropertyGroup>
+	
+	<!-- Build/Debug Settings -->
+	<Choose>
+		<When Condition=" '$(Configuration)'=='Debug' ">
+			<PropertyGroup>
+				<DebugSymbols>true</DebugSymbols>
+				<DebugType>full</DebugType>
+				<Optimize>false</Optimize>
+			</PropertyGroup>
+		</When>
+		<When Condition=" '$(Configuration)'=='Release' ">
+			<PropertyGroup>
+				<DebugSymbols>true</DebugSymbols>
+				<DebugType>pdbonly</DebugType>
+				<Optimize>true</Optimize>
+			</PropertyGroup>
+		</When>
+	</Choose>
+	
+	<!-- Overriding .csproj Project settings -->
+	<PropertyGroup>
+		<OutputPath Condition=" '$(OutputPath)' == '' ">$(BuildFolder)</OutputPath>
+		<Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+		<Platform Condition=" '$(Platform)' == '' ">Any CPU</Platform>
+		<TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.5</TargetFrameworkVersion>
+		<RunCodeAnalysis Condition=" '$(RunCodeAnalysis)' == '' ">false</RunCodeAnalysis>
+	</PropertyGroup>
+	
+	<!-- Targets -->
+	<Target Name="BuildSolution" DependsOnTargets="Version">
+		<MSBuild BuildInParallel="true" Projects="$(SolutionFile)" Targets="Build" Properties="Configuration=$(Configuration)">
+			<Output TaskParameter="TargetOutputs" ItemName="BuildAssemblies"/>
+		</MSBuild>
+		<Message Text="Compiled Assemblies:" Importance="High"/>
+		<Message Text="    %(BuildAssemblies.Filename)"/>
+	</Target>
+	<Target Name="SplitBuildVersionNumber">
+		<Message Text="Build: $(Build)" Importance="high"/>
+		<Message Text="Git SHA-1: $(GitHash)" Importance="high"/>
+		<CreateProperty Value="$(Build.Split('.')[0])">
+			<Output TaskParameter="Value" PropertyName="MajorNumber"/>
+		</CreateProperty>
+		<CreateProperty Value="$(Build.Split('.')[1])">
+			<Output TaskParameter="Value" PropertyName="MinorNumber"/>
+		</CreateProperty>
+		<CreateProperty Value="$(Build.Split('.')[2])">
+			<Output TaskParameter="Value" PropertyName="BuildNumber"/>
+		</CreateProperty>
+		<Message Text="MajorNumber: $(MajorNumber)" Importance="high"/>
+		<Message Text="MinorNumber: $(MinorNumber)" Importance="high"/>
+		<Message Text="BuildNumber: $(BuildNumber)" Importance="high"/>
+	</Target>
+	<Target Name="Version" DependsOnTargets="SplitBuildVersionNumber">
+		<Message Text="Starting path $(Root)" Importance="High"/>
+		<AssemblyInfo 
+			CodeLanguage="CS"
+			OutputFile="$(CodeDir)\GlobalAssemblyInfo.cs"
+			AssemblyConfiguration="$(Configuration)"
+			AssemblyCompany="IntelliFlo Ltd"
+			AssemblyProduct="$(SolutionName)"
+			AssemblyCopyright="Copyright ©2015 IntelliFlo Ltd"
+			CLSCompliant="false"
+			AssemblyVersion="$(MajorNumber).$(MinorNumber).$(BuildNumber).0"
+			AssemblyFileVersion="$(MajorNumber).$(MinorNumber).$(BuildNumber).0" 
+			AssemblyInformationalVersion="$(MajorNumber).$(MinorNumber).$(BuildNumber).$(GitHash)"
+			/>
+	</Target>
+	<!--
+	<Target Name="Version" DependsOnTargets="AssemblyInfoVersion">
+		<ItemGroup>
+			<VersionFile Include="$(BuildFolder)\.version.\$(MajorNumber).$(MinorNumber).$(BuildNumber).$(GitHash)" />
+			<VersionExeFile Include="$(BuildFolder)\$(MicroserviceExe).version" />
+			<Line Include="line01"><Text>$(MajorNumber).$(MinorNumber).$(BuildNumber).$(GitHash)</Text></Line>
+			<Lines Include="%(Line.Text)" />
+		</ItemGroup>	
+		<Message Text="Create Version file: @(VersionFile)" Importance="high"/>
+		<MakeDir Directories="$(BuildFolder)\.version." />
+		<WriteLinesToFile File="@(VersionFile)" Lines="@(Lines)" Overwrite="true" />	
+		<Message Text="Create Microservice Version file: @(VersionExeFile)" Importance="high"/>
+		<WriteLinesToFile File="@(VersionExeFile)" Lines="@(Lines)" Overwrite="true" />	
+	</Target>
+	-->
+	<!-- Solutuion Projects -->
+	<Target Name="DefineSolutionProjects">
+		<Message Text="Starting path $(Root)" Importance="High"/>
+		<GetSolutionProjects Solution="$(SolutionFile)">
+			<Output TaskParameter="Output" ItemName="SolutionProjects" />
+		</GetSolutionProjects>
+		<RegexMatch Input="@(SolutionProjects)" Expression="(.Test.)">
+			<Output TaskParameter="Output" ItemName="TestProjects"/>
+		</RegexMatch>
+		<CreateItem Include="@(SolutionProjects)" Exclude="@(TestProjects)">
+			<Output TaskParameter="Include" ItemName="BuildProjects"/>
+		</CreateItem>
+		<Message Text="Build Projects" Importance="High"/>
+		<Message Text="    %(BuildProjects.Filename)"/>
+		<Message Text="Test Projects" Importance="High"/>
+		<Message Text="    %(TestProjects.Filename)"/>
+	</Target>
+	
+	<!-- Imports -->
+	<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+	<Import Project="$(MsBuildCommunityTasksPath)\MSBuild.Community.Tasks.Targets"/>
+</Project>
