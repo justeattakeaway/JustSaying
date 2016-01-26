@@ -24,11 +24,5 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.SerialisationRegister
         {
             Assert.IsNull(ThrownException);
         }
-
-        [Then]
-        public void ExceptionThrownIfFormatNotSupported()
-        {
-            Assert.Throws<MessageFormatNotSupportedException>(() => SystemUnderTest.DeserializeMessage(string.Empty));
-        }
     }
 }
