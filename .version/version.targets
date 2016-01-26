@@ -5,7 +5,7 @@
 		<SolutionName>Reassure.NUnit</SolutionName>
 		<Root>$(MSBuildProjectDirectory)\..\</Root>
 		<PackagesFolder>$(Root)\packages</PackagesFolder>
-		<MsBuildCommunityTasksPath>$(PackagesFolder)\MSBuildTasks.1.4.0.88\tools</MsBuildCommunityTasksPath>
+		<MsBuildCommunityTasksPath>$(PackagesFolder)\MSBuildTasks.1.4.0.128\tools</MsBuildCommunityTasksPath>
 		<CodeDir>$(Root)\src</CodeDir>
 		<MsBuildLoggingPath>teamcityLog.log</MsBuildLoggingPath>
 		<BuildFolder>$(Root)\src\$(SolutionName)\bin\$(Configuration)</BuildFolder>
