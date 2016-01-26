@@ -7,7 +7,6 @@ namespace JustSaying.Messaging.MessageSerialisation
 {
     public class NewtonsoftSerialiser : IMessageSerialiser
     {
-        private readonly JsonConverter _enumConverter = new Newtonsoft.Json.Converters.StringEnumConverter();
         private readonly JsonSerializerSettings _settings;
 
         public NewtonsoftSerialiser()
@@ -24,7 +23,7 @@ namespace JustSaying.Messaging.MessageSerialisation
         {
             var jsqsMessage = JObject.Parse(message);
             var messageBody = jsqsMessage["Message"].ToString();
-            return (Message)JsonConvert.DeserializeObject(messageBody, type, _enumConverter);
+            return (Message)JsonConvert.DeserializeObject(messageBody, type, GetJsonSettings());
         }
 
         public string Serialise(Message message, bool serializeForSnsPublishing)
