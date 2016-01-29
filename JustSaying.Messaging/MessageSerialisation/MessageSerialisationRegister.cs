@@ -12,7 +12,9 @@ namespace JustSaying.Messaging.MessageSerialisation
         {
             var keyname = typeof(T).Name;
             if (!_map.ContainsKey(keyname))
+            {
                 _map.Add(keyname, new TypeSerialiser(typeof(T), serialiser));
+            }
         }
 
         public Message DeserializeMessage(string body)
@@ -21,12 +23,19 @@ namespace JustSaying.Messaging.MessageSerialisation
             {
                 var stringType = formatter.Value.Serialiser.GetMessageType(body);
                 if (string.IsNullOrWhiteSpace(stringType))
+                {
                     continue;
+                }
+
                 var matchedType = formatter.Value.Type;
-                if (!String.Equals(matchedType.Name, stringType, StringComparison.CurrentCultureIgnoreCase))
+                if (!string.Equals(matchedType.Name, stringType, StringComparison.CurrentCultureIgnoreCase))
+                {
                     continue;
+                }
+
                 return formatter.Value.Serialiser.Deserialise(body, matchedType);
             }
+
             throw new MessageFormatNotSupportedException(string.Format("Message can not be handled - type undetermined. Message body: '{0}'", body));
         }
 
