@@ -232,7 +232,13 @@ namespace JustSaying.AwsTools
                 _onError(ex, message);
                 return;
             }
-       
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error deserialising message");
+                _onError(ex, message);
+                return;
+            }
+
             try
             {
                 var handlingSucceeded = true;
