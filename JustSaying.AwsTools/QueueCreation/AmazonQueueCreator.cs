@@ -11,7 +11,7 @@ namespace JustSaying.AwsTools.QueueCreation
 
         public AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory)
         {
-            this._awsClientFactory = awsClientFactory;
+            _awsClientFactory = awsClientFactory;
         }
 
         public SqsQueueByName EnsureTopicExistsWithQueueSubscribed(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
@@ -30,7 +30,9 @@ namespace JustSaying.AwsTools.QueueCreation
             var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
             var queue = _queueCache.TryGetFromCache(region, queueConfig.QueueName);
             if (queue != null)
+            {
                 return queue;
+            }
             queue = new SqsQueueByName(regionEndpoint, queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue);
             queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdated(queueConfig);
 
@@ -50,7 +52,9 @@ namespace JustSaying.AwsTools.QueueCreation
             _topicCache.AddToCache(region.SystemName, queueConfig.PublishEndpoint, eventTopic);
 
             if (!eventTopic.Exists())
+            {
                 eventTopic.Create();
+            }
 
             return eventTopic;
         }

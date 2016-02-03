@@ -40,12 +40,15 @@ namespace JustSaying.AwsTools
         {
             if (RedrivePolicyNeedsUpdating(requestedRedrivePolicy))
             {
-                var response = Client.SetQueueAttributes(
-                new SetQueueAttributesRequest
+                var request = new SetQueueAttributesRequest
                 {
                     QueueUrl = Url,
-                    Attributes = new Dictionary<string, string> { { JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY, requestedRedrivePolicy.ToString() } }
-                });
+                    Attributes = new Dictionary<string, string>
+                        {
+                            {JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY, requestedRedrivePolicy.ToString()}
+                        }
+                };
+                var response = Client.SetQueueAttributes(request);
                 if (response.HttpStatusCode == HttpStatusCode.OK)
                 {
                     RedrivePolicy = requestedRedrivePolicy;

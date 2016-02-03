@@ -51,9 +51,8 @@ namespace JustSaying.AwsTools
                     throw;
                 }
             }
-
-
         }
+
         private void WaitUntilTableReady(string tableName)
         {
             string status = null;
@@ -69,8 +68,8 @@ namespace JustSaying.AwsTools
                         });
 
                     Log.Info("Dynamo Table name: {0}, status: {1}",
-                                      res.Table.TableName,
-                                      res.Table.TableStatus);
+                        res.Table.TableName,
+                        res.Table.TableStatus);
                     status = res.Table.TableStatus;
                 }
                 catch (ResourceNotFoundException)

@@ -1,4 +1,3 @@
-using System;
 using Newtonsoft.Json;
 
 namespace JustSaying.AwsTools.QueueCreation

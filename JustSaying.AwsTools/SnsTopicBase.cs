@@ -49,11 +49,11 @@ namespace JustSaying.AwsTools
             var messageType = message.GetType().Name;
 
             Client.Publish(new PublishRequest
-                               {
-                                   Subject = messageType,
-                                   Message = messageToSend,
-                                   TopicArn = Arn
-                               });
+                {
+                    Subject = messageType,
+                    Message = messageToSend,
+                    TopicArn = Arn
+                });
 
             EventLog.Info("Published message: '{0}' with content {1}", messageType, messageToSend);
         }

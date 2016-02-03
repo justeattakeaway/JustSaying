@@ -16,7 +16,7 @@ namespace JustSaying.Messaging.MessageSerialisation
 
         public NewtonsoftSerialiser(JsonSerializerSettings settings) : this()
         {
-            this._settings = settings;
+            _settings = settings;
         }
 
         public Message Deserialise(string message, Type type)
@@ -35,7 +35,9 @@ namespace JustSaying.Messaging.MessageSerialisation
             // AWS SNS service will add Subject and Message properties automatically, 
             // so just return plain message
             if (serializeForSnsPublishing)
+            {
                 return msg;
+            }
 
             // for direct publishing to SQS, add Subject and Message properties manually
             var context = new { Subject = message.GetType().Name, Message = msg };

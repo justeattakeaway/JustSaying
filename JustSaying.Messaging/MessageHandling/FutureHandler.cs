@@ -12,7 +12,6 @@ namespace JustSaying.Messaging.MessageHandling
             _futureHandler = futureHandler;
         }
 
-
         public bool Handle(T message)
         {
             return _futureHandler().Handle(message);

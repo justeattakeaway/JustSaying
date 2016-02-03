@@ -1,4 +1,3 @@
-using System;
 using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialisation

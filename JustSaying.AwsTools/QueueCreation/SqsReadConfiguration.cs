@@ -8,7 +8,6 @@ namespace JustSaying.AwsTools.QueueCreation
 
     public class SqsReadConfiguration : SqsBasicConfiguration
     {
-        
         public SqsReadConfiguration(SubscriptionType subscriptionType)
         {
             SubscriptionType = subscriptionType;
@@ -43,16 +42,22 @@ namespace JustSaying.AwsTools.QueueCreation
             base.Validate();
 
             if (MaxAllowedMessagesInFlight.HasValue && MessageProcessingStrategy != null)
+            {
                 throw new ConfigurationErrorsException("You have provided both 'maxAllowedMessagesInFlight' and 'messageProcessingStrategy' - these settings are mutually exclusive.");
+            }
         }
 
         private void ValidateSnsConfiguration()
         {
             if (string.IsNullOrWhiteSpace(Topic))
+            {
                 throw new ConfigurationErrorsException("Invalid configuration. Topic must be provided.");
+            }
 
             if (PublishEndpoint == null)
+            {
                 throw new ConfigurationErrorsException("You must provide a value for PublishEndpoint.");
+            }
         }
     }
 }

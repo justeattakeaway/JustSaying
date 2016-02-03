@@ -25,7 +25,7 @@ namespace JustSaying.AwsTools
 
         protected SqsQueueBase(RegionEndpoint region, IAmazonSQS client)
         {
-            this.Region = region;
+            Region = region;
             Client = client;
         }
 
@@ -37,7 +37,9 @@ namespace JustSaying.AwsTools
             Url = null;
 
             if (!Exists())
+            {
                 return;
+            }
 
             Client.DeleteQueue(new DeleteQueueRequest { QueueUrl = Url });
             
@@ -79,17 +81,20 @@ namespace JustSaying.AwsTools
         {
             if (QueueNeedsUpdating(queueConfig))
             {
-                var response = Client.SetQueueAttributes(
-                    new SetQueueAttributesRequest
+                var request = new SetQueueAttributesRequest
+                {
+                    QueueUrl = Url,
+                    Attributes = new Dictionary<string, string>
                     {
-                        QueueUrl = Url,
-                        Attributes = new Dictionary<string, string>
+                        {JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD, queueConfig.MessageRetentionSeconds.ToString()},
                         {
-                            {JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD, queueConfig.MessageRetentionSeconds.ToString()},
-                            {JustSayingConstants.ATTRIBUTE_VISIBILITY_TIMEOUT, queueConfig.VisibilityTimeoutSeconds.ToString()},
-                            {JustSayingConstants.ATTRIBUTE_DELIVERY_DELAY, queueConfig.DeliveryDelaySeconds.ToString()}
-                        }
-                    });
+                            JustSayingConstants.ATTRIBUTE_VISIBILITY_TIMEOUT,
+                            queueConfig.VisibilityTimeoutSeconds.ToString()
+                        },
+                        {JustSayingConstants.ATTRIBUTE_DELIVERY_DELAY, queueConfig.DeliveryDelaySeconds.ToString()}
+                    }
+                };
+                var response = Client.SetQueueAttributes(request);
                 if (response.HttpStatusCode == HttpStatusCode.OK)
                 {
                     MessageRetentionPeriod = queueConfig.MessageRetentionSeconds;
@@ -109,7 +114,9 @@ namespace JustSaying.AwsTools
         private RedrivePolicy ExtractRedrivePolicyFromQueueAttributes(Dictionary<string, string> queueAttributes)
         {
             if (!queueAttributes.ContainsKey(JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY))
+            {
                 return null;
+            }
             return RedrivePolicy.ConvertFromString(queueAttributes[JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY]);
         }
     }

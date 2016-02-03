@@ -11,12 +11,15 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
     {
         private readonly Func<int> _maximumAllowedMesagesInFlightProducer;
         private const int MinimumThreshold = 1;
-        public int BlockingThreshold {
+        public int BlockingThreshold
+        {
             get
             {
                 var threshold = _maximumAllowedMesagesInFlightProducer() - _maximumBatchSize;
                 if (threshold <= 0)
+                {
                     return MinimumThreshold;
+                }
                 return threshold;
             }
            }
@@ -91,7 +94,8 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             Interlocked.Decrement(ref _activeTaskCount);
         }
 
-        public int MaxBatchSize {
+        public int MaxBatchSize
+        {
             get { return _maximumBatchSize; }
         }
     }
