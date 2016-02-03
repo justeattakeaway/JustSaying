@@ -6,19 +6,26 @@ namespace JustSaying.AwsTools.QueueCreation
     {
         public T TryGetFromCache(string region, string key)
         {
-            if (this.ContainsKey(region) == false)
+            if (! this.ContainsKey(region))
+            {
                 return default(T);
-            var regionDict = this[region];
+            }
 
-            if (regionDict.ContainsKey(key) == false)
+            var regionDict = this[region];
+            if (! regionDict.ContainsKey(key))
+            {
                 return default(T);
+            }
+
             return regionDict[key];
         }
 
         public void AddToCache(string region, string key, T value)
         {
-            if (this.ContainsKey(region) == false)
+            if (!this.ContainsKey(region))
+            {
                 this[region] = new Dictionary<string, T>();
+            }
             var regionDict = this[region];
             regionDict[key] = value;
         }

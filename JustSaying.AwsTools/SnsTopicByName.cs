@@ -43,6 +43,7 @@ namespace JustSaying.AwsTools
                 Log.Info(string.Format("Created Topic: {0} on Arn: {1}", TopicName, Arn));
                 return true;
             }
+
             Log.Info(string.Format("Failed to create Topic: {0}", TopicName));
             return false;
         }

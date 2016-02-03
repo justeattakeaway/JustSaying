@@ -19,7 +19,9 @@ namespace JustSaying.AwsTools.QueueCreation
             base.Validate();
 
             if (string.IsNullOrWhiteSpace(QueueName))
+            {
                 throw new ConfigurationErrorsException("Invalid configuration. QueueName must be provided.");
+            }
         }
     }
 }

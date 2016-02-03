@@ -8,7 +8,7 @@ namespace JustSaying.AwsTools
 
         public AwsClientFactoryProxy()
         {
-            this.awsClientFactoryFunc = () => new DefaultAwsClientFactory();
+            awsClientFactoryFunc = () => new DefaultAwsClientFactory();
         }
 
         public AwsClientFactoryProxy(Func<IAwsClientFactory> awsClientFactoryFunc)

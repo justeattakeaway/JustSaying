@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Amazon.DynamoDBv2.DataModel;
 
@@ -33,7 +31,7 @@ namespace JustSaying.AwsTools
 
             batch.Execute();
 
-            return (batch.Results);
+            return batch.Results;
         }
 
         public void DeleteRow<T>(string key, DynamoDBOperationConfig operationConfig)

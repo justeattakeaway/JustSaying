@@ -30,15 +30,19 @@ namespace JustSaying.AwsTools
         {
             if (QueueNeedsUpdating(queueConfig))
             {
-                var response = Client.SetQueueAttributes(
-                    new SetQueueAttributesRequest
+                var request = new SetQueueAttributesRequest
+                {
+                    QueueUrl = Url,
+                    Attributes = new Dictionary<string, string>
                     {
-                        QueueUrl = Url,
-                        Attributes = new Dictionary<string, string>
                         {
-                            {JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD, queueConfig.ErrorQueueRetentionPeriodSeconds.ToString()},
+                            JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD,
+                            queueConfig.ErrorQueueRetentionPeriodSeconds.ToString()
                         }
-                    });
+                    }
+                };
+                var response = Client.SetQueueAttributes(request);
+
                 if (response.HttpStatusCode == HttpStatusCode.OK)
                 {
                     MessageRetentionPeriod = queueConfig.ErrorQueueRetentionPeriodSeconds;

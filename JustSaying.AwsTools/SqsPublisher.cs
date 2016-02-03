@@ -3,7 +3,6 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialisation;
-using Newtonsoft.Json;
 using Message = JustSaying.Models.Message;
 
 namespace JustSaying.AwsTools

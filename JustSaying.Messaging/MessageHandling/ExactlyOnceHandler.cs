@@ -31,10 +31,8 @@ namespace JustSaying.Messaging.MessageHandling
                 {
                     return RemoveTheMessageFromTheQueue;
                 }
-                else
-                {
-                    return LeaveItInTheQueue;
-                }
+
+                return LeaveItInTheQueue;
             }
 
             try
