@@ -7,12 +7,12 @@ using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Monitoring;
 using NLog;
-using Newtonsoft.Json.Linq;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using Message = JustSaying.Models.Message;
+using HandlerFunc = System.Func<JustSaying.Models.Message, bool>;
 
 namespace JustSaying.AwsTools
 {
@@ -22,7 +22,7 @@ namespace JustSaying.AwsTools
         private readonly IMessageSerialisationRegister _serialisationRegister;
         private readonly IMessageMonitor _messagingMonitor;
         private readonly Action<Exception, Amazon.SQS.Model.Message> _onError;
-        private readonly Dictionary<Type, List<Func<Message, bool>>> _handlers;
+        private readonly Dictionary<Type, List<HandlerFunc>> _handlers;
         private readonly IMessageLock _messageLock;
 
         private CancellationTokenSource _cts = new CancellationTokenSource();
@@ -37,7 +37,7 @@ namespace JustSaying.AwsTools
             _serialisationRegister = serialisationRegister;
             _messagingMonitor = messagingMonitor;
             _onError = onError ?? ((ex,message) => { });
-            _handlers = new Dictionary<Type, List<Func<Message, bool>>>();
+            _handlers = new Dictionary<Type, List<HandlerFunc>>();
             _messageProcessingStrategy = new MaximumThroughput();
             _messageLock = messageLock;
             Subscribers = new Collection<ISubscriber>();
@@ -45,7 +45,7 @@ namespace JustSaying.AwsTools
 
         public string Queue
         {
-            get { return this._queue.QueueName; }
+            get { return _queue.QueueName; }
         }
         // ToDo: This should not be here.
         public SqsNotificationListener WithMaximumConcurrentLimitOnMessagesInFlightOf(int maximumAllowedMesagesInFlight)
@@ -65,7 +65,7 @@ namespace JustSaying.AwsTools
             List<Func<Message, bool>> handlers;
             if (!_handlers.TryGetValue(typeof(T), out handlers))
             {
-                handlers = new List<Func<Message, bool>>();
+                handlers = new List<HandlerFunc>();
                 _handlers.Add(typeof(T), handlers);
             }
             var handlerInstance = futureHandler();
@@ -74,8 +74,10 @@ namespace JustSaying.AwsTools
             IHandler<T> handler = new FutureHandler<T>(futureHandler);
             if (guaranteedDelivery.Enabled)
             {
-                if(_messageLock == null)
+                if (_messageLock == null)
+                {
                     throw new Exception("IMessageLock is null. You need to specify an implementation for IMessageLock.");
+                }
 
                 handler = new ExactlyOnceHandler<T>(handler, _messageLock, guaranteedDelivery.TimeOut, handlerInstance.GetType().FullName.ToLower());
             }
@@ -96,41 +98,38 @@ namespace JustSaying.AwsTools
             var queueInfo = string.Format("Queue: {0}, Region: {1}", queue, region);
 
             _cts = new CancellationTokenSource();
-            Task.Factory
-                .StartNew(
-                    async () =>
+            Task.Factory.StartNew(async () =>
+                {
+                    while (!_cts.IsCancellationRequested)
                     {
-                        while (!_cts.IsCancellationRequested)
-                        {
-                            await ListenLoop(_cts.Token);
-                        }
-                    })
-                .ContinueWith(
-                    t =>
+                        await ListenLoop(_cts.Token);
+                    }
+                })
+                .ContinueWith(t =>
                     {
                         if (t.IsCompleted)
                         {
                             Log.Info(
-                                "[Completed] Stopped Listening - {0}",
+                                "[Completed] Stopped Listening - {0}", 
                                 queueInfo);
                         }
                         else if (t.IsFaulted)
                         {
                             Log.Info(
-                                "[Failed] Stopped Listening - {0}\n{1}",
-                                queueInfo,
+                                "[Failed] Stopped Listening - {0}\n{1}", 
+                                queueInfo, 
                                 t.Exception);
                         }
                         else
                         {
                             Log.Info(
-                                "[Canceled] Stopped Listening - {0}",
+                                "[Canceled] Stopped Listening - {0}", 
                                 queueInfo);
                         }
                     });
 
             Log.Info(
-                "Starting Listening - {0}",
+                "Starting Listening - {0}", 
                 queueInfo);
         }
 
@@ -155,14 +154,13 @@ namespace JustSaying.AwsTools
                 var watch = new System.Diagnostics.Stopwatch();
                 watch.Start();
 
-                var req =
-                    new ReceiveMessageRequest
+                var request = new ReceiveMessageRequest
                     {
                         QueueUrl = _queue.Url,
                         MaxNumberOfMessages = GetMaxBatchSize(),
                         WaitTimeSeconds = 20
                     };
-                var sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(req, ct);
+                var sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, ct);
 
                 watch.Stop();
 
@@ -220,47 +218,40 @@ namespace JustSaying.AwsTools
 
         public void ProcessMessageAction(Amazon.SQS.Model.Message message)
         {
-            Message typedMessage = null;
-            string rawMessage = null;
+            Message typedMessage;
             try
             {
                 typedMessage = _serialisationRegister.DeserializeMessage(message.Body);
+            }
+            catch (MessageFormatNotSupportedException ex)
+            {
+                Log.Trace(
+                    "Didn't handle message [{0}]. No serialiser setup",
+                    message.Body ?? string.Empty);
+                DeleteMessageFromQueue(message.ReceiptHandle);
+                _onError(ex, message);
+                return;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error deserialising message");
+                _onError(ex, message);
+                return;
+            }
 
+            try
+            {
                 var handlingSucceeded = true;
 
                 if (typedMessage != null)
                 {
-                    List<Func<Message, bool>> handlers;
-                    if (!_handlers.TryGetValue(typedMessage.GetType(), out handlers)) return;
-
-                    foreach (var handle in handlers)
-                    {
-                        var watch = new System.Diagnostics.Stopwatch();
-                        watch.Start();
-
-                        handlingSucceeded = handle(typedMessage);
-
-                        watch.Stop();
-                        Log.Trace("Handled message - MessageType: {0}", typedMessage.GetType().Name);
-                        _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
-                    }
+                    handlingSucceeded = CallMessageHandlers(typedMessage);
                 }
 
                 if (handlingSucceeded)
-                    _queue.Client.DeleteMessage(new DeleteMessageRequest { QueueUrl = _queue.Url, ReceiptHandle = message.ReceiptHandle });
-
-            }
-            catch (KeyNotFoundException ex)
-            {
-                Log.Trace(
-                    "Didn't handle message [{0}]. No serialiser setup",
-                    rawMessage ?? "");
-                _queue.Client.DeleteMessage(new DeleteMessageRequest
                 {
-                    QueueUrl = _queue.Url,
-                    ReceiptHandle = message.ReceiptHandle
-                });
-                _onError(ex, message);
+                    DeleteMessageFromQueue(message.ReceiptHandle);
+                }
             }
             catch (Exception ex)
             {
@@ -269,14 +260,53 @@ namespace JustSaying.AwsTools
                     message,
                     ex.StackTrace);
                 Log.Error(ex, msg);
+
                 if (typedMessage != null)
                 {
                     _messagingMonitor.HandleException(typedMessage.GetType().Name);
                 }
+
                 _onError(ex, message);
-                
             }
         }
+
+        private bool CallMessageHandlers(Message message)
+        {
+            List<HandlerFunc> handlerFuncs;
+            var foundHandlers = _handlers.TryGetValue(message.GetType(), out handlerFuncs);
+
+            if (!foundHandlers)
+            {
+                return true;
+            }
+
+            var allHandlersSucceeded = true;
+            foreach (var handlerFunc in handlerFuncs)
+            {
+                var watch = new System.Diagnostics.Stopwatch();
+                watch.Start();
+
+                var thisHandlerSucceeded = handlerFunc(message);
+                allHandlersSucceeded = allHandlersSucceeded && thisHandlerSucceeded;
+
+                watch.Stop();
+                Log.Trace("Handled message - MessageType: {0}", message.GetType().Name);
+                _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
+            }
+
+            return allHandlersSucceeded;
+        }
+
+        private void DeleteMessageFromQueue(string receiptHandle)
+        {
+            var deleteRequest = new DeleteMessageRequest
+            {
+                QueueUrl = _queue.Url,
+                ReceiptHandle = receiptHandle
+            };
+            _queue.Client.DeleteMessage(deleteRequest);
+        }
+
         public ICollection<ISubscriber> Subscribers { get; set; }
     }
 }
