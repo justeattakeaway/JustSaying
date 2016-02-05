@@ -22,7 +22,7 @@ namespace JustSaying.AwsTools
         private readonly IMessageMonitor _messagingMonitor;
         private readonly Action<Exception, Amazon.SQS.Model.Message> _onError;
         private readonly HandlerMap _handlerMap = new HandlerMap();
-        private readonly IMessageLock _messageLock;
+        private readonly MessageHandlerWrapper _messageHandlerWrapper;
 
         private CancellationTokenSource _cts = new CancellationTokenSource();
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
@@ -30,14 +30,20 @@ namespace JustSaying.AwsTools
         private const int MaxAmazonMessageCap = 10;
         private IMessageProcessingStrategy _messageProcessingStrategy;
 
-        public SqsNotificationListener(SqsQueueBase queue, IMessageSerialisationRegister serialisationRegister, IMessageMonitor messagingMonitor, Action<Exception, Amazon.SQS.Model.Message> onError = null, IMessageLock messageLock = null)
+        public SqsNotificationListener(
+            SqsQueueBase queue,
+            IMessageSerialisationRegister serialisationRegister,
+            IMessageMonitor messagingMonitor,
+            Action<Exception, Amazon.SQS.Model.Message> onError = null,
+            IMessageLock messageLock = null)
         {
             _queue = queue;
             _serialisationRegister = serialisationRegister;
             _messagingMonitor = messagingMonitor;
             _onError = onError ?? ((ex,message) => { });
             _messageProcessingStrategy = new MaximumThroughput();
-            _messageLock = messageLock;
+            _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor);
+
             Subscribers = new Collection<ISubscriber>();
         }
 
@@ -45,6 +51,7 @@ namespace JustSaying.AwsTools
         {
             get { return _queue.QueueName; }
         }
+
         // ToDo: This should not be here.
         public SqsNotificationListener WithMaximumConcurrentLimitOnMessagesInFlightOf(int maximumAllowedMesagesInFlight)
         {
@@ -60,27 +67,10 @@ namespace JustSaying.AwsTools
 
         public void AddMessageHandler<T>(Func<IHandler<T>> futureHandler) where T : Message
         {
-            var handlerInstance = futureHandler();
-            var guaranteedDelivery = new GuaranteedOnceDelivery<T>(handlerInstance);
-            
-            IHandler<T> handler = new FutureHandler<T>(futureHandler);
-            if (guaranteedDelivery.Enabled)
-            {
-                if (_messageLock == null)
-                {
-                    throw new Exception("IMessageLock is null. You need to specify an implementation for IMessageLock.");
-                }
-
-                handler = new ExactlyOnceHandler<T>(handler, _messageLock, guaranteedDelivery.TimeOut, handlerInstance.GetType().FullName.ToLower());
-            }
-            var executionTimeMonitoring = _messagingMonitor as IMeasureHandlerExecutionTime;
-            if (executionTimeMonitoring != null)
-            {
-                handler = new StopwatchHandler<T>(handler, executionTimeMonitoring);
-            }
-
             Subscribers.Add(new Subscriber(typeof(T)));
-            _handlerMap.Add(typeof(T), message => handler.Handle((T)message));
+
+            var handlerFunc = _messageHandlerWrapper.WrapMessageHandler(futureHandler);
+            _handlerMap.Add(typeof(T), handlerFunc);
         }
 
         public void Listen()

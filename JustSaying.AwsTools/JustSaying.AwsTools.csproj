@@ -60,6 +60,7 @@
     <Compile Include="HandlerMap.cs" />
     <Compile Include="IAwsClientFactoryProxy.cs" />
     <Compile Include="IAwsClientFactory.cs" />
+    <Compile Include="MessageHandlerWrapper.cs" />
     <Compile Include="QueueCreation\AmazonQueueCreator.cs" />
     <Compile Include="QueueCreation\IRegionResourceCache.cs" />
     <Compile Include="QueueCreation\IVerifyAmazonQueues.cs" />
