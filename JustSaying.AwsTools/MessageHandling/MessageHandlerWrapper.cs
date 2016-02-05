@@ -3,7 +3,7 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 
-namespace JustSaying.AwsTools
+namespace JustSaying.AwsTools.MessageHandling
 {
     public class MessageHandlerWrapper
     {

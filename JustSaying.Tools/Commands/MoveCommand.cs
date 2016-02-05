@@ -7,6 +7,7 @@ using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools;
+using JustSaying.AwsTools.MessageHandling;
 
 namespace JustSaying.Tools.Commands
 {

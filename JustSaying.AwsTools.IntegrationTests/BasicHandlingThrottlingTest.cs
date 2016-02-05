@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Threading;
 using Amazon;
 using Amazon.SQS.Model;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;

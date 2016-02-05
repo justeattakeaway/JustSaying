@@ -2,6 +2,7 @@
 using Amazon;
 using JustSaying.AwsTools;
 using JustBehave;
+using JustSaying.AwsTools.MessageHandling;
 
 namespace JustSaying.AwsTools.IntegrationTests
 {

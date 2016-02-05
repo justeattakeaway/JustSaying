@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Amazon;
 using JustSaying.AwsTools;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Extensions;
 using JustSaying.Messaging;

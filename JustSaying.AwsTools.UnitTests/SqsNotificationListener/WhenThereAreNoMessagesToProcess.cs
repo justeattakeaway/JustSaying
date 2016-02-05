@@ -7,19 +7,20 @@ using Amazon.SQS.Model;
 using JustSaying.AwsTools;
 using JustSaying.Messaging.Monitoring;
 using JustBehave;
+using JustSaying.AwsTools.MessageHandling;
 using NSubstitute;
 using JustSaying.TestingFramework;
 
 namespace AwsTools.UnitTests.SqsNotificationListener
 {
-    public class WhenThereAreNoMessagesToProcess : BehaviourTest<JustSaying.AwsTools.SqsNotificationListener>
+    public class WhenThereAreNoMessagesToProcess : BehaviourTest<JustSaying.AwsTools.MessageHandling.SqsNotificationListener>
     {
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private int _callCount;
 
-        protected override JustSaying.AwsTools.SqsNotificationListener CreateSystemUnderTest()
+        protected override JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
-            return new JustSaying.AwsTools.SqsNotificationListener(new SqsQueueByUrl(RegionEndpoint.EUWest1, "", _sqs), null, Substitute.For<IMessageMonitor>());
+            return new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(new SqsQueueByUrl(RegionEndpoint.EUWest1, "", _sqs), null, Substitute.For<IMessageMonitor>());
         }
 
         protected override void Given()
