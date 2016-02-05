@@ -2,6 +2,7 @@ using Amazon;
 using Amazon.SQS;
 using JustBehave;
 using JustSaying.AwsTools;
+using JustSaying.AwsTools.MessageHandling;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -9,9 +10,9 @@ namespace AwsTools.UnitTests.SqsNotificationListener.HandlingExceptions
 {
     public class WhenErrorHandlingActionIsNotProvided : BaseQueuePollingTest
     {
-        protected override JustSaying.AwsTools.SqsNotificationListener CreateSystemUnderTest()
+        protected override JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
-            return new JustSaying.AwsTools.SqsNotificationListener(new SqsQueueByUrl(RegionEndpoint.EUWest1, QueueUrl, Sqs), SerialisationRegister, Monitor);
+            return new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(new SqsQueueByUrl(RegionEndpoint.EUWest1, QueueUrl, Sqs), SerialisationRegister, Monitor);
         }
 
         protected override void When()

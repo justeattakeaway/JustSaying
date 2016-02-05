@@ -12,10 +12,11 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS;
+using JustSaying.AwsTools.MessageHandling;
 
 namespace AwsTools.UnitTests.SqsNotificationListener
 {
-    public abstract class BaseQueuePollingTest : BehaviourTest<JustSaying.AwsTools.SqsNotificationListener>
+    public abstract class BaseQueuePollingTest : BehaviourTest<JustSaying.AwsTools.MessageHandling.SqsNotificationListener>
     {
         protected const string QueueUrl = "url";
         protected IAmazonSQS Sqs;
@@ -27,9 +28,9 @@ namespace AwsTools.UnitTests.SqsNotificationListener
         protected IMessageLock MessageLock;
         protected readonly string _messageTypeString = typeof(GenericMessage).ToString();
 
-        protected override JustSaying.AwsTools.SqsNotificationListener CreateSystemUnderTest()
+        protected override JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
-            return new JustSaying.AwsTools.SqsNotificationListener(new SqsQueueByUrl(RegionEndpoint.EUWest1, QueueUrl, Sqs), SerialisationRegister, Monitor, null, MessageLock);
+            return new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(new SqsQueueByUrl(RegionEndpoint.EUWest1, QueueUrl, Sqs), SerialisationRegister, Monitor, null, MessageLock);
         }
 
         protected override void Given()

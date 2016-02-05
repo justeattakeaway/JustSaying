@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using HandlerFunc = System.Func<JustSaying.Models.Message, bool>;
 
-namespace JustSaying.AwsTools
+namespace JustSaying.AwsTools.MessageHandling
 {
     public class HandlerMap
     {

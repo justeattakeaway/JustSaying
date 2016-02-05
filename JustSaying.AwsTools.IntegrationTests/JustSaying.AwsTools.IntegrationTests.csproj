@@ -71,8 +71,6 @@
   <ItemGroup>
     <Compile Include="BasicHandlingThrottlingTest.cs" />
     <Compile Include="ProxyAwsClientFactory.cs" />
-    <Compile Include="DynamoDbStoreIntregrationTests.cs" />
-    <Compile Include="DynamoTableTests.cs" />
     <Compile Include="GlobalSetup.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SqsQueueIntegrationTests.cs" />

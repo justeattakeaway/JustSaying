@@ -9,12 +9,13 @@ using JustSaying.AwsTools;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustBehave;
+using JustSaying.AwsTools.MessageHandling;
 using NSubstitute;
 using JustSaying.TestingFramework;
 
 namespace AwsTools.UnitTests.SqsNotificationListener
 {
-    using SqsNotificationListener = JustSaying.AwsTools.SqsNotificationListener;
+    using SqsNotificationListener = JustSaying.AwsTools.MessageHandling.SqsNotificationListener;
 
     public class WhenThereAreExceptionsInMessageProcessing : 
         BehaviourTest<SqsNotificationListener>

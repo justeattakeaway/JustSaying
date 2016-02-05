@@ -3,6 +3,7 @@ using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustBehave;
+using JustSaying.AwsTools.MessageHandling;
 using NSubstitute;
 using NUnit.Framework;
 

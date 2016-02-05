@@ -5,6 +5,7 @@ using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Amazon.SQS.Util;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 
 namespace JustSaying.AwsTools

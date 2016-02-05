@@ -3,6 +3,7 @@ using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools;
 using JustSaying.Messaging.MessageSerialisation;
 using JustBehave;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using NSubstitute;

@@ -2,7 +2,7 @@ using System;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 
-namespace JustSaying.AwsTools
+namespace JustSaying.AwsTools.MessageHandling
 {
     internal class GuaranteedOnceDelivery<T> where T : Message
     {
