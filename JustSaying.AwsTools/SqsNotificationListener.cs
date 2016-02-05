@@ -12,7 +12,6 @@ using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using Message = JustSaying.Models.Message;
-using HandlerFunc = System.Func<JustSaying.Models.Message, bool>;
 
 namespace JustSaying.AwsTools
 {
@@ -22,7 +21,7 @@ namespace JustSaying.AwsTools
         private readonly IMessageSerialisationRegister _serialisationRegister;
         private readonly IMessageMonitor _messagingMonitor;
         private readonly Action<Exception, Amazon.SQS.Model.Message> _onError;
-        private readonly Dictionary<Type, List<HandlerFunc>> _handlers;
+        private readonly HandlerMap _handlerMap = new HandlerMap();
         private readonly IMessageLock _messageLock;
 
         private CancellationTokenSource _cts = new CancellationTokenSource();
@@ -37,7 +36,6 @@ namespace JustSaying.AwsTools
             _serialisationRegister = serialisationRegister;
             _messagingMonitor = messagingMonitor;
             _onError = onError ?? ((ex,message) => { });
-            _handlers = new Dictionary<Type, List<HandlerFunc>>();
             _messageProcessingStrategy = new MaximumThroughput();
             _messageLock = messageLock;
             Subscribers = new Collection<ISubscriber>();
@@ -62,12 +60,6 @@ namespace JustSaying.AwsTools
 
         public void AddMessageHandler<T>(Func<IHandler<T>> futureHandler) where T : Message
         {
-            List<Func<Message, bool>> handlers;
-            if (!_handlers.TryGetValue(typeof(T), out handlers))
-            {
-                handlers = new List<HandlerFunc>();
-                _handlers.Add(typeof(T), handlers);
-            }
             var handlerInstance = futureHandler();
             var guaranteedDelivery = new GuaranteedOnceDelivery<T>(handlerInstance);
             
@@ -88,7 +80,7 @@ namespace JustSaying.AwsTools
             }
 
             Subscribers.Add(new Subscriber(typeof(T)));
-            handlers.Add(message => handler.Handle((T)message));
+            _handlerMap.Add(typeof(T), message => handler.Handle((T)message));
         }
 
         public void Listen()
@@ -272,10 +264,9 @@ namespace JustSaying.AwsTools
 
         private bool CallMessageHandlers(Message message)
         {
-            List<HandlerFunc> handlerFuncs;
-            var foundHandlers = _handlers.TryGetValue(message.GetType(), out handlerFuncs);
+            var handlerFuncs = _handlerMap.Get(message.GetType());
 
-            if (!foundHandlers)
+            if (handlerFuncs == null)
             {
                 return true;
             }
