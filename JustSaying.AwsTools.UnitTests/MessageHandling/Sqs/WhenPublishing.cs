@@ -8,7 +8,7 @@ using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.TestingFramework;
 using NSubstitute;
 
-namespace JustSaying.AwsTools.UnitTests.Sqs
+namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
 {
     public class WhenPublishing : BehaviourTest<SqsPublisher>
     {

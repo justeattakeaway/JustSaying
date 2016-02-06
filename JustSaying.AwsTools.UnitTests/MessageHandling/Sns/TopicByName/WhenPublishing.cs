@@ -1,14 +1,13 @@
 ﻿using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
-using JustSaying.AwsTools;
-using JustSaying.Messaging.MessageSerialisation;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using NSubstitute;
 
-namespace AwsTools.UnitTests.Sns.TopicByName
+namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sns.TopicByName
 {
     public class WhenPublishing : BehaviourTest<SnsTopicByName>
     {
