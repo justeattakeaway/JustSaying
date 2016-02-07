@@ -71,24 +71,24 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="QueueCreation\WhenSerializingRedrivePolicy.cs" />
-    <Compile Include="Sns\TopicByName\WhenPublishing.cs" />
-    <Compile Include="SqsNotificationListener\HandlingExceptions\WhenErrorHandlingActionIsNotProvided.cs" />
-    <Compile Include="SqsNotificationListener\HandlingExceptions\WhenErrorHandlingActionIsProvided.cs" />
-    <Compile Include="SqsNotificationListener\WhenAttemptingToInterrogateASubscriber.cs" />
-    <Compile Include="SqsNotificationListener\WhenExactlyOnceIsAppliedToHandler.cs" />
-    <Compile Include="SqsNotificationListener\WhenExactlyOnceIsAppliedToHandlerWithoutExplicitTimeout.cs" />
-    <Compile Include="SqsNotificationListener\WhenListeningStartsAndStops.cs" />
-    <Compile Include="SqsNotificationListener\BaseQueuePollingTest.cs" />
-    <Compile Include="SqsNotificationListener\WhenMessageHandlingFails.cs" />
-    <Compile Include="SqsNotificationListener\WhenMessageHandlingSucceeds.cs" />
-    <Compile Include="SqsNotificationListener\WhenPassingAHandledAndUnhandledMessage.cs" />
+    <Compile Include="MessageHandling\Sns\TopicByName\WhenPublishing.cs" />
+    <Compile Include="MessageHandling\SqsNotificationListener\HandlingExceptions\WhenErrorHandlingActionIsNotProvided.cs" />
+    <Compile Include="MessageHandling\SqsNotificationListener\HandlingExceptions\WhenErrorHandlingActionIsProvided.cs" />
+    <Compile Include="MessageHandling\SqsNotificationListener\WhenAttemptingToInterrogateASubscriber.cs" />
+    <Compile Include="MessageHandling\SqsNotificationListener\WhenExactlyOnceIsAppliedToHandler.cs" />
+    <Compile Include="MessageHandling\SqsNotificationListener\WhenExactlyOnceIsAppliedToHandlerWithoutExplicitTimeout.cs" />
+    <Compile Include="MessageHandling\SqsNotificationListener\WhenListeningStartsAndStops.cs" />
+    <Compile Include="MessageHandling\SqsNotificationListener\BaseQueuePollingTest.cs" />
+    <Compile Include="MessageHandling\SqsNotificationListener\WhenMessageHandlingFails.cs" />
+    <Compile Include="MessageHandling\SqsNotificationListener\WhenMessageHandlingSucceeds.cs" />
+    <Compile Include="MessageHandling\SqsNotificationListener\WhenPassingAHandledAndUnhandledMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SqsNotificationListener\WhenThereAreExceptionsInMessageProcessing.cs" />
-    <Compile Include="SqsNotificationListener\WhenThereAreExceptionsInSqsCalling.cs" />
-    <Compile Include="SqsNotificationListener\WhenThereAreNoMessagesToProcess.cs" />
+    <Compile Include="MessageHandling\SqsNotificationListener\WhenThereAreExceptionsInMessageProcessing.cs" />
+    <Compile Include="MessageHandling\SqsNotificationListener\WhenThereAreExceptionsInSqsCalling.cs" />
+    <Compile Include="MessageHandling\SqsNotificationListener\WhenThereAreNoMessagesToProcess.cs" />
     <Compile Include="SqsQueueConfiguration\Validation\WhenPublishEndpointIsNotProvided.cs" />
-    <Compile Include="Sqs\WhenFetchingQueueByName.cs" />
-    <Compile Include="Sqs\WhenPublishing.cs" />
+    <Compile Include="MessageHandling\Sqs\WhenFetchingQueueByName.cs" />
+    <Compile Include="MessageHandling\Sqs\WhenPublishing.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj">

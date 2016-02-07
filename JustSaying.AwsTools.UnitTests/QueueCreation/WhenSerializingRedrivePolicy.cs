@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using JustBehave;
-using JustSaying.AwsTools.QueueCreation;
+﻿using JustSaying.AwsTools.QueueCreation;
 using NUnit.Framework;
 
 namespace JustSaying.AwsTools.UnitTests.QueueCreation

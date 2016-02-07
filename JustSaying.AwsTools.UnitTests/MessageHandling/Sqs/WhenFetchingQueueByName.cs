@@ -7,7 +7,7 @@ using JustSaying.AwsTools.MessageHandling;
 using NSubstitute;
 using NUnit.Framework;
 
-namespace JustSaying.AwsTools.UnitTests.Sqs
+namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
 {
     class WhenFetchingQueueByName
     {

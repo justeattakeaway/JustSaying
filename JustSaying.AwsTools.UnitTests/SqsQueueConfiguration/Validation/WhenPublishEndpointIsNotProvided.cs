@@ -1,9 +1,8 @@
-﻿using JustSaying.AwsTools;
+﻿using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
-using JustBehave;
 using NUnit.Framework;
 
-namespace AwsTools.UnitTests.SqsQueueConfiguration.Validation
+namespace JustSaying.AwsTools.UnitTests.SqsQueueConfiguration.Validation
 {
     class WhenPublishEndpointIsNotProvided : BehaviourTest<SqsReadConfiguration>
     {

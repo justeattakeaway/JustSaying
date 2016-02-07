@@ -1,12 +1,11 @@
 using System;
 using System.Threading.Tasks;
-using AwsTools.UnitTests.SqsNotificationListener;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using NSubstitute;
 using NUnit.Framework;
 
-namespace JustSaying.AwsTools.UnitTests.SqsNotificationListener
+namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
     public class WhenExactlyOnceIsAppliedToHandler : BaseQueuePollingTest
     {
@@ -52,6 +51,5 @@ namespace JustSaying.AwsTools.UnitTests.SqsNotificationListener
         {
             return _handlerWasCalled;
         }
-
     }
 }

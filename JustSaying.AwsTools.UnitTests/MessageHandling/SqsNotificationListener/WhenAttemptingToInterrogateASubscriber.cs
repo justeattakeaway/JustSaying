@@ -1,10 +1,9 @@
 using System.Linq;
-using AwsTools.UnitTests.SqsNotificationListener;
 using JustBehave;
 using JustSaying.TestingFramework;
 using Shouldly;
 
-namespace JustSaying.AwsTools.UnitTests.SqsNotificationListener
+namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
     public class WhenAttemptingToInterrogateASubscriber : BaseQueuePollingTest
     {
