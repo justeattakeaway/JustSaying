@@ -72,8 +72,6 @@
   <ItemGroup>
     <Compile Include="QueueCreation\WhenSerializingRedrivePolicy.cs" />
     <Compile Include="MessageHandling\Sns\TopicByName\WhenPublishing.cs" />
-    <Compile Include="MessageHandling\SqsNotificationListener\HandlingExceptions\WhenErrorHandlingActionIsNotProvided.cs" />
-    <Compile Include="MessageHandling\SqsNotificationListener\HandlingExceptions\WhenErrorHandlingActionIsProvided.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\WhenAttemptingToInterrogateASubscriber.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\WhenExactlyOnceIsAppliedToHandler.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\WhenExactlyOnceIsAppliedToHandlerWithoutExplicitTimeout.cs" />
