@@ -32,7 +32,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _handlerMap = handlerMap;
         }
 
-        public void ProcessMessage(SQSMessage message)
+        public void DispatchMessage(SQSMessage message)
         {
             Message typedMessage;
             try

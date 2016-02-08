@@ -195,7 +195,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public void HandleMessage(Amazon.SQS.Model.Message message)
         {
-            var action = new Action(() => _messageDispatcher.ProcessMessage(message));
+            var action = new Action(() => _messageDispatcher.DispatchMessage(message));
             _messageProcessingStrategy.ProcessMessage(action);
         }
 
