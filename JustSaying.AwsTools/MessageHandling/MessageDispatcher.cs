@@ -4,6 +4,7 @@ using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using Message = JustSaying.Models.Message;
+using SQSMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -12,15 +13,16 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly SqsQueueBase _queue;
         private readonly IMessageSerialisationRegister _serialisationRegister;
         private readonly IMessageMonitor _messagingMonitor;
-        private readonly Action<Exception, Amazon.SQS.Model.Message> _onError;
-        private readonly HandlerMap _handlerMap = new HandlerMap();
+        private readonly Action<Exception, SQSMessage> _onError;
+        private readonly HandlerMap _handlerMap;
 
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
 
-        public MessageDispatcher(SqsQueueBase queue, 
+        public MessageDispatcher(
+            SqsQueueBase queue, 
             IMessageSerialisationRegister serialisationRegister,
             IMessageMonitor messagingMonitor,
-            Action<Exception, Amazon.SQS.Model.Message> onError,
+            Action<Exception, SQSMessage> onError,
             HandlerMap handlerMap)
         {
             _queue = queue;
@@ -30,7 +32,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _handlerMap = handlerMap;
         }
 
-        public void ProcessMessage(Amazon.SQS.Model.Message message)
+        public void ProcessMessage(SQSMessage message)
         {
             Message typedMessage;
             try
@@ -119,6 +121,5 @@ namespace JustSaying.AwsTools.MessageHandling
             };
             _queue.Client.DeleteMessage(deleteRequest);
         }
-
     }
 }
