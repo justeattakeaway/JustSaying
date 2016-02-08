@@ -100,7 +100,7 @@ namespace JustSaying.AwsTools.MessageHandling
             if (task.IsFaulted)
             {
                 Log.Info(
-                    "[Failed] Stopped Listening - {0}\n{1}",
+                    "[Faulted] Stopped Listening - {0}\n{1}",
                      queueInfo,
                      task.Exception);
             }
