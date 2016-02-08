@@ -193,7 +193,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return maxMessageBatchSize.MaxBatchSize;
         }
 
-        public void HandleMessage(Amazon.SQS.Model.Message message)
+        private void HandleMessage(Amazon.SQS.Model.Message message)
         {
             var action = new Action(() => _messageDispatcher.DispatchMessage(message));
             _messageProcessingStrategy.ProcessMessage(action);
