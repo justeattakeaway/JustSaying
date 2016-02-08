@@ -101,19 +101,15 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 Log.Info(
                     "[Failed] Stopped Listening - {0}\n{1}",
-                    queueInfo,
-                    task.Exception);
-            }
-            else if (task.IsCompleted)
-            {
-                Log.Info(
-                    "[Completed] Stopped Listening - {0}",
-                    queueInfo);
+                     queueInfo,
+                     task.Exception);
             }
             else
             {
+                var endState = task.Status.ToString();
                 Log.Info(
-                    "[Canceled] Stopped Listening - {0}",
+                    "[{0}] Stopped Listening - {1}",
+                    endState,
                     queueInfo);
             }
         }
