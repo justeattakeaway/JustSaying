@@ -97,18 +97,18 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private static void LogTaskEndState(Task task, string queueInfo)
         {
-            if (task.IsCompleted)
-            {
-                Log.Info(
-                    "[Completed] Stopped Listening - {0}",
-                    queueInfo);
-            }
-            else if (task.IsFaulted)
+            if (task.IsFaulted)
             {
                 Log.Info(
                     "[Failed] Stopped Listening - {0}\n{1}",
                     queueInfo,
                     task.Exception);
+            }
+            else if (task.IsCompleted)
+            {
+                Log.Info(
+                    "[Completed] Stopped Listening - {0}",
+                    queueInfo);
             }
             else
             {
