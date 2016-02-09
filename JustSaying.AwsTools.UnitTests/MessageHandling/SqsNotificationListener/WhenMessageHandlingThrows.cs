@@ -25,11 +25,13 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         }
 
         [Then]
-        public async Task ExceptionIsLoggedToMonitor()
+        public void ExceptionIsLoggedToMonitor()
         {
-            await Patiently.VerifyExpectationAsync(
+            var verifyTask =  Patiently.VerifyExpectationAsync(
                 () => Monitor.ReceivedWithAnyArgs().HandleException(
                         Arg.Any<string>()));
+
+            verifyTask.Wait();
         }
     }
 }
