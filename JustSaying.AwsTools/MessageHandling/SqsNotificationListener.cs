@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
@@ -88,35 +89,57 @@ namespace JustSaying.AwsTools.MessageHandling
                         await ListenLoop(_cts.Token);
                     }
                 })
-                .ContinueWith(t =>
-                    {
-                        if (t.IsCompleted)
-                        {
-                            Log.Info(
-                                "[Completed] Stopped Listening - {0}", 
-                                queueInfo);
-                        }
-                        else if (t.IsFaulted)
-                        {
-                            Log.Info(
-                                "[Failed] Stopped Listening - {0}\n{1}", 
-                                queueInfo, 
-                                t.Exception);
-                        }
-                        else
-                        {
-                            Log.Info(
-                                "[Canceled] Stopped Listening - {0}", 
-                                queueInfo);
-                        }
-                    });
+                .ContinueWith(t => LogTaskEndState(t, queueInfo));
 
             Log.Info(
                 "Starting Listening - {0}", 
                 queueInfo);
         }
 
-        public void StopListening()
+        private static void LogTaskEndState(Task task, string queueInfo)
+        {
+            if (task.IsFaulted)
+            {
+                Log.Warn(
+                    "[Faulted] Stopped Listening - {0}\n{1}",
+                     queueInfo,
+                     AggregateExceptionDetails(task.Exception));
+            }
+            else
+            {
+                var endState = task.Status.ToString();
+                Log.Info(
+                    "[{0}] Stopped Listening - {1}",
+                    endState,
+                    queueInfo);
+            }
+        }
+
+        private static string AggregateExceptionDetails(AggregateException ex)
+        {
+            var flatEx = ex.Flatten();
+
+            if (flatEx.InnerExceptions.Count == 0)
+            {
+                return "AggregateException containing no inner exceptions\n" + ex;
+            }
+
+            if (flatEx.InnerExceptions.Count == 1)
+            {
+                return ex.InnerExceptions[0].ToString();
+            }
+
+            var innerExDetails = new StringBuilder();
+            innerExDetails.AppendFormat("AggregateException containing {0} inner exceptions", flatEx.InnerExceptions.Count);
+            foreach (var innerEx in flatEx.InnerExceptions)
+            {
+                innerExDetails.AppendLine(innerEx.ToString());
+            }
+
+            return innerExDetails.ToString();
+        }
+
+       public void StopListening()
         {
             _cts.Cancel();
             Log.Info(
