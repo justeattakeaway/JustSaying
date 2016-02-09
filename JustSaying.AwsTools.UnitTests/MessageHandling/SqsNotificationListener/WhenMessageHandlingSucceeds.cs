@@ -44,5 +44,13 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
                 () => Monitor.Received().ReceiveMessageTime(
                     Arg.Any<long>()));
         }
+
+        [Then]
+        public async Task ExceptionIsNotLoggedToMonitor()
+        {
+            await Patiently.VerifyExpectationAsync(
+                () => Monitor.DidNotReceiveWithAnyArgs().HandleException(
+                        Arg.Any<string>()));
+        }
     }
 }

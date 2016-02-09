@@ -29,7 +29,8 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 
         protected override JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
-            return new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(new SqsQueueByUrl(RegionEndpoint.EUWest1, QueueUrl, Sqs), SerialisationRegister, Monitor, null, MessageLock);
+            var queue = new SqsQueueByUrl(RegionEndpoint.EUWest1, QueueUrl, Sqs);
+            return new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(queue, SerialisationRegister, Monitor, null, MessageLock);
         }
 
         protected override void Given()
@@ -62,7 +63,8 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         {
             return new ReceiveMessageResponse
             {
-                Messages = new List<Message> {       
+                Messages = new List<Message>
+                {
                     new Message
                     {   
                         MessageId = messageId.ToString(),
@@ -72,7 +74,8 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
                     {
                         MessageId = messageId.ToString(),
                         Body = "{\"Subject\":\"SOME_UNKNOWN_MESSAGE\"," + "\"Message\":\"SOME_RANDOM_MESSAGE\"}"
-                    }}
+                    }
+                }
             };
         }
 
