@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
@@ -102,7 +103,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 Log.Warn(
                     "[Faulted] Stopped Listening - {0}\n{1}",
                      queueInfo,
-                     task.Exception);
+                     AggregateExceptionDetails(task.Exception));
             }
             else
             {
@@ -114,7 +115,31 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        public void StopListening()
+        private static string AggregateExceptionDetails(AggregateException ex)
+        {
+            var flatEx = ex.Flatten();
+
+            if (flatEx.InnerExceptions.Count == 0)
+            {
+                return "AggregateException containing no inner exceptions\n" + ex;
+            }
+
+            if (flatEx.InnerExceptions.Count == 1)
+            {
+                return ex.InnerExceptions[0].ToString();
+            }
+
+            var innerExDetails = new StringBuilder();
+            innerExDetails.AppendFormat("AggregateException containing {0} inner exceptions", flatEx.InnerExceptions.Count);
+            foreach (var innerEx in flatEx.InnerExceptions)
+            {
+                innerExDetails.AppendLine(innerEx.ToString());
+            }
+
+            return innerExDetails.ToString();
+        }
+
+       public void StopListening()
         {
             _cts.Cancel();
             Log.Info(
