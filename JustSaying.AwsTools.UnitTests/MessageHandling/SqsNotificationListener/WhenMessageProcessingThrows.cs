@@ -13,17 +13,17 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
     {
         public void BeforeGettingMoreMessages()
         {
-            throw new Exception("Lol no");
+            throw new Exception("Thrown by test BeforeGettingMoreMessages");
         }
 
         public void ProcessMessage(Action action)
         {
-            throw new Exception("Lol no");
+            throw new Exception("Thrown by test ProcessMessage");
         }
     }
 
     /// <summary>
-    /// this test exercises different exception ahndlers to the "handler throws an exception" path in WhenMessageHandlingThrows
+    /// this test exercises different exception handlers to the "handler throws an exception" path in WhenMessageHandlingThrows
     /// </summary>
     public class WhenMessageProcessingThrows : BaseQueuePollingTest
     {
