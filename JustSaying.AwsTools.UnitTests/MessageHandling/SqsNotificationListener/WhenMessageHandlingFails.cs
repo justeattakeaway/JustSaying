@@ -15,6 +15,14 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         }
 
         [Then]
+        public async Task MessageHandlerWasCalled()
+        {
+            await Patiently.VerifyExpectationAsync(
+                () => Handler.ReceivedWithAnyArgs().Handle(
+                        Arg.Any<GenericMessage>()));
+        }
+
+        [Then]
         public async Task FailedMessageIsNotRemovedFromQueue()
         {
             // The un-handled one is however.
