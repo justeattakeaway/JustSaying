@@ -42,7 +42,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             _messageMonitor = messageMonitor;
         }
 
-        public void BeforeGettingMoreMessages()
+        public async Task BeforeGettingMoreMessages()
         {
             var watch = new System.Diagnostics.Stopwatch();
             watch.Start();
@@ -61,7 +61,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
                 }
 
                 _messageMonitor.IncrementThrottlingStatistic();
-                Task.WaitAny(activeTasksToWaitOn);
+                await Task.WhenAny(activeTasksToWaitOn);
             }
 
             watch.Stop();

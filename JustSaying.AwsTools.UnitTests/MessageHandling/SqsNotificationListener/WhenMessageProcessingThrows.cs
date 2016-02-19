@@ -10,7 +10,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
     public class BrokenMessageProcessingStrategy : IMessageProcessingStrategy
     {
-        public void BeforeGettingMoreMessages()
+        public Task BeforeGettingMoreMessages()
         {
             throw new Exception("Thrown by test BeforeGettingMoreMessages");
         }
