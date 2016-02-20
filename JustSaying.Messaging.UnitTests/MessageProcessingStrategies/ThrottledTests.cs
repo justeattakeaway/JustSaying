@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Monitoring;
 using NSubstitute;
@@ -57,13 +58,13 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
         [TestCase(1000)]
         [TestCase(10000)]
-        public void SimulatedListenLoop_ProcessedAllMessages(int numberOfMessagesToProcess)
+        public async Task SimulatedListenLoop_ProcessedAllMessages(int numberOfMessagesToProcess)
         {
             var watch = new Stopwatch();
             watch.Start();
             var actions = BuildFakeIncomingMessages(numberOfMessagesToProcess);
 
-            ListenLoopExecuted(actions);
+            await ListenLoopExecuted(actions);
 
             watch.Stop();
             Thread.Sleep(2000);
@@ -74,21 +75,21 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
 
         [Test]
-        public void SimulatedListenLoop_WhenThrottlingOccurs_CallsMessageMonitor()
+        public async Task SimulatedListenLoop_WhenThrottlingOccurs_CallsMessageMonitor()
         {
             var actions = BuildFakeIncomingMessages(50);
             _messageProcessingStrategy = new Throttled(20, _fakeAmazonBatchSize, _fakeMonitor);
 
-            ListenLoopExecuted(actions);
+            await ListenLoopExecuted(actions);
 
             _fakeMonitor.Received().IncrementThrottlingStatistic();
         }
 
-        private void ListenLoopExecuted(Queue<Action> actions)
+        private async Task ListenLoopExecuted(Queue<Action> actions)
         {
             while (actions.Any())
             {
-                _messageProcessingStrategy.BeforeGettingMoreMessages();
+                await _messageProcessingStrategy.BeforeGettingMoreMessages();
                 var batch = GetFromFakeSnsQueue(actions);
 
                 foreach (var action in batch)

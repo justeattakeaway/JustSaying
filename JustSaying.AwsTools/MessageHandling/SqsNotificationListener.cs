@@ -155,7 +155,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                _messageProcessingStrategy.BeforeGettingMoreMessages();
+                await _messageProcessingStrategy.BeforeGettingMoreMessages();
 
                 var watch = new System.Diagnostics.Stopwatch();
                 watch.Start();

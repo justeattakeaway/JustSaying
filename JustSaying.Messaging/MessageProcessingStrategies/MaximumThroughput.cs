@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace JustSaying.Messaging.MessageProcessingStrategies
 {
     public class MaximumThroughput : IMessageProcessingStrategy
     {
-        public void BeforeGettingMoreMessages()
+        public Task BeforeGettingMoreMessages()
         {
+            return Task.FromResult(true);
         }
 
         public void ProcessMessage(Action action)
