@@ -60,6 +60,7 @@
     <Compile Include="MessageProcessingStrategies\DefaultThrottledThroughput.cs" />
     <Compile Include="MessageProcessingStrategies\IMessageMaxBatchSizeProcessingStrategy.cs" />
     <Compile Include="MessageProcessingStrategies\IMessageProcessingStrategy.cs" />
+    <Compile Include="MessageProcessingStrategies\MessageConstants.cs" />
     <Compile Include="MessageProcessingStrategies\Throttled.cs" />
     <Compile Include="MessageSerialisation\IMessageSerialisationFactory.cs" />
     <Compile Include="MessageSerialisation\MessageFormatNotSupportedException.cs" />
