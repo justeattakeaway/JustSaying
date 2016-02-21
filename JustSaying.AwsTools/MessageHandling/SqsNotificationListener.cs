@@ -42,7 +42,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _messagingMonitor = messagingMonitor;
             onError = onError ?? ((ex,message) => { });
             
-            _messageProcessingStrategy = new Throttled(MaxAmazonMessageCap, MaxAmazonMessageCap, _messagingMonitor);
+            _messageProcessingStrategy = new DefaultThrottledThroughput(_messagingMonitor);
             _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor);
             _messageDispatcher = new MessageDispatcher(queue, serialisationRegister, messagingMonitor, onError, _handlerMap);
 
