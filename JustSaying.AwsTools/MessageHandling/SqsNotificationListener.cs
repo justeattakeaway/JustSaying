@@ -29,8 +29,6 @@ namespace JustSaying.AwsTools.MessageHandling
         private CancellationTokenSource _cts = new CancellationTokenSource();
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
 
-        private const int MaxAmazonMessageCap = 10;
-
         public SqsNotificationListener(
             SqsQueueBase queue,
             IMessageSerialisationRegister serialisationRegister,
@@ -42,7 +40,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _messagingMonitor = messagingMonitor;
             onError = onError ?? ((ex,message) => { });
             
-            _messageProcessingStrategy = new MaximumThroughput();
+            _messageProcessingStrategy = new DefaultThrottledThroughput(_messagingMonitor);
             _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor);
             _messageDispatcher = new MessageDispatcher(queue, serialisationRegister, messagingMonitor, onError, _handlerMap);
 
@@ -57,7 +55,7 @@ namespace JustSaying.AwsTools.MessageHandling
         // ToDo: This should not be here.
         public SqsNotificationListener WithMaximumConcurrentLimitOnMessagesInFlightOf(int maximumAllowedMesagesInFlight)
         {
-            _messageProcessingStrategy = new Throttled(maximumAllowedMesagesInFlight, MaxAmazonMessageCap, _messagingMonitor);
+            _messageProcessingStrategy = new Throttled(maximumAllowedMesagesInFlight,  MessageConstants.MaxAmazonMessageCap, _messagingMonitor);
             return this;
         }
 
@@ -209,9 +207,9 @@ namespace JustSaying.AwsTools.MessageHandling
 
             if (maxMessageBatchSize == null || 
                 maxMessageBatchSize.MaxBatchSize <= 0 || 
-                maxMessageBatchSize.MaxBatchSize > MaxAmazonMessageCap)
+                maxMessageBatchSize.MaxBatchSize > MessageConstants.MaxAmazonMessageCap)
             {
-                return MaxAmazonMessageCap;
+                return MessageConstants.MaxAmazonMessageCap;
             }
             return maxMessageBatchSize.MaxBatchSize;
         }
