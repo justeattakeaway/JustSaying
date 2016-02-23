@@ -203,15 +203,12 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private int GetMaxBatchSize()
         {
-            var maxMessageBatchSize = _messageProcessingStrategy as IMessageMaxBatchSizeProcessingStrategy;
-
-            if (maxMessageBatchSize == null || 
-                maxMessageBatchSize.MaxBatchSize <= 0 || 
-                maxMessageBatchSize.MaxBatchSize > MessageConstants.MaxAmazonMessageCap)
+            if (_messageProcessingStrategy.MaxBatchSize <= 0 ||
+                _messageProcessingStrategy.MaxBatchSize > MessageConstants.MaxAmazonMessageCap)
             {
                 return MessageConstants.MaxAmazonMessageCap;
             }
-            return maxMessageBatchSize.MaxBatchSize;
+            return _messageProcessingStrategy.MaxBatchSize;
         }
 
         private void HandleMessage(Amazon.SQS.Model.Message message)

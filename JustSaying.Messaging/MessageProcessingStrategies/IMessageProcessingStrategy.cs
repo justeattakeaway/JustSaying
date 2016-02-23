@@ -7,5 +7,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
     {
         Task BeforeGettingMoreMessages();
         void ProcessMessage(Action action);
+
+        int MaxBatchSize { get; }
     }
 }
