@@ -19,6 +19,8 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         {
             throw new Exception("Thrown by test ProcessMessage");
         }
+
+        public int MaxBatchSize { get { return int.MaxValue; } }
     }
 
     /// <summary>
