@@ -116,10 +116,10 @@ That's it. By calling StartListening() we are telling the stack to begin polling
 ````
 
 
-###2.(b) Enabling Throttling
-By default throttling is off which means NotificationStack will create as many threads as it needs to process messages as fast as it can. 
-By enabling throttling you can limit the amount of messages passed to application (useful for web apps with TCP thread restrictions).
-To enable throttling you need to specify optional parameter when setting SqsTopicSubcriber
+###2.(b) Configure Throttling
+JustSaying throttles message handllers, which means JustSaying will limit the maximum number of messages being processed concurrently. The default limit is 8 threads per processor core, i.e. `[Environment.ProcessorCount](https://msdn.microsoft.com/en-us/library/system.environment.processorcount.aspx) * 8`. 
+We feel that this is a sensible number, but it can be overridden. This is useful for web apps with TCP thread restrictions.
+To override throttling you need to specify optional parameter when setting SqsTopicSubcriber
 
 ````c#
 
