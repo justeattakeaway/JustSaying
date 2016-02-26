@@ -26,7 +26,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             _fakeMonitor = Substitute.For<IMessageMonitor>();
             _fakeAmazonBatchSize = 10;
             _concurrencyLevel = 20;
-            _messageProcessingStrategy = new Throttled(_concurrencyLevel, _fakeAmazonBatchSize, _fakeMonitor);
+            _messageProcessingStrategy = new Throttled(_concurrencyLevel, _fakeMonitor);
             _actionsProcessed = 0;
         }
 
@@ -35,26 +35,14 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
         {
             var MaxAllowedMessagesInFlight = Substitute.For<Func<int>>();
             MaxAllowedMessagesInFlight().Returns(100);
-            _messageProcessingStrategy = new Throttled(MaxAllowedMessagesInFlight, 10, _fakeMonitor);
+            _messageProcessingStrategy = new Throttled(MaxAllowedMessagesInFlight, _fakeMonitor);
+
+            Assert.That(_messageProcessingStrategy.FreeTasks, Is.EqualTo(100));
 
             MaxAllowedMessagesInFlight().Returns(90);
 
-            Assert.That(_messageProcessingStrategy.BlockingThreshold, Is.EqualTo(90 - 10));
-
+            Assert.That(_messageProcessingStrategy.FreeTasks, Is.EqualTo(90));
         }
-
-        [TestCase(0, 10, 1)]
-        [TestCase(9, 10, 1)]
-        [TestCase(10, 10, 1)]
-        [TestCase(11, 10, 1)]
-        [TestCase(12, 10, 2)]
-        public void Ctor_WhenMaxAllowedMessagesInFlightIsNearToBatchSize_BlockingThresholdIsNeverNegative(int maxAllowedMessagesInFlight, int maxBatchSize, int expectedBlockingThreshold)
-        {
-            _messageProcessingStrategy = new Throttled(maxAllowedMessagesInFlight, maxBatchSize, _fakeMonitor);
-
-            Assert.That(_messageProcessingStrategy.BlockingThreshold, Is.EqualTo(expectedBlockingThreshold));
-        }
-
 
         [TestCase(1000)]
         [TestCase(10000)]
@@ -78,7 +66,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
         public async Task SimulatedListenLoop_WhenThrottlingOccurs_CallsMessageMonitor()
         {
             var actions = BuildFakeIncomingMessages(50);
-            _messageProcessingStrategy = new Throttled(20, _fakeAmazonBatchSize, _fakeMonitor);
+            _messageProcessingStrategy = new Throttled(20, _fakeMonitor);
 
             await ListenLoopExecuted(actions);
 
@@ -89,7 +77,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
         {
             while (actions.Any())
             {
-                await _messageProcessingStrategy.BeforeGettingMoreMessages();
+                await _messageProcessingStrategy.AwaitAtLeastOneTaskToComplete();
                 var batch = GetFromFakeSnsQueue(actions);
 
                 foreach (var action in batch)

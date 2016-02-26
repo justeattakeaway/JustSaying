@@ -10,44 +10,40 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
     public class Throttled : IMessageProcessingStrategy
     {
         private readonly Func<int> _maximumAllowedMesagesInFlightProducer;
-        private const int MinimumThreshold = 1;
-        public int BlockingThreshold
-        {
-            get
-            {
-                var threshold = _maximumAllowedMesagesInFlightProducer() - _maximumBatchSize;
-                if (threshold <= 0)
-                {
-                    return MinimumThreshold;
-                }
-                return threshold;
-            }
-           }
 
-        private readonly int _maximumBatchSize;
         private readonly IMessageMonitor _messageMonitor;
         private readonly List<Task> _activeTasks;
         private long _activeTaskCount;
 
-        public Throttled(int maximumAllowedMesagesInFlight, int maximumBatchSize, IMessageMonitor messageMonitor)
-            : this(() => maximumAllowedMesagesInFlight, maximumBatchSize, messageMonitor)
+        public Throttled(int maximumAllowedMesagesInFlight, IMessageMonitor messageMonitor)
+            : this(() => maximumAllowedMesagesInFlight, messageMonitor)
         {}
 
-        public Throttled(Func<int> maximumAllowedMesagesInFlightProducer, int maximumBatchSize,
+        public Throttled(Func<int> maximumAllowedMesagesInFlightProducer,
             IMessageMonitor messageMonitor)
         {
             _maximumAllowedMesagesInFlightProducer = maximumAllowedMesagesInFlightProducer;
             _activeTasks = new List<Task>();
-            _maximumBatchSize = maximumBatchSize;
             _messageMonitor = messageMonitor;
         }
 
-        public async Task BeforeGettingMoreMessages()
+        public int FreeTasks
+        {
+            get
+            {
+                var inUse = Interlocked.Read(ref _activeTaskCount);
+                int freeTasks = _maximumAllowedMesagesInFlightProducer() - (int)inUse;
+                return Math.Max(freeTasks, 0);
+            }
+        }
+
+        public async Task AwaitAtLeastOneTaskToComplete()
         {
             var watch = new System.Diagnostics.Stopwatch();
             watch.Start();
 
-            while (Interlocked.Read(ref _activeTaskCount) >= BlockingThreshold)
+            // wait for some tasks to complete
+            while (FreeTasks == 0)
             {
                 Task[] activeTasksToWaitOn;
                 lock (_activeTasks)
@@ -92,11 +88,6 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             }
 
             Interlocked.Decrement(ref _activeTaskCount);
-        }
-
-        public int MaxBatchSize
-        {
-            get { return _maximumBatchSize; }
         }
     }
 }
