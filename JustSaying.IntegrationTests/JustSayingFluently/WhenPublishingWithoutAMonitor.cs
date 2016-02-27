@@ -14,7 +14,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         private IAmJustSayingFluently _bus;
         private readonly IHandler<GenericMessage> _handler = Substitute.For<IHandler<GenericMessage>>();
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Given()
         {
             var bus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName).ConfigurePublisherWith(c =>

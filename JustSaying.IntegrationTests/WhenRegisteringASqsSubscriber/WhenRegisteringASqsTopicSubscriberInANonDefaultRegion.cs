@@ -56,7 +56,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void TearDown()
         {
             DeleteQueueIfItAlreadyExists(_regionEndpoint, _queueName);
