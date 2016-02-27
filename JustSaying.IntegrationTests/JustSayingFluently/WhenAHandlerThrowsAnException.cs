@@ -19,7 +19,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         private bool _handledException;
         private IMessageMonitor _monitoring;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Given()
         {
             _handler.Handle(Arg.Any<GenericMessage>()).Returns(true).AndDoes(ex => { throw new Exception("My Ex"); });
@@ -66,7 +66,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             await Patiently.AssertThatAsync(() => _handledException);
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void ByeBye()
         {
             _bus.StopListening();
