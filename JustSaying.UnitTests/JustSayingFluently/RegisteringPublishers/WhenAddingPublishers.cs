@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using JustBehave;
+﻿using JustBehave;
 using JustSaying.AwsTools;
 using JustSaying.TestingFramework;
 using NSubstitute;
@@ -36,14 +35,14 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
         }
 
         /// Note: Ignored tests are here for fluent api exploration & expecting compile time issues when working on the fluent interface stuff...
-        [Then, Ignore]
+        [Then, Ignore("Testing compile-time issues")]
         public void ASqsPublisherCanBeSetup()
         {
             SystemUnderTest.ConfigurePublisherWith(conf => conf.PublishFailureBackoffMilliseconds = 50)
                 .WithSnsMessagePublisher<GenericMessage>();
         }
 
-        [Then, Ignore]
+        [Then, Ignore("Testing compile-time issues")]
         public void MultipleSqsPublishersCanBeSetup()
         {
             SystemUnderTest.ConfigurePublisherWith(conf => conf.PublishFailureBackoffMilliseconds = 50)
@@ -51,7 +50,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
                 .WithSnsMessagePublisher<GenericMessage>();
         }
 
-        [Then, Ignore]
+        [Then, Ignore("Testing compile-time issues")]
         public void ASqsPublisherCanBeSetupWithConfiguration()
         {
             SystemUnderTest.WithSqsMessagePublisher<GenericMessage>(c =>

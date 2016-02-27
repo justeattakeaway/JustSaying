@@ -28,7 +28,7 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
         public void
             ItDoesNotHaveConversationPropertySerialisedBecauseItIsNotSet_ThisIsForBackwardsCompatibilityWhenWeDeploy()
         {
-            Assert.That(_jsonMessage, Is.Not.StringContaining("Conversation"));
+            Assert.That(_jsonMessage, Is.Not.Contain("Conversation"));
         }
 
         [Then]

@@ -8,7 +8,7 @@ namespace JustSaying.UnitTests.CreateMe
         private Action<IPublishConfiguration> _config;
         private string _region;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Given()
         {
             _region = "region-1";
