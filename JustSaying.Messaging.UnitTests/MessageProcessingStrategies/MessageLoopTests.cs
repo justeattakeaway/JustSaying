@@ -14,84 +14,129 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
     [TestFixture]
     public class MessageLoopTests
     {
-        private int _concurrencyLevel;
-        private Throttled _messageProcessingStrategy;
+        private const int MinTaskDuration = 20;
+        private const int TaskDurationVariance = 20;
+
+        private const int ConcurrencyLevel = 20;
+        private const int MaxAmazonBatchSize = 10;
+
         private int _actionsProcessed;
-        private int _fakeAmazonBatchSize;
-        private IMessageMonitor _fakeMonitor;
 
         [SetUp]
         public void SetUp()
         {
-            _fakeMonitor = Substitute.For<IMessageMonitor>();
-            _fakeAmazonBatchSize = 10;
-            _concurrencyLevel = 20;
-            _messageProcessingStrategy = new Throttled(_concurrencyLevel, _fakeMonitor);
             _actionsProcessed = 0;
         }
 
+        [TestCase(10)]
+        [TestCase(100)]
         [TestCase(1000)]
         [TestCase(10000)]
         public async Task SimulatedListenLoop_ProcessedAllMessages(int numberOfMessagesToProcess)
         {
+            var fakeMonitor = Substitute.For<IMessageMonitor>();
+            var messageProcessingStrategy = new Throttled(ConcurrencyLevel, fakeMonitor);
+
             var watch = new Stopwatch();
             watch.Start();
-            var actions = BuildFakeIncomingMessages(numberOfMessagesToProcess);
 
-            await ListenLoopExecuted(actions);
+            var actions = BuildFakeIncomingMessages(numberOfMessagesToProcess);
+            await ListenLoopExecuted(actions, messageProcessingStrategy);
 
             watch.Stop();
-            Thread.Sleep(2000);
+
+            await Task.Delay(1000);
 
             Assert.That(_actionsProcessed, Is.EqualTo(numberOfMessagesToProcess));
             Debug.WriteLine("Took " + watch.Elapsed + " to process " + numberOfMessagesToProcess + " messages.");
         }
 
-
-        [Test]
-        public async Task SimulatedListenLoop_WhenThrottlingOccurs_CallsMessageMonitor()
+        [TestCase(2, 1)]
+        [TestCase(100, 1)]
+        [TestCase(50, 20)]
+        [TestCase(1000, 10)]
+        public async Task SimulatedListenLoop_WhenThrottlingOccurs_CallsMessageMonitor(int messageCount, int capacity)
         {
-            var actions = BuildFakeIncomingMessages(50);
-            _messageProcessingStrategy = new Throttled(20, _fakeMonitor);
+            Assert.That(messageCount, Is.GreaterThan(capacity), "There should not be throttling in this case");
 
-            await ListenLoopExecuted(actions);
+            var fakeMonitor = Substitute.For<IMessageMonitor>();
+            var messageProcessingStrategy = new Throttled(capacity, fakeMonitor);
 
-            _fakeMonitor.Received().IncrementThrottlingStatistic();
+            var actions = BuildFakeIncomingMessages(messageCount);
+
+            await ListenLoopExecuted(actions, messageProcessingStrategy);
+
+            fakeMonitor.Received().IncrementThrottlingStatistic();
         }
 
-        private async Task ListenLoopExecuted(Queue<Action> actions)
+        [TestCase(1, 1)]
+        [TestCase(1, 2)]
+        [TestCase(2, 2)]
+        [TestCase(5, 10)]
+        [TestCase(10, 50)]
+        [TestCase(50, 50)]
+        public async Task SimulatedListenLoop_WhenThrottlingDoesNotOccur_DoNotCallMessageMonitor(int messageCount, int capacity)
+        {
+            Assert.That(messageCount, Is.LessThanOrEqualTo(capacity), "There should be throttling in this case");
+
+            var fakeMonitor = Substitute.For<IMessageMonitor>();
+            var messageProcessingStrategy = new Throttled(capacity, fakeMonitor);
+
+            var actions = BuildFakeIncomingMessages(messageCount);
+
+            await ListenLoopExecuted(actions, messageProcessingStrategy);
+
+            fakeMonitor.DidNotReceive().IncrementThrottlingStatistic();
+        }
+
+        private async Task ListenLoopExecuted(Queue<Action> actions, IMessageProcessingStrategy messageProcessingStrategy)
         {
             while (actions.Any())
             {
-                await _messageProcessingStrategy.AwaitAtLeastOneTaskToComplete();
-                var batch = GetFromFakeSnsQueue(actions);
-
+                var batch = GetFromFakeSnsQueue(actions, messageProcessingStrategy.FreeTasks);
                 foreach (var action in batch)
                 {
-                    _messageProcessingStrategy.ProcessMessage(action);
+                    messageProcessingStrategy.ProcessMessage(action);
                 }
+
+                if (!actions.Any())
+                {
+                    break;
+                }
+
+
+                Assert.That(messageProcessingStrategy.FreeTasks, Is.GreaterThanOrEqualTo(0));
+                await messageProcessingStrategy.AwaitAtLeastOneTaskToComplete();
+                Assert.That(messageProcessingStrategy.FreeTasks, Is.GreaterThan(0));
+
             }
         }
 
-        private IEnumerable<Action> GetFromFakeSnsQueue(Queue<Action> actions)
+        private IList<Action> GetFromFakeSnsQueue(Queue<Action> actions, int requestedBatchSize)
         {
+            var batchSize = Math.Min(requestedBatchSize, MaxAmazonBatchSize);
+            batchSize = Math.Min(batchSize, actions.Count);
+            Debug.WriteLine("Getting a batch of {0} for requested {1}", batchSize, requestedBatchSize);
+
             var batch = new List<Action>();
-            for (var i = 0; i != _fakeAmazonBatchSize; i++)
+
+            for (var i = 0; i < batchSize; i++)
             {
                 batch.Add(actions.Dequeue());
             }
             return batch;
         }
 
-        private Queue<Action> BuildFakeIncomingMessages(int numberOfMessagesToCreate, int maximumDurationASingleMessageWillTakeToExecute = 10)
+        private Queue<Action> BuildFakeIncomingMessages(int numberOfMessagesToCreate)
         {
+            var random = new Random();
             var actions = new Queue<Action>();
             for (var i = 0; i != numberOfMessagesToCreate; i++)
             {
-                var random = new Random();
-                var action = new Action(() =>
+                var duration = MinTaskDuration + random.Next(TaskDurationVariance);
+                var action = new Action(async () =>
                 {
-                    Thread.Sleep(random.Next(maximumDurationASingleMessageWillTakeToExecute));
+                    await Task.Delay(duration);
                     Interlocked.Increment(ref _actionsProcessed);
                 });
                 actions.Enqueue(action);
