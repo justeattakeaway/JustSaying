@@ -39,8 +39,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
 
         public async Task AwaitAtLeastOneTaskToComplete()
         {
-            var watch = new System.Diagnostics.Stopwatch();
-            watch.Start();
+            var watch = System.Diagnostics.Stopwatch.StartNew();
 
             // wait for some tasks to complete
             while (FreeTasks == 0)
@@ -61,7 +60,6 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             }
 
             watch.Stop();
-
             _messageMonitor.HandleThrottlingTime(watch.ElapsedMilliseconds);
         }
 

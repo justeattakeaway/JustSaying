@@ -67,6 +67,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             await ListenLoopExecuted(actions, messageProcessingStrategy);
 
             fakeMonitor.Received().IncrementThrottlingStatistic();
+            fakeMonitor.Received().HandleThrottlingTime(Arg.Any<long>());
         }
 
         [TestCase(1, 1)]

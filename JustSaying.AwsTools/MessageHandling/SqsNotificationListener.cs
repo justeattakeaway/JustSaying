@@ -212,6 +212,11 @@ namespace JustSaying.AwsTools.MessageHandling
                 numberOfMessagesToreadFromSqs = Math.Min(_messageProcessingStrategy.FreeTasks, MessageConstants.MaxAmazonMessageCap);
             }
 
+            if (numberOfMessagesToreadFromSqs == 0)
+            {
+                throw new InvalidOperationException("Cannot determine numberOfMessagesToreadFromSqs");
+            }
+
             return numberOfMessagesToreadFromSqs;
         }
 
