@@ -33,13 +33,13 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
         [Test]
         public void ChangeMaxAllowedMessagesInFlightAtRuntime_TheChangeIsApplied()
         {
-            var MaxAllowedMessagesInFlight = Substitute.For<Func<int>>();
-            MaxAllowedMessagesInFlight().Returns(100);
-            _messageProcessingStrategy = new Throttled(MaxAllowedMessagesInFlight, _fakeMonitor);
+            var maxAllowedMessagesInFlight = Substitute.For<Func<int>>();
+            maxAllowedMessagesInFlight().Returns(100);
+            _messageProcessingStrategy = new Throttled(maxAllowedMessagesInFlight, _fakeMonitor);
 
             Assert.That(_messageProcessingStrategy.FreeTasks, Is.EqualTo(100));
 
-            MaxAllowedMessagesInFlight().Returns(90);
+            maxAllowedMessagesInFlight().Returns(90);
 
             Assert.That(_messageProcessingStrategy.FreeTasks, Is.EqualTo(90));
         }

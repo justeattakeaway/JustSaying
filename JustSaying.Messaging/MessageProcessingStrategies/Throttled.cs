@@ -31,8 +31,8 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         {
             get
             {
-                var inUse = Interlocked.Read(ref _activeTaskCount);
-                int freeTasks = _maximumAllowedMesagesInFlightProducer() - (int)inUse;
+                var activeTasks = (int)Interlocked.Read(ref _activeTaskCount);
+                var freeTasks = _maximumAllowedMesagesInFlightProducer() - activeTasks;
                 return Math.Max(freeTasks, 0);
             }
         }
