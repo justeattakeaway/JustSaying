@@ -87,6 +87,7 @@ namespace JustSaying.AwsTools.MessageHandling
                         await ListenLoop(_cts.Token);
                     }
                 })
+                .Unwrap()
                 .ContinueWith(t => LogTaskEndState(t, queueInfo));
 
             Log.Info(
