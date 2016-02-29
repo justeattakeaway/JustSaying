@@ -10,17 +10,17 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
     public class BrokenMessageProcessingStrategy : IMessageProcessingStrategy
     {
-        public Task BeforeGettingMoreMessages()
+        public Task AwaitAtLeastOneTaskToComplete()
         {
-            throw new Exception("Thrown by test BeforeGettingMoreMessages");
+            throw new ArgumentException("Thrown by test AwaitAtLeastOneTaskToComplete");
         }
 
         public void ProcessMessage(Action action)
         {
-            throw new Exception("Thrown by test ProcessMessage");
+            throw new ArgumentException("Thrown by test ProcessMessage");
         }
 
-        public int MaxBatchSize { get { return int.MaxValue; } }
+        public int FreeTasks { get; }
     }
 
     /// <summary>

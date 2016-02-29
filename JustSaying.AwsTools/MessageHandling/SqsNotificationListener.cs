@@ -55,7 +55,7 @@ namespace JustSaying.AwsTools.MessageHandling
         // ToDo: This should not be here.
         public SqsNotificationListener WithMaximumConcurrentLimitOnMessagesInFlightOf(int maximumAllowedMesagesInFlight)
         {
-            _messageProcessingStrategy = new Throttled(maximumAllowedMesagesInFlight,  MessageConstants.MaxAmazonMessageCap, _messagingMonitor);
+            _messageProcessingStrategy = new Throttled(maximumAllowedMesagesInFlight,  _messagingMonitor);
             return this;
         }
 
@@ -87,7 +87,7 @@ namespace JustSaying.AwsTools.MessageHandling
                         await ListenLoop(_cts.Token);
                     }
                 })
-                .ContinueWith(t => LogTaskEndState(t, queueInfo));
+                .ContinueWith(t => LogTaskEndState(t.Unwrap(), queueInfo));
 
             Log.Info(
                 "Starting Listening - {0}", 
@@ -153,15 +153,14 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                await _messageProcessingStrategy.BeforeGettingMoreMessages();
+                var numberOfMessagesToreadFromSqs = await GetNumberOfMessagesToreadFromSqs();
 
-                var watch = new System.Diagnostics.Stopwatch();
-                watch.Start();
+                var watch = System.Diagnostics.Stopwatch.StartNew();
 
                 var request = new ReceiveMessageRequest
                     {
                         QueueUrl = _queue.Url,
-                        MaxNumberOfMessages = GetMaxBatchSize(),
+                        MaxNumberOfMessages = numberOfMessagesToreadFromSqs,
                         WaitTimeSeconds = 20
                     };
                 var sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, ct);
@@ -194,21 +193,31 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (Exception ex)
             {
                 var msg = string.Format(
-                    "Issue in message handling loop for queue {0}, region {1}",
+                    "Issue in message handling loop for queue {0}, region {1}: {2}-{3}",
                     queueName,
-                    region);
+                    region,
+                    ex.GetType().Name, ex.Message);
                 Log.Error(ex, msg);
             }
         }
 
-        private int GetMaxBatchSize()
+        private async Task<int> GetNumberOfMessagesToreadFromSqs()
         {
-            if (_messageProcessingStrategy.MaxBatchSize <= 0 ||
-                _messageProcessingStrategy.MaxBatchSize > MessageConstants.MaxAmazonMessageCap)
+            var numberOfMessagesToreadFromSqs = Math.Min(_messageProcessingStrategy.FreeTasks, MessageConstants.MaxAmazonMessageCap);
+
+            if (numberOfMessagesToreadFromSqs == 0)
             {
-                return MessageConstants.MaxAmazonMessageCap;
+                await _messageProcessingStrategy.AwaitAtLeastOneTaskToComplete();
+
+                numberOfMessagesToreadFromSqs = Math.Min(_messageProcessingStrategy.FreeTasks, MessageConstants.MaxAmazonMessageCap);
             }
-            return _messageProcessingStrategy.MaxBatchSize;
+
+            if (numberOfMessagesToreadFromSqs == 0)
+            {
+                throw new InvalidOperationException("Cannot determine numberOfMessagesToreadFromSqs");
+            }
+
+            return numberOfMessagesToreadFromSqs;
         }
 
         private void HandleMessage(Amazon.SQS.Model.Message message)

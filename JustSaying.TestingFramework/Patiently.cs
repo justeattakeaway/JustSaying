@@ -8,7 +8,7 @@ namespace JustSaying.TestingFramework
     {
         public static async Task VerifyExpectationAsync(Action expression)
         {
-            await VerifyExpectationAsync(expression, 5.Seconds());
+            await VerifyExpectationAsync(expression, 2.Seconds());
         }
 
         public static async Task VerifyExpectationAsync(Action expression, TimeSpan timeout)
@@ -26,7 +26,7 @@ namespace JustSaying.TestingFramework
                 {
                 }
                 
-                await Task.Delay(50.Milliseconds());
+                await Task.Delay(250.Milliseconds());
                 Console.WriteLine(
                     "Waiting for {0} ms - Still Checking.", 
                     (DateTime.Now - started).TotalMilliseconds);
