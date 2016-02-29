@@ -87,7 +87,7 @@ namespace JustSaying.AwsTools.MessageHandling
                         await ListenLoop(_cts.Token);
                     }
                 })
-                .ContinueWith(t => LogTaskEndState(t, queueInfo));
+                .ContinueWith(t => LogTaskEndState(t.Unwrap(), queueInfo));
 
             Log.Info(
                 "Starting Listening - {0}", 
@@ -155,8 +155,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 var numberOfMessagesToreadFromSqs = await GetNumberOfMessagesToreadFromSqs();
 
-                var watch = new System.Diagnostics.Stopwatch();
-                watch.Start();
+                var watch = System.Diagnostics.Stopwatch.StartNew();
 
                 var request = new ReceiveMessageRequest
                     {

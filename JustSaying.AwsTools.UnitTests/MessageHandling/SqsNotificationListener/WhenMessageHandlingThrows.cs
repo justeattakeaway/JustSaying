@@ -8,12 +8,13 @@ using NSubstitute.ExceptionExtensions;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
+
     public class WhenMessageHandlingThrows : BaseQueuePollingTest
     {
         protected override void Given()
         {
             base.Given();
-            Handler.Handle(Arg.Any<GenericMessage>()).ThrowsForAnyArgs(new Exception("Thrown by test handler"));
+            Handler.Handle(Arg.Any<GenericMessage>()).ThrowsForAnyArgs(new ArgumentException("Thrown by test handler"));
         }
 
         [Then]
@@ -36,8 +37,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         public async Task ExceptionIsLoggedToMonitor()
         {
             await Patiently.VerifyExpectationAsync(
-                () => Monitor.ReceivedWithAnyArgs().HandleException(
-                        Arg.Any<string>()));
+                () => Monitor.ReceivedWithAnyArgs().HandleException("GenericMessage"));
         }
     }
 }
