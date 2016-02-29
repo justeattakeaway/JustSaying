@@ -14,7 +14,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
     [TestFixture]
     public class MessageLoopTests
     {
-        private const int MinTaskDuration = 20;
+        private const int MinTaskDuration = 10;
         private const int TaskDurationVariance = 20;
 
         private const int ConcurrencyLevel = 20;
@@ -52,9 +52,12 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
         }
 
         [TestCase(2, 1)]
-        [TestCase(100, 1)]
-        [TestCase(50, 20)]
-        [TestCase(1000, 10)]
+        [TestCase(3, 2)]
+        [TestCase(6, 5)]
+        [TestCase(11, 10)]
+        [TestCase(100, 90)]
+        [TestCase(30, 20)]
+        [TestCase(1000, 900)]
         public async Task SimulatedListenLoop_WhenThrottlingOccurs_CallsMessageMonitor(int messageCount, int capacity)
         {
             Assert.That(messageCount, Is.GreaterThan(capacity), "There should not be throttling in this case");
@@ -95,6 +98,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             while (actions.Any())
             {
                 var batch = GetFromFakeSnsQueue(actions, messageProcessingStrategy.FreeTasks);
+
                 foreach (var action in batch)
                 {
                     messageProcessingStrategy.ProcessMessage(action);
@@ -117,7 +121,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
         {
             var batchSize = Math.Min(requestedBatchSize, MaxAmazonBatchSize);
             batchSize = Math.Min(batchSize, actions.Count);
-            Debug.WriteLine("Getting a batch of {0} for requested {1}", batchSize, requestedBatchSize);
+            Debug.WriteLine("Getting a batch of {0} for requested {1}, queue contains {2}", batchSize, requestedBatchSize, actions.Count);
 
             var batch = new List<Action>();
 
@@ -135,11 +139,12 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             for (var i = 0; i != numberOfMessagesToCreate; i++)
             {
                 var duration = MinTaskDuration + random.Next(TaskDurationVariance);
-                var action = new Action(async () =>
-                {
-                    await Task.Delay(duration);
-                    Interlocked.Increment(ref _actionsProcessed);
-                });
+
+                var action = new Action(() =>
+                    {
+                         Thread.Sleep(duration);
+                        Interlocked.Increment(ref _actionsProcessed);
+                    });
                 actions.Enqueue(action);
             }
 
