@@ -12,12 +12,12 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
     {
         public Task AwaitAtLeastOneTaskToComplete()
         {
-            throw new Exception("Thrown by test AwaitAtLeastOneTaskToComplete");
+            throw new ArgumentException("Thrown by test AwaitAtLeastOneTaskToComplete");
         }
 
         public void ProcessMessage(Action action)
         {
-            throw new Exception("Thrown by test ProcessMessage");
+            throw new ArgumentException("Thrown by test ProcessMessage");
         }
 
         public int FreeTasks { get; }
