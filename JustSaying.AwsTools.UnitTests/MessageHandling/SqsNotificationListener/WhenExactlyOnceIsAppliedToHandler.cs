@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.TestingFramework;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -15,18 +14,19 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 
         protected override void Given()
         {
+            base.Given();
+            _expectedtimeout = 5;
+
             var messageLockResponse = new MessageLockResponse
                 {
                     DoIHaveExclusiveLock = true
                 };
 
-            base.Given();
-            _expectedtimeout = 5;
             MessageLock = Substitute.For<IMessageLock>();
             MessageLock.TryAquireLock(Arg.Any<string>(), Arg.Any<TimeSpan>())
                 .Returns(messageLockResponse);
 
-            Handler = new ExactlyOnceSignallingHandler(_tcs);
+            Handler = new ExplicitExactlyOnceSignallingHandler(_tcs);
         }
 
         protected override async Task When()
@@ -41,7 +41,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         [Test]
         public void ProcessingIsPassedToTheHandler()
         {
-            ((ExactlyOnceSignallingHandler)Handler).HandlerWasCalled();
+            ((ExplicitExactlyOnceSignallingHandler)Handler).HandlerWasCalled();
         }
 
         [Test]

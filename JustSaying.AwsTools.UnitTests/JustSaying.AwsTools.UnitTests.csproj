@@ -71,6 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MessageHandling\SqsNotificationListener\Support\ExactlyOnceSignallingHandler.cs" />
+    <Compile Include="MessageHandling\SqsNotificationListener\Support\ExplicitExactlyOnceSignallingHandler.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\Support\SignallingHandler.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\Support\Tasks.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\Support\ThrowingDuringMessageProcessingStrategy.cs" />

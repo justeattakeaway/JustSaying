@@ -4,13 +4,13 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support
 {
-    [ExactlyOnce]
-    public class ExactlyOnceSignallingHandler : IHandler<GenericMessage>
+    [ExactlyOnce(TimeOut = 5)]
+    public class ExplicitExactlyOnceSignallingHandler : IHandler<GenericMessage>
     {
         private bool _handlerWasCalled;
         private readonly TaskCompletionSource<object> _doneSignal;
 
-        public ExactlyOnceSignallingHandler(TaskCompletionSource<object> doneSignal)
+        public ExplicitExactlyOnceSignallingHandler(TaskCompletionSource<object> doneSignal)
         {
             _doneSignal = doneSignal;
         }
