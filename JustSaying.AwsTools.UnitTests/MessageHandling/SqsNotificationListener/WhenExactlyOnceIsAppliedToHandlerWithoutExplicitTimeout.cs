@@ -19,12 +19,11 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         }
 
         [Test]
-        public async Task MessageIsLocked()
+        public void MessageIsLocked()
         {
-            await Patiently.VerifyExpectationAsync(
-                () => MessageLock.Received().TryAquireLock(
-                    Arg.Is<string>(a => a.Contains(DeserialisedMessage.Id.ToString())),
-                    TimeSpan.FromSeconds(_maximumTimeout)));
+            MessageLock.Received().TryAquireLock(
+                Arg.Is<string>(a => a.Contains(DeserialisedMessage.Id.ToString())),
+                TimeSpan.FromSeconds(_maximumTimeout));
         }
     }
 

@@ -11,6 +11,7 @@ using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using NSubstitute;
+using NUnit.Framework;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
@@ -55,9 +56,9 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         }
 
         [Then]
-        public async Task TheListenerDoesNotDie()
+        public void TheListenerDoesNotDie()
         {
-            await Patiently.AssertThatAsync(() => _callCount >= 3);
+            Assert.That(_callCount, Is.GreaterThanOrEqualTo(3));
         }
 
         public override void PostAssertTeardown()
