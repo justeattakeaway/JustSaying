@@ -7,6 +7,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
@@ -15,7 +16,7 @@ using NSubstitute;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
-    public abstract class BaseQueuePollingTest : BehaviourTest<JustSaying.AwsTools.MessageHandling.SqsNotificationListener>
+    public abstract class BaseQueuePollingTest : AsyncBehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
     {
         protected const string QueueUrl = "url";
         protected IAmazonSQS Sqs;
@@ -25,12 +26,13 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         protected IMessageMonitor Monitor;
         protected IMessageSerialisationRegister SerialisationRegister;
         protected IMessageLock MessageLock;
-        protected readonly string _messageTypeString = typeof(GenericMessage).ToString();
+        protected readonly string MessageTypeString = typeof(GenericMessage).ToString();
 
-        protected override JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
+        protected override AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
             var queue = new SqsQueueByUrl(RegionEndpoint.EUWest1, QueueUrl, Sqs);
-            return new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(queue, SerialisationRegister, Monitor, null, MessageLock);
+            queue.QueueName = Guid.NewGuid().ToString();
+            return new AwsTools.MessageHandling.SqsNotificationListener(queue, SerialisationRegister, Monitor, null, MessageLock);
         }
 
         protected override void Given()
@@ -40,7 +42,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             Monitor = Substitute.For<IMessageMonitor>();
             Handler = Substitute.For<IHandler<GenericMessage>>();
 
-            var response = GenerateResponseMessage(_messageTypeString, Guid.NewGuid());
+            var response = GenerateResponseMessage(MessageTypeString, Guid.NewGuid());
             
             Sqs.ReceiveMessageAsync(
                     Arg.Any<ReceiveMessageRequest>(), 
@@ -52,11 +54,16 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             DeserialisedMessage = new GenericMessage { RaisingComponent = "Component" };
             SerialisationRegister.DeserializeMessage(Arg.Any<string>()).Returns(DeserialisedMessage);
         }
-
-        protected override void When()
+        protected override async Task When()
         {
-            SystemUnderTest.AddMessageHandler(() => Handler);
+            var tcs = new TaskCompletionSource<object>();
+            var signallingHandler = new SignallingHandler<GenericMessage>(tcs, Handler);
+
+            SystemUnderTest.AddMessageHandler(() => signallingHandler);
             SystemUnderTest.Listen();
+
+            // wait until it's done
+            await Tasks.WaitWithTimeoutAsync(tcs.Task);
         }
 
         protected ReceiveMessageResponse GenerateResponseMessage(string messageType, Guid messageId)

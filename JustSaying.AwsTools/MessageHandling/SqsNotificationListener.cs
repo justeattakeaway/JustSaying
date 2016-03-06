@@ -195,9 +195,8 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (Exception ex)
             {
                 var msg = string.Format(
-                    "Issue in message handling loop for queue {0}, region {1}",
-                    queueName,
-                    region);
+                    "Issue in message handling loop for queue {0}, region {1}, Ex: {2} {3}",
+                    queueName, region, ex.GetType().Name, ex.Message);
                 Log.Error(ex, msg);
             }
         }

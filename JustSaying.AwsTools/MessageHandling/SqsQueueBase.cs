@@ -13,7 +13,7 @@ namespace JustSaying.AwsTools.MessageHandling
         public string Arn { get; protected set; }
         public string Url { get; protected set; }
         public IAmazonSQS Client { get; private set; }
-        public string QueueName { get; protected set; }
+        public string QueueName { get; set; }
         public RegionEndpoint Region { get; protected set; }
         public ErrorQueue ErrorQueue { get; protected set; }
         internal int MessageRetentionPeriod { get; set; }
