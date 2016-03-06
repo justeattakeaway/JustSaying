@@ -12,7 +12,7 @@ using NUnit.Framework;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
-    public class WhenThereAreNoMessagesToProcess : BehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
+    public class WhenThereAreNoMessagesToProcess : AsyncBehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
     {
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private int _callCount;
@@ -31,17 +31,17 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
                     Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>())
                 .Returns(x => Task.FromResult(GenerateEmptyMessage()));
-            
-            _sqs.When(x => 
-                    x.ReceiveMessageAsync(
-                        Arg.Any<ReceiveMessageRequest>(),
-                        Arg.Any<CancellationToken>()))
+
+            _sqs.When(x =>  x.ReceiveMessageAsync(
+                    Arg.Any<ReceiveMessageRequest>(),
+                    Arg.Any<CancellationToken>()))
                 .Do(x => _callCount++);
         }
 
-        protected override void When()
+        protected override async Task When()
         {
             SystemUnderTest.Listen();
+            await Task.Delay(100);
         }
 
         [Then]

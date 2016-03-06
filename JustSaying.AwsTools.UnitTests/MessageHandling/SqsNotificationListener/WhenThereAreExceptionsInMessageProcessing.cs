@@ -9,7 +9,6 @@ using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.TestingFramework;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -17,8 +16,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
     using SqsNotificationListener = AwsTools.MessageHandling.SqsNotificationListener;
 
-    public class WhenThereAreExceptionsInMessageProcessing : 
-        BehaviourTest<SqsNotificationListener>
+    public class WhenThereAreExceptionsInMessageProcessing : AsyncBehaviourTest<SqsNotificationListener>
     {
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private readonly IMessageSerialisationRegister _serialisationRegister = 
@@ -50,9 +48,10 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
                 .Do(x => _callCount++);
         }
 
-        protected override void When()
+        protected override async Task When()
         {
             SystemUnderTest.Listen();
+            await Task.Delay(100);
         }
 
         [Then]
