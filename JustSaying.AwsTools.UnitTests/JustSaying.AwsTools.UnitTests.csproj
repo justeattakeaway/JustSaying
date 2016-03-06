@@ -70,10 +70,11 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MessageHandling\SqsNotificationListener\ExactlyOnceSignallingHandler.cs" />
-    <Compile Include="MessageHandling\SqsNotificationListener\SignallingHandler.cs" />
-    <Compile Include="MessageHandling\SqsNotificationListener\ThrowingDuringMessageProcessingStrategy.cs" />
-    <Compile Include="MessageHandling\SqsNotificationListener\ThrowingBeforeMessageProcessingStrategy.cs" />
+    <Compile Include="MessageHandling\SqsNotificationListener\Support\ExactlyOnceSignallingHandler.cs" />
+    <Compile Include="MessageHandling\SqsNotificationListener\Support\SignallingHandler.cs" />
+    <Compile Include="MessageHandling\SqsNotificationListener\Support\Tasks.cs" />
+    <Compile Include="MessageHandling\SqsNotificationListener\Support\ThrowingDuringMessageProcessingStrategy.cs" />
+    <Compile Include="MessageHandling\SqsNotificationListener\Support\ThrowingBeforeMessageProcessingStrategy.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\WhenMessageProcessingThrowsDuring.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\WhenMessageProcessingThrowsBefore.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\WhenMessageHandlingThrows.cs" />

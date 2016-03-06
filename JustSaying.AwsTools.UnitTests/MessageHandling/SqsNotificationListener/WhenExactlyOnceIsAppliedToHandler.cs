@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using NSubstitute;
@@ -34,7 +35,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             SystemUnderTest.Listen();
 
             // wait until it's done
-            await Patiently.WaitWithTimeoutAsync(_tcs.Task);
+            await Tasks.WaitWithTimeoutAsync(_tcs.Task);
         }
 
         [Test]

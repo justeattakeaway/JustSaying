@@ -7,6 +7,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
@@ -61,7 +62,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             SystemUnderTest.Listen();
 
             // wait until it's done
-            await Patiently.WaitWithTimeoutAsync(tcs.Task);
+            await Tasks.WaitWithTimeoutAsync(tcs.Task);
         }
 
         protected ReceiveMessageResponse GenerateResponseMessage(string messageType, Guid messageId)

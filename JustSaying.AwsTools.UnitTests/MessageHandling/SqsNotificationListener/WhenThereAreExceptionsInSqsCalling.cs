@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustBehave;
+using JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
@@ -34,7 +35,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
                 .Do(_ =>
                 {
                     _sqsCallCounter++;
-                    Patiently.DelaySendDone(_tcs);
+                    Tasks.DelaySendDone(_tcs);
                     throw new Exception();
                 });
         }
@@ -46,7 +47,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             SystemUnderTest.Listen();
 
             // wait until it's done
-            await Patiently.WaitWithTimeoutAsync(_tcs.Task);
+            await Tasks.WaitWithTimeoutAsync(_tcs.Task);
         }
 
         [Then]

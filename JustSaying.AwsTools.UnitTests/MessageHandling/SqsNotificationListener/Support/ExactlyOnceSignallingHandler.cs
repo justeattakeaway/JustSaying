@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
+namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support
 {
     [ExactlyOnce(TimeOut = 5)]
     public class ExactlyOnceSignallingHandler : IHandler<GenericMessage>
@@ -18,7 +18,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         public bool Handle(GenericMessage message)
         {
             _handlerWasCalled = true;
-            Patiently.DelaySendDone(_doneSignal);
+            Tasks.DelaySendDone(_doneSignal);
             return true;
         }
 

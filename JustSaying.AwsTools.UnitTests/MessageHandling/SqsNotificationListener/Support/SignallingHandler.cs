@@ -2,7 +2,7 @@
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
+namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support
 {
     public class SignallingHandler<T> : IHandler<T>
     {
@@ -23,7 +23,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             }
             finally 
             {
-                Patiently.DelaySendDone(_doneSignal);
+                Tasks.DelaySendDone(_doneSignal);
             }
         }
     }

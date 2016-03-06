@@ -3,32 +3,32 @@ using System.Threading.Tasks;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.TestingFramework;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
+namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support
 {
-    public class ThrowingDuringMessageProcessingStrategy : IMessageProcessingStrategy
+    public class ThrowingBeforeMessageProcessingStrategy : IMessageProcessingStrategy
     {
         public int MaxBatchSize { get { return int.MaxValue; } }
 
         private readonly TaskCompletionSource<object> _doneSignal;
 
-        public ThrowingDuringMessageProcessingStrategy(TaskCompletionSource<object> doneSignal)
+        public ThrowingBeforeMessageProcessingStrategy(TaskCompletionSource<object> doneSignal)
         {
             _doneSignal = doneSignal;
         }
 
-        public async Task BeforeGettingMoreMessages()
+        public Task BeforeGettingMoreMessages()
         {
-            await Task.Delay(10);
+            Fail();
+            return null;
         }
 
         public void ProcessMessage(Action action)
         {
-            Fail();
         }
 
         private void Fail()
         {
-            Patiently.DelaySendDone(_doneSignal);
+            Tasks.DelaySendDone(_doneSignal);
             throw new Exception("Thrown by test ProcessMessage");
         }
 
