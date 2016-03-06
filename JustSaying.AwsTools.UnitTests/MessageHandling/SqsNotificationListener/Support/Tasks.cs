@@ -18,7 +18,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
 
             if (firstToComplete == timeoutTask)
             {
-                throw new Exception("Task did not complete before timeout of " + timeoutDuration);
+                throw new TimeoutException("Task did not complete before timeout of " + timeoutDuration);
             }
         }
 

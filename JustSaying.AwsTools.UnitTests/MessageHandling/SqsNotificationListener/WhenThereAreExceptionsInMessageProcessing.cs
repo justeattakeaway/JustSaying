@@ -11,12 +11,11 @@ using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using NSubstitute;
 using NUnit.Framework;
+using JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
-    using SqsNotificationListener = AwsTools.MessageHandling.SqsNotificationListener;
-
-    public class WhenThereAreExceptionsInMessageProcessing : AsyncBehaviourTest<SqsNotificationListener>
+    public class WhenThereAreExceptionsInMessageProcessing : AsyncBehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
     {
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private readonly IMessageSerialisationRegister _serialisationRegister = 
@@ -24,9 +23,9 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         
         private int _callCount;
 
-        protected override SqsNotificationListener CreateSystemUnderTest()
+        protected override AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
-            return new SqsNotificationListener(
+            return new AwsTools.MessageHandling.SqsNotificationListener(
                 new SqsQueueByUrl(RegionEndpoint.EUWest1, "", _sqs), 
                 _serialisationRegister, 
                 Substitute.For<IMessageMonitor>());
@@ -36,7 +35,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         {
             _serialisationRegister
                 .DeserializeMessage(Arg.Any<string>())
-                .Returns(x => { throw new Exception(); });
+                .Returns(x => { throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing"); });
             _sqs.ReceiveMessageAsync(
                     Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>())
@@ -52,6 +51,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         {
             SystemUnderTest.Listen();
             await Task.Delay(100);
+            SystemUnderTest.StopListening();
         }
 
         [Then]

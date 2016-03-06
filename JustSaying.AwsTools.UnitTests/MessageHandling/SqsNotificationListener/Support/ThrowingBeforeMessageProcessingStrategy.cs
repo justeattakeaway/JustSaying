@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageProcessingStrategies;
-using JustSaying.TestingFramework;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support
 {
@@ -29,7 +28,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
         private void Fail()
         {
             Tasks.DelaySendDone(_doneSignal);
-            throw new Exception("Thrown by test ProcessMessage");
+            throw new TestException("Thrown by test ProcessMessage");
         }
 
     }

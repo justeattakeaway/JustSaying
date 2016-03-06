@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.TestingFramework;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support
 {
