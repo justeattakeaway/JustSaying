@@ -14,6 +14,18 @@ using NUnit.Framework;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
+    [Serializable]
+    public class TestAwsException: Exception
+    {
+        public TestAwsException()
+        {
+        }
+
+        public TestAwsException(string message) : base(message)
+        {
+        }
+    }
+
     public class WhenThereAreExceptionsInSqsCalling : BaseQueuePollingTest
     {
         private int _sqsCallCounter;
@@ -35,8 +47,11 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
                 .Do(_ =>
                 {
                     _sqsCallCounter++;
-                    Tasks.DelaySendDone(_tcs);
-                    throw new Exception();
+                    if (_sqsCallCounter > 1)
+                    {
+                        Tasks.DelaySendDone(_tcs);
+                    }
+                    throw new TestAwsException("testing the failure");
                 });
         }
 
