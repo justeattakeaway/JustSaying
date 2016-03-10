@@ -6,7 +6,7 @@ namespace JustSaying.AwsTools.IntegrationTests
     [SetUpFixture]
     public class GlobalSetup
     {
-        [SetUp]
+        [OneTimeSetUp]
         public void SetUp()
         {
             CreateMeABus.DefaultClientFactory = () => new IntegrationAwsClientFactory();

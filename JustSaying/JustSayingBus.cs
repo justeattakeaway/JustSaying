@@ -37,9 +37,11 @@ namespace JustSaying
         public JustSayingBus(IMessagingConfig config, IMessageSerialisationRegister serialisationRegister)
         {
             if (config.PublishFailureReAttempts == 0)
-                Log.Warn("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may loose messages!");
+            {
+                Log.Warn("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages!");
+            }
 
-            Log.Info(string.Format("Registering with stack."));
+            Log.Info("Registering with stack.");
 
             Config = config;
             Monitor = new NullOpMessageMonitor();
@@ -54,7 +56,9 @@ namespace JustSaying
         public void AddNotificationSubscriber(string region, INotificationSubscriber subscriber)
         {
             if (string.IsNullOrWhiteSpace(region))
+            {
                 throw new ArgumentNullException("region");
+            }
 
             Dictionary<string, INotificationSubscriber> subscribersForRegion;
             if (!_subscribersByRegionAndQueue.TryGetValue(region, out subscribersForRegion))
