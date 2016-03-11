@@ -7,7 +7,6 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
     [ExactlyOnce]
     public class ExactlyOnceSignallingHandler : IHandler<GenericMessage>
     {
-        private bool _handlerWasCalled;
         private readonly TaskCompletionSource<object> _doneSignal;
 
         public ExactlyOnceSignallingHandler(TaskCompletionSource<object> doneSignal)
@@ -17,14 +16,11 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
 
         public bool Handle(GenericMessage message)
         {
-            _handlerWasCalled = true;
+            HandleWasCalled = true;
             Tasks.DelaySendDone(_doneSignal);
             return true;
         }
 
-        public bool HandlerWasCalled()
-        {
-            return _handlerWasCalled;
-        }
+        public bool HandleWasCalled { get; private set; }
     }
 }

@@ -11,6 +11,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
     {
         private int _expectedtimeout;
         private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
+        private ExplicitExactlyOnceSignallingHandler _handler;
 
         protected override void Given()
         {
@@ -26,7 +27,8 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             MessageLock.TryAquireLock(Arg.Any<string>(), Arg.Any<TimeSpan>())
                 .Returns(messageLockResponse);
 
-            Handler = new ExplicitExactlyOnceSignallingHandler(_tcs);
+            _handler = new ExplicitExactlyOnceSignallingHandler(_tcs);
+            Handler = _handler;
         }
 
         protected override async Task When()
@@ -42,14 +44,16 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         [Test]
         public void ProcessingIsPassedToTheHandler()
         {
-            ((ExplicitExactlyOnceSignallingHandler)Handler).HandlerWasCalled();
+            Assert.That(_handler.HandleWasCalled, Is.True);
         }
 
         [Test]
         public void MessageIsLocked()
         {
+            var messageId = DeserialisedMessage.Id.ToString();
+
             MessageLock.Received().TryAquireLock(
-                Arg.Is<string>(a => a.Contains(DeserialisedMessage.Id.ToString())),
+                Arg.Is<string>(a => a.Contains(messageId)),
                 TimeSpan.FromSeconds(_expectedtimeout));
         }
     }
