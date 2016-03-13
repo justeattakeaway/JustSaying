@@ -14,7 +14,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         {
             base.Given();
             Handler.Handle(Arg.Any<GenericMessage>()).Returns(
-                x => ExceptionOnFirstCall());
+                _ => ExceptionOnFirstCall());
         }
 
         private bool ExceptionOnFirstCall()

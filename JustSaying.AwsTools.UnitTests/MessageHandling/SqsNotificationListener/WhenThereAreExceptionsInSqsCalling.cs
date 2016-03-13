@@ -29,18 +29,24 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 
             DeserialisedMessage = new GenericMessage { RaisingComponent = "Component" };
             
-            Sqs.When(x => x.ReceiveMessageAsync(
+            Sqs.ReceiveMessageAsync(
                     Arg.Any<ReceiveMessageRequest>(),
-                    Arg.Any<CancellationToken>()))
-                .Do(_ =>
-                {
-                    _sqsCallCounter++;
-                    if (_sqsCallCounter > 1)
-                    {
-                        Tasks.DelaySendDone(_tcs);
-                    }
-                    throw new TestException("testing the failure");
-                });
+                    Arg.Any<CancellationToken>())
+                .Returns(_ =>  ExceptionOnFirstCall());
+        }
+
+        private Task ExceptionOnFirstCall()
+        {
+            _sqsCallCounter++;
+            if (_sqsCallCounter == 1)
+            {
+                throw new TestException("testing the failure");
+            }
+
+            Tasks.DelaySendDone(_tcs);
+
+            var response = new ReceiveMessageResponse();
+            return Task.FromResult(response);
         }
 
         protected override async Task When()
