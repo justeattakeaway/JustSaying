@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.TestingFramework;
@@ -17,27 +16,21 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         }
 
         [Then]
-        public async Task MessageHandlerWasCalled()
+        public void MessageHandlerWasCalled()
         {
-            await Patiently.VerifyExpectationAsync(
-                () => Handler.ReceivedWithAnyArgs().Handle(
-                        Arg.Any<GenericMessage>()));
+            Handler.ReceivedWithAnyArgs().Handle(Arg.Any<GenericMessage>());
         }
 
         [Then]
-        public async Task FailedMessageIsNotRemovedFromQueue()
+        public void FailedMessageIsNotRemovedFromQueue()
         {
-            await Patiently.VerifyExpectationAsync(
-                () => Sqs.DidNotReceiveWithAnyArgs().DeleteMessage(
-                        Arg.Any<DeleteMessageRequest>()));
+            Sqs.DidNotReceiveWithAnyArgs().DeleteMessage(Arg.Any<DeleteMessageRequest>());
         }
 
         [Then]
-        public async Task ExceptionIsLoggedToMonitor()
+        public void ExceptionIsLoggedToMonitor()
         {
-            await Patiently.VerifyExpectationAsync(
-                () => Monitor.ReceivedWithAnyArgs().HandleException(
-                        Arg.Any<string>()));
+            Monitor.ReceivedWithAnyArgs().HandleException(Arg.Any<string>());
         }
     }
 }
