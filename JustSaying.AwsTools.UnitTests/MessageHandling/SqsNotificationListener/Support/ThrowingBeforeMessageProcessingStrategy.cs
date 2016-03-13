@@ -23,7 +23,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
                 _firstTime = false;
                 Fail();
             }
-            return null;
+            return Task.FromResult(true);
         }
 
         public void ProcessMessage(Action action)
