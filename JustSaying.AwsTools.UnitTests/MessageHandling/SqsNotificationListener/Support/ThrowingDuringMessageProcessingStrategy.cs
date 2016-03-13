@@ -9,6 +9,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
         public int MaxBatchSize { get { return int.MaxValue; } }
 
         private readonly TaskCompletionSource<object> _doneSignal;
+        private bool _firstTime = true;
 
         public ThrowingDuringMessageProcessingStrategy(TaskCompletionSource<object> doneSignal)
         {
@@ -22,7 +23,11 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
 
         public void ProcessMessage(Action action)
         {
-            Fail();
+            if (_firstTime)
+            {
+                _firstTime = false;
+                Fail();
+            }
         }
 
         private void Fail()

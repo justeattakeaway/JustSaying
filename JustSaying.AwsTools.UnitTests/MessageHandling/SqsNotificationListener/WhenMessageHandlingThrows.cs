@@ -3,7 +3,6 @@ using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.TestingFramework;
 using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
@@ -12,7 +11,9 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         protected override void Given()
         {
             base.Given();
-            Handler.Handle(Arg.Any<GenericMessage>()).ThrowsForAnyArgs(new Exception("Thrown by test handler"));
+            Handler.Handle(Arg.Any<GenericMessage>()).Returns(
+                x => { throw new Exception("Thrown by test handler"); },
+                x => false );
         }
 
         [Then]
