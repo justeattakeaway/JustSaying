@@ -8,12 +8,24 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
     public class WhenMessageHandlingThrows : BaseQueuePollingTest
     {
+        private bool _firstTime = true;
+
         protected override void Given()
         {
             base.Given();
             Handler.Handle(Arg.Any<GenericMessage>()).Returns(
-                x => { throw new Exception("Thrown by test handler"); },
-                x => false );
+                x => ExceptionOnFirstCall());
+        }
+
+        private bool ExceptionOnFirstCall()
+        {
+            if (_firstTime)
+            {
+                _firstTime = false;
+                throw new Exception("Thrown by test handler");
+            }
+
+            return false;
         }
 
         [Then]
