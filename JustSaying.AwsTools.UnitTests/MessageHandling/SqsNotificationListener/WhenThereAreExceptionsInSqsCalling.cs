@@ -40,13 +40,14 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             _sqsCallCounter++;
             if (_sqsCallCounter == 1)
             {
-                throw new TestException("testing the failure");
+                throw new TestException("testing the failure on first call");
+            }
+            if (_sqsCallCounter == 2)
+            {
+                Tasks.DelaySendDone(_tcs);
             }
 
-            Tasks.DelaySendDone(_tcs);
-
-            var response = new ReceiveMessageResponse();
-            return Task.FromResult(response);
+            return Task.FromResult(new ReceiveMessageResponse());
         }
 
         protected override async Task When()
