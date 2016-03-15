@@ -1,6 +1,7 @@
 using System;
 using Amazon.SQS.Model;
 using JustBehave;
+using JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support;
 using JustSaying.TestingFramework;
 using NSubstitute;
 
@@ -22,7 +23,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             if (_firstTime)
             {
                 _firstTime = false;
-                throw new Exception("Thrown by test handler");
+                throw new TestException("Thrown by test handler");
             }
 
             return false;
