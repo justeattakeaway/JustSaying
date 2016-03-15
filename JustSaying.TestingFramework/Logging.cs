@@ -8,7 +8,7 @@ namespace JustSaying.TestingFramework
     {
         public static void ToConsole()
         {
-            const string layout = @"${time}|${message}${onexception:inner=|${exception:format=ShortType,Message}}";
+            const string layout = @"${time}|${level}|${message}${onexception:inner=|${exception:format=ShortType,Message}}";
             ToConsole(layout);
         }
 
