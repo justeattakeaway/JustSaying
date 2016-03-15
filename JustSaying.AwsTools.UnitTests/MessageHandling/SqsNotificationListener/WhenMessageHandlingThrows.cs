@@ -3,16 +3,29 @@ using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.TestingFramework;
 using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
     public class WhenMessageHandlingThrows : BaseQueuePollingTest
     {
+        private bool _firstTime = true;
+
         protected override void Given()
         {
             base.Given();
-            Handler.Handle(Arg.Any<GenericMessage>()).ThrowsForAnyArgs(new Exception("Thrown by test handler"));
+            Handler.Handle(Arg.Any<GenericMessage>()).Returns(
+                _ => ExceptionOnFirstCall());
+        }
+
+        private bool ExceptionOnFirstCall()
+        {
+            if (_firstTime)
+            {
+                _firstTime = false;
+                throw new Exception("Thrown by test handler");
+            }
+
+            return false;
         }
 
         [Then]
