@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,7 +10,7 @@ using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using NSubstitute;
 using NUnit.Framework;
-using JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support;
+using JustSaying.TestingFramework;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {

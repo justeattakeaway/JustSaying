@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support
+namespace JustSaying.TestingFramework
 {
     [Serializable]
     public class TestException : Exception
