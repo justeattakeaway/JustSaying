@@ -71,11 +71,8 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (Exception ex)
             {
-                var msg = string.Format(
-                    "Issue handling message... {0}. StackTrace: {1}",
-                    message,
-                    ex.StackTrace);
-                Log.Error(ex, msg);
+                var errorText = string.Format("Error handling message [{0}]", message.Body);
+                Log.Error(ex, errorText);
 
                 if (typedMessage != null)
                 {
