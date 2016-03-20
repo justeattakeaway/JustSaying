@@ -154,7 +154,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                var numberOfMessagesToreadFromSqs = await GetNumberOfMessagesToreadFromSqs();
+                var numberOfMessagesToReadFromSqs = await GetNumberOfMessagesToReadFromSqs();
 
                 var watch = new System.Diagnostics.Stopwatch();
                 watch.Start();
@@ -162,7 +162,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 var request = new ReceiveMessageRequest
                     {
                         QueueUrl = _queue.Url,
-                        MaxNumberOfMessages = numberOfMessagesToreadFromSqs,
+                        MaxNumberOfMessages = numberOfMessagesToReadFromSqs,
                         WaitTimeSeconds = 20
                     };
                 var sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, ct);
@@ -202,7 +202,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        private async Task<int> GetNumberOfMessagesToreadFromSqs()
+        private async Task<int> GetNumberOfMessagesToReadFromSqs()
         {
             var numberOfMessagesToreadFromSqs = Math.Min(_messageProcessingStrategy.FreeTasks, MessageConstants.MaxAmazonMessageCap);
 
