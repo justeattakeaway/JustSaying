@@ -1,43 +1,50 @@
 using System;
-using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustBehave;
+using JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support;
 using JustSaying.TestingFramework;
 using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
-
     public class WhenMessageHandlingThrows : BaseQueuePollingTest
     {
+        private bool _firstTime = true;
+
         protected override void Given()
         {
             base.Given();
-            Handler.Handle(Arg.Any<GenericMessage>()).ThrowsForAnyArgs(new ArgumentException("Thrown by test handler"));
+            Handler.Handle(Arg.Any<GenericMessage>()).Returns(
+                _ => ExceptionOnFirstCall());
+        }
+
+        private bool ExceptionOnFirstCall()
+        {
+            if (_firstTime)
+            {
+                _firstTime = false;
+                throw new TestException("Thrown by test handler");
+            }
+
+            return false;
         }
 
         [Then]
-        public async Task MessageHandlerWasCalled()
+        public void MessageHandlerWasCalled()
         {
-            await Patiently.VerifyExpectationAsync(
-                () => Handler.ReceivedWithAnyArgs().Handle(
-                        Arg.Any<GenericMessage>()));
+            Handler.ReceivedWithAnyArgs().Handle(Arg.Any<GenericMessage>());
         }
 
         [Then]
-        public async Task FailedMessageIsNotRemovedFromQueue()
+        public void FailedMessageIsNotRemovedFromQueue()
         {
-            await Patiently.VerifyExpectationAsync(
-                () => Sqs.DidNotReceiveWithAnyArgs().DeleteMessage(
-                        Arg.Any<DeleteMessageRequest>()));
+            Sqs.DidNotReceiveWithAnyArgs().DeleteMessage(Arg.Any<DeleteMessageRequest>());
         }
 
         [Then]
-        public async Task NoExceptionIsLoggedToMonitor()
+        public void ExceptionIsLoggedToMonitor()
         {
-            await Patiently.VerifyExpectationAsync(
-                () => Monitor.DidNotReceive().HandleException("GenericMessage"));
+            Monitor.ReceivedWithAnyArgs().HandleException(Arg.Any<string>());
         }
     }
 }

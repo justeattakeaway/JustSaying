@@ -7,19 +7,22 @@ using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.TestingFramework;
 using NSubstitute;
+using NUnit.Framework;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
-    public class WhenThereAreNoMessagesToProcess : BehaviourTest<JustSaying.AwsTools.MessageHandling.SqsNotificationListener>
+    public class WhenThereAreNoMessagesToProcess : AsyncBehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
     {
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private int _callCount;
 
-        protected override JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
+        protected override AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
-            return new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(new SqsQueueByUrl(RegionEndpoint.EUWest1, "", _sqs), null, Substitute.For<IMessageMonitor>());
+            return new AwsTools.MessageHandling.SqsNotificationListener(
+                new SqsQueueByUrl(RegionEndpoint.EUWest1, "", _sqs),
+                null,
+                Substitute.For<IMessageMonitor>());
         }
 
         protected override void Given()
@@ -28,23 +31,24 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
                     Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>())
                 .Returns(x => Task.FromResult(GenerateEmptyMessage()));
-            
-            _sqs.When(x => 
-                    x.ReceiveMessageAsync(
-                        Arg.Any<ReceiveMessageRequest>(),
-                        Arg.Any<CancellationToken>()))
+
+            _sqs.When(x =>  x.ReceiveMessageAsync(
+                    Arg.Any<ReceiveMessageRequest>(),
+                    Arg.Any<CancellationToken>()))
                 .Do(x => _callCount++);
         }
 
-        protected override void When()
+        protected override async Task When()
         {
             SystemUnderTest.Listen();
+            await Task.Delay(100);
+            SystemUnderTest.StopListening();
         }
 
         [Then]
-        public async Task ListenLoopDoesNotDie()
+        public void ListenLoopDoesNotDie()
         {
-            await Patiently.AssertThatAsync(() => _callCount > 3);
+            Assert.That(_callCount, Is.GreaterThan(3));
         }
 
         public override void PostAssertTeardown()

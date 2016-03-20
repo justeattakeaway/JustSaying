@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
+using JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.TestingFramework;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -10,46 +10,51 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
     public class WhenExactlyOnceIsAppliedToHandler : BaseQueuePollingTest
     {
         private int _expectedtimeout;
+        private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
+        private ExplicitExactlyOnceSignallingHandler _handler;
 
         protected override void Given()
         {
             base.Given();
             _expectedtimeout = 5;
+
+            var messageLockResponse = new MessageLockResponse
+                {
+                    DoIHaveExclusiveLock = true
+                };
+
             MessageLock = Substitute.For<IMessageLock>();
-            MessageLock.TryAquireLock(Arg.Any<string>(), Arg.Any<TimeSpan>()).Returns(new MessageLockResponse(){DoIHaveExclusiveLock = true});
-            Handler = new MyHandler();
+            MessageLock.TryAquireLock(Arg.Any<string>(), Arg.Any<TimeSpan>())
+                .Returns(messageLockResponse);
+
+            _handler = new ExplicitExactlyOnceSignallingHandler(_tcs);
+            Handler = _handler;
+        }
+
+        protected override async Task When()
+        {
+            SystemUnderTest.AddMessageHandler(() => Handler);
+            SystemUnderTest.Listen();
+
+            // wait until it's done
+            await Tasks.WaitWithTimeoutAsync(_tcs.Task);
+            SystemUnderTest.StopListening();
         }
 
         [Test]
-        public async Task ProcessingIsPassedToTheHandler()
+        public void ProcessingIsPassedToTheHandler()
         {
-            await Patiently.VerifyExpectationAsync(
-                () => (Handler as MyHandler).HandlerWasCalled());
+            Assert.That(_handler.HandleWasCalled, Is.True);
         }
 
         [Test]
-        public async Task MessageIsLocked()
+        public void MessageIsLocked()
         {
-            await Patiently.VerifyExpectationAsync(
-                () => MessageLock.Received().TryAquireLock(
-                        Arg.Is<string>(a => a.Contains(DeserialisedMessage.Id.ToString())), 
-                        TimeSpan.FromSeconds(_expectedtimeout)));
-        }
-    }
+            var messageId = DeserialisedMessage.Id.ToString();
 
-    [ExactlyOnce(TimeOut = 5)]
-    public class MyHandler : IHandler<GenericMessage>
-    {
-        private bool _handlerWasCalled;
-        public bool Handle(GenericMessage message)
-        {
-            _handlerWasCalled = true;
-            return true;
-        }
-
-        public bool HandlerWasCalled()
-        {
-            return _handlerWasCalled;
+            MessageLock.Received().TryAquireLock(
+                Arg.Is<string>(a => a.Contains(messageId)),
+                TimeSpan.FromSeconds(_expectedtimeout));
         }
     }
 }

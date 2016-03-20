@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,15 +8,13 @@ using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.TestingFramework;
 using NSubstitute;
+using NUnit.Framework;
+using JustSaying.TestingFramework;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
-    using SqsNotificationListener = AwsTools.MessageHandling.SqsNotificationListener;
-
-    public class WhenThereAreExceptionsInMessageProcessing : 
-        BehaviourTest<SqsNotificationListener>
+    public class WhenThereAreExceptionsInMessageProcessing : AsyncBehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
     {
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private readonly IMessageSerialisationRegister _serialisationRegister = 
@@ -25,9 +22,9 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         
         private int _callCount;
 
-        protected override SqsNotificationListener CreateSystemUnderTest()
+        protected override AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
-            return new SqsNotificationListener(
+            return new AwsTools.MessageHandling.SqsNotificationListener(
                 new SqsQueueByUrl(RegionEndpoint.EUWest1, "", _sqs), 
                 _serialisationRegister, 
                 Substitute.For<IMessageMonitor>());
@@ -37,7 +34,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         {
             _serialisationRegister
                 .DeserializeMessage(Arg.Any<string>())
-                .Returns(x => { throw new Exception(); });
+                .Returns(x => { throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing"); });
             _sqs.ReceiveMessageAsync(
                     Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>())
@@ -49,15 +46,17 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
                 .Do(x => _callCount++);
         }
 
-        protected override void When()
+        protected override async Task When()
         {
             SystemUnderTest.Listen();
+            await Task.Delay(100);
+            SystemUnderTest.StopListening();
         }
 
         [Then]
-        public async Task TheListenerDoesNotDie()
+        public void TheListenerDoesNotDie()
         {
-            await Patiently.AssertThatAsync(() => _callCount >= 3);
+            Assert.That(_callCount, Is.GreaterThanOrEqualTo(3));
         }
 
         public override void PostAssertTeardown()

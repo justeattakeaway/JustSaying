@@ -1,8 +1,6 @@
 ﻿using System.Threading;
-using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustBehave;
-using JustSaying.TestingFramework;
 using NSubstitute;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
@@ -12,42 +10,36 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         protected override void Given()
         {
             base.Given();
-            Handler.Handle(null).ReturnsForAnyArgs(info => true).AndDoes(x => Thread.Sleep(1)); // Ensure at least one ms wait on processing
+            Handler.Handle(null)
+                .ReturnsForAnyArgs(info => true)
+                .AndDoes(x => Thread.Sleep(1)); // Ensure at least one ms wait on processing
         }
 
         [Then]
-        public async Task MessagesGetDeserialisedByCorrectHandler()
+        public void MessagesGetDeserialisedByCorrectHandler()
         {
-            await Patiently.VerifyExpectationAsync(
-                () => SerialisationRegister.Received().DeserializeMessage(
-                    SqsMessageBody(_messageTypeString)));
+            SerialisationRegister.Received().DeserializeMessage(
+                SqsMessageBody(MessageTypeString));
         }
 
         [Then]
-        public async Task ProcessingIsPassedToTheHandlerForCorrectMessage()
+        public void ProcessingIsPassedToTheHandlerForCorrectMessage()
         {
-            await Patiently.VerifyExpectationAsync(
-                () =>Handler.Received().Handle(DeserialisedMessage));
+            Handler.Received().Handle(DeserialisedMessage);
         }
 
         [Then]
-        public async Task MonitoringToldMessageHandlingTime()
+        public void MonitoringToldMessageHandlingTime()
         {
-            await Patiently.VerifyExpectationAsync(
-                () =>Monitor.Received().HandleTime(
-                    Arg.Is<long>(x => x > 0)));
+            Monitor.Received().HandleTime(Arg.Is<long>(x => x > 0));
         }
 
         [Then]
-        public async Task AllMessagesAreClearedFromQueue()
+        public void AllMessagesAreClearedFromQueue()
         {
-            await Patiently.VerifyExpectationAsync(
-                () => SerialisationRegister.Received(2).DeserializeMessage(
-                    Arg.Any<string>()));
+            SerialisationRegister.Received(2).DeserializeMessage(Arg.Any<string>());
 
-            await Patiently.VerifyExpectationAsync(
-                () =>Sqs.Received().DeleteMessage(
-                    Arg.Any<DeleteMessageRequest>()));
+            Sqs.Received().DeleteMessage(Arg.Any<DeleteMessageRequest>());
         }
     }
 

@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustBehave;
-using JustSaying.TestingFramework;
 using NSubstitute;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
@@ -21,11 +20,8 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             Sqs.ReceiveMessageAsync(
                     Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>())
-               .Returns(
-                    _ => Task.FromResult(
-                            GenerateResponseMessage(
-                                SubjectOfMessageAfterStop, 
-                                Guid.NewGuid())), 
+               .Returns( _ => Task.FromResult(
+                            GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid())), 
                     _ => Task.FromResult(
                             new ReceiveMessageResponse
                             {
@@ -33,39 +29,35 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
                             }));
         }
 
-        protected override void When()
+        protected override async Task When()
         {
-            base.When();
+            await base.When();
 
             SystemUnderTest.StopListening();
-            
             SystemUnderTest.Listen();
         }
 
         [Then]
-        public async Task CorrectQueueIsPolled()
+        public void CorrectQueueIsPolled()
         {
-            await Patiently.VerifyExpectationAsync(() =>
-                Sqs.Received().ReceiveMessageAsync(
-                    Arg.Is<ReceiveMessageRequest>(x => x.QueueUrl == QueueUrl),
-                    Arg.Any<CancellationToken>()));
+            Sqs.Received().ReceiveMessageAsync(
+                Arg.Is<ReceiveMessageRequest>(x => x.QueueUrl == QueueUrl),
+                Arg.Any<CancellationToken>());
         }
 
         [Then]
-        public async Task TheMaxMessageAllowanceIsGrabbed()
+        public void TheMaxMessageAllowanceIsGrabbed()
         {
-            await Patiently.VerifyExpectationAsync(() => 
-                Sqs.Received().ReceiveMessageAsync(
-                    Arg.Is<ReceiveMessageRequest>(x => x.MaxNumberOfMessages == 10),
-                    Arg.Any<CancellationToken>()));
+            Sqs.Received().ReceiveMessageAsync(
+                Arg.Is<ReceiveMessageRequest>(x => x.MaxNumberOfMessages == 10),
+                Arg.Any<CancellationToken>());
         }
 
         [Then]
-        public async Task MessageIsProcessed()
+        public void MessageIsProcessed()
         {
-            await Patiently.VerifyExpectationAsync(() => 
-                SerialisationRegister.Received().DeserializeMessage(
-                    BodyOfMessageAfterStop));
+            SerialisationRegister.Received().DeserializeMessage(
+                BodyOfMessageAfterStop);
         }
 
         public override void PostAssertTeardown()

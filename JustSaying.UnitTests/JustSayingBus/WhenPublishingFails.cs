@@ -15,11 +15,15 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override void Given()
         {
+            Logging.ToConsole();
             base.Given();
+
             Config.PublishFailureReAttempts.Returns(PublishAttempts);
             Config.PublishFailureBackoffMilliseconds.Returns(0);
             RecordAnyExceptionsThrown();
-            _publisher.When(x => x.Publish(Arg.Any<Message>())).Do(x => { throw new Exception(); });
+
+            _publisher.When(x => x.Publish(Arg.Any<Message>()))
+                .Do(x => { throw new TestException("Thrown by test WhenPublishingFails"); });
         }
 
         protected override void When()
