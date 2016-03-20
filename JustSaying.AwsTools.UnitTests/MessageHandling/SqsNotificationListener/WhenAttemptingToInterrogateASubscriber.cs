@@ -1,5 +1,4 @@
 using System.Linq;
-using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.TestingFramework;
 using Shouldly;
@@ -8,15 +7,6 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
     public class WhenAttemptingToInterrogateASubscriber : BaseQueuePollingTest
     {
-        protected override async Task When()
-        {
-            await base.When();
-
-            SystemUnderTest.StopListening();
-
-            SystemUnderTest.Listen();
-        }
-
         [Then]
         public void SubscriptedMessagesAreAddedToTheInterrogationDetails()
         {
