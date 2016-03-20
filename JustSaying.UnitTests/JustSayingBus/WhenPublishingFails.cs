@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging;
@@ -15,7 +14,6 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override void Given()
         {
-            Logging.ToConsole();
             base.Given();
 
             Config.PublishFailureReAttempts.Returns(PublishAttempts);
