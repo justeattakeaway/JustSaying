@@ -20,8 +20,9 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             Sqs.ReceiveMessageAsync(
                     Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>())
-               .Returns( _ => Task.FromResult(
-                            GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid())), 
+               .Returns(
+                    _ => Task.FromResult(
+                        GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid())), 
                     _ => Task.FromResult(
                             new ReceiveMessageResponse
                             {
@@ -38,6 +39,17 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 
             SystemUnderTest.Listen();
             await Task.Yield();
+
+            SystemUnderTest.StopListening();
+            await Task.Yield();
+        }
+
+        [Then]
+        public void MessagesAreReceived()
+        {
+            Sqs.Received().ReceiveMessageAsync(
+                Arg.Any<ReceiveMessageRequest>(),
+                Arg.Any<CancellationToken>());
         }
 
         [Then]
