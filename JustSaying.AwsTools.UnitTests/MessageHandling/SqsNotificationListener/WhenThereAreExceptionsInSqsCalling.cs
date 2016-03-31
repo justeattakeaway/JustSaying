@@ -54,7 +54,6 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 
         protected override async Task When()
         {
- 
             SystemUnderTest.AddMessageHandler(() => Handler);
             SystemUnderTest.Listen();
 
@@ -67,12 +66,6 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         public void QueueIsPolledMoreThanOnce()
         {
             Assert.That(_sqsCallCounter, Is.GreaterThan(1));
-        }
-
-        public override void PostAssertTeardown()
-        {
-            SystemUnderTest.StopListening();
-            base.PostAssertTeardown();
         }
     }
 }
