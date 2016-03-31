@@ -28,6 +28,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 
             await doneSignal.Task;
             SystemUnderTest.StopListening();
+            await Task.Yield();
         }
 
         [Then]
