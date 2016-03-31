@@ -74,9 +74,9 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
             for (int i = 0; i < capacity; i++)
             {
-                messageProcessingStrategy.ProcessMessage(async () => await tcs.Task);
+                messageProcessingStrategy.ProcessMessage(() => tcs.Task.Wait());
             }
-
+            
             Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(0));
             tcs.SetResult(true);
         }
@@ -110,7 +110,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
             for (int i = 0; i < capacity; i++)
             {
-                messageProcessingStrategy.ProcessMessage(async () => await tcs.Task);
+                messageProcessingStrategy.ProcessMessage(() => tcs.Task.Wait());
                 Assert.That(messageProcessingStrategy.FreeTasks, Is.GreaterThanOrEqualTo(0));
             }
             tcs.SetResult(true);
@@ -119,6 +119,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
         private static async Task AllowTasksToComplete(TaskCompletionSource<bool> tcs)
         {
             tcs.SetResult(true);
+            await Task.Yield();
             await Task.Delay(250);
         }
     }
