@@ -1,5 +1,6 @@
 using JustBehave;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.TestingFramework;
 using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus
@@ -13,6 +14,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             Config = Substitute.For<IMessagingConfig>();
             Monitor = Substitute.For<IMessageMonitor>();
+
+            Logging.ToConsole();
         }
 
         protected override JustSaying.JustSayingBus CreateSystemUnderTest()
