@@ -31,7 +31,6 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
         [TestCase(10)]
         [TestCase(100)]
         [TestCase(1000)]
-        [TestCase(10000)]
         public async Task SimulatedListenLoop_ProcessedAllMessages(int numberOfMessagesToProcess)
         {
             var fakeMonitor = Substitute.For<IMessageMonitor>();
@@ -95,6 +94,10 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
         private async Task ListenLoopExecuted(Queue<Action> actions, IMessageProcessingStrategy messageProcessingStrategy)
         {
+            const int timeoutSeconds = 10;
+            var timeout = new TimeSpan(0, 0, timeoutSeconds);
+            var stopwatch = Stopwatch.StartNew();
+
             while (actions.Any())
             {
                 var batch = GetFromFakeSnsQueue(actions, messageProcessingStrategy.FreeTasks);
@@ -114,6 +117,10 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
                 await messageProcessingStrategy.AwaitAtLeastOneTaskToComplete();
                 Assert.That(messageProcessingStrategy.FreeTasks, Is.GreaterThan(0));
 
+                if (stopwatch.Elapsed > timeout)
+                {
+                    Assert.Fail("ListenLoopExecuted took longer than timout of " + timeoutSeconds);
+                }
             }
         }
 
