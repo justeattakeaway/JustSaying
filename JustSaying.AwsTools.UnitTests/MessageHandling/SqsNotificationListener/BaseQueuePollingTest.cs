@@ -67,6 +67,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             await Tasks.WaitWithTimeoutAsync(tcs.Task);
 
             SystemUnderTest.StopListening();
+            await Task.Yield();
         }
 
         protected ReceiveMessageResponse GenerateResponseMessage(string messageType, Guid messageId)

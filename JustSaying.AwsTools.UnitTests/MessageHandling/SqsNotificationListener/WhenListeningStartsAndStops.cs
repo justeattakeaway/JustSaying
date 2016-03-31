@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
@@ -34,7 +35,10 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             await base.When();
 
             SystemUnderTest.StopListening();
+            await Task.Yield();
+
             SystemUnderTest.Listen();
+            await Task.Yield();
         }
 
         [Then]
