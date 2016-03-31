@@ -62,11 +62,5 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             SerialisationRegister.Received().DeserializeMessage(
                 BodyOfMessageAfterStop);
         }
-
-        public override void PostAssertTeardown()
-        {
-            base.PostAssertTeardown();
-            SystemUnderTest.StopListening();
-        }
     }
 }

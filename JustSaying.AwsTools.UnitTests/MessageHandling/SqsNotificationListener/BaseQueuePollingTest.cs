@@ -98,6 +98,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         public override void PostAssertTeardown()
         {
             SystemUnderTest.StopListening();
+            Task.Delay(100).Wait();
         }
     }
 }
