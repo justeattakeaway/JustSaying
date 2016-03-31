@@ -11,7 +11,7 @@ using NUnit.Framework;
 
 namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 {
-    [TestFixture, Ignore("Fails on appveyor")]
+    [TestFixture]
     public class MessageLoopTests
     {
         private const int MinTaskDuration = 10;
