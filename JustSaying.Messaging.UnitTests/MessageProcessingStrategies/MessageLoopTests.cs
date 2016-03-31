@@ -60,7 +60,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
         [TestCase(1000, 900)]
         public async Task SimulatedListenLoop_WhenThrottlingOccurs_CallsMessageMonitor(int messageCount, int capacity)
         {
-            Assert.That(messageCount, Is.GreaterThan(capacity), "There should not be throttling in this case");
+            Assert.That(messageCount, Is.GreaterThan(capacity), "To cause throttling, message count must be over capacity");
 
             var fakeMonitor = Substitute.For<IMessageMonitor>();
             var messageProcessingStrategy = new Throttled(capacity, fakeMonitor);
@@ -81,7 +81,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
         [TestCase(50, 50)]
         public async Task SimulatedListenLoop_WhenThrottlingDoesNotOccur_DoNotCallMessageMonitor(int messageCount, int capacity)
         {
-            Assert.That(messageCount, Is.LessThanOrEqualTo(capacity), "There should be throttling in this case");
+            Assert.That(messageCount, Is.LessThanOrEqualTo(capacity), "To avoid throttling, message count must be not be over capacity");
 
             var fakeMonitor = Substitute.For<IMessageMonitor>();
             var messageProcessingStrategy = new Throttled(capacity, fakeMonitor);
