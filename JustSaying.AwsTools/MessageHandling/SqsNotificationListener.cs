@@ -142,7 +142,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             _cts.Cancel();
             Log.Info(
-                "Stopped Listening - Queue: {0}, Region: {1}",
+                "Stopping Listening - Queue: {0}, Region: {1}",
                 _queue.QueueName,
                 _queue.Region.SystemName);
         }
