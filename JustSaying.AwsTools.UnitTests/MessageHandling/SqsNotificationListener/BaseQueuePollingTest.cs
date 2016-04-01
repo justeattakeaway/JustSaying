@@ -57,16 +57,17 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         }
         protected override async Task When()
         {
-            var tcs = new TaskCompletionSource<object>();
-            var signallingHandler = new SignallingHandler<GenericMessage>(tcs, Handler);
+            var doneSignal = new TaskCompletionSource<object>();
+            var signallingHandler = new SignallingHandler<GenericMessage>(doneSignal, Handler);
 
             SystemUnderTest.AddMessageHandler(() => signallingHandler);
             SystemUnderTest.Listen();
 
             // wait until it's done
-            await Tasks.WaitWithTimeoutAsync(tcs.Task);
+            await Tasks.WaitWithTimeoutAsync(doneSignal.Task);
 
             SystemUnderTest.StopListening();
+            await Task.Yield();
         }
 
         protected ReceiveMessageResponse GenerateResponseMessage(string messageType, Guid messageId)
@@ -92,11 +93,6 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         protected string SqsMessageBody(string messageType)
         {
             return "{\"Subject\":\"" + messageType + "\"," + "\"Message\":\"" + MessageBody + "\"}";
-        }
-
-        public override void PostAssertTeardown()
-        {
-            SystemUnderTest.StopListening();
         }
     }
 }

@@ -25,10 +25,10 @@ namespace JustSaying.TestingFramework
                 catch
                 {
                 }
-                
+
                 await Task.Delay(50.Milliseconds());
                 Console.WriteLine(
-                    "Waiting for {0} ms - Still Checking.", 
+                    "Waiting for {0} ms - Still Checking.",
                     (DateTime.Now - started).TotalMilliseconds);
             } while (DateTime.Now < timeoutAt);
 

@@ -14,7 +14,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
         public static async Task WaitWithTimeoutAsync(Task task, TimeSpan timeoutDuration)
         {
             var timeoutTask = Task.Delay(timeoutDuration);
-            var firstToComplete = await Task.WhenAny(task, timeoutTask);
+            var firstToComplete = await Task.WhenAny(task, timeoutTask).ConfigureAwait(false);
 
             if (firstToComplete == timeoutTask)
             {
@@ -26,6 +26,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
         {
             Task.Run(async () =>
             {
+                await Task.Yield();
                 await Task.Delay(100);
                 doneSignal.SetResult(null);
             });
