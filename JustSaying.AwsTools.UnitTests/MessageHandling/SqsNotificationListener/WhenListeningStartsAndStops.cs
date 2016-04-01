@@ -40,7 +40,6 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 
             SystemUnderTest.StopListening();
             await Task.Yield();
-            await Task.Delay(100);
         }
 
         [Then]
