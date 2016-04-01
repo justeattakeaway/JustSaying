@@ -19,7 +19,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
 
         public async Task AwaitAtLeastOneTaskToComplete()
         {
-            await Task.Delay(10);
+            await Task.Yield();
         }
 
         public void ProcessMessage(Action action)

@@ -35,9 +35,6 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         {
             await base.When();
 
-            SystemUnderTest.StopListening();
-            await Task.Yield();
-
             SystemUnderTest.Listen();
             await Task.Yield();
 

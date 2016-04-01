@@ -60,12 +60,6 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             Assert.That(_callCount, Is.GreaterThanOrEqualTo(3));
         }
 
-        public override void PostAssertTeardown()
-        {
-            base.PostAssertTeardown();
-            SystemUnderTest.StopListening();
-        }
-
         private ReceiveMessageResponse GenerateEmptyMessage()
         {
             return new ReceiveMessageResponse
