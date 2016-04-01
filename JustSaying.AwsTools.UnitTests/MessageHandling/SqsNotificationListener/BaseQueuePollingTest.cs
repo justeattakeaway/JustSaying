@@ -67,6 +67,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             await Tasks.WaitWithTimeoutAsync(tcs.Task);
 
             SystemUnderTest.StopListening();
+            await Task.Yield();
         }
 
         protected ReceiveMessageResponse GenerateResponseMessage(string messageType, Guid messageId)
@@ -92,11 +93,6 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         protected string SqsMessageBody(string messageType)
         {
             return "{\"Subject\":\"" + messageType + "\"," + "\"Message\":\"" + MessageBody + "\"}";
-        }
-
-        public override void PostAssertTeardown()
-        {
-            SystemUnderTest.StopListening();
         }
     }
 }

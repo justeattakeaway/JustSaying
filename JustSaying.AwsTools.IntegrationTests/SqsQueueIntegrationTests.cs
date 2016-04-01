@@ -1,6 +1,5 @@
 ﻿using System;
 using Amazon;
-using JustSaying.AwsTools;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 

@@ -6,7 +6,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
     public class DefaultThrottledThroughput : Throttled
     {
         public DefaultThrottledThroughput(IMessageMonitor messageMonitor) :
-            base(MaxActiveHandlersForProcessors(), MessageConstants.MaxAmazonMessageCap, messageMonitor)
+            base(MaxActiveHandlersForProcessors(), messageMonitor)
         {
 
         }

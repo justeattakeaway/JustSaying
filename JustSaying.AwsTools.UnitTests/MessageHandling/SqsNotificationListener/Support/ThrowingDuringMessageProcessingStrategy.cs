@@ -7,7 +7,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
 {
     public class ThrowingDuringMessageProcessingStrategy : IMessageProcessingStrategy
     {
-        public int MaxBatchSize { get { return int.MaxValue; } }
+        public int FreeTasks { get { return int.MaxValue; } }
 
         private readonly TaskCompletionSource<object> _doneSignal;
         private bool _firstTime = true;
@@ -17,7 +17,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
             _doneSignal = doneSignal;
         }
 
-        public async Task BeforeGettingMoreMessages()
+        public async Task AwaitAtLeastOneTaskToComplete()
         {
             await Task.Delay(10);
         }

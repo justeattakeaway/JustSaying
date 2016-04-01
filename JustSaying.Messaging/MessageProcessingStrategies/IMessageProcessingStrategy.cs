@@ -5,9 +5,9 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
 {
     public interface IMessageProcessingStrategy
     {
-        Task BeforeGettingMoreMessages();
+        Task AwaitAtLeastOneTaskToComplete();
         void ProcessMessage(Action action);
 
-        int MaxBatchSize { get; }
+        int FreeTasks { get; }
     }
 }

@@ -26,6 +26,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
         {
             Task.Run(async () =>
             {
+                await Task.Yield();
                 await Task.Delay(100);
                 doneSignal.SetResult(null);
             });
