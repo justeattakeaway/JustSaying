@@ -91,6 +91,7 @@
     <Compile Include="JustSayingFluently\WhenHandlersThrowAnException.cs" />
     <Compile Include="JustSayingFluently\WhenPublishingWithoutAMonitor.cs" />
     <Compile Include="JustSayingFluently\WhenThrottlingIsEnabledALongRunningHandler.cs" />
+    <Compile Include="WhenOptingOutOfErrorQueue.cs" />
     <Compile Include="WhenRegisteringAPublisher\WhenPublishingAndNotInstantiated.cs" />
     <Compile Include="WhenRegisteringASqsSubscriber\WhenHandlerHasExactlyOnceAttribute.cs" />
     <Compile Include="WhenRegisteringASqsSubscriber\WhenRegisteringASqsGenericMessageTopicSubscriber.cs" />
