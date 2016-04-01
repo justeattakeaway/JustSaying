@@ -22,11 +22,16 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public override bool Create(SqsBasicConfiguration queueConfig, int attempt = 0)
         {
-            if (!ErrorQueue.Exists())
+            if (NeedErrorQueue(queueConfig) && !ErrorQueue.Exists())
             {
                 ErrorQueue.Create(new SqsBasicConfiguration { ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds, ErrorQueueOptOut = true });
             }
             return base.Create(queueConfig, attempt);
+        }
+
+        private static bool NeedErrorQueue(SqsBasicConfiguration queueConfig)
+        {
+            return !queueConfig.ErrorQueueOptOut;
         }
 
         public override void Delete()
@@ -66,7 +71,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
 
             //Create an error queue for existing queues if they don't already have one
-            if (ErrorQueue != null)
+            if (ErrorQueue != null && NeedErrorQueue(queueConfig))
             {
                 var errorQueueConfig = new SqsReadConfiguration(SubscriptionType.ToTopic)
                 {
@@ -89,13 +94,18 @@ namespace JustSaying.AwsTools.MessageHandling
 
         protected override Dictionary<string, string> GetCreateQueueAttributes(SqsBasicConfiguration queueConfig)
         {
-            return new Dictionary<string, string>
+            var policy = new Dictionary<string, string>
             {
                 { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD ,queueConfig.MessageRetentionSeconds.ToString(CultureInfo.InvariantCulture)},
                 { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , queueConfig.VisibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture)},
                 { SQSConstants.ATTRIBUTE_DELAY_SECONDS  , queueConfig.DeliveryDelaySeconds.ToString(CultureInfo.InvariantCulture)},
-                { JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY, new RedrivePolicy(_retryCountBeforeSendingToErrorQueue, ErrorQueue.Arn).ToString()}
             };
+            if (NeedErrorQueue(queueConfig))
+            {
+                policy.Add(JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY, new RedrivePolicy(_retryCountBeforeSendingToErrorQueue, ErrorQueue.Arn).ToString());
+            }
+
+            return policy;
         }
 
         private bool RedrivePolicyNeedsUpdating(RedrivePolicy requestedRedrivePolicy)
