@@ -94,10 +94,5 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         {
             return "{\"Subject\":\"" + messageType + "\"," + "\"Message\":\"" + MessageBody + "\"}";
         }
-
-        public override void PostAssertTeardown()
-        {
-            SystemUnderTest.StopListening();
-        }
     }
 }
