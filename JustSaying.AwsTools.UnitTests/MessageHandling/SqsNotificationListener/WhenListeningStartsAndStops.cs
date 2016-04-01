@@ -17,16 +17,18 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         {
             base.Given();
 
+            var response1 = GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid());
+            var response2 = new ReceiveMessageResponse
+            {
+                Messages = new List<Message>()
+            };
+
             Sqs.ReceiveMessageAsync(
-                    Arg.Any<ReceiveMessageRequest>(),
-                    Arg.Any<CancellationToken>())
-               .Returns( _ => Task.FromResult(
-                            GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid())), 
-                    _ => Task.FromResult(
-                            new ReceiveMessageResponse
-                            {
-                                Messages = new List<Message>()
-                            }));
+                Arg.Any<ReceiveMessageRequest>(),
+                Arg.Any<CancellationToken>())
+            .Returns(
+                _ => Task.FromResult(response1),
+                _ => Task.FromResult(response2));
         }
 
         protected override async Task When()
@@ -34,7 +36,21 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             await base.When();
 
             SystemUnderTest.StopListening();
+            await Task.Yield();
+
             SystemUnderTest.Listen();
+            await Task.Yield();
+
+            SystemUnderTest.StopListening();
+            await Task.Yield();
+        }
+
+        [Then]
+        public void MessagesAreReceived()
+        {
+            Sqs.Received().ReceiveMessageAsync(
+                Arg.Any<ReceiveMessageRequest>(),
+                Arg.Any<CancellationToken>());
         }
 
         [Then]
@@ -58,12 +74,6 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         {
             SerialisationRegister.Received().DeserializeMessage(
                 BodyOfMessageAfterStop);
-        }
-
-        public override void PostAssertTeardown()
-        {
-            base.PostAssertTeardown();
-            SystemUnderTest.StopListening();
         }
     }
 }

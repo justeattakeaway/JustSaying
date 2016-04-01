@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Monitoring;
@@ -14,116 +10,118 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
     [TestFixture]
     public class ThrottledTests
     {
-        private int _concurrencyLevel;
-        private Throttled _messageProcessingStrategy;
-        private int _actionsProcessed;
-        private int _fakeAmazonBatchSize;
         private IMessageMonitor _fakeMonitor;
 
         [SetUp]
         public void SetUp()
         {
             _fakeMonitor = Substitute.For<IMessageMonitor>();
-            _fakeAmazonBatchSize = 10;
-            _concurrencyLevel = 20;
-            _messageProcessingStrategy = new Throttled(_concurrencyLevel, _fakeAmazonBatchSize, _fakeMonitor);
-            _actionsProcessed = 0;
         }
 
         [Test]
         public void ChangeMaxAllowedMessagesInFlightAtRuntime_TheChangeIsApplied()
         {
-            var MaxAllowedMessagesInFlight = Substitute.For<Func<int>>();
-            MaxAllowedMessagesInFlight().Returns(100);
-            _messageProcessingStrategy = new Throttled(MaxAllowedMessagesInFlight, 10, _fakeMonitor);
+            Func<int> maxAllowedMessagesInFlight = Substitute.For<Func<int>>();
+            maxAllowedMessagesInFlight().Returns(100);
+            var messageProcessingStrategy = new Throttled(maxAllowedMessagesInFlight, _fakeMonitor);
 
-            MaxAllowedMessagesInFlight().Returns(90);
+            Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(100));
 
-            Assert.That(_messageProcessingStrategy.BlockingThreshold, Is.EqualTo(90 - 10));
+            maxAllowedMessagesInFlight().Returns(90);
 
+            Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(90));
         }
-
-        [TestCase(0, 10, 1)]
-        [TestCase(9, 10, 1)]
-        [TestCase(10, 10, 1)]
-        [TestCase(11, 10, 1)]
-        [TestCase(12, 10, 2)]
-        public void Ctor_WhenMaxAllowedMessagesInFlightIsNearToBatchSize_BlockingThresholdIsNeverNegative(int maxAllowedMessagesInFlight, int maxBatchSize, int expectedBlockingThreshold)
-        {
-            _messageProcessingStrategy = new Throttled(maxAllowedMessagesInFlight, maxBatchSize, _fakeMonitor);
-
-            Assert.That(_messageProcessingStrategy.BlockingThreshold, Is.EqualTo(expectedBlockingThreshold));
-        }
-
-
-        [TestCase(1000)]
-        [TestCase(10000)]
-        public async Task SimulatedListenLoop_ProcessedAllMessages(int numberOfMessagesToProcess)
-        {
-            var watch = new Stopwatch();
-            watch.Start();
-            var actions = BuildFakeIncomingMessages(numberOfMessagesToProcess);
-
-            await ListenLoopExecuted(actions);
-
-            watch.Stop();
-            Thread.Sleep(2000);
-
-            Assert.That(_actionsProcessed, Is.EqualTo(numberOfMessagesToProcess));
-            Debug.WriteLine("Took " + watch.Elapsed + " to process " + numberOfMessagesToProcess + " messages.");
-        }
-
 
         [Test]
-        public async Task SimulatedListenLoop_WhenThrottlingOccurs_CallsMessageMonitor()
+        public void FreeTaskCountStartsAtCapacity()
         {
-            var actions = BuildFakeIncomingMessages(50);
-            _messageProcessingStrategy = new Throttled(20, _fakeAmazonBatchSize, _fakeMonitor);
-
-            await ListenLoopExecuted(actions);
-
-            _fakeMonitor.Received().IncrementThrottlingStatistic();
+            var messageProcessingStrategy = new Throttled(123, _fakeMonitor);
+            Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(123));
         }
 
-        private async Task ListenLoopExecuted(Queue<Action> actions)
+        [Test]
+        public void WhenATasksIsAddedTheFreeTaskCountIsDecremented()
         {
-            while (actions.Any())
-            {
-                await _messageProcessingStrategy.BeforeGettingMoreMessages();
-                var batch = GetFromFakeSnsQueue(actions);
+            var messageProcessingStrategy = new Throttled(123, _fakeMonitor);
+            var tcs = new TaskCompletionSource<bool>();
 
-                foreach (var action in batch)
-                {
-                    _messageProcessingStrategy.ProcessMessage(action);
-                }
-            }
+            messageProcessingStrategy.ProcessMessage(() => tcs.Task.Wait());
+
+            Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(122));
         }
 
-        private IEnumerable<Action> GetFromFakeSnsQueue(Queue<Action> actions)
+        [Test]
+        public async Task WhenATaskCompletesTheFreeTaskCountIsIncremented()
         {
-            var batch = new List<Action>();
-            for (var i = 0; i != _fakeAmazonBatchSize; i++)
-            {
-                batch.Add(actions.Dequeue());
-            }
-            return batch;
+            var messageProcessingStrategy = new Throttled(3, _fakeMonitor);
+            var tcs = new TaskCompletionSource<object>();
+
+            messageProcessingStrategy.ProcessMessage(() => tcs.Task.Wait());
+
+            Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(2));
+
+            await AllowTasksToComplete(tcs);
+
+            Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(3));
         }
 
-        private Queue<Action> BuildFakeIncomingMessages(int numberOfMessagesToCreate, int maximumDurationASingleMessageWillTakeToExecute = 10)
+        [Test]
+        public async Task FreeTaskCountCanReachZero()
         {
-            var actions = new Queue<Action>();
-            for (var i = 0; i != numberOfMessagesToCreate; i++)
+            const int capacity = 10;
+            var messageProcessingStrategy = new Throttled(capacity, _fakeMonitor);
+            var tcs = new TaskCompletionSource<object>();
+
+            for (int i = 0; i < capacity; i++)
             {
-                var random = new Random();
-                var action = new Action(() =>
-                {
-                    Thread.Sleep(random.Next(maximumDurationASingleMessageWillTakeToExecute));
-                    Interlocked.Increment(ref _actionsProcessed);
-                });
-                actions.Enqueue(action);
+                messageProcessingStrategy.ProcessMessage(() => tcs.Task.Wait());
+            }
+            
+            Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(0));
+            await AllowTasksToComplete(tcs);
+        }
+
+        [Test]
+        public async Task FreeTaskCountCanGoToZeroAndBackToFull()
+        {
+            const int capacity = 10;
+            var messageProcessingStrategy = new Throttled(capacity, _fakeMonitor);
+            var tcs = new TaskCompletionSource<object>();
+
+            for (int i = 0; i < capacity; i++)
+            {
+                messageProcessingStrategy.ProcessMessage(() => tcs.Task.Wait());
             }
 
-            return actions;
+            Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(0));
+
+            await AllowTasksToComplete(tcs);
+
+            Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(capacity));
+        }
+
+        [Test]
+        public async Task FreeTaskCountIsNeverNegative()
+        {
+            const int capacity = 10;
+            var messageProcessingStrategy = new Throttled(capacity, _fakeMonitor);
+            var tcs = new TaskCompletionSource<object>();
+
+
+            for (int i = 0; i < capacity; i++)
+            {
+                messageProcessingStrategy.ProcessMessage(() => tcs.Task.Wait());
+                Assert.That(messageProcessingStrategy.FreeTasks, Is.GreaterThanOrEqualTo(0));
+            }
+
+            await AllowTasksToComplete(tcs);
+        }
+
+        private static async Task AllowTasksToComplete(TaskCompletionSource<object> doneSignal)
+        {
+            doneSignal.SetResult(null);
+            await Task.Yield();
+            await Task.Delay(100);
         }
     }
 }

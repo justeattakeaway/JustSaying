@@ -55,7 +55,7 @@ namespace JustSaying.AwsTools.MessageHandling
         // ToDo: This should not be here.
         public SqsNotificationListener WithMaximumConcurrentLimitOnMessagesInFlightOf(int maximumAllowedMesagesInFlight)
         {
-            _messageProcessingStrategy = new Throttled(maximumAllowedMesagesInFlight,  MessageConstants.MaxAmazonMessageCap, _messagingMonitor);
+            _messageProcessingStrategy = new Throttled(maximumAllowedMesagesInFlight, _messagingMonitor);
             return this;
         }
 
@@ -142,7 +142,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             _cts.Cancel();
             Log.Info(
-                "Stopped Listening - Queue: {0}, Region: {1}",
+                "Stopping Listening - Queue: {0}, Region: {1}",
                 _queue.QueueName,
                 _queue.Region.SystemName);
         }
@@ -154,7 +154,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                await _messageProcessingStrategy.BeforeGettingMoreMessages();
+                var numberOfMessagesToReadFromSqs = await GetNumberOfMessagesToReadFromSqs();
 
                 var watch = new System.Diagnostics.Stopwatch();
                 watch.Start();
@@ -162,7 +162,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 var request = new ReceiveMessageRequest
                     {
                         QueueUrl = _queue.Url,
-                        MaxNumberOfMessages = GetMaxBatchSize(),
+                        MaxNumberOfMessages = numberOfMessagesToReadFromSqs,
                         WaitTimeSeconds = 20
                     };
                 var sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, ct);
@@ -202,14 +202,23 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        private int GetMaxBatchSize()
+        private async Task<int> GetNumberOfMessagesToReadFromSqs()
         {
-            if (_messageProcessingStrategy.MaxBatchSize <= 0 ||
-                _messageProcessingStrategy.MaxBatchSize > MessageConstants.MaxAmazonMessageCap)
+            var numberOfMessagesToreadFromSqs = Math.Min(_messageProcessingStrategy.FreeTasks, MessageConstants.MaxAmazonMessageCap);
+
+            if (numberOfMessagesToreadFromSqs == 0)
             {
-                return MessageConstants.MaxAmazonMessageCap;
+                await _messageProcessingStrategy.AwaitAtLeastOneTaskToComplete();
+
+                numberOfMessagesToreadFromSqs = Math.Min(_messageProcessingStrategy.FreeTasks, MessageConstants.MaxAmazonMessageCap);
             }
-            return _messageProcessingStrategy.MaxBatchSize;
+
+            if (numberOfMessagesToreadFromSqs == 0)
+            {
+                throw new InvalidOperationException("Cannot determine numberOfMessagesToreadFromSqs");
+            }
+
+            return numberOfMessagesToreadFromSqs;
         }
 
         private void HandleMessage(Amazon.SQS.Model.Message message)
