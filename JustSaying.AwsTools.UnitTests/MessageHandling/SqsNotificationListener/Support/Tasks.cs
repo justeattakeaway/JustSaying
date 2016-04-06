@@ -5,7 +5,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
 {
     public static class Tasks
     {
-        private const int DefaultTimeoutMillis = 1000;
+        private const int DefaultTimeoutMillis = 10000;
 
         public static async Task WaitWithTimeoutAsync(Task task)
         {

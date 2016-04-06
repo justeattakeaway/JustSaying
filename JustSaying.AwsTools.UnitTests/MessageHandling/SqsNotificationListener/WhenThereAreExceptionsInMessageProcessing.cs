@@ -50,19 +50,13 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         {
             SystemUnderTest.Listen();
             await Task.Delay(100);
-            SystemUnderTest.StopListening();
+            await SystemUnderTest.StopListening();
         }
 
         [Then]
         public void TheListenerDoesNotDie()
         {
             Assert.That(_callCount, Is.GreaterThanOrEqualTo(3));
-        }
-
-        public override void PostAssertTeardown()
-        {
-            base.PostAssertTeardown();
-            SystemUnderTest.StopListening();
         }
 
         private ReceiveMessageResponse GenerateEmptyMessage()

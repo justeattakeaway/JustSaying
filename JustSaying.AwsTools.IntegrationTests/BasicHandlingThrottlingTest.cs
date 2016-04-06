@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
@@ -22,7 +23,7 @@ namespace JustSaying.AwsTools.IntegrationTests
     {
         [TestCase(1000), Explicit]
         // Use this to manually test the performance / throttling of getting messages out of the queue.
-        public void HandlingManyMessages(int throttleMessageCount)
+        public async Task HandlingManyMessages(int throttleMessageCount)
         {
             var locker = new object();
             var awsQueueClient = CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1);
@@ -81,7 +82,7 @@ namespace JustSaying.AwsTools.IntegrationTests
             }
             while (handleCount < throttleMessageCount && waitCount < 100);
 
-            listener.StopListening();
+            await listener.StopListening();
             stopwatch.Stop();
 
             Console.WriteLine("{0} - Handled {1} messages.", DateTime.Now, handleCount);
