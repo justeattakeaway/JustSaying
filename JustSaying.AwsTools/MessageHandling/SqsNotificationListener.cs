@@ -18,6 +18,8 @@ namespace JustSaying.AwsTools.MessageHandling
 {
     public class SqsNotificationListener : INotificationSubscriber
     {
+        private static readonly Logger Log = LogManager.GetLogger("JustSaying");
+
         private readonly SqsQueueBase _queue;
         private readonly IMessageMonitor _messagingMonitor;
 
@@ -26,8 +28,8 @@ namespace JustSaying.AwsTools.MessageHandling
         private IMessageProcessingStrategy _messageProcessingStrategy;
         private readonly HandlerMap _handlerMap = new HandlerMap();
 
-        private CancellationTokenSource _cts = new CancellationTokenSource();
-        private static readonly Logger Log = LogManager.GetLogger("JustSaying");
+        private CancellationTokenSource _cts;
+        private Task _runningListenLoop;
 
         public SqsNotificationListener(
             SqsQueueBase queue,
@@ -80,11 +82,12 @@ namespace JustSaying.AwsTools.MessageHandling
             var queueInfo = string.Format("Queue: {0}, Region: {1}", queue, region);
 
             _cts = new CancellationTokenSource();
-            Task.Factory.StartNew(async () =>
+            var token = _cts.Token;
+            _runningListenLoop = Task.Factory.StartNew(async () =>
                 {
-                    while (!_cts.IsCancellationRequested)
+                    while (!token.IsCancellationRequested)
                     {
-                        await ListenLoop(_cts.Token);
+                        await ListenLoop(token);
                     }
                 })
                 .Unwrap()
@@ -138,13 +141,28 @@ namespace JustSaying.AwsTools.MessageHandling
             return innerExDetails.ToString();
         }
 
-       public void StopListening()
+       public async Task StopListening()
         {
-            _cts.Cancel();
-            Log.Info(
-                "Stopped Listening - Queue: {0}, Region: {1}",
-                _queue.QueueName,
-                _queue.Region.SystemName);
+           if (_runningListenLoop != null)
+           {
+               _cts.Cancel();
+                await _runningListenLoop;
+
+               _cts = null;
+               _runningListenLoop = null;
+
+                Log.Info(
+                    "Stopped Listening - Queue: {0}, Region: {1}",
+                    _queue.QueueName,
+                    _queue.Region.SystemName);
+            }
+           else
+           {
+                Log.Info(
+                    "Stop called but was not Listening - Queue: {0}, Region: {1}",
+                    _queue.QueueName,
+                    _queue.Region.SystemName);
+            }
         }
 
         internal async Task ListenLoop(CancellationToken ct)

@@ -60,19 +60,13 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 
             // wait until it's done
             await Tasks.WaitWithTimeoutAsync(_tcs.Task);
-            SystemUnderTest.StopListening();
+            await SystemUnderTest.StopListening();
         }
 
         [Then]
         public void QueueIsPolledMoreThanOnce()
         {
             Assert.That(_sqsCallCounter, Is.GreaterThan(1));
-        }
-
-        public override void PostAssertTeardown()
-        {
-            SystemUnderTest.StopListening();
-            base.PostAssertTeardown();
         }
     }
 }

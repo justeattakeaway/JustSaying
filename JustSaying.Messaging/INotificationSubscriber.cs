@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
@@ -9,7 +10,7 @@ namespace JustSaying.Messaging
     {
         void AddMessageHandler<T>(Func<IHandler<T>> handler) where T : Message;
         void Listen();
-        void StopListening();
+        Task StopListening();
         string Queue { get; }
     }
 }
