@@ -1,25 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.AwsTools", "JustSaying.AwsTools\JustSaying.AwsTools.csproj", "{CBF2110B-C3A4-45E8-BBD6-301D77567043}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.AwsTools.UnitTests", "JustSaying.AwsTools.UnitTests\JustSaying.AwsTools.UnitTests.csproj", "{D5F19B9D-F761-4300-A9A1-2A1352CEEB8F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.AwsTools.IntegrationTests", "JustSaying.AwsTools.IntegrationTests\JustSaying.AwsTools.IntegrationTests.csproj", "{23E76404-BE2D-4A2A-952B-2683780E1565}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.Messaging", "JustSaying.Messaging\JustSaying.Messaging.csproj", "{899CD315-37B3-46D0-B2DC-FB94C552D968}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.Messaging.UnitTests", "JustSaying.Messaging.UnitTests\JustSaying.Messaging.UnitTests.csproj", "{7E36099E-E6A4-4259-973C-0ABE776377BA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.TestingFramework", "JustSaying.TestingFramework\JustSaying.TestingFramework.csproj", "{78E23D08-913E-491F-87AF-ADE5AA007F9A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying", "JustSaying\JustSaying.csproj", "{3B428F71-9AEF-4E46-8D56-644FC0E808D4}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.UnitTests", "JustSaying.UnitTests\JustSaying.UnitTests.csproj", "{17BC16D6-121C-4F30-B7D1-0768BEE201F2}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.IntegrationTests", "JustSaying.IntegrationTests\JustSaying.IntegrationTests.csproj", "{45717185-E959-48C6-926F-DC8B394F5680}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.Tools", "JustSaying.Tools\JustSaying.Tools.csproj", "{108342FE-33C8-4F41-ACBD-35541A80E8F5}"
 EndProject
@@ -46,18 +38,10 @@ Global
 		{D5F19B9D-F761-4300-A9A1-2A1352CEEB8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D5F19B9D-F761-4300-A9A1-2A1352CEEB8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D5F19B9D-F761-4300-A9A1-2A1352CEEB8F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{23E76404-BE2D-4A2A-952B-2683780E1565}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{23E76404-BE2D-4A2A-952B-2683780E1565}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{23E76404-BE2D-4A2A-952B-2683780E1565}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{23E76404-BE2D-4A2A-952B-2683780E1565}.Release|Any CPU.Build.0 = Release|Any CPU
 		{899CD315-37B3-46D0-B2DC-FB94C552D968}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{899CD315-37B3-46D0-B2DC-FB94C552D968}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{899CD315-37B3-46D0-B2DC-FB94C552D968}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{899CD315-37B3-46D0-B2DC-FB94C552D968}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7E36099E-E6A4-4259-973C-0ABE776377BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7E36099E-E6A4-4259-973C-0ABE776377BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7E36099E-E6A4-4259-973C-0ABE776377BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7E36099E-E6A4-4259-973C-0ABE776377BA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{78E23D08-913E-491F-87AF-ADE5AA007F9A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{78E23D08-913E-491F-87AF-ADE5AA007F9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{78E23D08-913E-491F-87AF-ADE5AA007F9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -66,14 +50,6 @@ Global
 		{3B428F71-9AEF-4E46-8D56-644FC0E808D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3B428F71-9AEF-4E46-8D56-644FC0E808D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3B428F71-9AEF-4E46-8D56-644FC0E808D4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{17BC16D6-121C-4F30-B7D1-0768BEE201F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{17BC16D6-121C-4F30-B7D1-0768BEE201F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{17BC16D6-121C-4F30-B7D1-0768BEE201F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{17BC16D6-121C-4F30-B7D1-0768BEE201F2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{45717185-E959-48C6-926F-DC8B394F5680}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{45717185-E959-48C6-926F-DC8B394F5680}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{45717185-E959-48C6-926F-DC8B394F5680}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{45717185-E959-48C6-926F-DC8B394F5680}.Release|Any CPU.Build.0 = Release|Any CPU
 		{108342FE-33C8-4F41-ACBD-35541A80E8F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{108342FE-33C8-4F41-ACBD-35541A80E8F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{108342FE-33C8-4F41-ACBD-35541A80E8F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
