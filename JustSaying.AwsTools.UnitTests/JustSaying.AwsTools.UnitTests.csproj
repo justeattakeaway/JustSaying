@@ -79,7 +79,6 @@
     <Compile Include="MessageHandling\SqsNotificationListener\WhenMessageProcessingThrowsDuring.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\WhenMessageProcessingThrowsBefore.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\WhenMessageHandlingThrows.cs" />
-    <Compile Include="QueueCreation\WhenSerializingRedrivePolicy.cs" />
     <Compile Include="MessageHandling\Sns\TopicByName\WhenPublishing.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\WhenAttemptingToInterrogateASubscriber.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\WhenExactlyOnceIsAppliedToHandler.cs" />
@@ -93,7 +92,6 @@
     <Compile Include="MessageHandling\SqsNotificationListener\WhenThereAreExceptionsInMessageProcessing.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\WhenThereAreExceptionsInSqsCalling.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\WhenThereAreNoMessagesToProcess.cs" />
-    <Compile Include="SqsQueueConfiguration\Validation\WhenPublishEndpointIsNotProvided.cs" />
     <Compile Include="MessageHandling\Sqs\WhenFetchingQueueByName.cs" />
     <Compile Include="MessageHandling\Sqs\WhenPublishing.cs" />
   </ItemGroup>
