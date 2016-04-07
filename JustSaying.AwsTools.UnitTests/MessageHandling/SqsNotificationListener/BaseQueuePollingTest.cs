@@ -13,6 +13,7 @@ using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using NSubstitute;
+using NUnit.Framework;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
@@ -64,10 +65,11 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             SystemUnderTest.Listen();
 
             // wait until it's done
-            await Tasks.WaitWithTimeoutAsync(doneSignal.Task);
+            var doneOk = await Tasks.WaitWithTimeoutAsync(doneSignal.Task);
 
             SystemUnderTest.StopListening();
-            await Task.Yield();
+
+            Assert.IsTrue(doneOk, "Timout occured before done signal");
         }
 
         protected ReceiveMessageResponse GenerateResponseMessage(string messageType, Guid messageId)
