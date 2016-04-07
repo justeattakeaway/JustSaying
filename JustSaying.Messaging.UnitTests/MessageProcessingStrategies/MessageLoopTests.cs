@@ -94,7 +94,8 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
         private async Task ListenLoopExecuted(Queue<Action> actions, IMessageProcessingStrategy messageProcessingStrategy)
         {
-            const int timeoutSeconds = 15;
+            var initalActionCount = actions.Count;
+            var timeoutSeconds = 10 + (initalActionCount / 100);
             var timeout = new TimeSpan(0, 0, timeoutSeconds);
             var stopwatch = Stopwatch.StartNew();
 
@@ -118,7 +119,9 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
                 if (stopwatch.Elapsed > timeout)
                 {
-                    Assert.Fail("ListenLoopExecuted took longer than timout of " + timeoutSeconds);
+                    var message = string.Format("ListenLoopExecuted took longer than timeout of {0}s, with {1} of {2} messages remaining",
+                        timeoutSeconds, actions.Count, initalActionCount);
+                    Assert.Fail(message);
                 }
             }
         }
