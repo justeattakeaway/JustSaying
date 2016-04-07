@@ -29,8 +29,8 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
         }
 
         [TestCase(10)]
-        [TestCase(100)]
-        [TestCase(1000)]
+        [TestCase(20)]
+        [TestCase(50)]
         public async Task SimulatedListenLoop_ProcessedAllMessages(int numberOfMessagesToProcess)
         {
             var fakeMonitor = Substitute.For<IMessageMonitor>();
