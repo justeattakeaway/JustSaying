@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustBehave;
+using JustSaying.Messaging.MessageProcessingStrategies;
 using NSubstitute;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
@@ -13,9 +14,16 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         private const string SubjectOfMessageAfterStop = @"POST_STOP_MESSAGE";
         private const string BodyOfMessageAfterStop = @"{""Subject"":""POST_STOP_MESSAGE"",""Message"":""object""}";
 
+        private int expectedMaxMessageCount;
+
         protected override void Given()
         {
             base.Given();
+
+            // we expect to get max 10 messages per batch
+            // except on single-core machines when we top out at ParallelHandlerExecutionPerCore=8
+            expectedMaxMessageCount = Math.Min(MessageConstants.MaxAmazonMessageCap, 
+                Environment.ProcessorCount * MessageConstants.ParallelHandlerExecutionPerCore);
 
             var response1 = GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid());
             var response2 = new ReceiveMessageResponse
@@ -62,7 +70,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         public void TheMaxMessageAllowanceIsGrabbed()
         {
             Sqs.Received().ReceiveMessageAsync(
-                Arg.Is<ReceiveMessageRequest>(x => x.MaxNumberOfMessages == 10),
+                Arg.Is<ReceiveMessageRequest>(x => x.MaxNumberOfMessages == expectedMaxMessageCount),
                 Arg.Any<CancellationToken>());
         }
 
