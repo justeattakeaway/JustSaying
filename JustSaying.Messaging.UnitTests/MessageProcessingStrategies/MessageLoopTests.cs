@@ -44,7 +44,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
             watch.Stop();
 
-            await Task.Delay(1000);
+            await Task.Delay(1000 + numberOfMessagesToProcess);
 
             Assert.That(_actionsProcessed, Is.EqualTo(numberOfMessagesToProcess));
             Debug.WriteLine("Took " + watch.Elapsed + " to process " + numberOfMessagesToProcess + " messages.");
@@ -94,7 +94,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
         private async Task ListenLoopExecuted(Queue<Action> actions, IMessageProcessingStrategy messageProcessingStrategy)
         {
-            const int timeoutSeconds = 10;
+            const int timeoutSeconds = 15;
             var timeout = new TimeSpan(0, 0, timeoutSeconds);
             var stopwatch = Stopwatch.StartNew();
 
