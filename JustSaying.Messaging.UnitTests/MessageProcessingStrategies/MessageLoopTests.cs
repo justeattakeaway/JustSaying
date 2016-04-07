@@ -11,6 +11,18 @@ using NUnit.Framework;
 
 namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 {
+    public class ThreadSafeCounter
+    {
+        private int _count = 0;
+
+        public void Increment()
+        {
+            Interlocked.Increment(ref _count);
+        }
+
+        public int Count {  get { return _count; } }
+    }
+
     [TestFixture]
     public class MessageLoopTests
     {
@@ -20,34 +32,28 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
         private const int ConcurrencyLevel = 20;
         private const int MaxAmazonBatchSize = 10;
 
-        private int _actionsProcessed;
-
-        [SetUp]
-        public void SetUp()
-        {
-            _actionsProcessed = 0;
-        }
-
         [TestCase(1)]
+        [TestCase(2)]
         [TestCase(10)]
         [TestCase(20)]
+        [TestCase(50)]
         public async Task SimulatedListenLoop_ProcessedAllMessages(int numberOfMessagesToProcess)
         {
             var fakeMonitor = Substitute.For<IMessageMonitor>();
             var messageProcessingStrategy = new Throttled(ConcurrencyLevel, fakeMonitor);
+            var counter = new ThreadSafeCounter();
 
             var watch = new Stopwatch();
             watch.Start();
 
-            var actions = BuildFakeIncomingMessages(numberOfMessagesToProcess);
+            var actions = BuildFakeIncomingMessages(numberOfMessagesToProcess, counter);
             await ListenLoopExecuted(actions, messageProcessingStrategy);
 
             watch.Stop();
 
             await Task.Delay(1000 + numberOfMessagesToProcess);
 
-            Assert.That(_actionsProcessed, Is.EqualTo(numberOfMessagesToProcess));
-            Debug.WriteLine("Took " + watch.Elapsed + " to process " + numberOfMessagesToProcess + " messages.");
+            Assert.That(counter.Count, Is.EqualTo(numberOfMessagesToProcess));
         }
 
         [TestCase(2, 1)]
@@ -63,8 +69,9 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
             var fakeMonitor = Substitute.For<IMessageMonitor>();
             var messageProcessingStrategy = new Throttled(capacity, fakeMonitor);
+            var counter = new ThreadSafeCounter();
 
-            var actions = BuildFakeIncomingMessages(messageCount);
+            var actions = BuildFakeIncomingMessages(messageCount, counter);
 
             await ListenLoopExecuted(actions, messageProcessingStrategy);
 
@@ -84,15 +91,17 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
             var fakeMonitor = Substitute.For<IMessageMonitor>();
             var messageProcessingStrategy = new Throttled(capacity, fakeMonitor);
+            var counter = new ThreadSafeCounter();
 
-            var actions = BuildFakeIncomingMessages(messageCount);
+            var actions = BuildFakeIncomingMessages(messageCount, counter);
 
             await ListenLoopExecuted(actions, messageProcessingStrategy);
 
             fakeMonitor.DidNotReceive().IncrementThrottlingStatistic();
         }
 
-        private async Task ListenLoopExecuted(Queue<Action> actions, IMessageProcessingStrategy messageProcessingStrategy)
+        private async Task ListenLoopExecuted(Queue<Action> actions,
+            IMessageProcessingStrategy messageProcessingStrategy)
         {
             var initalActionCount = actions.Count;
             var timeoutSeconds = 10 + (initalActionCount / 100);
@@ -130,7 +139,6 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
         {
             var batchSize = Math.Min(requestedBatchSize, MaxAmazonBatchSize);
             batchSize = Math.Min(batchSize, actions.Count);
-            Debug.WriteLine("Getting a batch of {0} for requested {1}, queue contains {2}", batchSize, requestedBatchSize, actions.Count);
 
             var batch = new List<Action>();
 
@@ -141,7 +149,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             return batch;
         }
 
-        private Queue<Action> BuildFakeIncomingMessages(int numberOfMessagesToCreate)
+        private Queue<Action> BuildFakeIncomingMessages(int numberOfMessagesToCreate, ThreadSafeCounter counter)
         {
             var random = new Random();
             var actions = new Queue<Action>();
@@ -152,7 +160,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
                 var action = new Action(() =>
                     {
                          Thread.Sleep(duration);
-                        Interlocked.Increment(ref _actionsProcessed);
+                        counter.Increment();
                     });
                 actions.Enqueue(action);
             }
