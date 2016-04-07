@@ -36,7 +36,6 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
         [TestCase(2)]
         [TestCase(10)]
         [TestCase(20)]
-        [TestCase(50)]
         public async Task SimulatedListenLoop_ProcessedAllMessages(int numberOfMessagesToProcess)
         {
             var fakeMonitor = Substitute.For<IMessageMonitor>();
@@ -51,7 +50,9 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
             watch.Stop();
 
-            await Task.Delay(1000 + numberOfMessagesToProcess);
+            await Task.Yield();
+            await Task.Delay(2000);
+            await Task.Yield();
 
             Assert.That(counter.Count, Is.EqualTo(numberOfMessagesToProcess));
         }
