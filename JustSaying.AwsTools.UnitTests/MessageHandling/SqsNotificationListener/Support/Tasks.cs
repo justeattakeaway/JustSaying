@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
+using NLog;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support
 {
     public static class Tasks
     {
         private const int DefaultTimeoutMillis = 1000;
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
         public static async Task WaitWithTimeoutAsync(Task task)
         {
@@ -18,7 +20,9 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
 
             if (firstToComplete == timeoutTask)
             {
-                throw new TimeoutException("Task did not complete before timeout of " + timeoutDuration);
+                var message = "Task did not complete before timeout of " + timeoutDuration;
+                Log.Error(message);
+                throw new TimeoutException(message);
             }
         }
 
