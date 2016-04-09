@@ -32,12 +32,11 @@ namespace JustSaying.UnitTests.JustSayingBus
         }
 
         [Then]
-        public async Task EventPublicationWasAttemptedTheConfiguredNumberOfTimes()
+        public void EventPublicationWasAttemptedTheConfiguredNumberOfTimes()
         {
-            await Patiently.VerifyExpectationAsync(() => 
-                _publisher
-                    .Received(PublishAttempts)
-                    .Publish(Arg.Any<GenericMessage>()));
+            _publisher
+                .Received(PublishAttempts)
+                .Publish(Arg.Any<GenericMessage>());
         }
     }
 }

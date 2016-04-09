@@ -18,18 +18,15 @@ namespace JustSaying.UnitTests.JustSayingBus
         }
 
         [Then]
-        public async Task PublisherIsCalledToPublish()
+        public void PublisherIsCalledToPublish()
         {
-            await Patiently.VerifyExpectationAsync(
-                () => _publisher.Received().Publish(Arg.Any<GenericMessage>()));
+            _publisher.Received().Publish(Arg.Any<GenericMessage>());
         }
 
         [Then]
-        public async Task PublishMessageTimeStatsSent()
+        public void PublishMessageTimeStatsSent()
         {
-            await Patiently.VerifyExpectationAsync(
-                () => Monitor.Received(1).PublishMessageTime(Arg.Any<long>()), 
-                10.Seconds());
+            Monitor.Received(1).PublishMessageTime(Arg.Any<long>());
         }
     }
 }
