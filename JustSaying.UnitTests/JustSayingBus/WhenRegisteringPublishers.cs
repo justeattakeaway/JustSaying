@@ -28,17 +28,15 @@ namespace JustSaying.UnitTests.JustSayingBus
         }
 
         [Then]
-        public async Task AcceptedOrderWasPublishedOnce()
+        public void AcceptedOrderWasPublishedOnce()
         {
-            await Patiently.VerifyExpectationAsync(
-                () => _publisher.Received(1).Publish(Arg.Any<OrderAccepted>()));
+            _publisher.Received(1).Publish(Arg.Any<OrderAccepted>());
         }
 
         [Then]
-        public async Task RejectedOrderWasPublishedTwice()
+        public void RejectedOrderWasPublishedTwice()
         {
-            await Patiently.VerifyExpectationAsync(
-                () => _publisher.Received(2).Publish(Arg.Any<OrderRejected>()));
+            _publisher.Received(2).Publish(Arg.Any<OrderRejected>());
         }
 
         [Then]
