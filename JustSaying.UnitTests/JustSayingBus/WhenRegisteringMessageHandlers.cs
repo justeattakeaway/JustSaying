@@ -51,11 +51,11 @@ namespace JustSaying.UnitTests.JustSayingBus
         public void HandlersAreAddedBeforeSubscriberStartup()
         {
             Received.InOrder(() =>
-                                 {
-                                     _subscriber.AddMessageHandler(Arg.Any<Func<IHandler<Message>>>());
-                                     _subscriber.AddMessageHandler(Arg.Any<Func<IHandler<Message2>>>());
-                                     _subscriber.Listen();
-                                 });
+                {
+                    _subscriber.AddMessageHandler(Arg.Any<Func<IHandler<Message>>>());
+                    _subscriber.AddMessageHandler(Arg.Any<Func<IHandler<Message2>>>());
+                    _subscriber.Listen();
+                });
         }
 
         public class Message2 : Message { }
