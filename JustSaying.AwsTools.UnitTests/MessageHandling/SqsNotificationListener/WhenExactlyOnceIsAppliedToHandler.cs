@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.TestingFramework;
 using NSubstitute;
 using NUnit.Framework;
 

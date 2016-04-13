@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using NLog;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support
+namespace JustSaying.TestingFramework
 {
     public static class Tasks
     {
