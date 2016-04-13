@@ -1,32 +1,40 @@
 ﻿using System;
 using System.Threading.Tasks;
+using NLog;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support
 {
     public static class Tasks
     {
-        private const int DefaultTimeoutMillis = 1000;
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-        public static async Task WaitWithTimeoutAsync(Task task)
+        private const int DefaultTimeoutMillis = 5000;
+        private const int DelaySendMillis = 200;
+
+        public static async Task<bool> WaitWithTimeoutAsync(Task task)
         {
-            await WaitWithTimeoutAsync(task, TimeSpan.FromMilliseconds(DefaultTimeoutMillis));
+            return await WaitWithTimeoutAsync(task, TimeSpan.FromMilliseconds(DefaultTimeoutMillis));
         }
-        public static async Task WaitWithTimeoutAsync(Task task, TimeSpan timeoutDuration)
+
+        public static async Task<bool> WaitWithTimeoutAsync(Task task, TimeSpan timeoutDuration)
         {
             var timeoutTask = Task.Delay(timeoutDuration);
-            var firstToComplete = await Task.WhenAny(task, timeoutTask);
+            var firstToComplete = await Task.WhenAny(task, timeoutTask).ConfigureAwait(false);
 
             if (firstToComplete == timeoutTask)
             {
-                throw new TimeoutException("Task did not complete before timeout of " + timeoutDuration);
+                Log.Error("Task did not complete before timeout of " + timeoutDuration);
+                return false;
             }
-        }
 
+            return true;
+        }
         public static void DelaySendDone(TaskCompletionSource<object> doneSignal)
         {
             Task.Run(async () =>
             {
-                await Task.Delay(100);
+                await Task.Yield();
+                await Task.Delay(DelaySendMillis);
                 doneSignal.SetResult(null);
             });
         }
