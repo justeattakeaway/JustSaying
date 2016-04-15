@@ -18,23 +18,23 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         private bool _handledException;
         private IMessageMonitor _monitoring;
 
-        private TaskCompletionSource<object> _doneSignal;
-
         [OneTimeSetUp]
-        public async Task Given()
+        public async Task Setup()
         {
-            _doneSignal = new TaskCompletionSource<object>();
+            // Setup
+            var doneSignal = new TaskCompletionSource<object>();
+            _globalErrorHandler = (ex, m) => { _handledException = true; };
+            _monitoring = Substitute.For<IMessageMonitor>();
 
+            // Given
             _handler.Handle(Arg.Any<GenericMessage>())
                 .Returns(true)
                 .AndDoes(_ =>
                 {
-                    Tasks.DelaySendDone(_doneSignal);
+                    Tasks.DelaySendDone(doneSignal);
                     throw new TestException("My Ex");
                 });
 
-            _globalErrorHandler = (ex, m) => { _handledException = true; };
-            _monitoring = Substitute.For<IMessageMonitor>();
             var bus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithMonitoring(_monitoring)
                 .ConfigurePublisherWith(c =>
@@ -53,11 +53,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                     })
                 .WithMessageHandler(_handler);
 
+            // When 
             bus.StartListening();
 
             bus.Publish(new GenericMessage());
-            await _doneSignal.Task;
 
+            // Teardown
+            await doneSignal.Task;
             bus.StopListening();
         }
 
