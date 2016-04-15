@@ -1,4 +1,5 @@
-﻿using JustSaying.TestingFramework;
+﻿using System.Threading.Tasks;
+using JustSaying.TestingFramework;
 using NUnit.Framework;
 using Shouldly;
 
@@ -15,15 +16,16 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             RegisterSqsHandler(_handler);
         }
 
-        protected override void When()
+        protected override async Task When()
         {
             ServiceBus.Publish(new AnotherGenericMessage());
+            await _handler.DoneSignal;
         }
 
         [Test]
         public void ThenItGetsHandled()
         {
-            _handler.WaitUntilCompletion(15.Seconds()).ShouldBe(true);
+            _handler.MessageCount.ShouldBeGreaterThan(0);
         }
     }
 }
