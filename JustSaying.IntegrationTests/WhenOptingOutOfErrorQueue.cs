@@ -14,7 +14,8 @@ namespace JustSaying.IntegrationTests
             return true;
         }
     }
-    class WhenOptingOutOfErrorQueue
+
+    public class WhenOptingOutOfErrorQueue
     {
         private IAmazonSQS _client;
 

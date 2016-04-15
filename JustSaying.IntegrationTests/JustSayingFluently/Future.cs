@@ -1,15 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.Models;
+using JustSaying.TestingFramework;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
     public class Future<TMessage> where TMessage : Message
     {
+        private readonly TaskCompletionSource<object> _doneSignal = new TaskCompletionSource<object>();
+
         private readonly Action _action;
-        private readonly ManualResetEvent _event;
         private readonly List<TMessage> _messages = new List<TMessage>();
 
         public Future(): this(null)
@@ -18,37 +20,39 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
         public Future(Action action)
         {
-            _event = new ManualResetEvent(false);
             _action = action;
         }
 
         public void Complete(TMessage message)
         {
-            _event.Set();
-
-            Value = message;
-            _messages.Add(message);
-            if (_action != null)
+            try
             {
-                _action();
+                Value = message;
+                _messages.Add(message);
+                if (_action != null)
+                {
+                    _action();
+                }
             }
+            finally
+            {
+                Tasks.DelaySendDone(_doneSignal);
+            }
+        }
+
+        public Task DoneSignal
+        {
+            get { return _doneSignal.Task; }
+        }
+
+        public int MessageCount
+        {
+            get { return _messages.Count; }
         }
 
         public Exception RecordedException { get; set; }
 
         public TMessage Value { get; set; }
-
-        public bool IsCompleted
-        {
-            get { return _event.WaitOne(0); }
-            
-        }
-
-        public bool WaitUntilCompletion(TimeSpan seconds)
-        {
-            var completed =  _event.WaitOne(seconds);
-            return completed;
-        }
 
         public bool HasReceived(TMessage message)
         {

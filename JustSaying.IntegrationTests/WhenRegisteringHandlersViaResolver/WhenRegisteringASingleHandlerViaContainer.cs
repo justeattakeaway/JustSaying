@@ -1,7 +1,7 @@
-using System;
 using System.Linq;
 using JustSaying.IntegrationTests.JustSayingFluently;
 using NUnit.Framework;
+using Shouldly;
 using StructureMap;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
@@ -29,7 +29,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         [Test]
         public void ThenHandlerWillReceiveTheMessage()
         {
-            Assert.IsTrue(_handlerFuture.WaitUntilCompletion(TimeSpan.FromSeconds(20)));
+            _handlerFuture.MessageCount.ShouldBeGreaterThan(0);
         }
     }
 }

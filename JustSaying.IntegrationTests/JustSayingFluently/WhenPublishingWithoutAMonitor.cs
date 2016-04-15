@@ -15,14 +15,23 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         private readonly IHandler<GenericMessage> _handler = Substitute.For<IHandler<GenericMessage>>();
 
         [OneTimeSetUp]
-        public void Given()
+        public async Task Given()
         {
-            var bus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName).ConfigurePublisherWith(c =>
-            {
-                c.PublishFailureBackoffMilliseconds = 1;
-                c.PublishFailureReAttempts = 1;
+            // Setup
+            var doneSignal = new TaskCompletionSource<object>();
+
+            // Given
+            _handler.Handle(Arg.Any<GenericMessage>())
+                .Returns(true)
+                .AndDoes(_ => Tasks.DelaySendDone(doneSignal));
+
+            var bus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+                .ConfigurePublisherWith(c =>
+                    {
+                        c.PublishFailureBackoffMilliseconds = 1;
+                        c.PublishFailureReAttempts = 1;
                 
-            })
+                    })
                 .WithSnsMessagePublisher<GenericMessage>()
                 .WithSqsTopicSubscriber()
                 .IntoQueue("queuename")
@@ -30,27 +39,20 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .WithMessageHandler(_handler);
 
             _bus = bus;
-            _bus.StartListening();
-        }
 
-        [SetUp]
-        public void When()
-        {
+            // When
+            _bus.StartListening();
             _bus.Publish(new GenericMessage());
+
+            // Teardown
+            await doneSignal.Task;
+            bus.StopListening();
         }
 
         [Then]
-        public async Task AMessageCanStillBePublishedAndPopsOutTheOtherEnd()
+        public void AMessageCanStillBePublishedAndPopsOutTheOtherEnd()
         {
-            await Patiently.VerifyExpectationAsync(
-                () => _handler.Received().Handle(Arg.Any<GenericMessage>()));
-        }
-
-        [TearDown]
-        public void ByeBye()
-        {
-            _bus.StopListening();
-            _bus = null;
+            _handler.Received().Handle(Arg.Any<GenericMessage>());
         }
     }
 }

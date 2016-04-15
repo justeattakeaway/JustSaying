@@ -20,18 +20,18 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             RegisterSnsHandler(_handler);
         }
 
-        protected override void When()
+        protected override async Task When()
         {
             ServiceBus.Publish(new GenericMessage());
+            await _handler.DoneSignal;
         }
 
         [Test]
-        public async Task ThenExceptionIsRecordedInMonitoring()
+        public void ThenExceptionIsRecordedInMonitoring()
         {
-            _handler.WaitUntilCompletion(15.Seconds()).ShouldBe(true);
+            _handler.MessageCount.ShouldBeGreaterThan(0);
 
-            await Patiently.VerifyExpectationAsync(
-                () => Monitoring.Received().HandleException(Arg.Any<string>()));
+            Monitoring.Received().HandleException(Arg.Any<string>());
         }
     }
 }

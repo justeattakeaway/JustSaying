@@ -10,7 +10,7 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
-    public abstract class GivenANotificationStack : BehaviourTest<IAmJustSayingFluently>
+    public abstract class GivenANotificationStack : AsyncBehaviourTest<IAmJustSayingFluently>
     {
         readonly Stopwatch _stopwatch = new Stopwatch();
         protected IAmJustSayingFluently ServiceBus;
