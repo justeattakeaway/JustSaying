@@ -14,24 +14,34 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
     public class WhenAHandlerThrowsAnException
     {
         private readonly IHandler<GenericMessage> _handler = Substitute.For<IHandler<GenericMessage>>();
-        private IAmJustSayingFluently _bus;
         private Action<Exception, Amazon.SQS.Model.Message> _globalErrorHandler;
         private bool _handledException;
         private IMessageMonitor _monitoring;
 
+        private TaskCompletionSource<object> _doneSignal;
+
         [OneTimeSetUp]
-        public void Given()
+        public async Task Given()
         {
-            _handler.Handle(Arg.Any<GenericMessage>()).Returns(true).AndDoes(ex => { throw new Exception("My Ex"); });
+            _doneSignal = new TaskCompletionSource<object>();
+
+            _handler.Handle(Arg.Any<GenericMessage>())
+                .Returns(true)
+                .AndDoes(_ =>
+                {
+                    Tasks.DelaySendDone(_doneSignal);
+                    throw new TestException("My Ex");
+                });
+
             _globalErrorHandler = (ex, m) => { _handledException = true; };
             _monitoring = Substitute.For<IMessageMonitor>();
             var bus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithMonitoring(_monitoring)
                 .ConfigurePublisherWith(c =>
-                                                                        {
-                                                                            c.PublishFailureBackoffMilliseconds = 1;
-                                                                            c.PublishFailureReAttempts = 3;
-                                                                        })
+                    {
+                        c.PublishFailureBackoffMilliseconds = 1;
+                        c.PublishFailureReAttempts = 3;
+                    })
                 .WithSnsMessagePublisher<GenericMessage>()
                 .WithSqsTopicSubscriber()
                 .IntoQueue("queuename")
@@ -44,33 +54,23 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .WithMessageHandler(_handler);
 
             bus.StartListening();
-            _bus = bus;
-        }
 
-        [SetUp]
-        public void When()
-        {
-            _bus.Publish(new GenericMessage());
-        }
+            bus.Publish(new GenericMessage());
+            await _doneSignal.Task;
 
-        [Then]
-        public async Task MessagePopsOutAtTheOtherEnd()
-        {
-            await Patiently.VerifyExpectationAsync(
-                () => _handler.Received().Handle(Arg.Any<GenericMessage>()));
+            bus.StopListening();
         }
 
         [Then]
-        public async Task CustomExceptionHandlingIsCalled()
+        public void MessagePopsOutAtTheOtherEnd()
         {
-            await Patiently.AssertThatAsync(() => _handledException);
+             _handler.Received().Handle(Arg.Any<GenericMessage>());
         }
 
-        [OneTimeTearDown]
-        public void ByeBye()
+        [Then]
+        public void CustomExceptionHandlingIsCalled()
         {
-            _bus.StopListening();
-            _bus = null;
+            Assert.That(_handledException, Is.True);
         }
     }
 }
