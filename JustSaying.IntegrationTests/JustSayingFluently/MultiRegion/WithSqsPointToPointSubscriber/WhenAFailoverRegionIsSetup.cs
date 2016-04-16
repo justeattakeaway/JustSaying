@@ -102,6 +102,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
             var done = await Tasks.WaitWithTimeoutAsync(handler.DoneSignal);
             Assert.That(done, Is.True);
 
+            Assert.That(handler.ReceivedMessageCount, Is.GreaterThanOrEqualTo(1));
             Assert.That(handler.HasReceived(_message));
         }
     }

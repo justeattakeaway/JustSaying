@@ -25,13 +25,6 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         private IHaveFulfilledSubscriptionRequirements _primaryBus;
         private IHaveFulfilledSubscriptionRequirements _secondaryBus;
 
-        [TearDown]
-        public void TearDown()
-        {
-            _primaryBus.StopListening();
-            _secondaryBus.StopListening();
-        }
-
         [Test]
         public async Task MessagesArePublishedToTheActiveRegion()
         {
@@ -45,6 +38,9 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             WhenTheFailoverRegionIsActive();
             AndAMessageIsPublished();
             await ThenTheMessageIsReceivedInThatRegion(_secondaryHandler);
+
+            _primaryBus.StopListening();
+            _secondaryBus.StopListening();
         }
 
         private void GivenSubscriptionsToAQueueInTwoRegions()
@@ -106,6 +102,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             var done = await Tasks.WaitWithTimeoutAsync(handler.DoneSignal);
             Assert.That(done, Is.True);
 
+            Assert.That(handler.ReceivedMessageCount, Is.GreaterThanOrEqualTo(1));
             Assert.That(handler.HasReceived(_message));
         }
     }
