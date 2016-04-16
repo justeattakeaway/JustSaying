@@ -21,14 +21,15 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         public Future(Action action)
         {
             _action = action;
+            ExpectedMessageCount = 1;
         }
 
         public void Complete(TMessage message)
         {
             try
             {
-                Value = message;
                 _messages.Add(message);
+
                 if (_action != null)
                 {
                     _action();
@@ -36,7 +37,10 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             }
             finally
             {
-                Tasks.DelaySendDone(_doneSignal);
+                if (ReceivedMessageCount >= ExpectedMessageCount)
+                {
+                    Tasks.DelaySendDone(_doneSignal);
+                }
             }
         }
 
@@ -45,14 +49,14 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             get { return _doneSignal.Task; }
         }
 
-        public int MessageCount
+        public int ExpectedMessageCount { get; set; }
+
+        public int ReceivedMessageCount
         {
             get { return _messages.Count; }
         }
 
         public Exception RecordedException { get; set; }
-
-        public TMessage Value { get; set; }
 
         public bool HasReceived(TMessage message)
         {

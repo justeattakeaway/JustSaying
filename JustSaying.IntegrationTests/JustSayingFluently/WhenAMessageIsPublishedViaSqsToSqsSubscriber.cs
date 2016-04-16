@@ -25,7 +25,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         [Test]
         public void ThenItGetsHandled()
         {
-            _handler.MessageCount.ShouldBeGreaterThan(0);
+            _handler.ReceivedMessageCount.ShouldBeGreaterThan(0);
         }
     }
 }

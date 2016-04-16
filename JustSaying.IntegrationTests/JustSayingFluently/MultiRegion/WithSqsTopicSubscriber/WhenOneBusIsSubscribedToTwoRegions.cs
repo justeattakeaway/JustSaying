@@ -20,14 +20,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         private GenericMessage _message1;
         private GenericMessage _message2;
 
-        [TearDown]
-        public void TearDown()
-        {
-            _subscriber.StopListening();
-        }
-
         [Test]
-        public async Task AMessagedPublishedToBothRegionsWillBeReceived()
+        public async Task MessagesPublishedToBothRegionsWillBeReceived()
         {
             GivenASubscriptionToAQueueInTwoRegions(RegionEndpoint.EUWest1.SystemName, RegionEndpoint.USEast1.SystemName);
             AndAPublisherToThePrimaryRegion(RegionEndpoint.EUWest1.SystemName);
@@ -36,10 +30,14 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             WhenMessagesArePublishedToBothRegions();
 
             await ThenTheSubscriberReceivesBothMessages();
+
+            _subscriber.StopListening();
         }
 
         private void GivenASubscriptionToAQueueInTwoRegions(string primaryRegion, string secondaryRegion)
         {
+            _handler.ExpectedMessageCount = 2;
+
             var handler = Substitute.For<IHandler<GenericMessage>>();
             handler.Handle(Arg.Any<GenericMessage>()).Returns(true);
             handler
@@ -76,16 +74,18 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             _message2 = new GenericMessage {Id = Guid.NewGuid()};
 
             _primaryPublisher.Publish(_message1);
+
             _secondaryPublisher.Publish(_message2);
         }
 
         private async Task ThenTheSubscriberReceivesBothMessages()
         {
-            await Patiently.AssertThatAsync(
-                () => _handler.HasReceived(_message1));
+            var done = await Tasks.WaitWithTimeoutAsync(_handler.DoneSignal);
+            Assert.That(done, Is.True);
 
-            await Patiently.AssertThatAsync(
-                () => _handler.HasReceived(_message2));
+            Assert.That(_handler.ReceivedMessageCount, Is.GreaterThanOrEqualTo(2));
+            Assert.That(_handler.HasReceived(_message1));
+            Assert.That(_handler.HasReceived(_message2));
         }
     }
 }

@@ -20,14 +20,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
         private GenericMessage _message1;
         private GenericMessage _message2;
 
-        [TearDown]
-        public void TearDown()
-        {
-            _subscriber.StopListening();
-        }
-
         [Test]
-        public async Task AMessagedPublishedToBothRegionsWillBeReceived()
+        public async Task MessagesPublishedToBothRegionsWillBeReceived()
         {
             GivenASubscriptionToAQueueInTwoRegions(RegionEndpoint.EUWest1.SystemName, RegionEndpoint.USEast1.SystemName);
             AndAPublisherToThePrimaryRegion(RegionEndpoint.EUWest1.SystemName);
@@ -36,10 +30,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
             WhenMessagesArePublishedToBothRegions();
 
             await ThenTheSubscriberReceivesBothMessages();
+
+            _subscriber.StopListening();
         }
 
         private void GivenASubscriptionToAQueueInTwoRegions(string primaryRegion, string secondaryRegion)
         {
+            _handler.ExpectedMessageCount = 2;
             var handler = Substitute.For<IHandler<GenericMessage>>();
             handler.Handle(Arg.Any<GenericMessage>()).Returns(true);
             handler
@@ -81,8 +78,12 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
 
         private async Task ThenTheSubscriberReceivesBothMessages()
         {
-            await Patiently.AssertThatAsync(() => _handler.HasReceived(_message1));
-            await Patiently.AssertThatAsync(() => _handler.HasReceived(_message2));
+            var done = await Tasks.WaitWithTimeoutAsync(_handler.DoneSignal);
+            Assert.That(done, Is.True);
+
+            Assert.That(_handler.ReceivedMessageCount, Is.GreaterThanOrEqualTo(2));
+            Assert.That(_handler.HasReceived(_message1));
+            Assert.That(_handler.HasReceived(_message2));
         }
     }
 }
