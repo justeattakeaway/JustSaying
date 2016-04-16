@@ -29,7 +29,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         [Test]
         public void ThenExceptionIsRecordedInMonitoring()
         {
-            _handler.MessageCount.ShouldBeGreaterThan(0);
+            _handler.ReceivedMessageCount.ShouldBeGreaterThan(0);
 
             Monitoring.Received().HandleException(Arg.Any<string>());
         }

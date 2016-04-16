@@ -103,7 +103,10 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
 
         private async Task ThenTheMessageIsReceivedInThatRegion(Future<GenericMessage> handler)
         {
-            await Patiently.AssertThatAsync(() => handler.HasReceived(_message));
+            var done = await Tasks.WaitWithTimeoutAsync(handler.DoneSignal);
+            Assert.That(done, Is.True);
+
+            Assert.That(handler.HasReceived(_message));
         }
     }
 }

@@ -29,7 +29,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         [Test]
         public void ThenHandlerWillReceiveTheMessage()
         {
-            _handlerFuture.MessageCount.ShouldBeGreaterThan(0);
+            _handlerFuture.ReceivedMessageCount.ShouldBeGreaterThan(0);
         }
     }
 }
