@@ -7,9 +7,9 @@ namespace JustSaying.AwsTools.MessageHandling
     internal class GuaranteedOnceDelivery<T> where T : Message
     {
         private const int DEFAULT_TEMPORARY_LOCK_SECONDS = 30;
-        private readonly IHandler<T> _handler;
+        private readonly IAsyncHandler<T> _handler;
 
-        public GuaranteedOnceDelivery(IHandler<T> handler)
+        public GuaranteedOnceDelivery(IAsyncHandler<T> handler)
         {
             _handler = handler;
         }

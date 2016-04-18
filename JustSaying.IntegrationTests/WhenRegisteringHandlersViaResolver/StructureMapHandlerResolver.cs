@@ -13,9 +13,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             _container = container;
         }
 
-        public IEnumerable<IHandler<T>> ResolveHandlers<T>()
+        public IEnumerable<IAsyncHandler<T>> ResolveHandlers<T>()
         {
-            return _container.GetAllInstances<IHandler<T>>();
+            return _container.GetAllInstances<IAsyncHandler<T>>();
         }
     }
 }

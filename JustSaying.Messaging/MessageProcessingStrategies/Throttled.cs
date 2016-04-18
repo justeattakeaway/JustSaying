@@ -63,9 +63,9 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             _messageMonitor.HandleThrottlingTime(watch.ElapsedMilliseconds);
         }
 
-        public void ProcessMessage(Action action)
+        public void ProcessMessage(Func<Task> action)
         {
-            var task = new Task(action);
+            var task = new Task(async () => await action());
             task.ContinueWith(MarkTaskAsComplete, TaskContinuationOptions.ExecuteSynchronously);
             
             Interlocked.Increment(ref _activeTaskCount);

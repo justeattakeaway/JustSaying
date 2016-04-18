@@ -199,13 +199,18 @@ namespace JustSaying
             return this;
         }
 
+        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message
+        {
+            return WithMessageHandler(new AsyncingHandler<T>(handler));
+        }
+
         /// <summary>
         /// Set message handlers for the given topic
         /// </summary>
         /// <typeparam name="T">Message type to be handled</typeparam>
         /// <param name="handler">Handler for the message type</param>
         /// <returns></returns>
-        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message
+        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IAsyncHandler<T> handler) where T : Message
         {
             // TODO - Subscription listeners should be just added once per queue,
             // and not for each message handler
@@ -233,12 +238,14 @@ namespace JustSaying
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
             if(!handlerResolver.ResolveHandlers<T>().Any())
             {
-                throw new HandlerNotRegisteredWithContainerException(string.Format("IHandler<{0}> is not regsistered in the container.", typeof(T).Name));
+                throw new HandlerNotRegisteredWithContainerException(string.Format("IHandler<{0}> is not registered in the container.", typeof(T).Name));
             }
             if (handlerResolver.ResolveHandlers<T>().Count() > 1)
             {
                 throw new NotSupportedException(string.Format("There are more than one registration for IHandler<{0}>. JustSaying currently does not support multiple registration for IHandler<T>.", typeof(T).Name));
             }
+
+            // TODo if therer are no IAsyncHandler<T> instances, look for some legacy IHandler<T> instances
 
             foreach (var region in Bus.Config.Regions)
             {
@@ -421,7 +428,7 @@ namespace JustSaying
 
     public interface IHandlerResolver
     {
-        IEnumerable<IHandler<T>> ResolveHandlers<T>();
+        IEnumerable<IAsyncHandler<T>> ResolveHandlers<T>();
     }
 
     public interface IAmJustSayingFluently : IMessagePublisher

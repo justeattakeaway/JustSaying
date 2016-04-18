@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using NLog;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageSerialisation;
@@ -32,7 +33,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _handlerMap = handlerMap;
         }
 
-        public void DispatchMessage(SQSMessage message)
+        public async Task DispatchMessage(SQSMessage message)
         {
             Message typedMessage;
             try
@@ -61,7 +62,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 if (typedMessage != null)
                 {
-                    handlingSucceeded = CallMessageHandlers(typedMessage);
+                    handlingSucceeded = await CallMessageHandlers(typedMessage);
                 }
 
                 if (handlingSucceeded)
@@ -83,7 +84,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        private bool CallMessageHandlers(Message message)
+        private async Task<bool> CallMessageHandlers(Message message)
         {
             var handlerFuncs = _handlerMap.Get(message.GetType());
 
@@ -98,7 +99,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 var watch = new System.Diagnostics.Stopwatch();
                 watch.Start();
 
-                var thisHandlerSucceeded = handlerFunc(message);
+                var thisHandlerSucceeded = await handlerFunc(message);
                 allHandlersSucceeded = allHandlersSucceeded && thisHandlerSucceeded;
 
                 watch.Stop();

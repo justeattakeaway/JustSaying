@@ -1,16 +1,17 @@
 ﻿using System;
+using System.Threading.Tasks;
 using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageHandling
 {
-    public class ExactlyOnceHandler<T> : IHandler<T> where T : Message
+    public class ExactlyOnceHandler<T> : IAsyncHandler<T> where T : Message
     {
-        private readonly IHandler<T> _inner;
+        private readonly IAsyncHandler<T> _inner;
         private readonly IMessageLock _messageLock;
         private readonly int _timeOut;
         private readonly string _handlerName;
 
-        public ExactlyOnceHandler(IHandler<T> inner, IMessageLock messageLock, int timeOut, string handlerName)
+        public ExactlyOnceHandler(IAsyncHandler<T> inner, IMessageLock messageLock, int timeOut, string handlerName)
         {
             _inner = inner;
             _messageLock = messageLock;
@@ -21,7 +22,7 @@ namespace JustSaying.Messaging.MessageHandling
         private const bool RemoveTheMessageFromTheQueue = true;
         private const bool LeaveItInTheQueue = false;
         
-        public bool Handle(T message)
+        public async Task<bool> Handle(T message)
         {
             var lockKey = string.Format("{2}-{1}-{0}", _handlerName, typeof(T).Name.ToLower(), message.UniqueKey());
             var lockResponse = _messageLock.TryAquireLock(lockKey, TimeSpan.FromSeconds(_timeOut));
@@ -37,7 +38,7 @@ namespace JustSaying.Messaging.MessageHandling
 
             try
             {
-                var successfullyHandled = _inner.Handle(message);
+                var successfullyHandled = await _inner.Handle(message);
                 if (successfullyHandled)
                 {
                     _messageLock.TryAquireLockPermanently(lockKey);

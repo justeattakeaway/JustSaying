@@ -7,7 +7,7 @@ namespace JustSaying.Messaging
 {
     public interface INotificationSubscriber : INotificationSubscriberInterrogation
     {
-        void AddMessageHandler<T>(Func<IHandler<T>> handler) where T : Message;
+        void AddMessageHandler<T>(Func<IAsyncHandler<T>> handler) where T : Message;
         void Listen();
         void StopListening();
         string Queue { get; }
