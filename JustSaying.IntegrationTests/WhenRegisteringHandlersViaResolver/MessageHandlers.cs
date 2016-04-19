@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using JustSaying.IntegrationTests.JustSayingFluently;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
@@ -13,7 +14,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         public string OrderId { get; private set; }
     }
 
-    public class OrderProcessor : IHandler<OrderPlaced>
+    public class OrderProcessor : IAsyncHandler<OrderPlaced>
     {
         private readonly Future<OrderPlaced> _future;
 
@@ -22,9 +23,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             _future = future;
         }
 
-        public bool Handle(OrderPlaced message)
+        public async Task<bool> Handle(OrderPlaced message)
         {
-            _future.Complete(message);
+            await _future.Complete(message);
             return true;
         }
 
@@ -34,7 +35,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         }
     }
 
-    public class OrderDispatcher : IHandler<OrderPlaced>
+    public class OrderDispatcher : IAsyncHandler<OrderPlaced>
     {
         private readonly Future<OrderPlaced> _future;
 
@@ -43,9 +44,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             _future = future;
         }
 
-        public bool Handle(OrderPlaced message)
+        public async Task<bool> Handle(OrderPlaced message)
         {
-            _future.Complete(message);
+            await _future.Complete(message);
             return true;
         }
 

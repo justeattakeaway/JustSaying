@@ -101,7 +101,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             fakeMonitor.DidNotReceive().IncrementThrottlingStatistic();
         }
 
-        private async Task ListenLoopExecuted(Queue<Action> actions,
+        private async Task ListenLoopExecuted(Queue<Func<Task>> actions,
             IMessageProcessingStrategy messageProcessingStrategy)
         {
             var initalActionCount = actions.Count;
@@ -136,12 +136,12 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             }
         }
 
-        private IList<Action> GetFromFakeSnsQueue(Queue<Action> actions, int requestedBatchSize)
+        private IList<Func<Task>> GetFromFakeSnsQueue(Queue<Func<Task>> actions, int requestedBatchSize)
         {
             var batchSize = Math.Min(requestedBatchSize, MaxAmazonBatchSize);
             batchSize = Math.Min(batchSize, actions.Count);
 
-            var batch = new List<Action>();
+            var batch = new List<Func<Task>>();
 
             for (var i = 0; i < batchSize; i++)
             {
@@ -150,17 +150,17 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             return batch;
         }
 
-        private Queue<Action> BuildFakeIncomingMessages(int numberOfMessagesToCreate, ThreadSafeCounter counter)
+        private Queue<Func<Task>> BuildFakeIncomingMessages(int numberOfMessagesToCreate, ThreadSafeCounter counter)
         {
             var random = new Random();
-            var actions = new Queue<Action>();
+            var actions = new Queue<Func<Task>>();
             for (var i = 0; i != numberOfMessagesToCreate; i++)
             {
                 var duration = MinTaskDuration + random.Next(TaskDurationVariance);
 
-                var action = new Action(() =>
+                var action = new Func<Task>(async () =>
                     {
-                         Thread.Sleep(duration);
+                        await Task.Delay(duration);
                         counter.Increment();
                     });
                 actions.Enqueue(action);

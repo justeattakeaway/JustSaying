@@ -45,7 +45,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
 
         private void GivenSubscriptionsToAQueueInTwoRegions()
         {
-            var primaryHandler = Substitute.For<IHandler<GenericMessage>>();
+            var primaryHandler = Substitute.For<IAsyncHandler<GenericMessage>>();
             primaryHandler.Handle(Arg.Any<GenericMessage>()).Returns(true);
             primaryHandler
                 .When(x => x.Handle(Arg.Any<GenericMessage>()))
@@ -58,7 +58,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
                 .WithMessageHandler(primaryHandler);
             _primaryBus.StartListening();
 
-            var secondaryHandler = Substitute.For<IHandler<GenericMessage>>();
+            var secondaryHandler = Substitute.For<IAsyncHandler<GenericMessage>>();
             secondaryHandler.Handle(Arg.Any<GenericMessage>()).Returns(true);
             secondaryHandler
                 .When(x => x.Handle(Arg.Any<GenericMessage>()))

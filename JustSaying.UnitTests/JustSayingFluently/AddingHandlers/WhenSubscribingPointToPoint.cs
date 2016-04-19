@@ -12,7 +12,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
 {
     public class WhenSubscribingPointToPoint : JustSayingFluentlyTestBase
     {
-        private readonly IHandler<Message> _handler = Substitute.For<IHandler<Message>>();
+        private readonly IAsyncHandler<Message> _handler = Substitute.For<IAsyncHandler<Message>>();
         private object _response;
 
         protected override void Given()
@@ -44,7 +44,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         [Then]
         public void HandlerIsAddedToBus()
         {
-            Bus.Received().AddMessageHandler(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Func<IHandler<Message>>>());
+            Bus.Received().AddMessageHandler(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Func<IAsyncHandler<Message>>>());
         }
         
         [Then]

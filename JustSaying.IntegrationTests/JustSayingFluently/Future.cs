@@ -11,20 +11,20 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
     {
         private readonly TaskCompletionSource<object> _doneSignal = new TaskCompletionSource<object>();
 
-        private readonly Action _action;
+        private readonly Func<Task> _action;
         private readonly List<TMessage> _messages = new List<TMessage>();
 
         public Future(): this(null)
         {
         }
 
-        public Future(Action action)
+        public Future(Func<Task> action)
         {
             _action = action;
             ExpectedMessageCount = 1;
         }
 
-        public void Complete(TMessage message)
+        public async Task Complete(TMessage message)
         {
             try
             {
@@ -32,7 +32,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
                 if (_action != null)
                 {
-                    _action();
+                    await _action();
                 }
             }
             finally

@@ -8,7 +8,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
     {
         public SingleHandlerRegistry()
         {
-            For<IHandler<OrderPlaced>>().Transient().Use<OrderProcessor>()
+            For<IAsyncHandler<OrderPlaced>>().Transient().Use<OrderProcessor>()
                 .Ctor<Future<OrderPlaced>>().Is(new Future<OrderPlaced>());
             
         }

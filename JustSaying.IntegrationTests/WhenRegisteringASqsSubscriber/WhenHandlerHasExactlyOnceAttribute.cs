@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
@@ -9,13 +10,13 @@ using NUnit.Framework;
 namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 {
     [ExactlyOnce(TimeOut = 10)]
-    public class SampleHandler : IHandler<GenericMessage>
+    public class SampleHandler : IAsyncHandler<GenericMessage>
     {
         private int _count;
-        public bool Handle(GenericMessage message)
+        public Task<bool> Handle(GenericMessage message)
         {
             Interlocked.Increment(ref _count);
-            return true;
+            return Task.FromResult(true);
         }
 
         public int NumberOfTimesIHaveBeenCalled()

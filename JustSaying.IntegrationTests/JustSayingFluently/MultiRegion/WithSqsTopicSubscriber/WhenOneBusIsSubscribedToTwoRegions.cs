@@ -38,7 +38,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         {
             _handler.ExpectedMessageCount = 2;
 
-            var handler = Substitute.For<IHandler<GenericMessage>>();
+            var handler = Substitute.For<IAsyncHandler<GenericMessage>>();
             handler.Handle(Arg.Any<GenericMessage>()).Returns(true);
             handler
                 .When(x => x.Handle(Arg.Any<GenericMessage>()))

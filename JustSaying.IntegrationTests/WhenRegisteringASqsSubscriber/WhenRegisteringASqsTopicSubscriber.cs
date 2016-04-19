@@ -39,9 +39,10 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             SystemUnderTest.WithSqsTopicSubscriber()
                 .IntoQueue(QueueName)
                 .ConfigureSubscriptionWith(cfg =>
-            {
-                cfg.MessageRetentionSeconds = 60;
-            }).WithMessageHandler(Substitute.For<IHandler<Message>>());
+                    {
+                        cfg.MessageRetentionSeconds = 60;
+                    })
+                .WithMessageHandler(Substitute.For<IAsyncHandler<Message>>());
         }
 
         [Then]
@@ -74,7 +75,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         {
             SystemUnderTest.WithSqsTopicSubscriber()
                 .IntoQueue(QueueName)
-                .WithMessageHandler(Substitute.For<IHandler<Message>>());
+                .WithMessageHandler(Substitute.For<IAsyncHandler<Message>>());
         }
     }
 }

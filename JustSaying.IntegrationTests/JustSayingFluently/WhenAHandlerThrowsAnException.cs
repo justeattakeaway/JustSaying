@@ -13,7 +13,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
     [TestFixture]
     public class WhenAHandlerThrowsAnException
     {
-        private readonly IHandler<GenericMessage> _handler = Substitute.For<IHandler<GenericMessage>>();
+        private readonly IAsyncHandler<GenericMessage> _handler = Substitute.For<IAsyncHandler<GenericMessage>>();
         private Action<Exception, Amazon.SQS.Model.Message> _globalErrorHandler;
         private bool _handledException;
         private IMessageMonitor _monitoring;

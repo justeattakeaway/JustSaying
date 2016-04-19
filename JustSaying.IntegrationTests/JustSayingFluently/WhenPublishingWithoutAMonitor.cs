@@ -12,7 +12,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
     public class WhenPublishingWithoutAMonitor
     {
         private IAmJustSayingFluently _bus;
-        private readonly IHandler<GenericMessage> _handler = Substitute.For<IHandler<GenericMessage>>();
+        private readonly IAsyncHandler<GenericMessage> _handler = Substitute.For<IAsyncHandler<GenericMessage>>();
 
         [OneTimeSetUp]
         public async Task Given()

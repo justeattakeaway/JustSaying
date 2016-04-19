@@ -15,7 +15,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
 
     public class WhenAddingASubscriptionHandlerForAGenericMessage : JustSayingFluentlyTestBase
     {
-        private readonly IHandler<JustSayingMessage<MyMessage>> _handler = Substitute.For<IHandler<JustSayingMessage<MyMessage>>>();
+        private readonly IAsyncHandler<JustSayingMessage<MyMessage>> _handler = Substitute.For<IAsyncHandler<JustSayingMessage<MyMessage>>>();
         private object _response;
 
         protected override void Given()
@@ -34,7 +34,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         [Then]
         public void HandlerIsAddedToBus()
         {
-            Bus.Received().AddMessageHandler(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Func<IHandler<JustSayingMessage<MyMessage>>>>());
+            Bus.Received().AddMessageHandler(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Func<IAsyncHandler<JustSayingMessage<MyMessage>>>>());
         }
     }
 }

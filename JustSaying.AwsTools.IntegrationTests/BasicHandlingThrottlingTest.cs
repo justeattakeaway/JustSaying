@@ -62,7 +62,7 @@ namespace JustSaying.AwsTools.IntegrationTests
             var handleCount = 0;
             var serialisations = Substitute.For<IMessageSerialisationRegister>();
             var monitor = Substitute.For<IMessageMonitor>();
-            var handler = Substitute.For<IHandler<GenericMessage>>();
+            var handler = Substitute.For<IAsyncHandler<GenericMessage>>();
             handler.Handle(null).ReturnsForAnyArgs(true).AndDoes(x => {lock (locker) { handleCount++; } });
 
             serialisations.DeserializeMessage(string.Empty).ReturnsForAnyArgs(new GenericMessage());

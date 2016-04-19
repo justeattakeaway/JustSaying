@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Amazon;
 using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
@@ -14,11 +15,11 @@ namespace JustSaying.AwsTools.IntegrationTests
         {
         }
 
-        public class OrderHandler : IHandler<Order>
+        public class OrderHandler : IAsyncHandler<Order>
         {
-            public bool Handle(Order message)
+            public Task<bool> Handle(Order message)
             {
-                return true;
+                return Task.FromResult(true);
             }
         }
 
