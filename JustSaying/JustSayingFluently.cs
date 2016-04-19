@@ -199,10 +199,12 @@ namespace JustSaying
             return this;
         }
 
+#pragma warning disable 618
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message
         {
             return WithMessageHandler(new AsyncingHandler<T>(handler));
         }
+#pragma warning restore 618
 
         /// <summary>
         /// Set message handlers for the given topic
@@ -452,7 +454,11 @@ namespace JustSaying
 
     public interface IFluentSubscription
     {
+#pragma warning disable 618
         IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message;
+#pragma warning restore 618
+        IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IAsyncHandler<T> handler) where T : Message;
+
         IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message;
         IFluentSubscription ConfigureSubscriptionWith(Action<SqsReadConfiguration> config);
     }

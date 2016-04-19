@@ -4,22 +4,22 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support
 {
-    public class SignallingHandler<T> : IHandler<T>
+    public class SignallingHandler<T> : IAsyncHandler<T>
     {
         private readonly TaskCompletionSource<object> _doneSignal;
-        private readonly IHandler<T> _inner;
+        private readonly IAsyncHandler<T> _inner;
 
-        public SignallingHandler(TaskCompletionSource<object> doneSignal, IHandler<T> inner)
+        public SignallingHandler(TaskCompletionSource<object> doneSignal, IAsyncHandler<T> inner)
         {
             _doneSignal = doneSignal;
             _inner = inner;
         }
 
-        public bool Handle(T message)
+        public async Task<bool> Handle(T message)
         {
             try
             {
-                return _inner.Handle(message);
+                return await _inner.Handle(message);
             }
             finally 
             {
