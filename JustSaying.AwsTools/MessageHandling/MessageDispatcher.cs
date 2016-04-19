@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using NLog;
 using Amazon.SQS.Model;
@@ -88,24 +89,29 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             var handlerFuncs = _handlerMap.Get(message.GetType());
 
-            if (handlerFuncs == null)
+            if ((handlerFuncs == null) || (handlerFuncs.Count == 0))
             {
                 return true;
             }
 
-            var allHandlersSucceeded = true;
-            foreach (var handlerFunc in handlerFuncs)
+            bool allHandlersSucceeded;
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+
+            if (handlerFuncs.Count == 1)
             {
-                var watch = new System.Diagnostics.Stopwatch();
-                watch.Start();
-
-                var thisHandlerSucceeded = await handlerFunc(message);
-                allHandlersSucceeded = allHandlersSucceeded && thisHandlerSucceeded;
-
-                watch.Stop();
-                Log.Trace("Handled message - MessageType: {0}", message.GetType().Name);
-                _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
+                // a shortcut for the usual case
+                allHandlersSucceeded = await handlerFuncs[0](message);
             }
+            else
+            {
+                var handlerTasks = handlerFuncs.Select(func => func(message));
+                var handlerResults = await Task.WhenAll(handlerTasks);
+                allHandlersSucceeded = handlerResults.All(x => x);
+            }
+
+            watch.Stop();
+            Log.Trace("Handled message - MessageType: {0}", message.GetType().Name);
+            _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
 
             return allHandlersSucceeded;
         }
