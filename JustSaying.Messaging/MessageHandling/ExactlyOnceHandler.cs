@@ -4,14 +4,14 @@ using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageHandling
 {
-    public class ExactlyOnceHandler<T> : IAsyncHandler<T> where T : Message
+    public class ExactlyOnceHandler<T> : IHandlerAsync<T> where T : Message
     {
-        private readonly IAsyncHandler<T> _inner;
+        private readonly IHandlerAsync<T> _inner;
         private readonly IMessageLock _messageLock;
         private readonly int _timeOut;
         private readonly string _handlerName;
 
-        public ExactlyOnceHandler(IAsyncHandler<T> inner, IMessageLock messageLock, int timeOut, string handlerName)
+        public ExactlyOnceHandler(IHandlerAsync<T> inner, IMessageLock messageLock, int timeOut, string handlerName)
         {
             _inner = inner;
             _messageLock = messageLock;

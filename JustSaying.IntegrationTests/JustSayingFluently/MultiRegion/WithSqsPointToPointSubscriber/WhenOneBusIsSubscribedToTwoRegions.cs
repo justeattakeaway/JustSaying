@@ -37,7 +37,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
         private void GivenASubscriptionToAQueueInTwoRegions(string primaryRegion, string secondaryRegion)
         {
             _handler.ExpectedMessageCount = 2;
-            var handler = Substitute.For<IAsyncHandler<GenericMessage>>();
+            var handler = Substitute.For<IHandlerAsync<GenericMessage>>();
             handler.Handle(Arg.Any<GenericMessage>()).Returns(true);
             handler
                 .When(x => x.Handle(Arg.Any<GenericMessage>()))

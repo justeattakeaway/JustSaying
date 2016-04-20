@@ -5,12 +5,12 @@ using JustSaying.Models;
 
 namespace JustSaying.Messaging.Monitoring
 {
-    public class StopwatchHandler<T> : IAsyncHandler<T> where T : Message
+    public class StopwatchHandler<T> : IHandlerAsync<T> where T : Message
     {
-        private readonly IAsyncHandler<T> _inner;
+        private readonly IHandlerAsync<T> _inner;
         private readonly IMeasureHandlerExecutionTime _monitoring;
 
-        public StopwatchHandler(IAsyncHandler<T> inner, IMeasureHandlerExecutionTime monitoring)
+        public StopwatchHandler(IHandlerAsync<T> inner, IMeasureHandlerExecutionTime monitoring)
         {
             _inner = inner;
             _monitoring = monitoring;

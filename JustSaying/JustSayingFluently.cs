@@ -212,7 +212,7 @@ namespace JustSaying
         /// <typeparam name="T">Message type to be handled</typeparam>
         /// <param name="handler">Handler for the message type</param>
         /// <returns></returns>
-        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IAsyncHandler<T> handler) where T : Message
+        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerAsync<T> handler) where T : Message
         {
             // TODO - Subscription listeners should be just added once per queue,
             // and not for each message handler
@@ -430,7 +430,7 @@ namespace JustSaying
 
     public interface IHandlerResolver
     {
-        IEnumerable<IAsyncHandler<T>> ResolveHandlers<T>();
+        IEnumerable<IHandlerAsync<T>> ResolveHandlers<T>();
     }
 
     public interface IAmJustSayingFluently : IMessagePublisher
@@ -457,7 +457,7 @@ namespace JustSaying
 #pragma warning disable 618
         IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message;
 #pragma warning restore 618
-        IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IAsyncHandler<T> handler) where T : Message;
+        IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerAsync<T> handler) where T : Message;
 
         IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message;
         IFluentSubscription ConfigureSubscriptionWith(Action<SqsReadConfiguration> config);

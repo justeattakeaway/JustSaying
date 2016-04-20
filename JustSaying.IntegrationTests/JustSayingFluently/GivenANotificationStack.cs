@@ -46,11 +46,11 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
         protected override IAmJustSayingFluently CreateSystemUnderTest()
         {
-            var snsHandler = Substitute.For<IAsyncHandler<GenericMessage>>();
+            var snsHandler = Substitute.For<IHandlerAsync<GenericMessage>>();
             snsHandler.When(x => x.Handle(Arg.Any<GenericMessage>()))
                     .Do(async x => await _snsHandler.Complete((GenericMessage)x.Args()[0]));
 
-            var sqsHandler = Substitute.For<IAsyncHandler<AnotherGenericMessage>>();
+            var sqsHandler = Substitute.For<IHandlerAsync<AnotherGenericMessage>>();
             sqsHandler.When(x => x.Handle(Arg.Any<AnotherGenericMessage>()))
                     .Do(async x => await _sqsHandler.Complete((AnotherGenericMessage)x.Args()[0]));
 

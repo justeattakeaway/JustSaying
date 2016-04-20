@@ -15,7 +15,7 @@ namespace JustSaying.AwsTools.IntegrationTests
         {
         }
 
-        public class OrderHandler : IAsyncHandler<Order>
+        public class OrderHandler : IHandlerAsync<Order>
         {
             public Task<bool> Handle(Order message)
             {

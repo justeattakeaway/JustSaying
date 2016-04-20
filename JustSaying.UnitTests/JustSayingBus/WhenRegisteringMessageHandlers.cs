@@ -10,11 +10,11 @@ namespace JustSaying.UnitTests.JustSayingBus
     public class WhenRegisteringMessageHandlers : GivenAServiceBus
     {
         private INotificationSubscriber _subscriber;
-        private IAsyncHandler<Message> _handler1;
-        private IAsyncHandler<Message2> _handler2;
+        private IHandlerAsync<Message> _handler1;
+        private IHandlerAsync<Message2> _handler2;
         private string _region;
-        private readonly Func<IAsyncHandler<Message>> _futureHandler1;
-        private readonly Func<IAsyncHandler<Message2>> _futureHandler2;
+        private readonly Func<IHandlerAsync<Message>> _futureHandler1;
+        private readonly Func<IHandlerAsync<Message2>> _futureHandler2;
 
         public WhenRegisteringMessageHandlers()
         {
@@ -26,8 +26,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             base.Given();
             _subscriber = Substitute.For<INotificationSubscriber>();
-            _handler1 = Substitute.For<IAsyncHandler<Message>>();
-            _handler2 = Substitute.For<IAsyncHandler<Message2>>();
+            _handler1 = Substitute.For<IHandlerAsync<Message>>();
+            _handler2 = Substitute.For<IHandlerAsync<Message2>>();
             _region = "west-1";
         }
 
@@ -52,8 +52,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             Received.InOrder(() =>
                 {
-                    _subscriber.AddMessageHandler(Arg.Any<Func<IAsyncHandler<Message>>>());
-                    _subscriber.AddMessageHandler(Arg.Any<Func<IAsyncHandler<Message2>>>());
+                    _subscriber.AddMessageHandler(Arg.Any<Func<IHandlerAsync<Message>>>());
+                    _subscriber.AddMessageHandler(Arg.Any<Func<IHandlerAsync<Message2>>>());
                     _subscriber.Listen();
                 });
         }

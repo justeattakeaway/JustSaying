@@ -8,7 +8,7 @@ using NUnit.Framework;
 
 namespace JustSaying.IntegrationTests
 {
-    public class OrderPlacedHandler : IAsyncHandler<GenericMessage>
+    public class OrderPlacedHandler : IHandlerAsync<GenericMessage>
     {
         public Task<bool> Handle(GenericMessage message)
         {

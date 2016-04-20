@@ -25,7 +25,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             Sqs = Substitute.For<IAmazonSQS>();
             SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
             Monitor = Substitute.For<IMessageMonitor>();
-            Handler = Substitute.For<IAsyncHandler<GenericMessage>>();
+            Handler = Substitute.For<IHandlerAsync<GenericMessage>>();
             GenerateResponseMessage(MessageTypeString, Guid.NewGuid());
 
             DeserialisedMessage = new GenericMessage { RaisingComponent = "Component" };

@@ -8,10 +8,10 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
     {
         public MultipleHandlerRegistry()
         {
-            For<IAsyncHandler<OrderPlaced>>().Transient().Use<OrderProcessor>()
+            For<IHandlerAsync<OrderPlaced>>().Transient().Use<OrderProcessor>()
                 .Ctor<Future<OrderPlaced>>().Is(new Future<OrderPlaced>());
             
-            For<IAsyncHandler<OrderPlaced>>().Transient().Use<OrderDispatcher>()
+            For<IHandlerAsync<OrderPlaced>>().Transient().Use<OrderDispatcher>()
                 .Ctor<Future<OrderPlaced>>().Is(new Future<OrderPlaced>());
         }
     }

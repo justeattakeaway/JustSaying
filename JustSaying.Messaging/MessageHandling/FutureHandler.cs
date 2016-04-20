@@ -4,11 +4,11 @@ using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageHandling
 {
-    public class FutureHandler<T> : IAsyncHandler<T> where T : Message
+    public class FutureHandler<T> : IHandlerAsync<T> where T : Message
     {
-        private readonly Func<IAsyncHandler<T>> _futureHandler;
+        private readonly Func<IHandlerAsync<T>> _futureHandler;
 
-        public FutureHandler(Func<IAsyncHandler<T>> futureHandler)
+        public FutureHandler(Func<IHandlerAsync<T>> futureHandler)
         {
             _futureHandler = futureHandler;
         }

@@ -7,7 +7,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
 {
     public class WhenAddingASubscriptionHandlerWithoutCustomConfig : JustSayingFluentlyTestBase
     {
-        private readonly IAsyncHandler<Message> _handler = Substitute.For<IAsyncHandler<Message>>();
+        private readonly IHandlerAsync<Message> _handler = Substitute.For<IHandlerAsync<Message>>();
         private IFluentSubscription _bus;
 
         protected override void Given() { }

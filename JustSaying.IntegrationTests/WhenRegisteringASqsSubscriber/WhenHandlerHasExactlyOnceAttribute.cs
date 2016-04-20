@@ -10,7 +10,7 @@ using NUnit.Framework;
 namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 {
     [ExactlyOnce(TimeOut = 10)]
-    public class SampleHandler : IAsyncHandler<GenericMessage>
+    public class SampleHandler : IHandlerAsync<GenericMessage>
     {
         private int _count;
         public Task<bool> Handle(GenericMessage message)

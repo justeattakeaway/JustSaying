@@ -89,7 +89,7 @@ namespace JustSaying
             }
         }
 
-        public void AddMessageHandler<T>(string region, string queue, Func<IAsyncHandler<T>> futureHandler) where T : Message
+        public void AddMessageHandler<T>(string region, string queue, Func<IHandlerAsync<T>> futureHandler) where T : Message
         {
             var subscribersByRegion = _subscribersByRegionAndQueue[region];
             var subscriber = subscribersByRegion[queue];

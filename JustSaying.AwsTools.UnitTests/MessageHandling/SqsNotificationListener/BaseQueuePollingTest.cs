@@ -23,7 +23,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         protected IAmazonSQS Sqs;
         protected GenericMessage DeserialisedMessage;
         protected const string MessageBody = "object";
-        protected IAsyncHandler<GenericMessage> Handler;
+        protected IHandlerAsync<GenericMessage> Handler;
         protected IMessageMonitor Monitor;
         protected IMessageSerialisationRegister SerialisationRegister;
         protected IMessageLock MessageLock;
@@ -42,7 +42,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             Sqs = Substitute.For<IAmazonSQS>();
             SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
             Monitor = Substitute.For<IMessageMonitor>();
-            Handler = Substitute.For<IAsyncHandler<GenericMessage>>();
+            Handler = Substitute.For<IHandlerAsync<GenericMessage>>();
 
             var response = GenerateResponseMessage(MessageTypeString, Guid.NewGuid());
             

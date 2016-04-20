@@ -5,11 +5,11 @@ namespace JustSaying.Messaging.MessageHandling
 #pragma warning disable CS0618 // Type or member is obsolete
 
     /// <summary>
-    /// Used to convert "IHandler<T>" instances into IAsyncHandler<T>
-    /// So that the rest of the system only has to deal with IAsyncHandler<T>
+    /// Used to convert "IHandler " instances into IAsyncHandler
+    /// So that the rest of the system only has to deal with IAsyncHandler
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class AsyncingHandler<T> : IAsyncHandler<T>
+    public class AsyncingHandler<T> : IHandlerAsync<T>
     {
         private readonly IHandler<T> _syncHandler;
 

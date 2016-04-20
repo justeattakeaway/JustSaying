@@ -5,7 +5,7 @@ using JustSaying.TestingFramework;
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support
 {
     [ExactlyOnce]
-    public class ExactlyOnceSignallingHandler : IAsyncHandler<GenericMessage>
+    public class ExactlyOnceSignallingHandler : IHandlerAsync<GenericMessage>
     {
         private readonly TaskCompletionSource<object> _doneSignal;
 

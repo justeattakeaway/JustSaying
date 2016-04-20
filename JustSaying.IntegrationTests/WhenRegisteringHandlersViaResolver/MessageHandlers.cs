@@ -14,7 +14,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         public string OrderId { get; private set; }
     }
 
-    public class OrderProcessor : IAsyncHandler<OrderPlaced>
+    public class OrderProcessor : IHandlerAsync<OrderPlaced>
     {
         private readonly Future<OrderPlaced> _future;
 
@@ -35,7 +35,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         }
     }
 
-    public class OrderDispatcher : IAsyncHandler<OrderPlaced>
+    public class OrderDispatcher : IHandlerAsync<OrderPlaced>
     {
         private readonly Future<OrderPlaced> _future;
 
