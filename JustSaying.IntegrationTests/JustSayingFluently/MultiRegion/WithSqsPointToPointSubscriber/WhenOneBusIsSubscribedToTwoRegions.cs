@@ -41,7 +41,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
             handler.Handle(Arg.Any<GenericMessage>()).Returns(true);
             handler
                 .When(x => x.Handle(Arg.Any<GenericMessage>()))
-                .Do(x => _handler.Complete((GenericMessage) x.Args()[0]));
+                .Do(async x => await _handler.Complete((GenericMessage) x.Args()[0]));
 
             _subscriber = CreateMeABus
                 .InRegion(primaryRegion)

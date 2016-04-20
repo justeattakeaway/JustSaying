@@ -49,7 +49,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             primaryHandler.Handle(Arg.Any<GenericMessage>()).Returns(true);
             primaryHandler
                 .When(x => x.Handle(Arg.Any<GenericMessage>()))
-                .Do(x => _primaryHandler.Complete((GenericMessage)x.Args()[0]));
+                .Do(async x => await _primaryHandler.Complete((GenericMessage)x.Args()[0]));
 
             _primaryBus = CreateMeABus
                 .InRegion(PrimaryRegion)
@@ -62,7 +62,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             secondaryHandler.Handle(Arg.Any<GenericMessage>()).Returns(true);
             secondaryHandler
                 .When(x => x.Handle(Arg.Any<GenericMessage>()))
-                .Do(x => _secondaryHandler.Complete((GenericMessage)x.Args()[0]));
+                .Do(async x => await _secondaryHandler.Complete((GenericMessage)x.Args()[0]));
 
             _secondaryBus = CreateMeABus
                 .InRegion(SecondaryRegion)

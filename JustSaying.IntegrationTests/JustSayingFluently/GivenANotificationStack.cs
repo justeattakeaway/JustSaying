@@ -48,11 +48,11 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         {
             var snsHandler = Substitute.For<IAsyncHandler<GenericMessage>>();
             snsHandler.When(x => x.Handle(Arg.Any<GenericMessage>()))
-                    .Do(x => _snsHandler.Complete((GenericMessage)x.Args()[0]));
+                    .Do(async x => await _snsHandler.Complete((GenericMessage)x.Args()[0]));
 
             var sqsHandler = Substitute.For<IAsyncHandler<AnotherGenericMessage>>();
             sqsHandler.When(x => x.Handle(Arg.Any<AnotherGenericMessage>()))
-                    .Do(x => _sqsHandler.Complete((AnotherGenericMessage)x.Args()[0]));
+                    .Do(async x => await _sqsHandler.Complete((AnotherGenericMessage)x.Args()[0]));
 
             Monitoring = Substitute.For<IMessageMonitor>();
 
