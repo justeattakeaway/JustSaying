@@ -65,8 +65,10 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
 
         public void ProcessMessage(Func<Task> action)
         {
-            var task = new Task(async () => await action());
-            task.ContinueWith(MarkTaskAsComplete, TaskContinuationOptions.ExecuteSynchronously);
+            var task = new Task<Task>(async () => await action());
+
+            task.Unwrap()
+                .ContinueWith(MarkTaskAsComplete, TaskContinuationOptions.ExecuteSynchronously);
             
             Interlocked.Increment(ref _activeTaskCount);
             
