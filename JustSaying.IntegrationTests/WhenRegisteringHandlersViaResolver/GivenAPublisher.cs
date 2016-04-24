@@ -1,11 +1,14 @@
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
-    public abstract class GivenAPublisher : BehaviourTest<IMessagePublisher>
+    public abstract class GivenAPublisher : AsyncBehaviourTest<IMessagePublisher>
     {
         protected IHaveFulfilledPublishRequirements Publisher;
+
+        protected Task DoneSignal;
 
         protected override IMessagePublisher CreateSystemUnderTest()
         {
@@ -15,9 +18,14 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             return Publisher;
         }
 
-        protected override void When()
+        protected override async Task When()
         {
             Publisher.Publish(new OrderPlaced("1234"));
+
+            if (DoneSignal != null)
+            {
+                await DoneSignal;
+            }
         }
     }
 }

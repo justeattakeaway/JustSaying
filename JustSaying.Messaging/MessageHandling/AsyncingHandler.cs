@@ -11,16 +11,18 @@ namespace JustSaying.Messaging.MessageHandling
     /// <typeparam name="T"></typeparam>
     public class AsyncingHandler<T> : IHandlerAsync<T>
     {
-        private readonly IHandler<T> _syncHandler;
+        private readonly IHandler<T> _inner;
 
-        public AsyncingHandler(IHandler<T> syncHandler)
+        public AsyncingHandler(IHandler<T> inner)
         {
-            _syncHandler = syncHandler;
+            _inner = inner;
         }
+
+        public IHandler<T> Inner { get { return _inner; } }
 
         public Task<bool> Handle(T message)
         {
-            return Task.FromResult(_syncHandler.Handle(message));
+            return Task.FromResult(_inner.Handle(message));
         }
     }
 

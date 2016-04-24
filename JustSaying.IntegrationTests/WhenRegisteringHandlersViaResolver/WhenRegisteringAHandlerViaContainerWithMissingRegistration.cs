@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using JustBehave;
 using NUnit.Framework;
 using StructureMap;
@@ -11,9 +12,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             RecordAnyExceptionsThrown();
         }
 
-        protected override void When()
+        protected override async Task When()
         {
-            base.When();
+            await base.When();
             var handlerResolver = new StructureMapHandlerResolver(new Container());
 
             CreateMeABus.InRegion("eu-west-1")

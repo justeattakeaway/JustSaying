@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Amazon;
 using JustSaying.AwsTools;
@@ -238,22 +237,23 @@ namespace JustSaying
                 : TopicHandler<T>();
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
-            if(!handlerResolver.ResolveHandlers<T>().Any())
+
+            var proposedHandlers = handlerResolver.ResolveHandlers<T>().ToList();
+
+            if (proposedHandlers.Count == 0)
             {
                 throw new HandlerNotRegisteredWithContainerException(string.Format("IHandler<{0}> is not registered in the container.", typeof(T).Name));
             }
-            if (handlerResolver.ResolveHandlers<T>().Count() > 1)
+            if (proposedHandlers.Count > 1)
             {
                 throw new NotSupportedException(string.Format("There are more than one registration for IHandler<{0}>. JustSaying currently does not support multiple registration for IHandler<T>.", typeof(T).Name));
             }
 
-            // TODo if therer are no IAsyncHandler<T> instances, look for some legacy IHandler<T> instances
+            var singleHandler = proposedHandlers[0];
 
             foreach (var region in Bus.Config.Regions)
             {
-                Bus.AddMessageHandler(region, 
-                    _subscriptionConfig.QueueName, 
-                    () => handlerResolver.ResolveHandlers<T>().Single());
+                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => singleHandler);
             }
             
 
@@ -426,11 +426,6 @@ namespace JustSaying
     public interface IMayWantCustomSerialisation : IAmJustSayingFluently
     {
         IMayWantOptionalSettings WithSerialisationFactory(IMessageSerialisationFactory factory);
-    }
-
-    public interface IHandlerResolver
-    {
-        IEnumerable<IHandlerAsync<T>> ResolveHandlers<T>();
     }
 
     public interface IAmJustSayingFluently : IMessagePublisher

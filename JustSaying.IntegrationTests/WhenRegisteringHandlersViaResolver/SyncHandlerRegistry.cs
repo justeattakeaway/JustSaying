@@ -4,12 +4,14 @@ using StructureMap.Configuration.DSL;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
-    public class SingleHandlerRegistry : Registry
+    public class SyncHandlerRegistry : Registry
     {
-        public SingleHandlerRegistry()
+        public SyncHandlerRegistry()
         {
-            For<IHandlerAsync<OrderPlaced>>().Transient().Use<OrderProcessor>()
+#pragma warning disable 618
+            For<IHandler<OrderPlaced>>().Transient().Use<SyncOrderProcessor>()
                 .Ctor<Future<OrderPlaced>>().Is(new Future<OrderPlaced>());
+#pragma warning restore 618
         }
     }
 }

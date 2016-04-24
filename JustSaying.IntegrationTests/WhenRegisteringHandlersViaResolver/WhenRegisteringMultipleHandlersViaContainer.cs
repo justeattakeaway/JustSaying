@@ -1,6 +1,8 @@
 using System;
 using NUnit.Framework;
 using StructureMap;
+using System.Threading.Tasks;
+using Container = StructureMap.Container;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
@@ -15,7 +17,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             _container = new Container(x => x.AddRegistry(new MultipleHandlerRegistry()));
         }
 
-        protected override void When()
+        protected override Task When()
         {
             var handlerResolver = new StructureMapHandlerResolver(_container);
 
@@ -23,6 +25,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);
+
+            return Task.FromResult(true);
         }
 
         [Test]
