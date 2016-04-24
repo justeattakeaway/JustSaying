@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace JustSaying.Messaging.MessageHandling
 {
@@ -15,6 +16,11 @@ namespace JustSaying.Messaging.MessageHandling
 
         public AsyncingHandler(IHandler<T> inner)
         {
+            if (inner == null)
+            {
+                throw new ArgumentNullException("inner");
+            }
+
             _inner = inner;
         }
 
