@@ -30,8 +30,8 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             var handlerInstance = futureHandler();
 
-            var guaranteedDelivery = new GuaranteedOnceDelivery<T>(handlerInstance);
-            if (!guaranteedDelivery.Enabled)
+            var exactlyOnceMetadata = new ExactlyOnceReader(handlerInstance.GetType());
+            if (!exactlyOnceMetadata.Enabled)
             {
                 return handler;
             }
@@ -42,7 +42,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
 
             var handlerName = handlerInstance.GetType().FullName.ToLower();
-            return new ExactlyOnceHandler<T>(handler, _messageLock, guaranteedDelivery.TimeOut, handlerName);
+            return new ExactlyOnceHandler<T>(handler, _messageLock, exactlyOnceMetadata.GetTimeOut(), handlerName);
         }
 
         private IHandlerAsync<T> MaybeWrapStopwatch<T>(IHandlerAsync<T> handler) where T : Message

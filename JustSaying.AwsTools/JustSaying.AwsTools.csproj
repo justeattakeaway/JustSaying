@@ -56,7 +56,7 @@
   <ItemGroup>
     <Compile Include="AwsClientFactoryProxy.cs" />
     <Compile Include="DefaultAwsClientFactory.cs" />
-    <Compile Include="MessageHandling\GuaranteedOnceDelivery.cs" />
+    <Compile Include="MessageHandling\ExactlyOnceReader.cs" />
     <Compile Include="MessageHandling\HandlerMap.cs" />
     <Compile Include="IAwsClientFactoryProxy.cs" />
     <Compile Include="IAwsClientFactory.cs" />

@@ -70,6 +70,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MessageHandling\ExactlyOnceReaderTests.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\Support\ExactlyOnceSignallingHandler.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\Support\ExplicitExactlyOnceSignallingHandler.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\Support\SignallingHandler.cs" />
