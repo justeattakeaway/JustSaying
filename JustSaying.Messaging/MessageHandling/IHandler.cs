@@ -6,7 +6,7 @@ namespace JustSaying.Messaging.MessageHandling
     /// Synchronous message handler
     /// </summary>
     /// <typeparam name="T">Type of message to be handled</typeparam>
-    [Obsolete("replaced by IAsyncHandler<T>")]
+    [Obsolete("replaced by IHandlerAsync<T>")]
     public interface IHandler<in T>
     {
         /// <summary>

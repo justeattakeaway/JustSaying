@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace JustSaying.Messaging.MessageHandling
 {
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618
 
     /// <summary>
     /// Used to convert "IHandler " instances into IAsyncHandler
@@ -32,5 +32,5 @@ namespace JustSaying.Messaging.MessageHandling
         }
     }
 
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618
 }
