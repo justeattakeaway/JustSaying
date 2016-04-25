@@ -1,9 +1,31 @@
 using System;
 using System.Linq;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Models;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
+    internal static class HandlerMetadata
+    {
+        public static ExactlyOnceReader ReadExactlyOnce<T>(IHandlerAsync<T> handler) where T : Message
+        {
+            var asyncingHandler = handler as AsyncingHandler<T>;
+            if (asyncingHandler != null)
+            {
+                return ReadExactlyOnce(asyncingHandler.Inner);
+            }
+
+            return new ExactlyOnceReader(handler.GetType());
+        }
+
+#pragma warning disable 618
+        public static ExactlyOnceReader ReadExactlyOnce<T>(IHandler<T> handler) where T : Message
+        {
+            return new ExactlyOnceReader(handler.GetType());
+        }
+#pragma warning restore 618
+    }
+
     internal class ExactlyOnceReader
     {
         private const int DefaultTemporaryLockSeconds = 30;
