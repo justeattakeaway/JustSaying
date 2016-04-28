@@ -70,6 +70,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MessageHandling\HandlerMapTests.cs" />
     <Compile Include="MessageHandling\HandlerMetadataTest.cs" />
     <Compile Include="MessageHandling\ExactlyOnceReaderTests.cs" />
     <Compile Include="MessageHandling\HandlersWithMetadata.cs" />
