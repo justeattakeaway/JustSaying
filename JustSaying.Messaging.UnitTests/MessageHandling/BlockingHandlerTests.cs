@@ -9,7 +9,7 @@ namespace JustSaying.Messaging.UnitTests.MessageHandling
 {
 #pragma warning disable 618
     [TestFixture]
-    public class AsyncingHandlerTests
+    public class BlockingHandlerTests
     {
         [Test]
         public void WhenInnerIsNull_ExcpetionIsThrown()

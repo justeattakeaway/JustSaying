@@ -69,7 +69,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MessageHandling\AsyncingHandlerTests.cs" />
+    <Compile Include="MessageHandling\BlockingHandlerTests.cs" />
     <Compile Include="MessageProcessingStrategies\MessageLoopTests.cs" />
     <Compile Include="MessageProcessingStrategies\ThrottledTests.cs" />
     <Compile Include="MessageHandling\WhenEnsuringMessageIsOnlyHandledExactlyOnce.cs" />
