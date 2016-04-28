@@ -56,7 +56,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
         [Test]
         public void WrappedHandler_DoesHaveExactlyOnce()
         {
-            var wrapped = new AsyncingHandler<GenericMessage>(new OnceTestHandler());
+            var wrapped = new BlockingHandler<GenericMessage>(new OnceTestHandler());
 
             var reader = HandlerMetadata.ReadExactlyOnce(wrapped);
 

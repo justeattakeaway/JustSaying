@@ -9,7 +9,7 @@ namespace JustSaying.AwsTools.MessageHandling
     {
         public static ExactlyOnceReader ReadExactlyOnce<T>(IHandlerAsync<T> handler) where T : Message
         {
-            var asyncingHandler = handler as AsyncingHandler<T>;
+            var asyncingHandler = handler as BlockingHandler<T>;
             if (asyncingHandler != null)
             {
                 return ReadExactlyOnce(asyncingHandler.Inner);

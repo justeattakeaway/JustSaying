@@ -20,7 +20,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
 #pragma warning disable 618
             var proposedSyncHandlers = _container.GetAllInstances<IHandler<T>>()
-                .Select(h => new AsyncingHandler<T>(h));
+                .Select(h => new BlockingHandler<T>(h));
 #pragma warning restore 618
 
             return proposedHandlers.Concat(proposedSyncHandlers);

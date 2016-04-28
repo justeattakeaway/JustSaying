@@ -15,7 +15,7 @@ namespace JustSaying.Messaging.UnitTests.MessageHandling
         public void WhenInnerIsNull_ExcpetionIsThrown()
         {
             Assert.Throws<ArgumentNullException>(() =>
-            { new AsyncingHandler<OrderAccepted>(null); });
+            { new BlockingHandler<OrderAccepted>(null); });
         }
 
         [Test]
@@ -25,7 +25,7 @@ namespace JustSaying.Messaging.UnitTests.MessageHandling
             inner.Handle(Arg.Any<OrderAccepted>())
                 .Returns(false);
 
-            var handler = new AsyncingHandler<OrderAccepted>(inner);
+            var handler = new BlockingHandler<OrderAccepted>(inner);
 
             var message = new OrderAccepted();
 
@@ -41,7 +41,7 @@ namespace JustSaying.Messaging.UnitTests.MessageHandling
             inner.Handle(Arg.Any<OrderAccepted>())
                 .Returns(false);
 
-            var handler = new AsyncingHandler<OrderAccepted>(inner);
+            var handler = new BlockingHandler<OrderAccepted>(inner);
 
             var message = new OrderAccepted();
 
@@ -57,7 +57,7 @@ namespace JustSaying.Messaging.UnitTests.MessageHandling
             inner.Handle(Arg.Any<OrderAccepted>())
                 .Returns(true);
 
-            var handler = new AsyncingHandler<OrderAccepted>(inner);
+            var handler = new BlockingHandler<OrderAccepted>(inner);
 
             var message = new OrderAccepted();
 

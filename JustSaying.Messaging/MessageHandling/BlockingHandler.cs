@@ -10,11 +10,11 @@ namespace JustSaying.Messaging.MessageHandling
     /// So that the rest of the system only has to deal with IAsyncHandler
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class AsyncingHandler<T> : IHandlerAsync<T>
+    public class BlockingHandler<T> : IHandlerAsync<T>
     {
         private readonly IHandler<T> _inner;
 
-        public AsyncingHandler(IHandler<T> inner)
+        public BlockingHandler(IHandler<T> inner)
         {
             if (inner == null)
             {

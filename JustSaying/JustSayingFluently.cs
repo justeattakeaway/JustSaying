@@ -201,7 +201,7 @@ namespace JustSaying
 #pragma warning disable 618
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message
         {
-            return WithMessageHandler(new AsyncingHandler<T>(handler));
+            return WithMessageHandler(new BlockingHandler<T>(handler));
         }
 #pragma warning restore 618
 

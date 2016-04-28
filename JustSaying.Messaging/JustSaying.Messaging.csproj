@@ -53,7 +53,7 @@
     <Compile Include="Interrogation\ISubscriber.cs" />
     <Compile Include="Interrogation\Publisher.cs" />
     <Compile Include="Interrogation\Subscriber.cs" />
-    <Compile Include="MessageHandling\AsyncingHandler.cs" />
+    <Compile Include="MessageHandling\BlockingHandler.cs" />
     <Compile Include="MessageHandling\ExactlyOnceAttribute.cs" />
     <Compile Include="MessageHandling\ExactlyOnceHandler.cs" />
     <Compile Include="MessageHandling\FutureHandler.cs" />

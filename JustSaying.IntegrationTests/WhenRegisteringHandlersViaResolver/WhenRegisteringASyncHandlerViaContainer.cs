@@ -19,7 +19,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             var handlers = handlerResolver.ResolveHandlers<OrderPlaced>().ToList();
             Assert.That(handlers.Count, Is.EqualTo(1));
 
-            var resolvedHandler = (AsyncingHandler<OrderPlaced>)handlers[0];
+            var resolvedHandler = (BlockingHandler<OrderPlaced>)handlers[0];
             _handlerFuture = ((SyncOrderProcessor)resolvedHandler.Inner).Future;
             DoneSignal = _handlerFuture.DoneSignal;
 
