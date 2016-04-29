@@ -46,6 +46,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
         protected override IAmJustSayingFluently CreateSystemUnderTest()
         {
+            const int TimeoutMillis = 1000;
+
             var snsHandler = Substitute.For<IHandlerAsync<GenericMessage>>();
             snsHandler.When(x => x.Handle(Arg.Any<GenericMessage>()))
                     .Do(x =>
@@ -53,7 +55,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                         var msg = (GenericMessage) x.Args()[0];
                         if (_snsHandler != null)
                         {
-                            _snsHandler.Complete(msg).Wait();
+                            _snsHandler.Complete(msg).Wait(TimeoutMillis);
                         }
                     });
 
@@ -64,7 +66,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                         var msg = (AnotherGenericMessage)x.Args()[0];
                         if (_sqsHandler != null)
                         {
-                            _sqsHandler.Complete(msg).Wait();
+                            _sqsHandler.Complete(msg).Wait(TimeoutMillis);
                         }
                     });
 

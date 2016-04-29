@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Amazon;
-using Amazon.SQS;
 using JustBehave;
-using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
