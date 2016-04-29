@@ -86,5 +86,29 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
             var handlers2 = map.Get(typeof(AnotherGenericMessage));
             Assert.That(handlers2, Is.Null);
         }
+
+        [Test]
+        public void MultipleHandlersForATypeWithOtherHandlersAreSupported()
+        {
+            Func<Message, Task<bool>> fn1 = m => Task.FromResult(true);
+            Func<Message, Task<bool>> fn2 = m => Task.FromResult(false);
+            Func<Message, Task<bool>> fn3 = m => Task.FromResult(true);
+
+            var map = new HandlerMap();
+            map.Add(typeof(GenericMessage), fn1);
+            map.Add(typeof(GenericMessage), fn2);
+            map.Add(typeof(AnotherGenericMessage), fn3);
+
+            var handlers1 = map.Get(typeof(GenericMessage));
+
+            Assert.That(handlers1, Is.Not.Null);
+            Assert.That(handlers1.Count, Is.EqualTo(2));
+            Assert.That(handlers1[0], Is.EqualTo(fn1));
+            Assert.That(handlers1[1], Is.EqualTo(fn2));
+
+            var handlers2 = map.Get(typeof(AnotherGenericMessage));
+            Assert.That(handlers2, Is.Not.Null);
+            Assert.That(handlers2.Count, Is.EqualTo(1));
+        }
     }
 }

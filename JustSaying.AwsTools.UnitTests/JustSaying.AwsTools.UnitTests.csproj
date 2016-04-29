@@ -74,6 +74,7 @@
     <Compile Include="MessageHandling\HandlerMetadataTest.cs" />
     <Compile Include="MessageHandling\ExactlyOnceReaderTests.cs" />
     <Compile Include="MessageHandling\HandlersWithMetadata.cs" />
+    <Compile Include="MessageHandling\MessageHandlerWrapperTests.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\Support\ExactlyOnceSignallingHandler.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\Support\ExplicitExactlyOnceSignallingHandler.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\Support\SignallingHandler.cs" />
