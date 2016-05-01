@@ -7,20 +7,20 @@ using StructureMap;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
-    public class WhenRegisteringASyncHandlerViaContainer : GivenAPublisher
+    public class WhenRegisteringABlockingHandlerViaContainer : GivenAPublisher
     {
         private Future<OrderPlaced> _handlerFuture;
 
         protected override void Given()
         {
-           var container = new Container(x => x.AddRegistry(new SyncHandlerRegistry()));
+           var container = new Container(x => x.AddRegistry(new BlockingHandlerRegistry()));
 
            var handlerResolver = new StructureMapHandlerResolver(container);
             var handlers = handlerResolver.ResolveHandlers<OrderPlaced>().ToList();
             Assert.That(handlers.Count, Is.EqualTo(1));
 
             var resolvedHandler = (BlockingHandler<OrderPlaced>)handlers[0];
-            _handlerFuture = ((SyncOrderProcessor)resolvedHandler.Inner).Future;
+            _handlerFuture = ((BlockingOrderProcessor)resolvedHandler.Inner).Future;
             DoneSignal = _handlerFuture.DoneSignal;
 
             var subscriber = CreateMeABus.InRegion("eu-west-1")
