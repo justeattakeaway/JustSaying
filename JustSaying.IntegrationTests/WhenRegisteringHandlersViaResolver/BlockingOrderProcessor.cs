@@ -1,5 +1,6 @@
-using JustSaying.IntegrationTests.JustSayingFluently;
+using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.TestingFramework;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
@@ -7,22 +8,21 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
     public class BlockingOrderProcessor : IHandler<OrderPlaced>
 #pragma warning restore 618
     {
-        private readonly Future<OrderPlaced> _future;
 
-        public BlockingOrderProcessor(Future<OrderPlaced> future)
+        public BlockingOrderProcessor()
         {
-            _future = future;
+            DoneSignal = new TaskCompletionSource<object>();
         }
+
+        public int ReceivedMessageCount { get; private set; }
+
+        public TaskCompletionSource<object> DoneSignal { get; private set; }
 
         public bool Handle(OrderPlaced message)
         {
-            _future.Complete(message).Wait();
+            ReceivedMessageCount++;
+            Tasks.DelaySendDone(DoneSignal);
             return true;
-        }
-
-        public Future<OrderPlaced> Future
-        {
-            get { return _future; }
         }
     }
 }

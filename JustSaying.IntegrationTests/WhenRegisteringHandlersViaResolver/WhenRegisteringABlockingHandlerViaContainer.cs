@@ -1,6 +1,4 @@
 using System.Linq;
-using JustSaying.IntegrationTests.JustSayingFluently;
-using JustSaying.Messaging.MessageHandling;
 using NUnit.Framework;
 using Shouldly;
 using StructureMap;
@@ -9,7 +7,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
     public class WhenRegisteringABlockingHandlerViaContainer : GivenAPublisher
     {
-        private Future<OrderPlaced> _handlerFuture;
+        private BlockingOrderProcessor _resolvedHandler;
 
         protected override void Given()
         {
@@ -19,9 +17,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             var handlers = handlerResolver.ResolveHandlers<OrderPlaced>().ToList();
             Assert.That(handlers.Count, Is.EqualTo(1));
 
-            var resolvedHandler = (BlockingHandler<OrderPlaced>)handlers[0];
-            _handlerFuture = ((BlockingOrderProcessor)resolvedHandler.Inner).Future;
-            DoneSignal = _handlerFuture.DoneSignal;
+            _resolvedHandler = (BlockingOrderProcessor)handlers[0];
+            DoneSignal = _resolvedHandler.DoneSignal.Task;
 
             var subscriber = CreateMeABus.InRegion("eu-west-1")
                 .WithSqsTopicSubscriber()
@@ -34,7 +31,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         [Test]
         public void ThenHandlerWillReceiveTheMessage()
         {
-            _handlerFuture.ReceivedMessageCount.ShouldBeGreaterThan(0);
+            _resolvedHandler.ReceivedMessageCount.ShouldBeGreaterThan(0);
         }
     }
 }
