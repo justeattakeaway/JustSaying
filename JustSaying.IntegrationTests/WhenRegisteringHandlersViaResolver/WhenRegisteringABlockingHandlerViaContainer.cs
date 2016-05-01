@@ -1,4 +1,5 @@
 using System.Linq;
+using JustSaying.Messaging.MessageHandling;
 using NUnit.Framework;
 using Shouldly;
 using StructureMap;
@@ -17,7 +18,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             var handlers = handlerResolver.ResolveHandlers<OrderPlaced>().ToList();
             Assert.That(handlers.Count, Is.EqualTo(1));
 
-            _resolvedHandler = (BlockingOrderProcessor)handlers[0];
+            var blockingHandler = (BlockingHandler<OrderPlaced>)handlers[0];
+            _resolvedHandler = (BlockingOrderProcessor)blockingHandler.Inner;
             DoneSignal = _resolvedHandler.DoneSignal.Task;
 
             var subscriber = CreateMeABus.InRegion("eu-west-1")
