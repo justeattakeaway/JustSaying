@@ -1,13 +1,15 @@
 using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging;
+using JustSaying.TestingFramework;
+using NUnit.Framework;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
     public abstract class GivenAPublisher : AsyncBehaviourTest<IMessagePublisher>
     {
         protected IHaveFulfilledPublishRequirements Publisher;
-
+        protected IHaveFulfilledSubscriptionRequirements Subscriber;
         protected Task DoneSignal;
 
         protected override IMessagePublisher CreateSystemUnderTest()
@@ -22,10 +24,36 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         {
             Publisher.Publish(new OrderPlaced("1234"));
 
-            if (DoneSignal != null)
+            await WaitForDone();
+
+            TearDownPubSub();
+        }
+
+        private async Task WaitForDone()
+        {
+            if (DoneSignal == null)
             {
-                await DoneSignal;
+                return;
+            }
+
+            var done = await Tasks.WaitWithTimeoutAsync(DoneSignal);
+            if (!done)
+            {
+                Assert.Fail("Done task timed out");
             }
         }
+
+        private void TearDownPubSub()
+        {
+            if (Publisher != null)
+            {
+                Publisher.StopListening();
+            }
+            if (Subscriber != null)
+            {
+                Subscriber.StopListening();
+            }
+        }
+
     }
 }

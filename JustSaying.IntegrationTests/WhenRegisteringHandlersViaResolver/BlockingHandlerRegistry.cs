@@ -9,8 +9,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         public BlockingHandlerRegistry()
         {
 #pragma warning disable 618
-            For<IHandler<OrderPlaced>>().Transient().Use<BlockingOrderProcessor>()
-                .Ctor<Future<OrderPlaced>>().Is(new Future<OrderPlaced>());
+            For<IHandler<OrderPlaced>>().Singleton().Use<BlockingOrderProcessor>();
 #pragma warning restore 618
         }
     }

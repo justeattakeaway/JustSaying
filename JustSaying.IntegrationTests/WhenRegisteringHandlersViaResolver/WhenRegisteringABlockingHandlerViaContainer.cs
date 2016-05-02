@@ -22,12 +22,12 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             _resolvedHandler = (BlockingOrderProcessor)blockingHandler.Inner;
             DoneSignal = _resolvedHandler.DoneSignal.Task;
 
-            var subscriber = CreateMeABus.InRegion("eu-west-1")
+            Subscriber = CreateMeABus.InRegion("eu-west-1")
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);
 
-            subscriber.StartListening();
+            Subscriber.StartListening();
         }
 
         [Test]

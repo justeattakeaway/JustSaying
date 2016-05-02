@@ -12,15 +12,16 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             RecordAnyExceptionsThrown();
         }
 
-        protected override async Task When()
+        protected override Task When()
         {
-            await base.When();
             var handlerResolver = new StructureMapHandlerResolver(new Container());
 
             CreateMeABus.InRegion("eu-west-1")
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);
+
+            return Task.FromResult(true);
         }
 
         [Then]

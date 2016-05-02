@@ -21,12 +21,12 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             _handlerFuture = ((OrderProcessor)handlers[0]).Future;
             DoneSignal = _handlerFuture.DoneSignal;
 
-            var subscriber = CreateMeABus.InRegion("eu-west-1")
+            Subscriber = CreateMeABus.InRegion("eu-west-1")
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);
 
-            subscriber.StartListening();
+            Subscriber.StartListening();
         }
 
         [Test]
