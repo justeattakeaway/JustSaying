@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 
-namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
+namespace JustSaying.IntegrationTests.TestHandlers
 {
 #pragma warning disable 618
     public class BlockingOrderProcessor : IHandler<OrderPlaced>

@@ -1,5 +1,4 @@
-﻿using System;
-using Amazon;
+﻿using Amazon;
 using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SQS;
@@ -25,9 +24,13 @@ namespace JustSaying.TestingFramework
         {
             var ci = System.Environment.GetEnvironmentVariable(_ci);
             if (string.IsNullOrWhiteSpace(ci))
-                this._credentials = new StoredProfileAWSCredentials(IntegrationTestConfig.AwsProfileName);
+            {
+                _credentials = new StoredProfileAWSCredentials(IntegrationTestConfig.AwsProfileName);
+            }
             else
+            {
                 _credentials = CredentialsFromEnvironment();
+            }
         }
 
         private AWSCredentials CredentialsFromEnvironment()

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Amazon;
 using JustBehave;
 using JustSaying.AwsTools;
+using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;

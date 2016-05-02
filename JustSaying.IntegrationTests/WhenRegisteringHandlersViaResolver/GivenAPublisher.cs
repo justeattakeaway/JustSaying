@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using JustBehave;
+using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
 using NUnit.Framework;

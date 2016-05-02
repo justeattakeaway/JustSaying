@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 
-namespace JustSaying.IntegrationTests.JustSayingFluently
+namespace JustSaying.IntegrationTests.TestHandlers
 {
     public class Future<TMessage> where TMessage : Message
     {

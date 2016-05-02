@@ -2,6 +2,7 @@ using System;
 using NUnit.Framework;
 using StructureMap;
 using System.Threading.Tasks;
+using JustSaying.IntegrationTests.TestHandlers;
 using Container = StructureMap.Container;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver

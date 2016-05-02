@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Amazon;
+using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using NSubstitute;

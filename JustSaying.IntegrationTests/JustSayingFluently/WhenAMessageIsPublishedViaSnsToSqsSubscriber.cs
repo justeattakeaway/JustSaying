@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.TestingFramework;
 using NUnit.Framework;
 using Shouldly;
