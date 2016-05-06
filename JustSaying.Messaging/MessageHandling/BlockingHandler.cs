@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 
 namespace JustSaying.Messaging.MessageHandling
 {
-#pragma warning disable CS0618
 
     /// <summary>
     /// Used to convert "IHandler " instances into IAsyncHandler
@@ -31,6 +30,4 @@ namespace JustSaying.Messaging.MessageHandling
             return Task.FromResult(_inner.Handle(message));
         }
     }
-
-#pragma warning restore CS0618
 }

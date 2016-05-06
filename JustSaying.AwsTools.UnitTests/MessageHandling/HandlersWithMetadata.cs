@@ -4,7 +4,6 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling
 {
-#pragma warning disable 618
     public class UnadornedHandlerAsync : IHandlerAsync<GenericMessage>
     {
         public Task<bool> Handle(GenericMessage message)

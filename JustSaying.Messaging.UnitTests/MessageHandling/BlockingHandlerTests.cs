@@ -7,7 +7,6 @@ using NUnit.Framework;
 
 namespace JustSaying.Messaging.UnitTests.MessageHandling
 {
-#pragma warning disable 618
     [TestFixture]
     public class BlockingHandlerTests
     {
@@ -65,6 +64,5 @@ namespace JustSaying.Messaging.UnitTests.MessageHandling
 
             Assert.That(result, Is.True);
         }
-#pragma warning restore 618
     }
 }

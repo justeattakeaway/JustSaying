@@ -16,14 +16,16 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
         public IEnumerable<IHandlerAsync<T>> ResolveHandlers<T>()
         {
-            var proposedHandlers = _container.GetAllInstances<IHandlerAsync<T>>();
-
-#pragma warning disable 618
-            var proposedSyncHandlers = _container.GetAllInstances<IHandler<T>>()
+            var proposedHandlers = GetAllInstances<IHandlerAsync<T>>();
+            var proposedSyncHandlers = GetAllInstances<IHandler<T>>()
                 .Select(h => new BlockingHandler<T>(h));
-#pragma warning restore 618
 
             return proposedHandlers.Concat(proposedSyncHandlers);
+        }
+
+        private IEnumerable<T> GetAllInstances<T>()
+        {
+            return _container.GetAllInstances<T>();
         }
     }
 }

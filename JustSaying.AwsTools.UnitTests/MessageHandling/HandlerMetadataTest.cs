@@ -63,5 +63,4 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
             Assert.That(reader.Enabled, Is.True);
         }
     }
-#pragma warning restore 618
 }

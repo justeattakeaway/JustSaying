@@ -4,9 +4,7 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.IntegrationTests.TestHandlers
 {
-#pragma warning disable 618
     public class BlockingOrderProcessor : IHandler<OrderPlaced>
-#pragma warning restore 618
     {
 
         public BlockingOrderProcessor()

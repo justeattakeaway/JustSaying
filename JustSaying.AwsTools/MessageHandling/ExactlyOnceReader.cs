@@ -18,12 +18,10 @@ namespace JustSaying.AwsTools.MessageHandling
             return new ExactlyOnceReader(handler.GetType());
         }
 
-#pragma warning disable 618
         public static ExactlyOnceReader ReadExactlyOnce<T>(IHandler<T> handler) where T : Message
         {
             return new ExactlyOnceReader(handler.GetType());
         }
-#pragma warning restore 618
     }
 
     internal class ExactlyOnceReader
