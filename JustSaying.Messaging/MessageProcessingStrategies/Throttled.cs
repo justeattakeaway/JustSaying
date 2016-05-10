@@ -66,16 +66,15 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
 
         public void ProcessMessage(Func<Task> action)
         {
-            // name it
+            // task is named but not yet started
             var messageProcessingTask = new Task<Task>(action);
 
             // what happens when it ends
             messageProcessingTask.Unwrap()
                 .ContinueWith(t => MarkTaskAsCompleted(messageProcessingTask), TaskContinuationOptions.ExecuteSynchronously);
 
+            // start it
             MarkTaskAsActive(messageProcessingTask);
-
-            // actually start it
             messageProcessingTask.Start();
         }
 
