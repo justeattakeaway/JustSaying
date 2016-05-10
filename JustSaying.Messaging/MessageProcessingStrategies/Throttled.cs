@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.Monitoring;
 
@@ -12,8 +11,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         private readonly Func<int> _maximumAllowedMesagesInFlightProducer;
 
         private readonly IMessageMonitor _messageMonitor;
-        private readonly List<Task> _activeTasks;
-        private long _activeTaskCount;
+        private readonly List<Task> _activeTasks = new List<Task>();
 
         public Throttled(int maximumAllowedMesagesInFlight, IMessageMonitor messageMonitor)
             : this(() => maximumAllowedMesagesInFlight, messageMonitor)
@@ -23,7 +21,6 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             IMessageMonitor messageMonitor)
         {
             _maximumAllowedMesagesInFlightProducer = maximumAllowedMesagesInFlightProducer;
-            _activeTasks = new List<Task>();
             _messageMonitor = messageMonitor;
         }
 
@@ -31,8 +28,12 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         {
             get
             {
-                var activeTasks = (int)Interlocked.Read(ref _activeTaskCount);
-                var freeTasks = _maximumAllowedMesagesInFlightProducer() - activeTasks;
+                int activeTaskCount;
+                lock (_activeTasks)
+                {
+                    activeTaskCount = _activeTasks.Count;
+                }
+                var freeTasks = _maximumAllowedMesagesInFlightProducer() - activeTaskCount;
                 return Math.Max(freeTasks, 0);
             }
         }
@@ -65,29 +66,38 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
 
         public void ProcessMessage(Func<Task> action)
         {
-            var task = new Task<Task>(action);
+            // name it
+            var messageProcessingTask = new Task<Task>(action);
 
-            task.Unwrap()
-                .ContinueWith(MarkTaskAsComplete, TaskContinuationOptions.ExecuteSynchronously);
-            
-            Interlocked.Increment(ref _activeTaskCount);
-            
-            lock (_activeTasks)
-            {
-                _activeTasks.Add(task);
-            }
+            // what happens when it ends
+            messageProcessingTask.Unwrap()
+                .ContinueWith(t => MarkTaskAsCompleted(messageProcessingTask), TaskContinuationOptions.ExecuteSynchronously);
 
-            task.Start();
+            MarkTaskAsActive(messageProcessingTask);
+
+            // actually start it
+            messageProcessingTask.Start();
         }
 
-        private void MarkTaskAsComplete(Task t)
+        private void MarkTaskAsActive(Task t)
         {
             lock (_activeTasks)
             {
+                _activeTasks.Add(t);
+            }
+        }
+
+        private void MarkTaskAsCompleted(Task t)
+        {
+            lock (_activeTasks)
+            {
+                if (!_activeTasks.Contains(t))
+                {
+                    throw new InvalidOperationException("Cannot find task in task list " + t.Id);
+                }
+
                 _activeTasks.Remove(t);
             }
-
-            Interlocked.Decrement(ref _activeTaskCount);
         }
     }
 }
