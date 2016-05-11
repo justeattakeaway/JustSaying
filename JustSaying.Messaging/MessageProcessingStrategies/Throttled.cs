@@ -11,7 +11,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         private readonly Func<int> _maximumAllowedMesagesInFlightProducer;
 
         private readonly IMessageMonitor _messageMonitor;
-        private readonly List<Task> _activeTasks = new List<Task>();
+        private readonly List<Task> _activeTasks;
 
         public Throttled(int maximumAllowedMesagesInFlight, IMessageMonitor messageMonitor)
             : this(() => maximumAllowedMesagesInFlight, messageMonitor)
@@ -22,6 +22,8 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         {
             _maximumAllowedMesagesInFlightProducer = maximumAllowedMesagesInFlightProducer;
             _messageMonitor = messageMonitor;
+
+            _activeTasks = new List<Task>(_maximumAllowedMesagesInFlightProducer());
         }
 
         public int FreeTasks
