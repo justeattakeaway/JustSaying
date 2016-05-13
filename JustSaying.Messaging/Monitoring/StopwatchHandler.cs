@@ -22,9 +22,14 @@ namespace JustSaying.Messaging.Monitoring
             var result = await _inner.Handle(message);
 
             watch.Stop();
-            _monitoring.HandlerExecutionTime(GetType().Name.ToLower(), 
-                message.GetType().Name.ToLower(), watch.Elapsed);
+
+            _monitoring.HandlerExecutionTime(TypeName(_inner), TypeName(message), watch.Elapsed);
             return result;
+        }
+
+        private static string TypeName(object obj)
+        {
+            return obj.GetType().Name.ToLower();
         }
     }
 }
