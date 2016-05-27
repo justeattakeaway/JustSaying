@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Amazon;
 using JustBehave;
 using JustSaying.AwsTools;
+using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
@@ -46,13 +47,29 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
         protected override IAmJustSayingFluently CreateSystemUnderTest()
         {
-            var snsHandler = Substitute.For<IHandler<GenericMessage>>();
-            snsHandler.When(x => x.Handle(Arg.Any<GenericMessage>()))
-                    .Do(x => _snsHandler.Complete((GenericMessage)x.Args()[0]));
+            const int TimeoutMillis = 1000;
 
-            var sqsHandler = Substitute.For<IHandler<AnotherGenericMessage>>();
+            var snsHandler = Substitute.For<IHandlerAsync<GenericMessage>>();
+            snsHandler.When(x => x.Handle(Arg.Any<GenericMessage>()))
+                    .Do(x =>
+                    {
+                        var msg = (GenericMessage) x.Args()[0];
+                        if (_snsHandler != null)
+                        {
+                            _snsHandler.Complete(msg).Wait(TimeoutMillis);
+                        }
+                    });
+
+            var sqsHandler = Substitute.For<IHandlerAsync<AnotherGenericMessage>>();
             sqsHandler.When(x => x.Handle(Arg.Any<AnotherGenericMessage>()))
-                    .Do(x => _sqsHandler.Complete((AnotherGenericMessage)x.Args()[0]));
+                    .Do(x =>
+                    {
+                        var msg = (AnotherGenericMessage)x.Args()[0];
+                        if (_sqsHandler != null)
+                        {
+                            _sqsHandler.Complete(msg).Wait(TimeoutMillis);
+                        }
+                    });
 
             Monitoring = Substitute.For<IMessageMonitor>();
 

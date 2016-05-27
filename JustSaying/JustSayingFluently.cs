@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Amazon;
 using JustSaying.AwsTools;
@@ -199,13 +198,18 @@ namespace JustSaying
             return this;
         }
 
+        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message
+        {
+            return WithMessageHandler(new BlockingHandler<T>(handler));
+        }
+
         /// <summary>
         /// Set message handlers for the given topic
         /// </summary>
         /// <typeparam name="T">Message type to be handled</typeparam>
         /// <param name="handler">Handler for the message type</param>
         /// <returns></returns>
-        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message
+        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerAsync<T> handler) where T : Message
         {
             // TODO - Subscription listeners should be just added once per queue,
             // and not for each message handler
@@ -231,20 +235,23 @@ namespace JustSaying
                 : TopicHandler<T>();
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
-            if(!handlerResolver.ResolveHandlers<T>().Any())
+
+            var proposedHandlers = handlerResolver.ResolveHandlers<T>().ToList();
+
+            if (proposedHandlers.Count == 0)
             {
-                throw new HandlerNotRegisteredWithContainerException(string.Format("IHandler<{0}> is not regsistered in the container.", typeof(T).Name));
+                throw new HandlerNotRegisteredWithContainerException(string.Format("IHandler<{0}> is not registered in the container.", typeof(T).Name));
             }
-            if (handlerResolver.ResolveHandlers<T>().Count() > 1)
+            if (proposedHandlers.Count > 1)
             {
                 throw new NotSupportedException(string.Format("There are more than one registration for IHandler<{0}>. JustSaying currently does not support multiple registration for IHandler<T>.", typeof(T).Name));
             }
 
+            var singleHandler = proposedHandlers[0];
+
             foreach (var region in Bus.Config.Regions)
             {
-                Bus.AddMessageHandler(region, 
-                    _subscriptionConfig.QueueName, 
-                    () => handlerResolver.ResolveHandlers<T>().Single());
+                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => singleHandler);
             }
             
 
@@ -419,11 +426,6 @@ namespace JustSaying
         IMayWantOptionalSettings WithSerialisationFactory(IMessageSerialisationFactory factory);
     }
 
-    public interface IHandlerResolver
-    {
-        IEnumerable<IHandler<T>> ResolveHandlers<T>();
-    }
-
     public interface IAmJustSayingFluently : IMessagePublisher
     {
         IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder);
@@ -446,6 +448,9 @@ namespace JustSaying
     public interface IFluentSubscription
     {
         IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message;
+
+        IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerAsync<T> handler) where T : Message;
+
         IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message;
         IFluentSubscription ConfigureSubscriptionWith(Action<SqsReadConfiguration> config);
     }

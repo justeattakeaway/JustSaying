@@ -1,5 +1,6 @@
 using System.Linq;
 using JustSaying.IntegrationTests.JustSayingFluently;
+using JustSaying.IntegrationTests.TestHandlers;
 using NUnit.Framework;
 using Shouldly;
 using StructureMap;
@@ -15,15 +16,18 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
            var container = new Container(x => x.AddRegistry(new SingleHandlerRegistry()));
 
            var handlerResolver = new StructureMapHandlerResolver(container);
+            var handlers = handlerResolver.ResolveHandlers<OrderPlaced>().ToList();
+            Assert.That(handlers.Count, Is.EqualTo(1));
 
-            _handlerFuture = ((OrderProcessor)handlerResolver.ResolveHandlers<OrderPlaced>().Single()).Future;
+            _handlerFuture = ((OrderProcessor)handlers[0]).Future;
+            DoneSignal = _handlerFuture.DoneSignal;
 
-            var subscriber = CreateMeABus.InRegion("eu-west-1")
+            Subscriber = CreateMeABus.InRegion("eu-west-1")
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);
 
-            subscriber.StartListening();
+            Subscriber.StartListening();
         }
 
         [Test]

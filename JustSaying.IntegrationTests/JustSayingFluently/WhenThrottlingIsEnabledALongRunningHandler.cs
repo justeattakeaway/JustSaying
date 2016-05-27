@@ -15,7 +15,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
     [TestFixture]
     public class WhenThrottlingIsEnabledALongRunningHandler
     {
-        private readonly IHandler<GenericMessage> _handler = Substitute.For<IHandler<GenericMessage>>();
+        private readonly IHandlerAsync<GenericMessage> _handler = Substitute.For<IHandlerAsync<GenericMessage>>();
         private IAmJustSayingFluently _publisher;
         private readonly Dictionary<int, Guid> _ids = new Dictionary<int, Guid>();
         private readonly Dictionary<int, GenericMessage> _messages = new Dictionary<int, GenericMessage>();

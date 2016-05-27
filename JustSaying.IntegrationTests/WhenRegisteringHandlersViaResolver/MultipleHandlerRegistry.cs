@@ -1,4 +1,5 @@
 using JustSaying.IntegrationTests.JustSayingFluently;
+using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
 using StructureMap.Configuration.DSL;
 
@@ -8,10 +9,10 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
     {
         public MultipleHandlerRegistry()
         {
-            For<IHandler<OrderPlaced>>().Transient().Use<OrderProcessor>()
+            For<IHandlerAsync<OrderPlaced>>().Transient().Use<OrderProcessor>()
                 .Ctor<Future<OrderPlaced>>().Is(new Future<OrderPlaced>());
             
-            For<IHandler<OrderPlaced>>().Transient().Use<OrderDispatcher>()
+            For<IHandlerAsync<OrderPlaced>>().Transient().Use<OrderDispatcher>()
                 .Ctor<Future<OrderPlaced>>().Is(new Future<OrderPlaced>());
         }
     }

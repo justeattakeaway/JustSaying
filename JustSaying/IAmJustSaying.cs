@@ -11,7 +11,7 @@ namespace JustSaying
     {
         bool Listening { get; }
         void AddNotificationSubscriber(string region, INotificationSubscriber subscriber);
-        void AddMessageHandler<T>(string region, string queueName, Func<IHandler<T>> handler) where T : Message;
+        void AddMessageHandler<T>(string region, string queueName, Func<IHandlerAsync<T>> handler) where T : Message;
 
         // TODO - swap params
         void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message;

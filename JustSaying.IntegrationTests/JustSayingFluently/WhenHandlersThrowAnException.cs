@@ -1,5 +1,5 @@
-using System;
 using System.Threading.Tasks;
+using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.TestingFramework;
 using NSubstitute;
 using NUnit.Framework;
@@ -16,7 +16,10 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             RecordAnyExceptionsThrown();
 
             base.Given();
-            _handler = new Future<GenericMessage>(() => { throw new Exception("Test Exception"); });
+            _handler = new Future<GenericMessage>(() =>
+            {
+                throw new TestException("Test Exception from WhenHandlersThrowAnException");
+            });
             RegisterSnsHandler(_handler);
         }
 

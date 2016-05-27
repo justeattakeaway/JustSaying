@@ -78,13 +78,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GlobalSetup.cs" />
-    <Compile Include="JustSayingFluently\Future.cs" />
+    <Compile Include="TestHandlers\Future.cs" />
     <Compile Include="JustSayingFluently\GivenANotificationStack.cs" />
     <Compile Include="JustSayingFluently\MultiRegion\WithSqsPointToPointSubscriber\WhenAFailoverRegionIsSetup.cs" />
     <Compile Include="JustSayingFluently\MultiRegion\WithSqsPointToPointSubscriber\WhenOneBusIsSubscribedToTwoRegions.cs" />
     <Compile Include="JustSayingFluently\MultiRegion\WithSqsTopicSubscriber\WhenAFailoverRegionIsSetup.cs" />
     <Compile Include="JustSayingFluently\MultiRegion\WithSqsTopicSubscriber\WhenOneBusIsSubscribedToTwoRegions.cs" />
-    <Compile Include="JustSayingFluently\TestExtensions.cs" />
+    <Compile Include="TestHandlers\OrderPlaced.cs" />
+    <Compile Include="TestHandlers\OrderProcessor.cs" />
+    <Compile Include="TestHandlers\ThrowingHandler.cs" />
     <Compile Include="JustSayingFluently\WhenAHandlerThrowsAnException.cs" />
     <Compile Include="JustSayingFluently\WhenAMessageIsPublishedViaSnsToSqsSubscriber.cs" />
     <Compile Include="JustSayingFluently\WhenAMessageIsPublishedViaSqsToSqsSubscriber.cs" />
@@ -106,9 +108,12 @@
     <Compile Include="WhenRegisteringHandlersViaResolver\MultipleHandlerRegistry.cs" />
     <Compile Include="WhenRegisteringHandlersViaResolver\SingleHandlerRegistry.cs" />
     <Compile Include="WhenRegisteringHandlersViaResolver\StructureMapHandlerResolver.cs" />
+    <Compile Include="WhenRegisteringHandlersViaResolver\BlockingHandlerRegistry.cs" />
+    <Compile Include="TestHandlers\BlockingOrderProcessor.cs" />
     <Compile Include="WhenRegisteringHandlersViaResolver\WhenRegisteringAHandlerViaContainerWithMissingRegistration.cs" />
+    <Compile Include="WhenRegisteringHandlersViaResolver\WhenRegisteringABlockingHandlerViaContainer.cs" />
     <Compile Include="WhenRegisteringHandlersViaResolver\WhenRegisteringASingleHandlerViaContainer.cs" />
-    <Compile Include="WhenRegisteringHandlersViaResolver\MessageHandlers.cs" />
+    <Compile Include="TestHandlers\OrderDispatcher.cs" />
     <Compile Include="WhenRegisteringHandlersViaResolver\WhenRegisteringMultipleHandlersViaContainer.cs" />
   </ItemGroup>
   <ItemGroup>

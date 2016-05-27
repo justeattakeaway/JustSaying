@@ -1,4 +1,5 @@
-﻿using Amazon;
+﻿using System.Threading.Tasks;
+using Amazon;
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
@@ -7,11 +8,11 @@ using NUnit.Framework;
 
 namespace JustSaying.IntegrationTests
 {
-    public class OrderPlacedHandler : IHandler<GenericMessage>
+    public class OrderPlacedHandler : IHandlerAsync<GenericMessage>
     {
-        public bool Handle(GenericMessage message)
+        public Task<bool> Handle(GenericMessage message)
         {
-            return true;
+            return Task.FromResult(true);
         }
     }
 

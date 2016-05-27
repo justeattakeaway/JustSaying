@@ -69,9 +69,11 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MessageHandling\BlockingHandlerTests.cs" />
     <Compile Include="MessageProcessingStrategies\MessageLoopTests.cs" />
     <Compile Include="MessageProcessingStrategies\ThrottledTests.cs" />
     <Compile Include="MessageHandling\WhenEnsuringMessageIsOnlyHandledExactlyOnce.cs" />
+    <Compile Include="Monitoring\StopwatchHandlerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serialisation\Newtonsoft\DealingWithPotentiallyMissingConversation.cs" />
     <Compile Include="Serialisation\Newtonsoft\WhenAskingForAnewSerialiser.cs" />

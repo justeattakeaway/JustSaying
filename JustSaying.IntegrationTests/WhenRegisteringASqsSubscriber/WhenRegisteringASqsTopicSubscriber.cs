@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Amazon;
-using Amazon.SQS;
 using JustBehave;
-using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
@@ -39,9 +37,10 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             SystemUnderTest.WithSqsTopicSubscriber()
                 .IntoQueue(QueueName)
                 .ConfigureSubscriptionWith(cfg =>
-            {
-                cfg.MessageRetentionSeconds = 60;
-            }).WithMessageHandler(Substitute.For<IHandler<Message>>());
+                    {
+                        cfg.MessageRetentionSeconds = 60;
+                    })
+                .WithMessageHandler(Substitute.For<IHandlerAsync<Message>>());
         }
 
         [Then]
@@ -74,7 +73,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         {
             SystemUnderTest.WithSqsTopicSubscriber()
                 .IntoQueue(QueueName)
-                .WithMessageHandler(Substitute.For<IHandler<Message>>());
+                .WithMessageHandler(Substitute.For<IHandlerAsync<Message>>());
         }
     }
 }

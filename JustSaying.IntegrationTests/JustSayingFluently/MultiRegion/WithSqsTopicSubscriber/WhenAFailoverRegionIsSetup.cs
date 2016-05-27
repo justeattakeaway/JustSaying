@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Amazon;
+using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using NSubstitute;
@@ -45,11 +46,11 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
 
         private void GivenSubscriptionsToAQueueInTwoRegions()
         {
-            var primaryHandler = Substitute.For<IHandler<GenericMessage>>();
+            var primaryHandler = Substitute.For<IHandlerAsync<GenericMessage>>();
             primaryHandler.Handle(Arg.Any<GenericMessage>()).Returns(true);
             primaryHandler
                 .When(x => x.Handle(Arg.Any<GenericMessage>()))
-                .Do(x => _primaryHandler.Complete((GenericMessage)x.Args()[0]));
+                .Do(async x => await _primaryHandler.Complete((GenericMessage)x.Args()[0]));
 
             _primaryBus = CreateMeABus
                 .InRegion(PrimaryRegion)
@@ -58,11 +59,11 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .WithMessageHandler(primaryHandler);
             _primaryBus.StartListening();
 
-            var secondaryHandler = Substitute.For<IHandler<GenericMessage>>();
+            var secondaryHandler = Substitute.For<IHandlerAsync<GenericMessage>>();
             secondaryHandler.Handle(Arg.Any<GenericMessage>()).Returns(true);
             secondaryHandler
                 .When(x => x.Handle(Arg.Any<GenericMessage>()))
-                .Do(x => _secondaryHandler.Complete((GenericMessage)x.Args()[0]));
+                .Do(async x => await _secondaryHandler.Complete((GenericMessage)x.Args()[0]));
 
             _secondaryBus = CreateMeABus
                 .InRegion(SecondaryRegion)

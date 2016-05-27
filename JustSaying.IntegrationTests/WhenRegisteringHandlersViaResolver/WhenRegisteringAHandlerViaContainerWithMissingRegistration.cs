@@ -1,4 +1,6 @@
+using System.Threading.Tasks;
 using JustBehave;
+using JustSaying.IntegrationTests.TestHandlers;
 using NUnit.Framework;
 using StructureMap;
 
@@ -11,15 +13,16 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             RecordAnyExceptionsThrown();
         }
 
-        protected override void When()
+        protected override Task When()
         {
-            base.When();
             var handlerResolver = new StructureMapHandlerResolver(new Container());
 
             CreateMeABus.InRegion("eu-west-1")
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);
+
+            return Task.FromResult(true);
         }
 
         [Then]

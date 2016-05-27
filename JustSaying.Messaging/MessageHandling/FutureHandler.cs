@@ -1,20 +1,22 @@
 ﻿using System;
+using System.Threading.Tasks;
 using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageHandling
 {
-    public class FutureHandler<T> : IHandler<T> where T : Message
+    public class FutureHandler<T> : IHandlerAsync<T> where T : Message
     {
-        private readonly Func<IHandler<T>> _futureHandler;
+        private readonly Func<IHandlerAsync<T>> _futureHandler;
 
-        public FutureHandler(Func<IHandler<T>> futureHandler)
+        public FutureHandler(Func<IHandlerAsync<T>> futureHandler)
         {
             _futureHandler = futureHandler;
         }
 
-        public bool Handle(T message)
+        public async Task<bool> Handle(T message)
         {
-            return _futureHandler().Handle(message);
+            var handler = _futureHandler();
+            return await handler.Handle(message);
         }
     }
 }

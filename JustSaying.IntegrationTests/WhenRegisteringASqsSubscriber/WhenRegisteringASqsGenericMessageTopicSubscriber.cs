@@ -17,7 +17,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         {
             SystemUnderTest.WithSqsTopicSubscriber()
                 .IntoQueue(QueueName)
-                .WithMessageHandler(Substitute.For<IHandler<GenericMessage<MyMessage>>>());
+                .WithMessageHandler(Substitute.For<IHandlerAsync<GenericMessage<MyMessage>>>());
         }
     }
 }

@@ -22,7 +22,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
             await Task.Yield();
         }
 
-        public void ProcessMessage(Action action)
+        public void ProcessMessage(Func<Task> action)
         {
             if (_firstTime)
             {

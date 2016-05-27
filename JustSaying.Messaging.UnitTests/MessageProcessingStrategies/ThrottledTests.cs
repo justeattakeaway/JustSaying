@@ -45,7 +45,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             var messageProcessingStrategy = new Throttled(123, _fakeMonitor);
             var tcs = new TaskCompletionSource<bool>();
 
-            messageProcessingStrategy.ProcessMessage(() => tcs.Task.Wait());
+            messageProcessingStrategy.ProcessMessage(() => tcs.Task);
 
             Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(122));
         }
@@ -56,7 +56,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             var messageProcessingStrategy = new Throttled(3, _fakeMonitor);
             var tcs = new TaskCompletionSource<object>();
 
-            messageProcessingStrategy.ProcessMessage(() => tcs.Task.Wait());
+            messageProcessingStrategy.ProcessMessage(() => tcs.Task);
 
             Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(2));
 
@@ -74,7 +74,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
             for (int i = 0; i < capacity; i++)
             {
-                messageProcessingStrategy.ProcessMessage(() => tcs.Task.Wait());
+                messageProcessingStrategy.ProcessMessage(() => tcs.Task);
             }
             
             Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(0));
@@ -90,7 +90,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
             for (int i = 0; i < capacity; i++)
             {
-                messageProcessingStrategy.ProcessMessage(() => tcs.Task.Wait());
+                messageProcessingStrategy.ProcessMessage(() => tcs.Task);
             }
 
             Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(0));
@@ -110,7 +110,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
             for (int i = 0; i < capacity; i++)
             {
-                messageProcessingStrategy.ProcessMessage(() => tcs.Task.Wait());
+                messageProcessingStrategy.ProcessMessage(() => tcs.Task);
                 Assert.That(messageProcessingStrategy.FreeTasks, Is.GreaterThanOrEqualTo(0));
             }
 

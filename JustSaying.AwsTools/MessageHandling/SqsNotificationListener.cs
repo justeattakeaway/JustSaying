@@ -65,7 +65,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return this;
         }
 
-        public void AddMessageHandler<T>(Func<IHandler<T>> futureHandler) where T : Message
+        public void AddMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler) where T : Message
         {
             Subscribers.Add(new Subscriber(typeof(T)));
 
@@ -223,7 +223,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private void HandleMessage(Amazon.SQS.Model.Message message)
         {
-            var action = new Action(() => _messageDispatcher.DispatchMessage(message));
+            var action = new Func<Task>(() => _messageDispatcher.DispatchMessage(message));
             _messageProcessingStrategy.ProcessMessage(action);
         }
 

@@ -6,7 +6,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
     public interface IMessageProcessingStrategy
     {
         Task AwaitAtLeastOneTaskToComplete();
-        void ProcessMessage(Action action);
+        void ProcessMessage(Func<Task> action);
 
         int FreeTasks { get; }
     }

@@ -12,7 +12,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
 {
     public class WhenAddingASubscriptionHandler : JustSayingFluentlyTestBase
     {
-        private readonly IHandler<Message> _handler = Substitute.For<IHandler<Message>>();
+        private readonly IHandlerAsync<Message> _handler = Substitute.For<IHandlerAsync<Message>>();
         private object _response;
 
         protected override void Given()
@@ -44,7 +44,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         [Then]
         public void HandlerIsAddedToBus()
         {
-            Bus.Received().AddMessageHandler(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Func<IHandler<Message>>>());
+            Bus.Received().AddMessageHandler(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Func<IHandlerAsync<Message>>>());
         }
 
         [Then]
