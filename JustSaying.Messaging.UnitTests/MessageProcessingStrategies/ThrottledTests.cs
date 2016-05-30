@@ -25,48 +25,48 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             maxAllowedMessagesInFlight().Returns(100);
             var messageProcessingStrategy = new Throttled(maxAllowedMessagesInFlight, _fakeMonitor);
 
-            Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(100));
+            Assert.That(messageProcessingStrategy.AvailableMessageHandlers, Is.EqualTo(100));
 
             maxAllowedMessagesInFlight().Returns(90);
 
-            Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(90));
+            Assert.That(messageProcessingStrategy.AvailableMessageHandlers, Is.EqualTo(90));
         }
 
         [Test]
-        public void FreeTaskCountStartsAtCapacity()
+        public void AvailableMessageHandlersCount_StartsAtCapacity()
         {
             var messageProcessingStrategy = new Throttled(123, _fakeMonitor);
-            Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(123));
+            Assert.That(messageProcessingStrategy.AvailableMessageHandlers, Is.EqualTo(123));
         }
 
         [Test]
-        public void WhenATasksIsAddedTheFreeTaskCountIsDecremented()
+        public void WhenATasksIsAdded_TheAvailableMessageHandlersCountIsDecremented()
         {
             var messageProcessingStrategy = new Throttled(123, _fakeMonitor);
             var tcs = new TaskCompletionSource<bool>();
 
             messageProcessingStrategy.ProcessMessage(() => tcs.Task);
 
-            Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(122));
+            Assert.That(messageProcessingStrategy.AvailableMessageHandlers, Is.EqualTo(122));
         }
 
         [Test]
-        public async Task WhenATaskCompletesTheFreeTaskCountIsIncremented()
+        public async Task WhenATaskCompletes_TheAvailableMessageHandlersCountIsIncremented()
         {
             var messageProcessingStrategy = new Throttled(3, _fakeMonitor);
             var tcs = new TaskCompletionSource<object>();
 
             messageProcessingStrategy.ProcessMessage(() => tcs.Task);
 
-            Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(2));
+            Assert.That(messageProcessingStrategy.AvailableMessageHandlers, Is.EqualTo(2));
 
             await AllowTasksToComplete(tcs);
 
-            Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(3));
+            Assert.That(messageProcessingStrategy.AvailableMessageHandlers, Is.EqualTo(3));
         }
 
         [Test]
-        public async Task FreeTaskCountCanReachZero()
+        public async Task AvailableMessageHandlersCount_CanReachZero()
         {
             const int capacity = 10;
             var messageProcessingStrategy = new Throttled(capacity, _fakeMonitor);
@@ -77,12 +77,12 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
                 messageProcessingStrategy.ProcessMessage(() => tcs.Task);
             }
             
-            Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(0));
+            Assert.That(messageProcessingStrategy.AvailableMessageHandlers, Is.EqualTo(0));
             await AllowTasksToComplete(tcs);
         }
 
         [Test]
-        public async Task FreeTaskCountCanGoToZeroAndBackToFull()
+        public async Task AvailableMessageHandlersCount_CanGoToZeroAndBackToFull()
         {
             const int capacity = 10;
             var messageProcessingStrategy = new Throttled(capacity, _fakeMonitor);
@@ -93,15 +93,15 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
                 messageProcessingStrategy.ProcessMessage(() => tcs.Task);
             }
 
-            Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(0));
+            Assert.That(messageProcessingStrategy.AvailableMessageHandlers, Is.EqualTo(0));
 
             await AllowTasksToComplete(tcs);
 
-            Assert.That(messageProcessingStrategy.FreeTasks, Is.EqualTo(capacity));
+            Assert.That(messageProcessingStrategy.AvailableMessageHandlers, Is.EqualTo(capacity));
         }
 
         [Test]
-        public async Task FreeTaskCountIsNeverNegative()
+        public async Task AvailableMessageHandlersCount_IsNeverNegative()
         {
             const int capacity = 10;
             var messageProcessingStrategy = new Throttled(capacity, _fakeMonitor);
@@ -111,7 +111,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             for (int i = 0; i < capacity; i++)
             {
                 messageProcessingStrategy.ProcessMessage(() => tcs.Task);
-                Assert.That(messageProcessingStrategy.FreeTasks, Is.GreaterThanOrEqualTo(0));
+                Assert.That(messageProcessingStrategy.AvailableMessageHandlers, Is.GreaterThanOrEqualTo(0));
             }
 
             await AllowTasksToComplete(tcs);

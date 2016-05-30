@@ -7,7 +7,12 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
 {
     public class ThrowingBeforeMessageProcessingStrategy : IMessageProcessingStrategy
     {
-        public int FreeTasks
+        public int MaxConcurrentMessageHandlers
+        {
+            get { return int.MaxValue; }
+        }
+
+        public int AvailableMessageHandlers
         {
             get
             {

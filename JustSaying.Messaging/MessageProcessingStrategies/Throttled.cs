@@ -26,7 +26,12 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             _activeTasks = new List<Task>(_maximumAllowedMesagesInFlightProducer());
         }
 
-        public int FreeTasks
+        public int MaxConcurrentMessageHandlers
+        {
+            get { return _maximumAllowedMesagesInFlightProducer(); }
+        }
+
+        public int AvailableMessageHandlers
         {
             get
             {
@@ -45,7 +50,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
             // wait for some tasks to complete
-            while (FreeTasks == 0)
+            while (AvailableMessageHandlers == 0)
             {
                 Task[] activeTasksToWaitOn;
                 lock (_activeTasks)

@@ -7,7 +7,9 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
 {
     public class ThrowingDuringMessageProcessingStrategy : IMessageProcessingStrategy
     {
-        public int FreeTasks { get { return int.MaxValue; } }
+        public int MaxConcurrentMessageHandlers { get { return int.MaxValue; } }
+
+        public int AvailableMessageHandlers { get { return int.MaxValue; } }
 
         private readonly TaskCompletionSource<object> _doneSignal;
         private bool _firstTime = true;
