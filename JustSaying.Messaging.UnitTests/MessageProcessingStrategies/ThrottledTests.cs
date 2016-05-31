@@ -25,29 +25,54 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             maxAllowedMessagesInFlight().Returns(100);
             var messageProcessingStrategy = new Throttled(maxAllowedMessagesInFlight, _fakeMonitor);
 
+            Assert.That(messageProcessingStrategy.MaxConcurrentMessageHandlers, Is.EqualTo(100));
             Assert.That(messageProcessingStrategy.AvailableMessageHandlers, Is.EqualTo(100));
 
             maxAllowedMessagesInFlight().Returns(90);
 
+            Assert.That(messageProcessingStrategy.MaxConcurrentMessageHandlers, Is.EqualTo(90));
             Assert.That(messageProcessingStrategy.AvailableMessageHandlers, Is.EqualTo(90));
+        }
+
+        [Test]
+        public void MaxConcurrentMessageHandlersCount_IsCapacity()
+        {
+            var messageProcessingStrategy = new Throttled(123, _fakeMonitor);
+
+            Assert.That(messageProcessingStrategy.MaxConcurrentMessageHandlers, Is.EqualTo(123));
         }
 
         [Test]
         public void AvailableMessageHandlersCount_StartsAtCapacity()
         {
             var messageProcessingStrategy = new Throttled(123, _fakeMonitor);
+
             Assert.That(messageProcessingStrategy.AvailableMessageHandlers, Is.EqualTo(123));
         }
 
         [Test]
-        public void WhenATasksIsAdded_TheAvailableMessageHandlersCountIsDecremented()
+        public async Task WhenATasksIsAdded_TheMaxConcurrentMessageHandlersCountIsUnaffected()
         {
             var messageProcessingStrategy = new Throttled(123, _fakeMonitor);
-            var tcs = new TaskCompletionSource<bool>();
+            var tcs = new TaskCompletionSource<object>();
+
+            messageProcessingStrategy.ProcessMessage(() => tcs.Task);
+
+            Assert.That(messageProcessingStrategy.MaxConcurrentMessageHandlers, Is.EqualTo(123));
+
+            await AllowTasksToComplete(tcs);
+        }
+
+        [Test]
+        public async Task WhenATasksIsAdded_TheAvailableMessageHandlersCountIsDecremented()
+        {
+            var messageProcessingStrategy = new Throttled(123, _fakeMonitor);
+            var tcs = new TaskCompletionSource<object>();
 
             messageProcessingStrategy.ProcessMessage(() => tcs.Task);
 
             Assert.That(messageProcessingStrategy.AvailableMessageHandlers, Is.EqualTo(122));
+            await AllowTasksToComplete(tcs);
         }
 
         [Test]
@@ -62,6 +87,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
             await AllowTasksToComplete(tcs);
 
+            Assert.That(messageProcessingStrategy.MaxConcurrentMessageHandlers, Is.EqualTo(3));
             Assert.That(messageProcessingStrategy.AvailableMessageHandlers, Is.EqualTo(3));
         }
 
@@ -76,7 +102,8 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             {
                 messageProcessingStrategy.ProcessMessage(() => tcs.Task);
             }
-            
+
+            Assert.That(messageProcessingStrategy.MaxConcurrentMessageHandlers, Is.EqualTo(capacity));
             Assert.That(messageProcessingStrategy.AvailableMessageHandlers, Is.EqualTo(0));
             await AllowTasksToComplete(tcs);
         }
