@@ -6,16 +6,16 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
     public interface IMessageProcessingStrategy
     {
         /// <summary>
-        /// The maximum number of tasks that will be used to handle messages at any one time
+        /// The maximum number of worker tasks that will be used to run messages handlers at any one time
         /// </summary>
-        int MaxConcurrentMessageHandlers { get; }
+        int MaxWorkers { get; }
 
         /// <summary>
-        /// The number of tasks that are free to handle messages right now,
-        /// i.e. MaxConcurrentMessageHandlers - (the number of currently running tasks)
-        /// Always in the range 0 >= x >= MaxConcurrentMessageHandlers
+        /// The number of worker tasks that are free to run messages handlers right now,
+        /// i.e. MaxWorkers - (the number of currently running workers)
+        /// Always in the range: 0 >= AvailableWorkers >= MaxWorkers
         /// </summary>
-        int AvailableMessageHandlers { get; }
+        int AvailableWorkers { get; }
 
         /// <summary>
         /// Start processing a message. 
@@ -24,11 +24,11 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         void ProcessMessage(Func<Task> action);
 
         /// <summary>
-        /// after awaiting this, AvailableMessageHandlers should be > 0,
+        /// after awaiting this, AvailableWorkers should be > 0,
         /// i.e. you are in a position to add another one by calling ProcessMessage
         /// </summary>
         /// <returns></returns>
-        Task AwaitAtLeastOneTaskToComplete();
+        Task AwaitAtLeastOneWorkerToComplete();
 
     }
 }

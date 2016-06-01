@@ -7,12 +7,12 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
 {
     public class ThrowingBeforeMessageProcessingStrategy : IMessageProcessingStrategy
     {
-        public int MaxConcurrentMessageHandlers
+        public int MaxWorkers
         {
             get { return int.MaxValue; }
         }
 
-        public int AvailableMessageHandlers
+        public int AvailableWorkers
         {
             get
             {
@@ -33,7 +33,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
             _doneSignal = doneSignal;
         }
 
-        public Task AwaitAtLeastOneTaskToComplete()
+        public Task AwaitAtLeastOneWorkerToComplete()
         {
             if (_firstTime)
             {

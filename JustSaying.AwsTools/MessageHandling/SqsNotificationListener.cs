@@ -204,13 +204,13 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private async Task<int> GetNumberOfMessagesToReadFromSqs()
         {
-            var numberOfMessagesToreadFromSqs = Math.Min(_messageProcessingStrategy.AvailableMessageHandlers, MessageConstants.MaxAmazonMessageCap);
+            var numberOfMessagesToreadFromSqs = Math.Min(_messageProcessingStrategy.AvailableWorkers, MessageConstants.MaxAmazonMessageCap);
 
             if (numberOfMessagesToreadFromSqs == 0)
             {
-                await _messageProcessingStrategy.AwaitAtLeastOneTaskToComplete();
+                await _messageProcessingStrategy.AwaitAtLeastOneWorkerToComplete();
 
-                numberOfMessagesToreadFromSqs = Math.Min(_messageProcessingStrategy.AvailableMessageHandlers, MessageConstants.MaxAmazonMessageCap);
+                numberOfMessagesToreadFromSqs = Math.Min(_messageProcessingStrategy.AvailableWorkers, MessageConstants.MaxAmazonMessageCap);
             }
 
             if (numberOfMessagesToreadFromSqs == 0)

@@ -8,30 +8,30 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
 {
     public class Throttled : IMessageProcessingStrategy
     {
-        private readonly Func<int> _maximumAllowedMesagesInFlightProducer;
+        private readonly Func<int> _maxWorkersProducer;
 
         private readonly IMessageMonitor _messageMonitor;
         private readonly List<Task> _activeTasks;
 
-        public Throttled(int maximumAllowedMesagesInFlight, IMessageMonitor messageMonitor)
-            : this(() => maximumAllowedMesagesInFlight, messageMonitor)
+        public Throttled(int maxWorkers, IMessageMonitor messageMonitor)
+            : this(() => maxWorkers, messageMonitor)
         {}
 
-        public Throttled(Func<int> maximumAllowedMesagesInFlightProducer,
+        public Throttled(Func<int> maxWorkersProducer,
             IMessageMonitor messageMonitor)
         {
-            _maximumAllowedMesagesInFlightProducer = maximumAllowedMesagesInFlightProducer;
+            _maxWorkersProducer = maxWorkersProducer;
             _messageMonitor = messageMonitor;
 
-            _activeTasks = new List<Task>(_maximumAllowedMesagesInFlightProducer());
+            _activeTasks = new List<Task>(_maxWorkersProducer());
         }
 
-        public int MaxConcurrentMessageHandlers
+        public int MaxWorkers
         {
-            get { return _maximumAllowedMesagesInFlightProducer(); }
+            get { return _maxWorkersProducer(); }
         }
 
-        public int AvailableMessageHandlers
+        public int AvailableWorkers
         {
             get
             {
@@ -40,17 +40,17 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
                 {
                     activeTaskCount = _activeTasks.Count;
                 }
-                var freeTasks = _maximumAllowedMesagesInFlightProducer() - activeTaskCount;
+                var freeTasks = _maxWorkersProducer() - activeTaskCount;
                 return Math.Max(freeTasks, 0);
             }
         }
 
-        public async Task AwaitAtLeastOneTaskToComplete()
+        public async Task AwaitAtLeastOneWorkerToComplete()
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
             // wait for some tasks to complete
-            while (AvailableMessageHandlers == 0)
+            while (AvailableWorkers == 0)
             {
                 Task[] activeTasksToWaitOn;
                 lock (_activeTasks)

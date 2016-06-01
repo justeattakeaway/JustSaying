@@ -111,7 +111,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
             while (actions.Any())
             {
-                var batch = GetFromFakeSnsQueue(actions, messageProcessingStrategy.AvailableMessageHandlers);
+                var batch = GetFromFakeSnsQueue(actions, messageProcessingStrategy.AvailableWorkers);
 
                 foreach (var action in batch)
                 {
@@ -123,9 +123,9 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
                     break;
                 }
 
-                Assert.That(messageProcessingStrategy.AvailableMessageHandlers, Is.GreaterThanOrEqualTo(0));
-                await messageProcessingStrategy.AwaitAtLeastOneTaskToComplete();
-                Assert.That(messageProcessingStrategy.AvailableMessageHandlers, Is.GreaterThan(0));
+                Assert.That(messageProcessingStrategy.AvailableWorkers, Is.GreaterThanOrEqualTo(0));
+                await messageProcessingStrategy.AwaitAtLeastOneWorkerToComplete();
+                Assert.That(messageProcessingStrategy.AvailableWorkers, Is.GreaterThan(0));
 
                 if (stopwatch.Elapsed > timeout)
                 {
