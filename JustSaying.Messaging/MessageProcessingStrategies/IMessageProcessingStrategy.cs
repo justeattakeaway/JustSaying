@@ -13,7 +13,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         /// <summary>
         /// The number of worker tasks that are free to run messages handlers right now,
         /// i.e. MaxWorkers - (the number of currently running workers)
-        /// Always in the range: 0 >= AvailableWorkers >= MaxWorkers
+        /// Always in the range 0 to MaxWorkers
         /// </summary>
         int AvailableWorkers { get; }
 
