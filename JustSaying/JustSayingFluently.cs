@@ -5,12 +5,12 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Extensions;
+using JustSaying.Logging;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
-using NLog;
 using JustSaying.Messaging.Interrogation;
 
 namespace JustSaying
@@ -25,7 +25,7 @@ namespace JustSaying
     /// </summary>
     public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings, IMayWantARegionPicker, IAmJustInterrogating
     {
-        private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
+        private static readonly ILog Log = LogProvider.GetLogger("JustSaying");
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
         private readonly IAwsClientFactoryProxy _awsClientFactoryProxy;
         protected readonly IAmJustSaying Bus;

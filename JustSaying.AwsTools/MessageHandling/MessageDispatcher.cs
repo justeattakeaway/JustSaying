@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using NLog;
 using Amazon.SQS.Model;
+using JustSaying.AwsTools.Logging;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using Message = JustSaying.Models.Message;
@@ -18,7 +18,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly Action<Exception, SQSMessage> _onError;
         private readonly HandlerMap _handlerMap;
 
-        private static readonly Logger Log = LogManager.GetLogger("JustSaying");
+        private static readonly ILog Log = LogProvider.GetLogger("JustSaying");
 
         public MessageDispatcher(
             SqsQueueBase queue, 
@@ -43,7 +43,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (MessageFormatNotSupportedException ex)
             {
-                Log.Trace(
+                Log.TraceFormat(
                     "Didn't handle message [{0}]. No serialiser setup",
                     message.Body ?? string.Empty);
                 DeleteMessageFromQueue(message.ReceiptHandle);
@@ -52,7 +52,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error deserialising message");
+                Log.ErrorException("Error deserialising message", ex);
                 _onError(ex, message);
                 return;
             }
@@ -74,7 +74,7 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (Exception ex)
             {
                 var errorText = string.Format("Error handling message [{0}]", message.Body);
-                Log.Error(ex, errorText);
+                Log.ErrorException(errorText, ex);
 
                 if (typedMessage != null)
                 {
@@ -110,7 +110,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
 
             watch.Stop();
-            Log.Trace("Handled message - MessageType: {0}", message.GetType().Name);
+            Log.TraceFormat("Handled message - MessageType: {0}", message.GetType().Name);
             _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
 
             return allHandlersSucceeded;
