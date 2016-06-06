@@ -43,7 +43,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
             return Task.FromResult(true);
         }
 
-        public void ProcessMessage(Func<Task> action)
+        public void StartWorker(Func<Task> action)
         {
         }
 

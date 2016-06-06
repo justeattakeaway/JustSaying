@@ -71,7 +71,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             _messageMonitor.HandleThrottlingTime(watch.ElapsedMilliseconds);
         }
 
-        public void ProcessMessage(Func<Task> action)
+        public void StartWorker(Func<Task> action)
         {
             // task is named but not yet started
             var messageProcessingTask = new Task<Task>(action);

@@ -18,10 +18,10 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         int AvailableWorkers { get; }
 
         /// <summary>
-        /// Start processing a message. 
+        /// Launch a worker to start processing a message.
         /// </summary>
         /// <param name="action"></param>
-        void ProcessMessage(Func<Task> action);
+        void StartWorker(Func<Task> action);
 
         /// <summary>
         /// after awaiting this, AvailableWorkers should be > 0,
@@ -29,6 +29,5 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         /// </summary>
         /// <returns></returns>
         Task AwaitAtLeastOneWorkerToComplete();
-
     }
 }

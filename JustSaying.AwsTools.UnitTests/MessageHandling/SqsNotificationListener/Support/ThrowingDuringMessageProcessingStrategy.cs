@@ -24,7 +24,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
             await Task.Yield();
         }
 
-        public void ProcessMessage(Func<Task> action)
+        public void StartWorker(Func<Task> action)
         {
             if (_firstTime)
             {

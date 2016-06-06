@@ -56,7 +56,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             var messageProcessingStrategy = new Throttled(123, _fakeMonitor);
             var tcs = new TaskCompletionSource<object>();
 
-            messageProcessingStrategy.ProcessMessage(() => tcs.Task);
+            messageProcessingStrategy.StartWorker(() => tcs.Task);
 
             Assert.That(messageProcessingStrategy.MaxWorkers, Is.EqualTo(123));
 
@@ -69,7 +69,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             var messageProcessingStrategy = new Throttled(123, _fakeMonitor);
             var tcs = new TaskCompletionSource<object>();
 
-            messageProcessingStrategy.ProcessMessage(() => tcs.Task);
+            messageProcessingStrategy.StartWorker(() => tcs.Task);
 
             Assert.That(messageProcessingStrategy.AvailableWorkers, Is.EqualTo(122));
             await AllowTasksToComplete(tcs);
@@ -81,7 +81,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             var messageProcessingStrategy = new Throttled(3, _fakeMonitor);
             var tcs = new TaskCompletionSource<object>();
 
-            messageProcessingStrategy.ProcessMessage(() => tcs.Task);
+            messageProcessingStrategy.StartWorker(() => tcs.Task);
 
             Assert.That(messageProcessingStrategy.AvailableWorkers, Is.EqualTo(2));
 
@@ -100,7 +100,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
             for (int i = 0; i < capacity; i++)
             {
-                messageProcessingStrategy.ProcessMessage(() => tcs.Task);
+                messageProcessingStrategy.StartWorker(() => tcs.Task);
             }
 
             Assert.That(messageProcessingStrategy.MaxWorkers, Is.EqualTo(capacity));
@@ -117,7 +117,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
             for (int i = 0; i < capacity; i++)
             {
-                messageProcessingStrategy.ProcessMessage(() => tcs.Task);
+                messageProcessingStrategy.StartWorker(() => tcs.Task);
             }
 
             Assert.That(messageProcessingStrategy.AvailableWorkers, Is.EqualTo(0));
@@ -137,7 +137,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
             for (int i = 0; i < capacity; i++)
             {
-                messageProcessingStrategy.ProcessMessage(() => tcs.Task);
+                messageProcessingStrategy.StartWorker(() => tcs.Task);
                 Assert.That(messageProcessingStrategy.AvailableWorkers, Is.GreaterThanOrEqualTo(0));
             }
 

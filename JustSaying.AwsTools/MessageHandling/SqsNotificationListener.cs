@@ -224,7 +224,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private void HandleMessage(Amazon.SQS.Model.Message message)
         {
             var action = new Func<Task>(() => _messageDispatcher.DispatchMessage(message));
-            _messageProcessingStrategy.ProcessMessage(action);
+            _messageProcessingStrategy.StartWorker(action);
         }
 
         public ICollection<ISubscriber> Subscribers { get; set; }

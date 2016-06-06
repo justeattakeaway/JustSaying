@@ -115,7 +115,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
                 foreach (var action in batch)
                 {
-                    messageProcessingStrategy.ProcessMessage(action);
+                    messageProcessingStrategy.StartWorker(action);
                 }
 
                 if (!actions.Any())
