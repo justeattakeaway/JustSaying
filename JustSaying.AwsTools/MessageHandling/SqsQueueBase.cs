@@ -65,7 +65,7 @@ namespace JustSaying.AwsTools.MessageHandling
             RedrivePolicy = ExtractRedrivePolicyFromQueueAttributes(attributes.Attributes);
         }
 
-        protected GetQueueAttributesResult GetAttrs(IEnumerable<string> attrKeys)
+        protected GetQueueAttributesResponse GetAttrs(IEnumerable<string> attrKeys)
         {
             var request = new GetQueueAttributesRequest { 
                 QueueUrl = Url,
