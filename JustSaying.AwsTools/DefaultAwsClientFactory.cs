@@ -21,12 +21,12 @@ namespace JustSaying.AwsTools
 
         public IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region)
         {
-            return AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(credentials, region);
+            return new AmazonSimpleNotificationServiceClient(credentials, region);
         }
 
         public IAmazonSQS GetSqsClient(RegionEndpoint region)
         {
-            return AWSClientFactory.CreateAmazonSQSClient(credentials, region);
+            return new AmazonSQSClient(credentials, region);
         }
     }
 }
