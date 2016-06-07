@@ -7,7 +7,9 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
 {
     public class ThrowingDuringMessageProcessingStrategy : IMessageProcessingStrategy
     {
-        public int FreeTasks { get { return int.MaxValue; } }
+        public int MaxWorkers { get { return int.MaxValue; } }
+
+        public int AvailableWorkers { get { return int.MaxValue; } }
 
         private readonly TaskCompletionSource<object> _doneSignal;
         private bool _firstTime = true;
@@ -17,12 +19,12 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
             _doneSignal = doneSignal;
         }
 
-        public async Task AwaitAtLeastOneTaskToComplete()
+        public async Task WaitForAvailableWorkers()
         {
             await Task.Yield();
         }
 
-        public void ProcessMessage(Func<Task> action)
+        public void StartWorker(Func<Task> action)
         {
             if (_firstTime)
             {

@@ -8,25 +8,30 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
 {
     public class Throttled : IMessageProcessingStrategy
     {
-        private readonly Func<int> _maximumAllowedMesagesInFlightProducer;
+        private readonly Func<int> _maxWorkersProducer;
 
         private readonly IMessageMonitor _messageMonitor;
         private readonly List<Task> _activeTasks;
 
-        public Throttled(int maximumAllowedMesagesInFlight, IMessageMonitor messageMonitor)
-            : this(() => maximumAllowedMesagesInFlight, messageMonitor)
+        public Throttled(int maxWorkers, IMessageMonitor messageMonitor)
+            : this(() => maxWorkers, messageMonitor)
         {}
 
-        public Throttled(Func<int> maximumAllowedMesagesInFlightProducer,
+        public Throttled(Func<int> maxWorkersProducer,
             IMessageMonitor messageMonitor)
         {
-            _maximumAllowedMesagesInFlightProducer = maximumAllowedMesagesInFlightProducer;
+            _maxWorkersProducer = maxWorkersProducer;
             _messageMonitor = messageMonitor;
 
-            _activeTasks = new List<Task>(_maximumAllowedMesagesInFlightProducer());
+            _activeTasks = new List<Task>(_maxWorkersProducer());
         }
 
-        public int FreeTasks
+        public int MaxWorkers
+        {
+            get { return _maxWorkersProducer(); }
+        }
+
+        public int AvailableWorkers
         {
             get
             {
@@ -35,17 +40,17 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
                 {
                     activeTaskCount = _activeTasks.Count;
                 }
-                var freeTasks = _maximumAllowedMesagesInFlightProducer() - activeTaskCount;
+                var freeTasks = _maxWorkersProducer() - activeTaskCount;
                 return Math.Max(freeTasks, 0);
             }
         }
 
-        public async Task AwaitAtLeastOneTaskToComplete()
+        public async Task WaitForAvailableWorkers()
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
             // wait for some tasks to complete
-            while (FreeTasks == 0)
+            while (AvailableWorkers == 0)
             {
                 Task[] activeTasksToWaitOn;
                 lock (_activeTasks)
@@ -66,7 +71,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             _messageMonitor.HandleThrottlingTime(watch.ElapsedMilliseconds);
         }
 
-        public void ProcessMessage(Func<Task> action)
+        public void StartWorker(Func<Task> action)
         {
             // task is named but not yet started
             var messageProcessingTask = new Task<Task>(action);
