@@ -19,7 +19,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
             _doneSignal = doneSignal;
         }
 
-        public async Task AwaitAtLeastOneWorkerToComplete()
+        public async Task WaitForAvailableWorkers()
         {
             await Task.Yield();
         }

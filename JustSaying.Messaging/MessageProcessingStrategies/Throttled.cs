@@ -45,7 +45,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             }
         }
 
-        public async Task AwaitAtLeastOneWorkerToComplete()
+        public async Task WaitForAvailableWorkers()
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();
 

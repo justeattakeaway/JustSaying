@@ -33,7 +33,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
             _doneSignal = doneSignal;
         }
 
-        public Task AwaitAtLeastOneWorkerToComplete()
+        public Task WaitForAvailableWorkers()
         {
             if (_firstTime)
             {

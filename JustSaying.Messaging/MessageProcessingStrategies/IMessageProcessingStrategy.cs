@@ -24,10 +24,10 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         void StartWorker(Func<Task> action);
 
         /// <summary>
-        /// after awaiting this, AvailableWorkers should be > 0,
-        /// i.e. you are in a position to add another one by calling ProcessMessage
+        /// After awaiting this, you should be in a position to start another worker
+        /// i.e. AvailableWorkers should be above 0
         /// </summary>
         /// <returns></returns>
-        Task AwaitAtLeastOneWorkerToComplete();
+        Task WaitForAvailableWorkers();
     }
 }

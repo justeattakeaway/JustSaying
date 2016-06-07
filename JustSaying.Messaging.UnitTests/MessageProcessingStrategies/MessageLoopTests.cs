@@ -124,7 +124,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
                 }
 
                 Assert.That(messageProcessingStrategy.AvailableWorkers, Is.GreaterThanOrEqualTo(0));
-                await messageProcessingStrategy.AwaitAtLeastOneWorkerToComplete();
+                await messageProcessingStrategy.WaitForAvailableWorkers();
                 Assert.That(messageProcessingStrategy.AvailableWorkers, Is.GreaterThan(0));
 
                 if (stopwatch.Elapsed > timeout)
