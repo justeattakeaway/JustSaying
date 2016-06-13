@@ -247,11 +247,10 @@ namespace JustSaying
                 throw new NotSupportedException(string.Format("There are more than one registration for IHandler<{0}>. JustSaying currently does not support multiple registration for IHandler<T>.", typeof(T).Name));
             }
 
-            var singleHandler = proposedHandlers[0];
-
             foreach (var region in Bus.Config.Regions)
             {
-                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => singleHandler);
+                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName,
+                    () => handlerResolver.ResolveHandlers<T>().Single());
             }
             
 
