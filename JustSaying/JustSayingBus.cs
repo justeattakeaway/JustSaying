@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using JustSaying.Logging;
 using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
@@ -9,7 +10,6 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
-using NLog;
 
 namespace JustSaying
 {
@@ -29,7 +29,7 @@ namespace JustSaying
         }
         public IMessageSerialisationRegister SerialisationRegister { get; private set; }
         public IMessageLock MessageLock { get; set; }
-        private static readonly Logger Log = LogManager.GetLogger("JustSaying"); //ToDo: danger!
+        private static readonly ILog Log = LogProvider.GetLogger("JustSaying");
         private readonly object _syncRoot = new object();
         private readonly ICollection<IPublisher> _publishers;
         private readonly ICollection<ISubscriber> _subscribers;
@@ -165,7 +165,7 @@ namespace JustSaying
             {
                 activeRegion = Config.GetActiveRegion();
             }
-            Log.Info("Active region has been evaluated to {0}", activeRegion);
+            Log.InfoFormat("Active region has been evaluated to {0}", activeRegion);
 
             if (!_publishersByRegionAndTopic.ContainsKey(activeRegion))
             {
@@ -209,7 +209,7 @@ namespace JustSaying
                     Monitor.IssuePublishingMessage();
 
                     var errorMessage = "Unable to publish message " + message.GetType().Name;
-                    Log.Error(ex, errorMessage);
+                    Log.ErrorException(errorMessage, ex);
                     throw;
                 }
 

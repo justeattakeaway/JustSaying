@@ -3,8 +3,8 @@ using System.Net;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using JustSaying.AwsTools.Logging;
 using JustSaying.AwsTools.QueueCreation;
-using NLog;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -21,7 +21,7 @@ namespace JustSaying.AwsTools.MessageHandling
         internal int DeliveryDelay { get; set; }
         internal RedrivePolicy RedrivePolicy { get; set; }
         
-        private static readonly Logger Log = LogManager.GetLogger("JustSaying");
+        private static readonly ILog Log = LogProvider.GetLogger("JustSaying");
 
         protected SqsQueueBase(RegionEndpoint region, IAmazonSQS client)
         {

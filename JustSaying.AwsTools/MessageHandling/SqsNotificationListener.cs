@@ -5,13 +5,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
+using JustSaying.AwsTools.Logging;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
-using NLog;
 using Message = JustSaying.Models.Message;
 
 namespace JustSaying.AwsTools.MessageHandling
@@ -27,7 +27,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly HandlerMap _handlerMap = new HandlerMap();
 
         private CancellationTokenSource _cts = new CancellationTokenSource();
-        private static readonly Logger Log = LogManager.GetLogger("JustSaying");
+        private static readonly ILog Log = LogProvider.GetLogger("JustSaying");
 
         public SqsNotificationListener(
             SqsQueueBase queue,
@@ -90,7 +90,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 .Unwrap()
                 .ContinueWith(t => LogTaskEndState(t, queueInfo));
 
-            Log.Info(
+            Log.InfoFormat(
                 "Starting Listening - {0}", 
                 queueInfo);
         }
@@ -99,7 +99,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             if (task.IsFaulted)
             {
-                Log.Warn(
+                Log.WarnFormat(
                     "[Faulted] Stopped Listening - {0}\n{1}",
                      queueInfo,
                      AggregateExceptionDetails(task.Exception));
@@ -107,7 +107,7 @@ namespace JustSaying.AwsTools.MessageHandling
             else
             {
                 var endState = task.Status.ToString();
-                Log.Info(
+                Log.InfoFormat(
                     "[{0}] Stopped Listening - {1}",
                     endState,
                     queueInfo);
@@ -141,7 +141,7 @@ namespace JustSaying.AwsTools.MessageHandling
        public void StopListening()
         {
             _cts.Cancel();
-            Log.Info(
+            Log.InfoFormat(
                 "Stopping Listening - Queue: {0}, Region: {1}",
                 _queue.QueueName,
                 _queue.Region.SystemName);
@@ -173,7 +173,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 var messageCount = sqsMessageResponse.Messages.Count;
 
-                Log.Trace(
+                Log.TraceFormat(
                     "Polled for messages - Queue: {0}, Region: {1}, MessageCount: {2}",
                     queueName,
                     region,
@@ -186,7 +186,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (InvalidOperationException ex)
             {
-                Log.Trace(
+                Log.TraceFormat(
                     "Suspected no message in queue [{0}], region: [{1}]. Ex: {2}",
                     queueName,
                     region,
@@ -198,7 +198,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     "Issue in message handling loop for queue {0}, region {1}",
                     queueName,
                     region);
-                Log.Error(ex, msg);
+                Log.ErrorException(msg, ex);
             }
         }
 

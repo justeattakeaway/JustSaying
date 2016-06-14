@@ -1,14 +1,14 @@
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
+using JustSaying.AwsTools.Logging;
 using JustSaying.Messaging.MessageSerialisation;
-using NLog;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
     public class SnsTopicByName : SnsTopicBase
     {
         public string TopicName { get; private set; }
-        private static readonly Logger Log = LogManager.GetLogger("JustSaying");
+        private static readonly ILog Log = LogProvider.GetLogger("JustSaying");
 
         public SnsTopicByName(string topicName, IAmazonSimpleNotificationService client, IMessageSerialisationRegister serialisationRegister)
             : base(serialisationRegister)
@@ -22,7 +22,7 @@ namespace JustSaying.AwsTools.MessageHandling
             if (string.IsNullOrWhiteSpace(Arn) == false)
                 return true;
 
-            Log.Info("Checking if topic '{0}' exists", TopicName);
+            Log.InfoFormat("Checking if topic '{0}' exists", TopicName);
             var topic = Client.FindTopic(TopicName);
 
             if (topic != null)

@@ -15,7 +15,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             Config = Substitute.For<IMessagingConfig>();
             Monitor = Substitute.For<IMessageMonitor>();
 
-            Logging.ToConsole();
+            TestingFramework.Logging.ToConsole();
         }
 
         protected override JustSaying.JustSayingBus CreateSystemUnderTest()

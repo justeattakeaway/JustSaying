@@ -20,7 +20,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 
         protected override void Given()
         {
-            Logging.ToConsole();
+            TestingFramework.Logging.ToConsole();
 
             Sqs = Substitute.For<IAmazonSQS>();
             SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
