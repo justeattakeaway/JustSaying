@@ -36,7 +36,7 @@ namespace JustSaying.AwsTools.QueueCreation
             }
             queue = new SqsQueueByName(regionEndpoint, queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue);
             queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdated(queueConfig);
-
+            queue.SetPolicy();
             _queueCache.AddToCache(region, queue.QueueName, queue);
             return queue;
         }

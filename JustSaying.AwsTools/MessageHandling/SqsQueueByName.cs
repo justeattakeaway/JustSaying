@@ -89,6 +89,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
             }
             UpdateRedrivePolicy(new RedrivePolicy(queueConfig.RetryCountBeforeSendingToErrorQueue, ErrorQueue.Arn));
+            new SqsPolicy().Set(this.Arn, "arn:aws:sns:eu-west-1:507204202721:*", this.Url, Client);
 
         }
 
@@ -111,6 +112,10 @@ namespace JustSaying.AwsTools.MessageHandling
         private bool RedrivePolicyNeedsUpdating(RedrivePolicy requestedRedrivePolicy)
         {
             return RedrivePolicy == null || RedrivePolicy.MaximumReceives != requestedRedrivePolicy.MaximumReceives;
+        }
+
+        public void SetPolicy()
+        {
         }
     }
 }
