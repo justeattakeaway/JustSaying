@@ -22,6 +22,8 @@ namespace JustSaying.AwsTools.QueueCreation
             var eventTopic = EnsureTopicExists(regionEndpoint, serialisationRegister, queueConfig);
             EnsureQueueIsSubscribedToTopic(regionEndpoint, eventTopic, queue);
 
+            var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
+            new SqsPolicy(queue.Arn, queue.Url, sqsclient).Set(eventTopic.Arn);
             return queue;
         }
 
@@ -36,7 +38,7 @@ namespace JustSaying.AwsTools.QueueCreation
             }
             queue = new SqsQueueByName(regionEndpoint, queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue);
             queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdated(queueConfig);
-            queue.SetPolicy();
+            
             _queueCache.AddToCache(region, queue.QueueName, queue);
             return queue;
         }
