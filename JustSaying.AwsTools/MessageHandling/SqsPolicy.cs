@@ -1,3 +1,4 @@
+using System;
 using Amazon.Auth.AccessControlPolicy;
 using Amazon.Auth.AccessControlPolicy.ActionIdentifiers;
 using Amazon.SQS;
@@ -7,37 +8,38 @@ namespace JustSaying.AwsTools.MessageHandling
 {
     public class SqsPolicy
     {
-        private readonly string arn;
-        private readonly IAmazonSQS client;
-        private readonly string url;
-
-        public SqsPolicy(string arn, string url, IAmazonSQS client)
+        private readonly string _policy;
+        public SqsPolicy(string policy)
         {
-            this.arn = arn;
-            this.url = url;
-            this.client = client;
+            _policy = policy;
         }
+        
 
-        public void Set(string topicArn)
+        public static void Save(string sourceArn, string queueArn, string queueUrl, IAmazonSQS client)
         {
-            var topicArnWildcard = CreateTopicArnWildcard(topicArn);
+            var topicArnWildcard = CreateTopicArnWildcard(sourceArn);
             ActionIdentifier[] actions = { SQSActionIdentifiers.SendMessage };
 
             Policy sqsPolicy = new Policy()
                 .WithStatements(new Statement(Statement.StatementEffect.Allow)
                     .WithPrincipals(Principal.AllUsers)
-                    .WithResources(new Resource(arn))
+                    .WithResources(new Resource(queueArn))
                     .WithConditions(ConditionFactory.NewSourceArnCondition(topicArnWildcard))
                     .WithActionIdentifiers(actions));
             SetQueueAttributesRequest setQueueAttributesRequest = new SetQueueAttributesRequest();
-            setQueueAttributesRequest.QueueUrl = url;
+            setQueueAttributesRequest.QueueUrl = queueUrl;
             setQueueAttributesRequest.Attributes["Policy"] = sqsPolicy.ToJson(); 
             client.SetQueueAttributes(setQueueAttributesRequest);
         }
 
-        private string CreateTopicArnWildcard(string topicArn)
+        public override string ToString()
         {
-            int index = topicArn.LastIndexOf(":");
+            return _policy;
+        }
+
+        private static string CreateTopicArnWildcard(string topicArn)
+        {
+            int index = topicArn.LastIndexOf(":", StringComparison.InvariantCultureIgnoreCase);
             if (index > 0)
                 topicArn = topicArn.Substring(0, index + 1);
             return topicArn + "*";

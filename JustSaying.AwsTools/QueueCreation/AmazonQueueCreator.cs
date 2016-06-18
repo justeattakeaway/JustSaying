@@ -23,7 +23,7 @@ namespace JustSaying.AwsTools.QueueCreation
             EnsureQueueIsSubscribedToTopic(regionEndpoint, eventTopic, queue);
 
             var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
-            new SqsPolicy(queue.Arn, queue.Url, sqsclient).Set(eventTopic.Arn);
+            SqsPolicy.Save(eventTopic.Arn, queue.Arn, queue.Url, sqsclient);
             return queue;
         }
 

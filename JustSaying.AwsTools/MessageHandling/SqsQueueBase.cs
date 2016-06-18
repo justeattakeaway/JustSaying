@@ -20,7 +20,9 @@ namespace JustSaying.AwsTools.MessageHandling
         internal int VisibilityTimeout { get; set; }
         internal int DeliveryDelay { get; set; }
         internal RedrivePolicy RedrivePolicy { get; set; }
-        
+        public string Policy { get; private set; }
+
+
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
 
         protected SqsQueueBase(RegionEndpoint region, IAmazonSQS client)
@@ -61,6 +63,7 @@ namespace JustSaying.AwsTools.MessageHandling
             Arn = attributes.QueueARN;
             MessageRetentionPeriod = attributes.MessageRetentionPeriod;
             VisibilityTimeout = attributes.VisibilityTimeout;
+            Policy = attributes.Policy;
             DeliveryDelay = attributes.DelaySeconds;
             RedrivePolicy = ExtractRedrivePolicyFromQueueAttributes(attributes.Attributes);
         }
