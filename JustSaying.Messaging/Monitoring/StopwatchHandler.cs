@@ -19,7 +19,7 @@ namespace JustSaying.Messaging.Monitoring
         public async Task<bool> Handle(T message)
         {
             var watch = Stopwatch.StartNew();
-            var result = await _inner.Handle(message);
+            var result = await _inner.Handle(message).OnAnyThread();
 
             watch.Stop();
 

@@ -84,7 +84,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     while (!_cts.IsCancellationRequested)
                     {
-                        await ListenLoop(_cts.Token);
+                        await ListenLoop(_cts.Token).OnAnyThread();
                     }
                 })
                 .Unwrap()
@@ -154,7 +154,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                var numberOfMessagesToReadFromSqs = await GetNumberOfMessagesToReadFromSqs();
+                var numberOfMessagesToReadFromSqs = await GetNumberOfMessagesToReadFromSqs().OnAnyThread();
 
                 var watch = new System.Diagnostics.Stopwatch();
                 watch.Start();
@@ -165,7 +165,7 @@ namespace JustSaying.AwsTools.MessageHandling
                         MaxNumberOfMessages = numberOfMessagesToReadFromSqs,
                         WaitTimeSeconds = 20
                     };
-                var sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, ct);
+                var sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, ct).OnAnyThread();
 
                 watch.Stop();
 
@@ -208,7 +208,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             if (numberOfMessagesToReadFromSqs == 0)
             {
-                await _messageProcessingStrategy.WaitForAvailableWorkers();
+                await _messageProcessingStrategy.WaitForAvailableWorkers().OnAnyThread();
 
                 numberOfMessagesToReadFromSqs = Math.Min(_messageProcessingStrategy.AvailableWorkers, MessageConstants.MaxAmazonMessageCap);
             }

@@ -64,7 +64,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
                 }
 
                 _messageMonitor.IncrementThrottlingStatistic();
-                await Task.WhenAny(activeTasksToWaitOn);
+                await Task.WhenAny(activeTasksToWaitOn).OnAnyThread();
             }
 
             watch.Stop();
