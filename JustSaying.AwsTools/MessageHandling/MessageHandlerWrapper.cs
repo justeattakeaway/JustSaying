@@ -23,7 +23,7 @@ namespace JustSaying.AwsTools.MessageHandling
             handler = MaybeWrapWithGuaranteedDelivery(futureHandler, handler);
             handler = MaybeWrapStopwatch(handler);
 
-            return async message => await handler.Handle((T)message);
+            return async message => await handler.Handle((T)message).ConfigureAwait(false);
         }
 
         private IHandlerAsync<T> MaybeWrapWithGuaranteedDelivery<T>(Func<IHandlerAsync<T>> futureHandler, IHandlerAsync<T> handler) where T : Message
