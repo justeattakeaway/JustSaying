@@ -7,6 +7,7 @@ using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using Message = JustSaying.Models.Message;
 using SQSMessage = Amazon.SQS.Model.Message;
+using JustSaying.Messaging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -63,7 +64,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 if (typedMessage != null)
                 {
-                    handlingSucceeded = await CallMessageHandlers(typedMessage);
+                    handlingSucceeded = await CallMessageHandlers(typedMessage).OnAnyThread();
                 }
 
                 if (handlingSucceeded)
@@ -100,12 +101,12 @@ namespace JustSaying.AwsTools.MessageHandling
             if (handlerFuncs.Count == 1)
             {
                 // a shortcut for the usual case
-                allHandlersSucceeded = await handlerFuncs[0](message);
+                allHandlersSucceeded = await handlerFuncs[0](message).OnAnyThread();
             }
             else
             {
                 var handlerTasks = handlerFuncs.Select(func => func(message));
-                var handlerResults = await Task.WhenAll(handlerTasks);
+                var handlerResults = await Task.WhenAll(handlerTasks).OnAnyThread();
                 allHandlersSucceeded = handlerResults.All(x => x);
             }
 
