@@ -1,6 +1,6 @@
 #JustSaying
 [![NuGet](https://img.shields.io/nuget/v/JustSaying.svg?maxAge=3600)](https://www.nuget.org/packages/JustSaying/)
-[![Build status](https://ci.appveyor.com/api/projects/status/vha51pup5lcnesu3?svg=true)](https://ci.appveyor.com/project/justeattech/justsaying)
+[![Build status](https://ci.appveyor.com/api/projects/status/vha51pup5lcnesu3/branch/master?svg=true)](https://ci.appveyor.com/project/justeattech/justsaying)
 [![Gitter](https://img.shields.io/gitter/room/justeat/JustSaying.js.svg?maxAge=2592000)](https://gitter.im/justeat/JustSaying)
 
 A helpful library for publishing and consuming events / messages over SNS (SNS / SQS as a message bus).
