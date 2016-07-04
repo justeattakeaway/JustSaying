@@ -63,7 +63,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 if (typedMessage != null)
                 {
-                    handlingSucceeded = await CallMessageHandlers(typedMessage);
+                    handlingSucceeded = await CallMessageHandlers(typedMessage).ConfigureAwait(false);
                 }
 
                 if (handlingSucceeded)
@@ -100,12 +100,12 @@ namespace JustSaying.AwsTools.MessageHandling
             if (handlerFuncs.Count == 1)
             {
                 // a shortcut for the usual case
-                allHandlersSucceeded = await handlerFuncs[0](message);
+                allHandlersSucceeded = await handlerFuncs[0](message).ConfigureAwait(false);
             }
             else
             {
                 var handlerTasks = handlerFuncs.Select(func => func(message));
-                var handlerResults = await Task.WhenAll(handlerTasks);
+                var handlerResults = await Task.WhenAll(handlerTasks).ConfigureAwait(false);
                 allHandlersSucceeded = handlerResults.All(x => x);
             }
 
