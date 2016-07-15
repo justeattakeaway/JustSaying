@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Amazon;
+using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using Amazon.SQS.Model;
 using JustBehave;
@@ -178,7 +179,7 @@ namespace JustSaying.IntegrationTests
 
             var queueArn = sqsclient.GetQueueAttributes(request).QueueARN;
 
-            var client = AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(regionEndpoint);
+            var client = new AmazonSimpleNotificationServiceClient(regionEndpoint);
 
             var subscriptions =  client.ListSubscriptionsByTopic(new ListSubscriptionsByTopicRequest(topic.TopicArn)).Subscriptions;
 
