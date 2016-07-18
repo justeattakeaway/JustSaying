@@ -42,12 +42,12 @@ namespace JustSaying.TestingFramework
 
         public IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region)
         {
-            return AWSClientFactory.CreateAmazonSimpleNotificationServiceClient(_credentials, region);
+            return new AmazonSimpleNotificationServiceClient(_credentials, region);
         }
 
         public IAmazonSQS GetSqsClient(RegionEndpoint region)
         {
-            return AWSClientFactory.CreateAmazonSQSClient(_credentials, region);
+            return new AmazonSQSClient(_credentials, region);
         }
     }
 }
