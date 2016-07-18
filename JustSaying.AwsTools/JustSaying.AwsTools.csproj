@@ -70,6 +70,7 @@
     <Compile Include="IAwsClientFactory.cs" />
     <Compile Include="MessageHandling\MessageDispatcher.cs" />
     <Compile Include="MessageHandling\MessageHandlerWrapper.cs" />
+    <Compile Include="MessageHandling\SqsPolicy.cs" />
     <Compile Include="QueueCreation\AmazonQueueCreator.cs" />
     <Compile Include="QueueCreation\IRegionResourceCache.cs" />
     <Compile Include="QueueCreation\IVerifyAmazonQueues.cs" />

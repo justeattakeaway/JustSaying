@@ -38,7 +38,7 @@ namespace JustSaying.Messaging.MessageHandling
 
             try
             {
-                var successfullyHandled = await _inner.Handle(message);
+                var successfullyHandled = await _inner.Handle(message).ConfigureAwait(false);
                 if (successfullyHandled)
                 {
                     _messageLock.TryAquireLockPermanently(lockKey);

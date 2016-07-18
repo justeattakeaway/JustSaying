@@ -33,8 +33,9 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public bool Subscribe(IAmazonSQS amazonSQSClient, SqsQueueBase queue)
         {
-            var subscriptionArn = Client.SubscribeQueue(Arn, amazonSQSClient, queue.Url);
-            if (!string.IsNullOrEmpty(subscriptionArn))
+            var subscriptionResponse = Client.Subscribe(Arn, "sqs", queue.Arn);
+            
+            if (!string.IsNullOrEmpty(subscriptionResponse.SubscriptionArn))
             {
                 return true;
             }

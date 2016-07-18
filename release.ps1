@@ -9,8 +9,7 @@ if (($version -eq $null) -or ($version -eq '')) {
   # TODO: validate that a tag like this doesn't exist already
   throw "Must supply version number in semver format eg 1.2.3"
 }
-$manifest = get-content "deploy/manifest.json" -raw | ConvertFrom-Json
-$ci_name = "je-$($manifest.feature.name)"
+$ci_name = "justsaying"
 $ci_uri = "https://ci.appveyor.com/project/$owner/$ci_name"
 $tag = "v$version"
 # $release = "release-$version"

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.SQS;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
@@ -16,6 +17,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
     {
         protected string TopicName;
         protected string QueueName;
+        protected IAmazonSQS Client;
 
         protected override void Given()
         {
@@ -30,6 +32,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
             DeleteTopicIfItAlreadyExists(TestEndpoint, TopicName);
             DeleteQueueIfItAlreadyExists(TestEndpoint, QueueName);
+            Client = CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1);
         }
 
         protected override void When()
@@ -53,7 +56,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         public async Task QueueIsCreated()
         {
             var queue = new SqsQueueByName(RegionEndpoint.EUWest1, 
-                QueueName, CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1), 0);
+                QueueName, Client, 0);
 
             await Patiently.AssertThatAsync(
                 queue.Exists, TimeSpan.FromSeconds(65));
