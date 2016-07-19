@@ -44,8 +44,7 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (MessageFormatNotSupportedException ex)
             {
                 Log.Trace(
-                    "Didn't handle message [{0}]. No serialiser setup",
-                    message.Body ?? string.Empty);
+                    $"Didn't handle message [{message.Body ?? string.Empty}]. No serialiser setup");
                 DeleteMessageFromQueue(message.ReceiptHandle);
                 _onError(ex, message);
                 return;
@@ -73,7 +72,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (Exception ex)
             {
-                var errorText = string.Format("Error handling message [{0}]", message.Body);
+                var errorText = $"Error handling message [{message.Body}]";
                 Log.Error(ex, errorText);
 
                 if (typedMessage != null)
@@ -110,7 +109,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
 
             watch.Stop();
-            Log.Trace("Handled message - MessageType: {0}", message.GetType().Name);
+            Log.Trace($"Handled message - MessageType: {message.GetType().Name}");
             _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
 
             return allHandlersSucceeded;

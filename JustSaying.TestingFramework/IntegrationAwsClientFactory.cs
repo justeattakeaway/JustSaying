@@ -23,14 +23,9 @@ namespace JustSaying.TestingFramework
         public IntegrationAwsClientFactory()
         {
             var ci = System.Environment.GetEnvironmentVariable(_ci);
-            if (string.IsNullOrWhiteSpace(ci))
-            {
-                _credentials = new StoredProfileAWSCredentials(IntegrationTestConfig.AwsProfileName);
-            }
-            else
-            {
-                _credentials = CredentialsFromEnvironment();
-            }
+            _credentials = string.IsNullOrWhiteSpace(ci)
+                ? new StoredProfileAWSCredentials(IntegrationTestConfig.AwsProfileName)
+                : CredentialsFromEnvironment();
         }
 
         private AWSCredentials CredentialsFromEnvironment()
@@ -41,13 +36,9 @@ namespace JustSaying.TestingFramework
         }
 
         public IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region)
-        {
-            return new AmazonSimpleNotificationServiceClient(_credentials, region);
-        }
+            => new AmazonSimpleNotificationServiceClient(_credentials, region);
 
         public IAmazonSQS GetSqsClient(RegionEndpoint region)
-        {
-            return new AmazonSQSClient(_credentials, region);
-        }
+            => new AmazonSQSClient(_credentials, region);
     }
 }

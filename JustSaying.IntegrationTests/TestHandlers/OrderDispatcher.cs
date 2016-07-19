@@ -18,9 +18,6 @@ namespace JustSaying.IntegrationTests.TestHandlers
             return true;
         }
 
-        public Future<OrderPlaced> Future
-        {
-            get { return _future; }
-        }
+        public Future<OrderPlaced> Future => _future;
     }
 }

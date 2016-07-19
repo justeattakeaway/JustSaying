@@ -23,7 +23,7 @@ namespace JustSaying.Tools.Commands
 
         public bool Execute()
         {
-            Console.WriteLine("Moving {0} messages from {1} to {2}", Count, SourceQueueName, DestinationQueueName);
+            Console.WriteLine($"Moving {Count} messages from {SourceQueueName} to {DestinationQueueName}");
 
             var config = new AmazonSQSConfig();
             var client = new DefaultAwsClientFactory().GetSqsClient(config.RegionEndpoint);
@@ -49,7 +49,8 @@ namespace JustSaying.Tools.Commands
                 }).ToList()
             });
 
-            Console.WriteLine("Moved {0} messages from {1} to {2}", sendResponse.Successful.Count, SourceQueueName, DestinationQueueName);
+            Console.WriteLine(
+                $"Moved {sendResponse.Successful.Count} messages from {SourceQueueName} to {DestinationQueueName}");
             return true;
         }
 

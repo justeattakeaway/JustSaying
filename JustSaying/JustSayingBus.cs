@@ -57,7 +57,7 @@ namespace JustSaying
         {
             if (string.IsNullOrWhiteSpace(region))
             {
-                throw new ArgumentNullException("region");
+                throw new ArgumentNullException(nameof(region));
             }
 
             Dictionary<string, INotificationSubscriber> subscribersForRegion;
@@ -115,18 +115,17 @@ namespace JustSaying
         {
             lock (_syncRoot)
             {
-                if (!Listening)
+                if (Listening)
+                    return;
+                foreach (var regionSubscriber in _subscribersByRegionAndQueue)
                 {
-                    foreach (var regionSubscriber in _subscribersByRegionAndQueue)
+                    foreach (var queueSubscriber in regionSubscriber.Value)
                     {
-                        foreach (var queueSubscriber in regionSubscriber.Value)
-                        {
-                            queueSubscriber.Value.Listen();
-                        }
+                        queueSubscriber.Value.Listen();
                     }
-
-                    Listening = true;
                 }
+
+                Listening = true;
             }
         }
 
@@ -134,17 +133,16 @@ namespace JustSaying
         {
             lock (_syncRoot)
             {
-                if (Listening)
+                if (!Listening)
+                    return;
+                foreach (var regionSubscriber in _subscribersByRegionAndQueue)
                 {
-                    foreach (var regionSubscriber in _subscribersByRegionAndQueue)
+                    foreach (var queueSubscriber in regionSubscriber.Value)
                     {
-                        foreach (var queueSubscriber in regionSubscriber.Value)
-                        {
-                            queueSubscriber.Value.StopListening();
-                        }
+                        queueSubscriber.Value.StopListening();
                     }
-                    Listening = false;
                 }
+                Listening = false;
             }
         }
 
@@ -165,11 +163,11 @@ namespace JustSaying
             {
                 activeRegion = Config.GetActiveRegion();
             }
-            Log.Info("Active region has been evaluated to {0}", activeRegion);
+            Log.Info($"Active region has been evaluated to {activeRegion}");
 
             if (!_publishersByRegionAndTopic.ContainsKey(activeRegion))
             {
-                var errorMessage = string.Format("Error publishing message, no publishers registered for region {0}.", activeRegion);
+                var errorMessage = $"Error publishing message, no publishers registered for region {activeRegion}.";
                 Log.Error(errorMessage);
                 throw new InvalidOperationException(errorMessage);
             }
@@ -178,7 +176,8 @@ namespace JustSaying
             var publishersByTopic = _publishersByRegionAndTopic[activeRegion];
             if (!publishersByTopic.ContainsKey(topic))
             {
-                var errorMessage = string.Format("Error publishing message, no publishers registered for message type {0} in {1}.", message, activeRegion);
+                var errorMessage =
+                    $"Error publishing message, no publishers registered for message type {message} in {activeRegion}.";
                 Log.Error(errorMessage);
                 throw new InvalidOperationException(errorMessage);
             }

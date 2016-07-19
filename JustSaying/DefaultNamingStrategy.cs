@@ -11,14 +11,11 @@ namespace JustSaying
     /// </summary>
     class DefaultNamingStrategy : INamingStrategy
     {
-        public string GetTopicName(string topicName, string messageType)
-        {
-            return messageType.ToLower();
-        }
+        public string GetTopicName(string topicName, string messageType) => messageType.ToLower();
 
         public string GetQueueName(SqsReadConfiguration sqsConfig, string messageType)
-        {
-            return string.IsNullOrWhiteSpace(sqsConfig.BaseQueueName) ? messageType.ToLower() : sqsConfig.BaseQueueName.ToLower();
-        }
+            => string.IsNullOrWhiteSpace(sqsConfig.BaseQueueName)
+                ? messageType.ToLower()
+                : sqsConfig.BaseQueueName.ToLower();
     }
 }

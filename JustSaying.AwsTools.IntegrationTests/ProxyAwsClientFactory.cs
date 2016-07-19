@@ -28,14 +28,11 @@ namespace JustSaying.AwsTools.IntegrationTests
 
         public ProxyAwsClientFactory()
         {
-            this.counters = new Dictionary<string, Dictionary<string, List<object>>>();
+            counters = new Dictionary<string, Dictionary<string, List<object>>>();
         }
 
 
-        public Dictionary<string, Dictionary<string, List<object>>> Counters
-        {
-            get { return counters; }
-        }
+        public Dictionary<string, Dictionary<string, List<object>>> Counters => counters;
 
         public IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region)
         {

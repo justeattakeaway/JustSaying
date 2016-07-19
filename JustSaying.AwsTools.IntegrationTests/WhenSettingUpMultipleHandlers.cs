@@ -11,7 +11,7 @@ namespace JustSaying.AwsTools.IntegrationTests
     [TestFixture]
     public class WhenSettingUpMultipleHandlers : BehaviourTest<IHaveFulfilledSubscriptionRequirements>
     {
-        public class Order : JustSaying.Models.Message
+        public class Order : Models.Message
         {
         }
 

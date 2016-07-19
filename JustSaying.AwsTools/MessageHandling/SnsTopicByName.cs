@@ -22,7 +22,7 @@ namespace JustSaying.AwsTools.MessageHandling
             if (string.IsNullOrWhiteSpace(Arn) == false)
                 return true;
 
-            Log.Info("Checking if topic '{0}' exists", TopicName);
+            Log.Info($"Checking if topic '{TopicName}' exists");
             var topic = Client.FindTopic(TopicName);
 
             if (topic != null)
@@ -40,11 +40,11 @@ namespace JustSaying.AwsTools.MessageHandling
             if (!string.IsNullOrEmpty(response.TopicArn))
             {    
                 Arn = response.TopicArn;
-                Log.Info(string.Format("Created Topic: {0} on Arn: {1}", TopicName, Arn));
+                Log.Info($"Created Topic: {TopicName} on Arn: {Arn}");
                 return true;
             }
 
-            Log.Info(string.Format("Failed to create Topic: {0}", TopicName));
+            Log.Info($"Failed to create Topic: {TopicName}");
             return false;
         }
     }

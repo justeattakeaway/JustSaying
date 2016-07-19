@@ -10,18 +10,11 @@ namespace JustSaying.AwsTools.MessageHandling
         public static ExactlyOnceReader ReadExactlyOnce<T>(IHandlerAsync<T> handler) where T : Message
         {
             var asyncingHandler = handler as BlockingHandler<T>;
-            if (asyncingHandler != null)
-            {
-                return ReadExactlyOnce(asyncingHandler.Inner);
-            }
-
-            return new ExactlyOnceReader(handler.GetType());
+            return asyncingHandler != null ? ReadExactlyOnce(asyncingHandler.Inner) : new ExactlyOnceReader(handler.GetType());
         }
 
         public static ExactlyOnceReader ReadExactlyOnce<T>(IHandler<T> handler) where T : Message
-        {
-            return new ExactlyOnceReader(handler.GetType());
-        }
+            => new ExactlyOnceReader(handler.GetType());
     }
 
     internal class ExactlyOnceReader
@@ -34,23 +27,13 @@ namespace JustSaying.AwsTools.MessageHandling
             _type = type;
         }
 
-        public bool Enabled
-        {
-            get { return Attribute.IsDefined(_type, typeof(ExactlyOnceAttribute)); }
-        }
+        public bool Enabled => Attribute.IsDefined(_type, typeof(ExactlyOnceAttribute));
 
         public int GetTimeOut()
-        {
-            var attributes = _type.GetCustomAttributes(true);
-            var targetAttribute = attributes.FirstOrDefault(a => a is ExactlyOnceAttribute);
-
-            if (targetAttribute != null)
-            {
-                var exactlyOnce = (ExactlyOnceAttribute)targetAttribute;
-                return exactlyOnce.TimeOut;
-            }
-
-            return DefaultTemporaryLockSeconds;
-        }
+            => _type
+            .GetCustomAttributes(true)
+            .OfType<ExactlyOnceAttribute>()
+            .FirstOrDefault()?.TimeOut
+            ?? DefaultTemporaryLockSeconds;
     }
 }

@@ -4,26 +4,20 @@ namespace JustSaying.AwsTools
 {
     public class AwsClientFactoryProxy : IAwsClientFactoryProxy
     {
-        private Func<IAwsClientFactory> awsClientFactoryFunc;
+        private Func<IAwsClientFactory> _awsClientFactoryFunc;
 
         public AwsClientFactoryProxy()
         {
-            awsClientFactoryFunc = () => new DefaultAwsClientFactory();
+            _awsClientFactoryFunc = () => new DefaultAwsClientFactory();
         }
 
         public AwsClientFactoryProxy(Func<IAwsClientFactory> awsClientFactoryFunc)
         {
-            this.awsClientFactoryFunc = awsClientFactoryFunc;
+            _awsClientFactoryFunc = awsClientFactoryFunc;
         }
 
-        public IAwsClientFactory GetAwsClientFactory()
-        {
-            return awsClientFactoryFunc();
-        }
+        public IAwsClientFactory GetAwsClientFactory() => _awsClientFactoryFunc();
 
-        public void SetAwsClientFactory(Func<IAwsClientFactory> func)
-        {
-            awsClientFactoryFunc = func;
-        }
+        public void SetAwsClientFactory(Func<IAwsClientFactory> func) => _awsClientFactoryFunc = func;
     }
 }

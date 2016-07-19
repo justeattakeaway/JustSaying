@@ -26,10 +26,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             _activeTasks = new List<Task>(_maxWorkersProducer());
         }
 
-        public int MaxWorkers
-        {
-            get { return _maxWorkersProducer(); }
-        }
+        public int MaxWorkers => _maxWorkersProducer();
 
         public int AvailableWorkers
         {
@@ -99,7 +96,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             {
                 if (!_activeTasks.Contains(t))
                 {
-                    throw new InvalidOperationException("Cannot find task in task list " + t.Id);
+                    throw new InvalidOperationException($"Cannot find task in task list {t.Id}");
                 }
 
                 _activeTasks.Remove(t);

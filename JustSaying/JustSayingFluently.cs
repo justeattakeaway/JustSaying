@@ -33,24 +33,19 @@ namespace JustSaying
         private IMessageSerialisationFactory _serialisationFactory;
         private Func<INamingStrategy> _busNamingStrategyFunc;
 
-        internal protected JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator, IAwsClientFactoryProxy awsClientFactoryProxy)
+        protected internal JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator, IAwsClientFactoryProxy awsClientFactoryProxy)
         {
             Bus = bus;
             _amazonQueueCreator = queueCreator;
-            this._awsClientFactoryProxy = awsClientFactoryProxy;
+            _awsClientFactoryProxy = awsClientFactoryProxy;
         }
 
-        private string GetMessageTypeName<T>()
-        {
-            return typeof(T).ToTopicName();
-        }
+        private string GetMessageTypeName<T>() => typeof(T).ToTopicName();
 
         public virtual INamingStrategy GetNamingStrategy()
-        {
-            if (_busNamingStrategyFunc != null)
-                return _busNamingStrategyFunc();
-            return new DefaultNamingStrategy();
-        }
+            => _busNamingStrategyFunc != null
+                ? _busNamingStrategyFunc()
+                : new DefaultNamingStrategy();
 
         /// <summary>
         /// Register for publishing messages to SNS
@@ -79,7 +74,7 @@ namespace JustSaying
                 Bus.AddMessagePublisher<T>(eventPublisher, region);
             }
 
-            Log.Info(string.Format("Created SNS topic publisher - Topic: {0}", _subscriptionConfig.Topic));
+            Log.Info($"Created SNS topic publisher - Topic: {_subscriptionConfig.Topic}");
 
             return this;
         }
@@ -117,7 +112,7 @@ namespace JustSaying
                 Bus.AddMessagePublisher<T>(eventPublisher, region);
             }
 
-            Log.Info(string.Format("Created SQS publisher - MessageName: {0}, QueueName: {1}", messageTypeName, queueName));
+            Log.Info($"Created SQS publisher - MessageName: {messageTypeName}, QueueName: {queueName}");
 
             return this;
         }
@@ -155,7 +150,7 @@ namespace JustSaying
         /// <summary>
         /// States whether the stack is listening for messages (subscriptions are running)
         /// </summary>
-        public bool Listening { get { return (Bus != null) && Bus.Listening; } }
+        public bool Listening => (Bus != null) && Bus.Listening;
 
         public IMayWantOptionalSettings WithSerialisationFactory(IMessageSerialisationFactory factory)
         {
@@ -199,9 +194,7 @@ namespace JustSaying
         }
 
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message
-        {
-            return WithMessageHandler(new BlockingHandler<T>(handler));
-        }
+            => WithMessageHandler(new BlockingHandler<T>(handler));
 
         /// <summary>
         /// Set message handlers for the given topic
@@ -223,7 +216,8 @@ namespace JustSaying
                 Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handler);
             }
             var messageTypeName = GetMessageTypeName<T>();
-            Log.Info(string.Format("Added a message handler - MessageName: {0}, QueueName: {1}, HandlerName: {2}", messageTypeName, _subscriptionConfig.QueueName, handler.GetType().Name));
+            Log.Info(
+                $"Added a message handler - MessageName: {messageTypeName}, QueueName: {_subscriptionConfig.QueueName}, HandlerName: {handler.GetType().Name}");
 
             return thing;
         }
@@ -240,11 +234,13 @@ namespace JustSaying
 
             if (proposedHandlers.Count == 0)
             {
-                throw new HandlerNotRegisteredWithContainerException(string.Format("IHandler<{0}> is not registered in the container.", typeof(T).Name));
+                throw new HandlerNotRegisteredWithContainerException(
+                    $"IHandler<{typeof(T).Name}> is not registered in the container.");
             }
             if (proposedHandlers.Count > 1)
             {
-                throw new NotSupportedException(string.Format("There are more than one registration for IHandler<{0}>. JustSaying currently does not support multiple registration for IHandler<T>.", typeof(T).Name));
+                throw new NotSupportedException(
+                    $"There are more than one registration for IHandler<{typeof(T).Name}>. JustSaying currently does not support multiple registration for IHandler<T>.");
             }
 
             foreach (var region in Bus.Config.Regions)
@@ -254,7 +250,8 @@ namespace JustSaying
             }
             
 
-            Log.Info(string.Format("Added a message handler - Topic: {0}, QueueName: {1}, HandlerName: IHandler<{2}>", _subscriptionConfig.Topic, _subscriptionConfig.QueueName, typeof(T)));
+            Log.Info(
+                $"Added a message handler - Topic: {_subscriptionConfig.Topic}, QueueName: {_subscriptionConfig.QueueName}, HandlerName: IHandler<{typeof(T)}>");
 
             return thing;
         }
@@ -268,7 +265,8 @@ namespace JustSaying
             {
                 var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribed(region, Bus.SerialisationRegister, _subscriptionConfig);
                 CreateSubscriptionListener<T>(region, queue);
-                Log.Info(string.Format("Created SQS topic subscription - Topic: {0}, QueueName: {1}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName));
+                Log.Info(
+                    $"Created SQS topic subscription - Topic: {_subscriptionConfig.Topic}, QueueName: {_subscriptionConfig.QueueName}");
             }
           
             return this;
@@ -283,7 +281,8 @@ namespace JustSaying
             {
                 var queue = _amazonQueueCreator.EnsureQueueExists(region, _subscriptionConfig);
                 CreateSubscriptionListener<T>(region, queue);
-                Log.Info(string.Format("Created SQS subscriber - MessageName: {0}, QueueName: {1}", messageTypeName, _subscriptionConfig.QueueName));
+                Log.Info(
+                    $"Created SQS subscriber - MessageName: {messageTypeName}, QueueName: {_subscriptionConfig.QueueName}");
             }
            
             return this;
@@ -376,13 +375,13 @@ namespace JustSaying
 
         public IMayWantOptionalSettings WithNamingStrategy(Func<INamingStrategy> busNamingStrategy)
         {
-            this._busNamingStrategyFunc = busNamingStrategy;
+            _busNamingStrategyFunc = busNamingStrategy;
             return this;
         }
 
         public IMayWantOptionalSettings WithAwsClientFactory(Func<IAwsClientFactory> awsClientFactory)
         {
-            this._awsClientFactoryProxy.SetAwsClientFactory(awsClientFactory);
+            _awsClientFactoryProxy.SetAwsClientFactory(awsClientFactory);
             return this;
         }
     }

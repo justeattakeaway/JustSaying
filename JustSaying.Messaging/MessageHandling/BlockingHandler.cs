@@ -11,23 +11,16 @@ namespace JustSaying.Messaging.MessageHandling
     /// <typeparam name="T"></typeparam>
     public class BlockingHandler<T> : IHandlerAsync<T>
     {
-        private readonly IHandler<T> _inner;
-
         public BlockingHandler(IHandler<T> inner)
         {
             if (inner == null)
-            {
-                throw new ArgumentNullException("inner");
-            }
+                throw new ArgumentNullException(nameof(inner));
 
-            _inner = inner;
+            Inner = inner;
         }
 
-        public IHandler<T> Inner { get { return _inner; } }
+        public IHandler<T> Inner { get; }
 
-        public Task<bool> Handle(T message)
-        {
-            return Task.FromResult(_inner.Handle(message));
-        }
+        public Task<bool> Handle(T message) => Task.FromResult(Inner.Handle(message));
     }
 }

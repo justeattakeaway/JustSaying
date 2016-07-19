@@ -7,26 +7,22 @@ namespace JustSaying.AwsTools
 {
     public class DefaultAwsClientFactory : IAwsClientFactory
     {
-        private readonly AWSCredentials credentials;
+        private readonly AWSCredentials _credentials;
 
         public DefaultAwsClientFactory()
         {
-            credentials = new StoredProfileAWSCredentials("default");
+            _credentials = new StoredProfileAWSCredentials("default");
         }
 
         public DefaultAwsClientFactory(AWSCredentials customCredentials)
         {
-            credentials = customCredentials;
+            _credentials = customCredentials;
         }
 
-        public IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region)
-        {
-            return new AmazonSimpleNotificationServiceClient(credentials, region);
-        }
+        public IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region) 
+            => new AmazonSimpleNotificationServiceClient(_credentials, region);
 
         public IAmazonSQS GetSqsClient(RegionEndpoint region)
-        {
-            return new AmazonSQSClient(credentials, region);
-        }
+            => new AmazonSQSClient(_credentials, region);
     }
 }

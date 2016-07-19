@@ -19,13 +19,9 @@ namespace JustSaying.AwsTools.QueueCreation
         protected RedrivePolicy() { }
 
         public override string ToString()
-        {
-            return "{\"maxReceiveCount\":\"" + MaximumReceives + "\", \"deadLetterTargetArn\":\"" + DeadLetterQueue + "\"}";
-        }
+            => "{\"maxReceiveCount\":\"" + MaximumReceives + "\", \"deadLetterTargetArn\":\"" + DeadLetterQueue + "\"}";
 
         public static RedrivePolicy ConvertFromString(string policy)
-        {
-            return JsonConvert.DeserializeObject<RedrivePolicy>(policy);
-        }
+            => JsonConvert.DeserializeObject<RedrivePolicy>(policy);
     }
 }

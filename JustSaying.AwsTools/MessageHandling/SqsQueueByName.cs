@@ -108,8 +108,6 @@ namespace JustSaying.AwsTools.MessageHandling
         }
 
         private bool RedrivePolicyNeedsUpdating(RedrivePolicy requestedRedrivePolicy)
-        {
-            return RedrivePolicy == null || RedrivePolicy.MaximumReceives != requestedRedrivePolicy.MaximumReceives;
-        }
+            => RedrivePolicy == null || RedrivePolicy.MaximumReceives != requestedRedrivePolicy.MaximumReceives;
     }
 }

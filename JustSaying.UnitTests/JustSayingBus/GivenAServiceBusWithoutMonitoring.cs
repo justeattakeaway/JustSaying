@@ -15,8 +15,6 @@ namespace JustSaying.UnitTests.JustSayingBus
         }
 
         protected override JustSaying.JustSayingBus CreateSystemUnderTest()
-        {
-            return new JustSaying.JustSayingBus(Config, null);
-        }
+            => new JustSaying.JustSayingBus(Config, null);
     }
 }

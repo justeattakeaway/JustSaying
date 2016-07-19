@@ -47,10 +47,7 @@ namespace JustSaying.AwsTools.MessageHandling
             Subscribers = new Collection<ISubscriber>();
         }
 
-        public string Queue
-        {
-            get { return _queue.QueueName; }
-        }
+        public string Queue => _queue.QueueName;
 
         // ToDo: This should not be here.
         public SqsNotificationListener WithMaximumConcurrentLimitOnMessagesInFlightOf(int maximumAllowedMesagesInFlight)
@@ -77,7 +74,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             var queue = _queue.QueueName;
             var region = _queue.Region.SystemName;
-            var queueInfo = string.Format("Queue: {0}, Region: {1}", queue, region);
+            var queueInfo = $"Queue: {queue}, Region: {region}";
 
             _cts = new CancellationTokenSource();
             Task.Factory.StartNew(async () =>
@@ -90,9 +87,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 .Unwrap()
                 .ContinueWith(t => LogTaskEndState(t, queueInfo));
 
-            Log.Info(
-                "Starting Listening - {0}", 
-                queueInfo);
+            Log.Info($"Starting Listening - {queueInfo}");
         }
 
         private static void LogTaskEndState(Task task, string queueInfo)
@@ -100,17 +95,13 @@ namespace JustSaying.AwsTools.MessageHandling
             if (task.IsFaulted)
             {
                 Log.Warn(
-                    "[Faulted] Stopped Listening - {0}\n{1}",
-                     queueInfo,
-                     AggregateExceptionDetails(task.Exception));
+                    $"[Faulted] Stopped Listening - {queueInfo}\n{AggregateExceptionDetails(task.Exception)}");
             }
             else
             {
                 var endState = task.Status.ToString();
                 Log.Info(
-                    "[{0}] Stopped Listening - {1}",
-                    endState,
-                    queueInfo);
+                    $"[{endState}] Stopped Listening - {queueInfo}");
             }
         }
 
@@ -142,9 +133,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             _cts.Cancel();
             Log.Info(
-                "Stopping Listening - Queue: {0}, Region: {1}",
-                _queue.QueueName,
-                _queue.Region.SystemName);
+                $"Stopping Listening - Queue: {_queue.QueueName}, Region: {_queue.Region.SystemName}");
         }
 
         internal async Task ListenLoop(CancellationToken ct)
@@ -174,10 +163,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 var messageCount = sqsMessageResponse.Messages.Count;
 
                 Log.Trace(
-                    "Polled for messages - Queue: {0}, Region: {1}, MessageCount: {2}",
-                    queueName,
-                    region,
-                    messageCount);
+                    $"Polled for messages - Queue: {queueName}, Region: {region}, MessageCount: {messageCount}");
 
                 foreach (var message in sqsMessageResponse.Messages)
                 {
@@ -187,17 +173,11 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (InvalidOperationException ex)
             {
                 Log.Trace(
-                    "Suspected no message in queue [{0}], region: [{1}]. Ex: {2}",
-                    queueName,
-                    region,
-                    ex);
+                    $"Suspected no message in queue [{queueName}], region: [{region}]. Ex: {ex}");
             }
             catch (Exception ex)
             {
-                var msg = string.Format(
-                    "Issue in message handling loop for queue {0}, region {1}",
-                    queueName,
-                    region);
+                var msg = $"Issue in message handling loop for queue {queueName}, region {region}";
                 Log.Error(ex, msg);
             }
         }

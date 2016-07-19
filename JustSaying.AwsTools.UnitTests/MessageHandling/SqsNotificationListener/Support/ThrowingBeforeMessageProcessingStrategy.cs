@@ -7,10 +7,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.
 {
     public class ThrowingBeforeMessageProcessingStrategy : IMessageProcessingStrategy
     {
-        public int MaxWorkers
-        {
-            get { return int.MaxValue; }
-        }
+        public int MaxWorkers => int.MaxValue;
 
         public int AvailableWorkers
         {

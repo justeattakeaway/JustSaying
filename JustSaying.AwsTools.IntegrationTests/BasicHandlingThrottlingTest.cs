@@ -36,7 +36,7 @@ namespace JustSaying.AwsTools.IntegrationTests
 
             Assert.True(q.Exists());
 
-            Console.WriteLine("{0} - Adding {1} messages to the queue.", DateTime.Now, throttleMessageCount);
+            Console.WriteLine($"{DateTime.Now} - Adding {throttleMessageCount} messages to the queue.");
 
             var entriesAdded = 0;
             // Add some messages
@@ -57,7 +57,7 @@ namespace JustSaying.AwsTools.IntegrationTests
             }
             while (entriesAdded < throttleMessageCount);
 
-            Console.WriteLine("{0} - Done adding messages.", DateTime.Now);
+            Console.WriteLine($"{DateTime.Now} - Done adding messages.");
             
             var handleCount = 0;
             var serialisations = Substitute.For<IMessageSerialisationRegister>();
@@ -76,7 +76,7 @@ namespace JustSaying.AwsTools.IntegrationTests
             do
             {
                 Thread.Sleep(TimeSpan.FromSeconds(5));
-                Console.WriteLine("{0} - Handled {1} messages. Waiting for completion.", DateTime.Now, handleCount);
+                Console.WriteLine($"{DateTime.Now} - Handled {handleCount} messages. Waiting for completion.");
                 waitCount++;
             }
             while (handleCount < throttleMessageCount && waitCount < 100);
@@ -84,9 +84,10 @@ namespace JustSaying.AwsTools.IntegrationTests
             listener.StopListening();
             stopwatch.Stop();
 
-            Console.WriteLine("{0} - Handled {1} messages.", DateTime.Now, handleCount);
-            Console.WriteLine("{0} - Took {1} ms", DateTime.Now, stopwatch.ElapsedMilliseconds);
-            Console.WriteLine("{0} - Throughput {1} msg/sec", DateTime.Now, (float)handleCount / stopwatch.ElapsedMilliseconds * 1000);
+            Console.WriteLine($"{DateTime.Now} - Handled {handleCount} messages.");
+            Console.WriteLine($"{DateTime.Now} - Took {stopwatch.ElapsedMilliseconds} ms");
+            Console.WriteLine(
+                $"{DateTime.Now} - Throughput {(float) handleCount/stopwatch.ElapsedMilliseconds*1000} msg/sec");
             Assert.AreEqual(throttleMessageCount, handleCount);
         }
         

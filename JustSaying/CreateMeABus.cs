@@ -13,10 +13,7 @@ namespace JustSaying
         /// </summary>
         public static Func<IAwsClientFactory> DefaultClientFactory = () => new DefaultAwsClientFactory();
 
-        public static IMayWantOptionalSettings InRegion(string region)
-        {
-            return InRegions(region);
-        }
+        public static IMayWantOptionalSettings InRegion(string region) => InRegions(region);
 
         public static IMayWantOptionalSettings InRegions(params string[] regions)
         {

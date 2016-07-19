@@ -44,17 +44,11 @@ namespace JustSaying.IntegrationTests.TestHandlers
             }
         }
 
-        public Task DoneSignal
-        {
-            get { return _doneSignal.Task; }
-        }
+        public Task DoneSignal => _doneSignal.Task;
 
         public int ExpectedMessageCount { get; set; }
 
-        public int ReceivedMessageCount
-        {
-            get { return _messages.Count; }
-        }
+        public int ReceivedMessageCount => _messages.Count;
 
         public Exception RecordedException { get; set; }
 

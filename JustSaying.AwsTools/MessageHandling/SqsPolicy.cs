@@ -20,26 +20,26 @@ namespace JustSaying.AwsTools.MessageHandling
             var topicArnWildcard = CreateTopicArnWildcard(sourceArn);
             ActionIdentifier[] actions = { SQSActionIdentifiers.SendMessage };
 
-            Policy sqsPolicy = new Policy()
+            var sqsPolicy = new Policy()
                 .WithStatements(new Statement(Statement.StatementEffect.Allow)
                     .WithPrincipals(Principal.AllUsers)
                     .WithResources(new Resource(queueArn))
                     .WithConditions(ConditionFactory.NewSourceArnCondition(topicArnWildcard))
                     .WithActionIdentifiers(actions));
-            SetQueueAttributesRequest setQueueAttributesRequest = new SetQueueAttributesRequest();
-            setQueueAttributesRequest.QueueUrl = queueUrl;
-            setQueueAttributesRequest.Attributes["Policy"] = sqsPolicy.ToJson(); 
+            var setQueueAttributesRequest = new SetQueueAttributesRequest
+            {
+                QueueUrl = queueUrl,
+                Attributes = {["Policy"] = sqsPolicy.ToJson()}
+            };
+
             client.SetQueueAttributes(setQueueAttributesRequest);
         }
 
-        public override string ToString()
-        {
-            return _policy;
-        }
+        public override string ToString() => _policy;
 
         private static string CreateTopicArnWildcard(string topicArn)
         {
-            int index = topicArn.LastIndexOf(":", StringComparison.InvariantCultureIgnoreCase);
+            var index = topicArn.LastIndexOf(":", StringComparison.InvariantCultureIgnoreCase);
             if (index > 0)
                 topicArn = topicArn.Substring(0, index + 1);
             return topicArn + "*";

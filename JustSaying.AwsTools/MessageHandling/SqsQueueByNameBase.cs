@@ -23,7 +23,7 @@ namespace JustSaying.AwsTools.MessageHandling
         public override bool Exists()
         {
             var result = Client.ListQueues(new ListQueuesRequest{ QueueNamePrefix = QueueName });
-            Log.Info("Checking if queue '{0}' exists", QueueName);
+            Log.Info($"Checking if queue '{QueueName}' exists");
             Url = result.QueueUrls.SingleOrDefault(x => Matches(x, QueueName));
 
             if (Url != null)
@@ -34,11 +34,10 @@ namespace JustSaying.AwsTools.MessageHandling
 
             return false;
         }
+
         private static bool Matches(string queueUrl, string queueName)
-        {
-            return queueUrl.Substring(queueUrl.LastIndexOf("/", StringComparison.InvariantCulture) + 1)
+            => queueUrl.Substring(queueUrl.LastIndexOf("/", StringComparison.InvariantCulture) + 1)
                 .Equals(queueName, StringComparison.InvariantCultureIgnoreCase);
-        }
 
         public virtual bool Create(SqsBasicConfiguration queueConfig, int attempt = 0)
         {
@@ -53,7 +52,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     Url = result.QueueUrl;
                     SetQueueProperties();
 
-                    Log.Info(string.Format("Created Queue: {0} on Arn: {1}", QueueName, Arn));
+                    Log.Info($"Created Queue: {QueueName} on Arn: {Arn}");
                     return true;
                 }
             }
@@ -62,26 +61,27 @@ namespace JustSaying.AwsTools.MessageHandling
                 if (ex.ErrorCode == "AWS.SimpleQueueService.QueueDeletedRecently")
                 {
                     // Ensure we wait for queue delete timeout to expire.
-                    Log.Info(string.Format("Waiting to create Queue due to AWS time restriction - Queue: {0}, AttemptCount: {1}", QueueName, attempt + 1));
+                    Log.Info(
+                        $"Waiting to create Queue due to AWS time restriction - Queue: {QueueName}, AttemptCount: {attempt + 1}");
                     Thread.Sleep(60000);
                     Create(queueConfig, attempt: attempt++);
                 }
                 else
                 {
                     // Throw all errors which are not delete timeout related.
-                    Log.Error(ex, string.Format("Create Queue error: {0}", QueueName));
+                    Log.Error(ex, $"Create Queue error: {QueueName}");
                     throw;
                 }
 
                 // If we're on a delete timeout, throw after 2 attempts.
                 if (attempt >= 2)
                 {
-                    Log.Error(ex, string.Format("Create Queue error, max retries exceeded for delay - Queue: {0}", QueueName));
+                    Log.Error(ex, $"Create Queue error, max retries exceeded for delay - Queue: {QueueName}");
                     throw;
                 }
             }
 
-            Log.Info(string.Format("Failed to create Queue: {0}", QueueName));
+            Log.Info($"Failed to create Queue: {QueueName}");
             return false;
         }
 

@@ -14,9 +14,6 @@ namespace JustSaying.Messaging.MessageHandling
         }
 
         public async Task<bool> Handle(T message)
-        {
-            var handler = _futureHandler();
-            return await handler.Handle(message).ConfigureAwait(false);
-        }
+            => await _futureHandler().Handle(message).ConfigureAwait(false);
     }
 }

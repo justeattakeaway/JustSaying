@@ -19,8 +19,6 @@ namespace JustSaying.UnitTests.JustSayingBus
         }
 
         protected override JustSaying.JustSayingBus CreateSystemUnderTest()
-        {
-            return new JustSaying.JustSayingBus(Config, null) {Monitor = Monitor};
-        }
+            => new JustSaying.JustSayingBus(Config, null) {Monitor = Monitor};
     }
 }
