@@ -115,7 +115,8 @@ namespace JustSaying
         {
             lock (_syncRoot)
             {
-                if (Listening) return;
+                if (Listening)
+                    return;
                 foreach (var regionSubscriber in _subscribersByRegionAndQueue)
                 {
                     foreach (var queueSubscriber in regionSubscriber.Value)
@@ -132,7 +133,8 @@ namespace JustSaying
         {
             lock (_syncRoot)
             {
-                if (!Listening) return;
+                if (!Listening)
+                    return;
                 foreach (var regionSubscriber in _subscribersByRegionAndQueue)
                 {
                     foreach (var queueSubscriber in regionSubscriber.Value)

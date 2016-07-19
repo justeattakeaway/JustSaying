@@ -29,7 +29,8 @@ namespace JustSaying.AwsTools
 
         protected internal override void UpdateQueueAttribute(SqsBasicConfiguration queueConfig)
         {
-            if (!QueueNeedsUpdating(queueConfig)) return;
+            if (!QueueNeedsUpdating(queueConfig))
+                return;
             var request = new SetQueueAttributesRequest
             {
                 QueueUrl = Url,
