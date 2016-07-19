@@ -45,11 +45,13 @@ namespace JustSaying.Messaging.MessageSerialisation
         }
 
         private JsonSerializerSettings GetJsonSettings()
-            => _settings ?? new JsonSerializerSettings
-               {
-                   NullValueHandling = NullValueHandling.Ignore,
-                   Converters = new JsonConverter[] {new Newtonsoft.Json.Converters.StringEnumConverter()}
-               };
+        {
+            return _settings ?? new JsonSerializerSettings
+                   {
+                       NullValueHandling = NullValueHandling.Ignore,
+                       Converters = new JsonConverter[] {new Newtonsoft.Json.Converters.StringEnumConverter()}
+                   };
+        }
 
         public string GetMessageType(string sqsMessge)
         {

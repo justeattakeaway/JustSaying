@@ -87,8 +87,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 .Unwrap()
                 .ContinueWith(t => LogTaskEndState(t, queueInfo));
 
-            Log.Info(
-                $"Starting Listening - {queueInfo}");
+            Log.Info($"Starting Listening - {queueInfo}");
         }
 
         private static void LogTaskEndState(Task task, string queueInfo)
