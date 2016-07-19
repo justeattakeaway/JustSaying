@@ -15,7 +15,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
         protected override IMessagePublisher CreateSystemUnderTest()
         {
-            Publisher = JustSaying.CreateMeABus.InRegion("eu-west-1")
+            Publisher = CreateMeABus.InRegion("eu-west-1")
                 .WithSnsMessagePublisher<OrderPlaced>();
             Publisher.StartListening();
             return Publisher;

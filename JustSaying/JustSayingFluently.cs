@@ -37,7 +37,7 @@ namespace JustSaying
         {
             Bus = bus;
             _amazonQueueCreator = queueCreator;
-            this._awsClientFactoryProxy = awsClientFactoryProxy;
+            _awsClientFactoryProxy = awsClientFactoryProxy;
         }
 
         private string GetMessageTypeName<T>() => typeof(T).ToTopicName();
@@ -375,13 +375,13 @@ namespace JustSaying
 
         public IMayWantOptionalSettings WithNamingStrategy(Func<INamingStrategy> busNamingStrategy)
         {
-            this._busNamingStrategyFunc = busNamingStrategy;
+            _busNamingStrategyFunc = busNamingStrategy;
             return this;
         }
 
         public IMayWantOptionalSettings WithAwsClientFactory(Func<IAwsClientFactory> awsClientFactory)
         {
-            this._awsClientFactoryProxy.SetAwsClientFactory(awsClientFactory);
+            _awsClientFactoryProxy.SetAwsClientFactory(awsClientFactory);
             return this;
         }
     }

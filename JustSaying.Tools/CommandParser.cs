@@ -8,18 +8,20 @@ namespace JustSaying.Tools
     public class CommandParser
     {
         public bool Parse(string commandText)
-            => CommandLine
+        {
+            return CommandLine
                 .Parse<ICommand>(commandText, InitializeCommandLineParser)
                 .All(option => option.Execute());
+        }
 
         private static void InitializeCommandLineParser(ICommandLineElementParser<ICommand> x)
-            => x.Add((from arg in x.Argument("exit")
+        {
+            x.Add((from arg in x.Argument("exit")
                         select (ICommand) new ExitCommand())
                     .Or(from arg in x.Argument("quit")
                         select (ICommand) new ExitCommand())
                     .Or(from arg in x.Argument("help")
                         select (ICommand) new HelpCommand())
-
                     .Or(from arg in x.Argument("move")
                         from sourceQueueName in x.Definition("from")
                         from destinationQueueName in x.Definition("to")
@@ -28,5 +30,6 @@ namespace JustSaying.Tools
                         (ICommand)
                         new MoveCommand(sourceQueueName.Value, destinationQueueName.Value, int.Parse(count.Value)))
             );
+        }
     }
 }

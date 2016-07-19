@@ -106,7 +106,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         {
             base.PostAssertTeardown();
             _stopwatch.Stop();
-            base.Teardown();
+            Teardown();
             Console.WriteLine($"The test took {_stopwatch.ElapsedMilliseconds/1000} seconds.");
 
             ServiceBus.StopListening();

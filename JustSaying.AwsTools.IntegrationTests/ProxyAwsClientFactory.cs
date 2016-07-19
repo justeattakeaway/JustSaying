@@ -28,7 +28,7 @@ namespace JustSaying.AwsTools.IntegrationTests
 
         public ProxyAwsClientFactory()
         {
-            this.counters = new Dictionary<string, Dictionary<string, List<object>>>();
+            counters = new Dictionary<string, Dictionary<string, List<object>>>();
         }
 
 
