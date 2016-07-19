@@ -12,8 +12,6 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         }
 
         private static int MaxActiveHandlersForProcessors()
-        {
-            return Environment.ProcessorCount * MessageConstants.ParallelHandlerExecutionPerCore;
-        }
+            => Environment.ProcessorCount * MessageConstants.ParallelHandlerExecutionPerCore;
     }
 }

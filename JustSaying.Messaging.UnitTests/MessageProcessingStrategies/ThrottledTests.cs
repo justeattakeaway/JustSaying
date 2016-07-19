@@ -21,7 +21,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
         [Test]
         public void ChangeMaxWorkersAtRuntime_TheChangeIsApplied()
         {
-            Func<int> maxAllowedMessagesInFlight = Substitute.For<Func<int>>();
+            var maxAllowedMessagesInFlight = Substitute.For<Func<int>>();
             maxAllowedMessagesInFlight().Returns(100);
             var messageProcessingStrategy = new Throttled(maxAllowedMessagesInFlight, _fakeMonitor);
 
@@ -98,7 +98,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             var messageProcessingStrategy = new Throttled(capacity, _fakeMonitor);
             var tcs = new TaskCompletionSource<object>();
 
-            for (int i = 0; i < capacity; i++)
+            for (var i = 0; i < capacity; i++)
             {
                 messageProcessingStrategy.StartWorker(() => tcs.Task);
             }
@@ -115,7 +115,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             var messageProcessingStrategy = new Throttled(capacity, _fakeMonitor);
             var tcs = new TaskCompletionSource<object>();
 
-            for (int i = 0; i < capacity; i++)
+            for (var i = 0; i < capacity; i++)
             {
                 messageProcessingStrategy.StartWorker(() => tcs.Task);
             }
@@ -135,7 +135,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             var tcs = new TaskCompletionSource<object>();
 
 
-            for (int i = 0; i < capacity; i++)
+            for (var i = 0; i < capacity; i++)
             {
                 messageProcessingStrategy.StartWorker(() => tcs.Task);
                 Assert.That(messageProcessingStrategy.AvailableWorkers, Is.GreaterThanOrEqualTo(0));

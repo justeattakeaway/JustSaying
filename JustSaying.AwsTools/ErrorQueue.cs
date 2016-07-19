@@ -29,31 +29,27 @@ namespace JustSaying.AwsTools
 
         protected internal override void UpdateQueueAttribute(SqsBasicConfiguration queueConfig)
         {
-            if (QueueNeedsUpdating(queueConfig))
+            if (!QueueNeedsUpdating(queueConfig)) return;
+            var request = new SetQueueAttributesRequest
             {
-                var request = new SetQueueAttributesRequest
+                QueueUrl = Url,
+                Attributes = new Dictionary<string, string>
                 {
-                    QueueUrl = Url,
-                    Attributes = new Dictionary<string, string>
                     {
-                        {
-                            JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD,
-                            queueConfig.ErrorQueueRetentionPeriodSeconds.ToString()
-                        }
+                        JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD,
+                        queueConfig.ErrorQueueRetentionPeriodSeconds.ToString()
                     }
-                };
-                var response = Client.SetQueueAttributes(request);
-
-                if (response.HttpStatusCode == HttpStatusCode.OK)
-                {
-                    MessageRetentionPeriod = queueConfig.ErrorQueueRetentionPeriodSeconds;
                 }
+            };
+            var response = Client.SetQueueAttributes(request);
+
+            if (response.HttpStatusCode == HttpStatusCode.OK)
+            {
+                MessageRetentionPeriod = queueConfig.ErrorQueueRetentionPeriodSeconds;
             }
         }
 
         protected override bool QueueNeedsUpdating(SqsBasicConfiguration queueConfig)
-        {
-            return MessageRetentionPeriod != queueConfig.ErrorQueueRetentionPeriodSeconds;
-        }
+            => MessageRetentionPeriod != queueConfig.ErrorQueueRetentionPeriodSeconds;
     }
 }

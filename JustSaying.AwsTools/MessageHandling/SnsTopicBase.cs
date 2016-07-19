@@ -31,7 +31,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return result.Subscriptions.Any(x => !string.IsNullOrEmpty(x.SubscriptionArn) && x.Endpoint == queue.Arn);
         }
 
-        public bool Subscribe(IAmazonSQS amazonSQSClient, SqsQueueBase queue)
+        public bool Subscribe(IAmazonSQS amazonSqsClient, SqsQueueBase queue)
         {
             var subscriptionResponse = Client.Subscribe(Arn, "sqs", queue.Arn);
             
@@ -40,7 +40,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 return true;
             }
 
-            Log.Info(string.Format("Failed to subscribe Queue to Topic: {0}, Topic: {1}", queue.Arn, Arn));
+            Log.Info($"Failed to subscribe Queue to Topic: {queue.Arn}, Topic: {Arn}");
             return false;
         }
 
@@ -56,7 +56,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     TopicArn = Arn
                 });
 
-            EventLog.Info("Published message: '{0}' with content {1}", messageType, messageToSend);
+            EventLog.Info($"Published message: '{messageType}' with content {messageToSend}");
         }
     }
 }

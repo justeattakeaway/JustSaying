@@ -57,7 +57,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         {
             _handler.When(x => x.Handle(Arg.Is<GenericMessage>(y => y.Id == guid))).Do(t =>
             {
-                Console.WriteLine("Running task {0}", number);
+                Console.WriteLine($"Running task {number}");
                 Thread.Sleep(wait);
             });
         }

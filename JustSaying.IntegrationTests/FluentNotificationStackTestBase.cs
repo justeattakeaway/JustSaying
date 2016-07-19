@@ -104,7 +104,8 @@ namespace JustSaying.IntegrationTests
                 Thread.Sleep(TimeSpan.FromSeconds(sleepStep));
             }
 
-            throw new Exception(string.Format("Deleted queue still exists {0} seconds after deletion!", (DateTime.Now - start).TotalSeconds));
+            throw new Exception(
+                $"Deleted queue still exists {(DateTime.Now - start).TotalSeconds} seconds after deletion!");
         }
 
         // ToDo: All these can go because we have already implemented them in AwsTools... Seriously. Wasted effort.
@@ -128,7 +129,7 @@ namespace JustSaying.IntegrationTests
             string nextToken = null;
             do
             {
-                ListTopicsResponse topicsResponse = client.ListTopics(new ListTopicsRequest{NextToken = nextToken});
+                var topicsResponse = client.ListTopics(new ListTopicsRequest{NextToken = nextToken});
                 nextToken = topicsResponse.NextToken;
                 topics.AddRange(topicsResponse.Topics);
             } while (nextToken != null);

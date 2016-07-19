@@ -23,12 +23,7 @@ namespace JustSaying.AwsTools.MessageHandling
         public List<HandlerFunc> Get(Type messageType)
         {
             List<HandlerFunc> handlers;
-            if (_handlers.TryGetValue(messageType, out handlers))
-            {
-                return handlers;
-            }
-
-            return null;
+            return _handlers.TryGetValue(messageType, out handlers) ? handlers : null;
         }
     }
 }

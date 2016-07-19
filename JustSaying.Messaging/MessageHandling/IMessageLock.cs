@@ -10,14 +10,9 @@ namespace JustSaying.Messaging.MessageHandling
         public long ExpiryAtTicks { get; set; }
 
         public override string ToString()
-        {
-            if (DoIHaveExclusiveLock)
-            {
-                return string.Format("Message is exclusively locked. The expiry is {0}, {1} ticks.", ExpiryAt, ExpiryAtTicks);
-            }
-
-            return string.Format("Message could NOT be exclusively locked. The lock will expire at {0}, {1} ticks.", ExpiryAt, ExpiryAtTicks);
-        }
+            => DoIHaveExclusiveLock 
+            ? $"Message is exclusively locked. The expiry is {ExpiryAt}, {ExpiryAtTicks} ticks." 
+            : $"Message could NOT be exclusively locked. The lock will expire at {ExpiryAt}, {ExpiryAtTicks} ticks.";
     }
 
     public interface IMessageLock

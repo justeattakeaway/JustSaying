@@ -28,9 +28,6 @@ namespace JustSaying.AwsTools.MessageHandling
             });
         }
 
-        public string GetMessageInContext(Message message)
-        {
-            return _serialisationRegister.Serialise(message, serializeForSnsPublishing: false);
-        }
+        public string GetMessageInContext(Message message) => _serialisationRegister.Serialise(message, serializeForSnsPublishing: false);
     }
 }

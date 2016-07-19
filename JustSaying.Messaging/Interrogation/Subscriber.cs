@@ -11,14 +11,8 @@ namespace JustSaying.Messaging.Interrogation
 
         public Type MessageType { get; set; }
 
-        public override bool Equals(object obj)
-        {
-            return MessageType == ((Subscriber)obj).MessageType;
-        }
+        public override bool Equals(object obj) => MessageType == ((Subscriber)obj).MessageType;
 
-        public override int GetHashCode()
-        {
-            return (MessageType != null ? MessageType.GetHashCode() : 0);
-        }
+        public override int GetHashCode() => MessageType?.GetHashCode() ?? 0;
     }
 }

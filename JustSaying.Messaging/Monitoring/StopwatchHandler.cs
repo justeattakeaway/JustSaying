@@ -27,9 +27,6 @@ namespace JustSaying.Messaging.Monitoring
             return result;
         }
 
-        private static string TypeName(object obj)
-        {
-            return obj.GetType().Name.ToLower();
-        }
+        private static string TypeName(object obj) => obj.GetType().Name.ToLower();
     }
 }

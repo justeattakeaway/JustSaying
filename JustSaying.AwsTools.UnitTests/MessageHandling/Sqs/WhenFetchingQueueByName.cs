@@ -26,7 +26,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
                     Attributes = new Dictionary<string, string>() { { "QueueArn", "something:some-queue-name" } }
                 });
         }
-
+        
         [Then]
         public void IncorrectQueueNameDoNotMatch()
         {

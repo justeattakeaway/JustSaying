@@ -25,19 +25,22 @@ namespace JustSaying.AwsTools.QueueCreation
             if (MessageRetentionSeconds < JustSayingConstants.MINIMUM_RETENTION_PERIOD ||
                 MessageRetentionSeconds > JustSayingConstants.MAXIMUM_RETENTION_PERIOD)
             {
-                throw new ConfigurationErrorsException(string.Format("Invalid configuration. MessageRetentionSeconds must be between {0} and {1}.", JustSayingConstants.MINIMUM_RETENTION_PERIOD, JustSayingConstants.MAXIMUM_RETENTION_PERIOD));
+                throw new ConfigurationErrorsException(
+                    $"Invalid configuration. MessageRetentionSeconds must be between {JustSayingConstants.MINIMUM_RETENTION_PERIOD} and {JustSayingConstants.MAXIMUM_RETENTION_PERIOD}.");
             }
 
             if (ErrorQueueRetentionPeriodSeconds < JustSayingConstants.MINIMUM_RETENTION_PERIOD ||
                 ErrorQueueRetentionPeriodSeconds > JustSayingConstants.MAXIMUM_RETENTION_PERIOD)
             {
-                throw new ConfigurationErrorsException(string.Format("Invalid configuration. ErrorQueueRetentionPeriodSeconds must be between {0} and {1}.", JustSayingConstants.MINIMUM_RETENTION_PERIOD, JustSayingConstants.MAXIMUM_RETENTION_PERIOD));
+                throw new ConfigurationErrorsException(
+                    $"Invalid configuration. ErrorQueueRetentionPeriodSeconds must be between {JustSayingConstants.MINIMUM_RETENTION_PERIOD} and {JustSayingConstants.MAXIMUM_RETENTION_PERIOD}.");
             }
 
             if (DeliveryDelaySeconds < JustSayingConstants.MINIMUM_DELIVERY_DELAY ||
                 DeliveryDelaySeconds > JustSayingConstants.MAXIMUM_DELIVERY_DELAY)
             {
-                throw new ConfigurationErrorsException(string.Format("Invalid configuration. DeliveryDelaySeconds must be between {0} and {1}.", JustSayingConstants.MINIMUM_DELIVERY_DELAY, JustSayingConstants.MAXIMUM_DELIVERY_DELAY));
+                throw new ConfigurationErrorsException(
+                    $"Invalid configuration. DeliveryDelaySeconds must be between {JustSayingConstants.MINIMUM_DELIVERY_DELAY} and {JustSayingConstants.MAXIMUM_DELIVERY_DELAY}.");
             }
         }
     }

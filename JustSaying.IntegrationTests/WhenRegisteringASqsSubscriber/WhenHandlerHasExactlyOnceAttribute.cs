@@ -127,7 +127,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             public MessageLockResponse TryAquireLockPermanently(string key)
             {
                 int value;
-                bool canAquire = !_store.TryGetValue(key, out value);
+                var canAquire = !_store.TryGetValue(key, out value);
                 if (canAquire)
                     _store.Add(key, 1);
                 return new MessageLockResponse(){DoIHaveExclusiveLock = canAquire};

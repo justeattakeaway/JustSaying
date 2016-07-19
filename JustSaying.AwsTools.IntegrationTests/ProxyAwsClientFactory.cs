@@ -32,10 +32,7 @@ namespace JustSaying.AwsTools.IntegrationTests
         }
 
 
-        public Dictionary<string, Dictionary<string, List<object>>> Counters
-        {
-            get { return counters; }
-        }
+        public Dictionary<string, Dictionary<string, List<object>>> Counters => counters;
 
         public IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region)
         {

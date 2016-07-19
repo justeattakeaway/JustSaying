@@ -20,7 +20,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             Interlocked.Increment(ref _count);
         }
 
-        public int Count {  get { return _count; } }
+        public int Count => _count;
     }
 
     [TestFixture]
@@ -129,8 +129,8 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
                 if (stopwatch.Elapsed > timeout)
                 {
-                    var message = string.Format("ListenLoopExecuted took longer than timeout of {0}s, with {1} of {2} messages remaining",
-                        timeoutSeconds, actions.Count, initalActionCount);
+                    var message =
+                        $"ListenLoopExecuted took longer than timeout of {timeoutSeconds}s, with {actions.Count} of {initalActionCount} messages remaining";
                     Assert.Fail(message);
                 }
             }

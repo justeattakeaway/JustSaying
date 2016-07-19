@@ -36,7 +36,8 @@ namespace JustSaying.Messaging.MessageSerialisation
                 return formatter.Value.Serialiser.Deserialise(body, matchedType);
             }
 
-            throw new MessageFormatNotSupportedException(string.Format("Message can not be handled - type undetermined. Message body: '{0}'", body));
+            throw new MessageFormatNotSupportedException(
+                $"Message can not be handled - type undetermined. Message body: '{body}'");
         }
 
         public string Serialise(Message message, bool serializeForSnsPublishing)
