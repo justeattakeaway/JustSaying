@@ -35,7 +35,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             var subscriptionResponse = Client.Subscribe(Arn, "sqs", queue.Arn);
             
-            if (!string.IsNullOrEmpty(subscriptionResponse.SubscriptionArn))
+            if (!string.IsNullOrEmpty(subscriptionResponse?.SubscriptionArn))
             {
                 return true;
             }
