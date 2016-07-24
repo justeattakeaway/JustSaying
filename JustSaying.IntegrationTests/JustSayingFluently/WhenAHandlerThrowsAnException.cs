@@ -37,7 +37,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                     })
                 .WithSnsMessagePublisher<GenericMessage>()
                 .WithSqsTopicSubscriber()
-                .IntoQueue("queuename")
+                .IntoQueueNamed("queuename")
                 .ConfigureSubscriptionWith(cfg =>
                     {
                         cfg.MessageRetentionSeconds = 60;

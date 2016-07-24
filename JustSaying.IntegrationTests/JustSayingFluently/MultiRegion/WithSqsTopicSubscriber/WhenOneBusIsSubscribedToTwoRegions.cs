@@ -50,7 +50,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .WithFailoverRegion(secondaryRegion)
                 .WithActiveRegion(() => primaryRegion)
                 .WithSqsTopicSubscriber()
-                .IntoQueue("queuename")
+                .IntoQueueNamed("queuename")
                 .WithMessageHandler(handler);
             _subscriber.StartListening();
         }
