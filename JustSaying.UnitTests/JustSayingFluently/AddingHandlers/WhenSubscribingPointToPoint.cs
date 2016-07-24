@@ -23,7 +23,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         {
             _response = SystemUnderTest
                 .WithSqsPointToPointSubscriber()
-                .IntoQueue(string.Empty)
+                .IntoDefaultQueue()
                 .ConfigureSubscriptionWith(cfg => { })
                 .WithMessageHandler(_handler);
         }

@@ -84,7 +84,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
                 .WithSnsMessagePublisher<GenericMessage>()
                 .WithSqsTopicSubscriber()
-                .IntoQueue("queuename")
+                .IntoQueueNamed("queuename")
                 .ConfigureSubscriptionWith(cf =>
                 {
                     cf.MessageRetentionSeconds = 60;
@@ -95,7 +95,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
                 .WithSqsMessagePublisher<AnotherGenericMessage>(configuration => { })
                 .WithSqsPointToPointSubscriber()
-                .IntoQueue(string.Empty)
+                .IntoDefaultQueue()
                 .WithMessageHandler(sqsHandler);
 
             ServiceBus.StartListening();

@@ -34,7 +34,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                     })
                 .WithSnsMessagePublisher<GenericMessage>()
                 .WithSqsTopicSubscriber()
-                .IntoQueue("queuename")
+                .IntoQueueNamed("queuename")
                 .ConfigureSubscriptionWith(cfg => cfg.InstancePosition = 1)
                 .WithMessageHandler(_handler);
 

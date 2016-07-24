@@ -16,7 +16,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         {
             _bus = SystemUnderTest
                 .WithSqsTopicSubscriber()
-                .IntoQueue("queuename");
+                .IntoQueueNamed("queuename");
         }
 
         [Then]

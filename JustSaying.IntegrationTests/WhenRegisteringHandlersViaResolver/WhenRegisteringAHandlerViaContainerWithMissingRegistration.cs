@@ -19,7 +19,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
             CreateMeABus.InRegion("eu-west-1")
                 .WithSqsTopicSubscriber()
-                .IntoQueue("container-test")
+                .IntoQueueNamed("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);
 
             return Task.FromResult(true);

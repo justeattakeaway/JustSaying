@@ -34,7 +34,7 @@ namespace JustSaying.IntegrationTests
                 .WithSnsMessagePublisher<GenericMessage>()
 
                 .WithSqsTopicSubscriber()
-                .IntoQueue(queueName)
+                .IntoQueueNamed(queueName)
                 .ConfigureSubscriptionWith(policy =>
                 {
                     policy.ErrorQueueOptOut = true;

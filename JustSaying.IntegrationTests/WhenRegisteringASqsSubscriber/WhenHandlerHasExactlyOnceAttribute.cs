@@ -100,7 +100,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
                 .WithMonitoring(new Monitoring())
                 .WithMessageLockStoreOf(new MessageLockStore())
                 .WithSqsTopicSubscriber()
-                .IntoQueue(QueueName)
+                .IntoQueueNamed(QueueName)
                 .ConfigureSubscriptionWith(cfg =>
                 {
                     cfg.MessageRetentionSeconds = 60;
