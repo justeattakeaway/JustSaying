@@ -191,7 +191,7 @@ namespace JustSaying
         {
             if (string.IsNullOrWhiteSpace(queueName))
             {
-                throw new ArgumentNullException(nameof(queueName));
+                throw new ArgumentException("You must supply a queue name or use IntoDefaultQueue");
             }
 
             _subscriptionConfig.BaseQueueName = queueName;
