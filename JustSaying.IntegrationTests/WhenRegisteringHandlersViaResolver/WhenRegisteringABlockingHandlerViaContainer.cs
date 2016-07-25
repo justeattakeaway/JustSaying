@@ -25,7 +25,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
             Subscriber = CreateMeABus.InRegion("eu-west-1")
                 .WithSqsTopicSubscriber()
-                .IntoQueue("container-test")
+                .IntoQueueNamed("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);
 
             Subscriber.StartListening();

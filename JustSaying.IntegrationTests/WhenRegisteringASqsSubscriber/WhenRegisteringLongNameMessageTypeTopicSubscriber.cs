@@ -15,7 +15,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             protected override void When()
             {
                 SystemUnderTest.WithSqsTopicSubscriber()
-                    .IntoQueue(QueueName)
+                    .IntoQueueNamed(QueueName)
                     .WithMessageHandler(Substitute.For<IHandlerAsync<LongLongLongLongLonggLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLonggLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongMessage>>());
             }
         } 

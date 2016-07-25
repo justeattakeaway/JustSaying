@@ -187,9 +187,20 @@ namespace JustSaying
 
         #region Implementation of Queue Subscription
 
-        public IFluentSubscription IntoQueue(string queuename)
+        public IFluentSubscription IntoQueueNamed(string queueName)
         {
-            _subscriptionConfig.BaseQueueName = queuename;
+            if (string.IsNullOrWhiteSpace(queueName))
+            {
+                throw new ArgumentException("You must supply a queue name or use IntoDefaultQueue");
+            }
+
+            _subscriptionConfig.BaseQueueName = queueName;
+            return this;
+        }
+
+        public IFluentSubscription IntoDefaultQueue()
+        {
+            _subscriptionConfig.BaseQueueName = string.Empty;
             return this;
         }
 
@@ -460,7 +471,8 @@ namespace JustSaying
 
     public interface ISubscriberIntoQueue
     {
-        IFluentSubscription IntoQueue(string queuename);
+        IFluentSubscription IntoQueueNamed(string queueName);
+        IFluentSubscription IntoDefaultQueue();
     }
 
     public interface IHaveFulfilledPublishRequirements : IAmJustSayingFluently

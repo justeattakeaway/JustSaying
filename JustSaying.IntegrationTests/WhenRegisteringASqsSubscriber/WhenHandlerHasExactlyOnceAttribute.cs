@@ -55,7 +55,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             var bus = CreateMeABus.InRegion(region)
                 .WithMonitoring(new Monitoring())
                 .WithMessageLockStoreOf(new MessageLockStore())
-                .WithSqsTopicSubscriber().IntoQueue(QueueName)
+                .WithSqsTopicSubscriber()
+                .IntoQueueNamed(QueueName)
                 .WithMessageHandler(_handler1)
                 .WithMessageHandler(_handler2);
             publisher.StartListening();
@@ -100,7 +101,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
                 .WithMonitoring(new Monitoring())
                 .WithMessageLockStoreOf(new MessageLockStore())
                 .WithSqsTopicSubscriber()
-                .IntoQueue(QueueName)
+                .IntoQueueNamed(QueueName)
                 .ConfigureSubscriptionWith(cfg =>
                 {
                     cfg.MessageRetentionSeconds = 60;

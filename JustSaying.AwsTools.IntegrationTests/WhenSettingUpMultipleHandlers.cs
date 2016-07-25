@@ -62,7 +62,7 @@ namespace JustSaying.AwsTools.IntegrationTests
                 .WithAwsClientFactory(() => proxyAwsClientFactory)
                 .WithNamingStrategy(() => uniqueTopicAndQueueNames)
                 .WithSqsTopicSubscriber()
-                .IntoQueue(baseQueueName) // generate unique queue name
+                .IntoQueueNamed(baseQueueName) // generate unique queue name
                 .WithMessageHandler<Order>(new OrderHandler())
                 .WithMessageHandler<Order>(new OrderHandler());
 

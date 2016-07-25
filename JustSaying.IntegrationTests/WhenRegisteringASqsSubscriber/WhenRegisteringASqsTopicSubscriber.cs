@@ -38,7 +38,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         protected override void When()
         {
             SystemUnderTest.WithSqsTopicSubscriber()
-                .IntoQueue(QueueName)
+                .IntoQueueNamed(QueueName)
                 .ConfigureSubscriptionWith(cfg =>
                     {
                         cfg.MessageRetentionSeconds = 60;
@@ -75,7 +75,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         protected override void When()
         {
             SystemUnderTest.WithSqsTopicSubscriber()
-                .IntoQueue(QueueName)
+                .IntoQueueNamed(QueueName)
                 .WithMessageHandler(Substitute.For<IHandlerAsync<Message>>());
         }
     }

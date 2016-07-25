@@ -55,7 +55,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             _primaryBus = CreateMeABus
                 .InRegion(PrimaryRegion)
                 .WithSqsTopicSubscriber()
-                .IntoQueue("queuename")
+                .IntoQueueNamed("queuename")
                 .WithMessageHandler(primaryHandler);
             _primaryBus.StartListening();
 
@@ -68,7 +68,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             _secondaryBus = CreateMeABus
                 .InRegion(SecondaryRegion)
                 .WithSqsTopicSubscriber()
-                .IntoQueue("queuename")
+                .IntoQueueNamed("queuename")
                 .WithMessageHandler(secondaryHandler);
             _secondaryBus.StartListening();
         }
