@@ -49,7 +49,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
                 .WithFailoverRegion(secondaryRegion)
                 .WithActiveRegion(() => primaryRegion)
                 .WithSqsPointToPointSubscriber()
-                .IntoQueue(string.Empty)
+                .IntoDefaultQueue()
                 .WithMessageHandler(handler);
             _subscriber.StartListening();
         }

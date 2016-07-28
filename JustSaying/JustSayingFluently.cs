@@ -466,4 +466,12 @@ namespace JustSaying
     public interface IHaveFulfilledPublishRequirements : IAmJustSayingFluently
     {
     }
+
+    public static class SubscriberIntoQueueExtensions
+    {
+        public static IFluentSubscription IntoDefaultQueue(this ISubscriberIntoQueue subscriber)
+        {
+            return subscriber.IntoQueue(string.Empty);
+        }
+    }
 }

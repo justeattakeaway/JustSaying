@@ -55,7 +55,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
             _primaryBus = CreateMeABus
                 .InRegion(PrimaryRegion)
                 .WithSqsPointToPointSubscriber()
-                .IntoQueue(string.Empty)
+                .IntoDefaultQueue()
                 .WithMessageHandler(primaryHandler);
             _primaryBus.StartListening();
 
@@ -68,7 +68,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
             _secondaryBus = CreateMeABus
                 .InRegion(SecondaryRegion)
                 .WithSqsPointToPointSubscriber()
-                .IntoQueue(string.Empty)
+                .IntoDefaultQueue()
                 .WithMessageHandler(secondaryHandler);
             _secondaryBus.StartListening();
         }
