@@ -5,7 +5,6 @@ using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
 
 namespace JustSaying.AwsTools.IntegrationTests
 {
