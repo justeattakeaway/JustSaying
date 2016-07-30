@@ -5,7 +5,6 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Extensions;
-using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
@@ -69,7 +68,9 @@ namespace JustSaying
                     Bus.SerialisationRegister);
 
                 if (!eventPublisher.Exists())
+                {
                     eventPublisher.Create();
+                }
 
                 Bus.AddMessagePublisher<T>(eventPublisher, region);
             }
@@ -107,7 +108,9 @@ namespace JustSaying
                     Bus.SerialisationRegister);
 
                 if (!eventPublisher.Exists())
+                {
                     eventPublisher.Create(config);
+                }
 
                 Bus.AddMessagePublisher<T>(eventPublisher, region);
             }
@@ -142,7 +145,9 @@ namespace JustSaying
         public virtual void Publish(Message message)
         {
             if (Bus == null)
+            {
                 throw new InvalidOperationException("You must register for message publication before publishing a message");
+            }
             
             Bus.Publish(message);
         }
@@ -184,8 +189,6 @@ namespace JustSaying
             _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.PointToPoint);
             return this;
         }
-
-        #region Implementation of Queue Subscription
 
         public IFluentSubscription IntoQueue(string queuename)
         {
@@ -248,7 +251,6 @@ namespace JustSaying
                 Bus.AddMessageHandler(region, _subscriptionConfig.QueueName,
                     () => handlerResolver.ResolveHandlers<T>().Single());
             }
-            
 
             Log.Info(
                 $"Added a message handler - Topic: {_subscriptionConfig.Topic}, QueueName: {_subscriptionConfig.QueueName}, HandlerName: IHandler<{typeof(T)}>");
@@ -320,10 +322,6 @@ namespace JustSaying
             _subscriptionConfig.QueueName = GetNamingStrategy().GetQueueName(_subscriptionConfig, messageTypeName);
         }
 
-        #endregion
-
-        #region Implementation of IFluentMonitoring
-
         /// <summary>
         /// Provide your own monitoring implementation
         /// </summary>
@@ -334,8 +332,6 @@ namespace JustSaying
             Bus.Monitor = messageMonitor;
             return this;
         }
-
-        #endregion
 
         public IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder)
         {
@@ -383,95 +379,6 @@ namespace JustSaying
         {
             _awsClientFactoryProxy.SetAwsClientFactory(awsClientFactory);
             return this;
-        }
-    }
-
-    public interface IMayWantOptionalSettings : IMayWantMonitoring, IMayWantMessageLockStore, IMayWantCustomSerialisation, 
-        IMayWantAFailoverRegion, IMayWantNamingStrategy, IMayWantAwsClientFactory { }
-
-    public interface IMayWantAwsClientFactory
-    {
-        IMayWantOptionalSettings WithAwsClientFactory(Func<IAwsClientFactory> awsClientFactory);
-    }
-
-    public interface IMayWantNamingStrategy
-    {
-        IMayWantOptionalSettings WithNamingStrategy(Func<INamingStrategy> busNamingStrategy);
-    }
-
-    public interface IMayWantAFailoverRegion
-    {
-        IMayWantARegionPicker WithFailoverRegion(string region);
-    }
-
-    public interface IMayWantARegionPicker : IMayWantAFailoverRegion
-    {
-        IMayWantOptionalSettings WithActiveRegion(Func<string> getActiveRegion);
-    }
-
-    public interface IMayWantMonitoring : IAmJustSayingFluently
-    {
-        IMayWantOptionalSettings WithMonitoring(IMessageMonitor messageMonitor);
-    }
-
-    public interface IMayWantMessageLockStore : IAmJustSayingFluently
-    {
-        IMayWantOptionalSettings WithMessageLockStoreOf(IMessageLock messageLock);
-    }
-
-    public interface IMayWantCustomSerialisation : IAmJustSayingFluently
-    {
-        IMayWantOptionalSettings WithSerialisationFactory(IMessageSerialisationFactory factory);
-    }
-
-    public interface IAmJustSayingFluently : IMessagePublisher
-    {
-        IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder);
-        IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>() where T : Message;
-        IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsWriteConfiguration> config) where T : Message;
-
-        /// <summary>
-        /// Adds subscriber to topic. 
-        /// </summary>
-        /// <param name="topicName">Topic name to subscribe to. If left empty,
-        /// topic name will be message type name</param>
-        /// <returns></returns>
-        ISubscriberIntoQueue WithSqsTopicSubscriber(string topicName = null);
-        ISubscriberIntoQueue WithSqsPointToPointSubscriber();
-        void StartListening();
-        void StopListening();
-        bool Listening { get; }
-    }
-
-    public interface IFluentSubscription
-    {
-        IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message;
-
-        IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerAsync<T> handler) where T : Message;
-
-        IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message;
-        IFluentSubscription ConfigureSubscriptionWith(Action<SqsReadConfiguration> config);
-    }
-
-    public interface IHaveFulfilledSubscriptionRequirements : IAmJustSayingFluently, IFluentSubscription
-    {
-        
-    }
-
-    public interface ISubscriberIntoQueue
-    {
-        IFluentSubscription IntoQueue(string queuename);
-    }
-
-    public interface IHaveFulfilledPublishRequirements : IAmJustSayingFluently
-    {
-    }
-
-    public static class SubscriberIntoQueueExtensions
-    {
-        public static IFluentSubscription IntoDefaultQueue(this ISubscriberIntoQueue subscriber)
-        {
-            return subscriber.IntoQueue(string.Empty);
         }
     }
 }
