@@ -71,9 +71,11 @@
     <Compile Include="JustSayingFluently.cs" />
     <Compile Include="IPublishConfiguration.cs" />
     <Compile Include="JustSayingBus.cs" />
+    <Compile Include="JustSayingFluentlyInterfaces.cs" />
     <Compile Include="MessagingConfig.cs" />
     <Compile Include="IAmJustSaying.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="JustSayingFluentlyExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj">
