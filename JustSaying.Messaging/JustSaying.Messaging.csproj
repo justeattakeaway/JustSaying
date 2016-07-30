@@ -59,6 +59,7 @@
     <Compile Include="MessageHandling\FutureHandler.cs" />
     <Compile Include="MessageHandling\IHandlerAsync.cs" />
     <Compile Include="MessageHandling\IMessageLock.cs" />
+    <Compile Include="MessageHandling\ListHandler.cs" />
     <Compile Include="MessageProcessingStrategies\DefaultThrottledThroughput.cs" />
     <Compile Include="MessageProcessingStrategies\IMessageProcessingStrategy.cs" />
     <Compile Include="MessageProcessingStrategies\MessageConstants.cs" />

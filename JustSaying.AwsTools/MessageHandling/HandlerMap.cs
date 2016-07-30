@@ -25,5 +25,7 @@ namespace JustSaying.AwsTools.MessageHandling
             List<HandlerFunc> handlers;
             return _handlers.TryGetValue(messageType, out handlers) ? handlers : null;
         }
+
+        public bool ContainsKey(Type type) => _handlers.ContainsKey(type);
     }
 }

@@ -64,6 +64,11 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public void AddMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler) where T : Message
         {
+            if (_handlerMap.ContainsKey(typeof(T)))
+            {
+                throw new ArgumentException("THis handler has already been registered");
+            }
+
             Subscribers.Add(new Subscriber(typeof(T)));
 
             var handlerFunc = _messageHandlerWrapper.WrapMessageHandler(futureHandler);
