@@ -63,8 +63,7 @@ namespace JustSaying.AwsTools.IntegrationTests
                 .WithNamingStrategy(() => uniqueTopicAndQueueNames)
                 .WithSqsTopicSubscriber()
                 .IntoQueue(baseQueueName) // generate unique queue name
-                .WithMessageHandler<Order>(new OrderHandler())
-                .WithMessageHandler<Order>(new OrderHandler());
+                .WithMessageHandlers(new OrderHandler(), new OrderHandler());
 
             bus
                 .StartListening();
