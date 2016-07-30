@@ -80,7 +80,6 @@ namespace JustSaying
 
     public interface IHaveFulfilledSubscriptionRequirements : IAmJustSayingFluently, IFluentSubscription
     {
-
     }
 
     public interface ISubscriberIntoQueue
@@ -91,5 +90,4 @@ namespace JustSaying
     public interface IHaveFulfilledPublishRequirements : IAmJustSayingFluently
     {
     }
-
 }
