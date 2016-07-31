@@ -61,7 +61,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 if (typedMessage != null)
                 {
-                    handlingSucceeded = await CallMessageHandlers(typedMessage).ConfigureAwait(false);
+                    handlingSucceeded = await CallMessageHandler(typedMessage).ConfigureAwait(false);
                 }
 
                 if (handlingSucceeded)
@@ -83,7 +83,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        private async Task<bool> CallMessageHandlers(Message message)
+        private async Task<bool> CallMessageHandler(Message message)
         {
             var handler = _handlerMap.Get(message.GetType());
 
