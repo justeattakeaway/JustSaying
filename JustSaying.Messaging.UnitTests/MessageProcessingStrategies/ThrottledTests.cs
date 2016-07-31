@@ -19,22 +19,6 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
         }
 
         [Test]
-        public void ChangeMaxWorkersAtRuntime_TheChangeIsApplied()
-        {
-            Func<int> maxAllowedMessagesInFlight = Substitute.For<Func<int>>();
-            maxAllowedMessagesInFlight().Returns(100);
-            var messageProcessingStrategy = new Throttled(maxAllowedMessagesInFlight, _fakeMonitor);
-
-            Assert.That(messageProcessingStrategy.MaxWorkers, Is.EqualTo(100));
-            Assert.That(messageProcessingStrategy.AvailableWorkers, Is.EqualTo(100));
-
-            maxAllowedMessagesInFlight().Returns(90);
-
-            Assert.That(messageProcessingStrategy.MaxWorkers, Is.EqualTo(90));
-            Assert.That(messageProcessingStrategy.AvailableWorkers, Is.EqualTo(90));
-        }
-
-        [Test]
         public void MaxWorkers_StartsAtCapacity()
         {
             var messageProcessingStrategy = new Throttled(123, _fakeMonitor);
