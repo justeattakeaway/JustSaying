@@ -19,22 +19,6 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
         }
 
         [Test]
-        public void ChangeMaxWorkersAtRuntime_TheChangeIsApplied()
-        {
-            var maxAllowedMessagesInFlight = Substitute.For<Func<int>>();
-            maxAllowedMessagesInFlight().Returns(100);
-            var messageProcessingStrategy = new Throttled(maxAllowedMessagesInFlight, _fakeMonitor);
-
-            Assert.That(messageProcessingStrategy.MaxWorkers, Is.EqualTo(100));
-            Assert.That(messageProcessingStrategy.AvailableWorkers, Is.EqualTo(100));
-
-            maxAllowedMessagesInFlight().Returns(90);
-
-            Assert.That(messageProcessingStrategy.MaxWorkers, Is.EqualTo(90));
-            Assert.That(messageProcessingStrategy.AvailableWorkers, Is.EqualTo(90));
-        }
-
-        [Test]
         public void MaxWorkers_StartsAtCapacity()
         {
             var messageProcessingStrategy = new Throttled(123, _fakeMonitor);
@@ -98,7 +82,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             var messageProcessingStrategy = new Throttled(capacity, _fakeMonitor);
             var tcs = new TaskCompletionSource<object>();
 
-            for (var i = 0; i < capacity; i++)
+            for (int i = 0; i < capacity; i++)
             {
                 messageProcessingStrategy.StartWorker(() => tcs.Task);
             }
@@ -115,7 +99,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             var messageProcessingStrategy = new Throttled(capacity, _fakeMonitor);
             var tcs = new TaskCompletionSource<object>();
 
-            for (var i = 0; i < capacity; i++)
+            for (int i = 0; i < capacity; i++)
             {
                 messageProcessingStrategy.StartWorker(() => tcs.Task);
             }
@@ -135,7 +119,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             var tcs = new TaskCompletionSource<object>();
 
 
-            for (var i = 0; i < capacity; i++)
+            for (int i = 0; i < capacity; i++)
             {
                 messageProcessingStrategy.StartWorker(() => tcs.Task);
                 Assert.That(messageProcessingStrategy.AvailableWorkers, Is.GreaterThanOrEqualTo(0));
