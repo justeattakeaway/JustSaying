@@ -80,6 +80,8 @@ namespace JustSaying.AwsTools.MessageHandling
                     throw;
                 }
             }
+            // TODO catch exception when subscription fails for foreign topic that doesn't exist.
+            // Log it and return true (or false, apparently noone cares what we return from here)
 
             Log.Info(string.Format("Failed to create Queue: {0}", QueueName));
             return false;

@@ -16,6 +16,7 @@ namespace JustSaying
 
         public int PublishFailureReAttempts { get; set; }
         public int PublishFailureBackoffMilliseconds { get; set; }
+        public IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
         public IList<string> Regions { get; private set; }
         public Func<string> GetActiveRegion { get; set; }
 
@@ -28,7 +29,7 @@ namespace JustSaying
             var duplicateRegion = Regions.GroupBy(x => x).FirstOrDefault(y => y.Count() > 1);
             if (duplicateRegion != null)
                 throw new ArgumentException(string.Format("Region {0} was added multiple times", duplicateRegion.Key));
-        
+
         }
     }
 }
