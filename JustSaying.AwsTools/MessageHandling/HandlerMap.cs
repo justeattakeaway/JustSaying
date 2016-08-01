@@ -6,24 +6,16 @@ namespace JustSaying.AwsTools.MessageHandling
 {
     public class HandlerMap
     {
-        private readonly Dictionary<Type, List<HandlerFunc>> _handlers = new Dictionary<Type, List<HandlerFunc>>();
+        private readonly Dictionary<Type, HandlerFunc> _handlers = new Dictionary<Type, HandlerFunc>();
 
-        public void Add(Type messageType, HandlerFunc handlerFunc)
+        public bool ContainsKey(Type messageType) => _handlers.ContainsKey(messageType);
+
+        public void Add(Type messageType, HandlerFunc handlerFunc) => _handlers.Add(messageType, handlerFunc);
+
+        public HandlerFunc Get(Type messageType)
         {
-            List<HandlerFunc> handlersForType;
-            if (!_handlers.TryGetValue(messageType, out handlersForType))
-            {
-                handlersForType = new List<HandlerFunc>();
-                _handlers.Add(messageType, handlersForType);
-            }
-
-            handlersForType.Add(handlerFunc);
-        }
-
-        public List<HandlerFunc> Get(Type messageType)
-        {
-            List<HandlerFunc> handlers;
-            return _handlers.TryGetValue(messageType, out handlers) ? handlers : null;
+            HandlerFunc handler;
+            return _handlers.TryGetValue(messageType, out handler) ? handler : null;
         }
     }
 }

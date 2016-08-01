@@ -86,6 +86,7 @@
     <Compile Include="WhenIAccessAnExistingQueueWithoutAnErrorQueue.cs" />
     <Compile Include="WhenICreateAQueueByName.cs" />
     <Compile Include="WhenQueueIsDeleted.cs" />
+    <Compile Include="WhenSettingUpMultipleHandlersFails.cs" />
     <Compile Include="WhenSettingUpMultipleHandlers.cs" />
     <Compile Include="WhenUpdatingDeliveryDelay.cs" />
     <Compile Include="WhenUpdatingRedrivePolicy.cs" />

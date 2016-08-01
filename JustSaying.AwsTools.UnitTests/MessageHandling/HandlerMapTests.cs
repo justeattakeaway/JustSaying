@@ -11,13 +11,20 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
     public class HandlerMapTests
     {
         [Test]
+        public void EmptyMapDoesNotContainKey()
+        {
+            var map = new HandlerMap();
+            Assert.That(map.ContainsKey(typeof(GenericMessage)), Is.False);
+        }
+
+        [Test]
         public void EmptyMapReturnsNullHandlers()
         {
             var map = new HandlerMap();
 
-            var handlers = map.Get(typeof (GenericMessage));
+            var handler = map.Get(typeof (GenericMessage));
 
-            Assert.That(handlers, Is.Null);
+            Assert.That(handler, Is.Null);
         }
 
         [Test]
@@ -26,10 +33,19 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
             var map = new HandlerMap();
             map.Add(typeof(GenericMessage), m => Task.FromResult(true) );
 
-            var handlers = map.Get(typeof(GenericMessage));
+            var handler = map.Get(typeof(GenericMessage));
 
-            Assert.That(handlers, Is.Not.Null);
-            Assert.That(handlers.Count, Is.EqualTo(1));
+            Assert.That(handler, Is.Not.Null);
+        }
+
+        [Test]
+        public void HandlerContainsKeyForMatchingTypeOnly()
+        {
+            var map = new HandlerMap();
+            map.Add(typeof(GenericMessage), m => Task.FromResult(true));
+
+            Assert.That(map.ContainsKey(typeof(GenericMessage)), Is.True);
+            Assert.That(map.ContainsKey(typeof(AnotherGenericMessage)), Is.False);
         }
 
         [Test]
@@ -38,9 +54,9 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
             var map = new HandlerMap();
             map.Add(typeof(GenericMessage), m => Task.FromResult(true));
 
-            var handlers = map.Get(typeof(AnotherGenericMessage));
+            var handler = map.Get(typeof(AnotherGenericMessage));
 
-            Assert.That(handlers, Is.Null);
+            Assert.That(handler, Is.Null);
         }
 
         [Test]
@@ -53,42 +69,31 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
             map.Add(typeof(GenericMessage), fn1);
             map.Add(typeof(AnotherGenericMessage), fn2);
 
-            var handlers1 = map.Get(typeof(GenericMessage));
+            var handler1 = map.Get(typeof(GenericMessage));
 
-            Assert.That(handlers1, Is.Not.Null);
-            Assert.That(handlers1.Count, Is.EqualTo(1));
-            Assert.That(handlers1[0], Is.EqualTo(fn1));
+            Assert.That(handler1, Is.Not.Null);
+            Assert.That(handler1, Is.EqualTo(fn1));
 
-            var handlers2 = map.Get(typeof(AnotherGenericMessage));
+            var handler2 = map.Get(typeof(AnotherGenericMessage));
 
-            Assert.That(handlers2, Is.Not.Null);
-            Assert.That(handlers2.Count, Is.EqualTo(1));
-            Assert.That(handlers2[0], Is.EqualTo(fn2));
+            Assert.That(handler2, Is.Not.Null);
+            Assert.That(handler2, Is.EqualTo(fn2));
         }
 
         [Test]
-        public void MultipleHandlersForATypeAreSupported()
+        public void MultipleHandlersForATypeAreNotSupported()
         {
             Func<Message, Task<bool>> fn1 = m => Task.FromResult(true);
             Func<Message, Task<bool>> fn2 = m => Task.FromResult(true);
 
             var map = new HandlerMap();
+
             map.Add(typeof(GenericMessage), fn1);
-            map.Add(typeof(GenericMessage), fn2);
-
-            var handlers1 = map.Get(typeof(GenericMessage));
-
-            Assert.That(handlers1, Is.Not.Null);
-            Assert.That(handlers1.Count, Is.EqualTo(2));
-            Assert.That(handlers1[0], Is.EqualTo(fn1));
-            Assert.That(handlers1[1], Is.EqualTo(fn2));
-
-            var handlers2 = map.Get(typeof(AnotherGenericMessage));
-            Assert.That(handlers2, Is.Null);
+            Assert.Throws<ArgumentException>(() => map.Add(typeof(GenericMessage), fn2));
         }
 
         [Test]
-        public void MultipleHandlersForATypeWithOtherHandlersAreSupported()
+        public void MultipleHandlersForATypeWithOtherHandlersAreNotSupported()
         {
             Func<Message, Task<bool>> fn1 = m => Task.FromResult(true);
             Func<Message, Task<bool>> fn2 = m => Task.FromResult(false);
@@ -96,19 +101,8 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
 
             var map = new HandlerMap();
             map.Add(typeof(GenericMessage), fn1);
-            map.Add(typeof(GenericMessage), fn2);
             map.Add(typeof(AnotherGenericMessage), fn3);
-
-            var handlers1 = map.Get(typeof(GenericMessage));
-
-            Assert.That(handlers1, Is.Not.Null);
-            Assert.That(handlers1.Count, Is.EqualTo(2));
-            Assert.That(handlers1[0], Is.EqualTo(fn1));
-            Assert.That(handlers1[1], Is.EqualTo(fn2));
-
-            var handlers2 = map.Get(typeof(AnotherGenericMessage));
-            Assert.That(handlers2, Is.Not.Null);
-            Assert.That(handlers2.Count, Is.EqualTo(1));
+            Assert.Throws<ArgumentException>(() => map.Add(typeof(GenericMessage), fn2));
         }
     }
 }

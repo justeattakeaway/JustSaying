@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using NLog;
 using Amazon.SQS.Model;
@@ -62,7 +61,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 if (typedMessage != null)
                 {
-                    handlingSucceeded = await CallMessageHandlers(typedMessage).ConfigureAwait(false);
+                    handlingSucceeded = await CallMessageHandler(typedMessage).ConfigureAwait(false);
                 }
 
                 if (handlingSucceeded)
@@ -84,35 +83,24 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        private async Task<bool> CallMessageHandlers(Message message)
+        private async Task<bool> CallMessageHandler(Message message)
         {
-            var handlerFuncs = _handlerMap.Get(message.GetType());
+            var handler = _handlerMap.Get(message.GetType());
 
-            if ((handlerFuncs == null) || (handlerFuncs.Count == 0))
+            if (handler == null)
             {
                 return true;
             }
 
-            bool allHandlersSucceeded;
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
-            if (handlerFuncs.Count == 1)
-            {
-                // a shortcut for the usual case
-                allHandlersSucceeded = await handlerFuncs[0](message).ConfigureAwait(false);
-            }
-            else
-            {
-                var handlerTasks = handlerFuncs.Select(func => func(message));
-                var handlerResults = await Task.WhenAll(handlerTasks).ConfigureAwait(false);
-                allHandlersSucceeded = handlerResults.All(x => x);
-            }
+            var handlerSucceeded = await handler(message).ConfigureAwait(false);
 
             watch.Stop();
             Log.Trace($"Handled message - MessageType: {message.GetType().Name}");
             _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
 
-            return allHandlersSucceeded;
+            return handlerSucceeded;
         }
 
         private void DeleteMessageFromQueue(string receiptHandle)

@@ -237,13 +237,11 @@ namespace JustSaying
 
             if (proposedHandlers.Count == 0)
             {
-                throw new HandlerNotRegisteredWithContainerException(
-                    $"IHandler<{typeof(T).Name}> is not registered in the container.");
+                throw new HandlerNotRegisteredWithContainerException($"There is no handler for '{typeof(T).Name}' messages.");
             }
             if (proposedHandlers.Count > 1)
             {
-                throw new NotSupportedException(
-                    $"There are more than one registration for IHandler<{typeof(T).Name}>. JustSaying currently does not support multiple registration for IHandler<T>.");
+                throw new NotSupportedException($"There is more than one handler for '{typeof(T).Name}' messages.");
             }
 
             foreach (var region in Bus.Config.Regions)

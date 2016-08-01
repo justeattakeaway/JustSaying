@@ -56,8 +56,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
                 .WithMonitoring(new Monitoring())
                 .WithMessageLockStoreOf(new MessageLockStore())
                 .WithSqsTopicSubscriber().IntoQueue(QueueName)
-                .WithMessageHandler(_handler1)
-                .WithMessageHandler(_handler2);
+                .WithMessageHandlers(_handler1, _handler2);
+
             publisher.StartListening();
             bus.StartListening();
 
