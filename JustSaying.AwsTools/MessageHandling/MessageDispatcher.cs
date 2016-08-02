@@ -63,6 +63,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 if (typedMessage != null)
                 {
+                    typedMessage.ReceiptHandle = message.ReceiptHandle;
                     handlingSucceeded = await CallMessageHandlers(typedMessage).ConfigureAwait(false);
                 }
 
