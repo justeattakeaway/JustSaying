@@ -64,7 +64,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 if (typedMessage != null)
                 {
                     typedMessage.ReceiptHandle = message.ReceiptHandle;
-                    typedMessage.QueueUrl = new Uri(_queue.Url);
+                    typedMessage.QueueUrl = _queue.Url;
                     handlingSucceeded = await CallMessageHandlers(typedMessage).ConfigureAwait(false);
                 }
 
