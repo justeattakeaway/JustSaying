@@ -30,15 +30,16 @@ namespace JustSaying.AwsTools.MessageHandling
                 Arn = topic.TopicArn;
                 return true;
             }
-            
+
             return false;
         }
 
         public bool Create()
         {
+            // TODO create policy
             var response = Client.CreateTopic(new CreateTopicRequest(TopicName));
             if (!string.IsNullOrEmpty(response.TopicArn))
-            {    
+            {
                 Arn = response.TopicArn;
                 Log.Info(string.Format("Created Topic: {0} on Arn: {1}", TopicName, Arn));
                 return true;

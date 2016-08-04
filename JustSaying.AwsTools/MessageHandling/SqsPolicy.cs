@@ -13,7 +13,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             _policy = policy;
         }
-        
+
 
         public static void Save(string sourceArn, string queueArn, string queueUrl, IAmazonSQS client)
         {
@@ -28,7 +28,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     .WithActionIdentifiers(actions));
             SetQueueAttributesRequest setQueueAttributesRequest = new SetQueueAttributesRequest();
             setQueueAttributesRequest.QueueUrl = queueUrl;
-            setQueueAttributesRequest.Attributes["Policy"] = sqsPolicy.ToJson(); 
+            setQueueAttributesRequest.Attributes["Policy"] = sqsPolicy.ToJson();
             client.SetQueueAttributes(setQueueAttributesRequest);
         }
 
