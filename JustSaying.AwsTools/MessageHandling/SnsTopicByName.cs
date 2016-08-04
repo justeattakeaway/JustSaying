@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.Messaging.MessageSerialisation;
@@ -36,17 +38,25 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public bool Create()
         {
-            // TODO create policy
             var response = Client.CreateTopic(new CreateTopicRequest(TopicName));
             if (!string.IsNullOrEmpty(response.TopicArn))
             {
                 Arn = response.TopicArn;
-                Log.Info(string.Format("Created Topic: {0} on Arn: {1}", TopicName, Arn));
+                Log.Info("Created Topic: {0} on Arn: {1}", TopicName, Arn);
                 return true;
             }
 
-            Log.Info(string.Format("Failed to create Topic: {0}", TopicName));
+            Log.Info("Failed to create Topic: {0}", TopicName);
             return false;
+        }
+
+        public void EnsurePolicyIsUpdated(IReadOnlyCollection<string> config)
+        {
+            if (config.Any())
+            {
+                var policy = new SnsPolicy(config);
+                policy.Save(Arn, Client);
+            }
         }
     }
 }

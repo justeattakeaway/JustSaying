@@ -77,10 +77,12 @@ namespace JustSaying
                 if (!eventPublisher.Exists())
                     eventPublisher.Create();
 
+                eventPublisher.EnsurePolicyIsUpdated(Bus.Config.AdditionalSubscriberAccounts);
+
                 Bus.AddMessagePublisher<T>(eventPublisher, region);
             }
 
-            Log.Info(string.Format("Created SNS topic publisher - Topic: {0}", _subscriptionConfig.Topic));
+            Log.Info("Created SNS topic publisher - Topic: {0}", _subscriptionConfig.Topic);
 
             return this;
         }
@@ -269,7 +271,7 @@ namespace JustSaying
             {
                 var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribed(region, Bus.SerialisationRegister, _subscriptionConfig);
                 CreateSubscriptionListener<T>(region, queue);
-                Log.Info(string.Format("Created SQS topic subscription - Topic: {0}, QueueName: {1}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName));
+                Log.Info("Created SQS topic subscription - Topic: {0}, QueueName: {1}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName);
             }
           
             return this;

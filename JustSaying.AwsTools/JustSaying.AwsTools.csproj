@@ -57,11 +57,15 @@
     <Compile Include="AwsClientFactoryProxy.cs" />
     <Compile Include="DefaultAwsClientFactory.cs" />
     <Compile Include="MessageHandling\ExactlyOnceReader.cs" />
+    <Compile Include="MessageHandling\ForeignTopicArnProvider.cs" />
     <Compile Include="MessageHandling\HandlerMap.cs" />
     <Compile Include="IAwsClientFactoryProxy.cs" />
     <Compile Include="IAwsClientFactory.cs" />
+    <Compile Include="MessageHandling\ITopicArnProvider.cs" />
+    <Compile Include="MessageHandling\LocalTopicArnProvider.cs" />
     <Compile Include="MessageHandling\MessageDispatcher.cs" />
     <Compile Include="MessageHandling\MessageHandlerWrapper.cs" />
+    <Compile Include="MessageHandling\SnsPolicy.cs" />
     <Compile Include="MessageHandling\SqsPolicy.cs" />
     <Compile Include="QueueCreation\AmazonQueueCreator.cs" />
     <Compile Include="QueueCreation\IRegionResourceCache.cs" />

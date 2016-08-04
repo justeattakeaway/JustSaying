@@ -13,7 +13,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public bool ArnExists()
         {
-            // pretend foreign topics exist, we actually find out when we attempt to subscribe
+            // Assume foreign topics exist, we actually find out when we attempt to subscribe
             return true;
         }
 

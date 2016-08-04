@@ -1,7 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Amazon.Auth.AccessControlPolicy;
 using Amazon.Auth.AccessControlPolicy.ActionIdentifiers;
+using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using Amazon.SQS;
 
@@ -16,23 +19,45 @@ namespace JustSaying.AwsTools.MessageHandling
             _accountIds = accountIds;
         }
 
-        public void Save(string sourceArn, string queueArn, string queueUrl, IAmazonSQS client)
+        public void Save(string sourceArn, IAmazonSimpleNotificationService client)
         {
             ActionIdentifier[] actions = { SNSActionIdentifiers.Subscribe};
 
             var snsPolicy = new Policy()
+                .WithStatements(GetDefaultStatement(sourceArn))
                 .WithStatements(new Statement(Statement.StatementEffect.Allow)
                     .WithPrincipals(_accountIds.Select(a => new Principal(a)).ToArray())
-                    .WithResources(new Resource(queueArn))
-                    .WithConditions(ConditionFactory.NewSourceArnCondition(sourceArn))
+                    .WithResources(new Resource(sourceArn))
                     .WithActionIdentifiers(actions));
-            var setQueueAttributesRequest = new SetTopicAttributesRequest
-            {
-                TopicArn = sourceArn,
-                AttributeName = "Policy",
-                AttributeValue = snsPolicy.ToJson()
-            };
-            // TODO what we gonna do with this?
+            var attributeValue = snsPolicy.ToJson();
+            var setQueueAttributesRequest = new SetTopicAttributesRequest(sourceArn, "Policy", attributeValue);
+
+            client.SetTopicAttributes(setQueueAttributesRequest);
+        }
+
+        private static Statement GetDefaultStatement(string sourceArn)
+        {
+            var sourceAccountId = ExtractSourceAccountId(sourceArn);
+            return new Statement(Statement.StatementEffect.Allow)
+                .WithPrincipals(Principal.AllUsers)
+                .WithActionIdentifiers(
+                    SNSActionIdentifiers.GetTopicAttributes,
+                    SNSActionIdentifiers.SetTopicAttributes,
+                    SNSActionIdentifiers.AddPermission,
+                    SNSActionIdentifiers.RemovePermission,
+                    SNSActionIdentifiers.DeleteTopic,
+                    SNSActionIdentifiers.Subscribe,
+                    SNSActionIdentifiers.ListSubscriptionsByTopic,
+                    SNSActionIdentifiers.Publish)
+                .WithResources(new Resource(sourceArn))
+                .WithConditions(new Condition("StringEquals", "AWS:SourceOwner", sourceAccountId));
+        }
+
+        private static string ExtractSourceAccountId(string sourceArn)
+        {
+            //Sns Arn pattern: arn:aws:sns:region:account-id:topic
+            var match = Regex.Match(sourceArn, "(.*?):(.*?):(.*?):(.*?):(.*?):(.*?)", RegexOptions.None, Regex.InfiniteMatchTimeout);
+            return match.Groups[5].Value;
         }
     }
 }
