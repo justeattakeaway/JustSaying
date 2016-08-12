@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using NLog;
 using Amazon.SQS.Model;
@@ -21,7 +20,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
 
         public MessageDispatcher(
-            SqsQueueBase queue, 
+            SqsQueueBase queue,
             IMessageSerialisationRegister serialisationRegister,
             IMessageMonitor messagingMonitor,
             Action<Exception, SQSMessage> onError,
@@ -44,8 +43,7 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (MessageFormatNotSupportedException ex)
             {
                 Log.Trace(
-                    "Didn't handle message [{0}]. No serialiser setup",
-                    message.Body ?? string.Empty);
+                    $"Didn't handle message [{message.Body ?? string.Empty}]. No serialiser setup");
                 DeleteMessageFromQueue(message.ReceiptHandle);
                 _onError(ex, message);
                 return;
@@ -65,7 +63,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     typedMessage.ReceiptHandle = message.ReceiptHandle;
                     typedMessage.QueueUrl = _queue.Url;
-                    handlingSucceeded = await CallMessageHandlers(typedMessage).ConfigureAwait(false);
+                    handlingSucceeded = await CallMessageHandler(typedMessage).ConfigureAwait(false);
                 }
 
                 if (handlingSucceeded)
@@ -75,7 +73,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (Exception ex)
             {
-                var errorText = string.Format("Error handling message [{0}]", message.Body);
+                var errorText = $"Error handling message [{message.Body}]";
                 Log.Error(ex, errorText);
 
                 if (typedMessage != null)
@@ -87,35 +85,24 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        private async Task<bool> CallMessageHandlers(Message message)
+        private async Task<bool> CallMessageHandler(Message message)
         {
-            var handlerFuncs = _handlerMap.Get(message.GetType());
+            var handler = _handlerMap.Get(message.GetType());
 
-            if ((handlerFuncs == null) || (handlerFuncs.Count == 0))
+            if (handler == null)
             {
                 return true;
             }
 
-            bool allHandlersSucceeded;
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
-            if (handlerFuncs.Count == 1)
-            {
-                // a shortcut for the usual case
-                allHandlersSucceeded = await handlerFuncs[0](message).ConfigureAwait(false);
-            }
-            else
-            {
-                var handlerTasks = handlerFuncs.Select(func => func(message));
-                var handlerResults = await Task.WhenAll(handlerTasks).ConfigureAwait(false);
-                allHandlersSucceeded = handlerResults.All(x => x);
-            }
+            var handlerSucceeded = await handler(message).ConfigureAwait(false);
 
             watch.Stop();
-            Log.Trace("Handled message - MessageType: {0}", message.GetType().Name);
+            Log.Trace($"Handled message - MessageType: {message.GetType().Name}");
             _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
 
-            return allHandlersSucceeded;
+            return handlerSucceeded;
         }
 
         private void DeleteMessageFromQueue(string receiptHandle)

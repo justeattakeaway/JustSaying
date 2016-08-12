@@ -1,4 +1,5 @@
 using Amazon;
+using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 
@@ -19,12 +20,28 @@ namespace JustSaying.AwsTools.QueueCreation
         {
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);
             var queue = EnsureQueueExists(region, queueConfig);
-            var eventTopic = EnsureTopicExists(regionEndpoint, serialisationRegister, queueConfig);
-            EnsureQueueIsSubscribedToTopic(regionEndpoint, eventTopic, queue);
+            if (TopicExistsInAnotherAccount(queueConfig))
+            {
+                var sqsClient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
+                var snsClient = _awsClientFactory.GetAwsClientFactory().GetSnsClient(regionEndpoint);
+                var arnProvider = new ForeignTopicArnProvider(regionEndpoint, queueConfig.TopicSourceAccount, queueConfig.PublishEndpoint);
+                snsClient.SubscribeQueue(arnProvider.GetArn(), sqsClient, queue.Url);
+            }
+            else
+            {
+                var eventTopic = EnsureTopicExists(regionEndpoint, serialisationRegister, queueConfig);
+                EnsureQueueIsSubscribedToTopic(regionEndpoint, eventTopic, queue);
 
-            var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
-            SqsPolicy.Save(eventTopic.Arn, queue.Arn, queue.Url, sqsclient);
+                var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
+                SqsPolicy.Save(eventTopic.Arn, queue.Arn, queue.Url, sqsclient);
+            }
+
             return queue;
+        }
+
+        private static bool TopicExistsInAnotherAccount(SqsReadConfiguration queueConfig)
+        {
+            return !string.IsNullOrWhiteSpace(queueConfig.TopicSourceAccount);
         }
 
         public SqsQueueByName EnsureQueueExists(string region, SqsReadConfiguration queueConfig)
