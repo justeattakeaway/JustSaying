@@ -68,6 +68,7 @@ namespace JustSaying
             var topicName = namingStrategy.GetTopicName(_subscriptionConfig.BaseTopicName, GetMessageTypeName<T>());
             foreach (var region in Bus.Config.Regions)
             {
+                // TODO pass region down into topic creation for when we have foreign topics so we can generate the arn
                 var eventPublisher = new SnsTopicByName(
                     topicName,
                     _awsClientFactoryProxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
@@ -76,10 +77,12 @@ namespace JustSaying
                 if (!eventPublisher.Exists())
                     eventPublisher.Create();
 
+                eventPublisher.EnsurePolicyIsUpdated(Bus.Config.AdditionalSubscriberAccounts);
+
                 Bus.AddMessagePublisher<T>(eventPublisher, region);
             }
 
-            Log.Info(string.Format("Created SNS topic publisher - Topic: {0}", _subscriptionConfig.Topic));
+            Log.Info("Created SNS topic publisher - Topic: {0}", _subscriptionConfig.Topic);
 
             return this;
         }
@@ -268,7 +271,7 @@ namespace JustSaying
             {
                 var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribed(region, Bus.SerialisationRegister, _subscriptionConfig);
                 CreateSubscriptionListener<T>(region, queue);
-                Log.Info(string.Format("Created SQS topic subscription - Topic: {0}, QueueName: {1}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName));
+                Log.Info("Created SQS topic subscription - Topic: {0}, QueueName: {1}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName);
             }
           
             return this;

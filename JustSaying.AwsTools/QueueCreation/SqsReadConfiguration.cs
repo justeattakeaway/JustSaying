@@ -30,6 +30,7 @@ namespace JustSaying.AwsTools.QueueCreation
         public int? MaxAllowedMessagesInFlight { get; set; }
         public IMessageProcessingStrategy MessageProcessingStrategy { get; set; }
         public Action<Exception, Amazon.SQS.Model.Message> OnError { get; set; }
+        public string TopicSourceAccount { get; set; }
 
         public override void Validate()
         {
