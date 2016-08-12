@@ -53,7 +53,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     Url = result.QueueUrl;
                     SetQueueProperties();
 
-                    Log.Info(string.Format("Created Queue: {0} on Arn: {1}", QueueName, Arn));
+                    Log.Info("Created Queue: {0} on Arn: {1}", QueueName, Arn);
                     return true;
                 }
             }
@@ -62,28 +62,26 @@ namespace JustSaying.AwsTools.MessageHandling
                 if (ex.ErrorCode == "AWS.SimpleQueueService.QueueDeletedRecently")
                 {
                     // Ensure we wait for queue delete timeout to expire.
-                    Log.Info(string.Format("Waiting to create Queue due to AWS time restriction - Queue: {0}, AttemptCount: {1}", QueueName, attempt + 1));
+                    Log.Info("Waiting to create Queue due to AWS time restriction - Queue: {0}, AttemptCount: {1}", QueueName, attempt + 1);
                     Thread.Sleep(60000);
                     Create(queueConfig, attempt: attempt++);
                 }
                 else
                 {
                     // Throw all errors which are not delete timeout related.
-                    Log.Error(ex, string.Format("Create Queue error: {0}", QueueName));
+                    Log.Error(ex, $"Create Queue error: {QueueName}");
                     throw;
                 }
 
                 // If we're on a delete timeout, throw after 2 attempts.
                 if (attempt >= 2)
                 {
-                    Log.Error(ex, string.Format("Create Queue error, max retries exceeded for delay - Queue: {0}", QueueName));
+                    Log.Error(ex, $"Create Queue error, max retries exceeded for delay - Queue: {QueueName}");
                     throw;
                 }
             }
-            // TODO catch exception when subscription fails for foreign topic that doesn't exist.
-            // Log it and return true (or false, apparently noone cares what we return from here)
 
-            Log.Info(string.Format("Failed to create Queue: {0}", QueueName));
+            Log.Info("Failed to create Queue: {0}", QueueName);
             return false;
         }
 

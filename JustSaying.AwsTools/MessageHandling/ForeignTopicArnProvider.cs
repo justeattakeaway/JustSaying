@@ -1,14 +1,15 @@
-using Amazon.SimpleNotificationService;
+using Amazon;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
     public class ForeignTopicArnProvider : ITopicArnProvider
     {
+        
         private readonly string _arn;
 
-        public ForeignTopicArnProvider(string topicName, string region, string accountId)
+        public ForeignTopicArnProvider(RegionEndpoint regionEndpoint, string accountId, string topicName)
         {
-            _arn = $"arn:aws:sns:{region}:{accountId}:{topicName}";
+            _arn = $"arn:aws:sns:{regionEndpoint.SystemName}:{accountId}:{topicName}";
         }
 
         public bool ArnExists()
