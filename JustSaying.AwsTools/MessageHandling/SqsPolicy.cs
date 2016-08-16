@@ -13,7 +13,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             _policy = policy;
         }
-        
+
 
         public static void Save(string sourceArn, string queueArn, string queueUrl, IAmazonSQS client)
         {

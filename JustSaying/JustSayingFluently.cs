@@ -61,6 +61,7 @@ namespace JustSaying
             var topicName = namingStrategy.GetTopicName(_subscriptionConfig.BaseTopicName, GetMessageTypeName<T>());
             foreach (var region in Bus.Config.Regions)
             {
+                // TODO pass region down into topic creation for when we have foreign topics so we can generate the arn
                 var eventPublisher = new SnsTopicByName(
                     topicName,
                     _awsClientFactoryProxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
@@ -70,6 +71,8 @@ namespace JustSaying
                 {
                     eventPublisher.Create();
                 }
+
+                eventPublisher.EnsurePolicyIsUpdated(Bus.Config.AdditionalSubscriberAccounts);
 
                 Bus.AddMessagePublisher<T>(eventPublisher, region);
             }

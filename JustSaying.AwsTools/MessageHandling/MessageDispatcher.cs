@@ -20,7 +20,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private static readonly Logger Log = LogManager.GetLogger("JustSaying");
 
         public MessageDispatcher(
-            SqsQueueBase queue, 
+            SqsQueueBase queue,
             IMessageSerialisationRegister serialisationRegister,
             IMessageMonitor messagingMonitor,
             Action<Exception, SQSMessage> onError,
@@ -61,6 +61,8 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 if (typedMessage != null)
                 {
+                    typedMessage.ReceiptHandle = message.ReceiptHandle;
+                    typedMessage.QueueUrl = _queue.Url;
                     handlingSucceeded = await CallMessageHandler(typedMessage).ConfigureAwait(false);
                 }
 
