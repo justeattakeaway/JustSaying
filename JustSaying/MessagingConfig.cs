@@ -11,6 +11,7 @@ namespace JustSaying
         {
             PublishFailureReAttempts = JustSayingConstants.DEFAULT_PUBLISHER_RETRY_COUNT;
             PublishFailureBackoffMilliseconds = JustSayingConstants.DEFAULT_PUBLISHER_RETRY_INTERVAL;
+            AdditionalSubscriberAccounts = new List<string>();
             Regions = new List<string>();
         }
 
