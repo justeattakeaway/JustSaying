@@ -16,10 +16,10 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
            var container = new Container(x => x.AddRegistry(new SingleHandlerRegistry()));
 
            var handlerResolver = new StructureMapHandlerResolver(container);
-            var handlers = handlerResolver.ResolveHandlers<OrderPlaced>().ToList();
-            Assert.That(handlers.Count, Is.EqualTo(1));
+            var handler = handlerResolver.ResolveHandler<OrderPlaced>();
+            Assert.That(handler, Is.Not.Null);
 
-            _handlerFuture = ((OrderProcessor)handlers[0]).Future;
+            _handlerFuture = ((OrderProcessor)handler).Future;
             DoneSignal = _handlerFuture.DoneSignal;
 
             Subscriber = CreateMeABus.InRegion("eu-west-1")

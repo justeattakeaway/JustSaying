@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using JustSaying.Messaging.MessageHandling;
 using StructureMap;
 
@@ -14,18 +12,21 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             _container = container;
         }
 
-        public IEnumerable<IHandlerAsync<T>> ResolveHandlers<T>()
+        public IHandlerAsync<T> ResolveHandler<T>()
         {
-            var proposedHandlers = GetAllInstances<IHandlerAsync<T>>();
-            var proposedSyncHandlers = GetAllInstances<IHandler<T>>()
-                .Select(h => new BlockingHandler<T>(h));
+            var handler = _container.GetInstance<IHandlerAsync<T>>();
+            if (handler != null)
+            {
+                return handler;
+            }
 
-            return proposedHandlers.Concat(proposedSyncHandlers);
-        }
+            var syncHandler = _container.GetInstance<IHandler<T>>();
+            if (syncHandler != null)
+            {
+                return new BlockingHandler<T>(syncHandler);
+            }
 
-        private IEnumerable<T> GetAllInstances<T>()
-        {
-            return _container.GetAllInstances<T>();
+            return null;
         }
     }
 }
