@@ -11,11 +11,13 @@ namespace JustSaying
         {
             PublishFailureReAttempts = JustSayingConstants.DEFAULT_PUBLISHER_RETRY_COUNT;
             PublishFailureBackoffMilliseconds = JustSayingConstants.DEFAULT_PUBLISHER_RETRY_INTERVAL;
+            AdditionalSubscriberAccounts = new List<string>();
             Regions = new List<string>();
         }
 
         public int PublishFailureReAttempts { get; set; }
         public int PublishFailureBackoffMilliseconds { get; set; }
+        public IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
         public IList<string> Regions { get; private set; }
         public Func<string> GetActiveRegion { get; set; }
 
@@ -27,7 +29,9 @@ namespace JustSaying
             }
             var duplicateRegion = Regions.GroupBy(x => x).FirstOrDefault(y => y.Count() > 1);
             if (duplicateRegion != null)
-                throw new ArgumentException($"Region {duplicateRegion.Key} was added multiple times");
+            {
+				throw new ArgumentException($"Region {duplicateRegion.Key} was added multiple times");				
+			}   
         
         }
     }
