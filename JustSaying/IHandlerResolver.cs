@@ -5,6 +5,6 @@ namespace JustSaying
 {
     public interface IHandlerResolver
     {
-        IEnumerable<IHandlerAsync<T>> ResolveHandlers<T>();
+        IHandlerAsync<T> ResolveHandler<T>();
     }
 }

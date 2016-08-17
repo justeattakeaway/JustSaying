@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
@@ -236,21 +235,16 @@ namespace JustSaying
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
 
-            var proposedHandlers = handlerResolver.ResolveHandlers<T>().ToList();
+            var proposedHandler = handlerResolver.ResolveHandler<T>();
 
-            if (proposedHandlers.Count == 0)
+            if (proposedHandler == null)
             {
                 throw new HandlerNotRegisteredWithContainerException($"There is no handler for '{typeof(T).Name}' messages.");
-            }
-            if (proposedHandlers.Count > 1)
-            {
-                throw new NotSupportedException($"There is more than one handler for '{typeof(T).Name}' messages.");
             }
 
             foreach (var region in Bus.Config.Regions)
             {
-                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName,
-                    () => handlerResolver.ResolveHandlers<T>().Single());
+                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handlerResolver.ResolveHandler<T>());
             }
 
             Log.Info(

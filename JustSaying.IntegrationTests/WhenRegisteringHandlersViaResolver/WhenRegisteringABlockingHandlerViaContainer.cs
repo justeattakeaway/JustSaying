@@ -16,10 +16,10 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
            var container = new Container(x => x.AddRegistry(new BlockingHandlerRegistry()));
 
            var handlerResolver = new StructureMapHandlerResolver(container);
-            var handlers = handlerResolver.ResolveHandlers<OrderPlaced>().ToList();
-            Assert.That(handlers.Count, Is.EqualTo(1));
+            var handler = handlerResolver.ResolveHandler<OrderPlaced>();
+            Assert.That(handler, Is.Not.Null);
 
-            var blockingHandler = (BlockingHandler<OrderPlaced>)handlers[0];
+            var blockingHandler = (BlockingHandler<OrderPlaced>)handler;
             _resolvedHandler = (BlockingOrderProcessor)blockingHandler.Inner;
             DoneSignal = _resolvedHandler.DoneSignal.Task;
 
