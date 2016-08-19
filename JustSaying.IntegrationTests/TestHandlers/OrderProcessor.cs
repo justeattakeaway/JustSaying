@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using JustSaying.IntegrationTests.JustSayingFluently;
 using JustSaying.Messaging.MessageHandling;
 
 namespace JustSaying.IntegrationTests.TestHandlers

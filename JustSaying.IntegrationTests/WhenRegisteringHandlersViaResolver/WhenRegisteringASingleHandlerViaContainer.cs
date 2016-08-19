@@ -1,5 +1,3 @@
-using System.Linq;
-using JustSaying.IntegrationTests.JustSayingFluently;
 using JustSaying.IntegrationTests.TestHandlers;
 using NUnit.Framework;
 using Shouldly;

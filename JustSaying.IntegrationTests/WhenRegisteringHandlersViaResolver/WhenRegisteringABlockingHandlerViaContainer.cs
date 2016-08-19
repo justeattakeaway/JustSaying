@@ -1,4 +1,3 @@
-using System.Linq;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
 using NUnit.Framework;

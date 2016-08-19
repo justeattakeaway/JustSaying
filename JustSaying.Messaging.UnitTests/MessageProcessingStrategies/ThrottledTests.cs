@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Monitoring;
 using NSubstitute;
