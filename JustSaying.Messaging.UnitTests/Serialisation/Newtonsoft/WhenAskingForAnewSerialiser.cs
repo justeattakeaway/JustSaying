@@ -1,6 +1,5 @@
 ﻿using JustBehave;
 using JustSaying.Messaging.MessageSerialisation;
-using JustSaying.Models;
 using JustSaying.TestingFramework;
 using NUnit.Framework;
 

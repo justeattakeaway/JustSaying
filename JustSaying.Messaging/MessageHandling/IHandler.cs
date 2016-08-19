@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace JustSaying.Messaging.MessageHandling
+﻿namespace JustSaying.Messaging.MessageHandling
 {
     /// <summary>
     /// Synchronous message handler, will be obsoleted by IHandlerAsync

@@ -1,4 +1,3 @@
-using JustSaying.IntegrationTests.JustSayingFluently;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
 using StructureMap;

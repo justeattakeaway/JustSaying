@@ -1,4 +1,3 @@
-using System;
 using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.TestingFramework;
