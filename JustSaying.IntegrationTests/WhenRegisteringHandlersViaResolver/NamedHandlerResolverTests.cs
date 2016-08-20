@@ -8,16 +8,6 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         private readonly IHandlerResolver _handlerResolver = new StructureMapNamedHandlerResolver();
 
         [Test]
-        public void TestDefaultResolution()
-        {
-            var context = new HandlerResolutionContext("no_match");
-            var handler = _handlerResolver.ResolveHandler<TestMessage>(context);
-
-            Assert.That(handler, Is.Not.Null);
-            Assert.That(handler, Is.InstanceOf<HandlerC>());
-        }
-
-        [Test]
         public void TestQueueAResolution()
         {
             var context = new HandlerResolutionContext("QueueA");
@@ -36,5 +26,16 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             Assert.That(handler, Is.Not.Null);
             Assert.That(handler, Is.InstanceOf<HandlerB>());
         }
+
+        [Test]
+        public void TestOtherQueueNameResolution()
+        {
+            var context = new HandlerResolutionContext("QueueWithAnyOtherName");
+            var handler = _handlerResolver.ResolveHandler<TestMessage>(context);
+
+            Assert.That(handler, Is.Not.Null);
+            Assert.That(handler, Is.InstanceOf<HandlerC>());
+        }
+
     }
 }
