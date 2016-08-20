@@ -115,10 +115,12 @@
     <Compile Include="WhenRegisteringASqsSubscriber\WhenRegisteringLongNameMessageTypeTopicSubscriber.cs" />
     <Compile Include="WhenRegisteringHandlersViaResolver\GivenAPublisher.cs" />
     <Compile Include="WhenRegisteringHandlersViaResolver\MultipleHandlerRegistry.cs" />
+    <Compile Include="WhenRegisteringHandlersViaResolver\NamedHandlerResolverTests.cs" />
     <Compile Include="WhenRegisteringHandlersViaResolver\SingleHandlerRegistry.cs" />
     <Compile Include="WhenRegisteringHandlersViaResolver\StructureMapHandlerResolver.cs" />
     <Compile Include="WhenRegisteringHandlersViaResolver\BlockingHandlerRegistry.cs" />
     <Compile Include="TestHandlers\BlockingOrderProcessor.cs" />
+    <Compile Include="WhenRegisteringHandlersViaResolver\StructureMapNamedHandlerResolver.cs" />
     <Compile Include="WhenRegisteringHandlersViaResolver\WhenRegisteringAHandlerViaContainerWithMissingRegistration.cs" />
     <Compile Include="WhenRegisteringHandlersViaResolver\WhenRegisteringABlockingHandlerViaContainer.cs" />
     <Compile Include="WhenRegisteringHandlersViaResolver\WhenRegisteringASingleHandlerViaContainer.cs" />
