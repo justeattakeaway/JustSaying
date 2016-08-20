@@ -12,7 +12,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             _container = container;
         }
 
-        public IHandlerAsync<T> ResolveHandler<T>()
+        public IHandlerAsync<T> ResolveHandler<T>(HandlerResolutionContext context)
         {
             var handler = _container.GetInstance<IHandlerAsync<T>>();
             if (handler != null)

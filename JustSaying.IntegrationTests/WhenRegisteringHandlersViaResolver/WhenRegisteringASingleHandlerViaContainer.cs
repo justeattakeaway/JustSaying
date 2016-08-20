@@ -12,9 +12,10 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         protected override void Given()
         {
            var container = new Container(x => x.AddRegistry(new SingleHandlerRegistry()));
+            var resolutionContext = new HandlerResolutionContext("test");
 
-           var handlerResolver = new StructureMapHandlerResolver(container);
-            var handler = handlerResolver.ResolveHandler<OrderPlaced>();
+            var handlerResolver = new StructureMapHandlerResolver(container);
+            var handler = handlerResolver.ResolveHandler<OrderPlaced>(resolutionContext);
             Assert.That(handler, Is.Not.Null);
 
             _handlerFuture = ((OrderProcessor)handler).Future;
