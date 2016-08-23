@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Amazon.SimpleNotificationService.Model;
 using JustBehave;
 using JustSaying.Models;
@@ -22,9 +23,10 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 
         }
 
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.WithSnsMessagePublisher<Message>();
+            return Task.FromResult(true);
         }
 
         [Then]

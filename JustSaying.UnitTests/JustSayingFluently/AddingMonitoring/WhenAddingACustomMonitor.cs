@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging.Monitoring;
 using NSubstitute;
@@ -12,9 +13,10 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingMonitoring
 
         protected override void Given() { }
 
-        protected override void When()
+        protected override Task When()
         {
             _response = SystemUnderTest.WithMonitoring(_monitor);
+            return Task.FromResult(true);
         }
 
         [Then]

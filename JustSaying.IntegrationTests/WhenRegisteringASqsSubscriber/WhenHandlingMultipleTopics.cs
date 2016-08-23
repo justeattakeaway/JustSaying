@@ -18,12 +18,13 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         public class TopicA : Message { }
         public class TopicB : Message { }
 
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.WithSqsTopicSubscriber()
                 .IntoQueue(QueueName)
                 .WithMessageHandler(Substitute.For<IHandlerAsync<GenericMessage<TopicA>>>())
                 .WithMessageHandler(Substitute.For<IHandlerAsync<GenericMessage<TopicB>>>());
+            return Task.FromResult(true);
         }
 
         [Then]

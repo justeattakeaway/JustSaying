@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Models;
 using NSubstitute;
@@ -14,9 +15,9 @@ namespace JustSaying.UnitTests.JustSayingBus
             RecordAnyExceptionsThrown();
         }
 
-        protected override void When()
+        protected override async Task When()
         {
-            SystemUnderTest.Publish(Substitute.For<Message>());
+            await SystemUnderTest.Publish(Substitute.For<Message>());
         }
 
         [Then]

@@ -35,7 +35,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             Client = CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1);
         }
 
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.WithSqsTopicSubscriber()
                 .IntoQueue(QueueName)
@@ -44,6 +44,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
                         cfg.MessageRetentionSeconds = 60;
                     })
                 .WithMessageHandler(Substitute.For<IHandlerAsync<Message>>());
+            return Task.FromResult(true);
         }
 
         [Then]
@@ -72,11 +73,12 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
     public class WhenRegisteringASqsTopicSubscriberUsingBasicSyntax : WhenRegisteringASqsTopicSubscriber
     {
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.WithSqsTopicSubscriber()
                 .IntoQueue(QueueName)
                 .WithMessageHandler(Substitute.For<IHandlerAsync<Message>>());
+            return Task.FromResult(true);
         }
     }
 }

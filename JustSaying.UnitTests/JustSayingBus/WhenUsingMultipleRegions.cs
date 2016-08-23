@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using NSubstitute;
 using JustBehave;
 using Shouldly;
@@ -14,8 +15,9 @@ namespace JustSaying.UnitTests.JustSayingBus
             Config.Regions.Returns(new List<string>{"region1", "region2"});
         }
 
-        protected override void When()
+        protected override Task When()
         {
+            return Task.FromResult(true);
         }
 
         [Then]

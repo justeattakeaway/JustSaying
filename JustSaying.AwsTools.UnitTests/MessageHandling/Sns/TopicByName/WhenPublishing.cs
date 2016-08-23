@@ -1,4 +1,5 @@
-﻿using Amazon.SimpleNotificationService;
+﻿using System.Threading.Tasks;
+using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
@@ -9,7 +10,7 @@ using NSubstitute;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sns.TopicByName
 {
-    public class WhenPublishing : BehaviourTest<SnsTopicByName>
+    public class WhenPublishing : AsyncBehaviourTest<SnsTopicByName>
     {
         private const string Message = "the_message_in_json";
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
@@ -29,9 +30,9 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sns.TopicByName
             _sns.FindTopic("TopicName").Returns(new Topic { TopicArn = TopicArn });
         }
 
-        protected override void When()
+        protected override async Task When()
         {
-            SystemUnderTest.Publish(new GenericMessage());
+            await SystemUnderTest.Publish(new GenericMessage());
         }
 
         [Then]

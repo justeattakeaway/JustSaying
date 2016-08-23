@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.TestingFramework;
 using NUnit.Framework;
@@ -16,9 +17,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
             RecordAnyExceptionsThrown();
         }
 
-        protected override void When()
+        protected override async Task When()
         {
-            SystemUnderTest.Publish(new GenericMessage());
+            await SystemUnderTest.Publish(new GenericMessage());
         }
 
         [Then]

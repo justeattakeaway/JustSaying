@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SimpleNotificationService.Model;
 using JustBehave;
@@ -31,12 +32,13 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             DeleteTopicIfItAlreadyExists(_regionEndpoint, _topicName);
         }
 
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.WithSqsTopicSubscriber()
             .IntoQueue(_queueName)
             .ConfigureSubscriptionWith(cfg => cfg.MessageRetentionSeconds = 60)
                 .WithMessageHandler(Substitute.For<IHandlerAsync<Message>>());
+            return Task.FromResult(true);
         }
 
         [Then]

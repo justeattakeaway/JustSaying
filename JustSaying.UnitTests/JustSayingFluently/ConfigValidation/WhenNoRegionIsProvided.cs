@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using JustBehave;
 using NUnit.Framework;
 
@@ -16,11 +17,12 @@ namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
             RecordAnyExceptionsThrown();
         }
 
-        protected override void When()
+        protected override Task When()
         {
             CreateMeABus
                 .InRegion(null)
                 .ConfigurePublisherWith(configuration => { });
+            return Task.FromResult(true);
         }
 
         [Then]

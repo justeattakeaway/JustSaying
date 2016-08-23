@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
@@ -23,11 +24,11 @@ namespace JustSaying.UnitTests.JustSayingBus
                 .Do(x => { throw new TestException("Thrown by test WhenPublishingFails"); });
         }
 
-        protected override void When()
+        protected override async Task When()
         {
             SystemUnderTest.AddMessagePublisher<GenericMessage>(_publisher, string.Empty);
 
-            SystemUnderTest.Publish(new GenericMessage());
+            await SystemUnderTest.Publish(new GenericMessage());
         }
 
         [Then]

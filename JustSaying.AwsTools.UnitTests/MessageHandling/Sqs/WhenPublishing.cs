@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -10,7 +11,7 @@ using NSubstitute;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
 {
-    public class WhenPublishing : BehaviourTest<SqsPublisher>
+    public class WhenPublishing : AsyncBehaviourTest<SqsPublisher>
     {
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
@@ -32,9 +33,9 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
             _serialisationRegister.Serialise(_message, false).Returns("serialized_contents");
         }
 
-        protected override void When()
+        protected override async Task When()
         {
-            SystemUnderTest.Publish(_message);
+            await SystemUnderTest.Publish(_message);
         }
 
         [Then]
