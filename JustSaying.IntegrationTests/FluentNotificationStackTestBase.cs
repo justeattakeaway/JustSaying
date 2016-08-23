@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
@@ -12,7 +13,7 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests
 {
-    public abstract class FluentNotificationStackTestBase : BehaviourTest<JustSaying.JustSayingFluently>
+    public abstract class FluentNotificationStackTestBase : AsyncBehaviourTest<JustSaying.JustSayingFluently>
     {
         private static readonly RegionEndpoint DefaultEndpoint = RegionEndpoint.EUWest1;
         protected static RegionEndpoint TestEndpoint { get; set; }
@@ -57,7 +58,7 @@ namespace JustSaying.IntegrationTests
             notificationStackField.SetValue(fns, NotificationStack);
         }
 
-        protected override void When()
+        protected override Task When()
         {
             throw new NotImplementedException();
         }

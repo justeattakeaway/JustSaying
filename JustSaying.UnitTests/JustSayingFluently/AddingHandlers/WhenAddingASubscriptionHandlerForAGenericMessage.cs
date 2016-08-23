@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
@@ -22,13 +23,14 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         {
         }
 
-        protected override void When()
+        protected override Task When()
         {
             _response = SystemUnderTest
                 .WithSqsTopicSubscriber()
                 .IntoDefaultQueue()
                 .ConfigureSubscriptionWith(cfg => { })
                 .WithMessageHandler(_handler);
+            return Task.FromResult(true);
         }
 
         [Then]

@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
@@ -30,11 +31,12 @@ namespace JustSaying.UnitTests.JustSayingBus
             _subscriber2.Subscribers.Returns(new Collection<ISubscriber> {new Subscriber(typeof (GenericMessage))});
         }
 
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.AddNotificationSubscriber("region1", _subscriber1);
             SystemUnderTest.AddNotificationSubscriber("region1", _subscriber2);
             SystemUnderTest.Start();
+            return Task.FromResult(true);
         }
 
         [Then]

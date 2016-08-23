@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging;
 using NSubstitute;
@@ -18,12 +19,13 @@ namespace JustSaying.UnitTests.JustSayingBus
             _subscriber2.Queue.Returns("queue2");
         }
 
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.AddNotificationSubscriber("region1", _subscriber1);
             SystemUnderTest.AddNotificationSubscriber("region1", _subscriber2);
             SystemUnderTest.Start();
             SystemUnderTest.Stop();
+            return Task.FromResult(true);
         }
 
         [Then]

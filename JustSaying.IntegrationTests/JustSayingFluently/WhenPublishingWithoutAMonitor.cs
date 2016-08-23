@@ -42,7 +42,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
             // When
             _bus.StartListening();
-            _bus.Publish(new GenericMessage());
+            await _bus.Publish(new GenericMessage());
 
             // Teardown
             await doneSignal.Task;

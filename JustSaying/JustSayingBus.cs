@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
@@ -146,10 +147,10 @@ namespace JustSaying
             }
         }
 
-        public void Publish(Message message)
+        public async Task Publish(Message message)
         {
             var publisher = GetActivePublisherForMessage(message);
-            Publish(publisher, message);
+            await Publish(publisher, message);
         }
 
         private IMessagePublisher GetActivePublisherForMessage(Message message)
@@ -176,8 +177,7 @@ namespace JustSaying
             var publishersByTopic = _publishersByRegionAndTopic[activeRegion];
             if (!publishersByTopic.ContainsKey(topic))
             {
-                var errorMessage =
-                    $"Error publishing message, no publishers registered for message type {message} in {activeRegion}.";
+                var errorMessage = $"Error publishing message, no publishers registered for message type {message} in {activeRegion}.";
                 Log.Error(errorMessage);
                 throw new InvalidOperationException(errorMessage);
             }
@@ -185,35 +185,29 @@ namespace JustSaying
             return publishersByTopic[topic];
         }
 
-        private void Publish(IMessagePublisher publisher, Message message, int attemptCount = 0)
+        private async Task Publish(IMessagePublisher publisher, Message message, int attemptCount = 0)
         {
             attemptCount++;
             try
             {
-                var watch = new System.Diagnostics.Stopwatch();
-                watch.Start();
+                var watch = Stopwatch.StartNew();
 
-                publisher.Publish(message);
+                await publisher.Publish(message);
 
                 watch.Stop();
                 Monitor.PublishMessageTime(watch.ElapsedMilliseconds);
             }
             catch (Exception ex)
             {
-                if (Monitor == null)
-                    Log.Error("Publish: Monitor was null - duplicates will occur!");
-
-                if (attemptCount == Config.PublishFailureReAttempts)
+                if (attemptCount >= Config.PublishFailureReAttempts)
                 {
                     Monitor.IssuePublishingMessage();
-
-                    var errorMessage = "Unable to publish message " + message.GetType().Name;
-                    Log.Error(ex, errorMessage);
+                    Log.Error(ex, $"Unable to publish message {message.GetType().Name} after {attemptCount} attempts");
                     throw;
                 }
 
-                Thread.Sleep(Config.PublishFailureBackoffMilliseconds * attemptCount); // ToDo: Increase back off each time (linear)
-                Publish(publisher, message, attemptCount);
+                await Task.Delay(Config.PublishFailureBackoffMilliseconds*attemptCount);
+                await Publish(publisher, message, attemptCount);
             }
       
         }

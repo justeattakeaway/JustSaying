@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialisation;
@@ -24,9 +25,10 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
             DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName);
         }
 
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.WithSnsMessagePublisher<Message>();
+            return Task.FromResult(true);
         }
 
         [Then]

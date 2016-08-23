@@ -1,9 +1,10 @@
-﻿using JustSaying.Models;
+﻿using System.Threading.Tasks;
+using JustSaying.Models;
 
 namespace JustSaying.Messaging
 {
     public interface IMessagePublisher
     {
-        void Publish(Message message);
+        Task Publish(Message message);
     }
 }
