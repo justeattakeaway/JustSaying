@@ -235,7 +235,8 @@ namespace JustSaying
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
 
-            var proposedHandler = handlerResolver.ResolveHandler<T>();
+            var resolutionContext = new HandlerResolutionContext(_subscriptionConfig.QueueName);
+            var proposedHandler = handlerResolver.ResolveHandler<T>(resolutionContext);
 
             if (proposedHandler == null)
             {
@@ -244,7 +245,7 @@ namespace JustSaying
 
             foreach (var region in Bus.Config.Regions)
             {
-                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handlerResolver.ResolveHandler<T>());
+                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handlerResolver.ResolveHandler<T>(resolutionContext));
             }
 
             Log.Info(

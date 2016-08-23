@@ -64,6 +64,7 @@
     <Compile Include="DefaultNamingStrategy.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="HandlerNotRegisteredWithContainerException.cs" />
+    <Compile Include="HandlerResolutionContext.cs" />
     <Compile Include="IHandlerResolver.cs" />
     <Compile Include="IMessagingConfig.cs" />
     <Compile Include="CreateMeABus.cs" />
