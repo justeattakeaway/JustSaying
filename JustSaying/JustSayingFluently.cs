@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
@@ -144,14 +145,14 @@ namespace JustSaying
         /// Publish a message to the stack.
         /// </summary>
         /// <param name="message"></param>
-        public virtual void Publish(Message message)
+        public virtual async Task Publish(Message message)
         {
             if (Bus == null)
             {
                 throw new InvalidOperationException("You must register for message publication before publishing a message");
             }
             
-            Bus.Publish(message);
+            await Bus.Publish(message);
         }
 
         /// <summary>

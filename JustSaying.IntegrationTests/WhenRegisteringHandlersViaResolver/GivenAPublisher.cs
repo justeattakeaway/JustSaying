@@ -23,7 +23,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
         protected override async Task When()
         {
-            Publisher.Publish(new OrderPlaced("1234"));
+            await Publisher.Publish(new OrderPlaced("1234"));
 
             await WaitForDone();
 

@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -19,13 +20,16 @@ namespace JustSaying.AwsTools.MessageHandling
             _serialisationRegister = serialisationRegister;
         }
 
-        public void Publish(Message message)
+        public async Task Publish(Message message)
         {
-            _client.SendMessage(new SendMessageRequest
-            {
-                MessageBody = GetMessageInContext(message),
-                QueueUrl = Url
-            });
+            var request = new SendMessageRequest
+                {
+                    MessageBody = GetMessageInContext(message),
+                    QueueUrl = Url
+                };
+
+            await _client.SendMessageAsync(request)
+                .ConfigureAwait(false);
         }
 
         public string GetMessageInContext(Message message) => _serialisationRegister.Serialise(message, serializeForSnsPublishing: false);

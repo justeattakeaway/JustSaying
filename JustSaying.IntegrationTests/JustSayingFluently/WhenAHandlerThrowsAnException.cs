@@ -49,7 +49,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             // When 
             bus.StartListening();
 
-            bus.Publish(new GenericMessage());
+            await bus.Publish(new GenericMessage());
 
             // Teardown
             await _handler.DoneSignal.Task;

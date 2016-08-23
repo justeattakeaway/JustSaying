@@ -19,7 +19,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
         protected override async Task When()
         {
-            ServiceBus.Publish(new AnotherGenericMessage());
+            await ServiceBus.Publish(new AnotherGenericMessage());
             await _handler.DoneSignal;
         }
 

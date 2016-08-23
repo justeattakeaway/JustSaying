@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using Amazon.SQS;
@@ -44,17 +45,20 @@ namespace JustSaying.AwsTools.MessageHandling
             return false;
         }
 
-        public void Publish(Message message)
+        public async Task Publish(Message message)
         {
             var messageToSend = _serialisationRegister.Serialise(message, serializeForSnsPublishing:true);
             var messageType = message.GetType().Name;
 
-            Client.Publish(new PublishRequest
+            var request = new PublishRequest
                 {
                     Subject = messageType,
                     Message = messageToSend,
                     TopicArn = Arn
-                });
+                };
+
+            await Client.PublishAsync(request)
+                .ConfigureAwait(false);
 
             EventLog.Info($"Published message: '{messageType}' with content {messageToSend}");
         }

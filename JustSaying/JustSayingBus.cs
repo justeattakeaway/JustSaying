@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
@@ -146,10 +147,10 @@ namespace JustSaying
             }
         }
 
-        public void Publish(Message message)
+        public async Task Publish(Message message)
         {
             var publisher = GetActivePublisherForMessage(message);
-            Publish(publisher, message);
+            await Publish(publisher, message);
         }
 
         private IMessagePublisher GetActivePublisherForMessage(Message message)
@@ -185,7 +186,7 @@ namespace JustSaying
             return publishersByTopic[topic];
         }
 
-        private void Publish(IMessagePublisher publisher, Message message, int attemptCount = 0)
+        private async Task Publish(IMessagePublisher publisher, Message message, int attemptCount = 0)
         {
             attemptCount++;
             try
@@ -193,27 +194,25 @@ namespace JustSaying
                 var watch = new System.Diagnostics.Stopwatch();
                 watch.Start();
 
-                publisher.Publish(message);
+                await publisher.Publish(message);
 
                 watch.Stop();
                 Monitor.PublishMessageTime(watch.ElapsedMilliseconds);
             }
             catch (Exception ex)
             {
-                if (Monitor == null)
-                    Log.Error("Publish: Monitor was null - duplicates will occur!");
-
-                if (attemptCount == Config.PublishFailureReAttempts)
+                if (attemptCount >= Config.PublishFailureReAttempts)
                 {
                     Monitor.IssuePublishingMessage();
 
+                    // todo: log the raw text of the failed message
                     var errorMessage = "Unable to publish message " + message.GetType().Name;
                     Log.Error(ex, errorMessage);
                     throw;
                 }
 
-                Thread.Sleep(Config.PublishFailureBackoffMilliseconds * attemptCount); // ToDo: Increase back off each time (linear)
-                Publish(publisher, message, attemptCount);
+                await Task.Delay(Config.PublishFailureBackoffMilliseconds*attemptCount);
+                await Publish(publisher, message, attemptCount);
             }
       
         }
