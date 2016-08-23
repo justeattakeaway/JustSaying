@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Extensions;
 using JustSaying.Messaging;
@@ -177,8 +177,7 @@ namespace JustSaying
             var publishersByTopic = _publishersByRegionAndTopic[activeRegion];
             if (!publishersByTopic.ContainsKey(topic))
             {
-                var errorMessage =
-                    $"Error publishing message, no publishers registered for message type {message} in {activeRegion}.";
+                var errorMessage = $"Error publishing message, no publishers registered for message type {message} in {activeRegion}.";
                 Log.Error(errorMessage);
                 throw new InvalidOperationException(errorMessage);
             }
@@ -191,8 +190,7 @@ namespace JustSaying
             attemptCount++;
             try
             {
-                var watch = new System.Diagnostics.Stopwatch();
-                watch.Start();
+                var watch = Stopwatch.StartNew();
 
                 await publisher.Publish(message);
 
@@ -204,10 +202,7 @@ namespace JustSaying
                 if (attemptCount >= Config.PublishFailureReAttempts)
                 {
                     Monitor.IssuePublishingMessage();
-
-                    // todo: log the raw text of the failed message
-                    var errorMessage = "Unable to publish message " + message.GetType().Name;
-                    Log.Error(ex, errorMessage);
+                    Log.Error(ex, $"Unable to publish message {message.GetType().Name} after {attemptCount} attempts");
                     throw;
                 }
 
