@@ -73,6 +73,7 @@
     <Compile Include="MessageHandling\LocalTopicArnProvider.cs" />
     <Compile Include="MessageHandling\MessageDispatcher.cs" />
     <Compile Include="MessageHandling\MessageHandlerWrapper.cs" />
+    <Compile Include="MessageHandling\PublishException.cs" />
     <Compile Include="MessageHandling\SnsPolicy.cs" />
     <Compile Include="MessageHandling\SqsPolicy.cs" />
     <Compile Include="QueueCreation\AmazonQueueCreator.cs" />

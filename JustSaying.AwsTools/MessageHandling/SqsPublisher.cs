@@ -1,3 +1,4 @@
+using System;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -21,11 +22,22 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public void Publish(Message message)
         {
-            _client.SendMessage(new SendMessageRequest
+            var request = new SendMessageRequest
+                {
+                    MessageBody = GetMessageInContext(message),
+                    QueueUrl = Url
+                };
+
+            try
             {
-                MessageBody = GetMessageInContext(message),
-                QueueUrl = Url
-            });
+                _client.SendMessage(request);
+            }
+            catch (Exception ex)
+            {
+                throw new PublishException(
+                    $"Failed to publish message to SQS. QueueUrl: {request.QueueUrl} MessageBody: {request.MessageBody}",
+                    ex);
+            }
         }
 
         public string GetMessageInContext(Message message) => _serialisationRegister.Serialise(message, serializeForSnsPublishing: false);
