@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
@@ -57,10 +58,18 @@ namespace JustSaying.AwsTools.MessageHandling
                     TopicArn = Arn
                 };
 
-            await Client.PublishAsync(request)
-                .ConfigureAwait(false);
+            try
+            {
+                await Client.PublishAsync(request)
+                    .ConfigureAwait(false);
 
-            EventLog.Info($"Published message: '{messageType}' with content {messageToSend}");
+                EventLog.Info($"Published message: '{messageType}' with content {messageToSend}");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to publish message to SNS.TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}", ex);
+            }
+
         }
     }
 }

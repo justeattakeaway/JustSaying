@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
@@ -28,8 +29,15 @@ namespace JustSaying.AwsTools.MessageHandling
                     QueueUrl = Url
                 };
 
-            await _client.SendMessageAsync(request)
-                .ConfigureAwait(false);
+            try
+            {
+                await _client.SendMessageAsync(request)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to publish message to SQS. QueueUrl: {request.QueueUrl} MessageBody: {request.MessageBody}", ex);
+            }
         }
 
         public string GetMessageInContext(Message message) => _serialisationRegister.Serialise(message, serializeForSnsPublishing: false);
