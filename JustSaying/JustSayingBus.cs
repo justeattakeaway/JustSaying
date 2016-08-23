@@ -208,10 +208,11 @@ namespace JustSaying
                 if (attemptCount >= Config.PublishFailureReAttempts)
                 {
                     Monitor.IssuePublishingMessage();
-                    Log.Error(ex, $"Unable to publish message {message.GetType().Name} after {attemptCount} attempts");
+                    Log.Error(ex, $"Failed to publish message {message.GetType().Name}. Halting after attempt {attemptCount}");
                     throw;
                 }
 
+                Log.Warn(ex, $"Failed to publish message {message.GetType().Name}. Retrying after attempt {attemptCount} of {Config.PublishFailureReAttempts}");
                 Thread.Sleep(Config.PublishFailureBackoffMilliseconds * attemptCount);
                 Publish(publisher, message, attemptCount);
             }
