@@ -30,7 +30,9 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                _client.SendMessage(request);
+                // todo make this async
+                _client.SendMessageAsync(request)
+                    .GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {

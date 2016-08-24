@@ -24,7 +24,10 @@ namespace JustSaying.AwsTools.QueueCreation
                 var sqsClient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
                 var snsClient = _awsClientFactory.GetAwsClientFactory().GetSnsClient(regionEndpoint);
                 var arnProvider = new ForeignTopicArnProvider(regionEndpoint, queueConfig.TopicSourceAccount, queueConfig.PublishEndpoint);
-                snsClient.SubscribeQueue(arnProvider.GetArn(), sqsClient, queue.Url);
+
+                // todo make async
+                snsClient.SubscribeQueueAsync(arnProvider.GetArn(), sqsClient, queue.Url)
+                    .GetAwaiter().GetResult();
             }
             else
             {

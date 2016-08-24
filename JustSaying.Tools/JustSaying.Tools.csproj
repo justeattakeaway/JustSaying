@@ -77,12 +77,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj">
-      <Project>{CBF2110B-C3A4-45E8-BBD6-301D77567043}</Project>
-      <Name>JustSaying.AwsTools</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Analyzer Include="..\packages\AWSSDK.SimpleNotificationService.3.1.1.2\analyzers\dotnet\cs\AWSSDK.SimpleNotificationService.CodeAnalysis.dll" />
     <Analyzer Include="..\packages\AWSSDK.SQS.3.1.0.13\analyzers\dotnet\cs\AWSSDK.SQS.CodeAnalysis.dll" />
   </ItemGroup>

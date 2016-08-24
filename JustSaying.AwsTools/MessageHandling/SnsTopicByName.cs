@@ -25,7 +25,8 @@ namespace JustSaying.AwsTools.MessageHandling
                 return true;
 
             Log.Info($"Checking if topic '{TopicName}' exists");
-            var topic = Client.FindTopic(TopicName);
+            var topic = Client.FindTopicAsync(TopicName)
+                .GetAwaiter().GetResult();
 
             if (topic != null)
             {
@@ -38,7 +39,10 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public bool Create()
         {
-            var response = Client.CreateTopic(new CreateTopicRequest(TopicName));
+            // todo make this async
+            var response = Client.CreateTopicAsync(new CreateTopicRequest(TopicName))
+                .GetAwaiter().GetResult();
+
             if (!string.IsNullOrEmpty(response.TopicArn))
             {
                 Arn = response.TopicArn;

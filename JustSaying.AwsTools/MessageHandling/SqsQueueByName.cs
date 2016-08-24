@@ -53,7 +53,11 @@ namespace JustSaying.AwsTools.MessageHandling
                             {JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY, requestedRedrivePolicy.ToString()}
                         }
                 };
-                var response = Client.SetQueueAttributes(request);
+
+                // todo make this async
+                var response = Client.SetQueueAttributesAsync(request)
+                    .GetAwaiter().GetResult();
+
                 if (response.HttpStatusCode == HttpStatusCode.OK)
                 {
                     RedrivePolicy = requestedRedrivePolicy;

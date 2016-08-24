@@ -42,7 +42,10 @@ namespace JustSaying.AwsTools
                     }
                 }
             };
-            var response = Client.SetQueueAttributes(request);
+
+            // todo make anync
+            var response = Client.SetQueueAttributesAsync(request)
+                .GetAwaiter().GetResult();
 
             if (response.HttpStatusCode == HttpStatusCode.OK)
             {

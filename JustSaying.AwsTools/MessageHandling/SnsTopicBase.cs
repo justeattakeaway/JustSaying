@@ -27,15 +27,19 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public bool IsSubscribed(SqsQueueBase queue)
         {
-            var result = Client.ListSubscriptionsByTopic(new ListSubscriptionsByTopicRequest(Arn));
-            
+            // todo make async
+            var result = Client.ListSubscriptionsByTopicAsync(new ListSubscriptionsByTopicRequest(Arn))
+                .GetAwaiter().GetResult();
+
             return result.Subscriptions.Any(x => !string.IsNullOrEmpty(x.SubscriptionArn) && x.Endpoint == queue.Arn);
         }
 
         public bool Subscribe(IAmazonSQS amazonSqsClient, SqsQueueBase queue)
         {
-            var subscriptionResponse = Client.Subscribe(Arn, "sqs", queue.Arn);
-            
+            // todo make async
+            var subscriptionResponse = Client.SubscribeAsync(Arn, "sqs", queue.Arn)
+                .GetAwaiter().GetResult();
+
             if (!string.IsNullOrEmpty(subscriptionResponse?.SubscriptionArn))
             {
                 return true;
@@ -58,7 +62,10 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                Client.Publish(request);
+                // todo make this async
+                Client.PublishAsync(request)
+                    .GetAwaiter().GetResult();
+
                 EventLog.Info($"Published message: '{messageType}' with content {messageToSend}");
             }
             catch (Exception ex)

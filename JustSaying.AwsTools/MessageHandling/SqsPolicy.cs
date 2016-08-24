@@ -32,14 +32,16 @@ namespace JustSaying.AwsTools.MessageHandling
                 Attributes = {["Policy"] = sqsPolicy.ToJson()}
             };
 
-            client.SetQueueAttributes(setQueueAttributesRequest);
+            // todo make this async
+            client.SetQueueAttributesAsync(setQueueAttributesRequest)
+                .GetAwaiter().GetResult();
         }
 
         public override string ToString() => _policy;
 
         private static string CreateTopicArnWildcard(string topicArn)
         {
-            var index = topicArn.LastIndexOf(":", StringComparison.InvariantCultureIgnoreCase);
+            var index = topicArn.LastIndexOf(":", StringComparison.OrdinalIgnoreCase);
             if (index > 0)
                 topicArn = topicArn.Substring(0, index + 1);
             return topicArn + "*";

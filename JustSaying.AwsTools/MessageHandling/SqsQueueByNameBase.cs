@@ -22,7 +22,10 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public override bool Exists()
         {
-            var result = Client.ListQueues(new ListQueuesRequest{ QueueNamePrefix = QueueName });
+            // todo make this async
+            var result = Client.ListQueuesAsync(new ListQueuesRequest{ QueueNamePrefix = QueueName })
+                .GetAwaiter().GetResult();
+
             Log.Info($"Checking if queue '{QueueName}' exists");
             Url = result.QueueUrls.SingleOrDefault(x => Matches(x, QueueName));
 
@@ -36,16 +39,18 @@ namespace JustSaying.AwsTools.MessageHandling
         }
 
         private static bool Matches(string queueUrl, string queueName)
-            => queueUrl.Substring(queueUrl.LastIndexOf("/", StringComparison.InvariantCulture) + 1)
-                .Equals(queueName, StringComparison.InvariantCultureIgnoreCase);
+            => queueUrl.Substring(queueUrl.LastIndexOf("/", StringComparison.Ordinal) + 1)
+                .Equals(queueName, StringComparison.OrdinalIgnoreCase);
 
         public virtual bool Create(SqsBasicConfiguration queueConfig, int attempt = 0)
         {
             try
             {
-                var result = Client.CreateQueue(new CreateQueueRequest{
+                // todo make this async
+                var result = Client.CreateQueueAsync(new CreateQueueRequest{
                     QueueName = QueueName,
-                    Attributes = GetCreateQueueAttributes(queueConfig)});
+                    Attributes = GetCreateQueueAttributes(queueConfig)})
+                    .GetAwaiter().GetResult();
 
                 if (!string.IsNullOrWhiteSpace(result.QueueUrl))
                 {

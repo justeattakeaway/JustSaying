@@ -106,10 +106,6 @@
       <Project>{899cd315-37b3-46d0-b2dc-fb94c552d968}</Project>
       <Name>JustSaying.Messaging</Name>
     </ProjectReference>
-    <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj">
-      <Project>{a9fd2bac-5b4b-4408-9253-16813bc87727}</Project>
-      <Name>JustSaying.Models</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\AWSSDK.SimpleNotificationService.3.1.1.2\analyzers\dotnet\cs\AWSSDK.SimpleNotificationService.CodeAnalysis.dll" />

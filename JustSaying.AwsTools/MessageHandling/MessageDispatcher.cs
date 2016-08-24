@@ -112,7 +112,10 @@ namespace JustSaying.AwsTools.MessageHandling
                 QueueUrl = _queue.Url,
                 ReceiptHandle = receiptHandle
             };
-            _queue.Client.DeleteMessage(deleteRequest);
+
+            // todo make this async
+            _queue.Client.DeleteMessageAsync(deleteRequest)
+                .GetAwaiter().GetResult();
         }
     }
 }

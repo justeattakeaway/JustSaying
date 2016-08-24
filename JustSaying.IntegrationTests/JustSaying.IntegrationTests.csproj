@@ -134,25 +134,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj">
-      <Project>{cbf2110b-c3a4-45e8-bbd6-301d77567043}</Project>
-      <Name>JustSaying.AwsTools</Name>
-    </ProjectReference>
     <ProjectReference Include="..\JustSaying.Messaging\JustSaying.Messaging.csproj">
       <Project>{899CD315-37B3-46D0-B2DC-FB94C552D968}</Project>
       <Name>JustSaying.Messaging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj">
-      <Project>{a9fd2bac-5b4b-4408-9253-16813bc87727}</Project>
-      <Name>JustSaying.Models</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\JustSaying.TestingFramework\JustSaying.TestingFramework.csproj">
-      <Project>{78E23D08-913E-491F-87AF-ADE5AA007F9A}</Project>
-      <Name>JustSaying.TestingFramework</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\JustSaying\JustSaying.csproj">
-      <Project>{3b428f71-9aef-4e46-8d56-644fc0e808d4}</Project>
-      <Name>JustSaying</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -43,7 +43,9 @@ namespace JustSaying.AwsTools.MessageHandling
                 return;
             }
 
-            Client.DeleteQueue(new DeleteQueueRequest { QueueUrl = Url });
+            // todo make this async
+            Client.DeleteQueueAsync(new DeleteQueueRequest {QueueUrl = Url})
+                .GetAwaiter().GetResult();
             
             Arn = null;
             Url = null;
@@ -74,8 +76,10 @@ namespace JustSaying.AwsTools.MessageHandling
                 QueueUrl = Url,
                 AttributeNames = new List<string>(attrKeys)
             };
-            
-            var result = Client.GetQueueAttributes(request);
+
+            // todo make this async
+            var result = Client.GetQueueAttributesAsync(request)
+                .GetAwaiter().GetResult();
 
             return result;
         }
@@ -97,7 +101,10 @@ namespace JustSaying.AwsTools.MessageHandling
                         {JustSayingConstants.ATTRIBUTE_DELIVERY_DELAY, queueConfig.DeliveryDelaySeconds.ToString()}
                     }
                 };
-                var response = Client.SetQueueAttributes(request);
+
+                // todo make this async
+                var response = Client.SetQueueAttributesAsync(request)
+                    .GetAwaiter().GetResult();
                 if (response.HttpStatusCode == HttpStatusCode.OK)
                 {
                     MessageRetentionPeriod = queueConfig.MessageRetentionSeconds;

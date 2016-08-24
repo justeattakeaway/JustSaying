@@ -15,7 +15,10 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public override bool Exists()
         {
-            var result = Client.ListQueues(new ListQueuesRequest());
+            // todo make async
+            var result = Client.ListQueuesAsync(new ListQueuesRequest())
+                .GetAwaiter().GetResult();
+
             if (result.QueueUrls.Any(x => x == Url))
             {
                 SetQueueProperties();
