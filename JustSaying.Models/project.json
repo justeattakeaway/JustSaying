@@ -40,11 +40,13 @@
 		"netstandard13": {
 			"dependencies": {
 				"NETStandard.Library": "1.6.0",
-        "System.Linq": "4.1.0",
-        "System.Threading.ThreadPool":  "4.0.10", 
+				"System.Linq": "4.1.0",
+				"System.Threading.ThreadPool":  "4.0.10", 
 				"System.Net.NetworkInformation": "4.1.0",
 				"System.Net.WebHeaderCollection": "4.0.1"
 			}
-		}
-	}
+		},
+		"net451": {
+			"dependencies": {}
+			}	}
 }

@@ -51,6 +51,9 @@
 				"System.Net.NetworkInformation": "4.1.0",
 				"System.Net.WebHeaderCollection": "4.0.1"
 			}
+		},
+		"net451": {
+			"dependencies": {}
+			}	
 		}
-	}
 }
