@@ -41,9 +41,18 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private static string CreateTopicArnWildcard(string topicArn)
         {
+            if (string.IsNullOrWhiteSpace(topicArn))
+            {
+                // todo should not get here?
+                return "*";
+            }
+
             var index = topicArn.LastIndexOf(":", StringComparison.OrdinalIgnoreCase);
             if (index > 0)
+            {
                 topicArn = topicArn.Substring(0, index + 1);
+            }
+
             return topicArn + "*";
         }
     }

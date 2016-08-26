@@ -52,7 +52,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     Attributes = GetCreateQueueAttributes(queueConfig)})
                     .GetAwaiter().GetResult();
 
-                if (!string.IsNullOrWhiteSpace(result.QueueUrl))
+                if (!string.IsNullOrWhiteSpace(result?.QueueUrl))
                 {
                     Url = result.QueueUrl;
                     SetQueueProperties();

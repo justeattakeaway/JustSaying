@@ -58,7 +58,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 var response = Client.SetQueueAttributesAsync(request)
                     .GetAwaiter().GetResult();
 
-                if (response.HttpStatusCode == HttpStatusCode.OK)
+                if (response?.HttpStatusCode == HttpStatusCode.OK)
                 {
                     RedrivePolicy = requestedRedrivePolicy;
                 }
@@ -91,6 +91,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     ErrorQueue.UpdateQueueAttribute(errorQueueConfig);
                 }
+
                 UpdateRedrivePolicy(new RedrivePolicy(queueConfig.RetryCountBeforeSendingToErrorQueue, ErrorQueue.Arn));
             }
         }

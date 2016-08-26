@@ -21,8 +21,10 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public override bool Exists()
         {
-            if (string.IsNullOrWhiteSpace(Arn) == false)
+            if (! string.IsNullOrWhiteSpace(Arn))
+            {
                 return true;
+            }
 
             Log.Info($"Checking if topic '{TopicName}' exists");
             var topic = Client.FindTopicAsync(TopicName)
@@ -43,7 +45,7 @@ namespace JustSaying.AwsTools.MessageHandling
             var response = Client.CreateTopicAsync(new CreateTopicRequest(TopicName))
                 .GetAwaiter().GetResult();
 
-            if (!string.IsNullOrEmpty(response.TopicArn))
+            if (!string.IsNullOrEmpty(response?.TopicArn))
             {
                 Arn = response.TopicArn;
                 Log.Info($"Created Topic: {TopicName} on Arn: {Arn}");
