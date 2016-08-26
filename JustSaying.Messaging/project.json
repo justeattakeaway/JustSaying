@@ -1,20 +1,19 @@
 {
-	"version": "1.0.0",
+	"version": "5.0.0",
 	"authors": ["JUST EAT plc"],
 	"copyright": "JUST EAT plc",
 	"title": "JustSaying",
-	"description": "JustSaying",
+	"description": "A light-weight message bus on top of AWS SNS and SQS",
 	"buildOptions": {
-		"warningsAsErrors": false,
+		"warningsAsErrors": true,
 		"platform": "anycpu",
 		"languageVersion": "csharp6",
 		"debugType": "portable"
 	},
 	"packOptions": {
 		"owners": ["JUST EAT plc"],
-		"summary": "SNS Messaging",
-		"tags": ["sns",
-		],
+		"summary": "SNS and SQS Messaging",
+		"tags": [ "aws", "sns", "sqs" ],
 		"repository": {
 			"type": "git",
 			"url": "https://github.com/justeat/JustSaying.git"
@@ -34,7 +33,7 @@
 		}
 	},
   "dependencies": {
-    "JustSaying.Models": "1.0.0",
+    "JustSaying.Models": "5.0.0",
     "Newtonsoft.Json": "9.0.1"
   },
 	"frameworks": {
