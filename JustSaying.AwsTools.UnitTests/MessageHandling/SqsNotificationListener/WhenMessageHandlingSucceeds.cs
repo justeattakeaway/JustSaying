@@ -27,7 +27,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         [Then]
         public void AllMessagesAreClearedFromQueue()
         {
-            Sqs.Received(2).DeleteMessage(Arg.Any<DeleteMessageRequest>());
+            Sqs.Received(2).DeleteMessageAsync(Arg.Any<DeleteMessageRequest>());
         }
 
         [Then]

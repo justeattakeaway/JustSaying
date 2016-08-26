@@ -8,7 +8,7 @@ namespace JustSaying.UnitTests.JustSayingBus
     public class WhenPublishingMessages : GivenAServiceBus
     {
         private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
-        
+
         protected override void When()
         {
             SystemUnderTest.AddMessagePublisher<GenericMessage>(_publisher, string.Empty);

@@ -27,7 +27,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 .GetAwaiter().GetResult();
 
             Log.Info($"Checking if queue '{QueueName}' exists");
-            Url = result.QueueUrls.SingleOrDefault(x => Matches(x, QueueName));
+            Url = result?.QueueUrls?.SingleOrDefault(x => Matches(x, QueueName));
 
             if (Url != null)
             {
