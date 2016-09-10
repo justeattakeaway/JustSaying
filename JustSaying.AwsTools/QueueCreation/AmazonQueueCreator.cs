@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Amazon;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
@@ -15,7 +16,14 @@ namespace JustSaying.AwsTools.QueueCreation
             _awsClientFactory = awsClientFactory;
         }
 
-        public SqsQueueByName EnsureTopicExistsWithQueueSubscribed(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
+        public SqsQueueByName EnsureTopicExistsWithQueueSubscribed(string region,
+            IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
+        {
+            return EnsureTopicExistsWithQueueSubscribedAsync(region, serialisationRegister, queueConfig)
+                  .GetAwaiter().GetResult();
+        }
+
+        public async Task<SqsQueueByName> EnsureTopicExistsWithQueueSubscribedAsync(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
         {
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);
             var queue = EnsureQueueExists(region, queueConfig);
@@ -25,9 +33,7 @@ namespace JustSaying.AwsTools.QueueCreation
                 var snsClient = _awsClientFactory.GetAwsClientFactory().GetSnsClient(regionEndpoint);
                 var arnProvider = new ForeignTopicArnProvider(regionEndpoint, queueConfig.TopicSourceAccount, queueConfig.PublishEndpoint);
 
-                // todo make async
-                snsClient.SubscribeQueueAsync(arnProvider.GetArn(), sqsClient, queue.Url)
-                    .GetAwaiter().GetResult();
+                await snsClient.SubscribeQueueAsync(arnProvider.GetArn(), sqsClient, queue.Url);
             }
             else
             {
@@ -35,7 +41,7 @@ namespace JustSaying.AwsTools.QueueCreation
                 EnsureQueueIsSubscribedToTopic(regionEndpoint, eventTopic, queue);
 
                 var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
-                SqsPolicy.Save(eventTopic.Arn, queue.Arn, queue.Url, sqsclient);
+                await SqsPolicy.SaveAsync(eventTopic.Arn, queue.Arn, queue.Url, sqsclient);
             }
 
             return queue;
@@ -57,7 +63,7 @@ namespace JustSaying.AwsTools.QueueCreation
             }
             queue = new SqsQueueByName(regionEndpoint, queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue);
             queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdated(queueConfig);
-            
+
             _queueCache.AddToCache(region, queue.QueueName, queue);
             return queue;
         }

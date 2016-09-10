@@ -44,7 +44,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 Log.Trace(
                     $"Didn't handle message [{message.Body ?? string.Empty}]. No serialiser setup");
-                DeleteMessageFromQueue(message.ReceiptHandle);
+                await DeleteMessageFromQueue(message.ReceiptHandle);
                 _onError(ex, message);
                 return;
             }
@@ -68,7 +68,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 if (handlingSucceeded)
                 {
-                    DeleteMessageFromQueue(message.ReceiptHandle);
+                    await DeleteMessageFromQueue(message.ReceiptHandle);
                 }
             }
             catch (Exception ex)
@@ -105,7 +105,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return handlerSucceeded;
         }
 
-        private void DeleteMessageFromQueue(string receiptHandle)
+        private async Task DeleteMessageFromQueue(string receiptHandle)
         {
             var deleteRequest = new DeleteMessageRequest
             {
@@ -113,9 +113,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 ReceiptHandle = receiptHandle
             };
 
-            // todo make this async
-            _queue.Client.DeleteMessageAsync(deleteRequest)
-                .GetAwaiter().GetResult();
+            await _queue.Client.DeleteMessageAsync(deleteRequest);
         }
     }
 }

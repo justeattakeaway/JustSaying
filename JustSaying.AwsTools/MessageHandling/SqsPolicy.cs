@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Amazon.Auth.AccessControlPolicy;
 using Amazon.Auth.AccessControlPolicy.ActionIdentifiers;
 using Amazon.SQS;
@@ -14,8 +15,13 @@ namespace JustSaying.AwsTools.MessageHandling
             _policy = policy;
         }
 
-
         public static void Save(string sourceArn, string queueArn, string queueUrl, IAmazonSQS client)
+        {
+            SaveAsync(sourceArn, queueArn, queueUrl, client)
+                .GetAwaiter().GetResult();
+        }
+
+        public static async Task SaveAsync(string sourceArn, string queueArn, string queueUrl, IAmazonSQS client)
         {
             var topicArnWildcard = CreateTopicArnWildcard(sourceArn);
             ActionIdentifier[] actions = { SQSActionIdentifiers.SendMessage };
@@ -29,13 +35,12 @@ namespace JustSaying.AwsTools.MessageHandling
             var setQueueAttributesRequest = new SetQueueAttributesRequest
             {
                 QueueUrl = queueUrl,
-                Attributes = {["Policy"] = sqsPolicy.ToJson()}
+                Attributes = { ["Policy"] = sqsPolicy.ToJson() }
             };
 
-            // todo make this async
-            client.SetQueueAttributesAsync(setQueueAttributesRequest)
-                .GetAwaiter().GetResult();
+            await client.SetQueueAttributesAsync(setQueueAttributesRequest);
         }
+
 
         public override string ToString() => _policy;
 

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using Amazon.SQS;
@@ -51,7 +52,13 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public void Publish(Message message)
         {
-            var messageToSend = _serialisationRegister.Serialise(message, serializeForSnsPublishing:true);
+            PublishAsync(message)
+                .GetAwaiter().GetResult();
+        }
+
+        private async Task PublishAsync(Message message)
+        {
+            var messageToSend = _serialisationRegister.Serialise(message, serializeForSnsPublishing: true);
             var messageType = message.GetType().Name;
             var request = new PublishRequest
                 {
@@ -62,18 +69,16 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                // todo make this async
-                Client.PublishAsync(request)
-                    .GetAwaiter().GetResult();
-
+                await Client.PublishAsync(request);
                 EventLog.Info($"Published message: '{messageType}' with content {messageToSend}");
             }
             catch (Exception ex)
             {
                 throw new PublishException(
-                    $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}", 
+                    $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}",
                     ex);
             }
+
         }
     }
 }

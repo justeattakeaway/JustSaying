@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.Messaging.MessageSerialisation;
@@ -41,9 +42,13 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public bool Create()
         {
-            // todo make this async
-            var response = Client.CreateTopicAsync(new CreateTopicRequest(TopicName))
+            return CreateAsync()
                 .GetAwaiter().GetResult();
+        }
+
+        private async Task<bool> CreateAsync()
+        {
+            var response = await Client.CreateTopicAsync(new CreateTopicRequest(TopicName));
 
             if (!string.IsNullOrEmpty(response?.TopicArn))
             {
@@ -55,6 +60,7 @@ namespace JustSaying.AwsTools.MessageHandling
             Log.Info($"Failed to create Topic: {TopicName}");
             return false;
         }
+
 
         public void EnsurePolicyIsUpdated(IReadOnlyCollection<string> config)
         {

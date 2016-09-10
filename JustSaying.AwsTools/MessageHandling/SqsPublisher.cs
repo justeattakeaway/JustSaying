@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -22,17 +23,21 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public void Publish(Message message)
         {
+            PublishAsync(message)
+                .GetAwaiter().GetResult();
+        }
+
+        private async Task PublishAsync(Message message)
+        {
             var request = new SendMessageRequest
-                {
-                    MessageBody = GetMessageInContext(message),
-                    QueueUrl = Url
-                };
+            {
+                MessageBody = GetMessageInContext(message),
+                QueueUrl = Url
+            };
 
             try
             {
-                // todo make this async
-                _client.SendMessageAsync(request)
-                    .GetAwaiter().GetResult();
+                await _client.SendMessageAsync(request);
             }
             catch (Exception ex)
             {
