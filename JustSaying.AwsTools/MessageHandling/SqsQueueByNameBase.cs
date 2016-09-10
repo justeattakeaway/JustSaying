@@ -74,7 +74,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     Log.Info(
                         $"Waiting to create Queue due to AWS time restriction - Queue: {QueueName}, AttemptCount: {attempt + 1}");
                     await Task.Delay(60000);
-                    await CreateAsync(queueConfig, attempt: attempt++);
+                    await CreateAsync(queueConfig, attempt + 1);
                 }
                 else
                 {
