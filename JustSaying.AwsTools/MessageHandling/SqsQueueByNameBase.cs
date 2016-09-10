@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -42,15 +43,19 @@ namespace JustSaying.AwsTools.MessageHandling
             => queueUrl.Substring(queueUrl.LastIndexOf("/", StringComparison.Ordinal) + 1)
                 .Equals(queueName, StringComparison.OrdinalIgnoreCase);
 
-        public virtual bool Create(SqsBasicConfiguration queueConfig, int attempt = 0)
+        public bool Create(SqsBasicConfiguration queueConfig, int attempt = 0)
+        {
+            return CreateAsync(queueConfig, attempt)
+                .GetAwaiter().GetResult();
+        }
+
+        public virtual async Task<bool> CreateAsync(SqsBasicConfiguration queueConfig, int attempt = 0)
         {
             try
             {
-                // todo make this async
-                var result = Client.CreateQueueAsync(new CreateQueueRequest{
+                var result = await Client.CreateQueueAsync(new CreateQueueRequest{
                     QueueName = QueueName,
-                    Attributes = GetCreateQueueAttributes(queueConfig)})
-                    .GetAwaiter().GetResult();
+                    Attributes = GetCreateQueueAttributes(queueConfig)});
 
                 if (!string.IsNullOrWhiteSpace(result?.QueueUrl))
                 {
@@ -68,8 +73,8 @@ namespace JustSaying.AwsTools.MessageHandling
                     // Ensure we wait for queue delete timeout to expire.
                     Log.Info(
                         $"Waiting to create Queue due to AWS time restriction - Queue: {QueueName}, AttemptCount: {attempt + 1}");
-                    Thread.Sleep(60000);
-                    Create(queueConfig, attempt: attempt++);
+                    await Task.Delay(60000);
+                    await CreateAsync(queueConfig, attempt: attempt++);
                 }
                 else
                 {

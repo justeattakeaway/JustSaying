@@ -46,7 +46,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 .GetAwaiter().GetResult();
         }
 
-        private async Task<bool> CreateAsync()
+        public async Task<bool> CreateAsync()
         {
             var response = await Client.CreateTopicAsync(new CreateTopicRequest(TopicName));
 

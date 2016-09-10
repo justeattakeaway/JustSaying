@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -23,8 +24,6 @@ namespace JustSaying.AwsTools.MessageHandling
         public string Policy { get; private set; }
 
 
-        private static readonly Logger Log = LogManager.GetLogger("JustSaying");
-
         protected SqsQueueBase(RegionEndpoint region, IAmazonSQS client)
         {
             Region = region;
@@ -33,7 +32,14 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public abstract bool Exists();
 
-        public virtual void Delete()
+        public void Delete()
+        {
+            DeleteAsync()
+                .GetAwaiter().GetResult();
+        }
+
+
+        public virtual async Task DeleteAsync()
         {
             Arn = null;
             Url = null;
@@ -43,10 +49,8 @@ namespace JustSaying.AwsTools.MessageHandling
                 return;
             }
 
-            // todo make this async
-            Client.DeleteQueueAsync(new DeleteQueueRequest {QueueUrl = Url})
-                .GetAwaiter().GetResult();
-            
+            await Client.DeleteQueueAsync(new DeleteQueueRequest {QueueUrl = Url});
+
             Arn = null;
             Url = null;
         }
@@ -55,7 +59,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             var attributes = GetAttrs(new[]
             {
-                JustSayingConstants.ATTRIBUTE_ARN, 
+                JustSayingConstants.ATTRIBUTE_ARN,
                 JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY,
                 JustSayingConstants.ATTRIBUTE_POLICY,
                 JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD,
@@ -72,19 +76,21 @@ namespace JustSaying.AwsTools.MessageHandling
 
         protected GetQueueAttributesResponse GetAttrs(IEnumerable<string> attrKeys)
         {
-            var request = new GetQueueAttributesRequest { 
+            return GetAttrsAsync(attrKeys)
+                .GetAwaiter().GetResult();
+        }
+
+        protected async Task<GetQueueAttributesResponse> GetAttrsAsync(IEnumerable<string> attrKeys)
+        {
+            var request = new GetQueueAttributesRequest {
                 QueueUrl = Url,
                 AttributeNames = new List<string>(attrKeys)
             };
 
-            // todo make this async
-            var result = Client.GetQueueAttributesAsync(request)
-                .GetAwaiter().GetResult();
-
-            return result;
+            return await Client.GetQueueAttributesAsync(request);
         }
 
-        protected internal virtual void UpdateQueueAttribute(SqsBasicConfiguration queueConfig)
+        protected internal virtual async Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig)
         {
             if (QueueNeedsUpdating(queueConfig))
             {
@@ -102,9 +108,8 @@ namespace JustSaying.AwsTools.MessageHandling
                     }
                 };
 
-                // todo make this async
-                var response = Client.SetQueueAttributesAsync(request)
-                    .GetAwaiter().GetResult();
+                var response = await Client.SetQueueAttributesAsync(request);
+
                 if (response.HttpStatusCode == HttpStatusCode.OK)
                 {
                     MessageRetentionPeriod = queueConfig.MessageRetentionSeconds;

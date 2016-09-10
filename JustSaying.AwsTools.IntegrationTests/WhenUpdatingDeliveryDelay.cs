@@ -20,7 +20,9 @@ namespace JustSaying.AwsTools.IntegrationTests
         {
             SystemUnderTest.Create(new SqsBasicConfiguration { DeliveryDelaySeconds = _oldDeliveryDelay });
 
-            SystemUnderTest.UpdateQueueAttribute(new SqsBasicConfiguration { DeliveryDelaySeconds = _newDeliveryDelay });
+            SystemUnderTest.UpdateQueueAttributeAsync(
+                new SqsBasicConfiguration { DeliveryDelaySeconds = _newDeliveryDelay })
+                .GetAwaiter().GetResult();
         }
 
         [Test]
