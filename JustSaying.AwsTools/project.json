@@ -33,9 +33,9 @@
 		}
 	},
   "dependencies": {
-    "AWSSDK.Core": "3.2.7-beta",
-    "AWSSDK.SimpleNotificationService": "3.2.7-beta",
-    "AWSSDK.SQS": "3.2.7-beta",
+    "AWSSDK.Core": "3.2.8-rc",
+    "AWSSDK.SimpleNotificationService": "3.2.8-rc",
+    "AWSSDK.SQS": "3.2.8-rc",
     "JustSaying.Messaging": "5.0.0",
     "Newtonsoft.Json": "9.0.1",
     "NLog": "4.4.0-betaV15"
