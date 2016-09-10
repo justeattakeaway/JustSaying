@@ -32,20 +32,16 @@ namespace JustSaying.AwsTools.MessageHandling
                 .GetAwaiter().GetResult();
         }
 
-        public bool IsSubscribed(SqsQueueBase queue)
+        public async Task<bool> IsSubscribedAsync(SqsQueueBase queue)
         {
-            // todo make async
-            var result = Client.ListSubscriptionsByTopicAsync(new ListSubscriptionsByTopicRequest(Arn))
-                .GetAwaiter().GetResult();
+            var result = await Client.ListSubscriptionsByTopicAsync(new ListSubscriptionsByTopicRequest(Arn));
 
             return result.Subscriptions.Any(x => !string.IsNullOrEmpty(x.SubscriptionArn) && x.Endpoint == queue.Arn);
         }
 
-        public bool Subscribe(IAmazonSQS amazonSqsClient, SqsQueueBase queue)
+        public async Task<bool> SubscribeAsync(IAmazonSQS amazonSqsClient, SqsQueueBase queue)
         {
-            // todo make async
-            var subscriptionResponse = Client.SubscribeAsync(Arn, "sqs", queue.Arn)
-                .GetAwaiter().GetResult();
+            var subscriptionResponse = await Client.SubscribeAsync(Arn, "sqs", queue.Arn);
 
             if (!string.IsNullOrEmpty(subscriptionResponse?.SubscriptionArn))
             {

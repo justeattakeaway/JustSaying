@@ -15,12 +15,6 @@ namespace JustSaying.AwsTools.MessageHandling
             _policy = policy;
         }
 
-        public static void Save(string sourceArn, string queueArn, string queueUrl, IAmazonSQS client)
-        {
-            SaveAsync(sourceArn, queueArn, queueUrl, client)
-                .GetAwaiter().GetResult();
-        }
-
         public static async Task SaveAsync(string sourceArn, string queueArn, string queueUrl, IAmazonSQS client)
         {
             var topicArnWildcard = CreateTopicArnWildcard(sourceArn);

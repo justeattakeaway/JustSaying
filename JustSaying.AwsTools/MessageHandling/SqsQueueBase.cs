@@ -49,15 +49,14 @@ namespace JustSaying.AwsTools.MessageHandling
             Arn = null;
             Url = null;
 
-            if (!Exists())
+            var exists = await ExistsAsync();
+            if (exists)
             {
-                return;
+                await Client.DeleteQueueAsync(new DeleteQueueRequest { QueueUrl = Url });
+
+                Arn = null;
+                Url = null;
             }
-
-            await Client.DeleteQueueAsync(new DeleteQueueRequest {QueueUrl = Url});
-
-            Arn = null;
-            Url = null;
         }
 
         protected async Task SetQueuePropertiesAsync()

@@ -38,7 +38,7 @@ namespace JustSaying.AwsTools.QueueCreation
             else
             {
                 var eventTopic = await EnsureTopicExists(regionEndpoint, serialisationRegister, queueConfig);
-                EnsureQueueIsSubscribedToTopic(regionEndpoint, eventTopic, queue);
+                await EnsureQueueIsSubscribedToTopic(regionEndpoint, eventTopic, queue);
 
                 var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
                 await SqsPolicy.SaveAsync(eventTopic.Arn, queue.Arn, queue.Url, sqsclient);
@@ -89,10 +89,10 @@ namespace JustSaying.AwsTools.QueueCreation
             return eventTopic;
         }
 
-        private void EnsureQueueIsSubscribedToTopic(RegionEndpoint region, SnsTopicByName eventTopic, SqsQueueByName queue)
+        private async Task EnsureQueueIsSubscribedToTopic(RegionEndpoint region, SnsTopicByName eventTopic, SqsQueueByName queue)
         {
             var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(region);
-            eventTopic.Subscribe(sqsclient, queue);
+            await eventTopic.SubscribeAsync(sqsclient, queue);
         }
     }
 }
