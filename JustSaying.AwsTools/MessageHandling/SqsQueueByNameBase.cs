@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
@@ -21,11 +20,9 @@ namespace JustSaying.AwsTools.MessageHandling
             QueueName = queueName;
         }
 
-        public override bool Exists()
+        public override async Task<bool> ExistsAsync()
         {
-            // todo make this async
-            var result = Client.ListQueuesAsync(new ListQueuesRequest{ QueueNamePrefix = QueueName })
-                .GetAwaiter().GetResult();
+            var result = await Client.ListQueuesAsync(new ListQueuesRequest{ QueueNamePrefix = QueueName });
 
             Log.Info($"Checking if queue '{QueueName}' exists");
             Url = result?.QueueUrls?.SingleOrDefault(x => Matches(x, QueueName));

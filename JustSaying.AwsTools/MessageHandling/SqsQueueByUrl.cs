@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -13,11 +14,9 @@ namespace JustSaying.AwsTools.MessageHandling
             Url = queueUrl;
         }
 
-        public override bool Exists()
+        public override async Task<bool> ExistsAsync()
         {
-            // todo make async
-            var result = Client.ListQueuesAsync(new ListQueuesRequest())
-                .GetAwaiter().GetResult();
+            var result = await Client.ListQueuesAsync(new ListQueuesRequest());
 
             if (result.QueueUrls.Any(x => x == Url))
             {

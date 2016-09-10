@@ -37,7 +37,7 @@ namespace JustSaying.AwsTools.QueueCreation
             }
             else
             {
-                var eventTopic = EnsureTopicExists(regionEndpoint, serialisationRegister, queueConfig);
+                var eventTopic = await EnsureTopicExists(regionEndpoint, serialisationRegister, queueConfig);
                 EnsureQueueIsSubscribedToTopic(regionEndpoint, eventTopic, queue);
 
                 var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
@@ -68,7 +68,7 @@ namespace JustSaying.AwsTools.QueueCreation
             return queue;
         }
 
-        private SnsTopicByName EnsureTopicExists(RegionEndpoint region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
+        private async Task<SnsTopicByName> EnsureTopicExists(RegionEndpoint region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
         {
             var snsclient = _awsClientFactory.GetAwsClientFactory().GetSnsClient(region);
 
@@ -79,9 +79,11 @@ namespace JustSaying.AwsTools.QueueCreation
             eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsclient, serialisationRegister);
             _topicCache.AddToCache(region.SystemName, queueConfig.PublishEndpoint, eventTopic);
 
-            if (!eventTopic.Exists())
+            var exists = await eventTopic.ExistsAsync();
+
+            if (!exists)
             {
-                eventTopic.Create();
+                await eventTopic.CreateAsync();
             }
 
             return eventTopic;

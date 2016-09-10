@@ -30,7 +30,13 @@ namespace JustSaying.AwsTools.MessageHandling
             Client = client;
         }
 
-        public abstract bool Exists();
+        public bool Exists()
+        {
+            return ExistsAsync()
+                .GetAwaiter().GetResult();
+        }
+
+        public abstract Task<bool> ExistsAsync();
 
         public void Delete()
         {

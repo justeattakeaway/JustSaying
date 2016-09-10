@@ -23,9 +23,13 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public override async Task<bool> CreateAsync(SqsBasicConfiguration queueConfig, int attempt = 0)
         {
-            if (NeedErrorQueue(queueConfig) && !ErrorQueue.Exists())
+            if (NeedErrorQueue(queueConfig))
             {
-                ErrorQueue.Create(new SqsBasicConfiguration { ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds, ErrorQueueOptOut = true });
+                var exisits = await ErrorQueue.ExistsAsync();
+                if (!exisits)
+                {
+                    ErrorQueue.Create(new SqsBasicConfiguration { ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds, ErrorQueueOptOut = true });
+                }
             }
 
             return await base.CreateAsync(queueConfig, attempt);
@@ -82,7 +86,8 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private async Task EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(SqsBasicConfiguration queueConfig)
         {
-            if (!Exists())
+            var exists = await ExistsAsync();
+            if (!exists)
             {
                 await CreateAsync(queueConfig);
             }
@@ -99,9 +104,10 @@ namespace JustSaying.AwsTools.MessageHandling
                     ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds,
                     ErrorQueueOptOut = true
                 };
-                if (!ErrorQueue.Exists())
-                {
 
+                var errorQueueExists = await ErrorQueue.ExistsAsync();
+                if (!errorQueueExists)
+                {
                     await ErrorQueue.CreateAsync(errorQueueConfig);
                 }
                 else
