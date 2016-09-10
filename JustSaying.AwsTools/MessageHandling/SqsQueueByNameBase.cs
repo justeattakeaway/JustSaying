@@ -29,7 +29,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             if (Url != null)
             {
-                SetQueueProperties();
+                await SetQueuePropertiesAsync();
                 return true;
             }
 
@@ -57,7 +57,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 if (!string.IsNullOrWhiteSpace(result?.QueueUrl))
                 {
                     Url = result.QueueUrl;
-                    SetQueueProperties();
+                    await SetQueuePropertiesAsync();
 
                     Log.Info($"Created Queue: {QueueName} on Arn: {Arn}");
                     return true;

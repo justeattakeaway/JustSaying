@@ -5,7 +5,6 @@ using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
-using NLog;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -61,17 +60,18 @@ namespace JustSaying.AwsTools.MessageHandling
             Url = null;
         }
 
-        protected void SetQueueProperties()
+        protected async Task SetQueuePropertiesAsync()
         {
-            var attributes = GetAttrs(new[]
-            {
-                JustSayingConstants.ATTRIBUTE_ARN,
-                JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY,
-                JustSayingConstants.ATTRIBUTE_POLICY,
-                JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD,
-                JustSayingConstants.ATTRIBUTE_VISIBILITY_TIMEOUT,
-                JustSayingConstants.ATTRIBUTE_DELIVERY_DELAY
-            });
+            var keys = new[]
+                {
+                    JustSayingConstants.ATTRIBUTE_ARN,
+                    JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY,
+                    JustSayingConstants.ATTRIBUTE_POLICY,
+                    JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD,
+                    JustSayingConstants.ATTRIBUTE_VISIBILITY_TIMEOUT,
+                    JustSayingConstants.ATTRIBUTE_DELIVERY_DELAY
+                };
+            var attributes = await GetAttrsAsync(keys);
             Arn = attributes.QueueARN;
             MessageRetentionPeriod = attributes.MessageRetentionPeriod;
             VisibilityTimeout = attributes.VisibilityTimeout;

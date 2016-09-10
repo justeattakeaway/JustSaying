@@ -20,7 +20,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             if (result.QueueUrls.Any(x => x == Url))
             {
-                SetQueueProperties();
+                await SetQueuePropertiesAsync();
                 // Need to set the prefix yet!
                 return true;
             }
