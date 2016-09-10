@@ -24,7 +24,13 @@ namespace JustSaying.AwsTools.MessageHandling
             _serialisationRegister = serialisationRegister;
         }
 
-        public abstract bool Exists();
+        public abstract Task<bool> ExistsAsync();
+
+        public bool Exists()
+        {
+            return ExistsAsync()
+                .GetAwaiter().GetResult();
+        }
 
         public bool IsSubscribed(SqsQueueBase queue)
         {

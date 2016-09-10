@@ -20,7 +20,7 @@ namespace JustSaying.AwsTools.MessageHandling
             Client = client;
         }
 
-        public override bool Exists()
+        public override async Task<bool> ExistsAsync()
         {
             if (! string.IsNullOrWhiteSpace(Arn))
             {
@@ -28,8 +28,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
 
             Log.Info($"Checking if topic '{TopicName}' exists");
-            var topic = Client.FindTopicAsync(TopicName)
-                .GetAwaiter().GetResult();
+            var topic = await Client.FindTopicAsync(TopicName);
 
             if (topic != null)
             {

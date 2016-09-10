@@ -90,6 +90,12 @@ namespace JustSaying.AwsTools.MessageHandling
             return await Client.GetQueueAttributesAsync(request);
         }
 
+        public void UpdateQueueAttribute(SqsBasicConfiguration queueConfig)
+        {
+            UpdateQueueAttributeAsync(queueConfig)
+                .GetAwaiter().GetResult();
+        }
+
         protected internal virtual async Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig)
         {
             if (QueueNeedsUpdating(queueConfig))
