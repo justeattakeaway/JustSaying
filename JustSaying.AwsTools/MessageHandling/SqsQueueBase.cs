@@ -79,12 +79,6 @@ namespace JustSaying.AwsTools.MessageHandling
             RedrivePolicy = ExtractRedrivePolicyFromQueueAttributes(attributes.Attributes);
         }
 
-        protected GetQueueAttributesResponse GetAttrs(IEnumerable<string> attrKeys)
-        {
-            return GetAttrsAsync(attrKeys)
-                .GetAwaiter().GetResult();
-        }
-
         protected async Task<GetQueueAttributesResponse> GetAttrsAsync(IEnumerable<string> attrKeys)
         {
             var request = new GetQueueAttributesRequest {
@@ -101,7 +95,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 .GetAwaiter().GetResult();
         }
 
-        protected internal virtual async Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig)
+        public virtual async Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig)
         {
             if (QueueNeedsUpdating(queueConfig))
             {

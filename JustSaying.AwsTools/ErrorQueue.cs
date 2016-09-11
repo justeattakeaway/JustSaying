@@ -28,7 +28,7 @@ namespace JustSaying.AwsTools
             };
         }
 
-        protected internal override async Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig)
+        public override async Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig)
         {
             if (!QueueNeedsUpdating(queueConfig))
             {
