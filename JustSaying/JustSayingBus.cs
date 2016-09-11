@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
@@ -71,8 +73,8 @@ namespace JustSaying
             if (subscribersForRegion.ContainsKey(subscriber.Queue))
             {
                 // TODO - no, we don't need to create a new notification subsrciber per queue
-                // JustSaying is creating subscribers per-topic per-region, but 
-                // we want to have that per-queue per-region, not 
+                // JustSaying is creating subscribers per-topic per-region, but
+                // we want to have that per-queue per-region, not
                 // per-topic per-region.
                 // Just re-use existing subscriber instead.
                 return;
@@ -155,8 +157,14 @@ namespace JustSaying
 
         public void Publish(Message message)
         {
+            PublishAsync(message)
+                .GetAwaiter().GetResult();
+        }
+
+        public async Task PublishAsync(Message message)
+        {
             var publisher = GetActivePublisherForMessage(message);
-            Publish(publisher, message);
+            await PublishAsync(publisher, message);
         }
 
         private IMessagePublisher GetActivePublisherForMessage(Message message)
@@ -191,14 +199,14 @@ namespace JustSaying
             return publishersByTopic[topic];
         }
 
-        private void Publish(IMessagePublisher publisher, Message message, int attemptCount = 0)
+        private async Task PublishAsync(IMessagePublisher publisher, Message message, int attemptCount = 0)
         {
             attemptCount++;
             try
             {
                 var watch = Stopwatch.StartNew();
 
-                publisher.Publish(message);
+                await publisher.PublishAsync(message);
 
                 watch.Stop();
                 Monitor.PublishMessageTime(watch.ElapsedMilliseconds);
@@ -213,8 +221,8 @@ namespace JustSaying
                 }
 
                 Log.Warn(ex, $"Failed to publish message {message.GetType().Name}. Retrying after attempt {attemptCount} of {Config.PublishFailureReAttempts}");
-                Thread.Sleep(Config.PublishFailureBackoffMilliseconds * attemptCount);
-                Publish(publisher, message, attemptCount);
+                await Task.Delay(Config.PublishFailureBackoffMilliseconds * attemptCount);
+                await PublishAsync(publisher, message, attemptCount);
             }
         }
 

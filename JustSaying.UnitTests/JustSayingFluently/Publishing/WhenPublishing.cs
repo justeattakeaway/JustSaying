@@ -13,13 +13,14 @@ namespace JustSaying.UnitTests.JustSayingFluently.Publishing
 
         protected override void When()
         {
-            SystemUnderTest.Publish(_message);
+            SystemUnderTest.PublishAsync(_message)
+                .GetAwaiter().GetResult();
         }
 
         [Then]
         public void TheMessageIsPublished()
         {
-            Bus.Received().Publish(_message);
+            Bus.Received().PublishAsync(_message);
         }
     }
 }

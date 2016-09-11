@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
@@ -31,13 +32,15 @@ namespace JustSaying.UnitTests.JustSayingBus
             _region = "west-1";
         }
 
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.AddNotificationSubscriber(_region, _subscriber);
             SystemUnderTest.AddNotificationSubscriber(_region, _subscriber);
             SystemUnderTest.AddMessageHandler(_region, _subscriber.Queue, _futureHandler1);
             SystemUnderTest.AddMessageHandler(_region, _subscriber.Queue, _futureHandler2);
             SystemUnderTest.Start();
+
+            return Task.CompletedTask;
         }
 
         [Then]

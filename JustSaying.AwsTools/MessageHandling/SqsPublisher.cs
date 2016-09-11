@@ -27,7 +27,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 .GetAwaiter().GetResult();
         }
 
-        private async Task PublishAsync(Message message)
+        public async Task PublishAsync(Message message)
         {
             var request = new SendMessageRequest
             {

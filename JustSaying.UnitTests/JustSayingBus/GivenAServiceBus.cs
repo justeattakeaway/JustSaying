@@ -5,7 +5,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
-    public abstract class GivenAServiceBus : BehaviourTest<JustSaying.JustSayingBus>
+    public abstract class GivenAServiceBus : AsyncBehaviourTest<JustSaying.JustSayingBus>
     {
         protected IMessagingConfig Config;
         protected IMessageMonitor Monitor;

@@ -28,7 +28,7 @@ namespace JustSaying.UnitTests
                     x.PublishFailureReAttempts = Configuration.PublishFailureReAttempts;
 
                 }) as JustSaying.JustSayingFluently;
-            
+
             ConfigureNotificationStackMock(fns);
             ConfigureAmazonQueueCreator(fns);
 

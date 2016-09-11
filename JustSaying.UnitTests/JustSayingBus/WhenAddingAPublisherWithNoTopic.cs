@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
@@ -13,9 +14,11 @@ namespace JustSaying.UnitTests.JustSayingBus
             RecordAnyExceptionsThrown();
         }
 
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.AddMessagePublisher<GenericMessage>(Substitute.For<IMessagePublisher>(), string.Empty);
+
+            return Task.CompletedTask;
         }
 
         [Then]
