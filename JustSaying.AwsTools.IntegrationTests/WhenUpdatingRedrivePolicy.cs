@@ -19,7 +19,9 @@ namespace JustSaying.AwsTools.IntegrationTests
 
             SystemUnderTest.Create(new SqsBasicConfiguration());
 
-            SystemUnderTest.UpdateRedrivePolicy(new RedrivePolicy(_newMaximumReceived, SystemUnderTest.ErrorQueue.Arn));
+            SystemUnderTest.UpdateRedrivePolicyAsync(
+                new RedrivePolicy(_newMaximumReceived, SystemUnderTest.ErrorQueue.Arn))
+                .GetAwaiter().GetResult();
         }
 
         [Test]

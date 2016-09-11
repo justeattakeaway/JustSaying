@@ -26,7 +26,7 @@ namespace JustSaying.AwsTools.QueueCreation
         public async Task<SqsQueueByName> EnsureTopicExistsWithQueueSubscribedAsync(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
         {
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);
-            var queue = EnsureQueueExists(region, queueConfig);
+            var queue = await EnsureQueueExistsAsync(region, queueConfig);
             if (TopicExistsInAnotherAccount(queueConfig))
             {
                 var sqsClient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
@@ -54,6 +54,12 @@ namespace JustSaying.AwsTools.QueueCreation
 
         public SqsQueueByName EnsureQueueExists(string region, SqsReadConfiguration queueConfig)
         {
+            return EnsureQueueExistsAsync(region, queueConfig)
+                .GetAwaiter().GetResult();
+        }
+
+        public async Task<SqsQueueByName> EnsureQueueExistsAsync(string region, SqsReadConfiguration queueConfig)
+        {
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);
             var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
             var queue = _queueCache.TryGetFromCache(region, queueConfig.QueueName);
@@ -62,7 +68,7 @@ namespace JustSaying.AwsTools.QueueCreation
                 return queue;
             }
             queue = new SqsQueueByName(regionEndpoint, queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue);
-            queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdated(queueConfig);
+            await queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig);
 
             _queueCache.AddToCache(region, queue.QueueName, queue);
             return queue;

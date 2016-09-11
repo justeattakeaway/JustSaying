@@ -28,7 +28,8 @@ namespace JustSaying.AwsTools.MessageHandling
                 var exisits = await ErrorQueue.ExistsAsync();
                 if (!exisits)
                 {
-                    ErrorQueue.Create(new SqsBasicConfiguration { ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds, ErrorQueueOptOut = true });
+                    await ErrorQueue.CreateAsync(
+                        new SqsBasicConfiguration { ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds, ErrorQueueOptOut = true });
                 }
             }
 
@@ -48,12 +49,6 @@ namespace JustSaying.AwsTools.MessageHandling
             }
 
             await base.DeleteAsync();
-        }
-
-        public void UpdateRedrivePolicy(RedrivePolicy requestedRedrivePolicy)
-        {
-            UpdateRedrivePolicyAsync(requestedRedrivePolicy)
-                .GetAwaiter().GetResult();
         }
 
         public async Task UpdateRedrivePolicyAsync(RedrivePolicy requestedRedrivePolicy)
@@ -78,13 +73,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        public void EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdated(SqsBasicConfiguration queueConfig)
-        {
-            EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig)
-                .GetAwaiter().GetResult();
-        }
-
-        private async Task EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(SqsBasicConfiguration queueConfig)
+        public async Task EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(SqsBasicConfiguration queueConfig)
         {
             var exists = await ExistsAsync();
             if (!exists)
@@ -115,7 +104,8 @@ namespace JustSaying.AwsTools.MessageHandling
                     await ErrorQueue.UpdateQueueAttributeAsync(errorQueueConfig);
                 }
 
-                UpdateRedrivePolicy(new RedrivePolicy(queueConfig.RetryCountBeforeSendingToErrorQueue, ErrorQueue.Arn));
+                await UpdateRedrivePolicyAsync(
+                    new RedrivePolicy(queueConfig.RetryCountBeforeSendingToErrorQueue, ErrorQueue.Arn));
             }
         }
 
