@@ -1,5 +1,4 @@
 using System;
-using System.Configuration;
 using JustSaying.Messaging.MessageProcessingStrategies;
 
 namespace JustSaying.AwsTools.QueueCreation

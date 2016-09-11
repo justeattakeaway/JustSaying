@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
@@ -8,18 +9,18 @@ namespace JustSaying.UnitTests.JustSayingBus
     public class WhenPublishingMessages : GivenAServiceBus
     {
         private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
-        
-        protected override void When()
+
+        protected override async Task When()
         {
             SystemUnderTest.AddMessagePublisher<GenericMessage>(_publisher, string.Empty);
 
-            SystemUnderTest.Publish(new GenericMessage());
+            await SystemUnderTest.PublishAsync(new GenericMessage());
         }
 
         [Then]
         public void PublisherIsCalledToPublish()
         {
-            _publisher.Received().Publish(Arg.Any<GenericMessage>());
+            _publisher.Received().PublishAsync(Arg.Any<GenericMessage>());
         }
 
         [Then]

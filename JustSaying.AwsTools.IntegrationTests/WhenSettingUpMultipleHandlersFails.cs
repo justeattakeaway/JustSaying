@@ -41,8 +41,7 @@ namespace JustSaying.AwsTools.IntegrationTests
         protected string QueueUniqueKey;
         private ProxyAwsClientFactory proxyAwsClientFactory;
         private int handlersAttached = 0;
-        private ArgumentException _capturedException
-            ;
+        private NotSupportedException _capturedException;
 
         protected override void Given()
         { }
@@ -63,7 +62,7 @@ namespace JustSaying.AwsTools.IntegrationTests
                 AttachAHandler(busConfig);
                 AttachAHandler(busConfig);
             }
-            catch (ArgumentException ex)
+            catch (NotSupportedException ex)
             {
                 _capturedException = ex;
             }

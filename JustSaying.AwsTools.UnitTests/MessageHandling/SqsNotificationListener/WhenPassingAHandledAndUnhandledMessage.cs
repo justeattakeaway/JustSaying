@@ -39,7 +39,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         {
             SerialisationRegister.Received(2).DeserializeMessage(Arg.Any<string>());
 
-            Sqs.Received().DeleteMessage(Arg.Any<DeleteMessageRequest>());
+            Sqs.Received().DeleteMessageAsync(Arg.Any<DeleteMessageRequest>());
         }
     }
 

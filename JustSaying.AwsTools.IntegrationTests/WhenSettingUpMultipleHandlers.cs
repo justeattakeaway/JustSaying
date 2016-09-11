@@ -65,8 +65,7 @@ namespace JustSaying.AwsTools.IntegrationTests
                 .IntoQueue(baseQueueName) // generate unique queue name
                 .WithMessageHandlers(new OrderHandler(), new OrderHandler());
 
-            bus
-                .StartListening();
+            bus.StartListening();
             return bus;
         }
         public override void PostAssertTeardown()
@@ -82,25 +81,34 @@ namespace JustSaying.AwsTools.IntegrationTests
         [Test]
         public void CreateTopicCalledOnce()
         {
-            Assert.That(proxyAwsClientFactory.Counters["CreateTopic"][topicName].Count, Is.EqualTo(1));
+            AssertHasCounterSetToOne("CreateTopic", topicName);
         }
 
         [Test]
         public void FindTopicCalledOnce()
         {
-            Assert.That(proxyAwsClientFactory.Counters["FindTopic"][topicName].Count, Is.EqualTo(1));
+            AssertHasCounterSetToOne("FindTopic", topicName);
         }
 
         [Test]
         public void ListQueuesCalledOnce()
         {
-            Assert.That(proxyAwsClientFactory.Counters["ListQueues"][queueName].Count, Is.EqualTo(1));
+            AssertHasCounterSetToOne("ListQueues", queueName);
         }
 
         [Test]
         public void CreateQueueCalledOnce()
         {
-            Assert.That(proxyAwsClientFactory.Counters["CreateQueue"][queueName].Count, Is.EqualTo(1));
+            AssertHasCounterSetToOne("CreateQueue", queueName);
+        }
+
+        private void AssertHasCounterSetToOne(string counter, string testQueueName)
+        {
+            var counters = proxyAwsClientFactory.Counters;
+
+            Assert.That(counters.ContainsKey(counter), Is.True, "no counter: " + counter);
+            Assert.That(counters[counter].ContainsKey(testQueueName), Is.True, "no queueName: " + testQueueName);
+            Assert.That(counters[counter][testQueueName].Count, Is.EqualTo(1), "Wrong count");
         }
     }
 }

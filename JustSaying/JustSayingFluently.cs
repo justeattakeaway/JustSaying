@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
@@ -146,12 +147,18 @@ namespace JustSaying
         /// <param name="message"></param>
         public virtual void Publish(Message message)
         {
+            PublishAsync(message)
+                .GetAwaiter().GetResult();
+        }
+
+        public virtual async Task PublishAsync(Message message)
+        {
             if (Bus == null)
             {
                 throw new InvalidOperationException("You must register for message publication before publishing a message");
             }
-            
-            Bus.Publish(message);
+
+            await Bus.PublishAsync(message);
         }
 
         /// <summary>
@@ -214,7 +221,7 @@ namespace JustSaying
             var thing =  _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
                 ? PointToPointHandler<T>()
                 : TopicHandler<T>();
-            
+
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
             foreach (var region in Bus.Config.Regions)
             {
@@ -266,7 +273,7 @@ namespace JustSaying
                 Log.Info(
                     $"Created SQS topic subscription - Topic: {_subscriptionConfig.Topic}, QueueName: {_subscriptionConfig.QueueName}");
             }
-          
+
             return this;
         }
 
@@ -282,7 +289,7 @@ namespace JustSaying
                 Log.Info(
                     $"Created SQS subscriber - MessageName: {messageTypeName}, QueueName: {_subscriptionConfig.QueueName}");
             }
-           
+
             return this;
         }
 

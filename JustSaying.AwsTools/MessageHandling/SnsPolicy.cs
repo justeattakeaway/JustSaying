@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Amazon.Auth.AccessControlPolicy;
 using Amazon.Auth.AccessControlPolicy.ActionIdentifiers;
 using Amazon.SimpleNotificationService;
@@ -19,7 +20,13 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public void Save(string sourceArn, IAmazonSimpleNotificationService client)
         {
-            ActionIdentifier[] actions = { SNSActionIdentifiers.Subscribe};
+            SaveAsync(sourceArn, client)
+                .GetAwaiter().GetResult();
+        }
+
+        private async Task SaveAsync(string sourceArn, IAmazonSimpleNotificationService client)
+        {
+            ActionIdentifier[] actions = { SNSActionIdentifiers.Subscribe };
 
             var snsPolicy = new Policy()
                 .WithStatements(GetDefaultStatement(sourceArn))
@@ -30,7 +37,7 @@ namespace JustSaying.AwsTools.MessageHandling
             var attributeValue = snsPolicy.ToJson();
             var setQueueAttributesRequest = new SetTopicAttributesRequest(sourceArn, "Policy", attributeValue);
 
-            client.SetTopicAttributes(setQueueAttributesRequest);
+            await client.SetTopicAttributesAsync(setQueueAttributesRequest);
         }
 
         private static Statement GetDefaultStatement(string sourceArn)

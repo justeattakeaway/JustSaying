@@ -17,7 +17,8 @@ namespace JustSaying.AwsTools.IntegrationTests
 
             SystemUnderTest.Create(new SqsBasicConfiguration { ErrorQueueRetentionPeriodSeconds = JustSayingConstants.MAXIMUM_RETENTION_PERIOD, ErrorQueueOptOut = true});
 
-            SystemUnderTest.UpdateQueueAttribute(new SqsBasicConfiguration { ErrorQueueRetentionPeriodSeconds = 100 });
+            SystemUnderTest.UpdateQueueAttribute(
+                new SqsBasicConfiguration {ErrorQueueRetentionPeriodSeconds = 100});
         }
 
         protected override ErrorQueue CreateSystemUnderTest()

@@ -36,7 +36,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         [Then]
         public void FailedMessageIsNotRemovedFromQueue()
         {
-            Sqs.DidNotReceiveWithAnyArgs().DeleteMessage(Arg.Any<DeleteMessageRequest>());
+            Sqs.DidNotReceiveWithAnyArgs().DeleteMessageAsync(Arg.Any<DeleteMessageRequest>());
         }
 
         [Then]

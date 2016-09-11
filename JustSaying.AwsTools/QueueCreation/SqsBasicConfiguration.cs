@@ -1,5 +1,3 @@
-using System.Configuration;
-
 namespace JustSaying.AwsTools.QueueCreation
 {
     public class SqsBasicConfiguration

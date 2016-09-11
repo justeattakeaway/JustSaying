@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using Amazon.SQS;
@@ -23,19 +24,25 @@ namespace JustSaying.AwsTools.MessageHandling
             _serialisationRegister = serialisationRegister;
         }
 
-        public abstract bool Exists();
+        public abstract Task<bool> ExistsAsync();
 
-        public bool IsSubscribed(SqsQueueBase queue)
+        public bool Exists()
         {
-            var result = Client.ListSubscriptionsByTopic(new ListSubscriptionsByTopicRequest(Arn));
-            
+            return ExistsAsync()
+                .GetAwaiter().GetResult();
+        }
+
+        public async Task<bool> IsSubscribedAsync(SqsQueueBase queue)
+        {
+            var result = await Client.ListSubscriptionsByTopicAsync(new ListSubscriptionsByTopicRequest(Arn));
+
             return result.Subscriptions.Any(x => !string.IsNullOrEmpty(x.SubscriptionArn) && x.Endpoint == queue.Arn);
         }
 
-        public bool Subscribe(IAmazonSQS amazonSqsClient, SqsQueueBase queue)
+        public async Task<bool> SubscribeAsync(IAmazonSQS amazonSqsClient, SqsQueueBase queue)
         {
-            var subscriptionResponse = Client.Subscribe(Arn, "sqs", queue.Arn);
-            
+            var subscriptionResponse = await Client.SubscribeAsync(Arn, "sqs", queue.Arn);
+
             if (!string.IsNullOrEmpty(subscriptionResponse?.SubscriptionArn))
             {
                 return true;
@@ -47,7 +54,13 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public void Publish(Message message)
         {
-            var messageToSend = _serialisationRegister.Serialise(message, serializeForSnsPublishing:true);
+            PublishAsync(message)
+                .GetAwaiter().GetResult();
+        }
+
+        public async Task PublishAsync(Message message)
+        {
+            var messageToSend = _serialisationRegister.Serialise(message, serializeForSnsPublishing: true);
             var messageType = message.GetType().Name;
             var request = new PublishRequest
                 {
@@ -58,15 +71,16 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                Client.Publish(request);
+                await Client.PublishAsync(request);
                 EventLog.Info($"Published message: '{messageType}' with content {messageToSend}");
             }
             catch (Exception ex)
             {
                 throw new PublishException(
-                    $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}", 
+                    $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}",
                     ex);
             }
+
         }
     }
 }

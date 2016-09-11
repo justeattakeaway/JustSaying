@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -27,10 +28,13 @@ namespace JustSaying.AwsTools
             };
         }
 
-        protected internal override void UpdateQueueAttribute(SqsBasicConfiguration queueConfig)
+        protected internal override async Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig)
         {
             if (!QueueNeedsUpdating(queueConfig))
+            {
                 return;
+            }
+
             var request = new SetQueueAttributesRequest
             {
                 QueueUrl = Url,
@@ -42,7 +46,8 @@ namespace JustSaying.AwsTools
                     }
                 }
             };
-            var response = Client.SetQueueAttributes(request);
+
+            var response = await Client.SetQueueAttributesAsync(request);
 
             if (response.HttpStatusCode == HttpStatusCode.OK)
             {

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.Messaging.MessageSerialisation;
@@ -19,13 +20,15 @@ namespace JustSaying.AwsTools.MessageHandling
             Client = client;
         }
 
-        public override bool Exists()
+        public override async Task<bool> ExistsAsync()
         {
-            if (string.IsNullOrWhiteSpace(Arn) == false)
+            if (! string.IsNullOrWhiteSpace(Arn))
+            {
                 return true;
+            }
 
             Log.Info($"Checking if topic '{TopicName}' exists");
-            var topic = Client.FindTopic(TopicName);
+            var topic = await Client.FindTopicAsync(TopicName);
 
             if (topic != null)
             {
@@ -38,8 +41,15 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public bool Create()
         {
-            var response = Client.CreateTopic(new CreateTopicRequest(TopicName));
-            if (!string.IsNullOrEmpty(response.TopicArn))
+            return CreateAsync()
+                .GetAwaiter().GetResult();
+        }
+
+        public async Task<bool> CreateAsync()
+        {
+            var response = await Client.CreateTopicAsync(new CreateTopicRequest(TopicName));
+
+            if (!string.IsNullOrEmpty(response?.TopicArn))
             {
                 Arn = response.TopicArn;
                 Log.Info($"Created Topic: {TopicName} on Arn: {Arn}");
@@ -49,6 +59,7 @@ namespace JustSaying.AwsTools.MessageHandling
             Log.Info($"Failed to create Topic: {TopicName}");
             return false;
         }
+
 
         public void EnsurePolicyIsUpdated(IReadOnlyCollection<string> config)
         {

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 
@@ -27,10 +28,10 @@ namespace JustSaying.AwsTools.MessageHandling
             _type = type;
         }
 
-        public bool Enabled => Attribute.IsDefined(_type, typeof(ExactlyOnceAttribute));
+        public bool Enabled => _type.GetTypeInfo().IsDefined(typeof(ExactlyOnceAttribute));
 
         public int GetTimeOut()
-            => _type
+            => _type.GetTypeInfo()
             .GetCustomAttributes(true)
             .OfType<ExactlyOnceAttribute>()
             .FirstOrDefault()?.TimeOut

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace JustSaying.Extensions
@@ -10,7 +11,7 @@ namespace JustSaying.Extensions
 
         public static string ToTopicName(this Type type)
         {
-            var name = type.IsGenericType
+            var name = type.GetTypeInfo().IsGenericType
                 ? Regex.Replace(type.FullName, "\\W", "_").ToLower()
                 : type.Name.ToLower();
 

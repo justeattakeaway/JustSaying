@@ -18,12 +18,12 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
         protected void SetUp()
         {
             _client = Substitute.For<IAmazonSQS>();
-            _client.ListQueues(Arg.Any<ListQueuesRequest>())
-                .Returns(new ListQueuesResponse() { QueueUrls = new List<string>() { "some-queue-name" } });
-            _client.GetQueueAttributes(Arg.Any<GetQueueAttributesRequest>())
-                .Returns(new GetQueueAttributesResponse()
+            _client.ListQueuesAsync(Arg.Any<ListQueuesRequest>())
+                .Returns(new ListQueuesResponse { QueueUrls = new List<string> { "some-queue-name" } });
+            _client.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>())
+                .Returns(new GetQueueAttributesResponse
                 {
-                    Attributes = new Dictionary<string, string>() { { "QueueArn", "something:some-queue-name" } }
+                    Attributes = new Dictionary<string, string> { { "QueueArn", "something:some-queue-name" } }
                 });
         }
 

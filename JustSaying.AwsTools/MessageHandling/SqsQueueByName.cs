@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -20,13 +21,18 @@ namespace JustSaying.AwsTools.MessageHandling
             ErrorQueue = new ErrorQueue(region, queueName, client);
         }
 
-        public override bool Create(SqsBasicConfiguration queueConfig, int attempt = 0)
+        public override async Task<bool> CreateAsync(SqsBasicConfiguration queueConfig, int attempt = 0)
         {
-            if (NeedErrorQueue(queueConfig) && !ErrorQueue.Exists())
+            if (NeedErrorQueue(queueConfig))
             {
-                ErrorQueue.Create(new SqsBasicConfiguration { ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds, ErrorQueueOptOut = true });
+                var exisits = await ErrorQueue.ExistsAsync();
+                if (!exisits)
+                {
+                    ErrorQueue.Create(new SqsBasicConfiguration { ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds, ErrorQueueOptOut = true });
+                }
             }
-            return base.Create(queueConfig, attempt);
+
+            return await base.CreateAsync(queueConfig, attempt);
         }
 
         private static bool NeedErrorQueue(SqsBasicConfiguration queueConfig)
@@ -34,14 +40,23 @@ namespace JustSaying.AwsTools.MessageHandling
             return !queueConfig.ErrorQueueOptOut;
         }
 
-        public override void Delete()
+        public override async Task DeleteAsync()
         {
-            if(ErrorQueue != null)
-                ErrorQueue.Delete();
-            base.Delete();
+            if (ErrorQueue != null)
+            {
+                await ErrorQueue.DeleteAsync();
+            }
+
+            await base.DeleteAsync();
         }
 
         public void UpdateRedrivePolicy(RedrivePolicy requestedRedrivePolicy)
+        {
+            UpdateRedrivePolicyAsync(requestedRedrivePolicy)
+                .GetAwaiter().GetResult();
+        }
+
+        public async Task UpdateRedrivePolicyAsync(RedrivePolicy requestedRedrivePolicy)
         {
             if (RedrivePolicyNeedsUpdating(requestedRedrivePolicy))
             {
@@ -53,8 +68,10 @@ namespace JustSaying.AwsTools.MessageHandling
                             {JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY, requestedRedrivePolicy.ToString()}
                         }
                 };
-                var response = Client.SetQueueAttributes(request);
-                if (response.HttpStatusCode == HttpStatusCode.OK)
+
+                var response = await Client.SetQueueAttributesAsync(request);
+
+                if (response?.HttpStatusCode == HttpStatusCode.OK)
                 {
                     RedrivePolicy = requestedRedrivePolicy;
                 }
@@ -63,11 +80,20 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public void EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdated(SqsBasicConfiguration queueConfig)
         {
-            if (!Exists())
-                Create(queueConfig);
+            EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig)
+                .GetAwaiter().GetResult();
+        }
+
+        private async Task EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(SqsBasicConfiguration queueConfig)
+        {
+            var exists = await ExistsAsync();
+            if (!exists)
+            {
+                await CreateAsync(queueConfig);
+            }
             else
             {
-                UpdateQueueAttribute(queueConfig);
+                await UpdateQueueAttributeAsync(queueConfig);
             }
 
             //Create an error queue for existing queues if they don't already have one
@@ -78,15 +104,17 @@ namespace JustSaying.AwsTools.MessageHandling
                     ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds,
                     ErrorQueueOptOut = true
                 };
-                if (!ErrorQueue.Exists())
-                {
 
-                    ErrorQueue.Create(errorQueueConfig);
+                var errorQueueExists = await ErrorQueue.ExistsAsync();
+                if (!errorQueueExists)
+                {
+                    await ErrorQueue.CreateAsync(errorQueueConfig);
                 }
                 else
                 {
-                    ErrorQueue.UpdateQueueAttribute(errorQueueConfig);
+                    await ErrorQueue.UpdateQueueAttributeAsync(errorQueueConfig);
                 }
+
                 UpdateRedrivePolicy(new RedrivePolicy(queueConfig.RetryCountBeforeSendingToErrorQueue, ErrorQueue.Arn));
             }
         }

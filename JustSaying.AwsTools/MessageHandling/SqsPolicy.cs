@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Amazon.Auth.AccessControlPolicy;
 using Amazon.Auth.AccessControlPolicy.ActionIdentifiers;
 using Amazon.SQS;
@@ -14,8 +15,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _policy = policy;
         }
 
-
-        public static void Save(string sourceArn, string queueArn, string queueUrl, IAmazonSQS client)
+        public static async Task SaveAsync(string sourceArn, string queueArn, string queueUrl, IAmazonSQS client)
         {
             var topicArnWildcard = CreateTopicArnWildcard(sourceArn);
             ActionIdentifier[] actions = { SQSActionIdentifiers.SendMessage };
@@ -29,19 +29,29 @@ namespace JustSaying.AwsTools.MessageHandling
             var setQueueAttributesRequest = new SetQueueAttributesRequest
             {
                 QueueUrl = queueUrl,
-                Attributes = {["Policy"] = sqsPolicy.ToJson()}
+                Attributes = { ["Policy"] = sqsPolicy.ToJson() }
             };
 
-            client.SetQueueAttributes(setQueueAttributesRequest);
+            await client.SetQueueAttributesAsync(setQueueAttributesRequest);
         }
+
 
         public override string ToString() => _policy;
 
         private static string CreateTopicArnWildcard(string topicArn)
         {
-            var index = topicArn.LastIndexOf(":", StringComparison.InvariantCultureIgnoreCase);
+            if (string.IsNullOrWhiteSpace(topicArn))
+            {
+                // todo should not get here?
+                return "*";
+            }
+
+            var index = topicArn.LastIndexOf(":", StringComparison.OrdinalIgnoreCase);
             if (index > 0)
+            {
                 topicArn = topicArn.Substring(0, index + 1);
+            }
+
             return topicArn + "*";
         }
     }

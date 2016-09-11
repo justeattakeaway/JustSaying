@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using JustBehave;
 using NUnit.Framework;
 
@@ -12,9 +13,10 @@ namespace JustSaying.UnitTests.JustSayingBus
             RecordAnyExceptionsThrown();
         }
 
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.AddNotificationSubscriber(" ", null);
+            return Task.CompletedTask;
         }
 
         [Then]

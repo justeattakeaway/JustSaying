@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
@@ -17,25 +18,26 @@ namespace JustSaying.UnitTests.JustSayingBus
             _publisher = Substitute.For<IMessagePublisher>();
         }
 
-        protected override void When()
+        protected override async Task When()
         {
             SystemUnderTest.AddMessagePublisher<OrderAccepted>(_publisher, string.Empty);
             SystemUnderTest.AddMessagePublisher<OrderRejected>(_publisher, string.Empty);
-            SystemUnderTest.Publish(new OrderAccepted());
-            SystemUnderTest.Publish(new OrderRejected());
-            SystemUnderTest.Publish(new OrderRejected());
+
+            await SystemUnderTest.PublishAsync(new OrderAccepted());
+            await SystemUnderTest.PublishAsync(new OrderRejected());
+            await SystemUnderTest.PublishAsync(new OrderRejected());
         }
 
         [Then]
         public void AcceptedOrderWasPublishedOnce()
         {
-            _publisher.Received(1).Publish(Arg.Any<OrderAccepted>());
+            _publisher.Received(1).PublishAsync(Arg.Any<OrderAccepted>());
         }
 
         [Then]
         public void RejectedOrderWasPublishedTwice()
         {
-            _publisher.Received(2).Publish(Arg.Any<OrderRejected>());
+            _publisher.Received(2).PublishAsync(Arg.Any<OrderRejected>());
         }
 
         [Then]

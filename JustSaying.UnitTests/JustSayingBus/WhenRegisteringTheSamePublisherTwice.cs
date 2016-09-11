@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.Models;
@@ -19,10 +20,12 @@ namespace JustSaying.UnitTests.JustSayingBus
             RecordAnyExceptionsThrown();
         }
 
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.AddMessagePublisher<Message>(_publisher, string.Empty);
             SystemUnderTest.AddMessagePublisher<Message>(_publisher, string.Empty);
+
+            return Task.CompletedTask;
         }
 
         [Then]
@@ -39,6 +42,6 @@ namespace JustSaying.UnitTests.JustSayingBus
 
             response.Publishers.Count().ShouldBe(1);
             response.Publishers.First(x => x.MessageType == typeof(Message)).ShouldNotBe(null);
-        } 
+        }
     }
 }

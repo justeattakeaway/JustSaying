@@ -26,7 +26,8 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sns.TopicByName
         protected override void Given()
         {
             _serialisationRegister.Serialise(Arg.Any<Message>(), Arg.Is(true)).Returns(Message);
-            _sns.FindTopic("TopicName").Returns(new Topic { TopicArn = TopicArn });
+            _sns.FindTopicAsync("TopicName")
+                .Returns(new Topic { TopicArn = TopicArn });
         }
 
         protected override void When()
@@ -37,7 +38,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sns.TopicByName
         [Then]
         public void MessageIsPublishedToSnsTopic()
         {
-            _sns.Received().Publish(Arg.Is<PublishRequest>(x => B(x)));
+            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => B(x)));
         }
 
         private static bool B(PublishRequest x)
@@ -48,13 +49,13 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sns.TopicByName
         [Then]
         public void MessageSubjectIsObjectType()
         {
-            _sns.Received().Publish(Arg.Is<PublishRequest>(x => x.Subject == typeof(GenericMessage).Name));
+            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.Subject == typeof(GenericMessage).Name));
         }
 
         [Then]
         public void MessageIsPublishedToCorrectLocation()
         {
-            _sns.Received().Publish(Arg.Is<PublishRequest>(x => x.TopicArn == TopicArn));
+            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.TopicArn == TopicArn));
         }
     }
 }

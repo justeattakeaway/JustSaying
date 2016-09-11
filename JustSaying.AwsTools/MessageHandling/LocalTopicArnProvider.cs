@@ -20,9 +20,11 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             try
             {
-                var arn = _client.FindTopic(topicName).TopicArn;
+                var topic = _client.FindTopicAsync(topicName)
+                    .GetAwaiter().GetResult();
+
                 _exists = true;
-                return arn;
+                return topic.TopicArn;
             }
             catch
             {

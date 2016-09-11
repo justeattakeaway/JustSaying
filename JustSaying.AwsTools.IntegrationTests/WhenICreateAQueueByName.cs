@@ -25,7 +25,7 @@ namespace JustSaying.AwsTools.IntegrationTests
         public async Task DeadLetterQueueIsCreated()
         {
             await Patiently.AssertThatAsync(
-                () => SystemUnderTest.ErrorQueue.Exists(), 
+                () => SystemUnderTest.ErrorQueue.Exists(),
                 40.Seconds());
         }
     }

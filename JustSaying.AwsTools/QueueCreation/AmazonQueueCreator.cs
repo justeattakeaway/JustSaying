@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Amazon;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
@@ -15,7 +16,14 @@ namespace JustSaying.AwsTools.QueueCreation
             _awsClientFactory = awsClientFactory;
         }
 
-        public SqsQueueByName EnsureTopicExistsWithQueueSubscribed(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
+        public SqsQueueByName EnsureTopicExistsWithQueueSubscribed(string region,
+            IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
+        {
+            return EnsureTopicExistsWithQueueSubscribedAsync(region, serialisationRegister, queueConfig)
+                  .GetAwaiter().GetResult();
+        }
+
+        public async Task<SqsQueueByName> EnsureTopicExistsWithQueueSubscribedAsync(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
         {
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);
             var queue = EnsureQueueExists(region, queueConfig);
@@ -24,15 +32,16 @@ namespace JustSaying.AwsTools.QueueCreation
                 var sqsClient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
                 var snsClient = _awsClientFactory.GetAwsClientFactory().GetSnsClient(regionEndpoint);
                 var arnProvider = new ForeignTopicArnProvider(regionEndpoint, queueConfig.TopicSourceAccount, queueConfig.PublishEndpoint);
-                snsClient.SubscribeQueue(arnProvider.GetArn(), sqsClient, queue.Url);
+
+                await snsClient.SubscribeQueueAsync(arnProvider.GetArn(), sqsClient, queue.Url);
             }
             else
             {
-                var eventTopic = EnsureTopicExists(regionEndpoint, serialisationRegister, queueConfig);
-                EnsureQueueIsSubscribedToTopic(regionEndpoint, eventTopic, queue);
+                var eventTopic = await EnsureTopicExists(regionEndpoint, serialisationRegister, queueConfig);
+                await EnsureQueueIsSubscribedToTopic(regionEndpoint, eventTopic, queue);
 
                 var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
-                SqsPolicy.Save(eventTopic.Arn, queue.Arn, queue.Url, sqsclient);
+                await SqsPolicy.SaveAsync(eventTopic.Arn, queue.Arn, queue.Url, sqsclient);
             }
 
             return queue;
@@ -54,12 +63,12 @@ namespace JustSaying.AwsTools.QueueCreation
             }
             queue = new SqsQueueByName(regionEndpoint, queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue);
             queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdated(queueConfig);
-            
+
             _queueCache.AddToCache(region, queue.QueueName, queue);
             return queue;
         }
 
-        private SnsTopicByName EnsureTopicExists(RegionEndpoint region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
+        private async Task<SnsTopicByName> EnsureTopicExists(RegionEndpoint region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
         {
             var snsclient = _awsClientFactory.GetAwsClientFactory().GetSnsClient(region);
 
@@ -70,18 +79,20 @@ namespace JustSaying.AwsTools.QueueCreation
             eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsclient, serialisationRegister);
             _topicCache.AddToCache(region.SystemName, queueConfig.PublishEndpoint, eventTopic);
 
-            if (!eventTopic.Exists())
+            var exists = await eventTopic.ExistsAsync();
+
+            if (!exists)
             {
-                eventTopic.Create();
+                await eventTopic.CreateAsync();
             }
 
             return eventTopic;
         }
 
-        private void EnsureQueueIsSubscribedToTopic(RegionEndpoint region, SnsTopicByName eventTopic, SqsQueueByName queue)
+        private async Task EnsureQueueIsSubscribedToTopic(RegionEndpoint region, SnsTopicByName eventTopic, SqsQueueByName queue)
         {
             var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(region);
-            eventTopic.Subscribe(sqsclient, queue);
+            await eventTopic.SubscribeAsync(sqsclient, queue);
         }
     }
 }

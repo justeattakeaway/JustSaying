@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
-using NLog;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -23,43 +23,54 @@ namespace JustSaying.AwsTools.MessageHandling
         public string Policy { get; private set; }
 
 
-        private static readonly Logger Log = LogManager.GetLogger("JustSaying");
-
         protected SqsQueueBase(RegionEndpoint region, IAmazonSQS client)
         {
             Region = region;
             Client = client;
         }
 
-        public abstract bool Exists();
-
-        public virtual void Delete()
+        public bool Exists()
         {
-            Arn = null;
-            Url = null;
-
-            if (!Exists())
-            {
-                return;
-            }
-
-            Client.DeleteQueue(new DeleteQueueRequest { QueueUrl = Url });
-            
-            Arn = null;
-            Url = null;
+            return ExistsAsync()
+                .GetAwaiter().GetResult();
         }
 
-        protected void SetQueueProperties()
+        public abstract Task<bool> ExistsAsync();
+
+        public void Delete()
         {
-            var attributes = GetAttrs(new[]
+            DeleteAsync()
+                .GetAwaiter().GetResult();
+        }
+
+
+        public virtual async Task DeleteAsync()
+        {
+            Arn = null;
+            Url = null;
+
+            var exists = await ExistsAsync();
+            if (exists)
             {
-                JustSayingConstants.ATTRIBUTE_ARN, 
-                JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY,
-                JustSayingConstants.ATTRIBUTE_POLICY,
-                JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD,
-                JustSayingConstants.ATTRIBUTE_VISIBILITY_TIMEOUT,
-                JustSayingConstants.ATTRIBUTE_DELIVERY_DELAY
-            });
+                await Client.DeleteQueueAsync(new DeleteQueueRequest { QueueUrl = Url });
+
+                Arn = null;
+                Url = null;
+            }
+        }
+
+        protected async Task SetQueuePropertiesAsync()
+        {
+            var keys = new[]
+                {
+                    JustSayingConstants.ATTRIBUTE_ARN,
+                    JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY,
+                    JustSayingConstants.ATTRIBUTE_POLICY,
+                    JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD,
+                    JustSayingConstants.ATTRIBUTE_VISIBILITY_TIMEOUT,
+                    JustSayingConstants.ATTRIBUTE_DELIVERY_DELAY
+                };
+            var attributes = await GetAttrsAsync(keys);
             Arn = attributes.QueueARN;
             MessageRetentionPeriod = attributes.MessageRetentionPeriod;
             VisibilityTimeout = attributes.VisibilityTimeout;
@@ -70,17 +81,27 @@ namespace JustSaying.AwsTools.MessageHandling
 
         protected GetQueueAttributesResponse GetAttrs(IEnumerable<string> attrKeys)
         {
-            var request = new GetQueueAttributesRequest { 
+            return GetAttrsAsync(attrKeys)
+                .GetAwaiter().GetResult();
+        }
+
+        protected async Task<GetQueueAttributesResponse> GetAttrsAsync(IEnumerable<string> attrKeys)
+        {
+            var request = new GetQueueAttributesRequest {
                 QueueUrl = Url,
                 AttributeNames = new List<string>(attrKeys)
             };
-            
-            var result = Client.GetQueueAttributes(request);
 
-            return result;
+            return await Client.GetQueueAttributesAsync(request);
         }
 
-        protected internal virtual void UpdateQueueAttribute(SqsBasicConfiguration queueConfig)
+        public void UpdateQueueAttribute(SqsBasicConfiguration queueConfig)
+        {
+            UpdateQueueAttributeAsync(queueConfig)
+                .GetAwaiter().GetResult();
+        }
+
+        protected internal virtual async Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig)
         {
             if (QueueNeedsUpdating(queueConfig))
             {
@@ -97,7 +118,9 @@ namespace JustSaying.AwsTools.MessageHandling
                         {JustSayingConstants.ATTRIBUTE_DELIVERY_DELAY, queueConfig.DeliveryDelaySeconds.ToString()}
                     }
                 };
-                var response = Client.SetQueueAttributes(request);
+
+                var response = await Client.SetQueueAttributesAsync(request);
+
                 if (response.HttpStatusCode == HttpStatusCode.OK)
                 {
                     MessageRetentionPeriod = queueConfig.MessageRetentionSeconds;
