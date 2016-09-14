@@ -5,7 +5,15 @@
 
 A helpful library for publishing and consuming events / messages over SNS (SNS / SQS as a message bus).
 
-##Publishing Messages
+##Configuring the client
+Before you can start publishing or consuming messages, you want to configure the AWS client factory.
+
+````c#
+        CreateMeABus.DefaultClientFactory = () => 
+			    new DefaultAwsClientFactory(new BasicAWSCredentials("accessKey", "secretKey"))
+````
+
+##Publishing messages
 Here's how to get up & running with simple message publishing.
 
 ###1. Create a message object (POCO)
