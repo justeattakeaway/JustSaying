@@ -29,4 +29,13 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
             return true;
         }
     }
+
+    [ExactlyOnce]
+    public class OnceHandlerWithImplicitTimeoutAsync : IHandlerAsync<GenericMessage>
+    {
+        public Task<bool> Handle(GenericMessage message)
+        {
+            return Task.FromResult(true);
+        }
+    }
 }
