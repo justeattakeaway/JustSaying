@@ -36,6 +36,15 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
         }
 
         [Test]
+        public void OnceHandlerWithImplicitTimeoutAsync_DefaultsToMaximum()
+        {
+            var handler = new OnceHandlerWithImplicitTimeoutAsync();
+            var reader = HandlerMetadata.ReadExactlyOnce(handler);
+
+            Assert.That(reader.GetTimeOut(), Is.EqualTo(int.MaxValue));
+        }
+
+        [Test]
         public void OnceTestHandler_DoesHaveExactlyOnce()
         {
             var handler = new OnceTestHandler();
