@@ -10,7 +10,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
     public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout : BaseQueuePollingTest
     {
-        private readonly int _maximumTimeout = (int)TimeSpan.MaxValue.TotalSeconds;
+        private readonly int _maximumTimeout = int.MaxValue;
         private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
         private ExactlyOnceSignallingHandler _handler;
 
