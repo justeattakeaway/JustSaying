@@ -33,6 +33,9 @@ namespace JustSaying.Tools.Commands
             var sourceQueue = new SqsQueueByName(config.RegionEndpoint, SourceQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT);
             var destinationQueue = new SqsQueueByName(config.RegionEndpoint, DestinationQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT);
 
+            EnsureQueueExists(sourceQueue);
+            EnsureQueueExists(destinationQueue);
+
             var messages = PopMessagesFromSourceQueue(sourceQueue);
             var receiptHandles = messages.ToDictionary(m => m.MessageId, m => m.ReceiptHandle);
             
@@ -54,6 +57,11 @@ namespace JustSaying.Tools.Commands
 
             Console.WriteLine("Moved {0} messages from {1} to {2}", sendResponse.Successful.Count, SourceQueueName, DestinationQueueName);
             return true;
+        }
+
+        private void EnsureQueueExists(SqsQueueByName queue)
+        {
+            if (!queue.Exists()) throw new System.InvalidOperationException($"{queue.QueueName} does not exist.");
         }
 
         private List<Message> PopMessagesFromSourceQueue(SqsQueueByName sourceQueue)
