@@ -6,7 +6,7 @@ namespace JustSaying.Tools.Commands
     {
         public bool Execute()
         {
-            Console.WriteLine("Move -from \"sourceUrl\" -to \"destinationUrl\" -count \"10\"");
+            Console.WriteLine("Move -from \"sourceUrl\" -to \"destinationUrl\" -in \"region\" -count \"10\"");
             return true;
         }
     }
