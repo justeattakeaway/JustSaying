@@ -26,8 +26,9 @@ namespace JustSaying.Tools
                 .Or(from arg in x.Argument("move")
                     from sourceQueueName in x.Definition("from")
                     from destinationQueueName in x.Definition("to")
+                    from region in x.Definition("in")
                     from count in (from d in x.Definition("count") select d).Optional("count", "1")
-                    select (ICommand) new MoveCommand(sourceQueueName.Value, destinationQueueName.Value, int.Parse(count.Value)))
+                    select (ICommand) new MoveCommand(sourceQueueName.Value, destinationQueueName.Value, region.Value, int.Parse(count.Value)))
                 );
         }
     }
