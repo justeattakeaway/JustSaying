@@ -39,7 +39,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _queue = queue;
             _messagingMonitor = messagingMonitor;
             onError = onError ?? ((ex,message) => { });
-            
+
             _messageProcessingStrategy = new DefaultThrottledThroughput(_messagingMonitor);
             _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor);
             _messageDispatcher = new MessageDispatcher(queue, serialisationRegister, messagingMonitor, onError, _handlerMap);
@@ -91,7 +91,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 .ContinueWith(t => LogTaskEndState(t, queueInfo));
 
             Log.Info(
-                "Starting Listening - {0}", 
+                "Starting Listening - {0}",
                 queueInfo);
         }
 
@@ -165,8 +165,20 @@ namespace JustSaying.AwsTools.MessageHandling
                         MaxNumberOfMessages = numberOfMessagesToReadFromSqs,
                         WaitTimeSeconds = 20
                     };
-                var sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, ct).ConfigureAwait(false);
 
+                var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                ReceiveMessageResponse sqsMessageResponse;
+                try
+                {
+                    var linkedCancellationToken =
+                        CancellationTokenSource.CreateLinkedTokenSource(ct, receiveTimeout.Token).Token;
+                    sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCancellationToken).ConfigureAwait(false);
+                }
+                finally
+                {
+                    if (receiveTimeout.Token.IsCancellationRequested)
+                        Log.Trace("Receiving messages from queue {0}, region {1}, timed out", _queue, region);
+                }
                 watch.Stop();
 
                 _messagingMonitor.ReceiveMessageTime(watch.ElapsedMilliseconds);
@@ -195,9 +207,11 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (Exception ex)
             {
                 var msg = string.Format(
-                    "Issue in message handling loop for queue {0}, region {1}",
-                    queueName,
-                    region);
+                    ct.IsCancellationRequested
+                        ? "Receiving messages from queue {0}, region {1}, was interupted by requested cancellation"
+                        : "Issue in message handling loop for queue {0}, region {1}",
+                    queueName, region);
+
                 Log.Error(ex, msg);
             }
         }
