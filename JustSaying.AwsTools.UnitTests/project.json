@@ -33,9 +33,9 @@
     }
   },
   "dependencies": {
-    "AWSSDK.Core": "3.2.8-rc",
-    "AWSSDK.SimpleNotificationService": "3.2.8-rc",
-    "AWSSDK.SQS": "3.2.8-rc",
+    "AWSSDK.Core": "3.3.0.2",
+    "AWSSDK.SimpleNotificationService": "3.3.0",
+    "AWSSDK.SQS": "3.3.0",
     "JustBehave": "1.0.0.12",
     "JustSaying.AwsTools": "5.0.0",
     "JustSaying.Messaging": "5.0.0",
