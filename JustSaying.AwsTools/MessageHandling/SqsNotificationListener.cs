@@ -154,10 +154,10 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                var numberOfMessagesToReadFromSqs = await GetNumberOfMessagesToReadFromSqs().ConfigureAwait(false);
+                var numberOfMessagesToReadFromSqs = await GetNumberOfMessagesToReadFromSqs()
+                    .ConfigureAwait(false);
 
-                var watch = new System.Diagnostics.Stopwatch();
-                watch.Start();
+                var watch = System.Diagnostics.Stopwatch.StartNew();
 
                 var request = new ReceiveMessageRequest
                     {
@@ -172,12 +172,15 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     var linkedCancellationToken =
                         CancellationTokenSource.CreateLinkedTokenSource(ct, receiveTimeout.Token).Token;
-                    sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCancellationToken).ConfigureAwait(false);
+                    sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCancellationToken)
+                        .ConfigureAwait(false);
                 }
                 finally
                 {
                     if (receiveTimeout.Token.IsCancellationRequested)
-                        Log.Trace("Receiving messages from queue {0}, region {1}, timed out", _queue, region);
+                    {
+                        Log.Info("Receiving messages from queue {0}, region {1}, timed out", _queue, region);
+                    }
                 }
                 watch.Stop();
 
@@ -187,9 +190,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 Log.Trace(
                     "Polled for messages - Queue: {0}, Region: {1}, MessageCount: {2}",
-                    queueName,
-                    region,
-                    messageCount);
+                    queueName, region, messageCount);
 
                 foreach (var message in sqsMessageResponse.Messages)
                 {
@@ -198,21 +199,21 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (InvalidOperationException ex)
             {
-                Log.Trace(
-                    "Suspected no message in queue [{0}], region: [{1}]. Ex: {2}",
-                    queueName,
-                    region,
-                    ex);
+                Log.Trace( "Suspected no message in queue [{0}], region: [{1}]. Ex: {2}",
+                    queueName, region, ex);
             }
             catch (Exception ex)
             {
-                var msg = string.Format(
-                    ct.IsCancellationRequested
-                        ? "Receiving messages from queue {0}, region {1}, was interupted by requested cancellation"
-                        : "Issue in message handling loop for queue {0}, region {1}",
-                    queueName, region);
-
-                Log.Error(ex, msg);
+                if (ct.IsCancellationRequested)
+                {
+                    var ctMsg = $"Receiving messages from queue {0}, region {1} was interupted by requested cancellation. This is expected during shutdown.";
+                    Log.Warn(ex, ctMsg);
+                }
+                else
+                {
+                    var msg = $"Issue in message handling loop for queue {queueName}, region {region}";
+                    Log.Error(ex, msg);
+                }
             }
         }
 
