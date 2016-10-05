@@ -199,14 +199,14 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (InvalidOperationException ex)
             {
-                Log.Trace( "Suspected no message in queue [{0}], region: [{1}]. Ex: {2}",
+                Log.Trace( "Suspected no message in queue {0}, region: {1}. Ex: {2}",
                     queueName, region, ex);
             }
             catch (Exception ex)
             {
                 if (ct.IsCancellationRequested)
                 {
-                    var ctMsg = $"Receiving messages from queue {0}, region {1} was interupted by requested cancellation. This is expected during shutdown.";
+                    var ctMsg = $"Receiving messages from queue {queueName}, region {region} was interupted by requested cancellation. This is expected during shutdown.";
                     Log.Warn(ex, ctMsg);
                 }
                 else
