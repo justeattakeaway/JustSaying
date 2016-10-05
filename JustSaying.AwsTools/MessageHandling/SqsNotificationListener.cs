@@ -179,7 +179,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     if (receiveTimeout.Token.IsCancellationRequested)
                     {
-                        Log.Info("Receiving messages from queue {0}, region {1}, timed out", _queue, region);
+                        Log.Info("Receiving messages from queue {0}, region {1}, timed out", queueName, region);
                     }
                 }
                 watch.Stop();
