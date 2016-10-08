@@ -39,7 +39,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _queue = queue;
             _messagingMonitor = messagingMonitor;
             onError = onError ?? ((ex,message) => { });
-            
+
             _messageProcessingStrategy = new DefaultThrottledThroughput(_messagingMonitor);
             _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor);
             _messageDispatcher = new MessageDispatcher(queue, serialisationRegister, messagingMonitor, onError, _handlerMap);
@@ -149,19 +149,35 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                var numberOfMessagesToReadFromSqs = await GetNumberOfMessagesToReadFromSqs().ConfigureAwait(false);
+                var numberOfMessagesToReadFromSqs = await GetNumberOfMessagesToReadFromSqs()
+                    .ConfigureAwait(false);
 
-                var watch = new System.Diagnostics.Stopwatch();
-                watch.Start();
+                var watch = System.Diagnostics.Stopwatch.StartNew();
 
                 var request = new ReceiveMessageRequest
-                    {
-                        QueueUrl = _queue.Url,
-                        MaxNumberOfMessages = numberOfMessagesToReadFromSqs,
-                        WaitTimeSeconds = 20
-                    };
-                var sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, ct).ConfigureAwait(false);
+                {
+                    QueueUrl = _queue.Url,
+                    MaxNumberOfMessages = numberOfMessagesToReadFromSqs,
+                    WaitTimeSeconds = 20
+                };
 
+                var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                ReceiveMessageResponse sqsMessageResponse;
+                try
+                {
+                    using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, receiveTimeout.Token))
+                    {
+                        sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCts.Token)
+                            .ConfigureAwait(false);
+                    }
+                }
+                finally
+                {
+                    if (receiveTimeout.Token.IsCancellationRequested)
+                    {
+                        Log.Info($"Receiving messages from queue {queueName}, region {region}, timed out", queueName);
+                    }
+                }
                 watch.Stop();
 
                 _messagingMonitor.ReceiveMessageTime(watch.ElapsedMilliseconds);
@@ -178,13 +194,20 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (InvalidOperationException ex)
             {
-                Log.Trace(
-                    $"Suspected no message in queue [{queueName}], region: [{region}]. Ex: {ex}");
+                Log.Trace($"Suspected no message in queue {queueName}, region: {region}. Ex: {ex}");
             }
             catch (Exception ex)
             {
-                var msg = $"Issue in message handling loop for queue {queueName}, region {region}";
-                Log.Error(ex, msg);
+                if (ct.IsCancellationRequested)
+                {
+                    var ctMsg = $"Receiving messages from queue {queueName}, region {region} was interupted by requested cancellation. This is expected during shutdown.";
+                    Log.Warn(ex, ctMsg);
+                }
+                else
+                {
+                    var msg = $"Issue in message handling loop for queue {queueName}, region {region}";
+                    Log.Error(ex, msg);
+                }
             }
         }
 
