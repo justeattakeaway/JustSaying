@@ -165,16 +165,17 @@ namespace JustSaying.AwsTools.MessageHandling
                 ReceiveMessageResponse sqsMessageResponse;
                 try
                 {
-                    var linkedCancellationToken =
-                        CancellationTokenSource.CreateLinkedTokenSource(ct, receiveTimeout.Token).Token;
-                    sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCancellationToken)
-                        .ConfigureAwait(false);
+                    using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, receiveTimeout.Token))
+                    {
+                        sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCts.Token)
+                            .ConfigureAwait(false);
+                    }
                 }
                 finally
                 {
                     if (receiveTimeout.Token.IsCancellationRequested)
                     {
-                        Log.Info("Receiving messages from queue {0}, region {1}, timed out", _queue, region);
+                        Log.Info($"Receiving messages from queue {queueName}, region {region}, timed out", queueName);
                     }
                 }
                 watch.Stop();
@@ -193,14 +194,13 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (InvalidOperationException ex)
             {
-                Log.Trace(
-                    $"Suspected no message in queue [{queueName}], region: [{region}]. Ex: {ex}");
+                Log.Trace($"Suspected no message in queue {queueName}, region: {region}. Ex: {ex}");
             }
             catch (Exception ex)
             {
                 if (ct.IsCancellationRequested)
                 {
-                    var ctMsg = $"Receiving messages from queue {0}, region {1} was interupted by requested cancellation. This is expected during shutdown.";
+                    var ctMsg = $"Receiving messages from queue {queueName}, region {region} was interupted by requested cancellation. This is expected during shutdown.";
                     Log.Warn(ex, ctMsg);
                 }
                 else
