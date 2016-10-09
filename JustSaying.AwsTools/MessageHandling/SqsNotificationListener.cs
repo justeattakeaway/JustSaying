@@ -170,10 +170,11 @@ namespace JustSaying.AwsTools.MessageHandling
                 ReceiveMessageResponse sqsMessageResponse;
                 try
                 {
-                    var linkedCancellationToken =
-                        CancellationTokenSource.CreateLinkedTokenSource(ct, receiveTimeout.Token).Token;
-                    sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCancellationToken)
-                        .ConfigureAwait(false);
+                    using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, receiveTimeout.Token))
+                    {
+                        sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCts.Token)
+                            .ConfigureAwait(false);
+                    }
                 }
                 finally
                 {
