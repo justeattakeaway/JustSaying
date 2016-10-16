@@ -35,7 +35,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
             Assert.That(reader.GetTimeOut(), Is.EqualTo(42));
         }
 
-        [Test]
+        [Test, Ignore("reverted")]
         public void OnceHandlerWithImplicitTimeoutAsync_DefaultsToMaximum()
         {
             var handler = new OnceHandlerWithImplicitTimeoutAsync();
