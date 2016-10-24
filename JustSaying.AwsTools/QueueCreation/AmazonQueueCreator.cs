@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 

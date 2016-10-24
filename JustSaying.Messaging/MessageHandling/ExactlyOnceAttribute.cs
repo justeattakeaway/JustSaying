@@ -7,7 +7,8 @@ namespace JustSaying.Messaging.MessageHandling
     {
         public ExactlyOnceAttribute()
         {
-            TimeOut = (int) TimeSpan.MaxValue.TotalSeconds;
+            //TimeOut = int.MaxValue;
+            TimeOut = (int)TimeSpan.MaxValue.TotalSeconds;
         }
         public int TimeOut { get; set; }
     }

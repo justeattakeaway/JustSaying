@@ -32,7 +32,7 @@ namespace JustSaying
             {
 				throw new ArgumentException($"Region {duplicateRegion.Key} was added multiple times");				
 			}   
-        
+
         }
     }
 }
