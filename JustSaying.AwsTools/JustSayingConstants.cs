@@ -39,7 +39,7 @@ namespace JustSaying.AwsTools
         /// <summary>
         /// Default message retention period on a queue in seconds
         /// </summary>
-        public static int DEFAULT_RETENTION_PERIOD = 345600;    //4 days
+        public static int DEFAULT_RETENTION_PERIOD = 60 * 10;    //10 minutes
 
         /// <summary>
         /// Maximum message retention period on a queue in seconds
