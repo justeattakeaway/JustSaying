@@ -161,9 +161,25 @@ namespace JustSaying.AwsTools.MessageHandling
                         WaitTimeSeconds = 20
                     };
 
-                var sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, ct).ConfigureAwait(false);
-                
-				watch.Stop();
+                var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                ReceiveMessageResponse sqsMessageResponse;
+                try
+                {
+                    using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, receiveTimeout.Token))
+                    {
+                        sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCts.Token)
+                            .ConfigureAwait(false);
+                    }
+                }
+                finally
+                {
+                    if (receiveTimeout.Token.IsCancellationRequested)
+                    {
+                        Log.Info("Receiving messages from queue {0}, region {1}, timed out", queueName, region);
+                    }
+                }
+
+                watch.Stop();
 
                 _messagingMonitor.ReceiveMessageTime(watch.ElapsedMilliseconds);
 
