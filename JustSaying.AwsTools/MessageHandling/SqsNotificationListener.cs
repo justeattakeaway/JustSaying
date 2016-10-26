@@ -39,7 +39,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _queue = queue;
             _messagingMonitor = messagingMonitor;
             onError = onError ?? ((ex,message) => { });
-            
+
             _messageProcessingStrategy = new DefaultThrottledThroughput(_messagingMonitor);
             _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor);
             _messageDispatcher = new MessageDispatcher(queue, serialisationRegister, messagingMonitor, onError, _handlerMap);
@@ -149,10 +149,10 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                var numberOfMessagesToReadFromSqs = await GetNumberOfMessagesToReadFromSqs().ConfigureAwait(false);
+                var numberOfMessagesToReadFromSqs = await GetNumberOfMessagesToReadFromSqs()
+                    .ConfigureAwait(false);
 
-                var watch = new System.Diagnostics.Stopwatch();
-                watch.Start();
+                var watch = System.Diagnostics.Stopwatch.StartNew();
 
                 var request = new ReceiveMessageRequest
                     {
@@ -160,7 +160,24 @@ namespace JustSaying.AwsTools.MessageHandling
                         MaxNumberOfMessages = numberOfMessagesToReadFromSqs,
                         WaitTimeSeconds = 20
                     };
-                var sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, ct).ConfigureAwait(false);
+
+                var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                ReceiveMessageResponse sqsMessageResponse;
+                try
+                {
+                    using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, receiveTimeout.Token))
+                    {
+                        sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCts.Token)
+                            .ConfigureAwait(false);
+                    }
+                }
+                finally
+                {
+                    if (receiveTimeout.Token.IsCancellationRequested)
+                    {
+                        Log.Info("Receiving messages from queue {0}, region {1}, timed out", queueName, region);
+                    }
+                }
 
                 watch.Stop();
 
