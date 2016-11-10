@@ -33,9 +33,6 @@
     }
   },
   "dependencies": {
-    "AWSSDK.Core": "3.3.0.2",
-    "AWSSDK.SimpleNotificationService": "3.3.0",
-    "AWSSDK.SQS": "3.3.0",
     "JustBehave": "1.0.0.12",
     "JustSaying": "5.0.0",
     "JustSaying.AwsTools": "5.0.0",
@@ -46,7 +43,10 @@
     "NLog": "4.4.0-betaV15",
     "NSubstitute": "1.10.0",
     "NUnit": "3.5.0",
-    "dotnet-test-nunit": "3.4.0-beta-2"
+    "dotnet-test-nunit": "3.4.0-beta-2",
+    "AWSSDK.Core": "3.3.4",
+    "AWSSDK.SimpleNotificationService": "3.3.0.2",
+    "AWSSDK.SQS": "3.3.0.2"
   },
   "testRunner": "nunit",
   "frameworks": {
