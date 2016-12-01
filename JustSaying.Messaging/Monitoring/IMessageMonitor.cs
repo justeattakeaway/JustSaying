@@ -8,6 +8,6 @@ namespace JustSaying.Messaging.Monitoring
         void IncrementThrottlingStatistic();
         void HandleThrottlingTime(long handleTimeMs);
         void PublishMessageTime(long handleTimeMs);
-        void ReceiveMessageTime(long handleTimeMs);
+        void ReceiveMessageTime(long handleTimeMs, string name, string queueName);
     }
 }

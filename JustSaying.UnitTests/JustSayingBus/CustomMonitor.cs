@@ -11,7 +11,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         public void IncrementThrottlingStatistic() { }
         public void HandleThrottlingTime(long handleTimeMs) { }
         public void PublishMessageTime(long handleTimeMs) { }
-        public void ReceiveMessageTime(long handleTimeMs) { }
+        public void ReceiveMessageTime(long handleTimeMs, string name, string queueName) { }
         public void HandlerExecutionTime(string typeName, string eventName, TimeSpan executionTime) { }
     }
 }

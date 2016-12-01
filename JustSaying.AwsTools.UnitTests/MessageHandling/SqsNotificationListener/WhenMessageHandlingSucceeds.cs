@@ -33,7 +33,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         [Then]
         public void ReceiveMessageTimeStatsSent()
         {
-            Monitor.Received().ReceiveMessageTime(Arg.Any<long>());
+            Monitor.Received().ReceiveMessageTime(Arg.Any<long>(), Arg.Any<string>(), Arg.Any<string>());
         }
 
         [Then]
