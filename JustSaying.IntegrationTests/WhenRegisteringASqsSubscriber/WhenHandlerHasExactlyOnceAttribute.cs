@@ -151,7 +151,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             public void IncrementThrottlingStatistic() { }
             public void HandleThrottlingTime(long handleTimeMs) { }
             public void PublishMessageTime(long handleTimeMs) { }
-            public void ReceiveMessageTime(long handleTimeMs) { }
+            public void ReceiveMessageTime(long handleTimeMs, string queueName, string region) { }
             public void HandlerExecutionTime(string typeName, string eventName, TimeSpan executionTime) { }
         }
     

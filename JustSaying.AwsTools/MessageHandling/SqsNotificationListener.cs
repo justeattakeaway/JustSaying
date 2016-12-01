@@ -181,7 +181,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 watch.Stop();
 
-                _messagingMonitor.ReceiveMessageTime(watch.ElapsedMilliseconds);
+                _messagingMonitor.ReceiveMessageTime(watch.ElapsedMilliseconds, queueName, region);
 
                 var messageCount = sqsMessageResponse.Messages.Count;
 
