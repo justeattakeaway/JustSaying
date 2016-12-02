@@ -14,6 +14,6 @@ namespace JustSaying.Messaging.Monitoring
 
         public void PublishMessageTime(long handleTimeMs) { }
 
-        public void ReceiveMessageTime(long handleTimeMs) { }
+        public void ReceiveMessageTime(long handleTimeMs, string queueName, string region) { }
     }
 }
