@@ -166,7 +166,7 @@ namespace JustSaying.AwsTools.MessageHandling
                         WaitTimeSeconds = 20
                     };
 
-                var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));
                 ReceiveMessageResponse sqsMessageResponse;
                 try
                 {
