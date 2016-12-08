@@ -38,7 +38,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             _queue = queue;
             _messagingMonitor = messagingMonitor;
-            onError = onError ?? ((ex,message) => { });
+            onError = onError ?? ((ex, message) => { });
 
             _messageProcessingStrategy = new DefaultThrottledThroughput(_messagingMonitor);
             _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor);
@@ -81,12 +81,12 @@ namespace JustSaying.AwsTools.MessageHandling
 
             _cts = new CancellationTokenSource();
             Task.Factory.StartNew(async () =>
+            {
+                while (!_cts.IsCancellationRequested)
                 {
-                    while (!_cts.IsCancellationRequested)
-                    {
-                        await ListenLoop(_cts.Token).ConfigureAwait(false);
-                    }
-                })
+                    await ListenLoop(_cts.Token).ConfigureAwait(false);
+                }
+            })
                 .Unwrap()
                 .ContinueWith(t => LogTaskEndState(t, queueInfo));
 
@@ -138,7 +138,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return innerExDetails.ToString();
         }
 
-       public void StopListening()
+        public void StopListening()
         {
             _cts.Cancel();
             Log.Info(
@@ -151,71 +151,85 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             var queueName = _queue.QueueName;
             var region = _queue.Region.SystemName;
+            ReceiveMessageResponse sqsMessageResponse = null;
 
             try
             {
-                var numberOfMessagesToReadFromSqs = await GetNumberOfMessagesToReadFromSqs()
-                    .ConfigureAwait(false);
-
-                var watch = System.Diagnostics.Stopwatch.StartNew();
-
-                var request = new ReceiveMessageRequest
-                    {
-                        QueueUrl = _queue.Url,
-                        MaxNumberOfMessages = numberOfMessagesToReadFromSqs,
-                        WaitTimeSeconds = 20
-                    };
-
-                var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));
-                ReceiveMessageResponse sqsMessageResponse;
-                try
-                {
-                    using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, receiveTimeout.Token))
-                    {
-                        sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCts.Token)
-                            .ConfigureAwait(false);
-                    }
-                }
-                finally
-                {
-                    if (receiveTimeout.Token.IsCancellationRequested)
-                    {
-                        Log.Info("Receiving messages from queue {0}, region {1}, timed out", queueName, region);
-                    }
-                }
-                watch.Stop();
-
-                _messagingMonitor.ReceiveMessageTime(watch.ElapsedMilliseconds, queueName, region);
-
+                sqsMessageResponse = await GetMessagesFromSqsQueue(ct, queueName, region);
                 var messageCount = sqsMessageResponse.Messages.Count;
 
                 Log.Trace(
-                    "Polled for messages - Queue: {0}, Region: {1}, MessageCount: {2}",
-                    queueName, region, messageCount);
-
-                foreach (var message in sqsMessageResponse.Messages)
-                {
-                    HandleMessage(message);
-                }
+                    $"Polled for messages - Queue: {queueName}, Region: {region}, MessageCount: {messageCount}");
             }
             catch (InvalidOperationException ex)
             {
-                Log.Trace( "Suspected no message in queue {0}, region: {1}. Ex: {2}",
-                    queueName, region, ex);
+                Log.Trace(
+                    $"Could not determine number of messages to read from [{queueName}], region: [{region}]. Ex: {ex}");
+            }
+            catch (OperationCanceledException ex)
+            {
+                Log.Trace($"Suspected no message in queue [{queueName}], region: [{region}]. Ex: {ex}");
             }
             catch (Exception ex)
             {
-                if (ct.IsCancellationRequested)
+                var msg = $"Issue receiving messages for queue {queueName}, region {region}";
+                Log.Error(ex, msg);
+            }
+
+            try
+            {
+                if (sqsMessageResponse != null)
                 {
-                    var ctMsg = $"Receiving messages from queue {queueName}, region {region} was interupted by requested cancellation. This is expected during shutdown.";
-                    Log.Warn(ex, ctMsg);
-                }
-                else
-                {
-                    var msg = $"Issue in message handling loop for queue {queueName}, region {region}";
-                    Log.Error(ex, msg);
+                    foreach (var message in sqsMessageResponse.Messages)
+                    {
+                        HandleMessage(message);
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                var msg = $"Issue in message handling loop for queue {queueName}, region {region}";
+                Log.Error(ex, msg);
+            }
+        }
+
+        private async Task<ReceiveMessageResponse> GetMessagesFromSqsQueue(CancellationToken ct, string queueName, string region)
+        {
+            var numberOfMessagesToReadFromSqs = await GetNumberOfMessagesToReadFromSqs()
+                .ConfigureAwait(false);
+
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+
+            var request = new ReceiveMessageRequest
+            {
+                QueueUrl = _queue.Url,
+                MaxNumberOfMessages = numberOfMessagesToReadFromSqs,
+                WaitTimeSeconds = 20
+            };
+
+            var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));
+            ReceiveMessageResponse sqsMessageResponse;
+            try
+            {
+                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, receiveTimeout.Token))
+                {
+                    sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCts.Token)
+                        .ConfigureAwait(false);
+                }
+            }
+            finally
+            {
+                if (receiveTimeout.Token.IsCancellationRequested)
+                {
+                    Log.Info("Receiving messages from queue {0}, region {1}, timed out", queueName, region);
+                }
+            }
+
+            watch.Stop();
+
+            _messagingMonitor.ReceiveMessageTime(watch.ElapsedMilliseconds, queueName, region);
+
+            return sqsMessageResponse;
         }
 
         private async Task<int> GetNumberOfMessagesToReadFromSqs()
