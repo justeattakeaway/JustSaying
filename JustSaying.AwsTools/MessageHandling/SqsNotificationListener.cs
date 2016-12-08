@@ -174,10 +174,12 @@ namespace JustSaying.AwsTools.MessageHandling
             try
             {
                 if (sqsMessageResponse != null)
+                {
                     foreach (var message in sqsMessageResponse.Messages)
                     {
                         HandleMessage(message);
                     }
+                }
             }
             catch (Exception ex)
             {
