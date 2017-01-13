@@ -39,7 +39,6 @@
 	"frameworks": {
 		"netstandard1.6": {
       "dependencies": {
-        "NETStandard.Library": "1.6.1",
         "System.Linq": "4.3.0",
         "System.Net.NetworkInformation": "4.3.0",
         "System.Net.WebHeaderCollection": "4.3.0"
