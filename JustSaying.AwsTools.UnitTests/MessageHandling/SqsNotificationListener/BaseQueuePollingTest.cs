@@ -12,6 +12,7 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -25,6 +26,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         protected const string MessageBody = "object";
         protected IHandlerAsync<GenericMessage> Handler;
         protected IMessageMonitor Monitor;
+        protected ILoggerFactory LoggerFactory;
         protected IMessageSerialisationRegister SerialisationRegister;
         protected IMessageLock MessageLock;
         protected readonly string MessageTypeString = typeof(GenericMessage).ToString();
@@ -32,18 +34,18 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         protected override AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
             var queue = new SqsQueueByUrl(RegionEndpoint.EUWest1, QueueUrl, Sqs);
-            return new AwsTools.MessageHandling.SqsNotificationListener(queue, SerialisationRegister, Monitor, null, MessageLock);
+            return new AwsTools.MessageHandling.SqsNotificationListener(queue, SerialisationRegister, Monitor, LoggerFactory, null, MessageLock);
         }
 
         protected override void Given()
         {
-            Logging.ToConsole();
-
+            LoggerFactory = new LoggerFactory().AddConsole();
             Sqs = Substitute.For<IAmazonSQS>();
             SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
             Monitor = Substitute.For<IMessageMonitor>();
             Handler = Substitute.For<IHandlerAsync<GenericMessage>>();
-
+            LoggerFactory = Substitute.For<ILoggerFactory>();
+            
             var response = GenerateResponseMessage(MessageTypeString, Guid.NewGuid());
             
             Sqs.ReceiveMessageAsync(

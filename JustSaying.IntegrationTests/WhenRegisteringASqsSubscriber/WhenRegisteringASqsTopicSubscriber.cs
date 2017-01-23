@@ -8,6 +8,7 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.TestingFramework;
 using JustSaying.Models;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -56,7 +57,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         public async Task QueueIsCreated()
         {
             var queue = new SqsQueueByName(RegionEndpoint.EUWest1, 
-                QueueName, Client, 0);
+                QueueName, Client, 0, Substitute.For<ILoggerFactory>());
 
             await Patiently.AssertThatAsync(
                 queue.Exists, TimeSpan.FromSeconds(65));

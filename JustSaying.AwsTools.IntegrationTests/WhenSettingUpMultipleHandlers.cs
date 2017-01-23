@@ -58,7 +58,7 @@ namespace JustSaying.AwsTools.IntegrationTests
             topicName = uniqueTopicAndQueueNames.GetTopicName(string.Empty, typeof(Order).Name);
             queueName = uniqueTopicAndQueueNames.GetQueueName(new SqsReadConfiguration(SubscriptionType.ToTopic) {BaseQueueName = baseQueueName }, typeof(Order).Name);
 
-            bus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+            bus = CreateMeABus.WithNoLogging().InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithAwsClientFactory(() => proxyAwsClientFactory)
                 .WithNamingStrategy(() => uniqueTopicAndQueueNames)
                 .WithSqsTopicSubscriber()

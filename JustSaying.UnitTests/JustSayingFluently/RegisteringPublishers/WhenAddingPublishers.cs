@@ -1,6 +1,7 @@
 ﻿using JustBehave;
 using JustSaying.AwsTools;
 using JustSaying.TestingFramework;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -12,7 +13,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
 
         protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
-            return new JustSaying.JustSayingFluently(_bus, null, new AwsClientFactoryProxy());
+            return new JustSaying.JustSayingFluently(_bus, null, new AwsClientFactoryProxy(), Substitute.For<ILoggerFactory>());
         }
 
         protected override void Given()

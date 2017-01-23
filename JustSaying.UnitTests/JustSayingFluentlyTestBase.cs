@@ -19,6 +19,7 @@ namespace JustSaying.UnitTests
             }
 
             var fns = CreateMeABus
+                .WithNoLogging()
                 .InRegion("defaultRegion")
                 .WithFailoverRegion("failoverRegion")
                 .WithActiveRegion(() => "defaultRegion")

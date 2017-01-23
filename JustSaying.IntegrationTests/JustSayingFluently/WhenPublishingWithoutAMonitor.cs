@@ -25,7 +25,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .Returns(true)
                 .AndDoes(_ => Tasks.DelaySendDone(doneSignal));
 
-            var bus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+            var bus = CreateMeABus.WithNoLogging().InRegion(RegionEndpoint.EUWest1.SystemName)
                 .ConfigurePublisherWith(c =>
                     {
                         c.PublishFailureBackoffMilliseconds = 1;

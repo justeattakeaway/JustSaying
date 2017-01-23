@@ -34,7 +34,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
 
 
-            var publisher = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+            var publisher = CreateMeABus.WithNoLogging().InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithMonitoring(Substitute.For<IMessageMonitor>())
                 .ConfigurePublisherWith(c =>
                 {

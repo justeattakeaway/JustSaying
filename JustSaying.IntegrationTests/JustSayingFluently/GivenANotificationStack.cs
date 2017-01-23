@@ -73,7 +73,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
             Monitoring = Substitute.For<IMessageMonitor>();
 
-            ServiceBus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+            ServiceBus = CreateMeABus.WithNoLogging().InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithMonitoring(Monitoring)
 
                 .ConfigurePublisherWith(c =>

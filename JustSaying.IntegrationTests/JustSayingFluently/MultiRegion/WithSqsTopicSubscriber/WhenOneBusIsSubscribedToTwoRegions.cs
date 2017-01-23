@@ -46,6 +46,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .Do(async x => await _handler.Complete((GenericMessage) x.Args()[0]));
 
             _subscriber = CreateMeABus
+                .WithNoLogging()
                 .InRegion(primaryRegion)
                 .WithFailoverRegion(secondaryRegion)
                 .WithActiveRegion(() => primaryRegion)
@@ -58,6 +59,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         private void AndAPublisherToThePrimaryRegion(string primaryRegion)
         {
             _primaryPublisher = CreateMeABus
+                .WithNoLogging()
                 .InRegion(primaryRegion)
                 .WithSnsMessagePublisher<GenericMessage>();
         }
@@ -65,6 +67,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         private void AndAPublisherToTheSecondaryRegion(string secondaryRegion)
         {
             _secondaryPublisher = CreateMeABus
+                .WithNoLogging()
                 .InRegion(secondaryRegion)
                 .WithSnsMessagePublisher<GenericMessage>();
         }

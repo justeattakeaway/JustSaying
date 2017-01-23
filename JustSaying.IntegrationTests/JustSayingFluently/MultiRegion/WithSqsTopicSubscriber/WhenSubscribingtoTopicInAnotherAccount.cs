@@ -57,7 +57,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         private IMayWantOptionalSettings GetBus(string accessKey, string secretKey)
         {
             return CreateMeABus
-                .InRegion("eu-west-1").WithAwsClientFactory(()=>new DefaultAwsClientFactory(new BasicAWSCredentials(accessKey, secretKey) ));
+                .WithNoLogging().InRegion("eu-west-1").WithAwsClientFactory(()=>new DefaultAwsClientFactory(new BasicAWSCredentials(accessKey, secretKey) ));
         }
     }
     class NamingStrategy : INamingStrategy

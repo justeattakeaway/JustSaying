@@ -19,7 +19,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
         protected override void When()
         {
             CreateMeABus
-                .InRegion(null)
+                .WithNoLogging().InRegion(null)
                 .ConfigurePublisherWith(configuration => { });
         }
 

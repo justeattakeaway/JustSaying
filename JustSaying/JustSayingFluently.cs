@@ -9,8 +9,9 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
-using NLog;
 using JustSaying.Messaging.Interrogation;
+using Microsoft.Extensions.Logging;
+using JustSaying.Logging;
 
 namespace JustSaying
 {
@@ -24,22 +25,25 @@ namespace JustSaying
     /// </summary>
     public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings, IMayWantARegionPicker, IAmJustInterrogating
     {
-        private static readonly Logger Log = LogManager.GetLogger("JustSaying"); // ToDo: Dangerous!
+        private readonly ILogger _log;
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
         private readonly IAwsClientFactoryProxy _awsClientFactoryProxy;
         protected readonly IAmJustSaying Bus;
         private SqsReadConfiguration _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic);
         private IMessageSerialisationFactory _serialisationFactory;
         private Func<INamingStrategy> _busNamingStrategyFunc;
+        private readonly ILoggerFactory _loggerFactory;
 
-        protected internal JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator, IAwsClientFactoryProxy awsClientFactoryProxy)
+        protected internal JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator, IAwsClientFactoryProxy awsClientFactoryProxy, ILoggerFactory loggerFactory)
         {
+            _loggerFactory = loggerFactory;
+            _log = _loggerFactory.CreateLogger("JustSaying");
             Bus = bus;
             _amazonQueueCreator = queueCreator;
             _awsClientFactoryProxy = awsClientFactoryProxy;
         }
-
-        private string GetMessageTypeName<T>() => typeof(T).ToTopicName();
+        
+        private static string GetMessageTypeName<T>() => typeof(T).ToTopicName();
 
         public virtual INamingStrategy GetNamingStrategy()
             => _busNamingStrategyFunc != null
@@ -53,7 +57,7 @@ namespace JustSaying
         /// <returns></returns>
         public IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>() where T : Message
         {
-            Log.Info("Adding SNS publisher");
+            _log.Info("Adding SNS publisher");
             _subscriptionConfig.Topic = GetMessageTypeName<T>();
             var namingStrategy = GetNamingStrategy();
 
@@ -66,7 +70,8 @@ namespace JustSaying
                 var eventPublisher = new SnsTopicByName(
                     topicName,
                     _awsClientFactoryProxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
-                    Bus.SerialisationRegister);
+                    Bus.SerialisationRegister,
+                    _loggerFactory);
 
                 if (!eventPublisher.Exists())
                 {
@@ -78,7 +83,7 @@ namespace JustSaying
                 Bus.AddMessagePublisher<T>(eventPublisher, region);
             }
 
-            Log.Info($"Created SNS topic publisher - Topic: {_subscriptionConfig.Topic}");
+            _log.Info($"Created SNS topic publisher - Topic: {_subscriptionConfig.Topic}");
 
             return this;
         }
@@ -90,7 +95,7 @@ namespace JustSaying
         /// <returns></returns>
         public IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsWriteConfiguration> configBuilder) where T : Message
         {
-            Log.Info("Adding SQS publisher");
+            _log.Info("Adding SQS publisher");
 
             var config = new SqsWriteConfiguration();
             configBuilder(config);
@@ -108,7 +113,8 @@ namespace JustSaying
                     queueName,
                     _awsClientFactoryProxy.GetAwsClientFactory().GetSqsClient(regionEndpoint),
                     config.RetryCountBeforeSendingToErrorQueue,
-                    Bus.SerialisationRegister);
+                    Bus.SerialisationRegister,
+                    _loggerFactory);
 
                 if (!eventPublisher.Exists())
                 {
@@ -118,7 +124,7 @@ namespace JustSaying
                 Bus.AddMessagePublisher<T>(eventPublisher, region);
             }
 
-            Log.Info($"Created SQS publisher - MessageName: {messageTypeName}, QueueName: {queueName}");
+            _log.Info($"Created SQS publisher - MessageName: {messageTypeName}, QueueName: {queueName}");
 
             return this;
         }
@@ -129,7 +135,7 @@ namespace JustSaying
         public void StartListening()
         {
             Bus.Start();
-            Log.Info("Started listening for messages");
+            _log.Info("Started listening for messages");
         }
 
         /// <summary>
@@ -138,7 +144,7 @@ namespace JustSaying
         public void StopListening()
         {
             Bus.Stop();
-            Log.Info("Stopped listening for messages");
+            _log.Info("Stopped listening for messages");
         }
 
         /// <summary>
@@ -164,7 +170,7 @@ namespace JustSaying
         /// <summary>
         /// States whether the stack is listening for messages (subscriptions are running)
         /// </summary>
-        public bool Listening => (Bus != null) && Bus.Listening;
+        public bool Listening => Bus?.Listening == true;
 
         public IMayWantOptionalSettings WithSerialisationFactory(IMessageSerialisationFactory factory)
         {
@@ -228,7 +234,7 @@ namespace JustSaying
                 Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handler);
             }
             var messageTypeName = GetMessageTypeName<T>();
-            Log.Info(
+            _log.Info(
                 $"Added a message handler - MessageName: {messageTypeName}, QueueName: {_subscriptionConfig.QueueName}, HandlerName: {handler.GetType().Name}");
 
             return thing;
@@ -255,7 +261,7 @@ namespace JustSaying
                 Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handlerResolver.ResolveHandler<T>(resolutionContext));
             }
 
-            Log.Info(
+            _log.Info(
                 $"Added a message handler - Topic: {_subscriptionConfig.Topic}, QueueName: {_subscriptionConfig.QueueName}, HandlerName: IHandler<{typeof(T)}>");
 
             return thing;
@@ -270,7 +276,7 @@ namespace JustSaying
             {
                 var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribed(region, Bus.SerialisationRegister, _subscriptionConfig);
                 CreateSubscriptionListener<T>(region, queue);
-                Log.Info(
+                _log.Info(
                     $"Created SQS topic subscription - Topic: {_subscriptionConfig.Topic}, QueueName: {_subscriptionConfig.QueueName}");
             }
 
@@ -286,7 +292,7 @@ namespace JustSaying
             {
                 var queue = _amazonQueueCreator.EnsureQueueExists(region, _subscriptionConfig);
                 CreateSubscriptionListener<T>(region, queue);
-                Log.Info(
+                _log.Info(
                     $"Created SQS subscriber - MessageName: {messageTypeName}, QueueName: {_subscriptionConfig.QueueName}");
             }
 
@@ -295,7 +301,7 @@ namespace JustSaying
 
         private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue) where T : Message
         {
-            var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, Bus.Monitor, _subscriptionConfig.OnError, Bus.MessageLock);
+            var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, Bus.Monitor, _loggerFactory, _subscriptionConfig.OnError, Bus.MessageLock);
             sqsSubscriptionListener.Subscribers.Add(new Subscriber(typeof(T)));
             Bus.AddNotificationSubscriber(region, sqsSubscriptionListener);
 

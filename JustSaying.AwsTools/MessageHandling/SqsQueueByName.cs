@@ -7,6 +7,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using Amazon.SQS.Util;
 using JustSaying.AwsTools.QueueCreation;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -14,11 +15,11 @@ namespace JustSaying.AwsTools.MessageHandling
     {
         private readonly int _retryCountBeforeSendingToErrorQueue;
 
-        public SqsQueueByName(RegionEndpoint region, string queueName, IAmazonSQS client, int retryCountBeforeSendingToErrorQueue)
-            : base(region, queueName, client)
+        public SqsQueueByName(RegionEndpoint region, string queueName, IAmazonSQS client, int retryCountBeforeSendingToErrorQueue, ILoggerFactory loggerFactory)
+            : base(region, queueName, client, loggerFactory)
         {
             _retryCountBeforeSendingToErrorQueue = retryCountBeforeSendingToErrorQueue;
-            ErrorQueue = new ErrorQueue(region, queueName, client);
+            ErrorQueue = new ErrorQueue(region, queueName, client, loggerFactory);
         }
 
         public override async Task<bool> CreateAsync(SqsBasicConfiguration queueConfig, int attempt = 0)

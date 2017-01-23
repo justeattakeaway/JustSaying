@@ -8,6 +8,7 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -20,12 +21,11 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 
         protected override void Given()
         {
-            Logging.ToConsole();
-
             Sqs = Substitute.For<IAmazonSQS>();
             SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
             Monitor = Substitute.For<IMessageMonitor>();
             Handler = Substitute.For<IHandlerAsync<GenericMessage>>();
+            LoggerFactory = Substitute.For<ILoggerFactory>();
             GenerateResponseMessage(MessageTypeString, Guid.NewGuid());
 
             DeserialisedMessage = new GenericMessage { RaisingComponent = "Component" };

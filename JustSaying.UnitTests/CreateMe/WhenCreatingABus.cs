@@ -23,39 +23,39 @@ namespace JustSaying.UnitTests.CreateMe
         public void PublishConfigurationIsOptional()
         {
             // Enforced by the fact we can do other configurations on the bus.
-            CreateMeABus.InRegion(_region).StopListening();
+            CreateMeABus.WithNoLogging().InRegion(_region).StopListening();
         }
 
         [Test]
         public void PublishConfigurationCanBeProvided()
         {
-            CreateMeABus.InRegion(_region).ConfigurePublisherWith(_config);
+            CreateMeABus.WithNoLogging().InRegion(_region).ConfigurePublisherWith(_config);
         }
 
         [Test]
         public void ThenICanProvideMonitoring()
         {
-            CreateMeABus.InRegion(_region).WithMonitoring(null).ConfigurePublisherWith(_config);
+            CreateMeABus.WithNoLogging().InRegion(_region).WithMonitoring(null).ConfigurePublisherWith(_config);
         }
 
         [Test]
         public void MonitoringIsNotEnforced()
         {
             // Enforced by the fact we can do other configurations on the bus.
-            CreateMeABus.InRegion(_region).ConfigurePublisherWith(_config).StopListening();
+            CreateMeABus.WithNoLogging().InRegion(_region).ConfigurePublisherWith(_config).StopListening();
         }
 
         [Test]
         public void ThenICanProvideCustomSerialisation()
         {
-            CreateMeABus.InRegion(_region).WithSerialisationFactory(null);
+            CreateMeABus.WithNoLogging().InRegion(_region).WithSerialisationFactory(null);
         }
 
         [Test]
         public void CustomSerialisationIsNotEnforced()
         {
             // Enforced by the fact we can do other configurations on the bus.
-            CreateMeABus.InRegion(_region).WithSerialisationFactory(null).StopListening();
+            CreateMeABus.WithNoLogging().InRegion(_region).WithSerialisationFactory(null).StopListening();
         }
     }
 }

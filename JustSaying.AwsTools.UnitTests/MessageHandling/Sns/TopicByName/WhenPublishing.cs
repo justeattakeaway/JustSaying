@@ -5,6 +5,7 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sns.TopicByName
@@ -18,7 +19,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sns.TopicByName
 
         protected override SnsTopicByName CreateSystemUnderTest()
         {
-            var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister);
+            var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister, Substitute.For<ILoggerFactory>());
             topic.Exists();
             return topic;
         }

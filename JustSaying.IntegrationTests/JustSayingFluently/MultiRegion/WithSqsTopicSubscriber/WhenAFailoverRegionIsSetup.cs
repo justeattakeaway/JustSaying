@@ -53,6 +53,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .Do(async x => await _primaryHandler.Complete((GenericMessage)x.Args()[0]));
 
             _primaryBus = CreateMeABus
+                .WithNoLogging()
                 .InRegion(PrimaryRegion)
                 .WithSqsTopicSubscriber()
                 .IntoQueue("queuename")
@@ -66,6 +67,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .Do(async x => await _secondaryHandler.Complete((GenericMessage)x.Args()[0]));
 
             _secondaryBus = CreateMeABus
+                .WithNoLogging()
                 .InRegion(SecondaryRegion)
                 .WithSqsTopicSubscriber()
                 .IntoQueue("queuename")
@@ -76,6 +78,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         private void AndAPublisherWithAFailoverRegion()
         {
             _publisher = CreateMeABus
+                .WithNoLogging()
                 .InRegion(PrimaryRegion)
                 .WithFailoverRegion(SecondaryRegion)
                 .WithActiveRegion(_getActiveRegion)

@@ -6,8 +6,9 @@ using Amazon.SimpleNotificationService.Model;
 using Amazon.SQS;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialisation;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
+using JustSaying.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -16,12 +17,14 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly IMessageSerialisationRegister _serialisationRegister; // ToDo: Grrr...why is this here even. GET OUT!
         public string Arn { get; protected set; }
         public IAmazonSimpleNotificationService Client { get; protected set; }
-        private static readonly Logger EventLog = LogManager.GetLogger("EventLog");
-        private static readonly Logger Log = LogManager.GetLogger("JustSaying");
+        private readonly ILogger _eventLog;
+        private readonly ILogger _log;
 
-        public SnsTopicBase(IMessageSerialisationRegister serialisationRegister)
+        protected SnsTopicBase(IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory)
         {
             _serialisationRegister = serialisationRegister;
+            _log = loggerFactory.CreateLogger("JustSaying");
+            _eventLog = loggerFactory.CreateLogger("EventLog");
         }
 
         public abstract Task<bool> ExistsAsync();
@@ -48,7 +51,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 return true;
             }
 
-            Log.Info($"Failed to subscribe Queue to Topic: {queue.Arn}, Topic: {Arn}");
+            _log.Info($"Failed to subscribe Queue to Topic: {queue.Arn}, Topic: {Arn}");
             return false;
         }
 
@@ -72,7 +75,7 @@ namespace JustSaying.AwsTools.MessageHandling
             try
             {
                 await Client.PublishAsync(request);
-                EventLog.Info($"Published message: '{messageType}' with content {messageToSend}");
+                _eventLog.Info($"Published message: '{messageType}' with content {messageToSend}");
             }
             catch (Exception ex)
             {

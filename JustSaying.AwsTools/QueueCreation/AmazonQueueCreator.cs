@@ -3,18 +3,21 @@ using Amazon;
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.QueueCreation
 {
     public class AmazonQueueCreator : IVerifyAmazonQueues
     {
         private readonly IAwsClientFactoryProxy _awsClientFactory;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly IRegionResourceCache<SqsQueueByName> _queueCache = new RegionResourceCache<SqsQueueByName>();
         private readonly IRegionResourceCache<SnsTopicByName> _topicCache = new RegionResourceCache<SnsTopicByName>();
 
-        public AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory)
+        public AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory, ILoggerFactory loggerFactory)
         {
             _awsClientFactory = awsClientFactory;
+            _loggerFactory = loggerFactory;
         }
 
         public SqsQueueByName EnsureTopicExistsWithQueueSubscribed(string region,
@@ -68,7 +71,7 @@ namespace JustSaying.AwsTools.QueueCreation
             {
                 return queue;
             }
-            queue = new SqsQueueByName(regionEndpoint, queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue);
+            queue = new SqsQueueByName(regionEndpoint, queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue, _loggerFactory);
             await queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig);
 
             _queueCache.AddToCache(region, queue.QueueName, queue);
@@ -83,7 +86,7 @@ namespace JustSaying.AwsTools.QueueCreation
             if (eventTopic != null)
                 return eventTopic;
 
-            eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsclient, serialisationRegister);
+            eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsclient, serialisationRegister, _loggerFactory);
             _topicCache.AddToCache(region.SystemName, queueConfig.PublishEndpoint, eventTopic);
 
             var exists = await eventTopic.ExistsAsync();

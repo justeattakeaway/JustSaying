@@ -10,6 +10,7 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -27,7 +28,7 @@ namespace JustSaying.AwsTools.IntegrationTests
             var locker = new object();
             var awsQueueClient = CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1);
  
-            var q = new SqsQueueByName(RegionEndpoint.EUWest1, "throttle_test", awsQueueClient, 1);
+            var q = new SqsQueueByName(RegionEndpoint.EUWest1, "throttle_test", awsQueueClient, 1, new LoggerFactory());
             if (!q.Exists())
             {
                 q.Create(new SqsBasicConfiguration());
@@ -66,7 +67,7 @@ namespace JustSaying.AwsTools.IntegrationTests
             handler.Handle(null).ReturnsForAnyArgs(true).AndDoes(x => {lock (locker) { handleCount++; } });
 
             serialisations.DeserializeMessage(string.Empty).ReturnsForAnyArgs(new GenericMessage());
-            var listener = new SqsNotificationListener(q, serialisations, monitor);
+            var listener = new SqsNotificationListener(q, serialisations, monitor, new LoggerFactory());
             listener.AddMessageHandler(() => handler);
 
             var stopwatch = new Stopwatch();

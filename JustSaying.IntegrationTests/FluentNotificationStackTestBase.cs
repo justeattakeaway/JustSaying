@@ -28,7 +28,7 @@ namespace JustSaying.IntegrationTests
 
         protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
-            var fns = CreateMeABus.InRegion(TestEndpoint.SystemName)
+            var fns = CreateMeABus.WithNoLogging().InRegion(TestEndpoint.SystemName)
                 .ConfigurePublisherWith(x =>
                 {
                     x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;

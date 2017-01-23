@@ -5,6 +5,7 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using NUnit.Framework;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests
 {
@@ -30,7 +31,7 @@ namespace JustSaying.IntegrationTests
         public void ErrorQueueShouldNotBeCreated()
         {
             var queueName = "test-queue-issue-191";
-            CreateMeABus.InRegion("eu-west-1")
+            CreateMeABus.WithNoLogging().InRegion("eu-west-1")
                 .WithSnsMessagePublisher<GenericMessage>()
 
                 .WithSqsTopicSubscriber()
@@ -46,7 +47,7 @@ namespace JustSaying.IntegrationTests
 
         private void AssertThatQueueDoesNotExist(string name)
         {
-            var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, name, _client, 1);
+            var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, name, _client, 1, new LoggerFactory());
             Assert.IsFalse(sqsQueueByName.Exists(), $"Expecting queue '{name}' to not exist but it does.");
         }
     }

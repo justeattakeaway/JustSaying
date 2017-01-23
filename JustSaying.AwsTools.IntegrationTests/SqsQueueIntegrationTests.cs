@@ -2,6 +2,7 @@
 using Amazon;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.IntegrationTests
 {
@@ -15,7 +16,7 @@ namespace JustSaying.AwsTools.IntegrationTests
         protected override SqsQueueByName CreateSystemUnderTest()
         {
             QueueUniqueKey = "test" + DateTime.Now.Ticks;
-            var queue = new SqsQueueByName(RegionEndpoint.EUWest1, QueueUniqueKey, CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1), 1);
+            var queue = new SqsQueueByName(RegionEndpoint.EUWest1, QueueUniqueKey, CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1), 1, new LoggerFactory());
             queue.Exists();
             return queue;
         }

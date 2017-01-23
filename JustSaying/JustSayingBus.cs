@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Extensions;
 using JustSaying.Messaging;
@@ -12,7 +10,8 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
-using NLog;
+using Microsoft.Extensions.Logging;
+using JustSaying.Logging;
 
 namespace JustSaying
 {
@@ -32,20 +31,15 @@ namespace JustSaying
         }
         public IMessageSerialisationRegister SerialisationRegister { get; private set; }
         public IMessageLock MessageLock { get; set; }
-        private static readonly Logger Log = LogManager.GetLogger("JustSaying"); //ToDo: danger!
+        private ILogger _log;
         private readonly object _syncRoot = new object();
         private readonly ICollection<IPublisher> _publishers;
         private readonly ICollection<ISubscriber> _subscribers;
 
-        public JustSayingBus(IMessagingConfig config, IMessageSerialisationRegister serialisationRegister)
+        public JustSayingBus(IMessagingConfig config, IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory)
         {
-            if (config.PublishFailureReAttempts == 0)
-            {
-                Log.Warn("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages!");
-            }
-
-            Log.Info("Registering with stack.");
-
+            _log = loggerFactory.CreateLogger("JustSaying");
+            
             Config = config;
             Monitor = new NullOpMessageMonitor();
 
@@ -101,6 +95,11 @@ namespace JustSaying
 
         public void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message
         {
+            if (Config.PublishFailureReAttempts == 0)
+            {
+                _log.Warn("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages!");
+            }
+
             Dictionary<string, IMessagePublisher> publishersByTopic;
             if (!_publishersByRegionAndTopic.TryGetValue(region, out publishersByTopic))
             {
@@ -178,12 +177,12 @@ namespace JustSaying
             {
                 activeRegion = Config.GetActiveRegion();
             }
-            Log.Info($"Active region has been evaluated to {activeRegion}");
+            _log.Info($"Active region has been evaluated to {activeRegion}");
 
             if (!_publishersByRegionAndTopic.ContainsKey(activeRegion))
             {
                 var errorMessage = $"Error publishing message, no publishers registered for region {activeRegion}.";
-                Log.Error(errorMessage);
+                _log.Error(errorMessage);
                 throw new InvalidOperationException(errorMessage);
             }
 
@@ -192,7 +191,7 @@ namespace JustSaying
             if (!publishersByTopic.ContainsKey(topic))
             {
                 var errorMessage = $"Error publishing message, no publishers registered for message type {message} in {activeRegion}.";
-                Log.Error(errorMessage);
+                _log.Error(errorMessage);
                 throw new InvalidOperationException(errorMessage);
             }
 
@@ -216,11 +215,11 @@ namespace JustSaying
                 if (attemptCount >= Config.PublishFailureReAttempts)
                 {
                     Monitor.IssuePublishingMessage();
-                    Log.Error(ex, $"Failed to publish message {message.GetType().Name}. Halting after attempt {attemptCount}");
+                    _log.Error(ex, $"Failed to publish message {message.GetType().Name}. Halting after attempt {attemptCount}");
                     throw;
                 }
 
-                Log.Warn(ex, $"Failed to publish message {message.GetType().Name}. Retrying after attempt {attemptCount} of {Config.PublishFailureReAttempts}");
+                _log.Warn(ex, $"Failed to publish message {message.GetType().Name}. Retrying after attempt {attemptCount} of {Config.PublishFailureReAttempts}");
                 await Task.Delay(Config.PublishFailureBackoffMilliseconds * attemptCount);
                 await PublishAsync(publisher, message, attemptCount);
             }

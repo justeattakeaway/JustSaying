@@ -37,8 +37,9 @@
     "AWSSDK.SimpleNotificationService": "3.3.0.6",
     "AWSSDK.SQS": "3.3.1.6",
     "JustSaying.Messaging": "5.0.0",
-    "Newtonsoft.Json": "9.0.1",
-    "NLog": "4.4.0-betaV15"
+    "JustSaying.Logging": "5.0.0",
+    "Microsoft.Extensions.Logging.Abstractions": "1.1.0",
+    "Newtonsoft.Json": "9.0.1"
   },
   "frameworks": {
     "netstandard1.6": {
