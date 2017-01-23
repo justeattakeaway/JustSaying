@@ -1,6 +1,7 @@
 using System.Reflection;
 using JustSaying.AwsTools.QueueCreation;
 using JustBehave;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 
 namespace JustSaying.UnitTests
@@ -19,7 +20,7 @@ namespace JustSaying.UnitTests
             }
 
             var fns = CreateMeABus
-                .WithNoLogging()
+                .WithLogging(new LoggerFactory())
                 .InRegion("defaultRegion")
                 .WithFailoverRegion("failoverRegion")
                 .WithActiveRegion(() => "defaultRegion")

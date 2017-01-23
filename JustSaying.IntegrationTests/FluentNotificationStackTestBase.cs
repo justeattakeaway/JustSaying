@@ -8,6 +8,7 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using Amazon.SQS.Model;
 using JustBehave;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 
 namespace JustSaying.IntegrationTests
@@ -28,7 +29,7 @@ namespace JustSaying.IntegrationTests
 
         protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
-            var fns = CreateMeABus.WithNoLogging().InRegion(TestEndpoint.SystemName)
+            var fns = CreateMeABus.WithLogging(new LoggerFactory()).InRegion(TestEndpoint.SystemName)
                 .ConfigurePublisherWith(x =>
                 {
                     x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;

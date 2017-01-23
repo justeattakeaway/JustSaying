@@ -7,6 +7,7 @@ using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
@@ -73,7 +74,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
             Monitoring = Substitute.For<IMessageMonitor>();
 
-            ServiceBus = CreateMeABus.WithNoLogging().InRegion(RegionEndpoint.EUWest1.SystemName)
+            ServiceBus = CreateMeABus.WithLogging(new LoggerFactory()).InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithMonitoring(Monitoring)
 
                 .ConfigurePublisherWith(c =>

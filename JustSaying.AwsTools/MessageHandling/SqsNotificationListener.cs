@@ -13,7 +13,6 @@ using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
-using JustSaying.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -96,21 +95,19 @@ namespace JustSaying.AwsTools.MessageHandling
                 .Unwrap()
                 .ContinueWith(t => LogTaskEndState(t, queueInfo, _log));
 
-            _log.Info($"Starting Listening - {queueInfo}");
+            _log.LogInformation($"Starting Listening - {queueInfo}");
         }
 
         private static void LogTaskEndState(Task task, string queueInfo, ILogger log)
         {
             if (task.IsFaulted)
             {
-                log.Warn(
-                    $"[Faulted] Stopped Listening - {queueInfo}\n{AggregateExceptionDetails(task.Exception)}");
+                log.LogWarning($"[Faulted] Stopped Listening - {queueInfo}\n{AggregateExceptionDetails(task.Exception)}");
             }
             else
             {
                 var endState = task.Status.ToString();
-                log.Info(
-                    $"[{endState}] Stopped Listening - {queueInfo}");
+                log.LogInformation($"[{endState}] Stopped Listening - {queueInfo}");
             }
         }
 
@@ -141,8 +138,7 @@ namespace JustSaying.AwsTools.MessageHandling
         public void StopListening()
         {
             _cts.Cancel();
-            _log.Info(
-                $"Stopping Listening - Queue: {_queue.QueueName}, Region: {_queue.Region.SystemName}");
+            _log.LogInformation($"Stopping Listening - Queue: {_queue.QueueName}, Region: {_queue.Region.SystemName}");
         }
 
         internal async Task ListenLoop(CancellationToken ct)
@@ -156,22 +152,20 @@ namespace JustSaying.AwsTools.MessageHandling
                 sqsMessageResponse = await GetMessagesFromSqsQueue(ct, queueName, region);
                 var messageCount = sqsMessageResponse.Messages.Count;
 
-                _log.Trace(
-                    $"Polled for messages - Queue: {queueName}, Region: {region}, MessageCount: {messageCount}");
+                _log.LogTrace($"Polled for messages - Queue: {queueName}, Region: {region}, MessageCount: {messageCount}");
             }
             catch (InvalidOperationException ex)
             {
-                _log.Trace(
-                    $"Could not determine number of messages to read from [{queueName}], region: [{region}]. Ex: {ex}");
+                _log.LogTrace($"Could not determine number of messages to read from [{queueName}], region: [{region}]. Ex: {ex}");
             }
             catch (OperationCanceledException ex)
             {
-                _log.Trace($"Suspected no message in queue [{queueName}], region: [{region}]. Ex: {ex}");
+                _log.LogTrace($"Suspected no message in queue [{queueName}], region: [{region}]. Ex: {ex}");
             }
             catch (Exception ex)
             {
                 var msg = $"Issue receiving messages for queue {queueName}, region {region}";
-                _log.Error(ex, msg);
+                _log.LogError(0, ex, msg);
             }
 
             try
@@ -187,7 +181,7 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (Exception ex)
             {
                 var msg = $"Issue in message handling loop for queue {queueName}, region {region}";
-                _log.Error(ex, msg);
+                _log.LogError(0, ex, msg);
             }
         }
 
@@ -220,7 +214,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 if (receiveTimeout.Token.IsCancellationRequested)
                 {
-                    _log.Info($"Receiving messages from queue {queueName}, region {region}, timed out");
+                    _log.LogInformation($"Receiving messages from queue {queueName}, region {region}, timed out");
                 }
             }
 

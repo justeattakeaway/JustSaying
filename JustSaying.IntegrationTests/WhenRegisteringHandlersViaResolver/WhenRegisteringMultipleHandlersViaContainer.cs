@@ -3,6 +3,7 @@ using NUnit.Framework;
 using StructureMap;
 using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
+using Microsoft.Extensions.Logging;
 using Container = StructureMap.Container;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
@@ -22,7 +23,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         {
             var handlerResolver = new StructureMapHandlerResolver(_container);
 
-            CreateMeABus.WithNoLogging().InRegion("eu-west-1")
+            CreateMeABus.WithLogging(new LoggerFactory()).InRegion("eu-west-1")
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);

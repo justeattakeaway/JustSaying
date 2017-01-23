@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying
 {
-    public class JustSayingFleuntlyLogging
+    public class JustSayingFluentlyLogging
     {
         public ILoggerFactory LoggerFactory { get; set; }
     }

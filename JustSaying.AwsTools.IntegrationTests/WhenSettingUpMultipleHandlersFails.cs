@@ -4,6 +4,7 @@ using Amazon;
 using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
 namespace JustSaying.AwsTools.IntegrationTests
@@ -54,7 +55,7 @@ namespace JustSaying.AwsTools.IntegrationTests
         {
             proxyAwsClientFactory = new ProxyAwsClientFactory();
 
-            var busConfig = CreateMeABus.WithNoLogging().InRegion(RegionEndpoint.EUWest1.SystemName)
+            var busConfig = CreateMeABus.WithLogging(new LoggerFactory()).InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithAwsClientFactory(() => proxyAwsClientFactory);
             try
             {

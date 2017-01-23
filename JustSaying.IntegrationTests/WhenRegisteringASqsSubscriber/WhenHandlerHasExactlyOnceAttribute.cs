@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
@@ -48,11 +49,11 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         {
             _handler1 = new SampleHandler();
             _handler2 = new AnotherSampleHandler();
-            var publisher = CreateMeABus.WithNoLogging().InRegion(region)
+            var publisher = CreateMeABus.WithLogging(new LoggerFactory()).InRegion(region)
                 .ConfigurePublisherWith(_ => { })
                 .WithSnsMessagePublisher<GenericMessage>();
 
-            var bus = CreateMeABus.WithNoLogging().InRegion(region)
+            var bus = CreateMeABus.WithLogging(new LoggerFactory()).InRegion(region)
                 .WithMonitoring(new Monitoring())
                 .WithMessageLockStoreOf(new MessageLockStore())
                 .WithSqsTopicSubscriber().IntoQueue(QueueName)
@@ -93,10 +94,10 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         protected void Act()
         {
             _sampleHandler = new SampleHandler();
-            var publisher = CreateMeABus.WithNoLogging().InRegion(region)
+            var publisher = CreateMeABus.WithLogging(new LoggerFactory()).InRegion(region)
                 .WithSnsMessagePublisher<GenericMessage>();
 
-            var bus = CreateMeABus.WithNoLogging().InRegion(region)
+            var bus = CreateMeABus.WithLogging(new LoggerFactory()).InRegion(region)
                 .WithMonitoring(new Monitoring())
                 .WithMessageLockStoreOf(new MessageLockStore())
                 .WithSqsTopicSubscriber()

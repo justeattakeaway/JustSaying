@@ -1,6 +1,5 @@
 using System;
 using JustSaying.AwsTools;
-using JustSaying.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying
@@ -12,9 +11,7 @@ namespace JustSaying
         /// </summary>
         public static Func<IAwsClientFactory> DefaultClientFactory = () => new DefaultAwsClientFactory();
 
-        public static JustSayingFleuntlyLogging WithLogging(ILoggerFactory loggerFactory) => 
-            new JustSayingFleuntlyLogging {LoggerFactory = loggerFactory};
-
-        public static JustSayingFleuntlyLogging WithNoLogging() => WithLogging(new NoOpLoggerFactory());
+        public static JustSayingFluentlyLogging WithLogging(ILoggerFactory loggerFactory) => 
+            new JustSayingFluentlyLogging {LoggerFactory = loggerFactory};
     }
 }

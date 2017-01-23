@@ -6,7 +6,6 @@ using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
@@ -26,7 +25,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             var result = await Client.ListQueuesAsync(new ListQueuesRequest{ QueueNamePrefix = QueueName });
 
-            _log.Info($"Checking if queue '{QueueName}' exists");
+            _log.LogInformation($"Checking if queue '{QueueName}' exists");
             Url = result?.QueueUrls?.SingleOrDefault(x => Matches(x, QueueName));
 
             if (Url != null)
@@ -61,7 +60,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     Url = result.QueueUrl;
                     await SetQueuePropertiesAsync();
 
-                    _log.Info($"Created Queue: {QueueName} on Arn: {Arn}");
+                    _log.LogInformation($"Created Queue: {QueueName} on Arn: {Arn}");
                     return true;
                 }
             }
@@ -70,27 +69,26 @@ namespace JustSaying.AwsTools.MessageHandling
                 if (ex.ErrorCode == "AWS.SimpleQueueService.QueueDeletedRecently")
                 {
                     // Ensure we wait for queue delete timeout to expire.
-                    _log.Info(
-                        $"Waiting to create Queue due to AWS time restriction - Queue: {QueueName}, AttemptCount: {attempt + 1}");
+                    _log.LogInformation($"Waiting to create Queue due to AWS time restriction - Queue: {QueueName}, AttemptCount: {attempt + 1}");
                     await Task.Delay(60000);
                     await CreateAsync(queueConfig, attempt + 1);
                 }
                 else
                 {
                     // Throw all errors which are not delete timeout related.
-                    _log.Error(ex, $"Create Queue error: {QueueName}");
+                    _log.LogError(0, (Exception) ex, $"Create Queue error: {QueueName}");
                     throw;
                 }
 
                 // If we're on a delete timeout, throw after 2 attempts.
                 if (attempt >= 2)
                 {
-                    _log.Error(ex, $"Create Queue error, max retries exceeded for delay - Queue: {QueueName}");
+                    _log.LogError(0, (Exception) ex, $"Create Queue error, max retries exceeded for delay - Queue: {QueueName}");
                     throw;
                 }
             }
 
-            _log.Info($"Failed to create Queue: {QueueName}");
+            _log.LogInformation($"Failed to create Queue: {QueueName}");
             return false;
         }
 

@@ -10,9 +10,9 @@ namespace JustSaying
 {
     public static class JustSayingFluentlyExtensions
     {
-        public static IMayWantOptionalSettings InRegion(this JustSayingFleuntlyLogging logging, string region) => InRegions(logging, region);
+        public static IMayWantOptionalSettings InRegion(this JustSayingFluentlyLogging logging, string region) => InRegions(logging, region);
 
-        public static IMayWantOptionalSettings InRegions(this JustSayingFleuntlyLogging logging, params string[] regions)
+        public static IMayWantOptionalSettings InRegions(this JustSayingFluentlyLogging logging, params string[] regions)
         {
             var config = new MessagingConfig();
 

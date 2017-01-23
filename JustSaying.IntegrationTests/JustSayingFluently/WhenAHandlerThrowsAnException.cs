@@ -5,6 +5,7 @@ using JustBehave;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -28,7 +29,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             // Given
             _handler = new ThrowingHandler();
 
-            var bus = CreateMeABus.WithNoLogging().InRegion(RegionEndpoint.EUWest1.SystemName)
+            var bus = CreateMeABus.WithLogging(new LoggerFactory()).InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithMonitoring(_monitoring)
                 .ConfigurePublisherWith(c =>
                     {

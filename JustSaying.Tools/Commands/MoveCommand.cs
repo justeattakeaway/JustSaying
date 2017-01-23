@@ -6,7 +6,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Tools.Commands
 {
@@ -28,12 +28,12 @@ namespace JustSaying.Tools.Commands
         public bool Execute()
         {
             Console.WriteLine($"Moving {Count} messages from {SourceQueueName} to {DestinationQueueName} in {Region}.");
-            var noopLoggerFactory = new NoOpLoggerFactory();
+            var loggerFactory = new LoggerFactory();
 
             var config = new AmazonSQSConfig { RegionEndpoint = RegionEndpoint.GetBySystemName(Region) };
             var client = new DefaultAwsClientFactory().GetSqsClient(config.RegionEndpoint);
-            var sourceQueue = new SqsQueueByName(config.RegionEndpoint, SourceQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT, noopLoggerFactory);
-            var destinationQueue = new SqsQueueByName(config.RegionEndpoint, DestinationQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT, noopLoggerFactory);
+            var sourceQueue = new SqsQueueByName(config.RegionEndpoint, SourceQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT, loggerFactory);
+            var destinationQueue = new SqsQueueByName(config.RegionEndpoint, DestinationQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT, loggerFactory);
 
             EnsureQueueExists(sourceQueue);
             EnsureQueueExists(destinationQueue);

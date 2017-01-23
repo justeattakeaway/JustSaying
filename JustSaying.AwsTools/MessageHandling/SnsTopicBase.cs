@@ -8,7 +8,6 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialisation;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
-using JustSaying.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -51,7 +50,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 return true;
             }
 
-            _log.Info($"Failed to subscribe Queue to Topic: {queue.Arn}, Topic: {Arn}");
+            _log.LogInformation($"Failed to subscribe Queue to Topic: {queue.Arn}, Topic: {Arn}");
             return false;
         }
 
@@ -75,7 +74,7 @@ namespace JustSaying.AwsTools.MessageHandling
             try
             {
                 await Client.PublishAsync(request);
-                _eventLog.Info($"Published message: '{messageType}' with content {messageToSend}");
+                _eventLog.LogInformation($"Published message: '{messageType}' with content {messageToSend}");
             }
             catch (Exception ex)
             {

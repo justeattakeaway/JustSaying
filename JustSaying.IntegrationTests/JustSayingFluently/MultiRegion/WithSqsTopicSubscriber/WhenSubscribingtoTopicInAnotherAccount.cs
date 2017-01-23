@@ -7,6 +7,7 @@ using JustSaying.AwsTools.QueueCreation;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -57,7 +58,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         private IMayWantOptionalSettings GetBus(string accessKey, string secretKey)
         {
             return CreateMeABus
-                .WithNoLogging().InRegion("eu-west-1").WithAwsClientFactory(()=>new DefaultAwsClientFactory(new BasicAWSCredentials(accessKey, secretKey) ));
+                .WithLogging(new LoggerFactory()).InRegion("eu-west-1").WithAwsClientFactory(()=>new DefaultAwsClientFactory(new BasicAWSCredentials(accessKey, secretKey) ));
         }
     }
     class NamingStrategy : INamingStrategy

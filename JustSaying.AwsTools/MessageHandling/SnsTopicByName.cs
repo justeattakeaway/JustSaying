@@ -5,7 +5,6 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.Messaging.MessageSerialisation;
 using Microsoft.Extensions.Logging;
-using JustSaying.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -29,7 +28,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 return true;
             }
 
-            _log.Info($"Checking if topic '{TopicName}' exists");
+            _log.LogInformation($"Checking if topic '{TopicName}' exists");
             var topic = await Client.FindTopicAsync(TopicName);
 
             if (topic != null)
@@ -54,11 +53,11 @@ namespace JustSaying.AwsTools.MessageHandling
             if (!string.IsNullOrEmpty(response?.TopicArn))
             {
                 Arn = response.TopicArn;
-                _log.Info($"Created Topic: {TopicName} on Arn: {Arn}");
+                _log.LogInformation($"Created Topic: {TopicName} on Arn: {Arn}");
                 return true;
             }
 
-            _log.Info($"Failed to create Topic: {TopicName}");
+            _log.LogInformation($"Failed to create Topic: {TopicName}");
             return false;
         }
 
