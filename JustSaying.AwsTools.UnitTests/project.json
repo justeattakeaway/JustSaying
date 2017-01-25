@@ -41,11 +41,11 @@
     "Newtonsoft.Json": "9.0.1",
     "NSubstitute": "1.10.0",
     "NUnit": "3.6.0",
-    "dotnet-test-nunit": "3.4.0-beta-2",
     "AWSSDK.Core": "3.3.8",
     "AWSSDK.SQS": "3.3.1.7",
     "Microsoft.Extensions.Logging": "1.1.0",
-    "Microsoft.Extensions.Logging.Console": "1.1.0"
+    "Microsoft.Extensions.Logging.Console": "1.1.0",
+    "dotnet-test-nunit": "3.4.0-beta-3"
   },
   "testRunner": "nunit",
   "frameworks": {
