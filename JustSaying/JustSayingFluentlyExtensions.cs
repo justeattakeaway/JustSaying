@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
@@ -14,7 +13,7 @@ namespace JustSaying
     {
         public static IMayWantOptionalSettings InRegion(this JustSayingFluentlyLogging logging, string region) => InRegions(logging, region);
 
-        public static IMayWantOptionalSettings InRegions(this JustSayingFluentlyLogging logging, params string[] regions) => InRegions(logging, regions.AsEnumerable());
+        public static IMayWantOptionalSettings InRegions(this JustSayingFluentlyLogging logging, params string[] regions) => InRegions(logging, regions as IEnumerable<string>);
 
         public static IMayWantOptionalSettings InRegions(this JustSayingFluentlyLogging logging, IEnumerable<string> regions)
         {
