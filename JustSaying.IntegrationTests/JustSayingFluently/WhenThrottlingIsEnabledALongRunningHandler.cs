@@ -6,6 +6,7 @@ using Amazon;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -34,7 +35,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
 
 
-            var publisher = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+            var publisher = CreateMeABus.WithLogging(new LoggerFactory())
+                .InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithMonitoring(Substitute.For<IMessageMonitor>())
                 .ConfigurePublisherWith(c =>
                 {
@@ -71,7 +73,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             //Give some time to AWS to schedule the first long running message
             Thread.Sleep(2000);
 
-            //publish the rest of the messages except the last one. 
+            //publish the rest of the messages except the last one.
             Enumerable.Range(2, 98).ToList().ForEach(i => _publisher.Publish(_messages[i]));
 
             //publish the last message after a couple of seconds to guaranty it was scheduled after all the rest

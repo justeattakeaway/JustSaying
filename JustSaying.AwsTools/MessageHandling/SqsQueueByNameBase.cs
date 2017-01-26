@@ -6,25 +6,26 @@ using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
-using NLog;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
     public abstract class SqsQueueByNameBase : SqsQueueBase
     {
-        private static readonly Logger Log = LogManager.GetLogger("JustSaying");
+        private readonly ILogger _log;
 
-        protected SqsQueueByNameBase(RegionEndpoint region, string queueName, IAmazonSQS client)
+        protected SqsQueueByNameBase(RegionEndpoint region, string queueName, IAmazonSQS client, ILoggerFactory loggerFactory)
             : base(region, client)
         {
             QueueName = queueName;
+            _log = loggerFactory.CreateLogger("JustSaying");
         }
 
         public override async Task<bool> ExistsAsync()
         {
             var result = await Client.ListQueuesAsync(new ListQueuesRequest{ QueueNamePrefix = QueueName });
 
-            Log.Info($"Checking if queue '{QueueName}' exists");
+            _log.LogInformation($"Checking if queue '{QueueName}' exists");
             Url = result?.QueueUrls?.SingleOrDefault(x => Matches(x, QueueName));
 
             if (Url != null)
@@ -59,7 +60,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     Url = result.QueueUrl;
                     await SetQueuePropertiesAsync();
 
-                    Log.Info($"Created Queue: {QueueName} on Arn: {Arn}");
+                    _log.LogInformation($"Created Queue: {QueueName} on Arn: {Arn}");
                     return true;
                 }
             }
@@ -68,27 +69,26 @@ namespace JustSaying.AwsTools.MessageHandling
                 if (ex.ErrorCode == "AWS.SimpleQueueService.QueueDeletedRecently")
                 {
                     // Ensure we wait for queue delete timeout to expire.
-                    Log.Info(
-                        $"Waiting to create Queue due to AWS time restriction - Queue: {QueueName}, AttemptCount: {attempt + 1}");
+                    _log.LogInformation($"Waiting to create Queue due to AWS time restriction - Queue: {QueueName}, AttemptCount: {attempt + 1}");
                     await Task.Delay(60000);
                     await CreateAsync(queueConfig, attempt + 1);
                 }
                 else
                 {
                     // Throw all errors which are not delete timeout related.
-                    Log.Error(ex, $"Create Queue error: {QueueName}");
+                    _log.LogError(0, (Exception) ex, $"Create Queue error: {QueueName}");
                     throw;
                 }
 
                 // If we're on a delete timeout, throw after 2 attempts.
                 if (attempt >= 2)
                 {
-                    Log.Error(ex, $"Create Queue error, max retries exceeded for delay - Queue: {QueueName}");
+                    _log.LogError(0, (Exception) ex, $"Create Queue error, max retries exceeded for delay - Queue: {QueueName}");
                     throw;
                 }
             }
 
-            Log.Info($"Failed to create Queue: {QueueName}");
+            _log.LogInformation($"Failed to create Queue: {QueueName}");
             return false;
         }
 

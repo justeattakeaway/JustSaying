@@ -1,5 +1,6 @@
 using System;
 using JustBehave;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
 namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
@@ -19,7 +20,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
         protected override void When()
         {
             CreateMeABus
-                .InRegion(null)
+                .WithLogging(new LoggerFactory()).InRegion(null)
                 .ConfigurePublisherWith(configuration => { });
         }
 

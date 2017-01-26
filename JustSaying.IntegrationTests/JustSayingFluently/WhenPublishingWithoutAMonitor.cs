@@ -3,6 +3,7 @@ using Amazon;
 using JustBehave;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -25,12 +26,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .Returns(true)
                 .AndDoes(_ => Tasks.DelaySendDone(doneSignal));
 
-            var bus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+            var bus = CreateMeABus.WithLogging(new LoggerFactory())
+                .InRegion(RegionEndpoint.EUWest1.SystemName)
                 .ConfigurePublisherWith(c =>
                     {
                         c.PublishFailureBackoffMilliseconds = 1;
                         c.PublishFailureReAttempts = 1;
-                
+
                     })
                 .WithSnsMessagePublisher<GenericMessage>()
                 .WithSqsTopicSubscriber()

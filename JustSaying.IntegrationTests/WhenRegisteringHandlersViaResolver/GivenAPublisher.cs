@@ -3,6 +3,7 @@ using JustBehave;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
@@ -15,7 +16,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
         protected override IMessagePublisher CreateSystemUnderTest()
         {
-            Publisher = CreateMeABus.InRegion("eu-west-1")
+            Publisher = CreateMeABus.WithLogging(new LoggerFactory())
+                .InRegion("eu-west-1")
                 .WithSnsMessagePublisher<OrderPlaced>();
             Publisher.StartListening();
             return Publisher;

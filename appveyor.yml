@@ -15,8 +15,10 @@ build:
   publish_nuget_symbols: true
   include_nuget_references: true
   verbosity: normal
-test:
-  assemblies: '**\*.UnitTests.dll'
+test_script:
+  - dotnet test .\JustSaying.AwsTools.UnitTests\project.json
+  - dotnet test .\JustSaying.Messaging.UnitTests\project.json
+  - dotnet test .\JustSaying.UnitTests\project.json
 artifacts:
 - path: 'JustSaying.{version}*.nupkg'
 notifications:

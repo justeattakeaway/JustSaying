@@ -8,13 +8,14 @@ using Amazon.SQS.Model;
 using Amazon.SQS.Util;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools
 {
     public class ErrorQueue : SqsQueueByNameBase
     {
-        public ErrorQueue(RegionEndpoint region, string sourceQueueName, IAmazonSQS client)
-            : base(region, sourceQueueName + "_error", client)
+        public ErrorQueue(RegionEndpoint region, string sourceQueueName, IAmazonSQS client, ILoggerFactory loggerFactory)
+            : base(region, sourceQueueName + "_error", client, loggerFactory)
         {
             ErrorQueue = null;
         }

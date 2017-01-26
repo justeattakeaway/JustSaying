@@ -33,14 +33,13 @@
 		}
 	},
   "dependencies": {
-    "AWSSDK.Core": "3.3.7.1",
-    "AWSSDK.SimpleNotificationService": "3.3.0.6",
-    "AWSSDK.SQS": "3.3.1.6",
+    "AWSSDK.Core": "3.3.8",
+    "AWSSDK.SimpleNotificationService": "3.3.0.7",
+    "AWSSDK.SQS": "3.3.1.7",
     "JustSaying.AwsTools": "5.0.0",
     "JustSaying.Messaging": "5.0.0",
     "JustSaying.Models": "5.0.0",
-    "Newtonsoft.Json": "9.0.1",
-    "NLog": "4.4.0-betaV15"
+    "Newtonsoft.Json": "9.0.1"
   },
   "frameworks": {
     "netstandard1.6": {

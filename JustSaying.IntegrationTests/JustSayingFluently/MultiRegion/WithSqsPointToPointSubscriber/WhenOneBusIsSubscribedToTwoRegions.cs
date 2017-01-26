@@ -4,6 +4,7 @@ using Amazon;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -45,6 +46,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
                 .Do(async x => await _handler.Complete((GenericMessage) x.Args()[0]));
 
             _subscriber = CreateMeABus
+                .WithLogging(new LoggerFactory())
                 .InRegion(primaryRegion)
                 .WithFailoverRegion(secondaryRegion)
                 .WithActiveRegion(() => primaryRegion)
@@ -57,6 +59,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
         private void AndAPublisherToThePrimaryRegion(string primaryRegion)
         {
             _primaryPublisher = CreateMeABus
+                .WithLogging(new LoggerFactory())
                 .InRegion(primaryRegion)
                 .WithSqsMessagePublisher<GenericMessage>(configuration => { });
         }
@@ -64,6 +67,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
         private void AndAPublisherToTheSecondaryRegion(string secondaryRegion)
         {
             _secondaryPublisher = CreateMeABus
+                .WithLogging(new LoggerFactory())
                 .InRegion(secondaryRegion)
                 .WithSqsMessagePublisher<GenericMessage>(configuration => { });
         }

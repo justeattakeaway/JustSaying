@@ -4,6 +4,7 @@ using Amazon;
 using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
 namespace JustSaying.AwsTools.IntegrationTests
@@ -58,7 +59,8 @@ namespace JustSaying.AwsTools.IntegrationTests
             topicName = uniqueTopicAndQueueNames.GetTopicName(string.Empty, typeof(Order).Name);
             queueName = uniqueTopicAndQueueNames.GetQueueName(new SqsReadConfiguration(SubscriptionType.ToTopic) {BaseQueueName = baseQueueName }, typeof(Order).Name);
 
-            bus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+            bus = CreateMeABus.WithLogging(new LoggerFactory())
+                .InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithAwsClientFactory(() => proxyAwsClientFactory)
                 .WithNamingStrategy(() => uniqueTopicAndQueueNames)
                 .WithSqsTopicSubscriber()

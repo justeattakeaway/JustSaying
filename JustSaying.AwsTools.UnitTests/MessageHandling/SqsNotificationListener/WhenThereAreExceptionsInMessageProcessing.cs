@@ -11,6 +11,7 @@ using JustSaying.Messaging.Monitoring;
 using NSubstitute;
 using NUnit.Framework;
 using JustSaying.TestingFramework;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
@@ -27,7 +28,8 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             return new AwsTools.MessageHandling.SqsNotificationListener(
                 new SqsQueueByUrl(RegionEndpoint.EUWest1, "", _sqs), 
                 _serialisationRegister, 
-                Substitute.For<IMessageMonitor>());
+                Substitute.For<IMessageMonitor>(),
+                Substitute.For<ILoggerFactory>());
         }
 
         protected override void Given()

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Threading.Tasks;
-using NLog;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using Message = JustSaying.Models.Message;
 using SQSMessage = Amazon.SQS.Model.Message;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -17,20 +17,22 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly Action<Exception, SQSMessage> _onError;
         private readonly HandlerMap _handlerMap;
 
-        private static readonly Logger Log = LogManager.GetLogger("JustSaying");
+        private static ILogger _log;
 
         public MessageDispatcher(
             SqsQueueBase queue,
             IMessageSerialisationRegister serialisationRegister,
             IMessageMonitor messagingMonitor,
             Action<Exception, SQSMessage> onError,
-            HandlerMap handlerMap)
+            HandlerMap handlerMap,
+            ILoggerFactory loggerFactory)
         {
             _queue = queue;
             _serialisationRegister = serialisationRegister;
             _messagingMonitor = messagingMonitor;
             _onError = onError;
             _handlerMap = handlerMap;
+            _log = loggerFactory.CreateLogger("JustSaying");
         }
 
         public async Task DispatchMessage(SQSMessage message)
@@ -42,15 +44,14 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (MessageFormatNotSupportedException ex)
             {
-                Log.Trace(
-                    $"Didn't handle message [{message.Body ?? string.Empty}]. No serialiser setup");
+                _log.LogTrace($"Didn't handle message [{message.Body ?? string.Empty}]. No serialiser setup");
                 await DeleteMessageFromQueue(message.ReceiptHandle);
                 _onError(ex, message);
                 return;
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error deserialising message");
+                _log.LogError(0, ex, "Error deserialising message");
                 _onError(ex, message);
                 return;
             }
@@ -74,7 +75,7 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (Exception ex)
             {
                 var errorText = $"Error handling message [{message.Body}]";
-                Log.Error(ex, errorText);
+                _log.LogError(0, ex, errorText);
 
                 if (typedMessage != null)
                 {
@@ -99,7 +100,7 @@ namespace JustSaying.AwsTools.MessageHandling
             var handlerSucceeded = await handler(message).ConfigureAwait(false);
 
             watch.Stop();
-            Log.Trace($"Handled message - MessageType: {message.GetType().Name}");
+            _log.LogTrace($"Handled message - MessageType: {message.GetType().Name}");
             _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
 
             return handlerSucceeded;

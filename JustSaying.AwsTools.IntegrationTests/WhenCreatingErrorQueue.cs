@@ -2,6 +2,7 @@ using System;
 using Amazon;
 using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
 namespace JustSaying.AwsTools.IntegrationTests
@@ -24,7 +25,7 @@ namespace JustSaying.AwsTools.IntegrationTests
         protected override ErrorQueue CreateSystemUnderTest()
         {
             QueueUniqueKey = "test" + DateTime.Now.Ticks;
-            return new ErrorQueue(RegionEndpoint.EUWest1, QueueUniqueKey, CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1));
+            return new ErrorQueue(RegionEndpoint.EUWest1, QueueUniqueKey, CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1), new LoggerFactory());
         }
         public override void PostAssertTeardown()
         {

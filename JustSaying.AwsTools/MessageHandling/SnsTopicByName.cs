@@ -4,20 +4,21 @@ using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.Messaging.MessageSerialisation;
-using NLog;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
     public class SnsTopicByName : SnsTopicBase
     {
         public string TopicName { get; private set; }
-        private static readonly Logger Log = LogManager.GetLogger("JustSaying");
+        private readonly ILogger _log;
 
-        public SnsTopicByName(string topicName, IAmazonSimpleNotificationService client, IMessageSerialisationRegister serialisationRegister)
-            : base(serialisationRegister)
+        public SnsTopicByName(string topicName, IAmazonSimpleNotificationService client, IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory)
+            : base(serialisationRegister, loggerFactory)
         {
             TopicName = topicName;
             Client = client;
+            _log = loggerFactory.CreateLogger("JustSaying");
         }
 
         public override async Task<bool> ExistsAsync()
@@ -27,7 +28,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 return true;
             }
 
-            Log.Info($"Checking if topic '{TopicName}' exists");
+            _log.LogInformation($"Checking if topic '{TopicName}' exists");
             var topic = await Client.FindTopicAsync(TopicName);
 
             if (topic != null)
@@ -52,11 +53,11 @@ namespace JustSaying.AwsTools.MessageHandling
             if (!string.IsNullOrEmpty(response?.TopicArn))
             {
                 Arn = response.TopicArn;
-                Log.Info($"Created Topic: {TopicName} on Arn: {Arn}");
+                _log.LogInformation($"Created Topic: {TopicName} on Arn: {Arn}");
                 return true;
             }
 
-            Log.Info($"Failed to create Topic: {TopicName}");
+            _log.LogInformation($"Failed to create Topic: {TopicName}");
             return false;
         }
 
