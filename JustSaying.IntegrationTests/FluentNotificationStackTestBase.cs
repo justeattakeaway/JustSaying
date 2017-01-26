@@ -21,7 +21,7 @@ namespace JustSaying.IntegrationTests
         protected IPublishConfiguration Configuration;
         protected IAmJustSaying NotificationStack { get; private set; }
         private bool _enableMockedBus;
-        
+
         protected override void Given()
         {
             TestEndpoint = DefaultEndpoint;
@@ -29,12 +29,13 @@ namespace JustSaying.IntegrationTests
 
         protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
-            var fns = CreateMeABus.WithLogging(new LoggerFactory()).InRegion(TestEndpoint.SystemName)
+            var fns = CreateMeABus.WithLogging(new LoggerFactory())
+                .InRegion(TestEndpoint.SystemName)
                 .ConfigurePublisherWith(x =>
                 {
                     x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;
                     x.PublishFailureReAttempts = Configuration.PublishFailureReAttempts;
-                
+
                 }) as JustSaying.JustSayingFluently;
 
             if (_enableMockedBus)
@@ -74,9 +75,9 @@ namespace JustSaying.IntegrationTests
         }
 
         public static void DeleteTopicIfItAlreadyExists(RegionEndpoint regionEndpoint, string topicName)
-        {            
+        {
             var topics = GetAllTopics(regionEndpoint, topicName);
-            
+
             topics.ForEach(t => DeleteTopic(regionEndpoint, t));
 
             Topic topic;
@@ -156,10 +157,10 @@ namespace JustSaying.IntegrationTests
         {
             const int maxSleepTime = 60;
             const int sleepStep = 5;
-            
+
             var start = DateTime.Now;
 
-            while ((DateTime.Now - start).TotalSeconds <= maxSleepTime) 
+            while ((DateTime.Now - start).TotalSeconds <= maxSleepTime)
             {
                 queueUrl = GetAllQueues(regionEndpoint, queueName).FirstOrDefault();
 

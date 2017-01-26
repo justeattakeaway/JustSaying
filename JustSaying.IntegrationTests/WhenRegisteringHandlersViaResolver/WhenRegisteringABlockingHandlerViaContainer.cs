@@ -24,7 +24,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             _resolvedHandler = (BlockingOrderProcessor)blockingHandler.Inner;
             DoneSignal = _resolvedHandler.DoneSignal.Task;
 
-            Subscriber = CreateMeABus.WithLogging(new LoggerFactory()).InRegion("eu-west-1")
+            Subscriber = CreateMeABus.WithLogging(new LoggerFactory())
+                .InRegion("eu-west-1")
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);

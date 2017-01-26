@@ -55,7 +55,8 @@ namespace JustSaying.AwsTools.IntegrationTests
         {
             proxyAwsClientFactory = new ProxyAwsClientFactory();
 
-            var busConfig = CreateMeABus.WithLogging(new LoggerFactory()).InRegion(RegionEndpoint.EUWest1.SystemName)
+            var busConfig = CreateMeABus.WithLogging(new LoggerFactory())
+                .InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithAwsClientFactory(() => proxyAwsClientFactory);
             try
             {

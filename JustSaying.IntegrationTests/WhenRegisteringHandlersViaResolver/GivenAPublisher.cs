@@ -16,7 +16,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
         protected override IMessagePublisher CreateSystemUnderTest()
         {
-            Publisher = CreateMeABus.WithLogging(new LoggerFactory()).InRegion("eu-west-1")
+            Publisher = CreateMeABus.WithLogging(new LoggerFactory())
+                .InRegion("eu-west-1")
                 .WithSnsMessagePublisher<OrderPlaced>();
             Publisher.StartListening();
             return Publisher;

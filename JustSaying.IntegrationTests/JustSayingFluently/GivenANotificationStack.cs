@@ -19,7 +19,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         protected IMessageMonitor Monitoring;
         private Future<GenericMessage> _snsHandler;
         private Future<AnotherGenericMessage> _sqsHandler;
-        private IPublishConfiguration _config = 
+        private IPublishConfiguration _config =
             new MessagingConfig
             {
                 PublishFailureBackoffMilliseconds = 1,
@@ -74,7 +74,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
             Monitoring = Substitute.For<IMessageMonitor>();
 
-            ServiceBus = CreateMeABus.WithLogging(new LoggerFactory()).InRegion(RegionEndpoint.EUWest1.SystemName)
+            ServiceBus = CreateMeABus.WithLogging(new LoggerFactory())
+                .InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithMonitoring(Monitoring)
 
                 .ConfigurePublisherWith(c =>

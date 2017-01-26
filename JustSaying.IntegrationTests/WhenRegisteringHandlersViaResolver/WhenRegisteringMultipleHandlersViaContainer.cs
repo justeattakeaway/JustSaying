@@ -23,7 +23,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         {
             var handlerResolver = new StructureMapHandlerResolver(_container);
 
-            CreateMeABus.WithLogging(new LoggerFactory()).InRegion("eu-west-1")
+            CreateMeABus.WithLogging(new LoggerFactory())
+                .InRegion("eu-west-1")
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);

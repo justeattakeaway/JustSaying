@@ -5,12 +5,17 @@
 
 A helpful library for publishing and consuming events / messages over SNS (SNS / SQS as a message bus).
 
-##Configuring the client
+##Getting started
 Before you can start publishing or consuming messages, you want to configure the AWS client factory.
 
 ````c#
-        CreateMeABus.DefaultClientFactory = () => 
+        CreateMeABus.DefaultClientFactory = () =>
 			    new DefaultAwsClientFactory(new BasicAWSCredentials("accessKey", "secretKey"))
+````
+
+You will also need to create a `ILoggerFactory` ([see here](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging)), if you do not want logging then you can always create an empty logger factory like so:
+````c#
+        var loggerFactory = new LoggerFactory();
 ````
 
 ##Publishing messages
@@ -38,7 +43,8 @@ Here's how to get up & running with simple message publishing.
 * The topic will be the message type.
 
 ````c#
-          var publisher = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+          var publisher = CreateMeABus.WithLogging(loggerFactory)
+                .InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithSnsMessagePublisher<OrderAccepted>();
 ````
 
@@ -47,9 +53,10 @@ Here's how to get up & running with simple message publishing.
 * You can also specify some publishing options (such as how to handle failures) using a configuration object like so:
 
 ````c#
-         CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+         CreateMeABus.WithLogging(loggerFactory)
+                .InRegion(RegionEndpoint.EUWest1.SystemName)
                 .ConfigurePublisherWith(c => { c.PublishFailureReAttempts = 3; c.PublishFailureBackoffMilliseconds = 50; })
-                .WithSnsMessagePublisher<OrderAccepted>(); 
+                .WithSnsMessagePublisher<OrderAccepted>();
 ````
 
 
@@ -82,7 +89,7 @@ We currently support SQS subscriptions only, but keep checking back for other me
         {
             public bool Handle(OrderAccepted message)
             {
-                // Some logic here ... 
+                // Some logic here ...
                 // e.g. bll.NotifyRestaurantAboutOrder(message.OrderId);
                 return true;
             }
@@ -97,7 +104,8 @@ We currently support SQS subscriptions only, but keep checking back for other me
 * We are telling it to keep 'OrderFailed' messages for 1 minute and not to handle them again on failure for 30 seconds. These are the default values.
 
 ````c#
-            CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+            CreateMeABus.WithLogging(loggerFactory)
+                .InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithSqsTopicSubscriber()
                 .IntoQueue("CustomerOrders")
                 .WithMessageHandler<OrderAccepted>(new OrderNotifier())
@@ -112,7 +120,8 @@ That's it. By calling StartListening() we are telling the stack to begin polling
 * We are telling it to keep 'OrderFailed' messages for 5 mins, and not to handle them again on failure for 60 seconds
 
 ````c#
-            CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+            CreateMeABus.WithLogging(loggerFactory)
+                .InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithSqsTopicSubscriber()
                 .IntoQueue("CustomerOrders")
                     .ConfigureSubscriptionWith(c => { c.MessageRetentionSeconds = 60; })
@@ -124,7 +133,7 @@ That's it. By calling StartListening() we are telling the stack to begin polling
 
 
 ###2.(b) Configure Throttling
-JustSaying throttles message handllers, which means JustSaying will limit the maximum number of messages being processed concurrently. The default limit is 8 threads per [processor core](https://msdn.microsoft.com/en-us/library/system.environment.processorcount.aspx), i.e. `Environment.ProcessorCount * 8`. 
+JustSaying throttles message handllers, which means JustSaying will limit the maximum number of messages being processed concurrently. The default limit is 8 threads per [processor core](https://msdn.microsoft.com/en-us/library/system.environment.processorcount.aspx), i.e. `Environment.ProcessorCount * 8`.
 We feel that this is a sensible number, but it can be overridden. This is useful for web apps with TCP thread restrictions.
 To override throttling you need to specify optional parameter when setting SqsTopicSubcriber
 
@@ -138,10 +147,11 @@ To override throttling you need to specify optional parameter when setting SqsTo
 ###2.(c) Control Handlers' life cycle
 You can tell JustSaying to delegate the creation of your handlers to an IoC container. All you need to do is to implement IHandlerResolver interface and pass it along when registering your handlers.
 ````c#
-CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
-                .WithSqsTopicSubscriber()
-                .IntoQueue("CustomerOrders")
-		.WithMessageHandler<OrderAccepted>(new HandlerResolver())
+CreateMeABus.WithLogging(loggerFactory)
+            .InRegion(RegionEndpoint.EUWest1.SystemName)
+            .WithSqsTopicSubscriber()
+            .IntoQueue("CustomerOrders")
+            .WithMessageHandler<OrderAccepted>(new HandlerResolver())
 ````
 
 ##Interrogation
@@ -149,9 +159,10 @@ JustSaying provides you access to the Subscribers and Publishers message types v
 
 ```c#
 
-            IAmJustSayingFluently bus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
+            IAmJustSayingFluently bus = CreateMeABus.WithLogging(loggerFactory)
+                .InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithSnsMessagePublisher<OrderAccepted>();
-            
+
             IInterrogationResponse response =((IAmJustInterrogating)bus).WhatDoIHave();
 ```
 
@@ -163,14 +174,14 @@ JustSaying stack will throw out the following named logs from NLog:
         * Information on the number of messages handled & heartbeat of queue polling (Trace level). You can use this to confirm you're receiving messages. Beware, it can get big!
 * "EventLog"
         * A full log of all the messages you publish (including the Json serialised version).
-        * 
+        *
 
 Here's a snippet of the expected configuration:
 
 ````xml
     <logger name="EventLog" minlevel="Trace" writeTo="logger-specfic-log" final="true" />
     <logger name="JustSaying" minlevel="Trace" writeTo="logger-specfic-log" final="true" />
-    
+
       <target
          name="logger-specfic-log"
          xsi:type="File"
@@ -186,7 +197,7 @@ Here's a snippet of the expected configuration:
 
 ## Dead letter Queue (Error queue)
 
-JustSaying supports error queues and this option is enabled by default. When a handler is unable to handle a message, JustSaying will attempt to re-deliver the message up to 5 times (Handler retry count is configurable) and if the handler is still unable to handle the message then the message will be moved to an error queue. 
+JustSaying supports error queues and this option is enabled by default. When a handler is unable to handle a message, JustSaying will attempt to re-deliver the message up to 5 times (Handler retry count is configurable) and if the handler is still unable to handle the message then the message will be moved to an error queue.
 You can opt out during subscription configuration.
 
 ## Power tool

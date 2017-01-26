@@ -29,7 +29,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             // Given
             _handler = new ThrowingHandler();
 
-            var bus = CreateMeABus.WithLogging(new LoggerFactory()).InRegion(RegionEndpoint.EUWest1.SystemName)
+            var bus = CreateMeABus.WithLogging(new LoggerFactory())
+                .InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithMonitoring(_monitoring)
                 .ConfigurePublisherWith(c =>
                     {
@@ -47,7 +48,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                     })
                 .WithMessageHandler(_handler);
 
-            // When 
+            // When
             bus.StartListening();
 
             bus.Publish(new GenericMessage());

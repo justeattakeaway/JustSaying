@@ -49,11 +49,13 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         {
             _handler1 = new SampleHandler();
             _handler2 = new AnotherSampleHandler();
-            var publisher = CreateMeABus.WithLogging(new LoggerFactory()).InRegion(region)
+            var publisher = CreateMeABus.WithLogging(new LoggerFactory())
+                .InRegion(region)
                 .ConfigurePublisherWith(_ => { })
                 .WithSnsMessagePublisher<GenericMessage>();
 
-            var bus = CreateMeABus.WithLogging(new LoggerFactory()).InRegion(region)
+            var bus = CreateMeABus.WithLogging(new LoggerFactory())
+                .InRegion(region)
                 .WithMonitoring(new Monitoring())
                 .WithMessageLockStoreOf(new MessageLockStore())
                 .WithSqsTopicSubscriber().IntoQueue(QueueName)
@@ -94,10 +96,12 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         protected void Act()
         {
             _sampleHandler = new SampleHandler();
-            var publisher = CreateMeABus.WithLogging(new LoggerFactory()).InRegion(region)
+            var publisher = CreateMeABus.WithLogging(new LoggerFactory())
+                .InRegion(region)
                 .WithSnsMessagePublisher<GenericMessage>();
 
-            var bus = CreateMeABus.WithLogging(new LoggerFactory()).InRegion(region)
+            var bus = CreateMeABus.WithLogging(new LoggerFactory())
+                .InRegion(region)
                 .WithMonitoring(new Monitoring())
                 .WithMessageLockStoreOf(new MessageLockStore())
                 .WithSqsTopicSubscriber()
@@ -117,7 +121,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         public void MessageHasBeenCalledOnce()
         {
             Act();
-            
+
             Thread.Sleep(5.Seconds());
             Assert.That(_sampleHandler.NumberOfTimesIHaveBeenCalled(), Is.EqualTo(1));
         }
@@ -155,5 +159,5 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             public void ReceiveMessageTime(long handleTimeMs, string queueName, string region) { }
             public void HandlerExecutionTime(string typeName, string eventName, TimeSpan executionTime) { }
         }
-    
+
 }
