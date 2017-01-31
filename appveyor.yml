@@ -1,4 +1,4 @@
-version: 4.0.{build}
+version: 5.0.{build}-beta01
 configuration: Release
 assembly_info:
   patch: true
@@ -19,8 +19,13 @@ test_script:
   - dotnet test .\JustSaying.AwsTools.UnitTests\project.json
   - dotnet test .\JustSaying.Messaging.UnitTests\project.json
   - dotnet test .\JustSaying.UnitTests\project.json
+after_build:
+- dotnet pack "JustSaying" --no-build -o artifacts
+- dotnet pack "JustSaying.AwsTools" --no-build -o artifacts
+- dotnet pack "JustSaying.Messaging" --no-build -o artifacts
+- dotnet pack "JustSaying.Models" --no-build -o artifacts
 artifacts:
-- path: 'JustSaying.{version}*.nupkg'
+- path: artifacts\**\*.*
 notifications:
 - provider: HipChat
   room: 'Eng :: Open Source'
