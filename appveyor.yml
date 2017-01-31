@@ -33,12 +33,12 @@ build_script:
     foreach ($projectFile  in $projectFiles) {
       $project =  Get-Content $projectFile -Raw | ConvertFrom-Json
       $version = $project.version
-      $version += ".$($env:APPVEYOR_BUILD_VERSION.split("-")[0])"
+      $version += ".$($env:APPVEYOR_BUILD_NUMBER)"
       $project.version = $version
       ConvertTo-Json $project -Depth 100 | Out-File -Encoding UTF8 $projectFile
     }
 - ps: dotnet restore
-- ps: dotnet build .\JustSaying\project.json
+- ps: dotnet build JustSaying/project.json
 test_script:
   - dotnet test .\JustSaying.AwsTools.UnitTests\project.json
   - dotnet test .\JustSaying.Messaging.UnitTests\project.json
