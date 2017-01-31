@@ -6,24 +6,48 @@ assembly_info:
   assembly_version: '{version}'
   assembly_file_version: '{version}'
   assembly_informational_version: '{version}'
-before_build:
-- nuget restore
-build:
-  project: JustSaying.sln
-  parallel: true
-  publish_nuget: true
-  publish_nuget_symbols: true
-  include_nuget_references: true
-  verbosity: normal
+# before_build:
+# - nuget restore
+# build:
+#   project: JustSaying.sln
+#   parallel: true
+#   publish_nuget: true
+#   publish_nuget_symbols: true
+#   include_nuget_references: true
+#   verbosity: normal
+build_script:
+- ps: |
+    $projectFiles = @(
+      "JustSaying\project.json",
+      "JustSaying.AwsTools\project.json",
+      "JustSaying.AwsTools.IntegrationTests\project.json",
+      "JustSaying.AwsTools.UnitTests\project.json",
+      "JustSaying.IntegrationTests\project.json",
+      "JustSaying.Messaging\project.json",
+      "JustSaying.Messaging.UnitTests\project.json",
+      "JustSaying.Models\project.json",
+      "JustSaying.TestingFramework\project.json",
+      "JustSaying.Tools\project.json",
+      "JustSaying.UnitTests\project.json"
+    )
+    foreach ($projectFile  in $projectFiles) {
+      $project =  Get-Content $projectFile -Raw | ConvertFrom-Json
+      $version = $project.version
+      $version += ".$($env:APPVEYOR_BUILD_VERSION.split("-")[0])"
+      $project.version = $version
+      ConvertTo-Json $project -Depth 100 | Out-File -Encoding UTF8 $projectFile
+    }
+- ps: dotnet restore
+- ps: dotnet build .\JustSaying\project.json
 test_script:
   - dotnet test .\JustSaying.AwsTools.UnitTests\project.json
   - dotnet test .\JustSaying.Messaging.UnitTests\project.json
   - dotnet test .\JustSaying.UnitTests\project.json
 after_build:
-- dotnet pack "JustSaying" -o artifacts --version-suffix %APPVEYOR_BUILD_NUMBER%
-- dotnet pack "JustSaying.AwsTools" -o artifacts --version-suffix %APPVEYOR_BUILD_NUMBER%
-- dotnet pack "JustSaying.Messaging" -o artifacts --version-suffix %APPVEYOR_BUILD_NUMBER%
-- dotnet pack "JustSaying.Models" -o artifacts --version-suffix %APPVEYOR_BUILD_NUMBER%
+- dotnet pack "JustSaying" -o artifacts --no-build
+- dotnet pack "JustSaying.AwsTools" -o artifacts --no-build
+- dotnet pack "JustSaying.Messaging" -o artifacts --no-build
+- dotnet pack "JustSaying.Models" -o artifacts --no-build
 artifacts:
 - path: artifacts\**\*.*
 notifications:
