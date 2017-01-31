@@ -6,15 +6,6 @@ assembly_info:
   assembly_version: '{version}'
   assembly_file_version: '{version}'
   assembly_informational_version: '{version}'
-# before_build:
-# - nuget restore
-# build:
-#   project: JustSaying.sln
-#   parallel: true
-#   publish_nuget: true
-#   publish_nuget_symbols: true
-#   include_nuget_references: true
-#   verbosity: normal
 build_script:
 - ps: |
     $projectFiles = @(
@@ -32,9 +23,7 @@ build_script:
     )
     foreach ($projectFile  in $projectFiles) {
       $project =  Get-Content $projectFile -Raw | ConvertFrom-Json
-      $version = $project.version
-      $version += ".$($env:APPVEYOR_BUILD_NUMBER)"
-      $project.version = $version
+      $project.version = $env:APPVEYOR_BUILD_VERSION
       ConvertTo-Json $project -Depth 100 | Out-File -Encoding UTF8 $projectFile
     }
 - ps: dotnet restore
