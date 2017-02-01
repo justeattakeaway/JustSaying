@@ -29,9 +29,9 @@ build_script:
 - ps: dotnet restore
 - ps: dotnet build JustSaying/project.json
 test_script:
-  - dotnet test .\JustSaying.AwsTools.UnitTests\project.json
-  - dotnet test .\JustSaying.Messaging.UnitTests\project.json
-  - dotnet test .\JustSaying.UnitTests\project.json
+  - dotnet test .\JustSaying.AwsTools.UnitTests\project.json --result=myresults.xml;format=AppVeyor
+  - dotnet test .\JustSaying.Messaging.UnitTests\project.json --result=myresults.xml;format=AppVeyor
+  - dotnet test .\JustSaying.UnitTests\project.json --result=myresults.xml;format=AppVeyor
 after_build:
 - dotnet pack "JustSaying" -o artifacts --no-build
 - dotnet pack "JustSaying.AwsTools" -o artifacts --no-build
