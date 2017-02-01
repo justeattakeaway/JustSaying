@@ -1,6 +1,9 @@
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 using Amazon;
-using Amazon.SQS;
+using Amazon.SimpleNotificationService;
+using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using Microsoft.Extensions.Logging;
@@ -13,6 +16,7 @@ namespace JustSaying.AwsTools.QueueCreation
         private readonly ILoggerFactory _loggerFactory;
         private readonly IRegionResourceCache<SqsQueueByName> _queueCache = new RegionResourceCache<SqsQueueByName>();
         private readonly IRegionResourceCache<SnsTopicByName> _topicCache = new RegionResourceCache<SnsTopicByName>();
+        private bool _disableTopicCheckOnSubscribe;
 
         public AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory, ILoggerFactory loggerFactory)
         {
@@ -41,7 +45,10 @@ namespace JustSaying.AwsTools.QueueCreation
             }
             else
             {
-                var eventTopic = await EnsureTopicExists(regionEndpoint, serialisationRegister, queueConfig);
+                var eventTopic = _disableTopicCheckOnSubscribe
+                    ? CreateTopicWithoutCheckingForExistence(serialisationRegister, queueConfig, regionEndpoint)
+                    : await EnsureTopicExists(regionEndpoint, serialisationRegister, queueConfig);
+
                 await EnsureQueueIsSubscribedToTopic(regionEndpoint, eventTopic, queue);
 
                 var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
@@ -49,6 +56,11 @@ namespace JustSaying.AwsTools.QueueCreation
             }
 
             return queue;
+        }
+
+        private SnsTopicByName CreateTopicWithoutCheckingForExistence(IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig, RegionEndpoint regionEndpoint)
+        {
+            return new SnsTopicByName(queueConfig.PublishEndpoint, _awsClientFactory.GetAwsClientFactory().GetSnsClient(regionEndpoint), serialisationRegister, _loggerFactory);
         }
 
         private static bool TopicExistsInAnotherAccount(SqsReadConfiguration queueConfig)
@@ -62,7 +74,7 @@ namespace JustSaying.AwsTools.QueueCreation
                 .GetAwaiter().GetResult();
         }
 
-        public async Task<SqsQueueByName> EnsureQueueExistsAsync(string region, SqsReadConfiguration queueConfig)
+        private async Task<SqsQueueByName> EnsureQueueExistsAsync(string region, SqsReadConfiguration queueConfig)
         {
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);
             var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
@@ -103,6 +115,44 @@ namespace JustSaying.AwsTools.QueueCreation
         {
             var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(region);
             await eventTopic.SubscribeAsync(sqsclient, queue);
+        }
+
+        public async Task PreLoadTopicCache(string region, IMessageSerialisationRegister serialisationRegister)
+        {
+            var regionEndpoint = RegionEndpoint.GetBySystemName(region);
+            var snsclient = _awsClientFactory.GetAwsClientFactory().GetSnsClient(regionEndpoint);
+            var topics = await ListTopics(snsclient);
+
+            foreach (var topic in topics)
+            {
+                var eventTopic = new SnsTopicByName(topic, snsclient, serialisationRegister, _loggerFactory);
+                _topicCache.AddToCache(regionEndpoint.SystemName, topic, eventTopic);
+            }
+        }
+
+        public void DisableTopicCheckOnSubscribe()
+        {
+            _disableTopicCheckOnSubscribe = true;
+        }
+
+        private static async Task<List<string>> ListTopics(IAmazonSimpleNotificationService snsclient)
+        {
+            var topics = new List<string>();
+            string str = string.Empty;
+            do
+            {
+                var listTopicsResponse = await snsclient.ListTopicsAsync(new ListTopicsRequest
+                {
+                    NextToken = str
+                });
+                if (listTopicsResponse?.Topics == null || listTopicsResponse.Topics.Count == 0)
+                {
+                    break;
+                }
+                topics.AddRange(listTopicsResponse.Topics.Select(x => x.TopicArn));
+                str = listTopicsResponse.NextToken;
+            } while (!string.IsNullOrEmpty(str));
+            return topics;
         }
     }
 }

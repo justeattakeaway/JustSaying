@@ -41,7 +41,7 @@ namespace JustSaying
             _amazonQueueCreator = queueCreator;
             _awsClientFactoryProxy = awsClientFactoryProxy;
         }
-        
+
         private static string GetMessageTypeName<T>() => typeof(T).ToTopicName();
 
         public virtual INamingStrategy GetNamingStrategy()
@@ -174,6 +174,21 @@ namespace JustSaying
         public IMayWantOptionalSettings WithSerialisationFactory(IMessageSerialisationFactory factory)
         {
             _serialisationFactory = factory;
+            return this;
+        }
+
+        public IMayWantOptionalSettings PreloadTopics()
+        {
+            foreach (var region in Bus.Config.Regions)
+            {
+               Task.WaitAll(_amazonQueueCreator.PreLoadTopicCache(region, Bus.SerialisationRegister));
+            }
+            return this;
+        }
+
+        public IMayWantOptionalSettings DisableTopicCheckOnSubscribe()
+        {
+            _amazonQueueCreator.DisableTopicCheckOnSubscribe();
             return this;
         }
 
