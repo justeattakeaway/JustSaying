@@ -33,7 +33,7 @@
 		}
 	},
   "dependencies": {
-    "JustSaying.Models": "5.0.0",
+    "JustSaying.Models": {"target": "project"},
     "Newtonsoft.Json": "9.0.1"
   },
 	"frameworks": {
