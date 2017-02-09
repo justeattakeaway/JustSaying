@@ -2,7 +2,7 @@
 	"version": "5.0.0",
 	"authors": ["JUST EAT plc"],
 	"copyright": "JUST EAT plc",
-	"title": "JustSaying",
+	"title": "JustSaying.Messaging",
 	"description": "A light-weight message bus on top of AWS SNS and SQS",
 	"buildOptions": {
 		"warningsAsErrors": true,
