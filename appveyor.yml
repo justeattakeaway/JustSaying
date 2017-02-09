@@ -1,4 +1,4 @@
-version: 5.0.{build}-beta
+version: 5.0.0-beta-{build}
 configuration: Release
 assembly_info:
   patch: true
