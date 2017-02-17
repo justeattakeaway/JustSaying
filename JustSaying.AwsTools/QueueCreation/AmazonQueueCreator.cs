@@ -138,21 +138,22 @@ namespace JustSaying.AwsTools.QueueCreation
         private static async Task<List<string>> ListTopics(IAmazonSimpleNotificationService snsclient)
         {
             var topics = new List<string>();
-            string str = string.Empty;
+            string nextToken = null;
             do
             {
                 var listTopicsResponse = await snsclient.ListTopicsAsync(new ListTopicsRequest
                 {
-                    NextToken = str
+                    NextToken = nextToken
                 });
                 if (listTopicsResponse?.Topics == null || listTopicsResponse.Topics.Count == 0)
                 {
                     break;
                 }
                 topics.AddRange(listTopicsResponse.Topics.Select(x => x.TopicArn));
-                str = listTopicsResponse.NextToken;
-            } while (!string.IsNullOrEmpty(str));
+                nextToken = listTopicsResponse.NextToken;
+            } while (!string.IsNullOrEmpty(nextToken));
             return topics;
+
         }
     }
 }
