@@ -126,7 +126,7 @@ namespace JustSaying.AwsTools.QueueCreation
             foreach (var topic in topics)
             {
                 var eventTopic = new SnsTopicByName(topic, snsclient, serialisationRegister, _loggerFactory);
-                _topicCache.AddToCache(regionEndpoint.SystemName, topic, eventTopic);
+                _topicCache.AddToCache(regionEndpoint.SystemName, eventTopic.TopicName, eventTopic);
             }
         }
 
@@ -135,9 +135,9 @@ namespace JustSaying.AwsTools.QueueCreation
             _disableTopicCheckOnSubscribe = true;
         }
 
-        private static async Task<List<string>> ListTopics(IAmazonSimpleNotificationService snsclient)
+        private static async Task<List<Topic>> ListTopics(IAmazonSimpleNotificationService snsclient)
         {
-            var topics = new List<string>();
+            var topics = new List<Topic>();
             string nextToken = null;
             do
             {
@@ -149,7 +149,7 @@ namespace JustSaying.AwsTools.QueueCreation
                 {
                     break;
                 }
-                topics.AddRange(listTopicsResponse.Topics.Select(x => x.TopicArn));
+                topics.AddRange(listTopicsResponse.Topics);
                 nextToken = listTopicsResponse.NextToken;
             } while (!string.IsNullOrEmpty(nextToken));
             return topics;

@@ -32,6 +32,7 @@ namespace JustSaying
         private IMessageSerialisationFactory _serialisationFactory;
         private Func<INamingStrategy> _busNamingStrategyFunc;
         private readonly ILoggerFactory _loggerFactory;
+        private bool skipTopicPreload;
 
         protected internal JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator, IAwsClientFactoryProxy awsClientFactoryProxy, ILoggerFactory loggerFactory)
         {
@@ -177,18 +178,18 @@ namespace JustSaying
             return this;
         }
 
-        public IMayWantOptionalSettings PreloadTopics()
+        public IMayWantOptionalSettings WithTopicQueryBehaviour(TopicQueryBehaviour topicBehaviour)
         {
-            foreach (var region in Bus.Config.Regions)
+            switch (topicBehaviour)
             {
-               Task.WaitAll(_amazonQueueCreator.PreLoadTopicCache(region, Bus.SerialisationRegister));
+                case TopicQueryBehaviour.DisableExistenceCheck:
+                    _amazonQueueCreator.DisableTopicCheckOnSubscribe();
+                    skipTopicPreload = true;
+                    break;
+                case TopicQueryBehaviour.NoPreload:
+                    skipTopicPreload = true;
+                    break;
             }
-            return this;
-        }
-
-        public IMayWantOptionalSettings DisableTopicCheckOnSubscribe()
-        {
-            _amazonQueueCreator.DisableTopicCheckOnSubscribe();
             return this;
         }
 
@@ -283,6 +284,7 @@ namespace JustSaying
         {
             var messageTypeName = GetMessageTypeName<T>();
             ConfigureSqsSubscriptionViaTopic(messageTypeName);
+            PreloadTopicCache();
 
             foreach (var region in Bus.Config.Regions)
             {
@@ -292,6 +294,16 @@ namespace JustSaying
             }
 
             return this;
+        }
+
+        private void PreloadTopicCache()
+        {
+            if (skipTopicPreload) return;
+            foreach (var region in Bus.Config.Regions)
+            {
+                Task.WaitAll(_amazonQueueCreator.PreLoadTopicCache(region, Bus.SerialisationRegister));
+            }
+            skipTopicPreload = true;
         }
 
         private IHaveFulfilledSubscriptionRequirements PointToPointHandler<T>() where T : Message
@@ -399,5 +411,11 @@ namespace JustSaying
             _awsClientFactoryProxy.SetAwsClientFactory(awsClientFactory);
             return this;
         }
+    }
+
+    public enum TopicQueryBehaviour
+    {
+        DisableExistenceCheck,
+        NoPreload
     }
 }
