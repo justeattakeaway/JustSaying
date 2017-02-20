@@ -66,17 +66,9 @@ namespace JustSaying
             var topicName = namingStrategy.GetTopicName(_subscriptionConfig.BaseTopicName, GetMessageTypeName<T>());
             foreach (var region in Bus.Config.Regions)
             {
-                // TODO pass region down into topic creation for when we have foreign topics so we can generate the arn
-                var eventPublisher = new SnsTopicByName(
-                    topicName,
-                    _awsClientFactoryProxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
-                    Bus.SerialisationRegister,
-                    _loggerFactory);
+                PreloadTopicCache();
 
-                if (!eventPublisher.Exists())
-                {
-                    eventPublisher.Create();
-                }
+                var eventPublisher = _amazonQueueCreator.EnsureTopicExists(region, Bus.SerialisationRegister, topicName);
 
                 eventPublisher.EnsurePolicyIsUpdated(Bus.Config.AdditionalSubscriberAccounts);
 

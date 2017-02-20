@@ -90,16 +90,21 @@ namespace JustSaying.AwsTools.QueueCreation
             return queue;
         }
 
-        private async Task<SnsTopicByName> EnsureTopicExists(RegionEndpoint region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
+        public SnsTopicByName EnsureTopicExists(string region, IMessageSerialisationRegister serialisationRegister, string topicName)
+        {
+            return EnsureTopicExists(RegionEndpoint.GetBySystemName(region),  serialisationRegister, topicName).GetAwaiter().GetResult();
+        }
+
+        private async Task<SnsTopicByName> EnsureTopicExists(RegionEndpoint region, IMessageSerialisationRegister serialisationRegister, string topicName)
         {
             var snsclient = _awsClientFactory.GetAwsClientFactory().GetSnsClient(region);
 
-            var eventTopic = _topicCache.TryGetFromCache(region.SystemName, queueConfig.PublishEndpoint);
+            var eventTopic = _topicCache.TryGetFromCache(region.SystemName, topicName);
             if (eventTopic != null)
                 return eventTopic;
 
-            eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsclient, serialisationRegister, _loggerFactory);
-            _topicCache.AddToCache(region.SystemName, queueConfig.PublishEndpoint, eventTopic);
+            eventTopic = new SnsTopicByName(topicName, snsclient, serialisationRegister, _loggerFactory);
+            _topicCache.AddToCache(region.SystemName, topicName, eventTopic);
 
             var exists = await eventTopic.ExistsAsync();
 
@@ -109,6 +114,11 @@ namespace JustSaying.AwsTools.QueueCreation
             }
 
             return eventTopic;
+        }
+
+        private Task<SnsTopicByName> EnsureTopicExists(RegionEndpoint region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
+        {
+            return EnsureTopicExists(region, serialisationRegister, queueConfig.PublishEndpoint);
         }
 
         private async Task EnsureQueueIsSubscribedToTopic(RegionEndpoint region, SnsTopicByName eventTopic, SqsQueueByName queue)
