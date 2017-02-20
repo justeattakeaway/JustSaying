@@ -14,13 +14,13 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
         public IHandlerAsync<T> ResolveHandler<T>(HandlerResolutionContext context)
         {
-            var handler = _container.GetInstance<IHandlerAsync<T>>();
+            var handler = _container.TryGetInstance<IHandlerAsync<T>>();
             if (handler != null)
             {
                 return handler;
             }
 
-            var syncHandler = _container.GetInstance<IHandler<T>>();
+            var syncHandler = _container.TryGetInstance<IHandler<T>>();
             if (syncHandler != null)
             {
                 return new BlockingHandler<T>(syncHandler);

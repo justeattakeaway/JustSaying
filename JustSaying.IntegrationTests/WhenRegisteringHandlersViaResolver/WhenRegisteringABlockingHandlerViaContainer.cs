@@ -1,4 +1,5 @@
 using JustSaying.IntegrationTests.TestHandlers;
+using JustSaying.IntegrationTests.TestHandlers.JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
@@ -20,8 +21,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             var handler = handlerResolver.ResolveHandler<OrderPlaced>(resolutionContext);
             Assert.That(handler, Is.Not.Null);
 
-            var blockingHandler = (BlockingHandler<OrderPlaced>)handler;
-            _resolvedHandler = (BlockingOrderProcessor)blockingHandler.Inner;
+            _resolvedHandler = (BlockingOrderProcessor)handler;
+
             DoneSignal = _resolvedHandler.DoneSignal.Task;
 
             Subscriber = CreateMeABus.WithLogging(new LoggerFactory())
