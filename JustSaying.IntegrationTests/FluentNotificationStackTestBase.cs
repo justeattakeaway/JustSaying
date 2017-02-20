@@ -189,13 +189,16 @@ namespace JustSaying.IntegrationTests
             return subscriptions.Any(x => !string.IsNullOrEmpty(x.SubscriptionArn) && x.Endpoint == queueArn);
         }
 
-        protected bool QueueHasPolicyForTopic(RegionEndpoint regionEndpoint, Topic topic, string queueUrl)
+        protected bool QueueHasPolicyForTopic(RegionEndpoint regionEndpoint, Topic topic, string queueUrl, string topicName)
         {
             var client = CreateMeABus.DefaultClientFactory().GetSqsClient(regionEndpoint);
 
             var policy = client.GetQueueAttributes(new GetQueueAttributesRequest{ QueueUrl = queueUrl, AttributeNames = new List<string>{ "Policy" }}).Policy;
 
-            return policy.Contains(topic.TopicArn);
+            int pos = topic.TopicArn.LastIndexOf(topicName);
+            string wildcardedSubscription = topic.TopicArn.Substring(0, pos) + "*";
+
+            return policy.Contains(topic.TopicArn) || policy.Contains(wildcardedSubscription);
         }
     }
 }
