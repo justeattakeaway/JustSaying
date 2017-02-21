@@ -1,8 +1,10 @@
 using System;
+using System.Threading;
 using NUnit.Framework;
 using StructureMap;
 using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
+using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.Logging;
 using Container = StructureMap.Container;
 
@@ -11,6 +13,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
     public class WhenRegisteringMultipleHandlersViaContainer : GivenAPublisher
     {
         private IContainer _container;
+        private IHandlerResolver handlerResolver;
 
         protected override void Given()
         {
@@ -21,7 +24,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
         protected override Task When()
         {
-            var handlerResolver = new StructureMapHandlerResolver(_container);
+            handlerResolver = new StructureMapHandlerResolver(_container);
 
             CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion("eu-west-1")
@@ -33,9 +36,11 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         }
 
         [Test]
-        public void ThrowsNotSupportedException()
+        public void WillResolveIfContainerCanResolveSingleInstance()
         {
-            Assert.IsInstanceOf<NotSupportedException>(ThrownException);
+            //Note Structuremap registry will overwrite the OrderProcessor with OrderDispatcher
+            var resolvedHandler = handlerResolver.ResolveHandler<OrderPlaced>(new HandlerResolutionContext("container-test"));
+            Assert.IsInstanceOf<OrderDispatcher>(resolvedHandler);
         }
     }
 }
