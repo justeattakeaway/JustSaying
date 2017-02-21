@@ -37,7 +37,7 @@ namespace JustSaying.AwsTools.MessageHandling
             var attributeValue = snsPolicy.ToJson();
             var setQueueAttributesRequest = new SetTopicAttributesRequest(sourceArn, "Policy", attributeValue);
 
-            await client.SetTopicAttributesAsync(setQueueAttributesRequest);
+            await client.SetTopicAttributesAsync(setQueueAttributesRequest).ConfigureAwait(false);
         }
 
         private static Statement GetDefaultStatement(string sourceArn)

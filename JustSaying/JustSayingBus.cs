@@ -162,7 +162,7 @@ namespace JustSaying
         public async Task PublishAsync(Message message)
         {
             var publisher = GetActivePublisherForMessage(message);
-            await PublishAsync(publisher, message);
+            await PublishAsync(publisher, message).ConfigureAwait(false);
         }
 
         private IMessagePublisher GetActivePublisherForMessage(Message message)
@@ -204,7 +204,7 @@ namespace JustSaying
             {
                 var watch = Stopwatch.StartNew();
 
-                await publisher.PublishAsync(message);
+                await publisher.PublishAsync(message).ConfigureAwait(false);
 
                 watch.Stop();
                 Monitor.PublishMessageTime(watch.ElapsedMilliseconds);
@@ -219,8 +219,8 @@ namespace JustSaying
                 }
 
                 _log.LogWarning(0, ex, $"Failed to publish message {message.GetType().Name}. Retrying after attempt {attemptCount} of {Config.PublishFailureReAttempts}");
-                await Task.Delay(Config.PublishFailureBackoffMilliseconds * attemptCount);
-                await PublishAsync(publisher, message, attemptCount);
+                await Task.Delay(Config.PublishFailureBackoffMilliseconds * attemptCount).ConfigureAwait(false);
+                await PublishAsync(publisher, message, attemptCount).ConfigureAwait(false);
             }
         }
 

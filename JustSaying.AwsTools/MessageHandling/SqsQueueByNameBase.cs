@@ -23,14 +23,14 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public override async Task<bool> ExistsAsync()
         {
-            var result = await Client.ListQueuesAsync(new ListQueuesRequest{ QueueNamePrefix = QueueName });
+            var result = await Client.ListQueuesAsync(new ListQueuesRequest{ QueueNamePrefix = QueueName }).ConfigureAwait(false);
 
             _log.LogInformation($"Checking if queue '{QueueName}' exists");
             Url = result?.QueueUrls?.SingleOrDefault(x => Matches(x, QueueName));
 
             if (Url != null)
             {
-                await SetQueuePropertiesAsync();
+                await SetQueuePropertiesAsync().ConfigureAwait(false);
                 return true;
             }
 
@@ -53,12 +53,12 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 var result = await Client.CreateQueueAsync(new CreateQueueRequest{
                     QueueName = QueueName,
-                    Attributes = GetCreateQueueAttributes(queueConfig)});
+                    Attributes = GetCreateQueueAttributes(queueConfig)}).ConfigureAwait(false);
 
                 if (!string.IsNullOrWhiteSpace(result?.QueueUrl))
                 {
                     Url = result.QueueUrl;
-                    await SetQueuePropertiesAsync();
+                    await SetQueuePropertiesAsync().ConfigureAwait(false);
 
                     _log.LogInformation($"Created Queue: {QueueName} on Arn: {Arn}");
                     return true;
@@ -70,8 +70,8 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     // Ensure we wait for queue delete timeout to expire.
                     _log.LogInformation($"Waiting to create Queue due to AWS time restriction - Queue: {QueueName}, AttemptCount: {attempt + 1}");
-                    await Task.Delay(60000);
-                    await CreateAsync(queueConfig, attempt + 1);
+                    await Task.Delay(60000).ConfigureAwait(false);
+                    await CreateAsync(queueConfig, attempt + 1).ConfigureAwait(false);
                 }
                 else
                 {

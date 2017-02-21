@@ -156,7 +156,7 @@ namespace JustSaying
                 throw new InvalidOperationException("You must register for message publication before publishing a message");
             }
 
-            await Bus.PublishAsync(message);
+            await Bus.PublishAsync(message).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -293,7 +293,7 @@ namespace JustSaying
             if (skipTopicPreload) return;
             foreach (var region in Bus.Config.Regions)
             {
-                Task.WaitAll(_amazonQueueCreator.PreLoadTopicCache(region, Bus.SerialisationRegister));
+                _amazonQueueCreator.PreLoadTopicCache(region, Bus.SerialisationRegister).GetAwaiter().GetResult();
             }
             skipTopicPreload = true;
         }

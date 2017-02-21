@@ -49,10 +49,10 @@ namespace JustSaying.AwsTools.MessageHandling
             Arn = null;
             Url = null;
 
-            var exists = await ExistsAsync();
+            var exists = await ExistsAsync().ConfigureAwait(false);
             if (exists)
             {
-                await Client.DeleteQueueAsync(new DeleteQueueRequest { QueueUrl = Url });
+                await Client.DeleteQueueAsync(new DeleteQueueRequest { QueueUrl = Url }).ConfigureAwait(false);
 
                 Arn = null;
                 Url = null;
@@ -70,7 +70,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     JustSayingConstants.ATTRIBUTE_VISIBILITY_TIMEOUT,
                     JustSayingConstants.ATTRIBUTE_DELIVERY_DELAY
                 };
-            var attributes = await GetAttrsAsync(keys);
+            var attributes = await GetAttrsAsync(keys).ConfigureAwait(false);
             Arn = attributes.QueueARN;
             MessageRetentionPeriod = attributes.MessageRetentionPeriod;
             VisibilityTimeout = attributes.VisibilityTimeout;
@@ -86,7 +86,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 AttributeNames = new List<string>(attrKeys)
             };
 
-            return await Client.GetQueueAttributesAsync(request);
+            return await Client.GetQueueAttributesAsync(request).ConfigureAwait(false);
         }
 
         public void UpdateQueueAttribute(SqsBasicConfiguration queueConfig)
@@ -113,7 +113,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     }
                 };
 
-                var response = await Client.SetQueueAttributesAsync(request);
+                var response = await Client.SetQueueAttributesAsync(request).ConfigureAwait(false);
 
                 if (response.HttpStatusCode == HttpStatusCode.OK)
                 {

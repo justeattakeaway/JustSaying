@@ -36,14 +36,14 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public async Task<bool> IsSubscribedAsync(SqsQueueBase queue)
         {
-            var result = await Client.ListSubscriptionsByTopicAsync(new ListSubscriptionsByTopicRequest(Arn));
+            var result = await Client.ListSubscriptionsByTopicAsync(new ListSubscriptionsByTopicRequest(Arn)).ConfigureAwait(false);
 
             return result.Subscriptions.Any(x => !string.IsNullOrEmpty(x.SubscriptionArn) && x.Endpoint == queue.Arn);
         }
 
         public async Task<bool> SubscribeAsync(IAmazonSQS amazonSqsClient, SqsQueueBase queue)
         {
-            var subscriptionResponse = await Client.SubscribeAsync(Arn, "sqs", queue.Arn);
+            var subscriptionResponse = await Client.SubscribeAsync(Arn, "sqs", queue.Arn).ConfigureAwait(false);
 
             if (!string.IsNullOrEmpty(subscriptionResponse?.SubscriptionArn))
             {
@@ -73,7 +73,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                await Client.PublishAsync(request);
+                await Client.PublishAsync(request).ConfigureAwait(false); 
                 _eventLog.LogInformation($"Published message: '{messageType}' with content {messageToSend}");
             }
             catch (Exception ex)

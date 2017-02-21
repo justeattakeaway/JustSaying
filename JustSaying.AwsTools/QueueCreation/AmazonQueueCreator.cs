@@ -34,25 +34,25 @@ namespace JustSaying.AwsTools.QueueCreation
         public async Task<SqsQueueByName> EnsureTopicExistsWithQueueSubscribedAsync(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
         {
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);
-            var queue = await EnsureQueueExistsAsync(region, queueConfig);
+            var queue = await EnsureQueueExistsAsync(region, queueConfig).ConfigureAwait(false);
             if (TopicExistsInAnotherAccount(queueConfig))
             {
                 var sqsClient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
                 var snsClient = _awsClientFactory.GetAwsClientFactory().GetSnsClient(regionEndpoint);
                 var arnProvider = new ForeignTopicArnProvider(regionEndpoint, queueConfig.TopicSourceAccount, queueConfig.PublishEndpoint);
 
-                await snsClient.SubscribeQueueAsync(arnProvider.GetArn(), sqsClient, queue.Url);
+                await snsClient.SubscribeQueueAsync(arnProvider.GetArn(), sqsClient, queue.Url).ConfigureAwait(false);
             }
             else
             {
                 var eventTopic = _disableTopicCheckOnSubscribe
                     ? CreateTopicWithoutCheckingForExistence(serialisationRegister, queueConfig, regionEndpoint)
-                    : await EnsureTopicExists(regionEndpoint, serialisationRegister, queueConfig);
+                    : await EnsureTopicExists(regionEndpoint, serialisationRegister, queueConfig).ConfigureAwait(false);
 
-                await EnsureQueueIsSubscribedToTopic(regionEndpoint, eventTopic, queue);
+                await EnsureQueueIsSubscribedToTopic(regionEndpoint, eventTopic, queue).ConfigureAwait(false);
 
                 var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
-                await SqsPolicy.SaveAsync(eventTopic.Arn, queue.Arn, queue.Url, sqsclient);
+                await SqsPolicy.SaveAsync(eventTopic.Arn, queue.Arn, queue.Url, sqsclient).ConfigureAwait(false); 
             }
 
             return queue;
@@ -84,7 +84,7 @@ namespace JustSaying.AwsTools.QueueCreation
                 return queue;
             }
             queue = new SqsQueueByName(regionEndpoint, queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue, _loggerFactory);
-            await queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig);
+            await queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig).ConfigureAwait(false);
 
             _queueCache.AddToCache(region, queue.QueueName, queue);
             return queue;
@@ -106,11 +106,11 @@ namespace JustSaying.AwsTools.QueueCreation
             eventTopic = new SnsTopicByName(topicName, snsclient, serialisationRegister, _loggerFactory);
             _topicCache.AddToCache(region.SystemName, topicName, eventTopic);
 
-            var exists = await eventTopic.ExistsAsync();
+            var exists = await eventTopic.ExistsAsync().ConfigureAwait(false);
 
             if (!exists)
             {
-                await eventTopic.CreateAsync();
+                await eventTopic.CreateAsync().ConfigureAwait(false);
             }
 
             return eventTopic;
@@ -124,14 +124,14 @@ namespace JustSaying.AwsTools.QueueCreation
         private async Task EnsureQueueIsSubscribedToTopic(RegionEndpoint region, SnsTopicByName eventTopic, SqsQueueByName queue)
         {
             var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(region);
-            await eventTopic.SubscribeAsync(sqsclient, queue);
+            await eventTopic.SubscribeAsync(sqsclient, queue).ConfigureAwait(false);
         }
 
         public async Task PreLoadTopicCache(string region, IMessageSerialisationRegister serialisationRegister)
         {
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);
             var snsclient = _awsClientFactory.GetAwsClientFactory().GetSnsClient(regionEndpoint);
-            var topics = await ListTopics(snsclient);
+            var topics = await ListTopics(snsclient).ConfigureAwait(false);
 
             foreach (var topic in topics)
             {
@@ -154,7 +154,7 @@ namespace JustSaying.AwsTools.QueueCreation
                 var listTopicsResponse = await snsclient.ListTopicsAsync(new ListTopicsRequest
                 {
                     NextToken = nextToken
-                });
+                }).ConfigureAwait(false);
                 if (listTopicsResponse?.Topics == null || listTopicsResponse.Topics.Count == 0)
                 {
                     break;
