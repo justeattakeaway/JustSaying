@@ -18,6 +18,14 @@ namespace JustSaying.TestingFramework
         public string Content { get; set; }
     }
 
+    public class DelayedMessage : Message
+    {
+        public DelayedMessage(int delaySeconds)
+        {
+            DelaySeconds = delaySeconds;
+        }
+    }
+
     public class MessageWithEnum : Message
     {
         public MessageWithEnum(Values enumVal)
