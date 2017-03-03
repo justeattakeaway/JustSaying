@@ -33,7 +33,8 @@ namespace JustSaying.AwsTools.MessageHandling
             var request = new SendMessageRequest
             {
                 MessageBody = GetMessageInContext(message),
-                QueueUrl = Url
+                QueueUrl = Url,
+                DelaySeconds = message.DelaySeconds ?? 0
             };
 
             try
