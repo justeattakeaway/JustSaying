@@ -41,7 +41,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
         [Then]
         public void MessageIsPublishedWithDelaySecondsPropertySet()
         {
-            _sqs.Received().SendMessage(Arg.Is<SendMessageRequest>(x => x.DelaySeconds.Equals(1)));
+            _sqs.Received().SendMessageAsync(Arg.Is<SendMessageRequest>(x => x.DelaySeconds.Equals(1)));
         }
     }
 }
