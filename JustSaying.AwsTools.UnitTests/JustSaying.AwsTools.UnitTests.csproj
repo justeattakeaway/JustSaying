@@ -83,6 +83,7 @@
     <Compile Include="MessageHandling\SqsNotificationListener\WhenMessageProcessingThrowsDuring.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\WhenMessageProcessingThrowsBefore.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\WhenMessageHandlingThrows.cs" />
+    <Compile Include="MessageHandling\Sqs\WhenPublishingDelayedMessage.cs" />
     <Compile Include="QueueCreation\WhenSerializingRedrivePolicy.cs" />
     <Compile Include="MessageHandling\Sns\TopicByName\WhenPublishing.cs" />
     <Compile Include="MessageHandling\SqsNotificationListener\WhenAttemptingToInterrogateASubscriber.cs" />

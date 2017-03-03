@@ -24,7 +24,8 @@ namespace JustSaying.AwsTools.MessageHandling
             _client.SendMessage(new SendMessageRequest
             {
                 MessageBody = GetMessageInContext(message),
-                QueueUrl = Url
+                QueueUrl = Url,
+                DelaySeconds = message.DelaySeconds ?? 0
             });
         }
 

@@ -19,6 +19,7 @@ namespace JustSaying.Models
         public string Conversation { get; set; }
         public string ReceiptHandle { get; set; }
         public string QueueUrl { get; set; }
+        public int? DelaySeconds { get; set; }
 
         //footprint in order to avoid the same message being processed multiple times.
         public virtual string UniqueKey()
