@@ -6,7 +6,7 @@ cache:
 before_build:
   - dotnet restore
 build:
-  project: JustSayig.sln
+  project: JustSaying.sln
   parallel: true
   verbosity: minimal
 pull_requests:
