@@ -1,45 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+  <Import Project="..\build\common.props" />
   <PropertyGroup>
-    <Description>A light-weight message bus on top of AWS SNS and SQS</Description>
-    <Copyright>JUST EAT plc</Copyright>
-    <AssemblyTitle>JustSaying.Models</AssemblyTitle>
-    <VersionPrefix>5.0.0</VersionPrefix>
-    <Authors>JUST EAT plc</Authors>
     <TargetFrameworks>netstandard1.6;net451</TargetFrameworks>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <PlatformTarget>anycpu</PlatformTarget>
-    <LangVersion>6</LangVersion>
-    <DebugType>portable</DebugType>
-    <AssemblyName>JustSaying.Models</AssemblyName>
-    <PackageId>JustSaying.Models</PackageId>
-    <PackageTags>aws;sns;sqs</PackageTags>
-    <PackageProjectUrl>https://github.com/justeat/JustSaying</PackageProjectUrl>
-    <PackageLicenseUrl>https://github.com/justeat/JustSaying/blob/develop/LICENSE.md</PackageLicenseUrl>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/justeat/JustSaying.git</RepositoryUrl>
-    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
-    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
-    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
   </ItemGroup>
-
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
     <PackageReference Include="System.Linq" Version="4.3.0" />
     <PackageReference Include="System.Threading.ThreadPool" Version="4.3.0" />
     <PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
     <PackageReference Include="System.Net.WebHeaderCollection" Version="4.3.0" />
   </ItemGroup>
-
   <ItemGroup Condition=" '$(TargetFramework)' == 'net451' ">
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
-
 </Project>
