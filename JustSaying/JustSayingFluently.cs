@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Amazon;
+using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
@@ -74,8 +75,16 @@ namespace JustSaying
                     _awsClientFactoryProxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
                     Bus.SerialisationRegister);
 
-                if (!eventPublisher.Exists())
+                try
+                {
                     eventPublisher.Create();
+                }
+                catch (AuthorizationErrorException ex)
+                {
+                    Log.Error(ex, "Unable to create topic");
+                }
+
+                eventPublisher.Create();
 
                 eventPublisher.EnsurePolicyIsUpdated(Bus.Config.AdditionalSubscriberAccounts);
 
@@ -151,7 +160,7 @@ namespace JustSaying
         {
             if (Bus == null)
                 throw new InvalidOperationException("You must register for message publication before publishing a message");
-            
+
             Bus.Publish(message);
         }
 
@@ -219,7 +228,7 @@ namespace JustSaying
             var thing =  _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
                 ? PointToPointHandler<T>()
                 : TopicHandler<T>();
-            
+
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
             foreach (var region in Bus.Config.Regions)
             {
@@ -255,7 +264,7 @@ namespace JustSaying
                 Bus.AddMessageHandler(region, _subscriptionConfig.QueueName,
                     () => handlerResolver.ResolveHandlers<T>().Single());
             }
-            
+
 
             Log.Info(string.Format("Added a message handler - Topic: {0}, QueueName: {1}, HandlerName: IHandler<{2}>", _subscriptionConfig.Topic, _subscriptionConfig.QueueName, typeof(T)));
 
@@ -273,7 +282,7 @@ namespace JustSaying
                 CreateSubscriptionListener<T>(region, queue);
                 Log.Info("Created SQS topic subscription - Topic: {0}, QueueName: {1}", _subscriptionConfig.Topic, _subscriptionConfig.QueueName);
             }
-          
+
             return this;
         }
 
@@ -288,7 +297,7 @@ namespace JustSaying
                 CreateSubscriptionListener<T>(region, queue);
                 Log.Info(string.Format("Created SQS subscriber - MessageName: {0}, QueueName: {1}", messageTypeName, _subscriptionConfig.QueueName));
             }
-           
+
             return this;
         }
 
@@ -390,7 +399,7 @@ namespace JustSaying
         }
     }
 
-    public interface IMayWantOptionalSettings : IMayWantMonitoring, IMayWantMessageLockStore, IMayWantCustomSerialisation, 
+    public interface IMayWantOptionalSettings : IMayWantMonitoring, IMayWantMessageLockStore, IMayWantCustomSerialisation,
         IMayWantAFailoverRegion, IMayWantNamingStrategy, IMayWantAwsClientFactory { }
 
     public interface IMayWantAwsClientFactory
@@ -435,7 +444,7 @@ namespace JustSaying
         IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsWriteConfiguration> config) where T : Message;
 
         /// <summary>
-        /// Adds subscriber to topic. 
+        /// Adds subscriber to topic.
         /// </summary>
         /// <param name="topicName">Topic name to subscribe to. If left empty,
         /// topic name will be message type name</param>
@@ -459,7 +468,7 @@ namespace JustSaying
 
     public interface IHaveFulfilledSubscriptionRequirements : IAmJustSayingFluently, IFluentSubscription
     {
-        
+
     }
 
     public interface ISubscriberIntoQueue
