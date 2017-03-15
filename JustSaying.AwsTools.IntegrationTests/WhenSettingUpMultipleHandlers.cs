@@ -81,21 +81,15 @@ namespace JustSaying.AwsTools.IntegrationTests
         }
 
         [Test]
-        public void CreateTopicCalledOnce()
+        public void CreateTopicCalled()
         {
-            Assert.That(proxyAwsClientFactory.Counters["CreateTopic"][topicName].Count, Is.EqualTo(1));
+            Assert.That(proxyAwsClientFactory.Counters["CreateTopic"][topicName].Count, Is.GreaterThanOrEqualTo(1));
         }
 
         [Test]
         public void FindTopicCalledOnce()
         {
-            Assert.That(proxyAwsClientFactory.Counters["FindTopic"][topicName].Count, Is.EqualTo(1));
-        }
-
-        [Test]
-        public void ListQueuesCalledOnce()
-        {
-            Assert.That(proxyAwsClientFactory.Counters["ListQueues"][queueName].Count, Is.EqualTo(1));
+            Assert.That(proxyAwsClientFactory.Counters["GetQueueAttributes"][topicName].Count, Is.EqualTo(1));
         }
 
         [Test]

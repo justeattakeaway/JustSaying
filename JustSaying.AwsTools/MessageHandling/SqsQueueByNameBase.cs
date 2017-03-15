@@ -35,9 +35,9 @@ namespace JustSaying.AwsTools.MessageHandling
                 return false;
             }
 
+            if (result?.QueueUrl == null) return false;
             Url = result.QueueUrl;
 
-            if (Url == null) return false;
             SetQueueProperties();
             return true;
         }
