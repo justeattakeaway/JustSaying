@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using NUnit.Framework;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
@@ -18,8 +20,13 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
         protected void SetUp()
         {
             _client = Substitute.For<IAmazonSQS>();
-            _client.ListQueues(Arg.Any<ListQueuesRequest>())
-                .Returns(new ListQueuesResponse() { QueueUrls = new List<string>() { "some-queue-name" } });
+            _client.GetQueueUrl(Arg.Any<string>())
+                .Returns(x =>
+                {
+                    if (x.Arg<string>() == "some-queue-name")
+                        return new GetQueueUrlResponse {QueueUrl = "some-queue-name"};
+                    throw new QueueDoesNotExistException("some-queue-name not found");
+                });
             _client.GetQueueAttributes(Arg.Any<GetQueueAttributesRequest>())
                 .Returns(new GetQueueAttributesResponse()
                 {
