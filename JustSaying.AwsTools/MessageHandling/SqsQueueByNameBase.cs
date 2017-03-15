@@ -22,17 +22,24 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public override bool Exists()
         {
-            var result = Client.ListQueues(new ListQueuesRequest{ QueueNamePrefix = QueueName });
+            GetQueueUrlResponse result;
             Log.Info("Checking if queue '{0}' exists", QueueName);
-            Url = result.QueueUrls.SingleOrDefault(x => Matches(x, QueueName));
 
-            if (Url != null)
+            try
             {
-                SetQueueProperties();
-                return true;
+
+                result = Client.GetQueueUrl(QueueName);
+            }
+            catch (QueueDoesNotExistException)
+            {
+                return false;
             }
 
-            return false;
+            Url = result.QueueUrl;
+
+            if (Url == null) return false;
+            SetQueueProperties();
+            return true;
         }
         private static bool Matches(string queueUrl, string queueName)
         {

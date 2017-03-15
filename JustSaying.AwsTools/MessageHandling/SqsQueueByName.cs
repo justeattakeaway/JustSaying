@@ -88,7 +88,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     ErrorQueue.UpdateQueueAttribute(errorQueueConfig);
                 }
             }
-            UpdateRedrivePolicy(new RedrivePolicy(queueConfig.RetryCountBeforeSendingToErrorQueue, ErrorQueue.Arn));
+            if (!queueConfig.ErrorQueueOptOut) UpdateRedrivePolicy(new RedrivePolicy(queueConfig.RetryCountBeforeSendingToErrorQueue, ErrorQueue.Arn));
         }
 
         protected override Dictionary<string, string> GetCreateQueueAttributes(SqsBasicConfiguration queueConfig)
