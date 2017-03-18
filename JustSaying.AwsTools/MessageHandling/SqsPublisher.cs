@@ -33,9 +33,13 @@ namespace JustSaying.AwsTools.MessageHandling
             var request = new SendMessageRequest
             {
                 MessageBody = GetMessageInContext(message),
-                QueueUrl = Url,
-                DelaySeconds = message.DelaySeconds ?? 0
+                QueueUrl = Url
             };
+
+            if (message.DelaySeconds.HasValue)
+            {
+                request.DelaySeconds = message.DelaySeconds.Value;
+            }
 
             try
             {
