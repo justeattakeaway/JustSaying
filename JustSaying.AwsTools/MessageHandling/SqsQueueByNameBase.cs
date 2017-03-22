@@ -1,6 +1,5 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using Amazon;
 using Amazon.SQS;
@@ -24,10 +23,10 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             GetQueueUrlResponse result;
             Log.Info("Checking if queue '{0}' exists", QueueName);
+            if (string.IsNullOrWhiteSpace(QueueName)) return false;
 
             try
             {
-
                 result = Client.GetQueueUrl(QueueName);
             }
             catch (QueueDoesNotExistException)
