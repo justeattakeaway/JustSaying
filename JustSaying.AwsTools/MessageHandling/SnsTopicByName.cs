@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Amazon.CloudWatchLogs.Model;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.Messaging.MessageSerialisation;
@@ -38,15 +39,24 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public bool Create()
         {
-            var response = Client.CreateTopic(new CreateTopicRequest(TopicName));
-            if (!string.IsNullOrEmpty(response.TopicArn))
+            try
             {
-                Arn = response.TopicArn;
-                Log.Info("Created Topic: {0} on Arn: {1}", TopicName, Arn);
-                return true;
-            }
+                var response = Client.CreateTopic(new CreateTopicRequest(TopicName));
 
-            Log.Info("Failed to create Topic: {0}", TopicName);
+                if (!string.IsNullOrEmpty(response.TopicArn))
+                {
+                    Arn = response.TopicArn;
+                    Log.Info("Topic: {0} on Arn: {1}", TopicName, Arn);
+                    return true;
+                }
+                Log.Info("Failed to create Topic: {0}", TopicName);
+            }
+            catch (AuthorizationErrorException ex)
+            {
+                Log.Warn(ex, "Not authorized to create topic: {0}", TopicName);
+                if (!Exists()) throw new InvalidOperationException("Topic does not exist and no permission to create it!");
+            }
+            
             return false;
         }
 

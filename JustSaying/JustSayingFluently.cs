@@ -75,15 +75,8 @@ namespace JustSaying
                     _awsClientFactoryProxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
                     Bus.SerialisationRegister);
 
-                try
-                {
-                    eventPublisher.Create();
-                }
-                catch (AuthorizationErrorException ex)
-                {
-                    Log.Error(ex, "Unable to create topic");
-                }
-
+                eventPublisher.Create();
+               
                 eventPublisher.EnsurePolicyIsUpdated(Bus.Config.AdditionalSubscriberAccounts);
 
                 Bus.AddMessagePublisher<T>(eventPublisher, region);
