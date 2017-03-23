@@ -84,8 +84,6 @@ namespace JustSaying
                     Log.Error(ex, "Unable to create topic");
                 }
 
-                eventPublisher.Create();
-
                 eventPublisher.EnsurePolicyIsUpdated(Bus.Config.AdditionalSubscriberAccounts);
 
                 Bus.AddMessagePublisher<T>(eventPublisher, region);
