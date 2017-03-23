@@ -23,7 +23,10 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             GetQueueUrlResponse result;
             Log.Info("Checking if queue '{0}' exists", QueueName);
-            if (string.IsNullOrWhiteSpace(QueueName)) return false;
+            if (string.IsNullOrWhiteSpace(QueueName))
+            {
+                return false;
+            }
 
             try
             {
@@ -34,7 +37,10 @@ namespace JustSaying.AwsTools.MessageHandling
                 return false;
             }
 
-            if (result?.QueueUrl == null) return false;
+            if (result?.QueueUrl == null)
+            {
+                return false;
+            }
             Url = result.QueueUrl;
 
             SetQueueProperties();
