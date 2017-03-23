@@ -54,7 +54,10 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (AuthorizationErrorException ex)
             {
                 Log.Warn(ex, "Not authorized to create topic: {0}", TopicName);
-                if (!Exists()) throw new InvalidOperationException("Topic does not exist and no permission to create it!");
+                if (!Exists())
+                {
+                    throw new InvalidOperationException("Topic does not exist and no permission to create it!");
+                }
             }
             
             return false;
