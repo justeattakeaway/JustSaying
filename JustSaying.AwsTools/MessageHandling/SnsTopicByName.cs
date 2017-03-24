@@ -22,8 +22,10 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public override bool Exists()
         {
-            if (string.IsNullOrWhiteSpace(Arn) == false)
+            if (!string.IsNullOrWhiteSpace(Arn))
+            {
                 return true;
+            }
 
             Log.Info("Checking if topic '{0}' exists", TopicName);
             var topic = Client.FindTopic(TopicName);
