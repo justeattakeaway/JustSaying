@@ -21,7 +21,7 @@ after_build:
 - dotnet pack .\JustSaying.Messaging\JustSaying.Messaging.csproj -o artifacts --no-build
 - dotnet pack .\JustSaying.Models\JustSaying.Models.csproj -o artifacts --no-build
 artifacts:
-- path: artifacts\**\*.*
+- path: artifacts\*.*
 notifications:
 - provider: HipChat
   room: 'Eng :: Open Source'
