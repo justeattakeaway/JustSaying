@@ -12,16 +12,20 @@ build:
 pull_requests:
   do_not_increment_build_number: true
 test_script:
+  - ps: $wc = New-Object 'System.Net.WebClient'
   - dotnet run --project .\JustSaying.AwsTools.UnitTests\JustSaying.AwsTools.UnitTests.csproj
+  - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\JustSaying.AwsTools.UnitTests\TestResults.xml))
   - dotnet run --project .\JustSaying.Messaging.UnitTests\JustSaying.Messaging.UnitTests.csproj
+  - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\JustSaying.Messaging.UnitTests\TestResults.xml))
   - dotnet run --project .\JustSaying.UnitTests\JustSaying.UnitTests.csproj
+  - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\JustSaying.UnitTests\TestResults.xml))
 after_build:
 - dotnet pack .\JustSaying\JustSaying.csproj -o artifacts --no-build
 - dotnet pack .\JustSaying.AwsTools\JustSaying.AwsTools.csproj -o artifacts --no-build
 - dotnet pack .\JustSaying.Messaging\JustSaying.Messaging.csproj -o artifacts --no-build
 - dotnet pack .\JustSaying.Models\JustSaying.Models.csproj -o artifacts --no-build
 artifacts:
-- path: 'artifacts\*.nupkg'
+- path: '**\*.nupkg'
 notifications:
 - provider: HipChat
   room: 'Eng :: Open Source'
