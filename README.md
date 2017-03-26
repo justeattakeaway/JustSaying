@@ -1,4 +1,4 @@
-#JustSaying
+# JustSaying
 [![NuGet](https://img.shields.io/nuget/v/JustSaying.svg?maxAge=3600)](https://www.nuget.org/packages/JustSaying/)
 [![Build status](https://ci.appveyor.com/api/projects/status/vha51pup5lcnesu3/branch/develop?svg=true)](https://ci.appveyor.com/project/justeattech/justsaying)
 [![Gitter](https://img.shields.io/gitter/room/justeat/JustSaying.js.svg?maxAge=2592000)](https://gitter.im/justeat/JustSaying)
@@ -18,10 +18,10 @@ You will also need to create a `ILoggerFactory` ([see here](https://docs.microso
         var loggerFactory = new LoggerFactory();
 ````
 
-##Publishing messages
+## Publishing messages
 Here's how to get up & running with simple message publishing.
 
-###1. Create a message object (POCO)
+### 1. Create a message object (POCO)
 
 * These can be as complex as you like (provided it is under 256k serialised as Json).
 * They must be derived from the abstract Message class (currently).
@@ -37,7 +37,7 @@ Here's how to get up & running with simple message publishing.
         }
 ````
 
-###2. Registering publishers
+### 2. Registering publishers
 * You will need to tell JustSaying which messages you intend to publish in order that it can setup any missing topics for you.
 * In this case, we are telling it to publish the OrderAccepted messages.
 * The topic will be the message type.
@@ -49,7 +49,7 @@ Here's how to get up & running with simple message publishing.
 ````
 
 
-###2.(a) Configuring publishing options
+### 2.(a) Configuring publishing options
 * You can also specify some publishing options (such as how to handle failures) using a configuration object like so:
 
 ````c#
@@ -60,7 +60,7 @@ Here's how to get up & running with simple message publishing.
 ````
 
 
-###3. Publish a message
+### 3. Publish a message
 
 * This can be done wherever you want within your application.
 * Simply pass the publisher object through using your IOC container.
@@ -78,7 +78,7 @@ We currently support SQS subscriptions only, but keep checking back for other me
 (although we are kinda at the mercy of AWS here for internal HTTP delivery...)
 
 
-###1. Create Handlers
+### 1. Create Handlers
 * We tell the stack to handle messages by implementing an interface which tells the handler our message type
 * Here, we're creating a handler for OrderAccepted messages.
 * This is where you pass on to your BLL layer.
@@ -96,7 +96,7 @@ We currently support SQS subscriptions only, but keep checking back for other me
         }
 ````
 
-###2. Register a subscription
+### 2. Register a subscription
 * This can be done at the same time as your publications are set up.
 * There is no limit to the number of handlers you add to a subscription.
 * You can specify message retention policies etc in your subscription for resiliency purposes.
@@ -115,7 +115,7 @@ We currently support SQS subscriptions only, but keep checking back for other me
 That's it. By calling StartListening() we are telling the stack to begin polling SQS for incoming messages.
 
 
-###2.(a) Subscription Configuration
+### 2.(a) Subscription Configuration
 * In this case, we are telling JustSaying to keep 'OrderAccepted' messages for the default time, which is one minute. They will be thrown away if not handled in this time.
 * We are telling it to keep 'OrderFailed' messages for 5 mins, and not to handle them again on failure for 60 seconds
 
@@ -132,7 +132,7 @@ That's it. By calling StartListening() we are telling the stack to begin polling
 ````
 
 
-###2.(b) Configure Throttling
+### 2.(b) Configure Throttling
 JustSaying throttles message handllers, which means JustSaying will limit the maximum number of messages being processed concurrently. The default limit is 8 threads per [processor core](https://msdn.microsoft.com/en-us/library/system.environment.processorcount.aspx), i.e. `Environment.ProcessorCount * 8`.
 We feel that this is a sensible number, but it can be overridden. This is useful for web apps with TCP thread restrictions.
 To override throttling you need to specify optional parameter when setting SqsTopicSubcriber
@@ -144,7 +144,7 @@ To override throttling you need to specify optional parameter when setting SqsTo
 
 ````
 
-###2.(c) Control Handlers' life cycle
+### 2.(c) Control Handlers' life cycle
 You can tell JustSaying to delegate the creation of your handlers to an IoC container. All you need to do is to implement IHandlerResolver interface and pass it along when registering your handlers.
 ````c#
 CreateMeABus.WithLogging(loggerFactory)
@@ -154,7 +154,7 @@ CreateMeABus.WithLogging(loggerFactory)
             .WithMessageHandler<OrderAccepted>(new HandlerResolver())
 ````
 
-##Interrogation
+## Interrogation
 JustSaying provides you access to the Subscribers and Publishers message types via ````IAmJustInterrogating```` interface on the message bus.
 
 ```c#
@@ -208,12 +208,12 @@ At this point, the power tool is only able to move arbitrary number of messages 
 JustSaying.Tools.exe move -from "source_queue_name" -to "destination_queue_name" -in "region" -count "1"
 ````
 
-##Contributing...
+## Contributing...
 We've been adding things ONLY as they are needed, so please feel free to either bring up suggestions or to submit pull requests with new *GENERIC* functionalities.
 
 Don't bother submitting any breaking changes or anything without unit tests against it. It will be declined.
 
-###The End.....
+### The End.....
 ...*Happy Messaging!...*
 
 AJ
