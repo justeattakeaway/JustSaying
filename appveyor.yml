@@ -4,11 +4,11 @@ configuration: Release
 cache:
   - packages
 before_build:
-- ps: $env:BuildNumber=$env:APPVEYOR_BUILD_NUMBER
-- dotnet restore
-build_script:
-- ps: $versionSuffix = "beta-" + "{0:d3}" -f [convert]::ToInt32($env:APPVEYOR_BUILD_NUMBER)
-- ps: dotnet build JustSaying.sln --version-suffix $versionSuffix -c Release
+  - dotnet restore
+build:
+  project: JustSaying.sln
+  parallel: true
+  verbosity: minimal
 pull_requests:
   do_not_increment_build_number: true
 test_script:
