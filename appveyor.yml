@@ -12,16 +12,16 @@ build:
 pull_requests:
   do_not_increment_build_number: true
 test_script:
-  - dotnet test .\JustSaying.AwsTools.UnitTests\JustSaying.AwsTools.UnitTests.csproj
-  - dotnet test .\JustSaying.Messaging.UnitTests\JustSaying.Messaging.UnitTests.csproj
-  - dotnet test .\JustSaying.UnitTests\JustSaying.UnitTests.csproj
+  - dotnet run .\JustSaying.AwsTools.UnitTests\JustSaying.AwsTools.UnitTests.csproj
+  - dotnet run .\JustSaying.Messaging.UnitTests\JustSaying.Messaging.UnitTests.csproj
+  - dotnet run .\JustSaying.UnitTests\JustSaying.UnitTests.csproj
 after_build:
 - dotnet pack .\JustSaying\JustSaying.csproj -o artifacts --no-build
 - dotnet pack .\JustSaying.AwsTools\JustSaying.AwsTools.csproj -o artifacts --no-build
 - dotnet pack .\JustSaying.Messaging\JustSaying.Messaging.csproj -o artifacts --no-build
 - dotnet pack .\JustSaying.Models\JustSaying.Models.csproj -o artifacts --no-build
 artifacts:
-- path: artifacts\*.*
+- path: 'artifacts\*.nupkg'
 notifications:
 - provider: HipChat
   room: 'Eng :: Open Source'
