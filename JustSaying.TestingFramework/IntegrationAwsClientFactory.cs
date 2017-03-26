@@ -22,14 +22,14 @@ namespace JustSaying.TestingFramework
 
         public IntegrationAwsClientFactory()
         {
-            var ci = System.Environment.GetEnvironmentVariable(_ci);
-            _credentials = string.IsNullOrWhiteSpace(ci)
-                ? new StoredProfileAWSCredentials(IntegrationTestConfig.AwsProfileName)
-                : CredentialsFromEnvironment();
+            FallbackCredentialsFactory.CredentialsGenerators.Insert(0, CredentialsFromEnvironment);
+            _credentials = FallbackCredentialsFactory.GetCredentials();
         }
 
         private AWSCredentials CredentialsFromEnvironment()
         {
+            var ci = System.Environment.GetEnvironmentVariable(_ci);
+            if (string.IsNullOrWhiteSpace(ci)) return null;
             var accessKey = System.Environment.GetEnvironmentVariable(_ciAccesskey);
             var secretKey = System.Environment.GetEnvironmentVariable(_ciSecretkey);
             return new BasicAWSCredentials(accessKey, secretKey);
