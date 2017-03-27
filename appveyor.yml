@@ -12,7 +12,7 @@ build:
 pull_requests:
   do_not_increment_build_number: true
 test_script:
-  - mkdir .\output\nunit
+  - ps: ni -ItemType Directory -path ".\output\nunit"
   - ps: $wc = New-Object 'System.Net.WebClient'
   - dotnet run --project .\JustSaying.AwsTools.UnitTests\JustSaying.AwsTools.UnitTests.csproj --result=.\output\nunit\JustSaying.AwsTools.UnitTests.TestResults.xml
   - dotnet run --project .\JustSaying.Messaging.UnitTests\JustSaying.Messaging.UnitTests.csproj --result=.\output\nunit\JustSaying.Messaging.UnitTests.TestResults.xml
