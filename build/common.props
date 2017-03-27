@@ -27,9 +27,7 @@
     <BuildNumber Condition=" '$(BuildNumber)' == '' ">0</BuildNumber>
 
     <PrereleaseLabel>-beta</PrereleaseLabel>
-    <PrereleaseLabel Condition=" '$(APPVEYOR_BUILD_NUMBER)' != '' "></PrereleaseLabel>
-    <!-- <PrereleaseLabel></PrereleaseLabel> --> <!-- For release versions only -->
-
+    
     <AssemblyVersion>$(Major).$(Minor).$(Revision).$(BuildNumber)</AssemblyVersion>
     <AssemblyFileVersion>$(Major).$(Minor).$(Revision).$(BuildNumber)</AssemblyFileVersion>
     <InformationalVersion>$(Major).$(Minor).$(Revision)$(PrereleaseLabel)$(BuildNumber)</InformationalVersion>
