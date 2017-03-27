@@ -28,8 +28,8 @@
 
     <!-- Remove for release -->
     <PrereleaseLabel>-beta</PrereleaseLabel>
-    
-    <BuildSuffix Condition=" '$(PrereleaseLabel)' != '' ">$(PrereleaseLabel)-BuildNumber</BuildSuffix>
+
+    <BuildSuffix Condition=" '$(PrereleaseLabel)' != '' ">$(PrereleaseLabel)-$(BuildNumber)</BuildSuffix>
     <BuildSuffix Condition=" '$(BuildSuffix)' == '' "></BuildSuffix>
 
     <AssemblyVersion>$(Major).0.0.0</AssemblyVersion>
