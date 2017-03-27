@@ -5,6 +5,7 @@ cache:
   - packages
 before_build:
   - dotnet restore
+clone_depth: 1
 build:
   project: JustSaying.sln
   parallel: true
