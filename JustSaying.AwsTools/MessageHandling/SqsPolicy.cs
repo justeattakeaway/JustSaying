@@ -32,7 +32,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 Attributes = { ["Policy"] = sqsPolicy.ToJson() }
             };
 
-            await client.SetQueueAttributesAsync(setQueueAttributesRequest);
+            await client.SetQueueAttributesAsync(setQueueAttributesRequest).ConfigureAwait(false);
         }
 
 

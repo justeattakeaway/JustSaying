@@ -29,7 +29,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         {
             try
             {
-                await action();
+                await action().ConfigureAwait(false);
             }
             finally
             {
@@ -46,7 +46,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             _messageMonitor.IncrementThrottlingStatistic();
 
             var watch = Stopwatch.StartNew();
-            await AsTask(_semaphore.AvailableWaitHandle);
+            await AsTask(_semaphore.AvailableWaitHandle).ConfigureAwait(false);
             watch.Stop();
 
             _messageMonitor.HandleThrottlingTime(watch.ElapsedMilliseconds);

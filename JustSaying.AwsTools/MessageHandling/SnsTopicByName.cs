@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,6 +22,30 @@ namespace JustSaying.AwsTools.MessageHandling
             _log = loggerFactory.CreateLogger("JustSaying");
         }
 
+        public SnsTopicByName(Topic topic, IAmazonSimpleNotificationService client, IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory)
+            : base(serialisationRegister, loggerFactory)
+        {
+            TopicName = ExtractTopicName(topic.TopicArn);
+            Client = client;
+            _log = loggerFactory.CreateLogger("JustSaying");
+            base.Arn = topic.TopicArn;
+        }
+
+        public static string ExtractTopicName(string topicArn)
+        {
+            if (string.IsNullOrWhiteSpace(topicArn))
+            {
+                throw new ArgumentNullException(nameof(topicArn));
+            }
+
+            var index = topicArn.LastIndexOf(":", StringComparison.OrdinalIgnoreCase);
+            if (index < 0 || topicArn.Length <= index + 1)
+            {
+                throw new ArgumentException("Invalid topic ARN");
+            }
+            return topicArn.Substring(index + 1);
+        }
+
         public override async Task<bool> ExistsAsync()
         {
             if (! string.IsNullOrWhiteSpace(Arn))
@@ -29,7 +54,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
 
             _log.LogInformation($"Checking if topic '{TopicName}' exists");
-            var topic = await Client.FindTopicAsync(TopicName);
+            var topic = await Client.FindTopicAsync(TopicName).ConfigureAwait(false); 
 
             if (topic != null)
             {
@@ -48,7 +73,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public async Task<bool> CreateAsync()
         {
-            var response = await Client.CreateTopicAsync(new CreateTopicRequest(TopicName));
+            var response = await Client.CreateTopicAsync(new CreateTopicRequest(TopicName)).ConfigureAwait(false);
 
             if (!string.IsNullOrEmpty(response?.TopicArn))
             {

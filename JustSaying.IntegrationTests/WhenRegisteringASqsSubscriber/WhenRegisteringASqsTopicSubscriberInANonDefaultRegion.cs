@@ -52,7 +52,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
             Assert.IsTrue(IsQueueSubscribedToTopic(_regionEndpoint, topic, queueUrl), "Queue is not subscribed to the topic");
 
-            Assert.IsTrue(QueueHasPolicyForTopic(_regionEndpoint, topic, queueUrl), "Queue does not have a policy for the topic");
+            Assert.IsTrue(QueueHasPolicyForTopic(_regionEndpoint, topic, queueUrl, _topicName), "Queue does not have a policy for the topic");
 
         }
 

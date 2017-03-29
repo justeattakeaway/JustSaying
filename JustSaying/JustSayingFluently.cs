@@ -32,6 +32,7 @@ namespace JustSaying
         private IMessageSerialisationFactory _serialisationFactory;
         private Func<INamingStrategy> _busNamingStrategyFunc;
         private readonly ILoggerFactory _loggerFactory;
+        private bool skipTopicPreload;
 
         protected internal JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator, IAwsClientFactoryProxy awsClientFactoryProxy, ILoggerFactory loggerFactory)
         {
@@ -41,7 +42,7 @@ namespace JustSaying
             _amazonQueueCreator = queueCreator;
             _awsClientFactoryProxy = awsClientFactoryProxy;
         }
-        
+
         private static string GetMessageTypeName<T>() => typeof(T).ToTopicName();
 
         public virtual INamingStrategy GetNamingStrategy()
@@ -65,17 +66,9 @@ namespace JustSaying
             var topicName = namingStrategy.GetTopicName(_subscriptionConfig.BaseTopicName, GetMessageTypeName<T>());
             foreach (var region in Bus.Config.Regions)
             {
-                // TODO pass region down into topic creation for when we have foreign topics so we can generate the arn
-                var eventPublisher = new SnsTopicByName(
-                    topicName,
-                    _awsClientFactoryProxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
-                    Bus.SerialisationRegister,
-                    _loggerFactory);
+                PreloadTopicCache();
 
-                if (!eventPublisher.Exists())
-                {
-                    eventPublisher.Create();
-                }
+                var eventPublisher = _amazonQueueCreator.EnsureTopicExists(region, Bus.SerialisationRegister, topicName);
 
                 eventPublisher.EnsurePolicyIsUpdated(Bus.Config.AdditionalSubscriberAccounts);
 
@@ -163,7 +156,7 @@ namespace JustSaying
                 throw new InvalidOperationException("You must register for message publication before publishing a message");
             }
 
-            await Bus.PublishAsync(message);
+            await Bus.PublishAsync(message).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -174,6 +167,21 @@ namespace JustSaying
         public IMayWantOptionalSettings WithSerialisationFactory(IMessageSerialisationFactory factory)
         {
             _serialisationFactory = factory;
+            return this;
+        }
+
+        public IMayWantOptionalSettings WithTopicQueryBehaviour(TopicQueryBehaviour topicBehaviour)
+        {
+            switch (topicBehaviour)
+            {
+                case TopicQueryBehaviour.DisableExistenceCheck:
+                    _amazonQueueCreator.DisableTopicCheckOnSubscribe();
+                    skipTopicPreload = true;
+                    break;
+                case TopicQueryBehaviour.NoPreload:
+                    skipTopicPreload = true;
+                    break;
+            }
             return this;
         }
 
@@ -268,6 +276,7 @@ namespace JustSaying
         {
             var messageTypeName = GetMessageTypeName<T>();
             ConfigureSqsSubscriptionViaTopic(messageTypeName);
+            PreloadTopicCache();
 
             foreach (var region in Bus.Config.Regions)
             {
@@ -277,6 +286,16 @@ namespace JustSaying
             }
 
             return this;
+        }
+
+        private void PreloadTopicCache()
+        {
+            if (skipTopicPreload) return;
+            foreach (var region in Bus.Config.Regions)
+            {
+                _amazonQueueCreator.PreLoadTopicCache(region, Bus.SerialisationRegister).GetAwaiter().GetResult();
+            }
+            skipTopicPreload = true;
         }
 
         private IHaveFulfilledSubscriptionRequirements PointToPointHandler<T>() where T : Message
@@ -384,5 +403,11 @@ namespace JustSaying
             _awsClientFactoryProxy.SetAwsClientFactory(awsClientFactory);
             return this;
         }
+    }
+
+    public enum TopicQueryBehaviour
+    {
+        DisableExistenceCheck,
+        NoPreload
     }
 }

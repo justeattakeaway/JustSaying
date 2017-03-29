@@ -8,7 +8,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
     {
         public BlockingHandlerRegistry()
         {
-            For<IHandlerAsync<OrderPlaced>>().Singleton().Use<BlockingOrderProcessor>();
+            For<IHandler<OrderPlaced>>().Singleton().Use<BlockingOrderProcessor>();
         }
     }
 }

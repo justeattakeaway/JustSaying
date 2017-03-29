@@ -45,7 +45,7 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (MessageFormatNotSupportedException ex)
             {
                 _log.LogTrace($"Didn't handle message [{message.Body ?? string.Empty}]. No serialiser setup");
-                await DeleteMessageFromQueue(message.ReceiptHandle);
+                await DeleteMessageFromQueue(message.ReceiptHandle).ConfigureAwait(false);
                 _onError(ex, message);
                 return;
             }
@@ -69,7 +69,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 if (handlingSucceeded)
                 {
-                    await DeleteMessageFromQueue(message.ReceiptHandle);
+                    await DeleteMessageFromQueue(message.ReceiptHandle).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
@@ -114,7 +114,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 ReceiptHandle = receiptHandle
             };
 
-            await _queue.Client.DeleteMessageAsync(deleteRequest);
+            await _queue.Client.DeleteMessageAsync(deleteRequest).ConfigureAwait(false);
         }
     }
 }

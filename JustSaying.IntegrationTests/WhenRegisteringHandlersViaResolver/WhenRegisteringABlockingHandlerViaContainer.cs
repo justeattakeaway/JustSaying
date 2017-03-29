@@ -20,8 +20,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             var handler = handlerResolver.ResolveHandler<OrderPlaced>(resolutionContext);
             Assert.That(handler, Is.Not.Null);
 
-            var blockingHandler = (BlockingHandler<OrderPlaced>)handler;
-            _resolvedHandler = (BlockingOrderProcessor)blockingHandler.Inner;
+            _resolvedHandler = (BlockingOrderProcessor)((BlockingHandler<OrderPlaced>)handler).Inner;
+
             DoneSignal = _resolvedHandler.DoneSignal.Task;
 
             Subscriber = CreateMeABus.WithLogging(new LoggerFactory())

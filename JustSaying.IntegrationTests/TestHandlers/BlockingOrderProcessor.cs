@@ -4,21 +4,24 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.IntegrationTests.TestHandlers
 {
-    public class BlockingOrderProcessor : IHandlerAsync<OrderPlaced>
+    public class BlockingOrderProcessor : IHandler<OrderPlaced>
     {
 
         public BlockingOrderProcessor()
         {
+            DoneSignal = new TaskCompletionSource<object>();
         }
 
         public int ReceivedMessageCount { get; private set; }
 
         public TaskCompletionSource<object> DoneSignal { get; private set; }
 
-        public Task<bool> Handle(OrderPlaced message)
+        public bool Handle(OrderPlaced message)
         {
             ReceivedMessageCount++;
-            return Task.FromResult(true);
+            Tasks.DelaySendDone(DoneSignal);
+            return true;
         }
     }
 }
+
