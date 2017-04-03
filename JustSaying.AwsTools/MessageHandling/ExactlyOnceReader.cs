@@ -8,18 +8,18 @@ namespace JustSaying.AwsTools.MessageHandling
 {
     internal static class HandlerMetadata
     {
+        // we use the obsolete interface"IHandler<T>" here
+#pragma warning disable 618
         public static ExactlyOnceReader ReadExactlyOnce<T>(IHandlerAsync<T> handler) where T : Message
         {
             var asyncingHandler = handler as BlockingHandler<T>;
             return asyncingHandler != null ? ReadExactlyOnce(asyncingHandler.Inner) : new ExactlyOnceReader(handler.GetType());
         }
 
-// we use the obsolete interface"IHandler<T>" here
-#pragma warning disable 618
         public static ExactlyOnceReader ReadExactlyOnce<T>(IHandler<T> handler) where T : Message
             => new ExactlyOnceReader(handler.GetType());
-#pragma warning restore 618
     }
+#pragma warning restore 618
 
     internal class ExactlyOnceReader
     {

@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-// we use the obsolete interface"IHandler<T>" here
-#pragma warning disable 618
-
 namespace JustSaying.Messaging.MessageHandling
 {
 
@@ -12,12 +9,15 @@ namespace JustSaying.Messaging.MessageHandling
     /// So that the rest of the system only has to deal with IAsyncHandler
     /// </summary>
     /// <typeparam name="T"></typeparam>
+    [Obsolete("Use IHandlerAsync")]
     public class BlockingHandler<T> : IHandlerAsync<T>
     {
         public BlockingHandler(IHandler<T> inner)
         {
             if (inner == null)
+            {
                 throw new ArgumentNullException(nameof(inner));
+            }
 
             Inner = inner;
         }
