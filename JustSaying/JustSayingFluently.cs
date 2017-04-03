@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Amazon;
 using JustSaying.AwsTools;
@@ -210,8 +210,11 @@ namespace JustSaying
             return this;
         }
 
+// we use the obsolete interface"IHandler<T>" here
+#pragma warning disable 618
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message
             => WithMessageHandler(new BlockingHandler<T>(handler));
+#pragma warning restore 618
 
         /// <summary>
         /// Set message handlers for the given topic

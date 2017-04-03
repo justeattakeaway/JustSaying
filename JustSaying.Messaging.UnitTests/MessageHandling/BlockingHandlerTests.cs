@@ -5,6 +5,9 @@ using JustSaying.TestingFramework;
 using NSubstitute;
 using NUnit.Framework;
 
+// we use the obsolete interface"IHandler<T>" here
+#pragma warning disable 618
+
 namespace JustSaying.Messaging.UnitTests.MessageHandling
 {
     [TestFixture]
