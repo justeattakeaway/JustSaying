@@ -1,0 +1,40 @@
+<Project>
+  <PropertyGroup>
+    <Authors>Just Eat</Authors>
+    <Company>Just Eat</Company>
+    <Copyright>Copyright (c) Just Eat 2015-$([System.DateTime]::Now.ToString(yyyy))</Copyright>
+    <Description>A light-weight message bus on top of AWS SNS and SQS</Description>
+    <PackageIconUrl>https://avatars3.githubusercontent.com/u/1516790?s=200</PackageIconUrl>
+    <PackageProjectUrl>https://github.com/justeat/JustSaying</PackageProjectUrl>
+    <PackageLicenseUrl>$(PackageProjectUrl)/blob/master/LICENSE.md</PackageLicenseUrl>
+    <PackageReleaseNotes>$(PackageProjectUrl)/releases</PackageReleaseNotes>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageTags>aws;sns;sqs</PackageTags>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>$(PackageProjectUrl).git</RepositoryUrl>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <CLSCompliant>true</CLSCompliant>
+    <ComVisible>false</ComVisible>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Major>5</Major>
+    <Minor>0</Minor>
+    <Revision>0</Revision>
+
+    <BuildNumber Condition=" '$(APPVEYOR_BUILD_NUMBER)' != '' ">$(APPVEYOR_BUILD_NUMBER)</BuildNumber>
+    <BuildNumber Condition=" '$(BUILD_NUMBER)' != '' ">$(BUILD_NUMBER)</BuildNumber>
+    <BuildNumber Condition=" '$(BuildNumber)' == '' ">0</BuildNumber>
+
+    <!-- Remove for release -->
+    <PrereleaseLabel>-beta</PrereleaseLabel>
+
+    <BuildSuffix Condition=" '$(PrereleaseLabel)' != '' ">$(PrereleaseLabel)-$(BuildNumber)</BuildSuffix>
+    <BuildSuffix Condition=" '$(BuildSuffix)' == '' "></BuildSuffix>
+
+    <AssemblyVersion>$(Major).0.0.0</AssemblyVersion>
+    <AssemblyFileVersion>$(Major).$(Minor).$(Revision).$(BuildNumber)</AssemblyFileVersion>
+    <InformationalVersion>$(Major).$(Minor).$(Revision)$(BuildSuffix)</InformationalVersion>
+    <PackageVersion>$(Major).$(Minor).$(Revision)$(BuildSuffix)</PackageVersion>
+  </PropertyGroup>
+</Project>

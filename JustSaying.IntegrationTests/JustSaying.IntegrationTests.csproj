@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\build\common.props" />
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net46</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JustSaying\JustSaying.csproj" />
+    <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj" />
+    <ProjectReference Include="..\JustSaying.Messaging\JustSaying.Messaging.csproj" />
+    <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj" />
+    <ProjectReference Include="..\JustSaying.TestingFramework\JustSaying.TestingFramework.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="AutoFixture" Version="3.50.2" />
+    <PackageReference Include="AWSSDK.Core" Version="3.3.10.3" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.0.11" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.3.1.11" />
+    <PackageReference Include="JustBehave" Version="1.0.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
+    <PackageReference Include="NSubstitute" Version="2.0.2" />
+    <PackageReference Include="NUnit" Version="3.6.1" />
+    <PackageReference Include="NUnitLite" Version="3.6.1" />
+    <PackageReference Include="StructureMap" Version="4.4.3" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System" />
+  </ItemGroup>
+</Project>

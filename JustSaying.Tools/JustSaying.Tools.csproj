@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\build\common.props" />
+  <PropertyGroup>
+    <TargetFramework>net46</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj" />
+    <ProjectReference Include="..\JustSaying.Messaging\JustSaying.Messaging.csproj" />
+    <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.Core" Version="3.3.10.3" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.3.1.11" />
+    <PackageReference Include="Magnum" Version="2.1.3" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System" />
+  </ItemGroup>
+</Project>

@@ -1,44 +1,31 @@
+os: Visual Studio 2017
 version: 5.0.0-beta-{build}
 configuration: Release
-assembly_info:
-  patch: true
-  file: '**\AssemblyInfo.*'
-  assembly_version: '{version}'
-  assembly_file_version: '{version}'
-  assembly_informational_version: '{version}'
-build_script:
-- ps: |
-    $projectFiles = @(
-      "JustSaying\project.json",
-      "JustSaying.AwsTools\project.json",
-      "JustSaying.AwsTools.IntegrationTests\project.json",
-      "JustSaying.AwsTools.UnitTests\project.json",
-      "JustSaying.IntegrationTests\project.json",
-      "JustSaying.Messaging\project.json",
-      "JustSaying.Messaging.UnitTests\project.json",
-      "JustSaying.Models\project.json",
-      "JustSaying.TestingFramework\project.json",
-      "JustSaying.Tools\project.json",
-      "JustSaying.UnitTests\project.json"
-    )
-    foreach ($projectFile  in $projectFiles) {
-      $project =  Get-Content $projectFile -Raw | ConvertFrom-Json
-      $project.version = $env:APPVEYOR_BUILD_VERSION
-      ConvertTo-Json $project -Depth 100 | Out-File -Encoding UTF8 $projectFile
-    }
-- ps: dotnet restore
-- ps: dotnet build JustSaying/project.json
+cache:
+  - packages
+before_build:
+  - dotnet restore
+clone_depth: 1
+build:
+  project: JustSaying.sln
+  parallel: true
+  verbosity: minimal
+pull_requests:
+  do_not_increment_build_number: true
 test_script:
-  - dotnet test .\JustSaying.AwsTools.UnitTests\project.json
-  - dotnet test .\JustSaying.Messaging.UnitTests\project.json
-  - dotnet test .\JustSaying.UnitTests\project.json
+  - ps: ni -ItemType Directory -path ".\output\nunit"
+  - ps: $wc = New-Object 'System.Net.WebClient'
+  - dotnet run --project .\JustSaying.AwsTools.UnitTests\JustSaying.AwsTools.UnitTests.csproj --result=.\output\nunit\JustSaying.AwsTools.UnitTests.TestResults.xml
+  - dotnet run --project .\JustSaying.Messaging.UnitTests\JustSaying.Messaging.UnitTests.csproj --result=.\output\nunit\JustSaying.Messaging.UnitTests.TestResults.xml
+  - dotnet run --project .\JustSaying.UnitTests\JustSaying.UnitTests.csproj --result=.\output\nunit\JustSaying.UnitTests.TestResults.xml
+  - ps: gci .\output\nunit\ -filter *.xml | % { $wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit3/$($env:APPVEYOR_JOB_ID)", $_.FullName) }
 after_build:
-- dotnet pack "JustSaying" -o artifacts --no-build
-- dotnet pack "JustSaying.AwsTools" -o artifacts --no-build
-- dotnet pack "JustSaying.Messaging" -o artifacts --no-build
-- dotnet pack "JustSaying.Models" -o artifacts --no-build
+- dotnet pack .\JustSaying\JustSaying.csproj -o ../output --no-build
+- dotnet pack .\JustSaying.AwsTools\JustSaying.AwsTools.csproj -o ../output --no-build
+- dotnet pack .\JustSaying.Messaging\JustSaying.Messaging.csproj -o ../output --no-build
+- dotnet pack .\JustSaying.Models\JustSaying.Models.csproj -o ../output --no-build
 artifacts:
-- path: artifacts\**\*.*
+- path: 'output\*.nupkg'
 notifications:
 - provider: HipChat
   room: 'Eng :: Open Source'

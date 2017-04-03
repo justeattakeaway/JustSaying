@@ -1,4 +1,4 @@
-using Amazon;
+﻿using Amazon;
 using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SQS;
@@ -11,7 +11,7 @@ namespace JustSaying.AwsTools
 
         public DefaultAwsClientFactory()
         {
-            _credentials = new StoredProfileAWSCredentials("default");
+            _credentials = FallbackCredentialsFactory.GetCredentials();
         }
 
         public DefaultAwsClientFactory(AWSCredentials customCredentials)
