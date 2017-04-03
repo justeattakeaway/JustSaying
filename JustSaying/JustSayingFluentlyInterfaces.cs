@@ -70,10 +70,8 @@ namespace JustSaying
 
     public interface IFluentSubscription
     {
-// we use the obsolete interface"IHandler<T>" here
-#pragma warning disable 618
+        [Obsolete("Use WithMessageHandler<T>(IHandlerAsync<T> handler)")]
         IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message;
-#pragma warning restore 618
 
         IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerAsync<T> handler) where T : Message;
 
