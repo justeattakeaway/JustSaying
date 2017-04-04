@@ -4,9 +4,8 @@
     <TargetFramework>net46</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj" />
-    <ProjectReference Include="..\JustSaying.Messaging\JustSaying.Messaging.csproj" />
     <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj" />
+    <ProjectReference Include="..\JustSaying\JustSaying.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.Core" Version="3.3.10.3" />

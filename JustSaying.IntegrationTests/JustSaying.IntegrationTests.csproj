@@ -6,8 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\JustSaying\JustSaying.csproj" />
-    <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj" />
-    <ProjectReference Include="..\JustSaying.Messaging\JustSaying.Messaging.csproj" />
     <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj" />
     <ProjectReference Include="..\JustSaying.TestingFramework\JustSaying.TestingFramework.csproj" />
   </ItemGroup>
