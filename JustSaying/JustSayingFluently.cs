@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Amazon;
 using JustSaying.AwsTools;
@@ -210,6 +210,7 @@ namespace JustSaying
             return this;
         }
 
+        [Obsolete("Use WithMessageHandler<T>(IHandlerAsync<T> handler)")]
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message
             => WithMessageHandler(new BlockingHandler<T>(handler));
 

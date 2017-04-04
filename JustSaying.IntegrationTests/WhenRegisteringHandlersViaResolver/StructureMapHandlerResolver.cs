@@ -1,4 +1,4 @@
-using JustSaying.Messaging.MessageHandling;
+﻿using JustSaying.Messaging.MessageHandling;
 using StructureMap;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
@@ -20,11 +20,14 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
                 return handler;
             }
 
+            // we use the obsolete interface"IHandler<T>" here
+            #pragma warning disable 618
             var syncHandler = _container.GetInstance<IHandler<T>>();
             if (syncHandler != null)
             {
                 return new BlockingHandler<T>(syncHandler);
             }
+            #pragma warning restore 618
 
             return null;
         }

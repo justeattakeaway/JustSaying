@@ -21,8 +21,11 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
         }
     }
 
+// we use the obsolete interface"IHandler<T>" here
+#pragma warning disable 618
     [ExactlyOnce(TimeOut = 23)]
     public class OnceTestHandler : IHandler<GenericMessage>
+#pragma warning restore 618
     {
         public bool Handle(GenericMessage message)
         {

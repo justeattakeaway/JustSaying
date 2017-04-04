@@ -65,7 +65,9 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
         [Test]
         public void WrappedHandler_DoesHaveExactlyOnce()
         {
+#pragma warning disable 618
             var wrapped = new BlockingHandler<GenericMessage>(new OnceTestHandler());
+#pragma warning restore 618
 
             var reader = HandlerMetadata.ReadExactlyOnce(wrapped);
 
