@@ -15,14 +15,10 @@ pull_requests:
 test_script:
   - ps: ni -ItemType Directory -path ".\output\nunit"
   - ps: $wc = New-Object 'System.Net.WebClient'
-  - dotnet run --project .\JustSaying.AwsTools.UnitTests\JustSaying.AwsTools.UnitTests.csproj --result=.\output\nunit\JustSaying.AwsTools.UnitTests.TestResults.xml
-  - dotnet run --project .\JustSaying.Messaging.UnitTests\JustSaying.Messaging.UnitTests.csproj --result=.\output\nunit\JustSaying.Messaging.UnitTests.TestResults.xml
   - dotnet run --project .\JustSaying.UnitTests\JustSaying.UnitTests.csproj --result=.\output\nunit\JustSaying.UnitTests.TestResults.xml
   - ps: gci .\output\nunit\ -filter *.xml | % { $wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit3/$($env:APPVEYOR_JOB_ID)", $_.FullName) }
 after_build:
 - dotnet pack .\JustSaying\JustSaying.csproj -o ../output --no-build
-- dotnet pack .\JustSaying.AwsTools\JustSaying.AwsTools.csproj -o ../output --no-build
-- dotnet pack .\JustSaying.Messaging\JustSaying.Messaging.csproj -o ../output --no-build
 - dotnet pack .\JustSaying.Models\JustSaying.Models.csproj -o ../output --no-build
 artifacts:
 - path: 'output\*.nupkg'

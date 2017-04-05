@@ -4,14 +4,13 @@
     <TargetFrameworks>netstandard1.6;net451</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JustSaying.AwsTools\JustSaying.AwsTools.csproj" />
-    <ProjectReference Include="..\JustSaying.Messaging\JustSaying.Messaging.csproj" />
     <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.Core" Version="3.3.10.3" />
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.0.11" />
     <PackageReference Include="AWSSDK.SQS" Version="3.3.1.11" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="1.1.1" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
