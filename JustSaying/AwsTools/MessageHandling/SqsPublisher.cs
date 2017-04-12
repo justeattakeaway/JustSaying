@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
@@ -22,24 +22,27 @@ namespace JustSaying.AwsTools.MessageHandling
             _serialisationRegister = serialisationRegister;
         }
 
+#if NET451
         public void Publish(Message message)
         {
-            PublishAsync(message)
-                .GetAwaiter().GetResult();
+            var request = BuildSendMessageRequest(message);
+
+            try
+            {
+                _client.SendMessage(request);
+            }
+            catch (Exception ex)
+            {
+                throw new PublishException(
+                    $"Failed to publish message to SQS. QueueUrl: {request.QueueUrl} MessageBody: {request.MessageBody}",
+                    ex);
+            }
         }
+#endif
 
         public async Task PublishAsync(Message message)
         {
-            var request = new SendMessageRequest
-            {
-                MessageBody = GetMessageInContext(message),
-                QueueUrl = Url
-            };
-
-            if (message.DelaySeconds.HasValue)
-            {
-                request.DelaySeconds = message.DelaySeconds.Value;
-            }
+            var request = BuildSendMessageRequest(message);
 
             try
             {
@@ -51,6 +54,21 @@ namespace JustSaying.AwsTools.MessageHandling
                     $"Failed to publish message to SQS. QueueUrl: {request.QueueUrl} MessageBody: {request.MessageBody}",
                     ex);
             }
+        }
+
+        private SendMessageRequest BuildSendMessageRequest(Message message)
+        {
+            var request = new SendMessageRequest
+            {
+                MessageBody = GetMessageInContext(message),
+                QueueUrl = Url
+            };
+
+            if (message.DelaySeconds.HasValue)
+            {
+                request.DelaySeconds = message.DelaySeconds.Value;
+            }
+            return request;
         }
 
         public string GetMessageInContext(Message message) => _serialisationRegister.Serialise(message, serializeForSnsPublishing: false);
