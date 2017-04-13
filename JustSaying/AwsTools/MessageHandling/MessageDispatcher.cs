@@ -95,7 +95,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     if (message.Attributes.ContainsKey(MessageSystemAttributeName.ApproximateReceiveCount) && int.TryParse(message.Attributes[MessageSystemAttributeName.ApproximateReceiveCount], out int approximateReceiveCount))
                     {
-                        var visibilityTimeoutSeconds = _messageBackoffStrategy.GetVisibilityTimeout(typedMessage, approximateReceiveCount);
+                        var visibilityTimeoutSeconds = (int)_messageBackoffStrategy.GetVisibilityTimeout(typedMessage, approximateReceiveCount).TotalSeconds;
 
                         try
                         {

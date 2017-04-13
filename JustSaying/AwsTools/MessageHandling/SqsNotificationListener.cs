@@ -21,6 +21,7 @@ namespace JustSaying.AwsTools.MessageHandling
     {
         private readonly SqsQueueBase _queue;
         private readonly IMessageMonitor _messagingMonitor;
+        private readonly List<string> _requestMessageAttributeNames = new List<string>();
 
         private readonly MessageDispatcher _messageDispatcher;
         private readonly MessageHandlerWrapper _messageHandlerWrapper;
@@ -49,6 +50,11 @@ namespace JustSaying.AwsTools.MessageHandling
             _messageDispatcher = new MessageDispatcher(queue, serialisationRegister, messagingMonitor, onError, _handlerMap, loggerFactory, messageBackoffStrategy);
 
             Subscribers = new Collection<ISubscriber>();
+
+            if (messageBackoffStrategy != null)
+            {
+                _requestMessageAttributeNames.Add(MessageSystemAttributeName.ApproximateReceiveCount);
+            }
         }
 
         public string Queue => _queue.QueueName;
@@ -199,7 +205,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 QueueUrl = _queue.Url,
                 MaxNumberOfMessages = numberOfMessagesToReadFromSqs,
                 WaitTimeSeconds = 20,
-                AttributeNames = new List<string> {MessageSystemAttributeName.ApproximateReceiveCount}
+                AttributeNames = _requestMessageAttributeNames
             };
 
             var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));

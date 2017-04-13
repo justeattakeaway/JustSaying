@@ -1,9 +1,10 @@
-﻿using JustSaying.Models;
+﻿using System;
+using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageProcessingStrategies
 {
     public interface IMessageBackoffStrategy
     {
-        int GetVisibilityTimeout(Message message, int approximateReceiveCount);
+        TimeSpan GetVisibilityTimeout(Message message, int approximateReceiveCount);
     }
 }
