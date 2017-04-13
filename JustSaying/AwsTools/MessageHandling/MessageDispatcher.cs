@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Amazon.SQS;
 using Amazon.SQS.Model;
+using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using Message = JustSaying.Models.Message;
@@ -16,6 +18,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly IMessageMonitor _messagingMonitor;
         private readonly Action<Exception, SQSMessage> _onError;
         private readonly HandlerMap _handlerMap;
+        private readonly IMessageBackoffStrategy _messageBackoffStrategy;
 
         private static ILogger _log;
 
@@ -25,7 +28,8 @@ namespace JustSaying.AwsTools.MessageHandling
             IMessageMonitor messagingMonitor,
             Action<Exception, SQSMessage> onError,
             HandlerMap handlerMap,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            IMessageBackoffStrategy messageBackoffStrategy)
         {
             _queue = queue;
             _serialisationRegister = serialisationRegister;
@@ -33,6 +37,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _onError = onError;
             _handlerMap = handlerMap;
             _log = loggerFactory.CreateLogger("JustSaying");
+            _messageBackoffStrategy = messageBackoffStrategy;
         }
 
         public async Task DispatchMessage(SQSMessage message)
@@ -56,10 +61,10 @@ namespace JustSaying.AwsTools.MessageHandling
                 return;
             }
 
+            var handlingSucceeded = false;
+
             try
             {
-                var handlingSucceeded = true;
-
                 if (typedMessage != null)
                 {
                     typedMessage.ReceiptHandle = message.ReceiptHandle;
@@ -83,6 +88,25 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
 
                 _onError(ex, message);
+            }
+            finally
+            {
+                if (!handlingSucceeded && _messageBackoffStrategy != null)
+                {
+                    if (message.Attributes.ContainsKey(MessageSystemAttributeName.ApproximateReceiveCount) && int.TryParse(message.Attributes[MessageSystemAttributeName.ApproximateReceiveCount], out int approximateReceiveCount))
+                    {
+                        var visibilityTimeoutSeconds = _messageBackoffStrategy.GetVisibilityTimeout(typedMessage, approximateReceiveCount);
+
+                        try
+                        {
+                            await UpdateMessageVisibilityTimeout(visibilityTimeoutSeconds, message.ReceiptHandle);
+                        }
+                        catch (Exception ex)
+                        {
+                            _log.LogError(0, ex, $"Failed to update message visibility timeout by {visibilityTimeoutSeconds} seconds");
+                        }
+                    }
+                }
             }
         }
 
@@ -115,6 +139,18 @@ namespace JustSaying.AwsTools.MessageHandling
             };
 
             await _queue.Client.DeleteMessageAsync(deleteRequest);
+        }
+
+        private Task UpdateMessageVisibilityTimeout(int visibilityTimeoutSeconds, string receiptHandle)
+        {
+            var visibilityRequest = new ChangeMessageVisibilityRequest
+            {
+                QueueUrl = _queue.Url,
+                ReceiptHandle = receiptHandle,
+                VisibilityTimeout = visibilityTimeoutSeconds
+            };
+
+            return _queue.Client.ChangeMessageVisibilityAsync(visibilityRequest);
         }
     }
 }

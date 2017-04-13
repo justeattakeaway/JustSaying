@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
@@ -35,7 +36,8 @@ namespace JustSaying.AwsTools.MessageHandling
             IMessageMonitor messagingMonitor,
             ILoggerFactory loggerFactory,
             Action<Exception, Amazon.SQS.Model.Message> onError = null,
-            IMessageLock messageLock = null)
+            IMessageLock messageLock = null,
+            IMessageBackoffStrategy messageBackoffStrategy = null)
         {
             _queue = queue;
             _messagingMonitor = messagingMonitor;
@@ -44,7 +46,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             _messageProcessingStrategy = new DefaultThrottledThroughput(_messagingMonitor);
             _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor);
-            _messageDispatcher = new MessageDispatcher(queue, serialisationRegister, messagingMonitor, onError, _handlerMap, loggerFactory);
+            _messageDispatcher = new MessageDispatcher(queue, serialisationRegister, messagingMonitor, onError, _handlerMap, loggerFactory, messageBackoffStrategy);
 
             Subscribers = new Collection<ISubscriber>();
         }
@@ -196,7 +198,8 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 QueueUrl = _queue.Url,
                 MaxNumberOfMessages = numberOfMessagesToReadFromSqs,
-                WaitTimeSeconds = 20
+                WaitTimeSeconds = 20,
+                AttributeNames = new List<string> {MessageSystemAttributeName.ApproximateReceiveCount}
             };
 
             var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));
