@@ -93,19 +93,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 if (!handlingSucceeded && _messageBackoffStrategy != null)
                 {
-                    if (message.Attributes.ContainsKey(MessageSystemAttributeName.ApproximateReceiveCount) && int.TryParse(message.Attributes[MessageSystemAttributeName.ApproximateReceiveCount], out int approximateReceiveCount))
-                    {
-                        var visibilityTimeoutSeconds = (int)_messageBackoffStrategy.GetVisibilityTimeout(typedMessage, approximateReceiveCount).TotalSeconds;
-
-                        try
-                        {
-                            await UpdateMessageVisibilityTimeout(visibilityTimeoutSeconds, message.ReceiptHandle);
-                        }
-                        catch (Exception ex)
-                        {
-                            _log.LogError(0, ex, $"Failed to update message visibility timeout by {visibilityTimeoutSeconds} seconds");
-                        }
-                    }
+                    await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage);
                 }
             }
         }
@@ -140,17 +128,30 @@ namespace JustSaying.AwsTools.MessageHandling
 
             await _queue.Client.DeleteMessageAsync(deleteRequest);
         }
-
-        private Task UpdateMessageVisibilityTimeout(int visibilityTimeoutSeconds, string receiptHandle)
+        
+        private async Task UpdateMessageVisibilityTimeout(SQSMessage message, string receiptHandle, Message typedMessage)
         {
-            var visibilityRequest = new ChangeMessageVisibilityRequest
+            if (message.Attributes.TryGetValue(MessageSystemAttributeName.ApproximateReceiveCount, out string rawApproxReceiveCount) && int.TryParse(rawApproxReceiveCount, out int approxReceiveCount))
             {
-                QueueUrl = _queue.Url,
-                ReceiptHandle = receiptHandle,
-                VisibilityTimeout = visibilityTimeoutSeconds
-            };
+                var visibilityTimeoutSeconds = (int)_messageBackoffStrategy.GetVisibilityTimeout(typedMessage, approxReceiveCount).TotalSeconds;
 
-            return _queue.Client.ChangeMessageVisibilityAsync(visibilityRequest);
+                try
+                {
+                    var visibilityRequest = new ChangeMessageVisibilityRequest
+                    {
+                        QueueUrl = _queue.Url,
+                        ReceiptHandle = receiptHandle,
+                        VisibilityTimeout = visibilityTimeoutSeconds
+                    };
+
+                    await _queue.Client.ChangeMessageVisibilityAsync(visibilityRequest);
+                }
+                catch (Exception ex)
+                {
+                    _log.LogError(0, ex, $"Failed to update message visibility timeout by {visibilityTimeoutSeconds} seconds");
+                    _onError(ex, message);
+                }
+            }
         }
     }
 }
