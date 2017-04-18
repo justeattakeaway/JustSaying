@@ -62,6 +62,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
 
             var handlingSucceeded = false;
+            Exception lastException = null;
 
             try
             {
@@ -88,12 +89,14 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
 
                 _onError(ex, message);
+
+                lastException = ex;
             }
             finally
             {
                 if (!handlingSucceeded && _messageBackoffStrategy != null)
                 {
-                    await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage);
+                    await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage, lastException);
                 }
             }
         }
@@ -129,11 +132,11 @@ namespace JustSaying.AwsTools.MessageHandling
             await _queue.Client.DeleteMessageAsync(deleteRequest);
         }
         
-        private async Task UpdateMessageVisibilityTimeout(SQSMessage message, string receiptHandle, Message typedMessage)
+        private async Task UpdateMessageVisibilityTimeout(SQSMessage message, string receiptHandle, Message typedMessage, Exception lastException)
         {
             if (message.Attributes.TryGetValue(MessageSystemAttributeName.ApproximateReceiveCount, out string rawApproxReceiveCount) && int.TryParse(rawApproxReceiveCount, out int approxReceiveCount))
             {
-                var visibilityTimeoutSeconds = (int)_messageBackoffStrategy.GetVisibilityTimeout(typedMessage, approxReceiveCount).TotalSeconds;
+                var visibilityTimeoutSeconds = (int)_messageBackoffStrategy.GetVisibilityTimeout(typedMessage, approxReceiveCount, lastException).TotalSeconds;
 
                 try
                 {

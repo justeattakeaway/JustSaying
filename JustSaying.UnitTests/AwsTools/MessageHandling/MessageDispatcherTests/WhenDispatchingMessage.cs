@@ -94,19 +94,20 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
         {
             private const int ExpectedReceiveCount = 1;
             private readonly TimeSpan _expectedBackoffTimeSpan = TimeSpan.FromMinutes(4);
+            private readonly Exception _expectedException = new Exception("Something failed when processing");
 
             protected override void Given()
             {
                 base.Given();
-                _messageBackoffStrategy.GetVisibilityTimeout(_typedMessage, Arg.Any<int>()).Returns(_expectedBackoffTimeSpan);
-                _handlerMap.Add(typeof(OrderAccepted), m => Task.FromResult(false));
+                _messageBackoffStrategy.GetVisibilityTimeout(_typedMessage, 1, _expectedException).Returns(_expectedBackoffTimeSpan);
+                _handlerMap.Add(typeof(OrderAccepted), m => throw _expectedException);
                 _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString());
             }
 
             [Test]
             public void ShouldInvokeMessageBackoffStrategyWithNumberOfReceives()
             {
-                _messageBackoffStrategy.Received(1).GetVisibilityTimeout(Arg.Is(_typedMessage), Arg.Is(ExpectedReceiveCount));
+                _messageBackoffStrategy.Received(1).GetVisibilityTimeout(Arg.Is(_typedMessage), Arg.Is(ExpectedReceiveCount), Arg.Is(_expectedException));
             }
 
             [Test]

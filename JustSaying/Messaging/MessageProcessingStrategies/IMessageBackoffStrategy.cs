@@ -5,6 +5,6 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
 {
     public interface IMessageBackoffStrategy
     {
-        TimeSpan GetVisibilityTimeout(Message message, int approximateReceiveCount);
+        TimeSpan GetVisibilityTimeout(Message message, int approximateReceiveCount, Exception lastException = null);
     }
 }
