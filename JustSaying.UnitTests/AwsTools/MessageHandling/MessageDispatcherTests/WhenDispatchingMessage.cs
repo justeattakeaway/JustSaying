@@ -99,7 +99,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             protected override void Given()
             {
                 base.Given();
-                _messageBackoffStrategy.GetVisibilityTimeout(_typedMessage, 1, _expectedException).Returns(_expectedBackoffTimeSpan);
+                _messageBackoffStrategy.GetBackoffDuration(_typedMessage, 1, _expectedException).Returns(_expectedBackoffTimeSpan);
                 _handlerMap.Add(typeof(OrderAccepted), m => throw _expectedException);
                 _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString());
             }
@@ -107,7 +107,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             [Test]
             public void ShouldInvokeMessageBackoffStrategyWithNumberOfReceives()
             {
-                _messageBackoffStrategy.Received(1).GetVisibilityTimeout(Arg.Is(_typedMessage), Arg.Is(ExpectedReceiveCount), Arg.Is(_expectedException));
+                _messageBackoffStrategy.Received(1).GetBackoffDuration(Arg.Is(_typedMessage), Arg.Is(ExpectedReceiveCount), Arg.Is(_expectedException));
             }
 
             [Test]
@@ -122,7 +122,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             protected override void Given()
             {
                 base.Given();
-                _messageBackoffStrategy.GetVisibilityTimeout(_typedMessage, Arg.Any<int>()).Returns(TimeSpan.FromMinutes(4));
+                _messageBackoffStrategy.GetBackoffDuration(_typedMessage, Arg.Any<int>()).Returns(TimeSpan.FromMinutes(4));
                 _amazonSqsClient.ChangeMessageVisibilityAsync(Arg.Any<ChangeMessageVisibilityRequest>()).Throws(new Exception("Something gone wrong"));
 
                 _handlerMap.Add(typeof(OrderAccepted), m => Task.FromResult(false));
