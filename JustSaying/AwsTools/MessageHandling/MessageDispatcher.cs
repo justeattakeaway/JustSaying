@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -134,7 +135,7 @@ namespace JustSaying.AwsTools.MessageHandling
         
         private async Task UpdateMessageVisibilityTimeout(SQSMessage message, string receiptHandle, Message typedMessage, Exception lastException)
         {
-            if (message.Attributes.TryGetValue(MessageSystemAttributeName.ApproximateReceiveCount, out string rawApproxReceiveCount) && int.TryParse(rawApproxReceiveCount, out int approxReceiveCount))
+            if (TryGetApproxReceiveCount(message.Attributes, out int approxReceiveCount))
             {
                 var visibilityTimeoutSeconds = (int)_messageBackoffStrategy.GetBackoffDuration(typedMessage, approxReceiveCount, lastException).TotalSeconds;
 
@@ -155,6 +156,13 @@ namespace JustSaying.AwsTools.MessageHandling
                     _onError(ex, message);
                 }
             }
+        }
+
+        private static bool TryGetApproxReceiveCount(IDictionary<string, string> attributes, out int approxReceiveCount)
+        {
+            approxReceiveCount = 0;
+
+            return attributes.TryGetValue(MessageSystemAttributeName.ApproximateReceiveCount, out string rawApproxReceiveCount) && int.TryParse(rawApproxReceiveCount, out approxReceiveCount);
         }
     }
 }
