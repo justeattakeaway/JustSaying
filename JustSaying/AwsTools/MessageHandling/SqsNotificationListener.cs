@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
@@ -20,6 +21,7 @@ namespace JustSaying.AwsTools.MessageHandling
     {
         private readonly SqsQueueBase _queue;
         private readonly IMessageMonitor _messagingMonitor;
+        private readonly List<string> _requestMessageAttributeNames = new List<string>();
 
         private readonly MessageDispatcher _messageDispatcher;
         private readonly MessageHandlerWrapper _messageHandlerWrapper;
@@ -35,7 +37,8 @@ namespace JustSaying.AwsTools.MessageHandling
             IMessageMonitor messagingMonitor,
             ILoggerFactory loggerFactory,
             Action<Exception, Amazon.SQS.Model.Message> onError = null,
-            IMessageLock messageLock = null)
+            IMessageLock messageLock = null,
+            IMessageBackoffStrategy messageBackoffStrategy = null)
         {
             _queue = queue;
             _messagingMonitor = messagingMonitor;
@@ -44,9 +47,14 @@ namespace JustSaying.AwsTools.MessageHandling
 
             _messageProcessingStrategy = new DefaultThrottledThroughput(_messagingMonitor);
             _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor);
-            _messageDispatcher = new MessageDispatcher(queue, serialisationRegister, messagingMonitor, onError, _handlerMap, loggerFactory);
+            _messageDispatcher = new MessageDispatcher(queue, serialisationRegister, messagingMonitor, onError, _handlerMap, loggerFactory, messageBackoffStrategy);
 
             Subscribers = new Collection<ISubscriber>();
+
+            if (messageBackoffStrategy != null)
+            {
+                _requestMessageAttributeNames.Add(MessageSystemAttributeName.ApproximateReceiveCount);
+            }
         }
 
         public string Queue => _queue.QueueName;
@@ -196,7 +204,8 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 QueueUrl = _queue.Url,
                 MaxNumberOfMessages = numberOfMessagesToReadFromSqs,
-                WaitTimeSeconds = 20
+                WaitTimeSeconds = 20,
+                AttributeNames = _requestMessageAttributeNames
             };
 
             var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));
