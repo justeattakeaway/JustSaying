@@ -15,6 +15,11 @@ namespace JustSaying.TestingFramework
 
     public class AnotherGenericMessage : Message
     {
+
+        public AnotherGenericMessage() 
+        {
+        }
+
         public string Content { get; set; }
     }
 
@@ -37,4 +42,11 @@ namespace JustSaying.TestingFramework
     }
 
     public enum Values { One, Two };
+
+    public class DownStreamMessage : Message
+    {
+        public DownStreamMessage(Message message) : base(message)
+        {
+        }
+    }
 }

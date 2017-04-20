@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace JustSaying.Models
 {
@@ -8,11 +8,20 @@ namespace JustSaying.Models
         {
             TimeStamp = DateTime.UtcNow;
             Id = Guid.NewGuid();
+            CorrelationId = Id;
         }
 
+        protected Message(Message message)
+        {
+            TimeStamp = DateTime.UtcNow;
+            Id = Guid.NewGuid();
+            CorrelationId = message.CorrelationId;
+        }
+        
         public Guid Id { get; set; }
         public DateTime TimeStamp { get; set; }
         public string RaisingComponent { get; set; }
+        public Guid CorrelationId { get; private set; }
         public string Version{ get; private set; }
         public string SourceIp { get; private set; }
         public string Tenant { get; set; }
