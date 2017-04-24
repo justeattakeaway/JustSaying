@@ -10,6 +10,7 @@ using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using JustSaying.Messaging.Interrogation;
+using JustSaying.Messaging.MessageProcessingStrategies;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying
@@ -307,7 +308,7 @@ namespace JustSaying
 
         private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue) where T : Message
         {
-            var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, Bus.Monitor, _loggerFactory, _subscriptionConfig.OnError, Bus.MessageLock);
+            var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, Bus.Monitor, _loggerFactory, _subscriptionConfig.OnError, Bus.MessageLock, _subscriptionConfig.MessageBackoffStrategy);
             sqsSubscriptionListener.Subscribers.Add(new Subscriber(typeof(T)));
             Bus.AddNotificationSubscriber(region, sqsSubscriptionListener);
 
