@@ -10,7 +10,7 @@ using NSubstitute;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sns.TopicByName
 {
-    public class WhenPublishing : BehaviourTest<SnsTopicByName>
+    public class WhenPublishingAsync : BehaviourTest<SnsTopicByName>
     {
         private const string Message = "the_message_in_json";
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
@@ -33,13 +33,14 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sns.TopicByName
 
         protected override void When()
         {
-            SystemUnderTest.Publish(new GenericMessage());
+            SystemUnderTest.PublishAsync(new GenericMessage())
+                .GetAwaiter().GetResult();
         }
 
         [Then]
         public void MessageIsPublishedToSnsTopic()
         {
-            _sns.Received().Publish(Arg.Is<PublishRequest>(x => B(x)));
+            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => B(x)));
         }
 
         private static bool B(PublishRequest x)
@@ -50,13 +51,13 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sns.TopicByName
         [Then]
         public void MessageSubjectIsObjectType()
         {
-            _sns.Received().Publish(Arg.Is<PublishRequest>(x => x.Subject == typeof(GenericMessage).Name));
+            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.Subject == typeof(GenericMessage).Name));
         }
 
         [Then]
         public void MessageIsPublishedToCorrectLocation()
         {
-            _sns.Received().Publish(Arg.Is<PublishRequest>(x => x.TopicArn == TopicArn));
+            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.TopicArn == TopicArn));
         }
     }
 }

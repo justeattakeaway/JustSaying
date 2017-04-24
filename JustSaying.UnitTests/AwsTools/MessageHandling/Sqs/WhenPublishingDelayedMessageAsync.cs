@@ -11,7 +11,7 @@ using NSubstitute;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
 {
-    public class WhenPublishingDelayedMessage : BehaviourTest<SqsPublisher>
+    public class WhenPublishingDelayedMessageAsync : BehaviourTest<SqsPublisher>
     {
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
@@ -35,13 +35,14 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
 
         protected override void When()
         {
-            SystemUnderTest.Publish(_message);
+            SystemUnderTest.PublishAsync(_message)
+                .GetAwaiter().GetResult();
         }
 
         [Then]
         public void MessageIsPublishedWithDelaySecondsPropertySet()
         {
-            _sqs.Received().SendMessage(Arg.Is<SendMessageRequest>(x => x.DelaySeconds.Equals(1)));
+            _sqs.Received().SendMessageAsync(Arg.Is<SendMessageRequest>(x => x.DelaySeconds.Equals(1)));
         }
     }
 }
