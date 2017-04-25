@@ -11,7 +11,7 @@ using NSubstitute;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
 {
-    public class WhenPublishing : BehaviourTest<SqsPublisher>
+    public class WhenPublishingAsync : BehaviourTest<SqsPublisher>
     {
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
@@ -40,20 +40,21 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
 
         protected override void When()
         {
-            SystemUnderTest.Publish(_message);
+            SystemUnderTest.PublishAsync(_message)
+                .GetAwaiter().GetResult();
         }
 
         [Then]
         public void MessageIsPublishedToQueue()
         {
             // ToDo: Can be better...
-            _sqs.Received().SendMessage(Arg.Is<SendMessageRequest>(x => x.MessageBody.Equals("serialized_contents")));
+            _sqs.Received().SendMessageAsync(Arg.Is<SendMessageRequest>(x => x.MessageBody.Equals("serialized_contents")));
         }
 
         [Then]
         public void MessageIsPublishedToCorrectLocation()
         {
-            _sqs.Received().SendMessage(Arg.Is<SendMessageRequest>(x => x.QueueUrl == Url));
+            _sqs.Received().SendMessageAsync(Arg.Is<SendMessageRequest>(x => x.QueueUrl == Url));
         }
     }
 }

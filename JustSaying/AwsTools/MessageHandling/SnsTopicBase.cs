@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
@@ -54,27 +54,15 @@ namespace JustSaying.AwsTools.MessageHandling
             return false;
         }
 
+#if NET451
         public void Publish(Message message)
         {
-            PublishAsync(message)
-                .GetAwaiter().GetResult();
-        }
-
-        public async Task PublishAsync(Message message)
-        {
-            var messageToSend = _serialisationRegister.Serialise(message, serializeForSnsPublishing: true);
-            var messageType = message.GetType().Name;
-            var request = new PublishRequest
-                {
-                    TopicArn = Arn,
-                    Subject = messageType,
-                    Message = messageToSend
-                };
+            var request = BuildPublishRequest(message);
 
             try
             {
-                await Client.PublishAsync(request);
-                _eventLog.LogInformation($"Published message: '{messageType}' with content {messageToSend}");
+                Client.Publish(request);
+                _eventLog.LogInformation($"Published message: '{request.Subject}' with content {request.Message}");
             }
             catch (Exception ex)
             {
@@ -82,7 +70,37 @@ namespace JustSaying.AwsTools.MessageHandling
                     $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}",
                     ex);
             }
-
         }
+#endif
+
+        public async Task PublishAsync(Message message)
+        {
+            var request = BuildPublishRequest(message);
+
+            try
+            {
+                await Client.PublishAsync(request);
+                _eventLog.LogInformation($"Published message: '{request.Subject}' with content {request.Message}");
+            }
+            catch (Exception ex)
+            {
+                throw new PublishException(
+                    $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}",
+                    ex);
+            }
+        }
+
+        private PublishRequest BuildPublishRequest(Message message)
+        {
+            var messageToSend = _serialisationRegister.Serialise(message, serializeForSnsPublishing: true);
+            var messageType = message.GetType().Name;
+            return new PublishRequest
+            {
+                TopicArn = Arn,
+                Subject = messageType,
+                Message = messageToSend
+            };
+        }
+
     }
 }

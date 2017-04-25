@@ -147,16 +147,26 @@ namespace JustSaying
             _log.LogInformation("Stopped listening for messages");
         }
 
+#if NET451
         /// <summary>
         /// Publish a message to the stack.
         /// </summary>
         /// <param name="message"></param>
         public virtual void Publish(Message message)
         {
-            PublishAsync(message)
-                .GetAwaiter().GetResult();
-        }
+            if (Bus == null)
+            {
+                throw new InvalidOperationException("You must register for message publication before publishing a message");
+            }
 
+            Bus.Publish(message);
+        }
+#endif
+
+        /// <summary>
+        /// Publish a message to the stack, asynchronously.
+        /// </summary>
+        /// <param name="message"></param>
         public virtual async Task PublishAsync(Message message)
         {
             if (Bus == null)

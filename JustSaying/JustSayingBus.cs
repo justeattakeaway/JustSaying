@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -153,11 +153,13 @@ namespace JustSaying
             }
         }
 
+#if NET451
         public void Publish(Message message)
         {
-            PublishAsync(message)
-                .GetAwaiter().GetResult();
+            var publisher = GetActivePublisherForMessage(message);
+            publisher.Publish(message);
         }
+#endif
 
         public async Task PublishAsync(Message message)
         {
