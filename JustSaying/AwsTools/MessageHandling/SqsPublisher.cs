@@ -22,7 +22,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _serialisationRegister = serialisationRegister;
         }
 
-#if NET451
+#if AWS_SDK_HAS_SYNC
         public void Publish(Message message)
         {
             var request = BuildSendMessageRequest(message);

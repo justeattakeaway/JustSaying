@@ -153,7 +153,7 @@ namespace JustSaying
             }
         }
 
-#if NET451
+#if AWS_SDK_HAS_SYNC
         public void Publish(Message message)
         {
             var publisher = GetActivePublisherForMessage(message);
