@@ -147,7 +147,7 @@ namespace JustSaying
             _log.LogInformation("Stopped listening for messages");
         }
 
-#if NET451
+#if AWS_SDK_HAS_SYNC
         /// <summary>
         /// Publish a message to the stack.
         /// </summary>

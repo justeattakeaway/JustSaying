@@ -5,7 +5,7 @@ namespace JustSaying.Messaging
 {
     public interface IMessagePublisher
     {
-#if NET451
+#if AWS_SDK_HAS_SYNC
         void Publish(Message message);
 #endif
         Task PublishAsync(Message message);
