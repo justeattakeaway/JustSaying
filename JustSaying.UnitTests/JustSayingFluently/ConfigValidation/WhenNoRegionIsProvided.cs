@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Threading.Tasks;
 using JustBehave;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
@@ -7,21 +8,19 @@ namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
 {
     public class WhenNoRegionIsProvided : JustSayingFluentlyTestBase
     {
-        protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
-        {
-            return null;
-        }
+        protected override JustSaying.JustSayingFluently CreateSystemUnderTest() => null;
 
         protected override void Given()
         {
             RecordAnyExceptionsThrown();
         }
 
-        protected override void When()
+        protected override async Task When()
         {
-            CreateMeABus
+            await CreateMeABus
                 .WithLogging(new LoggerFactory()).InRegion(null)
-                .ConfigurePublisherWith(configuration => { });
+                .ConfigurePublisherWith(configuration => { })
+                .Build();
         }
 
         [Then]

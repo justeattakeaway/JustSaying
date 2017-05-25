@@ -1,10 +1,11 @@
+﻿using System.Threading.Tasks;
 using Amazon;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
     public class ForeignTopicArnProvider : ITopicArnProvider
     {
-        
+
         private readonly string _arn;
 
         public ForeignTopicArnProvider(RegionEndpoint regionEndpoint, string accountId, string topicName)
@@ -12,15 +13,9 @@ namespace JustSaying.AwsTools.MessageHandling
             _arn = $"arn:aws:sns:{regionEndpoint.SystemName}:{accountId}:{topicName}";
         }
 
-        public bool ArnExists()
-        {
-            // Assume foreign topics exist, we actually find out when we attempt to subscribe
-            return true;
-        }
+        // Assume foreign topics exist, we actually find out when we attempt to subscribe
+        public bool ArnExists() => true;
 
-        public string GetArn()
-        {
-            return _arn;
-        }
+        public Task<string> GetArnAsync() => Task.FromResult(_arn);
     }
 }

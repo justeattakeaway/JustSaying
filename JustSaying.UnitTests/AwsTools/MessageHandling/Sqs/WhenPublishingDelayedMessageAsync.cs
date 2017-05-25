@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -11,7 +12,7 @@ using NSubstitute;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
 {
-    public class WhenPublishingDelayedMessageAsync : BehaviourTest<SqsPublisher>
+    public class WhenPublishingDelayedMessageAsync : AsyncBehaviourTest<SqsPublisher>
     {
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
@@ -23,7 +24,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
         {
             var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, _sqs, 0,
                 _serialisationRegister, Substitute.For<ILoggerFactory>());
-            sqs.Exists();
+            sqs.ExistsAsync().GetAwaiter().GetResult();
             return sqs;
         }
 
@@ -33,10 +34,9 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
             _sqs.GetQueueAttributes(Arg.Any<GetQueueAttributesRequest>()).Returns(new GetQueueAttributesResponse());
         }
 
-        protected override void When()
+        protected override async Task When()
         {
-            SystemUnderTest.PublishAsync(_message)
-                .GetAwaiter().GetResult();
+            await SystemUnderTest.PublishAsync(_message);
         }
 
         [Then]

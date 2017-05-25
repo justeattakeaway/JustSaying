@@ -12,10 +12,6 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public void Add(Type messageType, HandlerFunc handlerFunc) => _handlers.Add(messageType, handlerFunc);
 
-        public HandlerFunc Get(Type messageType)
-        {
-            HandlerFunc handler;
-            return _handlers.TryGetValue(messageType, out handler) ? handler : null;
-        }
+        public HandlerFunc Get(Type messageType) => _handlers.TryGetValue(messageType, out var handler) ? handler : null;
     }
 }

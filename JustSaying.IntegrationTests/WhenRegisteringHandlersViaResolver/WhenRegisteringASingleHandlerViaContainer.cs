@@ -1,4 +1,4 @@
-using JustSaying.IntegrationTests.TestHandlers;
+﻿using JustSaying.IntegrationTests.TestHandlers;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Shouldly;
@@ -26,7 +26,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
                 .InRegion("eu-west-1")
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
-                .WithMessageHandler<OrderPlaced>(handlerResolver);
+                .WithMessageHandler<OrderPlaced>(handlerResolver)
+                .Build().GetAwaiter().GetResult();
 
             Subscriber.StartListening();
         }

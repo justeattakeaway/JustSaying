@@ -6,15 +6,15 @@ namespace JustSaying.TestingFramework
 {
     public static class Patiently
     {
-        public static async Task AssertThatAsync(Func<bool> func) => await AssertThatAsync(func, 5.Seconds());
+        public static Task AssertThatAsync(Func<Task<bool>> func) => AssertThatAsync(func, 5.Seconds());
 
-        public static async Task AssertThatAsync(Func<bool> func, TimeSpan timeout)
+        public static async Task AssertThatAsync(Func<Task<bool>> func, TimeSpan timeout)
         {
             var started = DateTime.Now;
             var timeoutAt = DateTime.Now + timeout;
             do
             {
-                if (func.Invoke())
+                if (await func.Invoke())
                 {
                     return;
                 }
@@ -24,7 +24,7 @@ namespace JustSaying.TestingFramework
                     $"Waiting for {(DateTime.Now - started).TotalMilliseconds} ms - Still Checking.");
             } while (DateTime.Now < timeoutAt);
 
-            Assert.True(func.Invoke());
+            Assert.True(await func.Invoke());
         }
     }
     public static class Extensions

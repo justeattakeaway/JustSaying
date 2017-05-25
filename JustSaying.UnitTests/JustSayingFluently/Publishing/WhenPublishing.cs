@@ -1,3 +1,4 @@
+﻿using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
@@ -11,10 +12,9 @@ namespace JustSaying.UnitTests.JustSayingFluently.Publishing
 
         protected override void Given(){}
 
-        protected override void When()
+        protected override async Task When()
         {
-            SystemUnderTest.PublishAsync(_message)
-                .GetAwaiter().GetResult();
+            await SystemUnderTest.PublishAsync(_message);
         }
 
         [Then]

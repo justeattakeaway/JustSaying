@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Amazon;
 using JustSaying.AwsTools;
@@ -10,7 +12,6 @@ using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using JustSaying.Messaging.Interrogation;
-using JustSaying.Messaging.MessageProcessingStrategies;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying
@@ -23,7 +24,7 @@ namespace JustSaying
     /// 3. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc // ToDo: Shouldn't be enforced in base! Is a JE concern.
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings, IMayWantARegionPicker, IAmJustInterrogating
+    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings, IMayWantARegionPicker, IAmJustInterrogating, IMessageBus
     {
         private readonly ILogger _log;
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
@@ -33,6 +34,8 @@ namespace JustSaying
         private IMessageSerialisationFactory _serialisationFactory;
         private Func<INamingStrategy> _busNamingStrategyFunc;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly Queue<Func<Task>> _buildActions = new Queue<Func<Task>>();
+        private static readonly Task CompletedTask = Task.FromResult(0);
 
         protected internal JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator, IAwsClientFactoryProxy awsClientFactoryProxy, ILoggerFactory loggerFactory)
         {
@@ -57,33 +60,37 @@ namespace JustSaying
         /// <returns></returns>
         public IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>() where T : Message
         {
-            _log.LogInformation("Adding SNS publisher");
-            _subscriptionConfig.Topic = GetMessageTypeName<T>();
-            var namingStrategy = GetNamingStrategy();
-
-            Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
-
-            var topicName = namingStrategy.GetTopicName(_subscriptionConfig.BaseTopicName, GetMessageTypeName<T>());
-            foreach (var region in Bus.Config.Regions)
+            _buildActions.Enqueue(async () =>
             {
-                // TODO pass region down into topic creation for when we have foreign topics so we can generate the arn
-                var eventPublisher = new SnsTopicByName(
-                    topicName,
-                    _awsClientFactoryProxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
-                    Bus.SerialisationRegister,
-                    _loggerFactory);
+                _log.LogInformation("Adding SNS publisher");
+                _subscriptionConfig.Topic = GetMessageTypeName<T>();
+                var namingStrategy = GetNamingStrategy();
 
-                if (!eventPublisher.Exists())
+                Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
+
+                var topicName = namingStrategy.GetTopicName(_subscriptionConfig.BaseTopicName, GetMessageTypeName<T>());
+                foreach (var region in Bus.Config.Regions)
                 {
-                    eventPublisher.Create();
+                    // TODO pass region down into topic creation for when we have foreign topics so we can generate the arn
+                    var eventPublisher = new SnsTopicByName(
+                        topicName,
+                        _awsClientFactoryProxy.GetAwsClientFactory()
+                            .GetSnsClient(RegionEndpoint.GetBySystemName(region)),
+                        Bus.SerialisationRegister,
+                        _loggerFactory);
+
+                    if (!await eventPublisher.ExistsAsync())
+                    {
+                        await eventPublisher.CreateAsync();
+                    }
+
+                    await eventPublisher.EnsurePolicyIsUpdatedAsync(Bus.Config.AdditionalSubscriberAccounts);
+
+                    Bus.AddMessagePublisher<T>(eventPublisher, region);
                 }
 
-                eventPublisher.EnsurePolicyIsUpdated(Bus.Config.AdditionalSubscriberAccounts);
-
-                Bus.AddMessagePublisher<T>(eventPublisher, region);
-            }
-
-            _log.LogInformation($"Created SNS topic publisher - Topic: {_subscriptionConfig.Topic}");
+                _log.LogInformation($"Created SNS topic publisher - Topic: {_subscriptionConfig.Topic}");
+            });
 
             return this;
         }
@@ -95,36 +102,44 @@ namespace JustSaying
         /// <returns></returns>
         public IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsWriteConfiguration> configBuilder) where T : Message
         {
-            _log.LogInformation("Adding SQS publisher");
-
-            var config = new SqsWriteConfiguration();
-            configBuilder(config);
-
-            var messageTypeName = typeof(T).ToTopicName();
-            var queueName = GetNamingStrategy().GetQueueName(new SqsReadConfiguration(SubscriptionType.PointToPoint){BaseQueueName = config.QueueName}, messageTypeName);
-
-            Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
-
-            foreach (var region in Bus.Config.Regions)
+            _buildActions.Enqueue(async () =>
             {
-                var regionEndpoint = RegionEndpoint.GetBySystemName(region);
-                var eventPublisher = new SqsPublisher(
-                    regionEndpoint,
-                    queueName,
-                    _awsClientFactoryProxy.GetAwsClientFactory().GetSqsClient(regionEndpoint),
-                    config.RetryCountBeforeSendingToErrorQueue,
-                    Bus.SerialisationRegister,
-                    _loggerFactory);
+                _log.LogInformation("Adding SQS publisher");
 
-                if (!eventPublisher.Exists())
+                var config = new SqsWriteConfiguration();
+                configBuilder(config);
+
+
+                var messageTypeName = typeof(T).ToTopicName();
+                var queueName = GetNamingStrategy()
+                    .GetQueueName(
+                        new SqsReadConfiguration(SubscriptionType.PointToPoint) {BaseQueueName = config.QueueName},
+                        messageTypeName);
+
+                Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
+
+                foreach (var region in Bus.Config.Regions)
                 {
-                    eventPublisher.Create(config);
+                    var regionEndpoint = RegionEndpoint.GetBySystemName(region);
+                    var eventPublisher = new SqsPublisher(
+                        regionEndpoint,
+                        queueName,
+                        _awsClientFactoryProxy.GetAwsClientFactory().GetSqsClient(regionEndpoint),
+                        config.RetryCountBeforeSendingToErrorQueue,
+                        Bus.SerialisationRegister,
+                        _loggerFactory);
+
+                    if (!await eventPublisher.ExistsAsync())
+                    {
+                        await eventPublisher.CreateAsync(config);
+                    }
+
+                    Bus.AddMessagePublisher<T>(eventPublisher, region);
+
+                    _log.LogInformation(
+                        $"Created SQS publisher - MessageName: {messageTypeName}, QueueName: {queueName}");
                 }
-
-                Bus.AddMessagePublisher<T>(eventPublisher, region);
-            }
-
-            _log.LogInformation($"Created SQS publisher - MessageName: {messageTypeName}, QueueName: {queueName}");
+            });
 
             return this;
         }
@@ -184,40 +199,66 @@ namespace JustSaying
 
         public IMayWantOptionalSettings WithSerialisationFactory(IMessageSerialisationFactory factory)
         {
-            _serialisationFactory = factory;
+            _buildActions.Enqueue(() =>
+            {
+                _serialisationFactory = factory;
+                return CompletedTask;
+            });
             return this;
         }
 
         public IMayWantOptionalSettings WithMessageLockStoreOf(IMessageLock messageLock)
         {
-            Bus.MessageLock = messageLock;
+            _buildActions.Enqueue(() =>
+            {
+                Bus.MessageLock = messageLock;
+                return CompletedTask;
+            });
             return this;
         }
 
         public IFluentSubscription ConfigureSubscriptionWith(Action<SqsReadConfiguration> configBuilder)
         {
-            configBuilder(_subscriptionConfig);
+            _buildActions.Enqueue(() =>
+            {
+                configBuilder(_subscriptionConfig);
+                return CompletedTask;
+            });
             return this;
         }
 
         public ISubscriberIntoQueue WithSqsTopicSubscriber(string topicName = null)
         {
-            _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic)
+            _buildActions.Enqueue(() =>
             {
-                BaseTopicName = (topicName ?? string.Empty).ToLower()
-            };
+                _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic)
+                {
+                    BaseTopicName = (topicName ?? string.Empty).ToLower()
+                };
+                return CompletedTask;
+            });
             return this;
         }
 
         public ISubscriberIntoQueue WithSqsPointToPointSubscriber()
         {
-            _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.PointToPoint);
+            _buildActions.Enqueue(() =>
+            {
+                _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.PointToPoint);
+                return CompletedTask;
+            });
+            
             return this;
         }
 
         public IFluentSubscription IntoQueue(string queuename)
         {
-            _subscriptionConfig.BaseQueueName = queuename;
+            _buildActions.Enqueue(() =>
+            {
+                _subscriptionConfig.BaseQueueName = queuename;
+                return CompletedTask;
+            });
+            
             return this;
         }
 
@@ -233,77 +274,82 @@ namespace JustSaying
         /// <returns></returns>
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerAsync<T> handler) where T : Message
         {
-            // TODO - Subscription listeners should be just added once per queue,
-            // and not for each message handler
-            var thing =  _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
-                ? PointToPointHandler<T>()
-                : TopicHandler<T>();
-
-            Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
-            foreach (var region in Bus.Config.Regions)
+            _buildActions.Enqueue(async () =>
             {
-                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handler);
-            }
-            var messageTypeName = GetMessageTypeName<T>();
-            _log.LogInformation($"Added a message handler - MessageName: {messageTypeName}, QueueName: {_subscriptionConfig.QueueName}, HandlerName: {handler.GetType().Name}");
+                // TODO - Subscription listeners should be just added once per queue, and not for each message handler
+                await (_subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
+                    ? PointToPointHandler<T>()
+                    : TopicHandler<T>());
 
-            return thing;
+                Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
+                foreach (var region in Bus.Config.Regions)
+                {
+                    Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handler);
+                }
+                var messageTypeName = GetMessageTypeName<T>();
+                _log.LogInformation(
+                    $"Added a message handler - MessageName: {messageTypeName}, QueueName: {_subscriptionConfig.QueueName}, HandlerName: {handler.GetType().Name}");
+            });
+            return this;
         }
 
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message
         {
-            var thing = _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
-                ? PointToPointHandler<T>()
-                : TopicHandler<T>();
 
-            Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
-
-            var resolutionContext = new HandlerResolutionContext(_subscriptionConfig.QueueName);
-            var proposedHandler = handlerResolver.ResolveHandler<T>(resolutionContext);
-
-            if (proposedHandler == null)
+            _buildActions.Enqueue(async () =>
             {
-                throw new HandlerNotRegisteredWithContainerException($"There is no handler for '{typeof(T).Name}' messages.");
-            }
+                await (_subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
+                    ? PointToPointHandler<T>()
+                    : TopicHandler<T>());
 
-            foreach (var region in Bus.Config.Regions)
-            {
-                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handlerResolver.ResolveHandler<T>(resolutionContext));
-            }
+                Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
 
-            _log.LogInformation($"Added a message handler - Topic: {_subscriptionConfig.Topic}, QueueName: {_subscriptionConfig.QueueName}, HandlerName: IHandler<{typeof(T)}>");
+                var resolutionContext = new HandlerResolutionContext(_subscriptionConfig.QueueName);
+                var proposedHandler = handlerResolver.ResolveHandler<T>(resolutionContext);
 
-            return thing;
+                if (proposedHandler == null)
+                {
+                    throw new HandlerNotRegisteredWithContainerException(
+                        $"There is no handler for '{typeof(T).Name}' messages.");
+                }
+
+                foreach (var region in Bus.Config.Regions)
+                {
+                    Bus.AddMessageHandler(region, _subscriptionConfig.QueueName,
+                        () => handlerResolver.ResolveHandler<T>(resolutionContext));
+                }
+
+                _log.LogInformation(
+                    $"Added a message handler - Topic: {_subscriptionConfig.Topic}, QueueName: {_subscriptionConfig.QueueName}, HandlerName: IHandler<{typeof(T)}>");
+            });
+
+            return this;
         }
 
-        private IHaveFulfilledSubscriptionRequirements TopicHandler<T>() where T : Message
+        private async Task TopicHandler<T>() where T : Message
         {
             var messageTypeName = GetMessageTypeName<T>();
             ConfigureSqsSubscriptionViaTopic(messageTypeName);
 
             foreach (var region in Bus.Config.Regions)
             {
-                var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribed(region, Bus.SerialisationRegister, _subscriptionConfig);
+                var queue = await _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribedAsync(region, Bus.SerialisationRegister, _subscriptionConfig);
                 CreateSubscriptionListener<T>(region, queue);
                 _log.LogInformation($"Created SQS topic subscription - Topic: {_subscriptionConfig.Topic}, QueueName: {_subscriptionConfig.QueueName}");
             }
-
-            return this;
         }
 
-        private IHaveFulfilledSubscriptionRequirements PointToPointHandler<T>() where T : Message
+        private async Task PointToPointHandler<T>() where T : Message
         {
             var messageTypeName = GetMessageTypeName<T>();
             ConfigureSqsSubscription(messageTypeName);
 
             foreach (var region in Bus.Config.Regions)
             {
-                var queue = _amazonQueueCreator.EnsureQueueExists(region, _subscriptionConfig);
+                var queue = await _amazonQueueCreator.EnsureQueueExistsAsync(region, _subscriptionConfig);
                 CreateSubscriptionListener<T>(region, queue);
                 _log.LogInformation($"Created SQS subscriber - MessageName: {messageTypeName}, QueueName: {_subscriptionConfig.QueueName}");
             }
-
-            return this;
         }
 
         private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue) where T : Message
@@ -345,55 +391,99 @@ namespace JustSaying
         /// <returns></returns>
         public IMayWantOptionalSettings WithMonitoring(IMessageMonitor messageMonitor)
         {
-            Bus.Monitor = messageMonitor;
+            _buildActions.Enqueue(() =>
+            {
+                Bus.Monitor = messageMonitor;
+                return CompletedTask;
+            });
+            
             return this;
         }
 
         public IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder)
         {
-            confBuilder(Bus.Config);
-            Bus.Config.Validate();
-
+            _buildActions.Enqueue(() =>
+            {
+                confBuilder(Bus.Config);
+                Bus.Config.Validate();
+                return CompletedTask;
+            });
+            
             return this;
         }
 
         public IMayWantARegionPicker WithFailoverRegion(string region)
         {
-            Bus.Config.Regions.Add(region);
+            _buildActions.Enqueue(() =>
+            {
+                Bus.Config.Regions.Add(region);
+                return CompletedTask;
+            });
+            
             return this;
         }
 
         public IMayWantARegionPicker WithFailoverRegions(params string[] regions)
         {
-            foreach (var region in regions)
+            _buildActions.Enqueue(() =>
             {
-                Bus.Config.Regions.Add(region);
-            }
-            Bus.Config.Validate();
+                foreach (var region in regions)
+                {
+                    Bus.Config.Regions.Add(region);
+                }
+                Bus.Config.Validate();
+                return CompletedTask;
+            });
+            
             return this;
         }
 
         public IMayWantOptionalSettings WithActiveRegion(Func<string> getActiveRegion)
         {
-            Bus.Config.GetActiveRegion = getActiveRegion;
+            _buildActions.Enqueue(() =>
+            {
+                Bus.Config.GetActiveRegion = getActiveRegion;
+                return CompletedTask;
+            });
+            
             return this;
         }
 
         public IInterrogationResponse WhatDoIHave()
         {
             var iterrogationBus = Bus as IAmJustInterrogating;
-            return iterrogationBus.WhatDoIHave();
+            return iterrogationBus?.WhatDoIHave();
         }
 
         public IMayWantOptionalSettings WithNamingStrategy(Func<INamingStrategy> busNamingStrategy)
         {
-            _busNamingStrategyFunc = busNamingStrategy;
+            _buildActions.Enqueue(() =>
+            {
+                _busNamingStrategyFunc = busNamingStrategy;
+                return CompletedTask;
+            });
+            
             return this;
         }
 
         public IMayWantOptionalSettings WithAwsClientFactory(Func<IAwsClientFactory> awsClientFactory)
         {
-            _awsClientFactoryProxy.SetAwsClientFactory(awsClientFactory);
+            _buildActions.Enqueue(() =>
+            {
+                _awsClientFactoryProxy.SetAwsClientFactory(awsClientFactory);
+                return CompletedTask;
+            });
+            
+            return this;
+        }
+
+        public async Task<IMessageBus> Build()
+        {
+            while (_buildActions.Count > 0)
+            {
+                await _buildActions.Dequeue().Invoke();
+            }
+
             return this;
         }
     }

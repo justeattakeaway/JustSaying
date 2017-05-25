@@ -1,4 +1,5 @@
-﻿using JustSaying.AwsTools.QueueCreation;
+﻿using System.Threading.Tasks;
+using JustSaying.AwsTools.QueueCreation;
 using NUnit.Framework;
 
 namespace JustSaying.AwsTools.IntegrationTests
@@ -14,14 +15,12 @@ namespace JustSaying.AwsTools.IntegrationTests
             base.Given();
         }
 
-        protected override void When()
+        protected override async Task When()
         {
+            await SystemUnderTest.CreateAsync(new SqsBasicConfiguration());
 
-            SystemUnderTest.Create(new SqsBasicConfiguration());
-
-            SystemUnderTest.UpdateRedrivePolicyAsync(
-                new RedrivePolicy(_newMaximumReceived, SystemUnderTest.ErrorQueue.Arn))
-                .GetAwaiter().GetResult();
+            await SystemUnderTest.UpdateRedrivePolicyAsync(
+                new RedrivePolicy(_newMaximumReceived, SystemUnderTest.ErrorQueue.Arn));
         }
 
         [Test]

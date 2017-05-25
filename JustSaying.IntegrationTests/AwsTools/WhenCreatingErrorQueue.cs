@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Threading.Tasks;
 using Amazon;
 using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
@@ -7,18 +8,17 @@ using NUnit.Framework;
 
 namespace JustSaying.AwsTools.IntegrationTests
 {
-    public  class WhenCreatingErrorQueue : BehaviourTest<ErrorQueue>
+    public  class WhenCreatingErrorQueue : AsyncBehaviourTest<ErrorQueue>
     {
         protected string QueueUniqueKey;
 
         protected override void Given()
         { }
-        protected override void When()
+        protected override async Task When()
         {
+            await SystemUnderTest.CreateAsync(new SqsBasicConfiguration { ErrorQueueRetentionPeriodSeconds = JustSayingConstants.MAXIMUM_RETENTION_PERIOD, ErrorQueueOptOut = true});
 
-            SystemUnderTest.Create(new SqsBasicConfiguration { ErrorQueueRetentionPeriodSeconds = JustSayingConstants.MAXIMUM_RETENTION_PERIOD, ErrorQueueOptOut = true});
-
-            SystemUnderTest.UpdateQueueAttribute(
+            await SystemUnderTest.UpdateQueueAttributeAsync(
                 new SqsBasicConfiguration {ErrorQueueRetentionPeriodSeconds = 100});
         }
 
@@ -29,7 +29,7 @@ namespace JustSaying.AwsTools.IntegrationTests
         }
         public override void PostAssertTeardown()
         {
-            SystemUnderTest.Delete();
+            SystemUnderTest.DeleteAsync().GetAwaiter().GetResult();
             base.PostAssertTeardown();
         }
 

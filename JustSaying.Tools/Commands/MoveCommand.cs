@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Amazon;
@@ -64,7 +64,7 @@ namespace JustSaying.Tools.Commands
 
         private void EnsureQueueExists(SqsQueueByName queue)
         {
-            if (!queue.Exists()) throw new System.InvalidOperationException($"{queue.QueueName} does not exist.");
+            if (!queue.ExistsAsync().GetAwaiter().GetResult()) throw new InvalidOperationException($"{queue.QueueName} does not exist.");
         }
 
         private List<Message> PopMessagesFromSourceQueue(SqsQueueByName sourceQueue)
