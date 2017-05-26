@@ -20,4 +20,12 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="JustBehave">
+      <HintPath>..\..\..\Users\stuart.lang\.nuget\packages\justbehave\1.0.0.12\lib\net452\JustBehave.dll</HintPath>
+    </Reference>
+    <Reference Include="Ploeh.AutoFixture">
+      <HintPath>..\..\..\Users\stuart.lang\.nuget\packages\autofixture\3.50.2\lib\net40\Ploeh.AutoFixture.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>

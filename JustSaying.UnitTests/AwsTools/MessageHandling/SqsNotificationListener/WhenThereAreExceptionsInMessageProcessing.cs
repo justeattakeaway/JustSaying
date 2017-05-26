@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
@@ -15,7 +15,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
-    public class WhenThereAreExceptionsInMessageProcessing : AsyncBehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
+    public class WhenThereAreExceptionsInMessageProcessing : JustBehave.AsyncBehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
     {
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private readonly IMessageSerialisationRegister _serialisationRegister = 
@@ -36,11 +36,11 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         {
             _serialisationRegister
                 .DeserializeMessage(Arg.Any<string>())
-                .Returns(x => { throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing"); });
+                .Returns(x => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing"));
             _sqs.ReceiveMessageAsync(
                     Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>())
-                .Returns(x => Task.FromResult(GenerateEmptyMessage()));
+                .Returns(x => GenerateEmptyMessage());
 
             _sqs.When(x => x.ReceiveMessageAsync(
                     Arg.Any<ReceiveMessageRequest>(),

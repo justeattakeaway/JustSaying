@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Amazon;
-using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.Logging;
@@ -10,7 +9,7 @@ using NUnit.Framework;
 namespace JustSaying.AwsTools.IntegrationTests
 {
     [TestFixture]
-    public class WhenSettingUpMultipleHandlers : BehaviourTest<IMessageBus>
+    public class WhenSettingUpMultipleHandlers : TestingFramework.AsyncBehaviourTest<IMessageBus>
     {
         private class Order : Models.Message
         {
@@ -39,7 +38,7 @@ namespace JustSaying.AwsTools.IntegrationTests
         protected override void Given()
         { }
 
-        protected override IMessageBus CreateSystemUnderTest()
+        protected override async Task<IMessageBus> CreateSystemUnderTest()
         {
             // Given 2 handlers
             _uniqueTopicAndQueueNames = new UniqueTopicAndQueueNames();
@@ -49,27 +48,25 @@ namespace JustSaying.AwsTools.IntegrationTests
             _topicName = _uniqueTopicAndQueueNames.GetTopicName(string.Empty, typeof(Order).Name);
             _queueName = _uniqueTopicAndQueueNames.GetQueueName(new SqsReadConfiguration(SubscriptionType.ToTopic) {BaseQueueName = baseQueueName }, typeof(Order).Name);
 
-            _bus = CreateMeABus.WithLogging(new LoggerFactory())
+            _bus = await CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithAwsClientFactory(() => _proxyAwsClientFactory)
                 .WithNamingStrategy(() => _uniqueTopicAndQueueNames)
                 .WithSqsTopicSubscriber()
                 .IntoQueue(baseQueueName) // generate unique queue name
                 .WithMessageHandlers(new OrderHandler(), new OrderHandler())
-                .Build().GetAwaiter().GetResult();
+                .Build();
 
             _bus.StartListening();
             return _bus;
         }
-        public override void PostAssertTeardown()
+        public override async Task PostAssertTeardown()
         {
             SystemUnderTest.StopListening();
-            base.PostAssertTeardown();
+            await base.PostAssertTeardown();
         }
 
-        protected override void When()
-        {
-        }
+        protected override Task When() => Task.CompletedTask;
 
         [Test]
         public void CreateTopicCalledOnce()

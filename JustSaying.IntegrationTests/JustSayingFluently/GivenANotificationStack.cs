@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Amazon;
-using JustBehave;
 using JustSaying.AwsTools;
 using JustSaying.IntegrationTests.TestHandlers;
-using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
@@ -13,7 +12,7 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
-    public abstract class GivenANotificationStack : AsyncBehaviourTest<IMessageBus>
+    public abstract class GivenANotificationStack : TestingFramework.AsyncBehaviourTest<IMessageBus>
     {
         private readonly Stopwatch _stopwatch = new Stopwatch();
         protected IMessageBus ServiceBus;
@@ -47,7 +46,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             _stopwatch.Start();
         }
 
-        protected override IMessageBus CreateSystemUnderTest()
+        protected override async Task<IMessageBus> CreateSystemUnderTest()
         {
             const int TimeoutMillis = 1000;
 
@@ -69,7 +68,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
             Monitoring = Substitute.For<IMessageMonitor>();
 
-            ServiceBus = CreateMeABus.WithLogging(new LoggerFactory())
+            ServiceBus = await CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithMonitoring(Monitoring)
 
@@ -94,16 +93,16 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .WithSqsPointToPointSubscriber()
                 .IntoDefaultQueue()
                 .WithMessageHandler(sqsHandler)
-                .Build().GetAwaiter().GetResult();
+                .Build();
 
             ServiceBus.StartListening();
 
             return ServiceBus;
         }
 
-        public override void PostAssertTeardown()
+        public override async Task PostAssertTeardown()
         {
-            base.PostAssertTeardown();
+            await base.PostAssertTeardown();
             _stopwatch.Stop();
             Teardown();
             Console.WriteLine($"The test took {_stopwatch.ElapsedMilliseconds/1000} seconds.");

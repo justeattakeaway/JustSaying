@@ -18,7 +18,7 @@ using NUnit.Framework;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
-    public abstract class BaseQueuePollingTest : AsyncBehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
+    public abstract class BaseQueuePollingTest : JustBehave.AsyncBehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
     {
         protected const string QueueUrl = "url";
         protected IAmazonSQS Sqs;
@@ -52,8 +52,8 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
                     Arg.Any<ReceiveMessageRequest>(), 
                     Arg.Any<CancellationToken>())
                 .Returns(
-                    x => Task.FromResult(response),
-                    x => Task.FromResult(new ReceiveMessageResponse()));
+                    x => response,
+                    x => new ReceiveMessageResponse());
 
             DeserialisedMessage = new GenericMessage { RaisingComponent = "Component" };
             SerialisationRegister.DeserializeMessage(Arg.Any<string>()).Returns(DeserialisedMessage);

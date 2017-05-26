@@ -12,7 +12,7 @@ using NSubstitute;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
 {
-    public class WhenPublishingDelayedMessageAsync : AsyncBehaviourTest<SqsPublisher>
+    public class WhenPublishingDelayedMessageAsync : TestingFramework.AsyncBehaviourTest<SqsPublisher>
     {
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
@@ -20,11 +20,11 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
         private readonly DelayedMessage _message = new DelayedMessage(delaySeconds: 1);
         private const string QueueName = "queuename";
 
-        protected override SqsPublisher CreateSystemUnderTest()
+        protected override async Task<SqsPublisher> CreateSystemUnderTest()
         {
             var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, _sqs, 0,
                 _serialisationRegister, Substitute.For<ILoggerFactory>());
-            sqs.ExistsAsync().GetAwaiter().GetResult();
+            await sqs.ExistsAsync();
             return sqs;
         }
 

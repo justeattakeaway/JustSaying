@@ -8,18 +8,18 @@ using NUnit.Framework;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
-    public abstract class GivenAPublisher : AsyncBehaviourTest<IMessagePublisher>
+    public abstract class GivenAPublisher : TestingFramework.AsyncBehaviourTest<IMessagePublisher>
     {
         protected IMessageBus Publisher;
         protected IMessageBus Subscriber;
         protected Task DoneSignal;
 
-        protected override IMessagePublisher CreateSystemUnderTest()
+        protected override async Task<IMessagePublisher> CreateSystemUnderTest()
         {
-            Publisher = CreateMeABus.WithLogging(new LoggerFactory())
+            Publisher = await CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion("eu-west-1")
                 .WithSnsMessagePublisher<OrderPlaced>()
-                .Build().GetAwaiter().GetResult();
+                .Build();
 
             Publisher.StartListening();
             return Publisher;
