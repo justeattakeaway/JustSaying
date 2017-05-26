@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -35,8 +35,8 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
                 Arg.Any<ReceiveMessageRequest>(),
                 Arg.Any<CancellationToken>())
             .Returns(
-                _ => Task.FromResult(response1),
-                _ => Task.FromResult(response2));
+                _ => response1,
+                _ => response2);
         }
 
         protected override async Task When()
