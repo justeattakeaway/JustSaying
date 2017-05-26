@@ -11,6 +11,8 @@
     <PackageReference Include="AWSSDK.Core" Version="3.3.10.3" />
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.0.11" />
     <PackageReference Include="AWSSDK.SQS" Version="3.3.1.11" />
+    <PackageReference Include="JustBehave" Version="1.0.0.12" />
+    <PackageReference Include="AutoFixture" Version="3.50.2" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
     <PackageReference Include="NLog" Version="5.0.0-beta06" />
     <PackageReference Include="NSubstitute" Version="2.0.2" />
@@ -19,13 +21,5 @@
   <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="JustBehave">
-      <HintPath>..\..\..\Users\stuart.lang\.nuget\packages\justbehave\1.0.0.12\lib\net452\JustBehave.dll</HintPath>
-    </Reference>
-    <Reference Include="Ploeh.AutoFixture">
-      <HintPath>..\..\..\Users\stuart.lang\.nuget\packages\autofixture\3.50.2\lib\net40\Ploeh.AutoFixture.dll</HintPath>
-    </Reference>
   </ItemGroup>
 </Project>
