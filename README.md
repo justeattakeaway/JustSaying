@@ -167,7 +167,7 @@ IAmJustSayingFluently bus = await CreateMeABus.WithLogging(loggerFactory)
     .WithSnsMessagePublisher<OrderAccepted>()
     .Build();
 
-IInterrogationResponse response =((IAmJustInterrogating)bus).WhatDoIHave();
+IInterrogationResponse response = ((IAmJustInterrogating)bus).WhatDoIHave();
 ```
 
 ## Logging
