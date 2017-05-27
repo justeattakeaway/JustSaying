@@ -183,20 +183,20 @@ JustSaying stack will throw out the following named logs from NLog:
 Here's a snippet of the expected configuration:
 
 ```xml
-    <logger name="EventLog" minlevel="Trace" writeTo="logger-specfic-log" final="true" />
-    <logger name="JustSaying" minlevel="Trace" writeTo="logger-specfic-log" final="true" />
+<logger name="EventLog" minlevel="Trace" writeTo="logger-specfic-log" final="true" />
+<logger name="JustSaying" minlevel="Trace" writeTo="logger-specfic-log" final="true" />
 
-      <target
-         name="logger-specfic-log"
-         xsi:type="File"
-         fileName="${logdir}\${loggerspecificlogfilename}"
-         layout="${standardlayout}"
-         archiveFileName="${logdir}\${loggerspecificlogfilename}"
-         archiveEvery="Hour"
-         maxArchiveFiles="8784"
-         concurrentWrites="true"
-         keepFileOpen="false"
-      />
+  <target
+     name="logger-specfic-log"
+     xsi:type="File"
+     fileName="${logdir}\${loggerspecificlogfilename}"
+     layout="${standardlayout}"
+     archiveFileName="${logdir}\${loggerspecificlogfilename}"
+     archiveEvery="Hour"
+     maxArchiveFiles="8784"
+     concurrentWrites="true"
+     keepFileOpen="false"
+  />
 ```
 
 ## Dead letter Queue (Error queue)
