@@ -186,17 +186,17 @@ Here's a snippet of the expected configuration:
 <logger name="EventLog" minlevel="Trace" writeTo="logger-specfic-log" final="true" />
 <logger name="JustSaying" minlevel="Trace" writeTo="logger-specfic-log" final="true" />
 
-  <target
-     name="logger-specfic-log"
-     xsi:type="File"
-     fileName="${logdir}\${loggerspecificlogfilename}"
-     layout="${standardlayout}"
-     archiveFileName="${logdir}\${loggerspecificlogfilename}"
-     archiveEvery="Hour"
-     maxArchiveFiles="8784"
-     concurrentWrites="true"
-     keepFileOpen="false"
-  />
+<target
+   name="logger-specfic-log"
+   xsi:type="File"
+   fileName="${logdir}\${loggerspecificlogfilename}"
+   layout="${standardlayout}"
+   archiveFileName="${logdir}\${loggerspecificlogfilename}"
+   archiveEvery="Hour"
+   maxArchiveFiles="8784"
+   concurrentWrites="true"
+   keepFileOpen="false"
+/>
 ```
 
 ## Dead letter Queue (Error queue)
@@ -208,7 +208,7 @@ You can opt out during subscription configuration.
 
 JustSaying comes with a power tool console app that helps you mange your SQS queues from the command line.
 At this point, the power tool is only able to move arbitrary number of messages from one queue to another.
-```
+```batch
 JustSaying.Tools.exe move -from "source_queue_name" -to "destination_queue_name" -in "region" -count "1"
 ```
 
