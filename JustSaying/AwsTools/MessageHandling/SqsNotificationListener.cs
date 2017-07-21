@@ -72,7 +72,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return this;
         }
 
-        public void AddMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler) where T : Message
+        public void AddMessageHandler<T>(FutureHandler<T> futureHandler) where T : Message
         {
             if (_handlerMap.ContainsKey(typeof(T)))
             {

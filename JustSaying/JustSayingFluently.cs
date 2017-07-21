@@ -242,7 +242,8 @@ namespace JustSaying
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
             foreach (var region in Bus.Config.Regions)
             {
-                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handler);
+                var resolutionContext = new HandlerResolutionContext(_subscriptionConfig.QueueName);
+                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, new FutureHandler<T>(handler, resolutionContext));
             }
             var messageTypeName = GetMessageTypeName<T>();
             _log.LogInformation($"Added a message handler - MessageName: {messageTypeName}, QueueName: {_subscriptionConfig.QueueName}, HandlerName: {handler.GetType().Name}");
@@ -250,7 +251,14 @@ namespace JustSaying
             return thing;
         }
 
-        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message
+        [Obsolete("Use 'IHandlerAndMetadataResolver'")]
+        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver)
+            where T : Message
+        {
+            return WithMessageHandler<T>(new HandlerResolverAdapter(handlerResolver));
+        }
+
+        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerAndMetadataResolver handlerResolver) where T : Message
         {
             var thing = _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
                 ? PointToPointHandler<T>()
@@ -259,7 +267,7 @@ namespace JustSaying
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
 
             var resolutionContext = new HandlerResolutionContext(_subscriptionConfig.QueueName);
-            var proposedHandler = handlerResolver.ResolveHandler<T>(resolutionContext);
+            var proposedHandler = handlerResolver.ResolveHandlerType<T>(resolutionContext);//?check if we really need that validation
 
             if (proposedHandler == null)
             {
@@ -268,7 +276,7 @@ namespace JustSaying
 
             foreach (var region in Bus.Config.Regions)
             {
-                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handlerResolver.ResolveHandler<T>(resolutionContext));
+                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, new FutureHandler<T>(handlerResolver, resolutionContext));
             }
 
             _log.LogInformation($"Added a message handler - Topic: {_subscriptionConfig.Topic}, QueueName: {_subscriptionConfig.QueueName}, HandlerName: IHandler<{typeof(T)}>");
