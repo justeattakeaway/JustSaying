@@ -1,7 +1,8 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support;
+using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using NSubstitute;
 
@@ -23,7 +24,8 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             var doneSignal = new TaskCompletionSource<object>();
             SystemUnderTest.WithMessageProcessingStrategy(new ThrowingDuringMessageProcessingStrategy(doneSignal));
 
-            SystemUnderTest.AddMessageHandler(() => Handler);
+            var futureHandler = new FutureHandler<GenericMessage>(Handler, Context);
+            SystemUnderTest.AddMessageHandler(futureHandler);
             SystemUnderTest.Listen();
 
             await Tasks.WaitWithTimeoutAsync(doneSignal.Task);

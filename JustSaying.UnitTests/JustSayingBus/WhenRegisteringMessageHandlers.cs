@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging;
@@ -14,14 +14,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         private IHandlerAsync<Message> _handler1;
         private IHandlerAsync<Message2> _handler2;
         private string _region;
-        private readonly Func<IHandlerAsync<Message>> _futureHandler1;
-        private readonly Func<IHandlerAsync<Message2>> _futureHandler2;
-
-        public WhenRegisteringMessageHandlers()
-        {
-            _futureHandler1 = () => _handler1;
-            _futureHandler2 = () => _handler2;
-        }
+        private FutureHandler<Message> _futureHandler1;
+        private FutureHandler<Message2> _futureHandler2;
 
         protected override void Given()
         {
@@ -29,6 +23,9 @@ namespace JustSaying.UnitTests.JustSayingBus
             _subscriber = Substitute.For<INotificationSubscriber>();
             _handler1 = Substitute.For<IHandlerAsync<Message>>();
             _handler2 = Substitute.For<IHandlerAsync<Message2>>();
+            var context = new HandlerResolutionContext("some-queue");
+            _futureHandler1 = new FutureHandler<Message>(_handler1, context);
+            _futureHandler2 = new FutureHandler<Message2>(_handler2, context);
             _region = "west-1";
         }
 
@@ -55,8 +52,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             Received.InOrder(() =>
                 {
-                    _subscriber.AddMessageHandler(Arg.Any<Func<IHandlerAsync<Message>>>());
-                    _subscriber.AddMessageHandler(Arg.Any<Func<IHandlerAsync<Message2>>>());
+                    _subscriber.AddMessageHandler(Arg.Any<FutureHandler<Message>>());
+                    _subscriber.AddMessageHandler(Arg.Any<FutureHandler<Message2>>());
                     _subscriber.Listen();
                 });
         }

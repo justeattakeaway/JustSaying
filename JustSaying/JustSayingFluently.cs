@@ -267,9 +267,9 @@ namespace JustSaying
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
 
             var resolutionContext = new HandlerResolutionContext(_subscriptionConfig.QueueName);
-            var proposedHandler = handlerResolver.ResolveHandlerType<T>(resolutionContext);//?check if we really need that validation
+            var proposedHandlerMetadata = handlerResolver.ResolveHandlerType<T>(resolutionContext);//?TODO [SP] check if we really need that validation
 
-            if (proposedHandler == null)
+            if (proposedHandlerMetadata == null)
             {
                 throw new HandlerNotRegisteredWithContainerException($"There is no handler for '{typeof(T).Name}' messages.");
             }

@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace JustSaying.AwsTools.UnitTests.MessageHandling
 {
     [TestFixture]
-    public class MessageHandlerWrapperTests
+    public class FutureHandlerTests
     {
         [Test]
         public void WrapperReturnsAFunction()

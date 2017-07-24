@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -68,7 +68,9 @@ namespace JustSaying.AwsTools.IntegrationTests
 
             serialisations.DeserializeMessage(string.Empty).ReturnsForAnyArgs(new GenericMessage());
             var listener = new SqsNotificationListener(q, serialisations, monitor, new LoggerFactory());
-            listener.AddMessageHandler(() => handler);
+            var context = new HandlerResolutionContext(q.QueueName);
+            var futureHandler = new FutureHandler<GenericMessage>(handler, context);
+            listener.AddMessageHandler(futureHandler);
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();

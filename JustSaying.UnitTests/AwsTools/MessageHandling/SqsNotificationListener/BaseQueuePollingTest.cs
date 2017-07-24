@@ -21,6 +21,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
     public abstract class BaseQueuePollingTest : AsyncBehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
     {
         protected const string QueueUrl = "url";
+        protected HandlerResolutionContext Context;
         protected IAmazonSQS Sqs;
         protected GenericMessage DeserialisedMessage;
         protected const string MessageBody = "object";
@@ -34,6 +35,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         protected override AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
             var queue = new SqsQueueByUrl(RegionEndpoint.EUWest1, QueueUrl, Sqs);
+            Context = new HandlerResolutionContext(queue.QueueName); ;
             return new AwsTools.MessageHandling.SqsNotificationListener(queue, SerialisationRegister, Monitor, LoggerFactory, null, MessageLock);
         }
 
@@ -62,8 +64,9 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         {
             var doneSignal = new TaskCompletionSource<object>();
             var signallingHandler = new SignallingHandler<GenericMessage>(doneSignal, Handler);
+            var futureHandler = new FutureHandler<GenericMessage>(signallingHandler, Context);
 
-            SystemUnderTest.AddMessageHandler(() => signallingHandler);
+            SystemUnderTest.AddMessageHandler(futureHandler);
             SystemUnderTest.Listen();
 
             // wait until it's done

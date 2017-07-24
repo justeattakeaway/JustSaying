@@ -27,7 +27,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private IHandlerAsync<T> MaybeWrapWithGuaranteedDelivery<T>(FutureHandler<T> futureHandler) where T : Message
         {
-            var handlerType = futureHandler.Resolver.ResolveHandlerType<T>(futureHandler.Context);//todo a bit shitty here that i need to pass context
+            var handlerType = futureHandler.Resolver.ResolveHandlerType<T>(futureHandler.Context);//TODO [SP] invert the FutureHandler and Wrapper so that Wrapping occurs just in time
 
             var exactlyOnceMetadata = new ExactlyOnceReader(handlerType);
             if (!exactlyOnceMetadata.Enabled)
