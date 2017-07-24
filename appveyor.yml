@@ -13,10 +13,9 @@ build:
 pull_requests:
   do_not_increment_build_number: true
 test_script:
-  - ps: ni -ItemType Directory -path ".\output\nunit"
   - ps: $wc = New-Object 'System.Net.WebClient'
-  - dotnet run --project .\JustSaying.UnitTests\JustSaying.UnitTests.csproj --result=.\output\nunit\JustSaying.UnitTests.TestResults.xml
-  - ps: gci .\output\nunit\ -filter *.xml | % { $wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit3/$($env:APPVEYOR_JOB_ID)", $_.FullName) }
+  - dotnet test .\JustSaying.UnitTests\JustSaying.UnitTests.csproj -l trx;logfilename=TestResult.xml
+  - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)",  (Resolve-Path .\JustSaying.UnitTests\TestResults\TestResult.xml))
 after_build:
 - dotnet pack .\JustSaying\JustSaying.csproj -o ../output --no-build
 - dotnet pack .\JustSaying.Models\JustSaying.Models.csproj -o ../output --no-build
