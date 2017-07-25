@@ -35,8 +35,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         protected override AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
             var queue = new SqsQueueByUrl(RegionEndpoint.EUWest1, QueueUrl, Sqs);
-            Context = new HandlerResolutionContext(queue.QueueName); ;
-            return new AwsTools.MessageHandling.SqsNotificationListener(queue, SerialisationRegister, Monitor, LoggerFactory, null, MessageLock);
+            return new AwsTools.MessageHandling.SqsNotificationListener(queue, SerialisationRegister, Monitor, LoggerFactory);
         }
 
         protected override void Given()
@@ -45,8 +44,10 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             Sqs = Substitute.For<IAmazonSQS>();
             SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
             Monitor = Substitute.For<IMessageMonitor>();
+            MessageLock = Substitute.For<IMessageLock>();
             Handler = Substitute.For<IHandlerAsync<GenericMessage>>();
             LoggerFactory = Substitute.For<ILoggerFactory>();
+            Context = new HandlerResolutionContext(QueueUrl); ;
             
             var response = GenerateResponseMessage(MessageTypeString, Guid.NewGuid());
             
@@ -64,9 +65,8 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         {
             var doneSignal = new TaskCompletionSource<object>();
             var signallingHandler = new SignallingHandler<GenericMessage>(doneSignal, Handler);
-            var futureHandler = new FutureHandler<GenericMessage>(signallingHandler, Context);
 
-            SystemUnderTest.AddMessageHandler(futureHandler);
+            SystemUnderTest.AddMessageHandler(signallingHandler);
             SystemUnderTest.Listen();
 
             // wait until it's done

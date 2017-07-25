@@ -68,9 +68,7 @@ namespace JustSaying.AwsTools.IntegrationTests
 
             serialisations.DeserializeMessage(string.Empty).ReturnsForAnyArgs(new GenericMessage());
             var listener = new SqsNotificationListener(q, serialisations, monitor, new LoggerFactory());
-            var context = new HandlerResolutionContext(q.QueueName);
-            var futureHandler = new FutureHandler<GenericMessage>(handler, context);
-            listener.AddMessageHandler(futureHandler);
+            listener.AddMessageHandler(handler);
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();

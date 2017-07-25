@@ -10,7 +10,6 @@ using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using JustSaying.Messaging.Interrogation;
-using JustSaying.Messaging.MessageProcessingStrategies;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying
@@ -33,6 +32,7 @@ namespace JustSaying
         private IMessageSerialisationFactory _serialisationFactory;
         private Func<INamingStrategy> _busNamingStrategyFunc;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly MessageHandlerWrapper _messageHandlerWrapper;
 
         protected internal JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator, IAwsClientFactoryProxy awsClientFactoryProxy, ILoggerFactory loggerFactory)
         {
@@ -41,8 +41,9 @@ namespace JustSaying
             Bus = bus;
             _amazonQueueCreator = queueCreator;
             _awsClientFactoryProxy = awsClientFactoryProxy;
+            _messageHandlerWrapper = new MessageHandlerWrapper(bus.MessageLock, bus.Monitor);
         }
-        
+
         private static string GetMessageTypeName<T>() => typeof(T).ToTopicName();
 
         public virtual INamingStrategy GetNamingStrategy()
@@ -243,7 +244,7 @@ namespace JustSaying
             foreach (var region in Bus.Config.Regions)
             {
                 var resolutionContext = new HandlerResolutionContext(_subscriptionConfig.QueueName);
-                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, new FutureHandler<T>(handler, resolutionContext));
+                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, new FutureHandler<T>(new PredefinedHandlerResolver<T>(handler), resolutionContext, _messageHandlerWrapper));
             }
             var messageTypeName = GetMessageTypeName<T>();
             _log.LogInformation($"Added a message handler - MessageName: {messageTypeName}, QueueName: {_subscriptionConfig.QueueName}, HandlerName: {handler.GetType().Name}");
@@ -276,7 +277,7 @@ namespace JustSaying
 
             foreach (var region in Bus.Config.Regions)
             {
-                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, new FutureHandler<T>(handlerResolver, resolutionContext));
+                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, new FutureHandler<T>(handlerResolver, resolutionContext, _messageHandlerWrapper));
             }
 
             _log.LogInformation($"Added a message handler - Topic: {_subscriptionConfig.Topic}, QueueName: {_subscriptionConfig.QueueName}, HandlerName: IHandler<{typeof(T)}>");
@@ -316,7 +317,7 @@ namespace JustSaying
 
         private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue) where T : Message
         {
-            var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, Bus.Monitor, _loggerFactory, _subscriptionConfig.OnError, Bus.MessageLock, _subscriptionConfig.MessageBackoffStrategy);
+            var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, Bus.Monitor, _loggerFactory, _subscriptionConfig.OnError, _subscriptionConfig.MessageBackoffStrategy);
             sqsSubscriptionListener.Subscribers.Add(new Subscriber(typeof(T)));
             Bus.AddNotificationSubscriber(region, sqsSubscriptionListener);
 

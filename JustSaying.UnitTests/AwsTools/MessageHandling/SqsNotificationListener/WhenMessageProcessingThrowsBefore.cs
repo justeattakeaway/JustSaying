@@ -24,8 +24,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             var doneSignal = new TaskCompletionSource<object>();
             SystemUnderTest.WithMessageProcessingStrategy(new ThrowingBeforeMessageProcessingStrategy(doneSignal));
 
-            var futureHandler = new FutureHandler<GenericMessage>(Handler, Context);
-            SystemUnderTest.AddMessageHandler(futureHandler);
+            SystemUnderTest.AddMessageHandler(Handler);
             SystemUnderTest.Listen();
 
             await Tasks.WaitWithTimeoutAsync(doneSignal.Task);

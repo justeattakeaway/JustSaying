@@ -15,9 +15,8 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
         public void WrapperReturnsAFunction()
         {
             var messageLock = Substitute.For<IMessageLock>();
-            var ctx = Substitute.For<HandlerResolutionContext>("some-queue");
             var handlerWrapper = new MessageHandlerWrapper(messageLock, new NullOpMessageMonitor());
-            var wrapped = handlerWrapper.WrapMessageHandler(new FutureHandler<GenericMessage>(new UnadornedHandlerAsync(), ctx));
+            var wrapped = handlerWrapper.WrapMessageHandler(new UnadornedHandlerAsync());
 
             Assert.That(wrapped, Is.Not.Null);
         }
@@ -31,10 +30,8 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
             var mockHandler = Substitute.For<IHandlerAsync<GenericMessage>>();
             mockHandler.Handle(Arg.Any<GenericMessage>()).Returns(Task.FromResult(true));
 
-            var context = Substitute.For<HandlerResolutionContext>("some-queue");
-
             // act
-            var wrapped = handlerWrapper.WrapMessageHandler(new FutureHandler<GenericMessage>(mockHandler, context));
+            var wrapped = handlerWrapper.WrapMessageHandler(mockHandler);
 
             var result = await wrapped(new GenericMessage());
 
@@ -48,15 +45,13 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
             var messageLock = Substitute.For<IMessageLock>();
             var handlerWrapper = new MessageHandlerWrapper(messageLock, new NullOpMessageMonitor());
 
-            var context = Substitute.For<HandlerResolutionContext>("some-queue");
-
             var mockHandler = Substitute.For<IHandlerAsync<GenericMessage>>();
 
             var testMessage = new GenericMessage();
 
 
             // act
-            var wrapped = handlerWrapper.WrapMessageHandler(new FutureHandler<GenericMessage>(mockHandler, context));
+            var wrapped = handlerWrapper.WrapMessageHandler(mockHandler);
 
             await wrapped(testMessage);
 

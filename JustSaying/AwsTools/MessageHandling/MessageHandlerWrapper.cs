@@ -17,22 +17,22 @@ namespace JustSaying.AwsTools.MessageHandling
             _messagingMonitor = messagingMonitor;
         }
 
-        public Func<Message, Task<bool>> WrapMessageHandler<T>(FutureHandler<T> futureHandler) where T : Message
+        public Func<Message, Task<bool>> WrapMessageHandler<T>(IHandlerAsync<T> handler) where T : Message
         {
-            var handler = MaybeWrapWithGuaranteedDelivery(futureHandler);
+            handler = MaybeWrapWithGuaranteedDelivery(handler);
             handler = MaybeWrapStopwatch(handler);
 
             return async message => await handler.Handle((T)message).ConfigureAwait(false);
         }
 
-        private IHandlerAsync<T> MaybeWrapWithGuaranteedDelivery<T>(FutureHandler<T> futureHandler) where T : Message
+        private IHandlerAsync<T> MaybeWrapWithGuaranteedDelivery<T>(IHandlerAsync<T> handler) where T : Message
         {
-            var handlerType = futureHandler.Resolver.ResolveHandlerType<T>(futureHandler.Context);//TODO [SP] invert the FutureHandler and Wrapper so that Wrapping occurs just in time
+            var handlerType = handler.GetType();
 
             var exactlyOnceMetadata = new ExactlyOnceReader(handlerType);
             if (!exactlyOnceMetadata.Enabled)
             {
-                return futureHandler;
+                return handler;
             }
 
             if (_messageLock == null)
@@ -41,7 +41,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
 
             var handlerName = handlerType.FullName.ToLower();
-            return new ExactlyOnceHandler<T>(futureHandler, _messageLock, exactlyOnceMetadata.GetTimeOut(), handlerName);
+            return new ExactlyOnceHandler<T>(handler, _messageLock, exactlyOnceMetadata.GetTimeOut(), handlerName);
         }
 
         private IHandlerAsync<T> MaybeWrapStopwatch<T>(IHandlerAsync<T> handler) where T : Message

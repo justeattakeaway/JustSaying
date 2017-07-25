@@ -20,7 +20,7 @@ namespace JustSaying
 
         private readonly Dictionary<string, Dictionary<string, INotificationSubscriber>> _subscribersByRegionAndQueue;
         private readonly Dictionary<string, Dictionary<string, IMessagePublisher>> _publishersByRegionAndTopic;
-        public IMessagingConfig Config { get; private set; }
+        public IMessagingConfig Config { get; }
 
         private IMessageMonitor _monitor;
         public IMessageMonitor Monitor
@@ -28,9 +28,9 @@ namespace JustSaying
             get { return _monitor; }
             set { _monitor = value ?? new NullOpMessageMonitor(); }
         }
-        public IMessageSerialisationRegister SerialisationRegister { get; private set; }
+        public IMessageSerialisationRegister SerialisationRegister { get; }
         public IMessageLock MessageLock { get; set; }
-        private ILogger _log;
+        private readonly ILogger _log;
         private readonly object _syncRoot = new object();
         private readonly ICollection<IPublisher> _publishers;
         private readonly ICollection<ISubscriber> _subscribers;
@@ -85,11 +85,11 @@ namespace JustSaying
             }
         }
 
-        public void AddMessageHandler<T>(string region, string queue, FutureHandler<T> futureHandler) where T : Message
+        public void AddMessageHandler<T>(string region, string queue, IHandlerAsync<T> futureHandler) where T : Message
         {
             var subscribersByRegion = _subscribersByRegionAndQueue[region];
             var subscriber = subscribersByRegion[queue];
-            subscriber.AddMessageHandler<T>(futureHandler);
+            subscriber.AddMessageHandler(futureHandler);
         }
 
         public void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message

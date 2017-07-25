@@ -14,8 +14,6 @@ namespace JustSaying.UnitTests.JustSayingBus
         private IHandlerAsync<Message> _handler1;
         private IHandlerAsync<Message2> _handler2;
         private string _region;
-        private FutureHandler<Message> _futureHandler1;
-        private FutureHandler<Message2> _futureHandler2;
 
         protected override void Given()
         {
@@ -23,9 +21,6 @@ namespace JustSaying.UnitTests.JustSayingBus
             _subscriber = Substitute.For<INotificationSubscriber>();
             _handler1 = Substitute.For<IHandlerAsync<Message>>();
             _handler2 = Substitute.For<IHandlerAsync<Message2>>();
-            var context = new HandlerResolutionContext("some-queue");
-            _futureHandler1 = new FutureHandler<Message>(_handler1, context);
-            _futureHandler2 = new FutureHandler<Message2>(_handler2, context);
             _region = "west-1";
         }
 
@@ -33,8 +28,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             SystemUnderTest.AddNotificationSubscriber(_region, _subscriber);
             SystemUnderTest.AddNotificationSubscriber(_region, _subscriber);
-            SystemUnderTest.AddMessageHandler(_region, _subscriber.Queue, _futureHandler1);
-            SystemUnderTest.AddMessageHandler(_region, _subscriber.Queue, _futureHandler2);
+            SystemUnderTest.AddMessageHandler(_region, _subscriber.Queue, _handler1);
+            SystemUnderTest.AddMessageHandler(_region, _subscriber.Queue, _handler2);
             SystemUnderTest.Start();
 
             return Task.CompletedTask;
@@ -43,8 +38,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Then]
         public void HandlersAreAdded()
         {
-            _subscriber.Received().AddMessageHandler(_futureHandler1);
-            _subscriber.Received().AddMessageHandler(_futureHandler2);
+            _subscriber.Received().AddMessageHandler(_handler1);
+            _subscriber.Received().AddMessageHandler(_handler2);
         }
 
         [Then]
@@ -52,8 +47,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             Received.InOrder(() =>
                 {
-                    _subscriber.AddMessageHandler(Arg.Any<FutureHandler<Message>>());
-                    _subscriber.AddMessageHandler(Arg.Any<FutureHandler<Message2>>());
+                    _subscriber.AddMessageHandler(Arg.Any<IHandlerAsync<Message>>());
+                    _subscriber.AddMessageHandler(Arg.Any<IHandlerAsync<Message2>>());
                     _subscriber.Listen();
                 });
         }

@@ -53,8 +53,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 
         protected override async Task When()
         {
-            var futureHandler = new FutureHandler<GenericMessage>(Handler, Context);
-            SystemUnderTest.AddMessageHandler(futureHandler);
+            SystemUnderTest.AddMessageHandler(Handler);
             SystemUnderTest.Listen();
 
             // wait until it's done

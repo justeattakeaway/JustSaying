@@ -1,10 +1,8 @@
-﻿using System;
-using JustSaying.Messaging;
+﻿using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
-using Microsoft.Extensions.Logging;
 
 namespace JustSaying
 {
@@ -12,7 +10,7 @@ namespace JustSaying
     {
         bool Listening { get; }
         void AddNotificationSubscriber(string region, INotificationSubscriber subscriber);
-        void AddMessageHandler<T>(string region, string queueName, FutureHandler<T> futureHandler) where T : Message;
+        void AddMessageHandler<T>(string region, string queueName, IHandlerAsync<T> futureHandler) where T : Message;
 
         // TODO - swap params
         void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message;

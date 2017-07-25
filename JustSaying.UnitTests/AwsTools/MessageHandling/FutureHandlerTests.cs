@@ -12,56 +12,39 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
     public class FutureHandlerTests
     {
         [Test]
-        public void WrapperReturnsAFunction()
+        public async Task FutureHandlerResolvesAndCallsActualHandler()
         {
-            var messageLock = Substitute.For<IMessageLock>();
+            // arrange
             var ctx = Substitute.For<HandlerResolutionContext>("some-queue");
-            var handlerWrapper = new MessageHandlerWrapper(messageLock, new NullOpMessageMonitor());
-            var wrapped = handlerWrapper.WrapMessageHandler(new FutureHandler<GenericMessage>(new UnadornedHandlerAsync(), ctx));
-
-            Assert.That(wrapped, Is.Not.Null);
-        }
-        [Test]
-        public async Task ReturnedFunctionIsCallable()
-        {
-            // arrange
-            var messageLock = Substitute.For<IMessageLock>();
-            var handlerWrapper = new MessageHandlerWrapper(messageLock, new NullOpMessageMonitor());
-
-            var mockHandler = Substitute.For<IHandlerAsync<GenericMessage>>();
-            mockHandler.Handle(Arg.Any<GenericMessage>()).Returns(Task.FromResult(true));
-
-            var context = Substitute.For<HandlerResolutionContext>("some-queue");
+            var wrapper = Substitute.For<MessageHandlerWrapper>(Substitute.For<IMessageLock>(), Substitute.For<IMessageMonitor>());
+            var handler = Substitute.For<IHandlerAsync<GenericMessage>>();
+            handler.Handle(Arg.Any<GenericMessage>()).Returns(true);
+            var resolver = Substitute.For<IHandlerAndMetadataResolver>();
+            resolver.ResolveHandler<GenericMessage>(Arg.Any<HandlerResolutionContextWithMessage>()).Returns(handler);
+            var futureHandler = new FutureHandler<GenericMessage>(resolver, ctx, wrapper );
 
             // act
-            var wrapped = handlerWrapper.WrapMessageHandler(new FutureHandler<GenericMessage>(mockHandler, context));
+            var result = await futureHandler.Handle(new GenericMessage());
 
-            var result = await wrapped(new GenericMessage());
-
-            Assert.That(result, Is.True);
+            Assert.True(result);
         }
-
         [Test]
-        public async Task ReturnedFunctionCallsInner()
+        public async Task FutureHandlerWrapsHandler()
         {
             // arrange
-            var messageLock = Substitute.For<IMessageLock>();
-            var handlerWrapper = new MessageHandlerWrapper(messageLock, new NullOpMessageMonitor());
-
-            var context = Substitute.For<HandlerResolutionContext>("some-queue");
-
-            var mockHandler = Substitute.For<IHandlerAsync<GenericMessage>>();
-
-            var testMessage = new GenericMessage();
-
+            var ctx = Substitute.For<HandlerResolutionContext>("some-queue");
+            var wrapper = Substitute.For<MessageHandlerWrapper>(Substitute.For<IMessageLock>(), Substitute.For<IMessageMonitor>());
+            var handler = Substitute.For<IHandlerAsync<GenericMessage>>();
+            handler.Handle(Arg.Any<GenericMessage>()).Returns(true);
+            var resolver = Substitute.For<IHandlerAndMetadataResolver>();
+            resolver.ResolveHandler<GenericMessage>(Arg.Any<HandlerResolutionContextWithMessage>()).Returns(handler);
+            var futureHandler = new FutureHandler<GenericMessage>(resolver, ctx, wrapper);
 
             // act
-            var wrapped = handlerWrapper.WrapMessageHandler(new FutureHandler<GenericMessage>(mockHandler, context));
+            await futureHandler.Handle(new GenericMessage());
 
-            await wrapped(testMessage);
+            wrapper.Received().WrapMessageHandler(handler);
 
-
-            await mockHandler.Received().Handle(testMessage);
         }
     }
 }
