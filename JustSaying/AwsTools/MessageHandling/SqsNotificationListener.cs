@@ -69,7 +69,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return this;
         }
 
-        public void AddMessageHandler<T>(IHandlerAsync<T> futureHandler) where T : Message
+        public void AddMessageHandler<T>(IHandlerAsync<T> handler) where T : Message
         {
             if (_handlerMap.ContainsKey(typeof(T)))
             {
@@ -79,7 +79,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             Subscribers.Add(new Subscriber(typeof(T)));
 
-            _handlerMap.Add(typeof(T), async message => await futureHandler.Handle((T)message).ConfigureAwait(false));
+            _handlerMap.Add(typeof(T), async message => await handler.Handle((T)message).ConfigureAwait(false));
         }
 
         public void Listen()

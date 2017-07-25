@@ -13,14 +13,4 @@ namespace JustSaying
 
         internal HandlerResolutionContextWithMessage WithMessage(Message message) => new HandlerResolutionContextWithMessage(QueueName, message);
     }
-
-    public class HandlerResolutionContextWithMessage: HandlerResolutionContext
-    {
-        public HandlerResolutionContextWithMessage(string queueName, Message message): base(queueName)
-        {
-            Message = message;
-        }
-
-        public Message Message { get; }
-    }
 }

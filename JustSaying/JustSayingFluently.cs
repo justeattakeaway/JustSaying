@@ -268,7 +268,7 @@ namespace JustSaying
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
 
             var resolutionContext = new HandlerResolutionContext(_subscriptionConfig.QueueName);
-            var proposedHandlerMetadata = handlerResolver.ResolveHandlerType<T>(resolutionContext);//?TODO [SP] check if we really need that validation
+            var proposedHandlerMetadata = handlerResolver.ResolveHandlerType<T>(resolutionContext);
 
             if (proposedHandlerMetadata == null)
             {
