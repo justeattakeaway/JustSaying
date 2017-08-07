@@ -30,7 +30,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
                 .IntoDefaultQueue()
                 .ConfigureSubscriptionWith(cfg => { })
                 .WithMessageHandler(_handler)
-                .Build();
+                .BuildSubscriberAsync();
         }
 
         [Then]

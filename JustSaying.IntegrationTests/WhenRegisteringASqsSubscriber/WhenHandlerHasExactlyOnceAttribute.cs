@@ -49,7 +49,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
                 .InRegion(Region)
                 .ConfigurePublisherWith(_ => { })
                 .WithSnsMessagePublisher<GenericMessage>()
-                .Build();
+                .BuildPublisherAsync();
 
             var bus = await CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion(Region)
@@ -57,9 +57,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
                 .WithMessageLockStoreOf(new MessageLockStore())
                 .WithSqsTopicSubscriber().IntoQueue(_queueName)
                 .WithMessageHandlers(_handler1, _handler2)
-                .Build();
+                .BuildSubscriberAsync();
 
-            publisher.StartListening();
             bus.StartListening();
 
             publisher.Publish(_message);
@@ -96,7 +95,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             var publisher = await CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion(Region)
                 .WithSnsMessagePublisher<GenericMessage>()
-                .Build();
+                .BuildPublisherAsync();
 
             var bus = await CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion(Region)
@@ -108,9 +107,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
                 {
                     cfg.MessageRetentionSeconds = 60;
                 }).WithMessageHandler(_sampleHandler)
-                .Build();
+                .BuildSubscriberAsync();
 
-            publisher.StartListening();
             bus.StartListening();
 
             publisher.Publish(_message);

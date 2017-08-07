@@ -28,7 +28,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .WithNamingStrategy(() => new NamingStrategy())
                 .ConfigurePublisherWith(cfg => cfg.AdditionalSubscriberAccounts = new List<string> { subscriberAccount })
                 .WithSnsMessagePublisher<GenericMessage>()
-                .Build();
+                .BuildPublisherAsync();
 
             var handler = Substitute.For<IHandlerAsync<GenericMessage>>();
             handler.Handle(Arg.Any<GenericMessage>()).Returns(true);
@@ -42,7 +42,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .IntoQueue("crossaccount")
                 .ConfigureSubscriptionWith(cfg => cfg.TopicSourceAccount = publisherAccount)
                 .WithMessageHandler(handler)
-                .Build();
+                .BuildSubscriberAsync();
 
             subscribingBus.StartListening();
 

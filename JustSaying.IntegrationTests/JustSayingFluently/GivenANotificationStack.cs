@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.IntegrationTests.TestHandlers;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
@@ -68,6 +69,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
             Monitoring = Substitute.For<IMessageMonitor>();
 
+#pragma warning disable CS0618 // Type or member is obsolete
             ServiceBus = await CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithMonitoring(Monitoring)
@@ -93,9 +95,11 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .WithSqsPointToPointSubscriber()
                 .IntoDefaultQueue()
                 .WithMessageHandler(sqsHandler)
-                .Build();
 
-            ServiceBus.StartListening();
+                .BuildBusAsync();
+#pragma warning restore CS0618 // Type or member is obsolete
+
+            ServiceBus.Subscriber.StartListening();
 
             return ServiceBus;
         }
@@ -107,7 +111,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             Teardown();
             Console.WriteLine($"The test took {_stopwatch.ElapsedMilliseconds/1000} seconds.");
 
-            ServiceBus.StopListening();
+            ServiceBus.Subscriber.StopListening();
         }
     }
 }

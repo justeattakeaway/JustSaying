@@ -26,6 +26,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .Returns(true)
                 .AndDoes(_ => Tasks.DelaySendDone(doneSignal));
 
+#pragma warning disable CS0618 // Type or member is obsolete
             var bus = await CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion(RegionEndpoint.EUWest1.SystemName)
                 .ConfigurePublisherWith(c =>
@@ -39,17 +40,18 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .IntoQueue("queuename")
                 .ConfigureSubscriptionWith(cfg => cfg.InstancePosition = 1)
                 .WithMessageHandler(_handler)
-                .Build();
+                .BuildBusAsync();
+#pragma warning restore CS0618 // Type or member is obsolete
 
             _bus = bus;
 
             // When
-            _bus.StartListening();
-            _bus.Publish(new GenericMessage());
+            _bus.Subscriber.StartListening();
+            _bus.Publisher.Publish(new GenericMessage());
 
             // Teardown
             await doneSignal.Task;
-            bus.StopListening();
+            bus.Subscriber.StopListening();
         }
 
         [Then]

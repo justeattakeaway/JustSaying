@@ -10,8 +10,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
     public abstract class GivenAPublisher : TestingFramework.AsyncBehaviourTest<IMessagePublisher>
     {
-        protected IMessageBus Publisher;
-        protected IMessageBus Subscriber;
+        protected IMessagePublisher Publisher;
+        protected IMessageSubscriber Subscriber;
         protected Task DoneSignal;
 
         protected override async Task<IMessagePublisher> CreateSystemUnderTest()
@@ -19,9 +19,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             Publisher = await CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion("eu-west-1")
                 .WithSnsMessagePublisher<OrderPlaced>()
-                .Build();
+                .BuildPublisherAsync();
 
-            Publisher.StartListening();
             return Publisher;
         }
 
@@ -48,11 +47,6 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             }
         }
 
-        private void TearDownPubSub()
-        {
-            Publisher?.StopListening();
-            Subscriber?.StopListening();
-        }
-
+        private void TearDownPubSub() => Subscriber?.StopListening();
     }
 }

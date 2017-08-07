@@ -20,7 +20,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
             await CreateMeABus
                 .WithLogging(new LoggerFactory()).InRegion(null)
                 .ConfigurePublisherWith(configuration => { })
-                .Build();
+                .BuildPublisherAsync();
         }
 
         [Then]

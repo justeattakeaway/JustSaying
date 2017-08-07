@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Amazon;
 using JustSaying.IntegrationTests.TestHandlers;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -15,9 +16,9 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
     {
         private readonly Future<GenericMessage> _handler = new Future<GenericMessage>();
 
-        private IMessageBus _primaryPublisher;
-        private IMessageBus _secondaryPublisher;
-        private IMessageBus _subscriber;
+        private IMessagePublisher _primaryPublisher;
+        private IMessagePublisher _secondaryPublisher;
+        private IMessageSubscriber _subscriber;
 
         private GenericMessage _message1;
         private GenericMessage _message2;
@@ -54,7 +55,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .WithSqsTopicSubscriber()
                 .IntoQueue("queuename")
                 .WithMessageHandler(handler)
-                .Build();
+                .BuildSubscriberAsync();
 
             _subscriber.StartListening();
         }
@@ -65,7 +66,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .WithLogging(new LoggerFactory())
                 .InRegion(primaryRegion)
                 .WithSnsMessagePublisher<GenericMessage>()
-                .Build();
+                .BuildPublisherAsync();
         }
 
         private async Task AndAPublisherToTheSecondaryRegionAsync(string secondaryRegion)
@@ -74,7 +75,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .WithLogging(new LoggerFactory())
                 .InRegion(secondaryRegion)
                 .WithSnsMessagePublisher<GenericMessage>()
-                .Build();
+                .BuildPublisherAsync();
         }
 
         private void WhenMessagesArePublishedToBothRegions()

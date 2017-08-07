@@ -28,6 +28,7 @@ namespace JustSaying.IntegrationTests
         public async Task ErrorQueueShouldNotBeCreated()
         {
             var queueName = "test-queue-issue-191";
+#pragma warning disable CS0618 // Type or member is obsolete
             await CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion("eu-west-1")
                 .WithSnsMessagePublisher<GenericMessage>()
@@ -39,7 +40,8 @@ namespace JustSaying.IntegrationTests
                     policy.ErrorQueueOptOut = true;
                 })
                 .WithMessageHandler(new OrderPlacedHandler())
-                .Build();
+                .BuildBusAsync();
+#pragma warning restore CS0618 // Type or member is obsolete
 
             await AssertThatQueueDoesNotExist(queueName+ "_error");
         }

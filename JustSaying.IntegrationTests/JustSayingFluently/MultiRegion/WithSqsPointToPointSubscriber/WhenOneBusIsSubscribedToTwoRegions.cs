@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Amazon;
 using JustSaying.IntegrationTests.TestHandlers;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -15,9 +16,9 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
     {
         private readonly Future<GenericMessage> _handler = new Future<GenericMessage>();
 
-        private IMessageBus _primaryPublisher;
-        private IMessageBus _secondaryPublisher;
-        private IMessageBus _subscriber;
+        private IMessagePublisher _primaryPublisher;
+        private IMessagePublisher _secondaryPublisher;
+        private IMessageSubscriber _subscriber;
 
         private GenericMessage _message1;
         private GenericMessage _message2;
@@ -53,7 +54,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
                 .WithSqsPointToPointSubscriber()
                 .IntoDefaultQueue()
                 .WithMessageHandler(handler)
-                .Build();
+                .BuildSubscriberAsync();
 
             _subscriber.StartListening();
         }
@@ -64,7 +65,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
                 .WithLogging(new LoggerFactory())
                 .InRegion(primaryRegion)
                 .WithSqsMessagePublisher<GenericMessage>(configuration => { })
-                .Build();
+                .BuildPublisherAsync();
         }
 
         private async Task AndAPublisherToTheSecondaryRegion(string secondaryRegion)
@@ -73,7 +74,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
                 .WithLogging(new LoggerFactory())
                 .InRegion(secondaryRegion)
                 .WithSqsMessagePublisher<GenericMessage>(configuration => { })
-                .Build();
+                .BuildPublisherAsync();
         }
 
         private void WhenMessagesArePublishedToBothRegions()

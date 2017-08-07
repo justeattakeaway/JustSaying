@@ -33,7 +33,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver)
-                .Build().GetAwaiter().GetResult();
+                .BuildSubscriberAsync().GetAwaiter().GetResult();
 
             Subscriber.StartListening();
         }

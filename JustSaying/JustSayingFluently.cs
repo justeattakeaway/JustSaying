@@ -7,6 +7,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Extensions;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
@@ -24,7 +25,7 @@ namespace JustSaying
     /// 3. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc // ToDo: Shouldn't be enforced in base! Is a JE concern.
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings, IMayWantARegionPicker, IAmJustInterrogating, IMessageBus
+    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings, IMayWantARegionPicker, IAmJustInterrogating, IMessagePublisher, IMessageSubscriber
     {
         private readonly ILogger _log;
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
@@ -477,14 +478,32 @@ namespace JustSaying
             return this;
         }
 
-        public async Task<IMessageBus> Build()
+
+        [Obsolete("Use BuildPublisherAsync or BuildSubscriberAsync")]
+        public async Task<IMessageBus> BuildBusAsync() => await Build();
+
+        private async Task<IMessageBus> Build()
         {
             while (_buildActions.Count > 0)
             {
                 await _buildActions.Dequeue().Invoke();
             }
 
-            return this;
+            return new MessageBus(this, this);
         }
+
+        public async Task<IMessagePublisher> BuildPublisherAsync() => (await Build()).Publisher;
+        public async Task<IMessageSubscriber> BuildSubscriberAsync() => (await Build()).Subscriber;
+    }
+
+    public class MessageBus : IMessageBus
+    {
+        public MessageBus(IMessagePublisher publisher, IMessageSubscriber subscriber)
+        {
+            Publisher = publisher;
+            Subscriber = subscriber;
+        }
+        public IMessagePublisher Publisher { get; }
+        public IMessageSubscriber Subscriber { get; }
     }
 }

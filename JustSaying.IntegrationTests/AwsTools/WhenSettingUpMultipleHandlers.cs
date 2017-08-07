@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Amazon;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
@@ -9,7 +10,7 @@ using NUnit.Framework;
 namespace JustSaying.AwsTools.IntegrationTests
 {
     [TestFixture]
-    public class WhenSettingUpMultipleHandlers : TestingFramework.AsyncBehaviourTest<IMessageBus>
+    public class WhenSettingUpMultipleHandlers : TestingFramework.AsyncBehaviourTest<IMessageSubscriber>
     {
         private class Order : Models.Message
         {
@@ -31,14 +32,14 @@ namespace JustSaying.AwsTools.IntegrationTests
         
         private UniqueTopicAndQueueNames _uniqueTopicAndQueueNames;
         private ProxyAwsClientFactory _proxyAwsClientFactory;
-        private IMessageBus _bus;
+        private IMessageSubscriber _bus;
         private string _topicName;
         private string _queueName;
 
         protected override void Given()
         { }
 
-        protected override async Task<IMessageBus> CreateSystemUnderTest()
+        protected override async Task<IMessageSubscriber> CreateSystemUnderTest()
         {
             // Given 2 handlers
             _uniqueTopicAndQueueNames = new UniqueTopicAndQueueNames();
@@ -55,7 +56,7 @@ namespace JustSaying.AwsTools.IntegrationTests
                 .WithSqsTopicSubscriber()
                 .IntoQueue(baseQueueName) // generate unique queue name
                 .WithMessageHandlers(new OrderHandler(), new OrderHandler())
-                .Build();
+                .BuildSubscriberAsync();
 
             _bus.StartListening();
             return _bus;

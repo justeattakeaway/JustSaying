@@ -64,8 +64,6 @@ namespace JustSaying
         /// <returns></returns>
         ISubscriberIntoQueue WithSqsTopicSubscriber(string topicName = null);
         ISubscriberIntoQueue WithSqsPointToPointSubscriber();
-
-        Task<IMessageBus> Build();
     }
 
     public interface IFluentSubscription
@@ -81,14 +79,20 @@ namespace JustSaying
 
     public interface IHaveFulfilledSubscriptionRequirements : IAmJustSayingFluently, IFluentSubscription
     {
+        Task<IMessageSubscriber> BuildSubscriberAsync();
+        [Obsolete("Use BuildPublisherAsync or BuildSubscriberAsync")]
+        Task<IMessageBus> BuildBusAsync();
     }
 
     public interface IHaveFulfilledPublishRequirements : IAmJustSayingFluently
     {
+        Task<IMessagePublisher> BuildPublisherAsync();
     }
 
-    public interface IMessageBus : IMessagePublisher, IMessageSubscriber
+    public interface IMessageBus
     {
+        IMessagePublisher Publisher { get; }
+        IMessageSubscriber Subscriber { get; }
     }
 
     public interface ISubscriberIntoQueue

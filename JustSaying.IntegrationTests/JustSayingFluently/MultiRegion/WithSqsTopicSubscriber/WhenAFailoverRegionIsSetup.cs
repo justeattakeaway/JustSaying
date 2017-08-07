@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Amazon;
 using JustSaying.IntegrationTests.TestHandlers;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -19,13 +20,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         private readonly Future<GenericMessage> _primaryHandler = new Future<GenericMessage>();
         private readonly Future<GenericMessage> _secondaryHandler = new Future<GenericMessage>();
 
-        private IMessageBus _publisher;
+        private IMessagePublisher _publisher;
         private GenericMessage _message;
         private static string _activeRegion;
         private readonly Func<string> _getActiveRegion = () => _activeRegion;
 
-        private IMessageBus _primaryBus;
-        private IMessageBus _secondaryBus;
+        private IMessageSubscriber _primaryBus;
+        private IMessageSubscriber _secondaryBus;
 
         [Test]
         public async Task MessagesArePublishedToTheActiveRegion()
@@ -59,7 +60,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .WithSqsTopicSubscriber()
                 .IntoQueue("queuename")
                 .WithMessageHandler(primaryHandler)
-                .Build();
+                .BuildSubscriberAsync();
 
             _primaryBus.StartListening();
 
@@ -75,7 +76,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .WithSqsTopicSubscriber()
                 .IntoQueue("queuename")
                 .WithMessageHandler(secondaryHandler)
-                .Build();
+                .BuildSubscriberAsync();
 
             _secondaryBus.StartListening();
         }
@@ -88,7 +89,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .WithFailoverRegion(SecondaryRegion)
                 .WithActiveRegion(_getActiveRegion)
                 .WithSnsMessagePublisher<GenericMessage>()
-                .Build();
+                .BuildPublisherAsync();
         }
 
         private void WhenThePrimaryRegionIsActive()
