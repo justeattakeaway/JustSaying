@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -17,14 +17,8 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             _accountIds = accountIds;
         }
-
-        public void Save(string sourceArn, IAmazonSimpleNotificationService client)
-        {
-            SaveAsync(sourceArn, client)
-                .GetAwaiter().GetResult();
-        }
-
-        private async Task SaveAsync(string sourceArn, IAmazonSimpleNotificationService client)
+        
+        public async Task SaveAsync(string sourceArn, IAmazonSimpleNotificationService client)
         {
             ActionIdentifier[] actions = { SNSActionIdentifiers.Subscribe };
 

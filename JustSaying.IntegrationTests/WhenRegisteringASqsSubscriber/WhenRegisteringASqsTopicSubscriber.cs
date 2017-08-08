@@ -60,7 +60,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
                 QueueName, Client, 0, Substitute.For<ILoggerFactory>());
 
             await Patiently.AssertThatAsync(
-                queue.Exists, TimeSpan.FromSeconds(65));
+                () => queue.ExistsAsync(), TimeSpan.FromSeconds(65));
         }
 
         [TearDown]

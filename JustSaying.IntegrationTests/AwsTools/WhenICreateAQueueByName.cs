@@ -10,22 +10,22 @@ namespace JustSaying.AwsTools.IntegrationTests
     {
         private bool _isQueueCreated;
 
-        protected override void When()
+        protected override async Task When()
         {
-            _isQueueCreated = SystemUnderTest.Create(new SqsBasicConfiguration(), attempt: 0);
+            _isQueueCreated = await SystemUnderTest.CreateAsync(new SqsBasicConfiguration());
         }
 
         [Then]
-        public void TheQueueISCreated()
+        public void TheQueueIsCreated()
         {
-            Assert.IsTrue(_isQueueCreated);
+            Assert.That(_isQueueCreated, Is.True);
         }
 
         [Then, Explicit("Extremely long running test")]
         public async Task DeadLetterQueueIsCreated()
         {
             await Patiently.AssertThatAsync(
-                () => SystemUnderTest.ErrorQueue.Exists(),
+                () => SystemUnderTest.ErrorQueue.ExistsAsync(),
                 40.Seconds());
         }
     }

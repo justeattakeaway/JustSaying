@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Amazon;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
@@ -17,12 +19,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
     public class WhenThrottlingIsEnabledALongRunningHandler
     {
         private readonly IHandlerAsync<GenericMessage> _handler = Substitute.For<IHandlerAsync<GenericMessage>>();
-        private IAmJustSayingFluently _publisher;
+        private IMessagePublisher _publisher;
+        private IMessageSubscriber _subscriber;
         private readonly Dictionary<int, Guid> _ids = new Dictionary<int, Guid>();
         private readonly Dictionary<int, GenericMessage> _messages = new Dictionary<int, GenericMessage>();
-
+        
         [SetUp]
-        public void Given()
+        public async Task Given()
         {
             Enumerable.Range(1, 100).ToList().ForEach(i =>
             {
@@ -35,7 +38,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
 
 
-            var publisher = CreateMeABus.WithLogging(new LoggerFactory())
+#pragma warning disable CS0618 // Type or member is obsolete
+            var messageBus = await CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithMonitoring(Substitute.For<IMessageMonitor>())
                 .ConfigurePublisherWith(c =>
@@ -49,10 +53,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                         cfg.InstancePosition = 1;
                         cfg.MaxAllowedMessagesInFlight = 25;
                     })
-                .WithMessageHandler(_handler);
+                .WithMessageHandler(_handler)
+                .BuildBusAsync();
+#pragma warning restore CS0618 // Type or member is obsolete
 
-            publisher.StartListening();
-            _publisher = publisher;
+            _subscriber = messageBus.Subscriber;
+            _subscriber.StartListening();
+            _publisher = messageBus.Publisher;
         }
 
         private void SetUpHandler(Guid guid, int number, int wait)
@@ -91,7 +98,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         [TearDown]
         public void ByeBye()
         {
-            _publisher.StopListening();
+            _subscriber.StopListening();
+            _subscriber = null;
             _publisher = null;
         }
     }

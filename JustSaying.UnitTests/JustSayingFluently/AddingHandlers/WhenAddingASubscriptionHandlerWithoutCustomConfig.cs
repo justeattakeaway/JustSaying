@@ -1,3 +1,4 @@
+﻿using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
@@ -12,11 +13,13 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
 
         protected override void Given() { }
 
-        protected override void When()
+        protected override Task When()
         {
             _bus = SystemUnderTest
                 .WithSqsTopicSubscriber()
                 .IntoQueue("queuename");
+
+            return Task.CompletedTask;
         }
 
         [Then]

@@ -1,4 +1,6 @@
+﻿using System.Threading.Tasks;
 using JustBehave;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Monitoring;
 using NSubstitute;
 using NUnit.Framework;
@@ -8,13 +10,13 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingMonitoring
     public class WhenAddingACustomMonitor : JustSayingFluentlyTestBase
     {
         readonly IMessageMonitor _monitor = Substitute.For<IMessageMonitor>();
-        private object _response;
+        private IMessagePublisher _response;
 
         protected override void Given() { }
 
-        protected override void When()
+        protected override async Task When()
         {
-            _response = SystemUnderTest.WithMonitoring(_monitor);
+            _response = await SystemUnderTest.WithMonitoring(_monitor).ConfigurePublisherWith(x => {}).BuildPublisherAsync();
         }
 
         [Then]

@@ -27,13 +27,7 @@ namespace JustSaying.AwsTools.MessageHandling
         }
 
         public abstract Task<bool> ExistsAsync();
-
-        public bool Exists()
-        {
-            return ExistsAsync()
-                .GetAwaiter().GetResult();
-        }
-
+        
         public async Task<bool> IsSubscribedAsync(SqsQueueBase queue)
         {
             var result = await Client.ListSubscriptionsByTopicAsync(new ListSubscriptionsByTopicRequest(Arn));

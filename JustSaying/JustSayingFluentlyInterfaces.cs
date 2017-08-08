@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
@@ -49,7 +50,7 @@ namespace JustSaying
         IMayWantOptionalSettings WithSerialisationFactory(IMessageSerialisationFactory factory);
     }
 
-    public interface IAmJustSayingFluently : IMessagePublisher
+    public interface IAmJustSayingFluently
     {
         IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder);
         IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>() where T : Message;
@@ -63,9 +64,6 @@ namespace JustSaying
         /// <returns></returns>
         ISubscriberIntoQueue WithSqsTopicSubscriber(string topicName = null);
         ISubscriberIntoQueue WithSqsPointToPointSubscriber();
-        void StartListening();
-        void StopListening();
-        bool Listening { get; }
     }
 
     public interface IFluentSubscription
@@ -81,14 +79,24 @@ namespace JustSaying
 
     public interface IHaveFulfilledSubscriptionRequirements : IAmJustSayingFluently, IFluentSubscription
     {
+        Task<IMessageSubscriber> BuildSubscriberAsync();
+        [Obsolete("Use BuildPublisherAsync or BuildSubscriberAsync")]
+        Task<IMessageBus> BuildBusAsync();
+    }
+
+    public interface IHaveFulfilledPublishRequirements : IAmJustSayingFluently
+    {
+        Task<IMessagePublisher> BuildPublisherAsync();
+    }
+
+    public interface IMessageBus
+    {
+        IMessagePublisher Publisher { get; }
+        IMessageSubscriber Subscriber { get; }
     }
 
     public interface ISubscriberIntoQueue
     {
         IFluentSubscription IntoQueue(string queuename);
-    }
-
-    public interface IHaveFulfilledPublishRequirements : IAmJustSayingFluently
-    {
     }
 }

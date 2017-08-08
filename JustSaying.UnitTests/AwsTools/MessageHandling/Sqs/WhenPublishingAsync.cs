@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -11,7 +13,7 @@ using NSubstitute;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
 {
-    public class WhenPublishingAsync : BehaviourTest<SqsPublisher>
+    public class WhenPublishingAsync : TestingFramework.AsyncBehaviourTest<SqsPublisher>
     {
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
@@ -19,10 +21,10 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
         private readonly GenericMessage _message = new GenericMessage {Content = "Hello"};
         private const string QueueName = "queuename";
 
-        protected override SqsPublisher CreateSystemUnderTest()
+        protected override async Task<SqsPublisher> CreateSystemUnderTest()
         {
             var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, _sqs, 0, _serialisationRegister, Substitute.For<ILoggerFactory>());
-            sqs.Exists();
+            await sqs.ExistsAsync();
             return sqs;
         }
 
@@ -38,10 +40,9 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
                 .Returns("serialized_contents");
         }
 
-        protected override void When()
+        protected override async Task When()
         {
-            SystemUnderTest.PublishAsync(_message)
-                .GetAwaiter().GetResult();
+            await SystemUnderTest.PublishAsync(_message);
         }
 
         [Then]

@@ -1,4 +1,5 @@
-﻿using JustSaying.AwsTools.QueueCreation;
+﻿using System.Threading.Tasks;
+using JustSaying.AwsTools.QueueCreation;
 using NUnit.Framework;
 
 namespace JustSaying.AwsTools.IntegrationTests
@@ -16,11 +17,11 @@ namespace JustSaying.AwsTools.IntegrationTests
             base.Given();
         }
 
-        protected override void When()
+        protected override async Task When()
         {
-            SystemUnderTest.Create(new SqsBasicConfiguration { DeliveryDelaySeconds = _oldDeliveryDelay });
+            await SystemUnderTest.CreateAsync(new SqsBasicConfiguration { DeliveryDelaySeconds = _oldDeliveryDelay });
 
-            SystemUnderTest.UpdateQueueAttribute(
+            await SystemUnderTest.UpdateQueueAttributeAsync(
                 new SqsBasicConfiguration {DeliveryDelaySeconds = _newDeliveryDelay});
         }
 

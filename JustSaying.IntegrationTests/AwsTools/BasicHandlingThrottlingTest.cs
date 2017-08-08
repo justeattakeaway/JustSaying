@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
@@ -23,19 +24,19 @@ namespace JustSaying.AwsTools.IntegrationTests
     {
         [TestCase(1000), Explicit]
         // Use this to manually test the performance / throttling of getting messages out of the queue.
-        public void HandlingManyMessages(int throttleMessageCount)
+        public async Task HandlingManyMessages(int throttleMessageCount)
         {
             var locker = new object();
             var awsQueueClient = CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1);
  
             var q = new SqsQueueByName(RegionEndpoint.EUWest1, "throttle_test", awsQueueClient, 1, new LoggerFactory());
-            if (!q.Exists())
+            if (!await q.ExistsAsync())
             {
-                q.Create(new SqsBasicConfiguration());
+                await q.CreateAsync(new SqsBasicConfiguration());
                 Thread.Sleep(TimeSpan.FromMinutes(1));  // wait 60 secs for queue creation to be guaranteed completed by aws. :(
             }
-
-            Assert.True(q.Exists());
+            
+            Assert.That(await q.ExistsAsync(), Is.True);
 
             Console.WriteLine($"{DateTime.Now} - Adding {throttleMessageCount} messages to the queue.");
 

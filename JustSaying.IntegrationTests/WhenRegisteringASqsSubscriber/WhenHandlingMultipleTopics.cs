@@ -31,7 +31,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         public async Task SqsPolicyWithAWildcardIsApplied()
         {
             var queue = new SqsQueueByName(RegionEndpoint.EUWest1, QueueName, Client, 0, Substitute.For<ILoggerFactory>());
-            await Patiently.AssertThatAsync(queue.Exists, TimeSpan.FromSeconds(60));
+            await Patiently.AssertThatAsync(() => queue.ExistsAsync(), TimeSpan.FromSeconds(60));
             dynamic policyJson = JObject.Parse(queue.Policy);
             Assert.IsTrue(policyJson.Statement.Count == 1, $"Expecting 1 statement in Sqs policy but found {policyJson.Statement.Count}");
         }

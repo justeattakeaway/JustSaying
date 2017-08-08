@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,25 +28,15 @@ namespace JustSaying.AwsTools.MessageHandling
             _log.LogInformation($"Checking if queue '{QueueName}' exists");
             Url = result?.QueueUrls?.SingleOrDefault(x => Matches(x, QueueName));
 
-            if (Url != null)
-            {
-                await SetQueuePropertiesAsync();
-                return true;
-            }
-
-            return false;
+            if (Url == null) return false;
+            await SetQueuePropertiesAsync();
+            return true;
         }
 
         private static bool Matches(string queueUrl, string queueName)
             => queueUrl.Substring(queueUrl.LastIndexOf("/", StringComparison.Ordinal) + 1)
                 .Equals(queueName, StringComparison.OrdinalIgnoreCase);
-
-        public bool Create(SqsBasicConfiguration queueConfig, int attempt = 0)
-        {
-            return CreateAsync(queueConfig, attempt)
-                .GetAwaiter().GetResult();
-        }
-
+        
         public virtual async Task<bool> CreateAsync(SqsBasicConfiguration queueConfig, int attempt = 0)
         {
             try

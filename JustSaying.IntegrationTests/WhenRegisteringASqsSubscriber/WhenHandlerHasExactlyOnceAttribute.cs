@@ -20,10 +20,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             return Task.FromResult(true);
         }
 
-        public int NumberOfTimesIHaveBeenCalled()
-        {
-            return _count;
-        }
+        public int NumberOfTimesIHaveBeenCalled() => _count;
     }
     [ExactlyOnce]
     public class AnotherSampleHandler : SampleHandler { }
@@ -31,46 +28,46 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
     [TestFixture]
     public class WhenTwoDifferentHanldersHandleAMessageWithExactlyOnceAttribute
     {
-        protected string TopicName;
-        protected string QueueName;
+        private string _queueName;
         private GenericMessage _message;
         private SampleHandler _handler1;
         private SampleHandler _handler2;
-        private const string region = "eu-west-1";
+        private const string Region = "eu-west-1";
 
         [SetUp]
         protected void SetUp()
         {
-            TopicName = "genericmessage";
-            QueueName = "queuename-" + DateTime.Now.Ticks;
+            _queueName = "queuename-" + DateTime.Now.Ticks;
             _message = new GenericMessage { Id = Guid.NewGuid() };
         }
-        protected void Act()
+
+        private async Task Act()
         {
             _handler1 = new SampleHandler();
             _handler2 = new AnotherSampleHandler();
-            var publisher = CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion(region)
+            var publisher = await CreateMeABus.WithLogging(new LoggerFactory())
+                .InRegion(Region)
                 .ConfigurePublisherWith(_ => { })
-                .WithSnsMessagePublisher<GenericMessage>();
+                .WithSnsMessagePublisher<GenericMessage>()
+                .BuildPublisherAsync();
 
-            var bus = CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion(region)
+            var bus = await CreateMeABus.WithLogging(new LoggerFactory())
+                .InRegion(Region)
                 .WithMonitoring(new Monitoring())
                 .WithMessageLockStoreOf(new MessageLockStore())
-                .WithSqsTopicSubscriber().IntoQueue(QueueName)
-                .WithMessageHandlers(_handler1, _handler2);
+                .WithSqsTopicSubscriber().IntoQueue(_queueName)
+                .WithMessageHandlers(_handler1, _handler2)
+                .BuildSubscriberAsync();
 
-            publisher.StartListening();
             bus.StartListening();
 
             publisher.Publish(_message);
         }
 
         [Test, Ignore("waiting for 2 sid-by-side consumers bug to get fixed.")]
-        public void BothHandlersAreTriggered()
+        public async Task BothHandlersAreTriggered()
         {
-            Act();
+            await Act();
 
             Thread.Sleep(5.Seconds());
             Assert.That(_handler1.NumberOfTimesIHaveBeenCalled(), Is.EqualTo(1));
@@ -80,37 +77,38 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
     [TestFixture]
     public class WhenHandlerHasExactlyOnceAttribute
     {
-        protected string TopicName;
-        protected string QueueName;
+        private string _queueName;
         private GenericMessage _message;
         private SampleHandler _sampleHandler;
-        private const string region = "eu-west-1";
+        private const string Region = "eu-west-1";
 
         [SetUp]
         protected void SetUp()
         {
-            TopicName = "CustomerCommunication";
-            QueueName = "queuename-" + DateTime.Now.Ticks;
+            _queueName = "queuename-" + DateTime.Now.Ticks;
             _message = new GenericMessage{Id = Guid.NewGuid()};
         }
-        protected void Act()
+
+        private async Task Act()
         {
             _sampleHandler = new SampleHandler();
-            var publisher = CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion(region)
-                .WithSnsMessagePublisher<GenericMessage>();
+            var publisher = await CreateMeABus.WithLogging(new LoggerFactory())
+                .InRegion(Region)
+                .WithSnsMessagePublisher<GenericMessage>()
+                .BuildPublisherAsync();
 
-            var bus = CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion(region)
+            var bus = await CreateMeABus.WithLogging(new LoggerFactory())
+                .InRegion(Region)
                 .WithMonitoring(new Monitoring())
                 .WithMessageLockStoreOf(new MessageLockStore())
                 .WithSqsTopicSubscriber()
-                .IntoQueue(QueueName)
+                .IntoQueue(_queueName)
                 .ConfigureSubscriptionWith(cfg =>
                 {
                     cfg.MessageRetentionSeconds = 60;
-                }).WithMessageHandler(_sampleHandler);
-            publisher.StartListening();
+                }).WithMessageHandler(_sampleHandler)
+                .BuildSubscriberAsync();
+
             bus.StartListening();
 
             publisher.Publish(_message);
@@ -118,11 +116,11 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         }
 
         [Test]
-        public void MessageHasBeenCalledOnce()
+        public async Task MessageHasBeenCalledOnce()
         {
-            Act();
+            await Act();
 
-            Thread.Sleep(5.Seconds());
+            await Task.Delay(5.Seconds());
             Assert.That(_sampleHandler.NumberOfTimesIHaveBeenCalled(), Is.EqualTo(1));
         }
     }
@@ -131,22 +129,14 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             private readonly Dictionary<string, int> _store = new Dictionary<string, int>();
             public MessageLockResponse TryAquireLockPermanently(string key)
             {
-                int value;
-                var canAquire = !_store.TryGetValue(key, out value);
-                if (canAquire)
-                    _store.Add(key, 1);
-                return new MessageLockResponse(){DoIHaveExclusiveLock = canAquire};
+                var canAquire = !_store.TryGetValue(key, out var _);
+                if (canAquire) _store.Add(key, 1);
+                return new MessageLockResponse {DoIHaveExclusiveLock = canAquire};
             }
 
-            public MessageLockResponse TryAquireLock(string key, TimeSpan howLong)
-            {
-                return TryAquireLockPermanently(key);
-            }
+            public MessageLockResponse TryAquireLock(string key, TimeSpan howLong) => TryAquireLockPermanently(key);
 
-            public void ReleaseLock(string key)
-            {
-                _store.Remove(key);
-            }
+            public void ReleaseLock(string key) => _store.Remove(key);
         }
     internal class Monitoring : IMessageMonitor, IMeasureHandlerExecutionTime
         {

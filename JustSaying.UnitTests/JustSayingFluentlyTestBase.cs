@@ -1,12 +1,11 @@
-using System.Reflection;
+﻿using System.Reflection;
 using JustSaying.AwsTools.QueueCreation;
-using JustBehave;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
 namespace JustSaying.UnitTests
 {
-    public abstract class JustSayingFluentlyTestBase : BehaviourTest<JustSaying.JustSayingFluently>
+    public abstract class JustSayingFluentlyTestBase : JustBehave.AsyncBehaviourTest<JustSaying.JustSayingFluently>
     {
         protected IPublishConfiguration Configuration;
         protected IAmJustSaying Bus;

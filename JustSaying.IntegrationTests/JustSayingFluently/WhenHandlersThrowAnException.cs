@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.TestingFramework;
 using NSubstitute;
@@ -25,7 +25,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
         protected override async Task When()
         {
-            ServiceBus.Publish(new GenericMessage());
+            ServiceBus.Publisher.Publish(new GenericMessage());
             await _handler.DoneSignal;
         }
 
