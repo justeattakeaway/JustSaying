@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon.Runtime;
@@ -23,14 +23,12 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         {
             string publisherAccount = "<enter publisher account id>";
             string subscriberAccount = "<enter subscriber account id>";
-            var publishingBus = GetBus("<enter publisher access key>", "<enter publisher secret key>");
-            var subscribingBus = GetBus("<enter subscriber access key>", "<enter subscriber secret key>");
+            var publishingBus = await GetBus("<enter publisher access key>", "<enter publisher secret key>")
 
-            publishingBus
                 .WithNamingStrategy(() => new NamingStrategy())
                 .ConfigurePublisherWith(cfg => cfg.AdditionalSubscriberAccounts = new List<string> { subscriberAccount })
-                .WithSnsMessagePublisher<GenericMessage>();
-
+                .WithSnsMessagePublisher<GenericMessage>()
+                .BuildPublisherAsync();
 
             var handler = Substitute.For<IHandlerAsync<GenericMessage>>();
             handler.Handle(Arg.Any<GenericMessage>()).Returns(true);
@@ -38,12 +36,14 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .When(x => x.Handle(Arg.Any<GenericMessage>()))
                 .Do(async x => await _signal.Complete((GenericMessage)x.Args()[0]));
 
-            subscribingBus
+            var subscribingBus = await GetBus("<enter subscriber access key>", "<enter subscriber secret key>")
                 .WithNamingStrategy(() => new NamingStrategy())
                 .WithSqsTopicSubscriber()
                 .IntoQueue("crossaccount")
                 .ConfigureSubscriptionWith(cfg => cfg.TopicSourceAccount = publisherAccount)
-                .WithMessageHandler(handler);
+                .WithMessageHandler(handler)
+                .BuildSubscriberAsync();
+
             subscribingBus.StartListening();
 
             //Act

@@ -11,10 +11,7 @@ namespace JustSaying.IntegrationTests
 {
     public class OrderPlacedHandler : IHandlerAsync<GenericMessage>
     {
-        public Task<bool> Handle(GenericMessage message)
-        {
-            return Task.FromResult(true);
-        }
+        public Task<bool> Handle(GenericMessage message) => Task.FromResult(true);
     }
 
     public class WhenOptingOutOfErrorQueue
@@ -28,10 +25,11 @@ namespace JustSaying.IntegrationTests
         }
 
         [Test]
-        public void ErrorQueueShouldNotBeCreated()
+        public async Task ErrorQueueShouldNotBeCreated()
         {
             var queueName = "test-queue-issue-191";
-            CreateMeABus.WithLogging(new LoggerFactory())
+#pragma warning disable CS0618 // Type or member is obsolete
+            await CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion("eu-west-1")
                 .WithSnsMessagePublisher<GenericMessage>()
 
@@ -41,15 +39,17 @@ namespace JustSaying.IntegrationTests
                 {
                     policy.ErrorQueueOptOut = true;
                 })
-                .WithMessageHandler(new OrderPlacedHandler());
+                .WithMessageHandler(new OrderPlacedHandler())
+                .BuildBusAsync();
+#pragma warning restore CS0618 // Type or member is obsolete
 
-            AssertThatQueueDoesNotExist(queueName+ "_error");
+            await AssertThatQueueDoesNotExist(queueName+ "_error");
         }
 
-        private void AssertThatQueueDoesNotExist(string name)
+        private async Task AssertThatQueueDoesNotExist(string name)
         {
             var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, name, _client, 1, new LoggerFactory());
-            Assert.IsFalse(sqsQueueByName.Exists(), $"Expecting queue '{name}' to not exist but it does.");
+            Assert.IsFalse(await sqsQueueByName.ExistsAsync(), $"Expecting queue '{name}' to not exist but it does.");
         }
     }
 }

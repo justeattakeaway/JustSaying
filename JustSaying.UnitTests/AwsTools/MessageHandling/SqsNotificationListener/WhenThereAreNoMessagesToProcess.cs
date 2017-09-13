@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
@@ -32,7 +32,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             _sqs.ReceiveMessageAsync(
                     Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>())
-                .Returns(x => Task.FromResult(GenerateEmptyMessage()));
+                .Returns(x => GenerateEmptyMessage());
 
             _sqs.When(x =>  x.ReceiveMessageAsync(
                     Arg.Any<ReceiveMessageRequest>(),

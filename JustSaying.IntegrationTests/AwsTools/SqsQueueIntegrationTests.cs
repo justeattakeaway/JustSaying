@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.IntegrationTests
 {
-    public abstract class WhenCreatingQueuesByName : BehaviourTest<SqsQueueByName>
+    public abstract class WhenCreatingQueuesByName : AsyncBehaviourTest<SqsQueueByName>
     {
         protected string QueueUniqueKey;
 
@@ -17,12 +17,12 @@ namespace JustSaying.AwsTools.IntegrationTests
         {
             QueueUniqueKey = "test" + DateTime.Now.Ticks;
             var queue = new SqsQueueByName(RegionEndpoint.EUWest1, QueueUniqueKey, CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1), 1, new LoggerFactory());
-            queue.Exists();
+            queue.ExistsAsync().GetAwaiter().GetResult();
             return queue;
         }
         public override void PostAssertTeardown()
         {
-            SystemUnderTest.Delete();
+            SystemUnderTest.DeleteAsync().GetAwaiter().GetResult();
             base.PostAssertTeardown();
         }
     }

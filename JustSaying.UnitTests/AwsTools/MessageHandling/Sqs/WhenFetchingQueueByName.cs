@@ -34,21 +34,21 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
         public void IncorrectQueueNameDoNotMatch()
         {
             var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name1", _client, RetryCount, _log);
-            Assert.IsFalse(sqsQueueByName.Exists());
+            Assert.IsFalse(sqsQueueByName.ExistsAsync().GetAwaiter().GetResult());
         }
 
         [Then]
         public void IncorrectPartialQueueNameDoNotMatch()
         {
             var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue", _client, RetryCount, _log);
-            Assert.IsFalse(sqsQueueByName.Exists());
+            Assert.IsFalse(sqsQueueByName.ExistsAsync().GetAwaiter().GetResult());
         }
 
         [Then]
         public void CorrectQueueNameShouldMatch()
         {
             var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name", _client, RetryCount, _log);
-            Assert.IsTrue(sqsQueueByName.Exists());
+            Assert.IsTrue(sqsQueueByName.ExistsAsync().GetAwaiter().GetResult());
         }
     }
 }

@@ -1,11 +1,10 @@
-using JustBehave;
-using JustSaying.Messaging.Monitoring;
+﻿using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
-    public abstract class GivenAServiceBus : AsyncBehaviourTest<JustSaying.JustSayingBus>
+    public abstract class GivenAServiceBus : JustBehave.AsyncBehaviourTest<JustSaying.JustSayingBus>
     {
         protected IMessagingConfig Config;
         protected IMessageMonitor Monitor;

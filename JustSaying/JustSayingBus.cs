@@ -20,17 +20,17 @@ namespace JustSaying
 
         private readonly Dictionary<string, Dictionary<string, INotificationSubscriber>> _subscribersByRegionAndQueue;
         private readonly Dictionary<string, Dictionary<string, IMessagePublisher>> _publishersByRegionAndTopic;
-        public IMessagingConfig Config { get; private set; }
+        public IMessagingConfig Config { get; }
 
         private IMessageMonitor _monitor;
         public IMessageMonitor Monitor
         {
-            get { return _monitor; }
-            set { _monitor = value ?? new NullOpMessageMonitor(); }
+            get => _monitor ?? new NullOpMessageMonitor();
+            set => _monitor = value;
         }
-        public IMessageSerialisationRegister SerialisationRegister { get; private set; }
+        public IMessageSerialisationRegister SerialisationRegister { get; }
         public IMessageLock MessageLock { get; set; }
-        private ILogger _log;
+        private readonly ILogger _log;
         private readonly object _syncRoot = new object();
         private readonly ICollection<IPublisher> _publishers;
         private readonly ICollection<ISubscriber> _subscribers;
@@ -40,8 +40,7 @@ namespace JustSaying
             _log = loggerFactory.CreateLogger("JustSaying");
             
             Config = config;
-            Monitor = new NullOpMessageMonitor();
-
+            
             _subscribersByRegionAndQueue = new Dictionary<string, Dictionary<string, INotificationSubscriber>>();
             _publishersByRegionAndTopic = new Dictionary<string, Dictionary<string, IMessagePublisher>>();
             SerialisationRegister = serialisationRegister;
@@ -55,9 +54,8 @@ namespace JustSaying
             {
                 throw new ArgumentNullException(nameof(region));
             }
-
-            Dictionary<string, INotificationSubscriber> subscribersForRegion;
-            if (!_subscribersByRegionAndQueue.TryGetValue(region, out subscribersForRegion))
+            
+            if (!_subscribersByRegionAndQueue.TryGetValue(region, out var subscribersForRegion))
             {
                 subscribersForRegion = new Dictionary<string,INotificationSubscriber>();
                 _subscribersByRegionAndQueue.Add(region, subscribersForRegion);
@@ -98,9 +96,8 @@ namespace JustSaying
             {
                 _log.LogWarning("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages!");
             }
-
-            Dictionary<string, IMessagePublisher> publishersByTopic;
-            if (!_publishersByRegionAndTopic.TryGetValue(region, out publishersByTopic))
+            
+            if (!_publishersByRegionAndTopic.TryGetValue(region, out var publishersByTopic))
             {
                 publishersByTopic = new Dictionary<string, IMessagePublisher>();
                 _publishersByRegionAndTopic.Add(region, publishersByTopic);
@@ -226,9 +223,6 @@ namespace JustSaying
             }
         }
 
-        public IInterrogationResponse WhatDoIHave()
-        {
-            return new InterrogationResponse(Config.Regions, _subscribers, _publishers);
-        }
+        public IInterrogationResponse WhatDoIHave() => new InterrogationResponse(Config.Regions, _subscribers, _publishers);
     }
 }

@@ -32,7 +32,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
                 .InRegion("eu-west-1")
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
-                .WithMessageHandler<OrderPlaced>(handlerResolver);
+                .WithMessageHandler<OrderPlaced>(handlerResolver)
+                .BuildSubscriberAsync().GetAwaiter().GetResult();
 
             Subscriber.StartListening();
         }

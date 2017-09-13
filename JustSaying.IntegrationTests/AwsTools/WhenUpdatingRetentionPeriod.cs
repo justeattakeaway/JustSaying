@@ -1,3 +1,4 @@
+﻿using System.Threading.Tasks;
 using JustSaying.AwsTools.QueueCreation;
 using NUnit.Framework;
 
@@ -16,12 +17,11 @@ namespace JustSaying.AwsTools.IntegrationTests
             base.Given();
         }
 
-        protected override void When()
+        protected override async Task When()
         {
+            await SystemUnderTest.CreateAsync(new SqsBasicConfiguration { MessageRetentionSeconds = _oldRetentionPeriod });
 
-            SystemUnderTest.Create(new SqsBasicConfiguration { MessageRetentionSeconds = _oldRetentionPeriod });
-
-            SystemUnderTest.UpdateQueueAttribute(
+            await SystemUnderTest.UpdateQueueAttributeAsync(
                 new SqsBasicConfiguration {MessageRetentionSeconds = _newRetentionPeriod});
         }
 

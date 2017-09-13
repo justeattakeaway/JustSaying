@@ -29,20 +29,8 @@ namespace JustSaying.AwsTools.MessageHandling
             Client = client;
         }
 
-        public bool Exists()
-        {
-            return ExistsAsync()
-                .GetAwaiter().GetResult();
-        }
-
+        
         public abstract Task<bool> ExistsAsync();
-
-        public void Delete()
-        {
-            DeleteAsync()
-                .GetAwaiter().GetResult();
-        }
-
 
         public virtual async Task DeleteAsync()
         {
@@ -79,7 +67,7 @@ namespace JustSaying.AwsTools.MessageHandling
             RedrivePolicy = ExtractRedrivePolicyFromQueueAttributes(attributes.Attributes);
         }
 
-        protected async Task<GetQueueAttributesResponse> GetAttrsAsync(IEnumerable<string> attrKeys)
+        private async Task<GetQueueAttributesResponse> GetAttrsAsync(IEnumerable<string> attrKeys)
         {
             var request = new GetQueueAttributesRequest {
                 QueueUrl = Url,
@@ -88,13 +76,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             return await Client.GetQueueAttributesAsync(request);
         }
-
-        public void UpdateQueueAttribute(SqsBasicConfiguration queueConfig)
-        {
-            UpdateQueueAttributeAsync(queueConfig)
-                .GetAwaiter().GetResult();
-        }
-
+        
         public virtual async Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig)
         {
             if (QueueNeedsUpdating(queueConfig))
@@ -124,20 +106,14 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        protected virtual bool QueueNeedsUpdating(SqsBasicConfiguration queueConfig)
-        {
-            return MessageRetentionPeriod != queueConfig.MessageRetentionSeconds
-                   || VisibilityTimeout != queueConfig.VisibilityTimeoutSeconds
-                   || DeliveryDelay != queueConfig.DeliveryDelaySeconds;
-        }
+        protected virtual bool QueueNeedsUpdating(SqsBasicConfiguration queueConfig) =>
+            MessageRetentionPeriod != queueConfig.MessageRetentionSeconds
+            || VisibilityTimeout != queueConfig.VisibilityTimeoutSeconds
+            || DeliveryDelay != queueConfig.DeliveryDelaySeconds;
 
-        private RedrivePolicy ExtractRedrivePolicyFromQueueAttributes(Dictionary<string, string> queueAttributes)
-        {
-            if (!queueAttributes.ContainsKey(JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY))
-            {
-                return null;
-            }
-            return RedrivePolicy.ConvertFromString(queueAttributes[JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY]);
-        }
+        private RedrivePolicy ExtractRedrivePolicyFromQueueAttributes(Dictionary<string, string> queueAttributes) =>
+            !queueAttributes.ContainsKey(JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY)
+                ? null
+                : RedrivePolicy.ConvertFromString(queueAttributes[JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY]);
     }
 }

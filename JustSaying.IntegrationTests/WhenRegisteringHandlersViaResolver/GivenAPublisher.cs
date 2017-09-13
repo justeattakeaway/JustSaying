@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging;
@@ -8,18 +8,19 @@ using NUnit.Framework;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
-    public abstract class GivenAPublisher : AsyncBehaviourTest<IMessagePublisher>
+    public abstract class GivenAPublisher : TestingFramework.AsyncBehaviourTest<IMessagePublisher>
     {
-        protected IHaveFulfilledPublishRequirements Publisher;
-        protected IHaveFulfilledSubscriptionRequirements Subscriber;
+        protected IMessagePublisher Publisher;
+        protected IMessageSubscriber Subscriber;
         protected Task DoneSignal;
 
-        protected override IMessagePublisher CreateSystemUnderTest()
+        protected override async Task<IMessagePublisher> CreateSystemUnderTest()
         {
-            Publisher = CreateMeABus.WithLogging(new LoggerFactory())
+            Publisher = await CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion("eu-west-1")
-                .WithSnsMessagePublisher<OrderPlaced>();
-            Publisher.StartListening();
+                .WithSnsMessagePublisher<OrderPlaced>()
+                .BuildPublisherAsync();
+
             return Publisher;
         }
 
@@ -46,17 +47,6 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             }
         }
 
-        private void TearDownPubSub()
-        {
-            if (Publisher != null)
-            {
-                Publisher.StopListening();
-            }
-            if (Subscriber != null)
-            {
-                Subscriber.StopListening();
-            }
-        }
-
+        private void TearDownPubSub() => Subscriber?.StopListening();
     }
 }

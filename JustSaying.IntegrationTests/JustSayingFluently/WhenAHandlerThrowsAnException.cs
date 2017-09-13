@@ -29,7 +29,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             // Given
             _handler = new ThrowingHandler();
 
-            var bus = CreateMeABus.WithLogging(new LoggerFactory())
+#pragma warning disable CS0618 // Type or member is obsolete
+            var bus = await CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithMonitoring(_monitoring)
                 .ConfigurePublisherWith(c =>
@@ -46,16 +47,18 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                         cfg.InstancePosition = 1;
                         cfg.OnError = _globalErrorHandler;
                     })
-                .WithMessageHandler(_handler);
+                .WithMessageHandler(_handler)
+                .BuildBusAsync();
+#pragma warning restore CS0618 // Type or member is obsolete
 
             // When
-            bus.StartListening();
+            bus.Subscriber.StartListening();
 
-            bus.Publish(new GenericMessage());
+            bus.Publisher.Publish(new GenericMessage());
 
             // Teardown
             await _handler.DoneSignal.Task;
-            bus.StopListening();
+            bus.Subscriber.StopListening();
         }
 
         [Then]

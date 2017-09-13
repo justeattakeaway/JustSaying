@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
@@ -19,20 +20,21 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         {
         }
 
-        protected override void When()
+        protected override async Task When()
         {
-            _response = SystemUnderTest
+            _response = await SystemUnderTest
                 .WithSqsPointToPointSubscriber()
                 .IntoDefaultQueue()
                 .ConfigureSubscriptionWith(cfg => { })
-                .WithMessageHandler(_handler);
+                .WithMessageHandler(_handler)
+                .BuildSubscriberAsync();
         }
 
         [Then]
         public void TheQueueIsCreatedInEachRegion()
         {
-            QueueVerifier.Received().EnsureQueueExists("defaultRegion", Arg.Any<SqsReadConfiguration>());
-            QueueVerifier.Received().EnsureQueueExists("failoverRegion", Arg.Any<SqsReadConfiguration>());
+            QueueVerifier.Received().EnsureQueueExistsAsync("defaultRegion", Arg.Any<SqsReadConfiguration>()).GetAwaiter().GetResult();
+            QueueVerifier.Received().EnsureQueueExistsAsync("failoverRegion", Arg.Any<SqsReadConfiguration>()).GetAwaiter().GetResult();
         }
 
         [Then]
@@ -64,7 +66,8 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         {
             QueueVerifier
                 .DidNotReceiveWithAnyArgs()
-                .EnsureTopicExistsWithQueueSubscribed(Arg.Any<string>(), Arg.Any<IMessageSerialisationRegister>(), Arg.Any<SqsReadConfiguration>());
+                .EnsureTopicExistsWithQueueSubscribedAsync(Arg.Any<string>(), Arg.Any<IMessageSerialisationRegister>(), Arg.Any<SqsReadConfiguration>())
+                .GetAwaiter().GetResult();
         }
     }
 }

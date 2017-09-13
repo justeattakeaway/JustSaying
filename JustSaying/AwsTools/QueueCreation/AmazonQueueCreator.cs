@@ -1,6 +1,5 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Amazon;
-using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using Microsoft.Extensions.Logging;
@@ -19,14 +18,7 @@ namespace JustSaying.AwsTools.QueueCreation
             _awsClientFactory = awsClientFactory;
             _loggerFactory = loggerFactory;
         }
-
-        public SqsQueueByName EnsureTopicExistsWithQueueSubscribed(string region,
-            IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
-        {
-            return EnsureTopicExistsWithQueueSubscribedAsync(region, serialisationRegister, queueConfig)
-                  .GetAwaiter().GetResult();
-        }
-
+        
         public async Task<SqsQueueByName> EnsureTopicExistsWithQueueSubscribedAsync(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
         {
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);
@@ -37,7 +29,7 @@ namespace JustSaying.AwsTools.QueueCreation
                 var snsClient = _awsClientFactory.GetAwsClientFactory().GetSnsClient(regionEndpoint);
                 var arnProvider = new ForeignTopicArnProvider(regionEndpoint, queueConfig.TopicSourceAccount, queueConfig.PublishEndpoint);
 
-                await snsClient.SubscribeQueueAsync(arnProvider.GetArn(), sqsClient, queue.Url);
+                await snsClient.SubscribeQueueAsync(await arnProvider.GetArnAsync(), sqsClient, queue.Url);
             }
             else
             {
@@ -51,17 +43,9 @@ namespace JustSaying.AwsTools.QueueCreation
             return queue;
         }
 
-        private static bool TopicExistsInAnotherAccount(SqsReadConfiguration queueConfig)
-        {
-            return !string.IsNullOrWhiteSpace(queueConfig.TopicSourceAccount);
-        }
-
-        public SqsQueueByName EnsureQueueExists(string region, SqsReadConfiguration queueConfig)
-        {
-            return EnsureQueueExistsAsync(region, queueConfig)
-                .GetAwaiter().GetResult();
-        }
-
+        private static bool TopicExistsInAnotherAccount(SqsReadConfiguration queueConfig) =>
+            !string.IsNullOrWhiteSpace(queueConfig.TopicSourceAccount);
+   
         public async Task<SqsQueueByName> EnsureQueueExistsAsync(string region, SqsReadConfiguration queueConfig)
         {
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);

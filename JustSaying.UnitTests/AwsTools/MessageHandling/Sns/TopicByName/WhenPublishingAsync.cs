@@ -1,7 +1,9 @@
-﻿using Amazon.SimpleNotificationService;
+﻿using System.Threading.Tasks;
+using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
@@ -10,17 +12,17 @@ using NSubstitute;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sns.TopicByName
 {
-    public class WhenPublishingAsync : BehaviourTest<SnsTopicByName>
+    public class WhenPublishingAsync : TestingFramework.AsyncBehaviourTest<SnsTopicByName>
     {
         private const string Message = "the_message_in_json";
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IAmazonSimpleNotificationService _sns = Substitute.For<IAmazonSimpleNotificationService>();
         private const string TopicArn = "topicarn";
 
-        protected override SnsTopicByName CreateSystemUnderTest()
+        protected override async Task<SnsTopicByName> CreateSystemUnderTest()
         {
             var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister, Substitute.For<ILoggerFactory>());
-            topic.Exists();
+            await topic.ExistsAsync();
             return topic;
         }
 
@@ -31,10 +33,9 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sns.TopicByName
                 .Returns(new Topic { TopicArn = TopicArn });
         }
 
-        protected override void When()
+        protected override async Task When()
         {
-            SystemUnderTest.PublishAsync(new GenericMessage())
-                .GetAwaiter().GetResult();
+            await SystemUnderTest.PublishAsync(new GenericMessage());
         }
 
         [Then]
@@ -43,10 +44,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sns.TopicByName
             _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => B(x)));
         }
 
-        private static bool B(PublishRequest x)
-        {
-            return x.Message.Equals(Message);
-        }
+        private static bool B(PublishRequest x) => x.Message.Equals(Message);
 
         [Then]
         public void MessageSubjectIsObjectType()
