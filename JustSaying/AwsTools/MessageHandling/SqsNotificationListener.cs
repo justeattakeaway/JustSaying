@@ -24,7 +24,6 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly List<string> _requestMessageAttributeNames = new List<string>();
 
         private readonly MessageDispatcher _messageDispatcher;
-        private readonly MessageHandlerWrapper _messageHandlerWrapper;
         private IMessageProcessingStrategy _messageProcessingStrategy;
         private readonly HandlerMap _handlerMap = new HandlerMap();
 
@@ -37,7 +36,6 @@ namespace JustSaying.AwsTools.MessageHandling
             IMessageMonitor messagingMonitor,
             ILoggerFactory loggerFactory,
             Action<Exception, Amazon.SQS.Model.Message> onError = null,
-            IMessageLock messageLock = null,
             IMessageBackoffStrategy messageBackoffStrategy = null)
         {
             _queue = queue;
@@ -46,7 +44,6 @@ namespace JustSaying.AwsTools.MessageHandling
             _log = loggerFactory.CreateLogger("JustSaying");
 
             _messageProcessingStrategy = new DefaultThrottledThroughput(_messagingMonitor);
-            _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor);
             _messageDispatcher = new MessageDispatcher(queue, serialisationRegister, messagingMonitor, onError, _handlerMap, loggerFactory, messageBackoffStrategy);
 
             Subscribers = new Collection<ISubscriber>();
@@ -72,7 +69,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return this;
         }
 
-        public void AddMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler) where T : Message
+        public void AddMessageHandler<T>(IHandlerAsync<T> handler) where T : Message
         {
             if (_handlerMap.ContainsKey(typeof(T)))
             {
@@ -82,8 +79,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             Subscribers.Add(new Subscriber(typeof(T)));
 
-            var handlerFunc = _messageHandlerWrapper.WrapMessageHandler(futureHandler);
-            _handlerMap.Add(typeof(T), handlerFunc);
+            _handlerMap.Add(typeof(T), async message => await handler.Handle((T)message).ConfigureAwait(false));
         }
 
         public void Listen()

@@ -17,20 +17,19 @@ namespace JustSaying.AwsTools.MessageHandling
             _messagingMonitor = messagingMonitor;
         }
 
-        public Func<Message, Task<bool>> WrapMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler) where T : Message
+        public Func<Message, Task<bool>> WrapMessageHandler<T>(IHandlerAsync<T> handler) where T : Message
         {
-            IHandlerAsync<T> handler = new FutureHandler<T>(futureHandler);
-            handler = MaybeWrapWithGuaranteedDelivery(futureHandler, handler);
+            handler = MaybeWrapWithGuaranteedDelivery(handler);
             handler = MaybeWrapStopwatch(handler);
 
             return async message => await handler.Handle((T)message).ConfigureAwait(false);
         }
 
-        private IHandlerAsync<T> MaybeWrapWithGuaranteedDelivery<T>(Func<IHandlerAsync<T>> futureHandler, IHandlerAsync<T> handler) where T : Message
+        private IHandlerAsync<T> MaybeWrapWithGuaranteedDelivery<T>(IHandlerAsync<T> handler) where T : Message
         {
-            var handlerInstance = futureHandler();
+            var handlerType = handler.GetType();
 
-            var exactlyOnceMetadata = new ExactlyOnceReader(handlerInstance.GetType());
+            var exactlyOnceMetadata = new ExactlyOnceReader(handlerType);
             if (!exactlyOnceMetadata.Enabled)
             {
                 return handler;
@@ -41,7 +40,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 throw new Exception("IMessageLock is null. You need to specify an implementation for IMessageLock.");
             }
 
-            var handlerName = handlerInstance.GetType().FullName.ToLower();
+            var handlerName = handlerType.FullName.ToLower();
             return new ExactlyOnceHandler<T>(handler, _messageLock, exactlyOnceMetadata.GetTimeOut(), handlerName);
         }
 

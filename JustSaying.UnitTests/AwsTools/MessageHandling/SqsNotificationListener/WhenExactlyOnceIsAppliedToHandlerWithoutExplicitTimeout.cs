@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
@@ -29,12 +30,14 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
                 .Returns(messageLockResponse);
 
             _handler = new ExactlyOnceSignallingHandler(_tcs);
-            Handler = _handler;
+            var futureHandler = new FutureHandler<GenericMessage>(new PredefinedHandlerResolver<GenericMessage>(_handler), Context, new MessageHandlerWrapper(MessageLock, Monitor));
+
+            Handler = futureHandler;
         }
 
         protected override async Task When()
         {
-            SystemUnderTest.AddMessageHandler(() => Handler);
+            SystemUnderTest.AddMessageHandler(Handler);
             SystemUnderTest.Listen();
 
             // wait until it's done

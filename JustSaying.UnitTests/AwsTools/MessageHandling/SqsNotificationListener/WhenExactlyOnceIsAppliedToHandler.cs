@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
@@ -24,17 +25,18 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
                     DoIHaveExclusiveLock = true
                 };
 
-            MessageLock = Substitute.For<IMessageLock>();
             MessageLock.TryAquireLock(Arg.Any<string>(), Arg.Any<TimeSpan>())
                 .Returns(messageLockResponse);
 
             _handler = new ExplicitExactlyOnceSignallingHandler(_tcs);
-            Handler = _handler;
+            var futureHandler = new FutureHandler<GenericMessage>(new PredefinedHandlerResolver<GenericMessage>(_handler), Context, new MessageHandlerWrapper(MessageLock, Monitor));
+
+            Handler = futureHandler;
         }
 
         protected override async Task When()
         {
-            SystemUnderTest.AddMessageHandler(() => Handler);
+            SystemUnderTest.AddMessageHandler(Handler);
             SystemUnderTest.Listen();
 
             // wait until it's done

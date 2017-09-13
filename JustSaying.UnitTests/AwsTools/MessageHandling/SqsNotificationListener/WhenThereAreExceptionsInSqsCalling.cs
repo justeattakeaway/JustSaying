@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS;
@@ -53,7 +53,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 
         protected override async Task When()
         {
-            SystemUnderTest.AddMessageHandler(() => Handler);
+            SystemUnderTest.AddMessageHandler(Handler);
             SystemUnderTest.Listen();
 
             // wait until it's done

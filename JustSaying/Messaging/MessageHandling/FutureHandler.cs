@@ -1,19 +1,28 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageHandling
 {
     public class FutureHandler<T> : IHandlerAsync<T> where T : Message
     {
-        private readonly Func<IHandlerAsync<T>> _futureHandler;
+        private readonly MessageHandlerWrapper _messageHandlerWrapper;
+        public IHandlerAndMetadataResolver Resolver { get; set; }
+        public HandlerResolutionContext Context { get; set; }
 
-        public FutureHandler(Func<IHandlerAsync<T>> futureHandler)
+        public FutureHandler(IHandlerAndMetadataResolver handlerResolver, HandlerResolutionContext context, MessageHandlerWrapper messageHandlerWrapper)
         {
-            _futureHandler = futureHandler;
+            Resolver = handlerResolver;
+            Context = context;
+            _messageHandlerWrapper = messageHandlerWrapper;
         }
-
+        
         public async Task<bool> Handle(T message)
-            => await _futureHandler().Handle(message).ConfigureAwait(false);
+        {
+            var handler = Resolver.ResolveHandler<T>(Context.WithMessage(message));
+            var handlerFunc = _messageHandlerWrapper.WrapMessageHandler(handler);
+
+            return await handlerFunc(message).ConfigureAwait(false);
+        }
     }
 }
