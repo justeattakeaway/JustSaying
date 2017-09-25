@@ -40,14 +40,14 @@ namespace JustSaying.Tools.Commands
 
             var messages = PopMessagesFromSourceQueue(sourceQueue);
             var receiptHandles = messages.ToDictionary(m => m.MessageId, m => m.ReceiptHandle);
-
+            
             var sendResponse = destinationQueue.Client.SendMessageBatch(new SendMessageBatchRequest
             {
                 QueueUrl = destinationQueue.Url,
                 Entries = messages.Select(x => new SendMessageBatchRequestEntry { Id = x.MessageId, MessageBody = x.Body }).ToList()
             });
 
-            sourceQueue.Client.DeleteMessageBatch(new DeleteMessageBatchRequest
+            var deleteResponse = sourceQueue.Client.DeleteMessageBatch(new DeleteMessageBatchRequest
             {
                 QueueUrl = sourceQueue.Url,
                 Entries = sendResponse.Successful.Select(x => new DeleteMessageBatchRequestEntry
@@ -64,10 +64,7 @@ namespace JustSaying.Tools.Commands
 
         private void EnsureQueueExists(SqsQueueByName queue)
         {
-            if (!queue.Exists())
-            {
-                throw new InvalidOperationException($"{queue.QueueName} does not exist.");
-            }
+            if (!queue.Exists()) throw new System.InvalidOperationException($"{queue.QueueName} does not exist.");
         }
 
         private List<Message> PopMessagesFromSourceQueue(SqsQueueByName sourceQueue)
@@ -84,7 +81,7 @@ namespace JustSaying.Tools.Commands
                 messages.AddRange(receiveResponse.Messages);
             } while (messages.Count < Count && receiveResponse.Messages.Any());
 
-
+            
             return messages;
         }
     }
