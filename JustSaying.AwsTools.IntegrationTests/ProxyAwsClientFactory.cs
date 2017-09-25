@@ -11,17 +11,17 @@ namespace JustSaying.AwsTools.IntegrationTests
     /// <summary>
     /// An AWS Client Factory which forwards all AWS calls to SNS/SQS clients
     /// and stores all calls in a dictionary.
-    ///
+    /// 
     /// Use to inspect what operations and which arguments have been passed
     /// </summary>
     public class ProxyAwsClientFactory : IAwsClientFactory
     {
         /// <summary>
         /// Root dictionary key is aws operation, such as ListTopics, GetQueue, etc.
-        ///
-        /// Each inner dictionary contains a grouped collection of calls to that operator. Key for the grouping
+        /// 
+        /// Each inner dictionary contains a grouped collection of calls to that operator. Key for the grouping 
         /// is chosen on a per operation basis, but in many cases this is the queue or topic name.
-        ///
+        /// 
         /// List of objects is the full list of arguments when that call was made.
         /// </summary>
         private Dictionary<string, Dictionary<string, List<object>>> counters;
@@ -49,10 +49,6 @@ namespace JustSaying.AwsTools.IntegrationTests
             client.FindTopic(Arg.Any<string>())
                 .ReturnsForAnyArgs(r => innerClient.FindTopic(r.Arg<string>()))
                 .AndDoes(r => Increment("FindTopic", r.Arg<string>(), r.Arg<string>()));
-
-            client.GetTopicAttributes(Arg.Any<string>())
-            .ReturnsForAnyArgs(r => innerClient.GetTopicAttributes(r.Arg<string>()))
-            .AndDoes(r => Increment("GetTopicAttributes", r.Arg<string>(), r.Arg<string>()));
 
             return client;
         }
