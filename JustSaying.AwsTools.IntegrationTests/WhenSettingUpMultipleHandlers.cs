@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Amazon;
 using JustBehave;
@@ -44,7 +45,6 @@ namespace JustSaying.AwsTools.IntegrationTests
         IHaveFulfilledSubscriptionRequirements bus;
         private string topicName;
         private string queueName;
-
         protected override void Given()
         { }
 
@@ -56,7 +56,7 @@ namespace JustSaying.AwsTools.IntegrationTests
 
             var baseQueueName = "CustomerOrders_";
             topicName = uniqueTopicAndQueueNames.GetTopicName(string.Empty, typeof(Order).Name);
-            queueName = uniqueTopicAndQueueNames.GetQueueName(new SqsReadConfiguration(SubscriptionType.ToTopic) {BaseQueueName = baseQueueName }, typeof(Order).Name);
+            queueName = uniqueTopicAndQueueNames.GetQueueName(new SqsReadConfiguration(SubscriptionType.ToTopic) { BaseQueueName = baseQueueName }, typeof(Order).Name);
 
             bus = CreateMeABus.InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithAwsClientFactory(() => proxyAwsClientFactory)
@@ -81,21 +81,15 @@ namespace JustSaying.AwsTools.IntegrationTests
         }
 
         [Test]
-        public void CreateTopicCalledOnce()
+        public void CreateTopicCalled()
         {
-            Assert.That(proxyAwsClientFactory.Counters["CreateTopic"][topicName].Count, Is.EqualTo(1));
+            Assert.That(proxyAwsClientFactory.Counters["CreateTopic"][topicName].Count, Is.GreaterThanOrEqualTo(1));
         }
 
         [Test]
-        public void FindTopicCalledOnce()
+        public void GetQueueAttributesCalledOnce()
         {
-            Assert.That(proxyAwsClientFactory.Counters["FindTopic"][topicName].Count, Is.EqualTo(1));
-        }
-
-        [Test]
-        public void ListQueuesCalledOnce()
-        {
-            Assert.That(proxyAwsClientFactory.Counters["ListQueues"][queueName].Count, Is.EqualTo(1));
+            Assert.That(proxyAwsClientFactory.Counters["GetQueueAttributes"].First(x => x.Key.EndsWith(queueName)).Value.Count, Is.EqualTo(1));
         }
 
         [Test]
