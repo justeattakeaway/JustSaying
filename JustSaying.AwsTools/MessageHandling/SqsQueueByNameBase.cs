@@ -1,6 +1,5 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using Amazon;
 using Amazon.SQS;
@@ -22,17 +21,30 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public override bool Exists()
         {
-            var result = Client.ListQueues(new ListQueuesRequest{ QueueNamePrefix = QueueName });
+            GetQueueUrlResponse result;
             Log.Info("Checking if queue '{0}' exists", QueueName);
-            Url = result.QueueUrls.SingleOrDefault(x => Matches(x, QueueName));
-
-            if (Url != null)
+            if (string.IsNullOrWhiteSpace(QueueName))
             {
-                SetQueueProperties();
-                return true;
+                return false;
             }
 
-            return false;
+            try
+            {
+                result = Client.GetQueueUrl(QueueName);
+            }
+            catch (QueueDoesNotExistException)
+            {
+                return false;
+            }
+
+            if (result?.QueueUrl == null)
+            {
+                return false;
+            }
+            Url = result.QueueUrl;
+
+            SetQueueProperties();
+            return true;
         }
         private static bool Matches(string queueUrl, string queueName)
         {

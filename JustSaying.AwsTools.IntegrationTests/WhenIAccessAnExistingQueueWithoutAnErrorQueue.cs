@@ -9,7 +9,7 @@ namespace JustSaying.AwsTools.IntegrationTests
     {
         protected override void When()
         {
-            SystemUnderTest.Create(new SqsBasicConfiguration(), attempt: 0);
+            SystemUnderTest.Create(new SqsBasicConfiguration() {ErrorQueueOptOut = true}, attempt: 0);
         }
 
         [Then]
