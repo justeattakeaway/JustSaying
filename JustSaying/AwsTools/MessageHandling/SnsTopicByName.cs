@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,7 +11,7 @@ namespace JustSaying.AwsTools.MessageHandling
 {
     public class SnsTopicByName : SnsTopicBase
     {
-        public string TopicName { get; private set; }
+        public string TopicName { get; }
         private readonly ILogger _log;
 
         public SnsTopicByName(string topicName, IAmazonSimpleNotificationService client, IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory)
@@ -21,9 +22,18 @@ namespace JustSaying.AwsTools.MessageHandling
             _log = loggerFactory.CreateLogger("JustSaying");
         }
 
-        public override async Task<bool> ExistsAsync()
+        public void EnsurePolicyIsUpdated(IReadOnlyCollection<string> config)
         {
-            if (! string.IsNullOrWhiteSpace(Arn))
+            if (config.Any())
+            {
+                var policy = new SnsPolicy(config);
+                policy.Save(Arn, Client);
+            }
+        }
+
+        protected override async Task<bool> ExistsAsync()
+        {
+            if (!string.IsNullOrWhiteSpace(Arn))
             {
                 return true;
             }
@@ -40,35 +50,32 @@ namespace JustSaying.AwsTools.MessageHandling
             return false;
         }
 
-        public bool Create()
-        {
-            return CreateAsync()
-                .GetAwaiter().GetResult();
-        }
+        public bool Create() => CreateAsync().GetAwaiter().GetResult();
 
         public async Task<bool> CreateAsync()
         {
-            var response = await Client.CreateTopicAsync(new CreateTopicRequest(TopicName));
-
-            if (!string.IsNullOrEmpty(response?.TopicArn))
+            try
             {
-                Arn = response.TopicArn;
-                _log.LogInformation($"Created Topic: {TopicName} on Arn: {Arn}");
-                return true;
+                var response = await Client.CreateTopicAsync(new CreateTopicRequest(TopicName));
+
+                if (!string.IsNullOrEmpty(response.TopicArn))
+                {
+                    Arn = response.TopicArn;
+                    _log.LogInformation($"Created Topic: {TopicName} on Arn: {Arn}");
+                    return true;
+                }
+                _log.LogInformation($"Failed to create Topic: {TopicName}");
+            }
+            catch (AuthorizationErrorException ex)
+            {
+                _log.LogWarning(0, ex, $"Not authorized to create topic: {TopicName}");
+                if (!Exists())
+                {
+                    throw new InvalidOperationException("Topic does not exist and no permission to create it!");
+                }
             }
 
-            _log.LogInformation($"Failed to create Topic: {TopicName}");
             return false;
-        }
-
-
-        public void EnsurePolicyIsUpdated(IReadOnlyCollection<string> config)
-        {
-            if (config.Any())
-            {
-                var policy = new SnsPolicy(config);
-                policy.Save(Arn, Client);
-            }
         }
     }
 }

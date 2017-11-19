@@ -23,18 +23,30 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public override async Task<bool> ExistsAsync()
         {
-            var result = await Client.ListQueuesAsync(new ListQueuesRequest{ QueueNamePrefix = QueueName });
-
+            GetQueueUrlResponse result;
             _log.LogInformation($"Checking if queue '{QueueName}' exists");
-            Url = result?.QueueUrls?.SingleOrDefault(x => Matches(x, QueueName));
-
-            if (Url != null)
+            if (string.IsNullOrWhiteSpace(QueueName))
             {
-                await SetQueuePropertiesAsync();
-                return true;
+                return false;
             }
 
-            return false;
+            try
+            {
+                result = await Client.GetQueueUrlAsync(QueueName);
+            }
+            catch (QueueDoesNotExistException)
+            {
+                return false;
+            }
+
+            if (result?.QueueUrl == null)
+            {
+                return false;
+            }
+            Url = result.QueueUrl;
+
+            await SetQueuePropertiesAsync();
+            return true;
         }
 
         private static bool Matches(string queueUrl, string queueName)

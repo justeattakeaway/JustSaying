@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -28,8 +28,8 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
 
         protected override void Given()
         {
-            _sqs.ListQueuesAsync(Arg.Any<ListQueuesRequest>())
-                .Returns(new ListQueuesResponse { QueueUrls = new List<string> { Url } });
+            _sqs.GetQueueUrlAsync(Arg.Any<string>())
+                .Returns(new GetQueueUrlResponse { QueueUrl = Url });
 
             _sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>())
                 .Returns(new GetQueueAttributesResponse());

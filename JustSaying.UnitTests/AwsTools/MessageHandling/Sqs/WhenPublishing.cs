@@ -28,14 +28,9 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
 
         protected override void Given()
         {
-            _sqs.ListQueuesAsync(Arg.Any<ListQueuesRequest>())
-                .Returns(new ListQueuesResponse { QueueUrls = new List<string> { Url } });
-
-            _sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>())
-                .Returns(new GetQueueAttributesResponse());
-
-            _serialisationRegister.Serialise(_message, false)
-                .Returns("serialized_contents");
+            _sqs.GetQueueUrlAsync(Arg.Any<string>()).Returns(new GetQueueUrlResponse {QueueUrl = Url});
+            _sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>()).Returns(new GetQueueAttributesResponse());
+            _serialisationRegister.Serialise(_message, false).Returns("serialized_contents");
         }
 
         protected override void When()
