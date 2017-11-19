@@ -42,6 +42,10 @@ namespace JustSaying.AwsTools.IntegrationTests
                 .ReturnsForAnyArgs(r => innerClient.FindTopicAsync(r.Arg<string>()))
                 .AndDoes(r => Increment("FindTopic", r.Arg<string>(), r.Arg<string>()));
 
+            client.GetTopicAttributes(Arg.Any<string>())
+            .ReturnsForAnyArgs(r => innerClient.GetTopicAttributes(r.Arg<string>()))
+            .AndDoes(r => Increment("GetTopicAttributes", r.Arg<string>(), r.Arg<string>()));
+
             return client;
         }
 

@@ -1,9 +1,7 @@
-﻿using System;
-using System.Linq;
+using System;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
-using Amazon.SQS;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialisation;
 using Microsoft.Extensions.Logging;
@@ -15,7 +13,7 @@ namespace JustSaying.AwsTools.MessageHandling
     {
         private readonly IMessageSerialisationRegister _serialisationRegister; // ToDo: Grrr...why is this here even. GET OUT!
         public string Arn { get; protected set; }
-        public IAmazonSimpleNotificationService Client { get; protected set; }
+        protected IAmazonSimpleNotificationService Client { get; set; }
         private readonly ILogger _eventLog;
         private readonly ILogger _log;
 
@@ -26,22 +24,11 @@ namespace JustSaying.AwsTools.MessageHandling
             _eventLog = loggerFactory.CreateLogger("EventLog");
         }
 
-        public abstract Task<bool> ExistsAsync();
+        protected abstract Task<bool> ExistsAsync();
 
-        public bool Exists()
-        {
-            return ExistsAsync()
-                .GetAwaiter().GetResult();
-        }
+        public bool Exists() => ExistsAsync().GetAwaiter().GetResult();
 
-        public async Task<bool> IsSubscribedAsync(SqsQueueBase queue)
-        {
-            var result = await Client.ListSubscriptionsByTopicAsync(new ListSubscriptionsByTopicRequest(Arn));
-
-            return result.Subscriptions.Any(x => !string.IsNullOrEmpty(x.SubscriptionArn) && x.Endpoint == queue.Arn);
-        }
-
-        public async Task<bool> SubscribeAsync(IAmazonSQS amazonSqsClient, SqsQueueBase queue)
+        public async Task<bool> SubscribeAsync(SqsQueueBase queue)
         {
             var subscriptionResponse = await Client.SubscribeAsync(Arn, "sqs", queue.Arn);
 

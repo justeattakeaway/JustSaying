@@ -35,7 +35,6 @@ namespace JustSaying.IntegrationTests
                 {
                     x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;
                     x.PublishFailureReAttempts = Configuration.PublishFailureReAttempts;
-
                 }) as JustSaying.JustSayingFluently;
 
             if (_enableMockedBus)
@@ -108,6 +107,7 @@ namespace JustSaying.IntegrationTests
 
             throw new Exception(
                 $"Deleted queue still exists {(DateTime.Now - start).TotalSeconds} seconds after deletion!");
+
         }
 
         // ToDo: All these can go because we have already implemented them in AwsTools... Seriously. Wasted effort.
@@ -115,13 +115,13 @@ namespace JustSaying.IntegrationTests
         protected static void DeleteTopic(RegionEndpoint regionEndpoint, Topic topic)
         {
             var client = CreateMeABus.DefaultClientFactory().GetSnsClient(regionEndpoint);
-            client.DeleteTopic(new DeleteTopicRequest { TopicArn = topic.TopicArn });
+            client.DeleteTopic(new DeleteTopicRequest {TopicArn = topic.TopicArn});
         }
 
         private static void DeleteQueue(RegionEndpoint regionEndpoint, string queueUrl)
         {
             var client = CreateMeABus.DefaultClientFactory().GetSqsClient(regionEndpoint);
-            client.DeleteQueue(new DeleteQueueRequest { QueueUrl = queueUrl });
+            client.DeleteQueue(new DeleteQueueRequest {QueueUrl = queueUrl});
         }
 
         private static List<Topic> GetAllTopics(RegionEndpoint regionEndpoint, string topicName)
@@ -136,14 +136,18 @@ namespace JustSaying.IntegrationTests
                 topics.AddRange(topicsResponse.Topics);
             } while (nextToken != null);
 
-            return topics.Where(x => x.TopicArn.IndexOf(topicName, StringComparison.InvariantCultureIgnoreCase) >= 0).ToList();
+            return
+                topics.Where(x => x.TopicArn.IndexOf(topicName, StringComparison.InvariantCultureIgnoreCase) >= 0)
+                    .ToList();
         }
 
         private static List<string> GetAllQueues(RegionEndpoint regionEndpoint, string queueName)
         {
             var client = CreateMeABus.DefaultClientFactory().GetSqsClient(regionEndpoint);
             var topics = client.ListQueues(new ListQueuesRequest());
-            return topics.QueueUrls.Where(x => x.IndexOf(queueName, StringComparison.InvariantCultureIgnoreCase) >= 0).ToList();
+            return
+                topics.QueueUrls.Where(x => x.IndexOf(queueName, StringComparison.InvariantCultureIgnoreCase) >= 0)
+                    .ToList();
         }
 
         protected static bool TryGetTopic(RegionEndpoint regionEndpoint, string topicName, out Topic topic)
@@ -176,7 +180,11 @@ namespace JustSaying.IntegrationTests
 
         protected bool IsQueueSubscribedToTopic(RegionEndpoint regionEndpoint, Topic topic, string queueUrl)
         {
-            var request = new GetQueueAttributesRequest{ QueueUrl = queueUrl, AttributeNames = new List<string> { "QueueArn" } };
+            var request = new GetQueueAttributesRequest
+            {
+                QueueUrl = queueUrl,
+                AttributeNames = new List<string> {"QueueArn"}
+            };
 
             var sqsclient = CreateMeABus.DefaultClientFactory().GetSqsClient(regionEndpoint);
 
@@ -184,7 +192,8 @@ namespace JustSaying.IntegrationTests
 
             var client = new AmazonSimpleNotificationServiceClient(regionEndpoint);
 
-            var subscriptions =  client.ListSubscriptionsByTopic(new ListSubscriptionsByTopicRequest(topic.TopicArn)).Subscriptions;
+            var subscriptions =
+                client.ListSubscriptionsByTopic(new ListSubscriptionsByTopicRequest(topic.TopicArn)).Subscriptions;
 
             return subscriptions.Any(x => !string.IsNullOrEmpty(x.SubscriptionArn) && x.Endpoint == queueArn);
         }
@@ -193,9 +202,17 @@ namespace JustSaying.IntegrationTests
         {
             var client = CreateMeABus.DefaultClientFactory().GetSqsClient(regionEndpoint);
 
-            var policy = client.GetQueueAttributes(new GetQueueAttributesRequest{ QueueUrl = queueUrl, AttributeNames = new List<string>{ "Policy" }}).Policy;
+            var policy =
+                client.GetQueueAttributes(new GetQueueAttributesRequest
+                {
+                    QueueUrl = queueUrl,
+                    AttributeNames = new List<string> {"Policy"}
+                }).Policy;
 
-            return policy.Contains(topic.TopicArn);
+            int pos = topic.TopicArn.LastIndexOf(':');
+            string wildcardedSubscription = topic.TopicArn.Substring(0, pos + 1) + "*";
+
+            return policy.Contains(topic.TopicArn) || policy.Contains(wildcardedSubscription);
         }
     }
 }

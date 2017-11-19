@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
@@ -42,7 +43,7 @@ namespace JustSaying
             _amazonQueueCreator = queueCreator;
             _awsClientFactoryProxy = awsClientFactoryProxy;
         }
-        
+
         private static string GetMessageTypeName<T>() => typeof(T).ToTopicName();
 
         public virtual INamingStrategy GetNamingStrategy()
@@ -73,10 +74,7 @@ namespace JustSaying
                     Bus.SerialisationRegister,
                     _loggerFactory);
 
-                if (!eventPublisher.Exists())
-                {
-                    eventPublisher.Create();
-                }
+                eventPublisher.Create();
 
                 eventPublisher.EnsurePolicyIsUpdated(Bus.Config.AdditionalSubscriberAccounts);
 
