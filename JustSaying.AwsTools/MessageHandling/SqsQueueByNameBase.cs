@@ -56,14 +56,19 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             try
             {
-                var result = Client.CreateQueue(new CreateQueueRequest{
-                    QueueName = QueueName,
-                    Attributes = GetCreateQueueAttributes(queueConfig)});
+                var queueResponse = Client.CreateQueue(QueueName);
 
-                if (!string.IsNullOrWhiteSpace(result.QueueUrl))
+                if (!string.IsNullOrWhiteSpace(queueResponse?.QueueUrl))
                 {
-                    Url = result.QueueUrl;
+                    Url = queueResponse.QueueUrl;
+
                     SetQueueProperties();
+                    
+                    Client.SetQueueAttributes(new SetQueueAttributesRequest()
+                    {
+                        QueueUrl = queueResponse.QueueUrl,
+                        Attributes = GetCreateQueueAttributes(queueConfig)
+                    });
 
                     Log.Info("Created Queue: {0} on Arn: {1}", QueueName, Arn);
                     return true;

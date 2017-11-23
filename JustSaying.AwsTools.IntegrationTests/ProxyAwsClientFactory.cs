@@ -79,10 +79,14 @@ namespace JustSaying.AwsTools.IntegrationTests
                 .ReturnsForAnyArgs(r => innerClient.ListQueues(r.Arg<ListQueuesRequest>()))
                 .AndDoes(r => Increment("ListQueues", r.Arg<ListQueuesRequest>().QueueNamePrefix, r.Arg<ListQueuesRequest>()));
 
-            client.CreateQueue(Arg.Any<CreateQueueRequest>())
-                .ReturnsForAnyArgs(r => innerClient.CreateQueue(r.Arg<CreateQueueRequest>()))
-                .AndDoes(r => Increment("CreateQueue", r.Arg<CreateQueueRequest>().QueueName, r.Arg<CreateQueueRequest>()));
+            client.CreateQueue(Arg.Any<string>())
+                .ReturnsForAnyArgs(r => innerClient.CreateQueue(r.Arg<string>()))
+                .AndDoes(r => Increment("CreateQueue", r.Arg<string>()));
 
+            client.SetQueueAttributes(Arg.Any<SetQueueAttributesRequest>())
+                .ReturnsForAnyArgs(r => innerClient.SetQueueAttributes(r.Arg<SetQueueAttributesRequest>()))
+                .AndDoes(r => Increment("SetQueueAttributes", r.Arg<SetQueueAttributesRequest>().QueueUrl, r.Arg<SetQueueAttributesRequest>()));
+            
             client.GetQueueAttributes(Arg.Any<GetQueueAttributesRequest>())
                 .ReturnsForAnyArgs(r => innerClient.GetQueueAttributes(r.Arg<GetQueueAttributesRequest>()))
                 .AndDoes(r => Increment("GetQueueAttributes", r.Arg<GetQueueAttributesRequest>().QueueUrl, r.Arg<GetQueueAttributesRequest>()));

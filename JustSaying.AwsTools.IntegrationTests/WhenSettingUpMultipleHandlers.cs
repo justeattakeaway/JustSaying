@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.SQS.Model;
+using Amazon.SQS.Util;
 using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
@@ -96,6 +98,19 @@ namespace JustSaying.AwsTools.IntegrationTests
         public void CreateQueueCalledOnce()
         {
             Assert.That(proxyAwsClientFactory.Counters["CreateQueue"][queueName].Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void SetQueueAttributesCalledOnceWithBasicAttributes()
+        {
+            var allSetQueueAttributesCalls = proxyAwsClientFactory.Counters["SetQueueAttributes"]
+                .Where(x => x.Key.EndsWith(queueName))
+                .SelectMany(x => x.Value)
+                .Select(x => (SetQueueAttributesRequest) ((object[]) x).First())
+                .ToArray();
+           
+            Assert.That(allSetQueueAttributesCalls
+                .Count(x => x.Attributes.ContainsKey(SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT)), Is.EqualTo(1));
         }
     }
 }
