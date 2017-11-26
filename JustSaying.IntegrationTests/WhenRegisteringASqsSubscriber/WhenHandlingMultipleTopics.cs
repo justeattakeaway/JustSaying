@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using Amazon;
-using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
@@ -10,11 +9,9 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using NSubstitute;
 using Xunit;
-using Assert = NUnit.Framework.Assert;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 {
-
     public class WhenHandlingMultipleTopics : WhenRegisteringASqsTopicSubscriber
     {
         public class TopicA : Message { }
@@ -36,7 +33,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             var queue = new SqsQueueByName(RegionEndpoint.EUWest1, QueueName, Client, 0, Substitute.For<ILoggerFactory>());
             await Patiently.AssertThatAsync(queue.Exists, TimeSpan.FromSeconds(60));
             dynamic policyJson = JObject.Parse(queue.Policy);
-            Assert.IsTrue(policyJson.Statement.Count == 1, $"Expecting 1 statement in Sqs policy but found {policyJson.Statement.Count}");
+            policyJson.Statement.Count.ShouldBe(1,  $"Expecting 1 statement in Sqs policy but found {policyJson.Statement.Count}");
         }
     }
 }

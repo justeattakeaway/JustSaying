@@ -1,5 +1,7 @@
-﻿using JustSaying.AwsTools.QueueCreation;
-using NUnit.Framework;
+using System.Threading.Tasks;
+using JustSaying.AwsTools.QueueCreation;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.AwsTools.IntegrationTests
 {
@@ -16,18 +18,20 @@ namespace JustSaying.AwsTools.IntegrationTests
             base.Given();
         }
 
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.Create(new SqsBasicConfiguration { DeliveryDelaySeconds = _oldDeliveryDelay });
 
             SystemUnderTest.UpdateQueueAttribute(
                 new SqsBasicConfiguration {DeliveryDelaySeconds = _newDeliveryDelay});
+
+            return Task.CompletedTask;
         }
 
-        [Test]
+        [Fact]
         public void TheDeliveryDelayIsUpdatedWithTheNewValue()
         {
-            Assert.AreEqual(_newDeliveryDelay, SystemUnderTest.DeliveryDelay);
+            SystemUnderTest.DeliveryDelay.ShouldBe(_newDeliveryDelay);
         }
     }
 }

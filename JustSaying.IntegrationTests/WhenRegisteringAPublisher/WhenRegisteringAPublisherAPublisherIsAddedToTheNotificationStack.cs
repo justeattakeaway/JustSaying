@@ -3,7 +3,6 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Models;
 using NSubstitute;
-using NUnit.Framework;
 using Xunit;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher

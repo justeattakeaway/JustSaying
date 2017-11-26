@@ -9,7 +9,8 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopicSubscriber
 {
@@ -18,7 +19,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         private readonly Future<GenericMessage> _signal = new Future<GenericMessage>();
         readonly GenericMessage _message = new GenericMessage {Id = Guid.NewGuid()};
 
-        [Test, Category("Integration"), Ignore("Requires credentials for 2 accounts")]
+        [Fact(Skip = "Requires credentials for 2 accounts"), Trait("Category", "Integration")]
         public async Task ICanReceiveMessagePublishedToTopicInAnotherAccount()
         {
             string publisherAccount = "<enter publisher account id>";
@@ -51,7 +52,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
 
             //Assert
             var done = await Tasks.WaitWithTimeoutAsync(_signal.DoneSignal, TimeSpan.FromMinutes(1));
-            Assert.That(_signal.HasReceived(_message));
+            _signal.HasReceived(_message).ShouldBeTrue();
 
         }
 

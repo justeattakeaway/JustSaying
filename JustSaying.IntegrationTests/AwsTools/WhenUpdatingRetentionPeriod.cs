@@ -1,5 +1,7 @@
+using System.Threading.Tasks;
 using JustSaying.AwsTools.QueueCreation;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.AwsTools.IntegrationTests
 {
@@ -16,19 +18,21 @@ namespace JustSaying.AwsTools.IntegrationTests
             base.Given();
         }
 
-        protected override void When()
+        protected override Task When()
         {
 
             SystemUnderTest.Create(new SqsBasicConfiguration { MessageRetentionSeconds = _oldRetentionPeriod });
 
             SystemUnderTest.UpdateQueueAttribute(
                 new SqsBasicConfiguration {MessageRetentionSeconds = _newRetentionPeriod});
+
+            return Task.CompletedTask;
         }
 
-        [Test]
+        [Fact]
         public void TheRedrivePolicyIsUpdatedWithTheNewValue()
         {
-            Assert.AreEqual(_newRetentionPeriod, SystemUnderTest.MessageRetentionPeriod);
+            SystemUnderTest.MessageRetentionPeriod.ShouldBe(_newRetentionPeriod);
         }
     }
 }

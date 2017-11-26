@@ -1,9 +1,8 @@
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.Models;
-using NUnit.Framework;
+using Shouldly;
 using Xunit;
-using Assert = Xunit.Assert;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 {
@@ -35,11 +34,10 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         {
             bool topicExists;
             (topicExists, _topic) = await TryGetTopic(TestEndpoint, _topicName);
-            Assert.True(topicExists);
+            topicExists.ShouldBeTrue();
         }
 
-        [TearDown]
-        public void TearDown()
+        protected override void Teardown()
         {
             if (_topic != null)
             {

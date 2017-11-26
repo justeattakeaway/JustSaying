@@ -1,41 +1,41 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
-    [TestFixture]
     public class NamedHandlerResolverTests
     {
         private readonly IHandlerResolver _handlerResolver = new StructureMapNamedHandlerResolver();
 
-        [Test]
+        [Fact]
         public void TestQueueAResolution()
         {
             var context = new HandlerResolutionContext("QueueA");
             var handler = _handlerResolver.ResolveHandler<TestMessage>(context);
 
-            Assert.That(handler, Is.Not.Null);
-            Assert.That(handler, Is.InstanceOf<HandlerA>());
+            handler.ShouldNotBeNull();
+            handler.ShouldBeAssignableTo<HandlerA>();
         }
 
-        [Test]
+        [Fact]
         public void TestQueueBResolution()
         {
             var context = new HandlerResolutionContext("QueueB");
             var handler = _handlerResolver.ResolveHandler<TestMessage>(context);
 
-            Assert.That(handler, Is.Not.Null);
-            Assert.That(handler, Is.InstanceOf<HandlerB>());
+            handler.ShouldNotBeNull();
+            handler.ShouldBeAssignableTo<HandlerB>();
         }
 
-        [Test]
+        [Fact]
         public void TestOtherQueueNameResolution()
         {
             var context = new HandlerResolutionContext("QueueWithAnyOtherName");
             var handler = _handlerResolver.ResolveHandler<TestMessage>(context);
 
-            Assert.That(handler, Is.Not.Null);
-            Assert.That(handler, Is.InstanceOf<HandlerC>());
+            handler.ShouldNotBeNull();
+            handler.ShouldBeAssignableTo<HandlerC>();
         }
-
     }
 }

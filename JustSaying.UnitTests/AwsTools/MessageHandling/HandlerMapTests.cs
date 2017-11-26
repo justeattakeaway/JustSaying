@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
-using NUnit.Framework;
 using Shouldly;
 using Xunit;
 

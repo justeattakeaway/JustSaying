@@ -1,8 +1,8 @@
 using JustBehave;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.TestingFramework;
+using Shouldly;
 using Xunit;
-using Assert = NUnit.Framework.Assert;
 
 namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
 {
@@ -25,22 +25,22 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
         [Fact]
         public void MessageHasBeenCreated()
         {
-            Assert.NotNull(_messageOut);
+            _messageOut.ShouldNotBeNull();
         }
 
         [Fact]
         public void MessagesContainSameDetails()
         {
-            Assert.AreEqual(_messageIn.EnumVal, _messageOut.EnumVal);
-            Assert.AreEqual(_messageIn.RaisingComponent, _messageOut.RaisingComponent);
-            Assert.AreEqual(_messageIn.TimeStamp, _messageOut.TimeStamp);
+            _messageOut.EnumVal.ShouldBe(_messageIn.EnumVal);
+            _messageOut.RaisingComponent.ShouldBe(_messageIn.RaisingComponent);
+            _messageOut.TimeStamp.ShouldBe(_messageIn.TimeStamp);
         }
         
         [Fact]
         public void EnumsAreRepresentedAsStrings()
         {
-            Assert.That(_jsonMessage.Contains("EnumVal"));
-            Assert.That(_jsonMessage.Contains("Two"));
+            _jsonMessage.ShouldContain("EnumVal");
+            _jsonMessage.ShouldContain("Two");
         }
     }
 }

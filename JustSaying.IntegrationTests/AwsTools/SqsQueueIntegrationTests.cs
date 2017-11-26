@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.IntegrationTests
 {
-    public abstract class WhenCreatingQueuesByName : XBehaviourTest<SqsQueueByName>
+    public abstract class WhenCreatingQueuesByName : XAsyncBehaviourTest<SqsQueueByName>
     {
         protected string QueueUniqueKey;
 

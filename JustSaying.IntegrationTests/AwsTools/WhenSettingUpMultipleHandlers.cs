@@ -6,11 +6,11 @@ using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.Logging;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.AwsTools.IntegrationTests
 {
-    [TestFixture]
     public class WhenSettingUpMultipleHandlers : XBehaviourTest<IHaveFulfilledSubscriptionRequirements>
     {
         public class Order : Models.Message
@@ -81,19 +81,20 @@ namespace JustSaying.AwsTools.IntegrationTests
         {
         }
 
-        [Test]
+        [Fact]
         public void CreateTopicCalled()
         {
-            Assert.That(proxyAwsClientFactory.Counters["CreateTopic"][topicName].Count, Is.GreaterThanOrEqualTo(1));
+            proxyAwsClientFactory.Counters["CreateTopic"][topicName].Count.ShouldBeGreaterThanOrEqualTo(1);
         }
 
-        [Test]
+        [Fact]
         public void GetQueueAttributesCalledOnce()
         {
-            Assert.That(proxyAwsClientFactory.Counters["GetQueueAttributes"].First(x => x.Key.EndsWith(queueName)).Value.Count, Is.EqualTo(1));
+            proxyAwsClientFactory.Counters["GetQueueAttributes"].First(x => x.Key.EndsWith(queueName)).Value.Count
+                .ShouldBe(1);
         }
 
-        [Test]
+        [Fact]
         public void CreateQueueCalledOnce()
         {
             AssertHasCounterSetToOne("CreateQueue", queueName);
@@ -103,9 +104,9 @@ namespace JustSaying.AwsTools.IntegrationTests
         {
             var counters = proxyAwsClientFactory.Counters;
 
-            Assert.That(counters.ContainsKey(counter), Is.True, "no counter: " + counter);
-            Assert.That(counters[counter].ContainsKey(testQueueName), Is.True, "no queueName: " + testQueueName);
-            Assert.That(counters[counter][testQueueName].Count, Is.EqualTo(1), "Wrong count");
+            counters.ShouldContainKey(counter, $"no counter: {counter}");
+            counters[counter].ShouldContainKey(testQueueName, $"no queueName: {testQueueName}");
+            counters[counter][testQueueName].Count.ShouldBe(1, "Wrong count");
         }
     }
 }

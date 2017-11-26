@@ -1,9 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using JustBehave;
 using JustSaying.TestingFramework;
+using Shouldly;
 using Xunit;
-using Assert = NUnit.Framework.Assert;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 {
@@ -26,7 +25,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         [Fact]
         public void ExceptionIsRaised()
         {
-            Assert.IsInstanceOf<InvalidOperationException>(ThrownException);
+            ThrownException.ShouldBeAssignableTo<InvalidOperationException>();
         }
     }
 }

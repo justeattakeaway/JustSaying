@@ -1,11 +1,12 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
-using NUnit.Framework;
 using Microsoft.Extensions.Logging;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.IntegrationTests
 {
@@ -19,15 +20,14 @@ namespace JustSaying.IntegrationTests
 
     public class WhenOptingOutOfErrorQueue
     {
-        private IAmazonSQS _client;
+        private readonly IAmazonSQS _client;
 
-        [SetUp]
-        public void SetUp()
+        public WhenOptingOutOfErrorQueue()
         {
             _client = CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1);
         }
 
-        [Test]
+        [Fact]
         public void ErrorQueueShouldNotBeCreated()
         {
             var queueName = "test-queue-issue-191";
@@ -49,7 +49,7 @@ namespace JustSaying.IntegrationTests
         private void AssertThatQueueDoesNotExist(string name)
         {
             var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, name, _client, 1, new LoggerFactory());
-            Assert.IsFalse(sqsQueueByName.Exists(), $"Expecting queue '{name}' to not exist but it does.");
+            sqsQueueByName.Exists().ShouldBeFalse($"Expecting queue '{name}' to not exist but it does.");
         }
     }
 }

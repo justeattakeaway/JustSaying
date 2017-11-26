@@ -1,10 +1,8 @@
 using System.Threading.Tasks;
-using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
-using NUnit.Framework;
 using JustSaying.TestingFramework;
+using Shouldly;
 using Xunit;
-using Assert = NUnit.Framework.Assert;
 
 namespace JustSaying.AwsTools.IntegrationTests
 {
@@ -12,18 +10,19 @@ namespace JustSaying.AwsTools.IntegrationTests
     {
         private bool _isQueueCreated;
 
-        protected override void When()
+        protected override Task When()
         {
             _isQueueCreated = SystemUnderTest.Create(new SqsBasicConfiguration(), attempt: 0);
+            return Task.CompletedTask;
         }
 
         [Fact]
-        public void TheQueueISCreated()
+        public void TheQueueIsCreated()
         {
-            Assert.IsTrue(_isQueueCreated);
+            _isQueueCreated.ShouldBeTrue();
         }
 
-        [Then, Explicit("Extremely long running test")]
+        [Fact(Skip = "Extremely long running test")]
         public async Task DeadLetterQueueIsCreated()
         {
             await Patiently.AssertThatAsync(

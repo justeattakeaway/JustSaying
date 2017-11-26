@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
-using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
@@ -10,7 +9,6 @@ using JustSaying.TestingFramework;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NUnit.Framework;
 using Xunit;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber

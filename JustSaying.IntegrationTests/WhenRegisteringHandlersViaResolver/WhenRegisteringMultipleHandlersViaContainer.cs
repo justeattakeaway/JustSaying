@@ -1,9 +1,10 @@
 using System;
-using NUnit.Framework;
 using StructureMap;
 using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
 using Microsoft.Extensions.Logging;
+using Shouldly;
+using Xunit;
 using Container = StructureMap.Container;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
@@ -32,10 +33,10 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             return Task.FromResult(true);
         }
 
-        [Test]
+        [Fact]
         public void ThrowsNotSupportedException()
         {
-            Assert.IsInstanceOf<NotSupportedException>(ThrownException);
+            ThrownException.ShouldBeAssignableTo<NotSupportedException>();
         }
     }
 }

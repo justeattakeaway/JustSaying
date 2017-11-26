@@ -8,9 +8,10 @@ namespace JustSaying.AwsTools.IntegrationTests
 {
     public class WhenIAccessAnExistingQueueWithoutAnErrorQueue : WhenCreatingQueuesByName
     {
-        protected override void When()
+        protected override Task When()
         {
-            SystemUnderTest.Create(new SqsBasicConfiguration() {ErrorQueueOptOut = true}, attempt: 0);
+            SystemUnderTest.Create(new SqsBasicConfiguration {ErrorQueueOptOut = true}, attempt: 0);
+            return Task.CompletedTask;
         }
 
         [Fact]

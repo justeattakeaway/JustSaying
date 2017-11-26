@@ -3,7 +3,8 @@ using Amazon;
 using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
 using Microsoft.Extensions.Logging;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.AwsTools.IntegrationTests
 {
@@ -34,10 +35,10 @@ namespace JustSaying.AwsTools.IntegrationTests
             base.PostAssertTeardown();
         }
 
-        [Test]
+        [Fact]
         public void TheRetentionPeriodOfTheErrorQueueStaysAsMaximum()
         {
-            Assert.AreEqual(100, SystemUnderTest.MessageRetentionPeriod);
+            SystemUnderTest.MessageRetentionPeriod.ShouldBe(100);
         }
     }
 }

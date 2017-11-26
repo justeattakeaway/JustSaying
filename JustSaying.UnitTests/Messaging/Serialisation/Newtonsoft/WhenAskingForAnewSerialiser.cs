@@ -1,8 +1,8 @@
 using JustBehave;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.TestingFramework;
+using Shouldly;
 using Xunit;
-using Assert = NUnit.Framework.Assert;
 
 namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
 {
@@ -23,7 +23,7 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
         [Fact]
         public void OneIsProvided()
         {
-            Assert.NotNull(_result);
+            _result.ShouldNotBeNull();
         }
     }
 }

@@ -6,8 +6,8 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Models;
 using NSubstitute;
+using Shouldly;
 using Xunit;
-using Assert = NUnit.Framework.Assert;
 
 namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
 {
@@ -59,7 +59,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         [Fact]
         public void ICanContinueConfiguringTheBus()
         {
-            Assert.IsInstanceOf<IFluentSubscription>(_response);
+            _response.ShouldBeAssignableTo<IFluentSubscription>();
         }
     }
 }
