@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Amazon;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.IntegrationTests
 {
-    public abstract class WhenCreatingQueuesByName : BehaviourTest<SqsQueueByName>
+    public abstract class WhenCreatingQueuesByName : XBehaviourTest<SqsQueueByName>
     {
         protected string QueueUniqueKey;
 
@@ -20,7 +20,8 @@ namespace JustSaying.AwsTools.IntegrationTests
             queue.Exists();
             return queue;
         }
-        public override void PostAssertTeardown()
+
+        protected override void PostAssertTeardown()
         {
             SystemUnderTest.Delete();
             base.PostAssertTeardown();

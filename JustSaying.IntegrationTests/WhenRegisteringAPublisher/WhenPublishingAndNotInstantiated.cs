@@ -1,7 +1,9 @@
-﻿using System;
+using System;
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.TestingFramework;
-using NUnit.Framework;
+using Xunit;
+using Assert = NUnit.Framework.Assert;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 {
@@ -16,12 +18,12 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
             RecordAnyExceptionsThrown();
         }
 
-        protected override void When()
+        protected override async Task When()
         {
-            SystemUnderTest.Publish(new GenericMessage());
+            await SystemUnderTest.PublishAsync(new GenericMessage());
         }
 
-        [Then]
+        [Fact]
         public void ExceptionIsRaised()
         {
             Assert.IsInstanceOf<InvalidOperationException>(ThrownException);

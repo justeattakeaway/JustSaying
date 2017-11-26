@@ -1,8 +1,10 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
 using NUnit.Framework;
 using JustSaying.TestingFramework;
+using Xunit;
+using Assert = NUnit.Framework.Assert;
 
 namespace JustSaying.AwsTools.IntegrationTests
 {
@@ -15,7 +17,7 @@ namespace JustSaying.AwsTools.IntegrationTests
             _isQueueCreated = SystemUnderTest.Create(new SqsBasicConfiguration(), attempt: 0);
         }
 
-        [Then]
+        [Fact]
         public void TheQueueISCreated()
         {
             Assert.IsTrue(_isQueueCreated);

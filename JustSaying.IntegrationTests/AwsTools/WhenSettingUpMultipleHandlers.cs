@@ -11,7 +11,7 @@ using NUnit.Framework;
 namespace JustSaying.AwsTools.IntegrationTests
 {
     [TestFixture]
-    public class WhenSettingUpMultipleHandlers : BehaviourTest<IHaveFulfilledSubscriptionRequirements>
+    public class WhenSettingUpMultipleHandlers : XBehaviourTest<IHaveFulfilledSubscriptionRequirements>
     {
         public class Order : Models.Message
         {
@@ -70,7 +70,8 @@ namespace JustSaying.AwsTools.IntegrationTests
             bus.StartListening();
             return bus;
         }
-        public override void PostAssertTeardown()
+
+        protected override void PostAssertTeardown()
         {
             SystemUnderTest.StopListening();
             base.PostAssertTeardown();

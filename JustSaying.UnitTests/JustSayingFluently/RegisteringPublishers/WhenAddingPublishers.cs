@@ -1,4 +1,4 @@
-﻿using JustBehave;
+using JustBehave;
 using JustSaying.AwsTools;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
 {
-    public class WhenAddingPublishers : BehaviourTest<JustSaying.JustSayingFluently>
+    public class WhenAddingPublishers : XBehaviourTest<JustSaying.JustSayingFluently>
     {
         private readonly IAmJustSaying _bus = Substitute.For<IAmJustSaying>();
 

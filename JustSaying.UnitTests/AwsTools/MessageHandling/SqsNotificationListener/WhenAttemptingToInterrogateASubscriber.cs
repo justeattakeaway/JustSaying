@@ -1,13 +1,13 @@
 using System.Linq;
-using JustBehave;
 using JustSaying.TestingFramework;
 using Shouldly;
+using Xunit;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
     public class WhenAttemptingToInterrogateASubscriber : BaseQueuePollingTest
     {
-        [Then]
+        [Fact]
         public void SubscriptedMessagesAreAddedToTheInterrogationDetails()
         {
             SystemUnderTest.Subscribers.Count.ShouldBe(1);

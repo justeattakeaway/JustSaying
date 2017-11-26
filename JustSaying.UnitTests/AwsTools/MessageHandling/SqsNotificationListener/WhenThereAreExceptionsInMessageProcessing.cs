@@ -9,13 +9,14 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using NSubstitute;
-using NUnit.Framework;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
+using Xunit;
+using Shouldly;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
-    public class WhenThereAreExceptionsInMessageProcessing : AsyncBehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
+    public class WhenThereAreExceptionsInMessageProcessing : XAsyncBehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
     {
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private readonly IMessageSerialisationRegister _serialisationRegister = 
@@ -56,10 +57,10 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             await Task.Yield();
         }
 
-        [Then]
+        [Fact]
         public void TheListenerDoesNotDie()
         {
-            Assert.That(_callCount, Is.GreaterThanOrEqualTo(3));
+            _callCount.ShouldBeGreaterThanOrEqualTo(3);
         }
 
         private ReceiveMessageResponse GenerateEmptyMessage()

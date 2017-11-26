@@ -1,8 +1,8 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.TestingFramework;
-using NUnit.Framework;
 using Shouldly;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
@@ -19,11 +19,11 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
         protected override async Task When()
         {
-            ServiceBus.Publish(new AnotherGenericMessage());
+            await ServiceBus.PublishAsync(new AnotherGenericMessage());
             await _handler.DoneSignal;
         }
 
-        [Test]
+        [Fact]
         public void ThenItGetsHandled()
         {
             _handler.ReceivedMessageCount.ShouldBeGreaterThan(0);

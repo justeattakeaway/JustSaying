@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.TestingFramework;
+using Xunit;
 
 namespace JustSaying.AwsTools.IntegrationTests
 {
@@ -12,7 +13,7 @@ namespace JustSaying.AwsTools.IntegrationTests
             SystemUnderTest.Create(new SqsBasicConfiguration() {ErrorQueueOptOut = true}, attempt: 0);
         }
 
-        [Then]
+        [Fact]
         public async Task ThereIsNoErrorQueue()
         {
             await Patiently.AssertThatAsync(() => !SystemUnderTest.ErrorQueue.Exists());

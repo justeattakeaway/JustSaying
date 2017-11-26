@@ -1,9 +1,10 @@
-using JustBehave;
+using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Models;
 using NSubstitute;
 using NUnit.Framework;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 {
@@ -21,21 +22,22 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 
             Configuration = new MessagingConfig();
 
-            DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName);
+            DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName).Wait();
         }
 
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.WithSnsMessagePublisher<Message>();
+            return Task.CompletedTask;
         }
 
-        [Then]
+        [Fact]
         public void APublisherIsAddedToTheStack()
         {
             NotificationStack.Received().AddMessagePublisher<Message>(Arg.Any<IMessagePublisher>(), TestEndpoint.SystemName);
         }
 
-        [Then]
+        [Fact]
         public void SerialisationIsRegisteredForMessage()
         {
             NotificationStack.SerialisationRegister.Received()
@@ -45,7 +47,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         [TearDown]
         public void TearDown()
         {
-            DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName);
+            DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName).Wait();
         }
     }
 }

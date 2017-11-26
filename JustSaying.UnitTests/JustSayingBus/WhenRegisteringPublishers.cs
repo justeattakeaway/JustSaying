@@ -1,10 +1,10 @@
 using System.Linq;
 using System.Threading.Tasks;
-using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
 using NSubstitute;
 using Shouldly;
+using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -28,19 +28,19 @@ namespace JustSaying.UnitTests.JustSayingBus
             await SystemUnderTest.PublishAsync(new OrderRejected());
         }
 
-        [Then]
+        [Fact]
         public void AcceptedOrderWasPublishedOnce()
         {
             _publisher.Received(1).PublishAsync(Arg.Any<OrderAccepted>());
         }
 
-        [Then]
+        [Fact]
         public void RejectedOrderWasPublishedTwice()
         {
             _publisher.Received(2).PublishAsync(Arg.Any<OrderRejected>());
         }
 
-        [Then]
+        [Fact]
         public void AndInterrogationShowsPublishersHaveBeenSet()
         {
             var response = SystemUnderTest.WhatDoIHave();

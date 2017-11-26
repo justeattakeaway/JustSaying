@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-using NUnit.Framework;
+using Xunit;
 using Message = JustSaying.Models.Message;
 using SQSMessage = Amazon.SQS.Model.Message;
 
@@ -28,9 +28,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
         public override Task<bool> ExistsAsync() => Task.FromResult(true);
     }
-
-    [TestFixture]
-    public class WhenDispatchingMessage : BehaviourTest<MessageDispatcher>
+    
+    public class WhenDispatchingMessage : XBehaviourTest<MessageDispatcher>
     {
         private const string ExpectedQueueUrl = "http://queueurl";
         
@@ -77,13 +76,13 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
                 _handlerMap.Add(typeof(OrderAccepted), m => Task.FromResult(true));
             }
 
-            [Test]
+            [Fact]
             public void ShouldDeserializeMessage()
             {
                 _serialisationRegister.Received(1).DeserializeMessage(Arg.Is<string>(x => x == _sqsMessage.Body));
             }
 
-            [Test]
+            [Fact]
             public void ShouldDeleteMessageIfHandledSuccessfully()
             {
                 _amazonSqsClient.Received(1).DeleteMessageAsync(Arg.Is<DeleteMessageRequest>(x => x.QueueUrl == ExpectedQueueUrl && x.ReceiptHandle == _sqsMessage.ReceiptHandle));
@@ -104,13 +103,13 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
                 _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString());
             }
 
-            [Test]
+            [Fact]
             public void ShouldInvokeMessageBackoffStrategyWithNumberOfReceives()
             {
                 _messageBackoffStrategy.Received(1).GetBackoffDuration(Arg.Is(_typedMessage), Arg.Is(ExpectedReceiveCount), Arg.Is(_expectedException));
             }
 
-            [Test]
+            [Fact]
             public void ShouldUpdateMessageVisibility()
             {
                 _amazonSqsClient.Received(1).ChangeMessageVisibilityAsync(Arg.Is<ChangeMessageVisibilityRequest>(x => x.QueueUrl == ExpectedQueueUrl && x.ReceiptHandle == _sqsMessage.ReceiptHandle && x.VisibilityTimeout == (int) _expectedBackoffTimeSpan.TotalSeconds));
@@ -129,7 +128,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
                 _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, "1");
             }
 
-            [Test]
+            [Fact]
             public void ShouldLogException()
             {
                 _logger.ReceivedWithAnyArgs().LogError(0, null, "msg");

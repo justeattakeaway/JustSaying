@@ -1,8 +1,8 @@
 using System.Threading.Tasks;
-using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
 using NSubstitute;
+using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -17,13 +17,13 @@ namespace JustSaying.UnitTests.JustSayingBus
             await SystemUnderTest.PublishAsync(new GenericMessage());
         }
 
-        [Then]
+        [Fact]
         public void PublisherIsCalledToPublish()
         {
             _publisher.Received().PublishAsync(Arg.Any<GenericMessage>());
         }
 
-        [Then]
+        [Fact]
         public void PublishMessageTimeStatsSent()
         {
             Monitor.Received(1).PublishMessageTime(Arg.Any<long>());

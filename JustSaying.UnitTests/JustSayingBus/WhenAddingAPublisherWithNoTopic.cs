@@ -1,9 +1,10 @@
 using System.Threading.Tasks;
-using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
 using NSubstitute;
 using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -21,10 +22,10 @@ namespace JustSaying.UnitTests.JustSayingBus
             return Task.CompletedTask;
         }
 
-        [Then]
+        [Fact]
         public void ExceptionThrown()
         {
-            Assert.That(ThrownException, Is.Not.Null);
+            ThrownException.ShouldNotBeNull();
         }
     }
 }

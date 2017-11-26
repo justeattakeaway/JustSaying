@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NSubstitute;
-using JustBehave;
 using Shouldly;
+using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -20,7 +20,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             return Task.CompletedTask;
         }
 
-        [Then]
+        [Fact]
         public void RegionsAreReturnedInTheInterrogationResult()
         {
             var response = SystemUnderTest.WhatDoIHave();

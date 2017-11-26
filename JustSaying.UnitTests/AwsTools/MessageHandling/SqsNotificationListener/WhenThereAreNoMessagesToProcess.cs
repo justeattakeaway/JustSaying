@@ -9,11 +9,12 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
-    public class WhenThereAreNoMessagesToProcess : AsyncBehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
+    public class WhenThereAreNoMessagesToProcess : XAsyncBehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
     {
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private int _callCount;
@@ -48,10 +49,10 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             await Task.Yield();
         }
 
-        [Then]
+        [Fact]
         public void ListenLoopDoesNotDie()
         {
-            Assert.That(_callCount, Is.GreaterThan(3));
+            _callCount.ShouldBeGreaterThan(3);
         }
 
         private ReceiveMessageResponse GenerateEmptyMessage()

@@ -1,7 +1,9 @@
+using System.Threading.Tasks;
 using Amazon.SimpleNotificationService.Model;
-using JustBehave;
 using JustSaying.Models;
 using NUnit.Framework;
+using Xunit;
+using Assert = Xunit.Assert;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 {
@@ -18,19 +20,22 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 
             Configuration = new MessagingConfig();
 
-            DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName);
+            DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName).Wait();
 
         }
 
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.WithSnsMessagePublisher<Message>();
+            return Task.CompletedTask;
         }
 
-        [Then]
-        public void ASnsTopicIsCreatedInTheNonDefaultRegion()
+        [Fact]
+        public async Task ASnsTopicIsCreatedInTheNonDefaultRegion()
         {
-            Assert.IsTrue(TryGetTopic(TestEndpoint, _topicName, out _topic));
+            bool topicExists;
+            (topicExists, _topic) = await TryGetTopic(TestEndpoint, _topicName);
+            Assert.True(topicExists);
         }
 
         [TearDown]
@@ -38,7 +43,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         {
             if (_topic != null)
             {
-                DeleteTopic(TestEndpoint, _topic);
+                DeleteTopic(TestEndpoint, _topic).Wait();
             }
         }
     }

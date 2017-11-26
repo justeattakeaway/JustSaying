@@ -1,33 +1,34 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling
 {
-    [TestFixture]
     public class HandlerMapTests
     {
-        [Test]
+        [Fact]
         public void EmptyMapDoesNotContainKey()
         {
             var map = new HandlerMap();
-            Assert.That(map.ContainsKey(typeof(GenericMessage)), Is.False);
+            map.ContainsKey(typeof(GenericMessage)).ShouldBeFalse();
         }
 
-        [Test]
+        [Fact]
         public void EmptyMapReturnsNullHandlers()
         {
             var map = new HandlerMap();
 
             var handler = map.Get(typeof (GenericMessage));
 
-            Assert.That(handler, Is.Null);
+            handler.ShouldBeNull();
         }
 
-        [Test]
+        [Fact]
         public void HandlerIsReturnedForMatchingType()
         {
             var map = new HandlerMap();
@@ -35,20 +36,20 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
 
             var handler = map.Get(typeof(GenericMessage));
 
-            Assert.That(handler, Is.Not.Null);
+            handler.ShouldNotBeNull();
         }
 
-        [Test]
+        [Fact]
         public void HandlerContainsKeyForMatchingTypeOnly()
         {
             var map = new HandlerMap();
             map.Add(typeof(GenericMessage), m => Task.FromResult(true));
 
-            Assert.That(map.ContainsKey(typeof(GenericMessage)), Is.True);
-            Assert.That(map.ContainsKey(typeof(AnotherGenericMessage)), Is.False);
+            map.ContainsKey(typeof(GenericMessage)).ShouldBeTrue();
+            map.ContainsKey(typeof(AnotherGenericMessage)).ShouldBeFalse();
         }
 
-        [Test]
+        [Fact]
         public void HandlerIsNotReturnedForNonMatchingType()
         {
             var map = new HandlerMap();
@@ -56,10 +57,10 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
 
             var handler = map.Get(typeof(AnotherGenericMessage));
 
-            Assert.That(handler, Is.Null);
+            handler.ShouldBeNull();
         }
 
-        [Test]
+        [Fact]
         public void CorrectHandlerIsReturnedForType()
         {
             Func<Message, Task<bool>> fn1 = m => Task.FromResult(true);
@@ -71,16 +72,14 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
 
             var handler1 = map.Get(typeof(GenericMessage));
 
-            Assert.That(handler1, Is.Not.Null);
-            Assert.That(handler1, Is.EqualTo(fn1));
-
+            handler1.ShouldBe(fn1);
+            
             var handler2 = map.Get(typeof(AnotherGenericMessage));
 
-            Assert.That(handler2, Is.Not.Null);
-            Assert.That(handler2, Is.EqualTo(fn2));
+            handler2.ShouldBe(fn2);
         }
 
-        [Test]
+        [Fact]
         public void MultipleHandlersForATypeAreNotSupported()
         {
             Func<Message, Task<bool>> fn1 = m => Task.FromResult(true);
@@ -89,10 +88,10 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
             var map = new HandlerMap();
 
             map.Add(typeof(GenericMessage), fn1);
-            Assert.Throws<ArgumentException>(() => map.Add(typeof(GenericMessage), fn2));
+            new Action(() => map.Add(typeof(GenericMessage), fn2)).ShouldThrow<ArgumentException>();
         }
 
-        [Test]
+        [Fact]
         public void MultipleHandlersForATypeWithOtherHandlersAreNotSupported()
         {
             Func<Message, Task<bool>> fn1 = m => Task.FromResult(true);
@@ -102,7 +101,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
             var map = new HandlerMap();
             map.Add(typeof(GenericMessage), fn1);
             map.Add(typeof(AnotherGenericMessage), fn3);
-            Assert.Throws<ArgumentException>(() => map.Add(typeof(GenericMessage), fn2));
+            new Action(() => map.Add(typeof(GenericMessage), fn2)).ShouldThrow<ArgumentException>();
         }
     }
 }

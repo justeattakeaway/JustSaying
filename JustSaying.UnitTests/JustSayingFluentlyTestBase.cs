@@ -6,7 +6,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests
 {
-    public abstract class JustSayingFluentlyTestBase : BehaviourTest<JustSaying.JustSayingFluently>
+    public abstract class JustSayingFluentlyTestBase : XAsyncBehaviourTest<JustSaying.JustSayingFluently>
     {
         protected IPublishConfiguration Configuration;
         protected IAmJustSaying Bus;

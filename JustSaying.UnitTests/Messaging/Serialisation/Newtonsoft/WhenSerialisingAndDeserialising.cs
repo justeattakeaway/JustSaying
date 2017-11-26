@@ -1,11 +1,12 @@
-﻿using JustBehave;
+using JustBehave;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.TestingFramework;
-using NUnit.Framework;
+using Xunit;
+using Assert = NUnit.Framework.Assert;
 
 namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
 {
-    public class WhenSerialisingAndDeserialising : BehaviourTest<NewtonsoftSerialiser>
+    public class WhenSerialisingAndDeserialising : XBehaviourTest<NewtonsoftSerialiser>
     {
         private MessageWithEnum _messageOut;
         private MessageWithEnum _messageIn;
@@ -21,13 +22,13 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
             _messageIn = SystemUnderTest.Deserialise(_jsonMessage, typeof(MessageWithEnum)) as MessageWithEnum;
         }
 
-        [Then]
+        [Fact]
         public void MessageHasBeenCreated()
         {
             Assert.NotNull(_messageOut);
         }
 
-        [Then]
+        [Fact]
         public void MessagesContainSameDetails()
         {
             Assert.AreEqual(_messageIn.EnumVal, _messageOut.EnumVal);
@@ -35,7 +36,7 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
             Assert.AreEqual(_messageIn.TimeStamp, _messageOut.TimeStamp);
         }
         
-        [Then]
+        [Fact]
         public void EnumsAreRepresentedAsStrings()
         {
             Assert.That(_jsonMessage.Contains("EnumVal"));

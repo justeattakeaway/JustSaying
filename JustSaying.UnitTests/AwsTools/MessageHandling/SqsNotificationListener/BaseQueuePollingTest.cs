@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,11 +14,11 @@ using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NUnit.Framework;
+using Shouldly;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
-    public abstract class BaseQueuePollingTest : AsyncBehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
+    public abstract class BaseQueuePollingTest : XAsyncBehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
     {
         protected const string QueueUrl = "url";
         protected IAmazonSQS Sqs;
@@ -71,7 +71,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 
             SystemUnderTest.StopListening();
 
-            Assert.IsTrue(doneOk, "Timout occured before done signal");
+            doneOk.ShouldBeTrue("Timout occured before done signal");
         }
 
         protected ReceiveMessageResponse GenerateResponseMessage(string messageType, Guid messageId)

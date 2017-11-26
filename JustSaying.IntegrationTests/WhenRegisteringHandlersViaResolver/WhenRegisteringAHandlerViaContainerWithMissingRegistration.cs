@@ -2,8 +2,9 @@ using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.IntegrationTests.TestHandlers;
 using Microsoft.Extensions.Logging;
-using NUnit.Framework;
 using StructureMap;
+using Xunit;
+using Assert = NUnit.Framework.Assert;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
@@ -27,7 +28,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             return Task.FromResult(true);
         }
 
-        [Then]
+        [Fact]
         public void ExceptionIsThrownBecauseHandlerIsNotRegisteredInContainer()
         {
             Assert.IsInstanceOf<HandlerNotRegisteredWithContainerException>(ThrownException);

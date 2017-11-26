@@ -1,13 +1,12 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.TestingFramework;
 using NSubstitute;
-using NUnit.Framework;
 using Shouldly;
+using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -40,20 +39,20 @@ namespace JustSaying.UnitTests.JustSayingBus
             return Task.CompletedTask;
         }
 
-        [Then]
+        [Fact]
         public void SubscribersStartedUp()
         {
             _subscriber1.Received().Listen();
             _subscriber2.Received().Listen();
         }
 
-        [Then]
+        [Fact]
         public void StateIsListening()
         {
-            Assert.True(SystemUnderTest.Listening);
+            SystemUnderTest.Listening.ShouldBeTrue();
         }
 
-        [Then]
+        [Fact]
         public void CallingStartTwiceDoesNotStartListeningTwice()
         {
             SystemUnderTest.Start();
@@ -61,7 +60,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             _subscriber2.Received(1).Listen();
         }
 
-        [Then]
+        [Fact]
         public void AndInterrogationShowsPublishersHaveBeenSet()
         {
             var response = SystemUnderTest.WhatDoIHave();

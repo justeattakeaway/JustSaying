@@ -47,7 +47,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             subscribingBus.StartListening();
 
             //Act
-            publishingBus.Publish(_message);
+            await publishingBus.PublishAsync(_message);
 
             //Assert
             var done = await Tasks.WaitWithTimeoutAsync(_signal.DoneSignal, TimeSpan.FromMinutes(1));

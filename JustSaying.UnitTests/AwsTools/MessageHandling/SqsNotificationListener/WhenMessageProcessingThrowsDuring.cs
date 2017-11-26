@@ -1,9 +1,9 @@
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
-using JustBehave;
 using JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support;
 using JustSaying.TestingFramework;
 using NSubstitute;
+using Xunit;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
 {
@@ -32,19 +32,19 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             await Task.Yield();
         }
 
-        [Then]
+        [Fact]
         public void MessageHandlerWasNotCalled()
         {
             Handler.DidNotReceiveWithAnyArgs().Handle(Arg.Any<GenericMessage>());
         }
 
-        [Then]
+        [Fact]
         public void FailedMessageIsNotRemovedFromQueue()
         {
             Sqs.DidNotReceiveWithAnyArgs().DeleteMessageAsync(Arg.Any<DeleteMessageRequest>());
         }
 
-        [Then]
+        [Fact]
         public void ExceptionIsLoggedToMonitor()
         {
             Monitor.DidNotReceiveWithAnyArgs().HandleException(Arg.Any<string>());

@@ -1,68 +1,68 @@
-﻿using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling
 {
-    [TestFixture]
     public class HandlerMetadataTests
     {
-        [Test]
+        [Fact]
         public void UnadornedHandler_DoesNotHaveExactlyOnce()
         {
             var handler = new UnadornedHandlerAsync();
             var reader = HandlerMetadata.ReadExactlyOnce(handler);
 
-            Assert.That(reader.Enabled, Is.False);
+            reader.Enabled.ShouldBeFalse();
         }
 
-        [Test]
+        [Fact]
         public void OnceTestHandlerAsync_DoesHaveExactlyOnce()
         {
             var handler = new OnceTestHandlerAsync();
             var reader = HandlerMetadata.ReadExactlyOnce(handler);
 
-            Assert.That(reader.Enabled, Is.True);
+            reader.Enabled.ShouldBeTrue();
         }
 
-        [Test]
+        [Fact]
         public void OnceTestHandlerAsync_HasCorrectTimeout()
         {
             var handler = new OnceTestHandlerAsync();
             var reader = HandlerMetadata.ReadExactlyOnce(handler);
 
-            Assert.That(reader.GetTimeOut(), Is.EqualTo(42));
+            reader.GetTimeOut().ShouldBe(42);
         }
 
-        [Test, Ignore("reverted")]
+        [Fact(Skip = "reverted")]
         public void OnceHandlerWithImplicitTimeoutAsync_DefaultsToMaximum()
         {
             var handler = new OnceHandlerWithImplicitTimeoutAsync();
             var reader = HandlerMetadata.ReadExactlyOnce(handler);
 
-            Assert.That(reader.GetTimeOut(), Is.EqualTo(int.MaxValue));
+            reader.GetTimeOut().ShouldBe(int.MaxValue);
         }
 
-        [Test]
+        [Fact]
         public void OnceTestHandler_DoesHaveExactlyOnce()
         {
             var handler = new OnceTestHandler();
             var reader = HandlerMetadata.ReadExactlyOnce(handler);
 
-            Assert.That(reader.Enabled, Is.True);
+            reader.Enabled.ShouldBeTrue();
         }
 
-        [Test]
+        [Fact]
         public void OnceTestHandler_HasCorrectTimeout()
         {
             var handler = new OnceTestHandler();
             var reader = HandlerMetadata.ReadExactlyOnce(handler);
 
-            Assert.That(reader.GetTimeOut(), Is.EqualTo(23));
+            reader.GetTimeOut().ShouldBe(23);
         }
 
-        [Test]
+        [Fact]
         public void WrappedHandler_DoesHaveExactlyOnce()
         {
 #pragma warning disable 618
@@ -71,7 +71,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
 
             var reader = HandlerMetadata.ReadExactlyOnce(wrapped);
 
-            Assert.That(reader.Enabled, Is.True);
+            reader.Enabled.ShouldBeTrue();
         }
     }
 }

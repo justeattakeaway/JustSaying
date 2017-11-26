@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Amazon;
 using JustSaying.IntegrationTests.TestHandlers;
@@ -6,11 +6,11 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPointToPointSubscriber
 {
-    [TestFixture]
     public class WhenAFailoverRegionIsSetup
     {
         private static readonly string PrimaryRegion = RegionEndpoint.EUWest1.SystemName;
@@ -27,18 +27,18 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
         private IHaveFulfilledSubscriptionRequirements _primaryBus;
         private IHaveFulfilledSubscriptionRequirements _secondaryBus;
 
-        [Test]
+        [Fact]
         public async Task MessagesArePublishedToTheActiveRegion()
         {
             GivenSubscriptionsToAQueueInTwoRegions();
             AndAPublisherWithAFailoverRegion();
 
             WhenThePrimaryRegionIsActive();
-            AndAMessageIsPublished();
+            await AndAMessageIsPublished();
             await ThenTheMessageIsReceivedInThatRegion(_primaryHandler);
 
             WhenTheFailoverRegionIsActive();
-            AndAMessageIsPublished();
+            await AndAMessageIsPublished();
             await ThenTheMessageIsReceivedInThatRegion(_secondaryHandler);
 
             _primaryBus.StopListening();
@@ -96,19 +96,19 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
             _activeRegion = SecondaryRegion;
         }
 
-        private void AndAMessageIsPublished()
+        private async Task AndAMessageIsPublished()
         {
             _message = new GenericMessage { Id = Guid.NewGuid() };
-            _publisher.Publish(_message);
+            await _publisher.PublishAsync(_message);
         }
 
         private async Task ThenTheMessageIsReceivedInThatRegion(Future<GenericMessage> handler)
         {
             var done = await Tasks.WaitWithTimeoutAsync(handler.DoneSignal);
-            Assert.That(done, Is.True);
+            done.ShouldBeTrue();
 
-            Assert.That(handler.ReceivedMessageCount, Is.GreaterThanOrEqualTo(1));
-            Assert.That(handler.HasReceived(_message));
+            handler.ReceivedMessageCount.ShouldBeGreaterThanOrEqualTo(1);
+            handler.HasReceived(_message).ShouldBeTrue();
         }
     }
 }

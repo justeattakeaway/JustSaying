@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Amazon;
 using JustBehave;
@@ -9,7 +9,8 @@ using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using NSubstitute;
-using NUnit.Framework;
+using Xunit;
+using Assert = NUnit.Framework.Assert;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 {
@@ -19,15 +20,17 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         public class TopicA : Message { }
         public class TopicB : Message { }
 
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.WithSqsTopicSubscriber()
                 .IntoQueue(QueueName)
                 .WithMessageHandler(Substitute.For<IHandlerAsync<GenericMessage<TopicA>>>())
                 .WithMessageHandler(Substitute.For<IHandlerAsync<GenericMessage<TopicB>>>());
+
+            return Task.CompletedTask;
         }
 
-        [Then]
+        [Fact]
         public async Task SqsPolicyWithAWildcardIsApplied()
         {
             var queue = new SqsQueueByName(RegionEndpoint.EUWest1, QueueName, Client, 0, Substitute.For<ILoggerFactory>());

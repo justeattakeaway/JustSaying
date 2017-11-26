@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Amazon;
 using JustBehave;
 using JustSaying.Messaging.MessageHandling;
@@ -6,6 +6,7 @@ using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
@@ -44,14 +45,14 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
             // When
             _bus.StartListening();
-            _bus.Publish(new GenericMessage());
+            await _bus.PublishAsync(new GenericMessage());
 
             // Teardown
             await doneSignal.Task;
             bus.StopListening();
         }
 
-        [Then]
+        [Fact]
         public void AMessageCanStillBePublishedAndPopsOutTheOtherEnd()
         {
             _handler.Received().Handle(Arg.Any<GenericMessage>());

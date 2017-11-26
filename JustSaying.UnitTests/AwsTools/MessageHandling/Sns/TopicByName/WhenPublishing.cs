@@ -1,4 +1,5 @@
-﻿using Amazon.SimpleNotificationService;
+using System.Threading.Tasks;
+using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
@@ -7,10 +8,11 @@ using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using Xunit;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sns.TopicByName
 {
-    public class WhenPublishing : BehaviourTest<SnsTopicByName>
+    public class WhenPublishing : XAsyncBehaviourTest<SnsTopicByName>
     {
         private const string Message = "the_message_in_json";
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
@@ -31,15 +33,15 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sns.TopicByName
                 .Returns(new Topic { TopicArn = TopicArn });
         }
 
-        protected override void When()
+        protected override async Task When()
         {
-            SystemUnderTest.Publish(new GenericMessage());
+            await SystemUnderTest.PublishAsync(new GenericMessage());
         }
 
-        [Then]
+        [Fact]
         public void MessageIsPublishedToSnsTopic()
         {
-            _sns.Received().Publish(Arg.Is<PublishRequest>(x => B(x)));
+            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => B(x)));
         }
 
         private static bool B(PublishRequest x)
@@ -47,16 +49,16 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sns.TopicByName
             return x.Message.Equals(Message);
         }
 
-        [Then]
+        [Fact]
         public void MessageSubjectIsObjectType()
         {
-            _sns.Received().Publish(Arg.Is<PublishRequest>(x => x.Subject == typeof(GenericMessage).Name));
+            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.Subject == typeof(GenericMessage).Name));
         }
 
-        [Then]
+        [Fact]
         public void MessageIsPublishedToCorrectLocation()
         {
-            _sns.Received().Publish(Arg.Is<PublishRequest>(x => x.TopicArn == TopicArn));
+            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.TopicArn == TopicArn));
         }
     }
 }

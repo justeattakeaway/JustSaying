@@ -1,8 +1,9 @@
-﻿using System;
-using JustBehave;
+using System;
+using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 using NSubstitute;
+using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
 {
@@ -22,16 +23,18 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         {
         }
 
-        protected override void When()
+        protected override Task When()
         {
             _response = SystemUnderTest
                 .WithSqsTopicSubscriber()
                 .IntoDefaultQueue()
                 .ConfigureSubscriptionWith(cfg => { })
                 .WithMessageHandler(_handler);
+
+            return Task.CompletedTask;
         }
 
-        [Then]
+        [Fact]
         public void HandlerIsAddedToBus()
         {
             Bus.Received().AddMessageHandler(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Func<IHandlerAsync<JustSayingMessage<MyMessage>>>>());

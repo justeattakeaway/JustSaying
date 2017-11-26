@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Monitoring;
 using NSubstitute;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 {
@@ -22,8 +23,7 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
 
         public int Count => _count;
     }
-
-    [TestFixture]
+    
     public class MessageLoopTests
     {
         private const int MinTaskDuration = 10;
@@ -32,10 +32,11 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
         private const int ConcurrencyLevel = 20;
         private const int MaxAmazonBatchSize = 10;
 
-        [TestCase(1)]
-        [TestCase(2)]
-        [TestCase(10)]
-        [TestCase(20)]
+        [Theory]
+        [InlineData(1)]
+        [InlineData(2)]
+        [InlineData(10)]
+        [InlineData(20)]
         public async Task SimulatedListenLoop_ProcessedAllMessages(int numberOfMessagesToProcess)
         {
             var fakeMonitor = Substitute.For<IMessageMonitor>();
@@ -54,19 +55,20 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             await Task.Delay(2000);
             await Task.Yield();
 
-            Assert.That(counter.Count, Is.EqualTo(numberOfMessagesToProcess));
+            counter.Count.ShouldBe(numberOfMessagesToProcess);
         }
 
-        [TestCase(2, 1)]
-        [TestCase(3, 2)]
-        [TestCase(6, 5)]
-        [TestCase(11, 10)]
-        [TestCase(100, 90)]
-        [TestCase(30, 20)]
-        [TestCase(1000, 900)]
+        [Theory]
+        [InlineData(2, 1)]
+        [InlineData(3, 2)]
+        [InlineData(6, 5)]
+        [InlineData(11, 10)]
+        [InlineData(100, 90)]
+        [InlineData(30, 20)]
+        [InlineData(1000, 900)]
         public async Task SimulatedListenLoop_WhenThrottlingOccurs_CallsMessageMonitor(int messageCount, int capacity)
         {
-            Assert.That(messageCount, Is.GreaterThan(capacity), "To cause throttling, message count must be over capacity");
+            messageCount.ShouldBeGreaterThan(capacity, "To cause throttling, message count must be over capacity");
 
             var fakeMonitor = Substitute.For<IMessageMonitor>();
             var messageProcessingStrategy = new Throttled(capacity, fakeMonitor);
@@ -80,15 +82,17 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
             fakeMonitor.Received().HandleThrottlingTime(Arg.Any<long>());
         }
 
-        [TestCase(1, 1)]
-        [TestCase(1, 2)]
-        [TestCase(2, 2)]
-        [TestCase(5, 10)]
-        [TestCase(10, 50)]
-        [TestCase(50, 50)]
+        [Theory]
+        [InlineData(1, 1)]
+        [InlineData(1, 2)]
+        [InlineData(2, 2)]
+        [InlineData(5, 10)]
+        [InlineData(10, 50)]
+        [InlineData(50, 50)]
         public async Task SimulatedListenLoop_WhenThrottlingDoesNotOccur_DoNotCallMessageMonitor(int messageCount, int capacity)
         {
-            Assert.That(messageCount, Is.LessThanOrEqualTo(capacity), "To avoid throttling, message count must be not be over capacity");
+            messageCount.ShouldBeLessThanOrEqualTo(capacity,
+                "To avoid throttling, message count must be not be over capacity");
 
             var fakeMonitor = Substitute.For<IMessageMonitor>();
             var messageProcessingStrategy = new Throttled(capacity, fakeMonitor);
@@ -123,16 +127,12 @@ namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
                     break;
                 }
 
-                Assert.That(messageProcessingStrategy.AvailableWorkers, Is.GreaterThanOrEqualTo(0));
+                messageProcessingStrategy.AvailableWorkers.ShouldBeGreaterThanOrEqualTo(0);
                 await messageProcessingStrategy.WaitForAvailableWorkers();
-                Assert.That(messageProcessingStrategy.AvailableWorkers, Is.GreaterThan(0));
+                messageProcessingStrategy.AvailableWorkers.ShouldBeGreaterThan(0);
 
-                if (stopwatch.Elapsed > timeout)
-                {
-                    var message =
-                        $"ListenLoopExecuted took longer than timeout of {timeoutSeconds}s, with {actions.Count} of {initalActionCount} messages remaining";
-                    Assert.Fail(message);
-                }
+                stopwatch.Elapsed.ShouldBeLessThanOrEqualTo(timeout,
+                    $"ListenLoopExecuted took longer than timeout of {timeoutSeconds}s, with {actions.Count} of {initalActionCount} messages remaining");
             }
         }
 

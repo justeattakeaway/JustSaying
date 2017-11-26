@@ -1,8 +1,8 @@
 using System.Threading.Tasks;
-using JustBehave;
 using JustSaying.Messaging;
 using NSubstitute;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -25,13 +25,13 @@ namespace JustSaying.UnitTests.JustSayingBus
             return Task.CompletedTask;
         }
 
-        [Then]
+        [Fact]
         public void StateIsNotListening()
         {
-            Assert.False(SystemUnderTest.Listening);
+            SystemUnderTest.Listening.ShouldBeFalse();
         }
 
-        [Then]
+        [Fact]
         public void CallingStopTwiceDoesNotStopListeningTwice()
         {
             SystemUnderTest.Stop();

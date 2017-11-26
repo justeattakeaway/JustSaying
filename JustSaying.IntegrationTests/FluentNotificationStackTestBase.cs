@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
@@ -13,7 +14,7 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests
 {
-    public abstract class FluentNotificationStackTestBase : BehaviourTest<JustSaying.JustSayingFluently>
+    public abstract class FluentNotificationStackTestBase : XAsyncBehaviourTest<JustSaying.JustSayingFluently>
     {
         private static readonly RegionEndpoint DefaultEndpoint = RegionEndpoint.EUWest1;
         protected static RegionEndpoint TestEndpoint { get; set; }
@@ -58,7 +59,7 @@ namespace JustSaying.IntegrationTests
             notificationStackField.SetValue(fns, NotificationStack);
         }
 
-        protected override void When()
+        protected override Task When()
         {
             throw new NotImplementedException();
         }
@@ -68,29 +69,29 @@ namespace JustSaying.IntegrationTests
             _enableMockedBus = true;
         }
 
-        public static void DeleteTopicIfItAlreadyExists(string regionEndpointName, string topicName)
+        public static async Task DeleteTopicIfItAlreadyExists(string regionEndpointName, string topicName)
         {
-            DeleteTopicIfItAlreadyExists(RegionEndpoint.GetBySystemName(regionEndpointName), topicName);
+            await DeleteTopicIfItAlreadyExists(RegionEndpoint.GetBySystemName(regionEndpointName), topicName);
         }
 
-        public static void DeleteTopicIfItAlreadyExists(RegionEndpoint regionEndpoint, string topicName)
+        public static async Task DeleteTopicIfItAlreadyExists(RegionEndpoint regionEndpoint, string topicName)
         {
-            var topics = GetAllTopics(regionEndpoint, topicName);
+            var topics = await GetAllTopics(regionEndpoint, topicName);
 
-            topics.ForEach(t => DeleteTopic(regionEndpoint, t));
+            topics.ForEach(t => DeleteTopic(regionEndpoint, t).Wait());
 
-            Topic topic;
-            if (TryGetTopic(regionEndpoint, topicName, out topic))
+            var (topicExists, _) = await TryGetTopic(regionEndpoint, topicName);
+            if (topicExists)
             {
                 throw new Exception("Deleted topic still exists!");
             }
         }
 
-        protected void DeleteQueueIfItAlreadyExists(RegionEndpoint regionEndpoint, string queueName)
+        protected async Task DeleteQueueIfItAlreadyExists(RegionEndpoint regionEndpoint, string queueName)
         {
-            var queues = GetAllQueues(regionEndpoint, queueName);
+            var queues = await GetAllQueues(regionEndpoint, queueName);
 
-            queues.ForEach(t => DeleteQueue(regionEndpoint, t));
+            queues.ForEach(t => DeleteQueue(regionEndpoint, t).Wait());
 
             const int maxSleepTime = 60;
             const int sleepStep = 5;
@@ -99,7 +100,7 @@ namespace JustSaying.IntegrationTests
 
             while ((DateTime.Now - start).TotalSeconds <= maxSleepTime)
             {
-                if (!GetAllQueues(regionEndpoint, queueName).Any())
+                if (!(await GetAllQueues(regionEndpoint, queueName)).Any())
                     return;
 
                 Thread.Sleep(TimeSpan.FromSeconds(sleepStep));
@@ -112,26 +113,26 @@ namespace JustSaying.IntegrationTests
 
         // ToDo: All these can go because we have already implemented them in AwsTools... Seriously. Wasted effort.
 
-        protected static void DeleteTopic(RegionEndpoint regionEndpoint, Topic topic)
+        protected static async Task DeleteTopic(RegionEndpoint regionEndpoint, Topic topic)
         {
             var client = CreateMeABus.DefaultClientFactory().GetSnsClient(regionEndpoint);
-            client.DeleteTopic(new DeleteTopicRequest {TopicArn = topic.TopicArn});
+            await client.DeleteTopicAsync(new DeleteTopicRequest {TopicArn = topic.TopicArn});
         }
 
-        private static void DeleteQueue(RegionEndpoint regionEndpoint, string queueUrl)
+        private static async Task DeleteQueue(RegionEndpoint regionEndpoint, string queueUrl)
         {
             var client = CreateMeABus.DefaultClientFactory().GetSqsClient(regionEndpoint);
-            client.DeleteQueue(new DeleteQueueRequest {QueueUrl = queueUrl});
+            await client.DeleteQueueAsync(new DeleteQueueRequest {QueueUrl = queueUrl});
         }
 
-        private static List<Topic> GetAllTopics(RegionEndpoint regionEndpoint, string topicName)
+        private static async Task<List<Topic>> GetAllTopics(RegionEndpoint regionEndpoint, string topicName)
         {
             var client = CreateMeABus.DefaultClientFactory().GetSnsClient(regionEndpoint);
             var topics = new List<Topic>();
             string nextToken = null;
             do
             {
-                var topicsResponse = client.ListTopics(new ListTopicsRequest{NextToken = nextToken});
+                var topicsResponse = await client.ListTopicsAsync(new ListTopicsRequest{NextToken = nextToken});
                 nextToken = topicsResponse.NextToken;
                 topics.AddRange(topicsResponse.Topics);
             } while (nextToken != null);
@@ -141,23 +142,23 @@ namespace JustSaying.IntegrationTests
                     .ToList();
         }
 
-        private static List<string> GetAllQueues(RegionEndpoint regionEndpoint, string queueName)
+        private static async Task<List<string>> GetAllQueues(RegionEndpoint regionEndpoint, string queueName)
         {
             var client = CreateMeABus.DefaultClientFactory().GetSqsClient(regionEndpoint);
-            var topics = client.ListQueues(new ListQueuesRequest());
+            var topics = await client.ListQueuesAsync(new ListQueuesRequest());
             return
                 topics.QueueUrls.Where(x => x.IndexOf(queueName, StringComparison.InvariantCultureIgnoreCase) >= 0)
                     .ToList();
         }
 
-        protected static bool TryGetTopic(RegionEndpoint regionEndpoint, string topicName, out Topic topic)
+        protected static async Task<(bool topicExists, Topic topic)> TryGetTopic(RegionEndpoint regionEndpoint, string topicName)
         {
-            topic = GetAllTopics(regionEndpoint, topicName).SingleOrDefault();
+            var topic = (await GetAllTopics(regionEndpoint, topicName)).SingleOrDefault();
 
-            return topic != null;
+            return (topic != null, topic);
         }
 
-        protected static bool WaitForQueueToExist(RegionEndpoint regionEndpoint, string queueName, out string queueUrl)
+        protected static async Task<(bool queueExists,string queueUrl)> WaitForQueueToExist(RegionEndpoint regionEndpoint, string queueName)
         {
             const int maxSleepTime = 60;
             const int sleepStep = 5;
@@ -166,19 +167,18 @@ namespace JustSaying.IntegrationTests
 
             while ((DateTime.Now - start).TotalSeconds <= maxSleepTime)
             {
-                queueUrl = GetAllQueues(regionEndpoint, queueName).FirstOrDefault();
+                var queueUrl = (await GetAllQueues(regionEndpoint, queueName)).FirstOrDefault();
 
                 if (!String.IsNullOrEmpty(queueUrl))
-                    return true;
+                    return (true, queueUrl);
 
                 Thread.Sleep(TimeSpan.FromSeconds(sleepStep));
             }
-
-            queueUrl = null;
-            return false;
+            
+            return (false, null);
         }
 
-        protected bool IsQueueSubscribedToTopic(RegionEndpoint regionEndpoint, Topic topic, string queueUrl)
+        protected async Task<bool> IsQueueSubscribedToTopic(RegionEndpoint regionEndpoint, Topic topic, string queueUrl)
         {
             var request = new GetQueueAttributesRequest
             {
@@ -188,26 +188,26 @@ namespace JustSaying.IntegrationTests
 
             var sqsclient = CreateMeABus.DefaultClientFactory().GetSqsClient(regionEndpoint);
 
-            var queueArn = sqsclient.GetQueueAttributes(request).QueueARN;
+            var queueArn = (await sqsclient.GetQueueAttributesAsync(request)).QueueARN;
 
             var client = new AmazonSimpleNotificationServiceClient(regionEndpoint);
 
             var subscriptions =
-                client.ListSubscriptionsByTopic(new ListSubscriptionsByTopicRequest(topic.TopicArn)).Subscriptions;
+                (await client.ListSubscriptionsByTopicAsync(new ListSubscriptionsByTopicRequest(topic.TopicArn))).Subscriptions;
 
             return subscriptions.Any(x => !string.IsNullOrEmpty(x.SubscriptionArn) && x.Endpoint == queueArn);
         }
 
-        protected bool QueueHasPolicyForTopic(RegionEndpoint regionEndpoint, Topic topic, string queueUrl)
+        protected async Task<bool> QueueHasPolicyForTopic(RegionEndpoint regionEndpoint, Topic topic, string queueUrl)
         {
             var client = CreateMeABus.DefaultClientFactory().GetSqsClient(regionEndpoint);
 
             var policy =
-                client.GetQueueAttributes(new GetQueueAttributesRequest
+                (await client.GetQueueAttributesAsync(new GetQueueAttributesRequest
                 {
                     QueueUrl = queueUrl,
                     AttributeNames = new List<string> {"Policy"}
-                }).Policy;
+                })).Policy;
 
             int pos = topic.TopicArn.LastIndexOf(':');
             string wildcardedSubscription = topic.TopicArn.Substring(0, pos + 1) + "*";

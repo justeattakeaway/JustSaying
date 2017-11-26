@@ -2,8 +2,8 @@ using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.TestingFramework;
 using NSubstitute;
-using NUnit.Framework;
 using Shouldly;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
@@ -16,20 +16,17 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             RecordAnyExceptionsThrown();
 
             base.Given();
-            _handler = new Future<GenericMessage>(() =>
-            {
-                throw new TestException("Test Exception from WhenHandlersThrowAnException");
-            });
+            _handler = new Future<GenericMessage>(() => throw new TestException("Test Exception from WhenHandlersThrowAnException"));
             RegisterSnsHandler(_handler);
         }
 
         protected override async Task When()
         {
-            ServiceBus.Publish(new GenericMessage());
+            await ServiceBus.PublishAsync(new GenericMessage());
             await _handler.DoneSignal;
         }
 
-        [Test]
+        [Fact]
         public void ThenExceptionIsRecordedInMonitoring()
         {
             _handler.ReceivedMessageCount.ShouldBeGreaterThan(0);

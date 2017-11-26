@@ -1,7 +1,8 @@
-using JustBehave;
+using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 using NSubstitute;
+using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
 {
@@ -12,14 +13,16 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
 
         protected override void Given() { }
 
-        protected override void When()
+        protected override Task When()
         {
             _bus = SystemUnderTest
                 .WithSqsTopicSubscriber()
                 .IntoQueue("queuename");
+
+            return Task.CompletedTask;
         }
 
-        [Then]
+        [Fact]
         public void ConfigurationIsNotRequired()
         {
             // Tested by the fact that handlers can be added
@@ -27,7 +30,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
                 .WithMessageHandler(_handler);
         }
 
-        [Then]
+        [Fact]
         public void ConfigurationCanBeProvided()
         {
             _bus.ConfigureSubscriptionWith(conf => conf.InstancePosition = 1);

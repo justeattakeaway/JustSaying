@@ -5,12 +5,12 @@ using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.Logging;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.AwsTools.IntegrationTests
 {
-    [TestFixture]
-    public class WhenSettingUpMultipleHandlersFails : BehaviourTest<IHaveFulfilledSubscriptionRequirements>
+    public class WhenSettingUpMultipleHandlersFails : XBehaviourTest<IHaveFulfilledSubscriptionRequirements>
     {
         public class Order : Models.Message
         {
@@ -80,17 +80,17 @@ namespace JustSaying.AwsTools.IntegrationTests
             handlersAttached++;
         }
 
-        [Test]
+        [Fact]
         public void ThenOnlyOneHandlerIsAttached()
         {
-            Assert.That(handlersAttached, Is.EqualTo(1));
+            handlersAttached.ShouldBe(1);
         }
 
-        [Test]
+        [Fact]
         public void ThenAnExceptionIsThrown()
         {
-            Assert.That(_capturedException, Is.Not.Null);
-            Assert.That(_capturedException.Message, Does.StartWith("The handler for 'Order' messages on this queue has already been registered."));
+            _capturedException.ShouldNotBeNull();
+            _capturedException.Message.ShouldStartWith("The handler for 'Order' messages on this queue has already been registered.");
         }
     }
 }

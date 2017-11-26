@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using JustBehave;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -19,10 +19,10 @@ namespace JustSaying.UnitTests.JustSayingBus
             return Task.CompletedTask;
         }
 
-        [Then]
+        [Fact]
         public void ArgExceptionThrown()
         {
-            Assert.AreEqual(((ArgumentException)ThrownException).ParamName, "region");
+            ((ArgumentException) ThrownException).ParamName.ShouldBe("region");
         }
     }
 }

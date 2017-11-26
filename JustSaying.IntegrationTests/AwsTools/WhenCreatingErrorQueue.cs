@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace JustSaying.AwsTools.IntegrationTests
 {
-    public  class WhenCreatingErrorQueue : BehaviourTest<ErrorQueue>
+    public  class WhenCreatingErrorQueue : XBehaviourTest<ErrorQueue>
     {
         protected string QueueUniqueKey;
 
@@ -27,7 +27,8 @@ namespace JustSaying.AwsTools.IntegrationTests
             QueueUniqueKey = "test" + DateTime.Now.Ticks;
             return new ErrorQueue(RegionEndpoint.EUWest1, QueueUniqueKey, CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1), new LoggerFactory());
         }
-        public override void PostAssertTeardown()
+
+        protected override void PostAssertTeardown()
         {
             SystemUnderTest.Delete();
             base.PostAssertTeardown();

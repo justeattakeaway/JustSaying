@@ -1,4 +1,4 @@
-﻿using Amazon;
+using Amazon;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using Amazon.SQS;
@@ -15,14 +15,14 @@ namespace JustSaying.AwsTools.IntegrationTests
             var innerClient = CreateMeABus.DefaultClientFactory().GetSnsClient(region);
             var client = Substitute.For<IAmazonSimpleNotificationService>();
 
-            client.CreateTopic(Arg.Any<CreateTopicRequest>())
+            client.CreateTopicAsync(Arg.Any<CreateTopicRequest>())
                 .ThrowsForAnyArgs(x => new AuthorizationErrorException("Denied"));
 
-            client.FindTopic(Arg.Any<string>())
-                .ReturnsForAnyArgs(r => innerClient.FindTopic(r.Arg<string>()));
+            client.FindTopicAsync(Arg.Any<string>())
+                .ReturnsForAnyArgs(r => innerClient.FindTopicAsync(r.Arg<string>()));
 
-            client.GetTopicAttributes(Arg.Any<string>())
-                .ReturnsForAnyArgs(r => innerClient.GetTopicAttributes(r.Arg<string>()));
+            client.GetTopicAttributesAsync(Arg.Any<string>())
+                .ReturnsForAnyArgs(r => innerClient.GetTopicAttributesAsync(r.Arg<string>()));
 
             return client;
         }

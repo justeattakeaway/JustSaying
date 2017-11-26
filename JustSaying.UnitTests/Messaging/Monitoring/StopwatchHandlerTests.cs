@@ -1,17 +1,17 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using NSubstitute;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.Messaging.UnitTests.Monitoring
 {
-    [TestFixture]
     public class StopwatchHandlerTests
     {
-        [Test]
+        [Fact]
         public async Task WhenHandlerIsWrappedinStopWatch_InnerHandlerIsCalled()
         {
             var handler = MockHandler();
@@ -20,12 +20,12 @@ namespace JustSaying.Messaging.UnitTests.Monitoring
             var stopWatchHandler = new StopwatchHandler<OrderAccepted>(handler, monitoring);
 
             var result = await stopWatchHandler.Handle(new OrderAccepted());
-            Assert.That(result, Is.True);
-
+            result.ShouldBeTrue();
+            
             await handler.Received(1).Handle(Arg.Any<OrderAccepted>());
         }
 
-        [Test]
+        [Fact]
         public async Task WhenHandlerIsWrappedinStopWatch_MonitoringIsCalled()
         {
             var handler = MockHandler();
@@ -39,7 +39,7 @@ namespace JustSaying.Messaging.UnitTests.Monitoring
                 Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan>());
         }
 
-        [Test]
+        [Fact]
         public async Task WhenHandlerIsWrappedinStopWatch_MonitoringIsCalledWithCorrectTypeNames()
         {
             var handler = MockHandler();
@@ -55,7 +55,7 @@ namespace JustSaying.Messaging.UnitTests.Monitoring
                 innnerHandlerName, "orderaccepted", Arg.Any<TimeSpan>());
         }
 
-        [Test]
+        [Fact]
         public async Task WhenHandlerIsWrappedinStopWatch_MonitoringIsCalledWithTiming()
         {
             var handler = MockHandler();

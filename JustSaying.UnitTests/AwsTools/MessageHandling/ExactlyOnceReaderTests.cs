@@ -1,34 +1,33 @@
-﻿using JustSaying.AwsTools.MessageHandling;
-using NUnit.Framework;
+using JustSaying.AwsTools.MessageHandling;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.AwsTools.UnitTests.MessageHandling
 {
-
-    [TestFixture]
     public class ExactlyOnceReaderTests
     {
-        [Test]
+        [Fact]
         public void ObjectTypeDoesNotHaveExactlyOnce()
         {
             var reader = new ExactlyOnceReader(typeof (object));
 
-            Assert.That(reader.Enabled, Is.False);
+            reader.Enabled.ShouldBeFalse();
         }
 
-        [Test]
+        [Fact]
         public void UnadornedHandlerType_DoesNotHaveExactlyOnce()
         {
             var reader = new ExactlyOnceReader(typeof(UnadornedHandlerAsync));
 
-            Assert.That(reader.Enabled, Is.False);
+            reader.Enabled.ShouldBeFalse();
         }
 
-        [Test]
+        [Fact]
         public void OnceTestHandlerAsyncType_HasExactlyOnce()
         {
             var reader = new ExactlyOnceReader(typeof (OnceTestHandlerAsync));
 
-            Assert.That(reader.Enabled, Is.True);
+            reader.Enabled.ShouldBeTrue();
         }
     }
 }

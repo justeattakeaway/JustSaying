@@ -1,16 +1,15 @@
-﻿using System;
-using NUnit.Framework;
+using System;
 using Microsoft.Extensions.Logging;
+using Xunit;
 
 namespace JustSaying.UnitTests.CreateMe
 {
     public class WhenCreatingABus
     {
-        private Action<IPublishConfiguration> _config;
-        private string _region;
+        private readonly Action<IPublishConfiguration> _config;
+        private readonly string _region;
 
-        [OneTimeSetUp]
-        public void Given()
+        public WhenCreatingABus()
         {
             _region = "region-1";
             _config = x =>
@@ -20,39 +19,39 @@ namespace JustSaying.UnitTests.CreateMe
             };
         }
 
-        [Test]
+        [Fact]
         public void PublishConfigurationIsOptional()
         {
             // Enforced by the fact we can do other configurations on the bus.
             CreateMeABus.WithLogging(new LoggerFactory()).InRegion(_region).StopListening();
         }
 
-        [Test]
+        [Fact]
         public void PublishConfigurationCanBeProvided()
         {
             CreateMeABus.WithLogging(new LoggerFactory()).InRegion(_region).ConfigurePublisherWith(_config);
         }
 
-        [Test]
+        [Fact]
         public void ThenICanProvideMonitoring()
         {
             CreateMeABus.WithLogging(new LoggerFactory()).InRegion(_region).WithMonitoring(null).ConfigurePublisherWith(_config);
         }
 
-        [Test]
+        [Fact]
         public void MonitoringIsNotEnforced()
         {
             // Enforced by the fact we can do other configurations on the bus.
             CreateMeABus.WithLogging(new LoggerFactory()).InRegion(_region).ConfigurePublisherWith(_config).StopListening();
         }
 
-        [Test]
+        [Fact]
         public void ThenICanProvideCustomSerialisation()
         {
             CreateMeABus.WithLogging(new LoggerFactory()).InRegion(_region).WithSerialisationFactory(null);
         }
 
-        [Test]
+        [Fact]
         public void CustomSerialisationIsNotEnforced()
         {
             // Enforced by the fact we can do other configurations on the bus.

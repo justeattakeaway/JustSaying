@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Amazon;
 using JustBehave;
@@ -8,6 +8,8 @@ using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
+using Xunit;
+using Assert = NUnit.Framework.Assert;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
@@ -51,20 +53,20 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             // When
             bus.StartListening();
 
-            bus.Publish(new GenericMessage());
+            await bus.PublishAsync(new GenericMessage());
 
             // Teardown
             await _handler.DoneSignal.Task;
             bus.StopListening();
         }
 
-        [Then]
+        [Fact]
         public void MessagePopsOutAtTheOtherEnd()
         {
             Assert.That(_handler.MessageReceived, Is.Not.Null);
         }
 
-        [Then]
+        [Fact]
         public void CustomExceptionHandlingIsCalled()
         {
             Assert.That(_handledException, Is.True);
