@@ -29,7 +29,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
         public override Task<bool> ExistsAsync() => Task.FromResult(true);
     }
     
-    public class WhenDispatchingMessage : XBehaviourTest<MessageDispatcher>
+    public class WhenDispatchingMessage : XAsyncBehaviourTest<MessageDispatcher>
     {
         private const string ExpectedQueueUrl = "http://queueurl";
         
@@ -61,7 +61,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             _serialisationRegister.DeserializeMessage(Arg.Any<string>()).Returns(_typedMessage);
         }
 
-        protected override void When() => SystemUnderTest.DispatchMessage(_sqsMessage).GetAwaiter().GetResult();
+        protected override async Task When() =>  await SystemUnderTest.DispatchMessage(_sqsMessage);
 
         protected override MessageDispatcher CreateSystemUnderTest()
         {

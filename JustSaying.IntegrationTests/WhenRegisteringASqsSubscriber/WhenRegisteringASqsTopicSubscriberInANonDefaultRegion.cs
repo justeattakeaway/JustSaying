@@ -4,7 +4,6 @@ using Amazon;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 using NSubstitute;
-using NUnit.Framework;
 using Xunit;
 using Assert = Xunit.Assert;
 
@@ -58,9 +57,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             Assert.True(await QueueHasPolicyForTopic(_regionEndpoint, topic, queueUrl), "Queue does not have a policy for the topic");
 
         }
-
-        [OneTimeTearDown]
-        public void TearDown()
+        
+        protected override void PostAssertTeardown()
         {
             DeleteQueueIfItAlreadyExists(_regionEndpoint, _queueName).Wait();
             DeleteTopicIfItAlreadyExists(_regionEndpoint, _topicName).Wait();

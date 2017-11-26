@@ -44,8 +44,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
                 .AddSerialiser<Message>(Arg.Any<IMessageSerialiser>());
         }
 
-        [TearDown]
-        public void TearDown()
+        protected override void PostAssertTeardown()
         {
             DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName).Wait();
         }

@@ -6,6 +6,7 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
+using NSubstitute;
 using Shouldly;
 using Xunit;
 
@@ -54,7 +55,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
             var bus = CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion(region)
-                .WithMonitoring(new Monitoring())
+                .WithMonitoring(Substitute.For<IMessageMonitor>())
                 .WithMessageLockStoreOf(new MessageLockStore())
                 .WithSqsTopicSubscriber().IntoQueue(QueueName)
                 .WithMessageHandlers(_handler1, _handler2);
@@ -98,7 +99,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
             var bus = CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion(region)
-                .WithMonitoring(new Monitoring())
+                .WithMonitoring(Substitute.For<IMessageMonitor>())
                 .WithMessageLockStoreOf(new MessageLockStore())
                 .WithSqsTopicSubscriber()
                 .IntoQueue(QueueName)
@@ -145,17 +146,5 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         {
             _store.Remove(key);
         }
-    }
-
-    internal class Monitoring : IMessageMonitor, IMeasureHandlerExecutionTime
-    {
-        public void HandleException(string messageType) { }
-        public void HandleTime(long handleTimeMs) { }
-        public void IssuePublishingMessage() { }
-        public void IncrementThrottlingStatistic() { }
-        public void HandleThrottlingTime(long handleTimeMs) { }
-        public void PublishMessageTime(long handleTimeMs) { }
-        public void ReceiveMessageTime(long handleTimeMs, string queueName, string region) { }
-        public void HandlerExecutionTime(string typeName, string eventName, TimeSpan executionTime) { }
     }
 }

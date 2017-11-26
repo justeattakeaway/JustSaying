@@ -77,8 +77,8 @@ namespace JustSaying.IntegrationTests
         public static async Task DeleteTopicIfItAlreadyExists(RegionEndpoint regionEndpoint, string topicName)
         {
             var topics = await GetAllTopics(regionEndpoint, topicName);
-
-            topics.ForEach(t => DeleteTopic(regionEndpoint, t).Wait());
+            
+            await Task.WhenAll(topics.Select(t => DeleteTopic(regionEndpoint, t)));
 
             var (topicExists, _) = await TryGetTopic(regionEndpoint, topicName);
             if (topicExists)

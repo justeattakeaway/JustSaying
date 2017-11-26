@@ -34,16 +34,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
 
             reader.GetTimeOut().ShouldBe(42);
         }
-
-        [Fact(Skip = "reverted")]
-        public void OnceHandlerWithImplicitTimeoutAsync_DefaultsToMaximum()
-        {
-            var handler = new OnceHandlerWithImplicitTimeoutAsync();
-            var reader = HandlerMetadata.ReadExactlyOnce(handler);
-
-            reader.GetTimeOut().ShouldBe(int.MaxValue);
-        }
-
+        
         [Fact]
         public void OnceTestHandler_DoesHaveExactlyOnce()
         {
