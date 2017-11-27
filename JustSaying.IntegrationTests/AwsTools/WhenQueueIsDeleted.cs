@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.TestingFramework;
 using Xunit;
 
 namespace JustSaying.IntegrationTests.AwsTools
