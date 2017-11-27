@@ -4,7 +4,7 @@ using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.AwsTools.IntegrationTests
+namespace JustSaying.IntegrationTests.AwsTools
 {
     public abstract class WhenCreatingQueuesByName : XAsyncBehaviourTest<SqsQueueByName>
     {

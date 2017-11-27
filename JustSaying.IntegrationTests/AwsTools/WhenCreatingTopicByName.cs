@@ -6,7 +6,7 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.AwsTools.IntegrationTests
+namespace JustSaying.IntegrationTests.AwsTools
 {
     public abstract class WhenCreatingTopicByName : XBehaviourTest<SnsTopicByName>
     {

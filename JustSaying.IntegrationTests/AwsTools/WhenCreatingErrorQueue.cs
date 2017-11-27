@@ -1,12 +1,13 @@
 using System;
 using Amazon;
 using JustBehave;
+using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.AwsTools.IntegrationTests
+namespace JustSaying.IntegrationTests.AwsTools
 {
     public  class WhenCreatingErrorQueue : XBehaviourTest<ErrorQueue>
     {

@@ -1,9 +1,8 @@
 using System.Threading.Tasks;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.TestingFramework;
 using Xunit;
 
-namespace JustSaying.AwsTools.IntegrationTests
+namespace JustSaying.IntegrationTests.AwsTools
 {
     public class WhenQueueIsDeleted : WhenCreatingQueuesByName
     {

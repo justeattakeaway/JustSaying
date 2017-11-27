@@ -10,14 +10,13 @@ using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
-namespace JustSaying.AwsTools.IntegrationTests
+namespace JustSaying.IntegrationTests.AwsTools
 {
-    // OK, I know it ain't pretty, but we needed this asap & it does the job. Deal with it. :)
+    // OK, I know it ain't pretty, but we needed this asap & it does the job. Deal with it. :)]
     public class BasicHandlingThrottlingTest
     {
         [Xunit.Theory(Skip= "Explicitly ran")]

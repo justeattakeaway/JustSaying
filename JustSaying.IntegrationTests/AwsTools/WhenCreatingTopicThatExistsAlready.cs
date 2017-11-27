@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.AwsTools.IntegrationTests
+namespace JustSaying.IntegrationTests.AwsTools
 {
     public class WhenCreatingTopicThatExistsAlready : WhenCreatingTopicByName
     {

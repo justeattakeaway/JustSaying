@@ -2,10 +2,11 @@ using Amazon;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using Amazon.SQS;
+using JustSaying.AwsTools;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
-namespace JustSaying.AwsTools.IntegrationTests
+namespace JustSaying.IntegrationTests.AwsTools
 {
     public class NoTopicCreationAwsClientFactory : IAwsClientFactory
     {
