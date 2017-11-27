@@ -1,11 +1,11 @@
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
-using JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.Support;
 using NSubstitute;
 using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
     /// <summary>
     /// this test exercises different exception handlers to the "handler throws an exception" path in WhenMessageHandlingThrows

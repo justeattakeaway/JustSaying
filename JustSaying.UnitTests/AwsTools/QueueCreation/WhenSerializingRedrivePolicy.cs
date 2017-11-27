@@ -2,7 +2,7 @@ using JustSaying.AwsTools.QueueCreation;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.QueueCreation
+namespace JustSaying.UnitTests.AwsTools.QueueCreation
 {
     public class WhenSerializingRedrivePolicy 
     {

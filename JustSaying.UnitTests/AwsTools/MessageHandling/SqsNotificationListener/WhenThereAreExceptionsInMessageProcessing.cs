@@ -8,15 +8,15 @@ using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
-using NSubstitute;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
-using Xunit;
+using NSubstitute;
 using Shouldly;
+using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
-    public class WhenThereAreExceptionsInMessageProcessing : XAsyncBehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
+    public class WhenThereAreExceptionsInMessageProcessing : XAsyncBehaviourTest<JustSaying.AwsTools.MessageHandling.SqsNotificationListener>
     {
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private readonly IMessageSerialisationRegister _serialisationRegister = 
@@ -24,9 +24,9 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         
         private int _callCount;
 
-        protected override AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
+        protected override JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
-            return new AwsTools.MessageHandling.SqsNotificationListener(
+            return new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
                 new SqsQueueByUrl(RegionEndpoint.EUWest1, "", _sqs), 
                 _serialisationRegister, 
                 Substitute.For<IMessageMonitor>(),

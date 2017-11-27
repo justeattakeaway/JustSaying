@@ -7,7 +7,7 @@ using NSubstitute;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.Messaging.UnitTests.Monitoring
+namespace JustSaying.UnitTests.Messaging.Monitoring
 {
     public class StopwatchHandlerTests
     {

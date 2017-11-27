@@ -10,7 +10,7 @@ using NSubstitute;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.Messaging.UnitTests.MessageProcessingStrategies
+namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
 {
     public class ThreadSafeCounter
     {

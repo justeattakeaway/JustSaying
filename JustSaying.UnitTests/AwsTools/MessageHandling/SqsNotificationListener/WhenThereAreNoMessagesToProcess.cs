@@ -12,16 +12,16 @@ using NSubstitute;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
-    public class WhenThereAreNoMessagesToProcess : XAsyncBehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
+    public class WhenThereAreNoMessagesToProcess : XAsyncBehaviourTest<JustSaying.AwsTools.MessageHandling.SqsNotificationListener>
     {
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private int _callCount;
 
-        protected override AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
+        protected override JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
-            return new AwsTools.MessageHandling.SqsNotificationListener(
+            return new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
                 new SqsQueueByUrl(RegionEndpoint.EUWest1, "", _sqs),
                 null,
                 Substitute.For<IMessageMonitor>(),

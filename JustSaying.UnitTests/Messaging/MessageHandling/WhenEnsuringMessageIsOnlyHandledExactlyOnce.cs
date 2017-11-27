@@ -6,7 +6,7 @@ using NSubstitute;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.Messaging.UnitTests.MessageHandling
+namespace JustSaying.UnitTests.Messaging.MessageHandling
 {
     public class WhenEnsuringMessageIsOnlyHandledExactlyOnce
     {

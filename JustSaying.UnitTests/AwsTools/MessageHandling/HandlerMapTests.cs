@@ -6,7 +6,7 @@ using JustSaying.TestingFramework;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling
+namespace JustSaying.UnitTests.AwsTools.MessageHandling
 {
     public class HandlerMapTests
     {

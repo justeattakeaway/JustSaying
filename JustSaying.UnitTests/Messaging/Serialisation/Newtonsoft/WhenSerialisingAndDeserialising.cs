@@ -4,7 +4,7 @@ using JustSaying.TestingFramework;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
+namespace JustSaying.UnitTests.Messaging.Serialisation.Newtonsoft
 {
     public class WhenSerialisingAndDeserialising : XBehaviourTest<NewtonsoftSerialiser>
     {

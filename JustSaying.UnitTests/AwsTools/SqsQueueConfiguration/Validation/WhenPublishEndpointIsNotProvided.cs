@@ -1,9 +1,10 @@
 using JustBehave;
+using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.SqsQueueConfiguration.Validation
+namespace JustSaying.UnitTests.AwsTools.SqsQueueConfiguration.Validation
 {
     public class WhenPublishEndpointIsNotProvided : XBehaviourTest<SqsReadConfiguration>
     {

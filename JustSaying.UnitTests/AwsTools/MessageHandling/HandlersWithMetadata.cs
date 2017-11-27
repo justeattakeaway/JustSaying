@@ -2,7 +2,7 @@
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling
+namespace JustSaying.UnitTests.AwsTools.MessageHandling
 {
     public class UnadornedHandlerAsync : IHandlerAsync<GenericMessage>
     {

@@ -7,7 +7,7 @@ using JustSaying.Messaging.MessageProcessingStrategies;
 using NSubstitute;
 using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
     public class WhenListeningStartsAndStops : BaseQueuePollingTest
     {

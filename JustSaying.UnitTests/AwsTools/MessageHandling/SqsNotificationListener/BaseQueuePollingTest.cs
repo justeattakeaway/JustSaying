@@ -7,18 +7,18 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.Support;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
-    public abstract class BaseQueuePollingTest : XAsyncBehaviourTest<AwsTools.MessageHandling.SqsNotificationListener>
+    public abstract class BaseQueuePollingTest : XAsyncBehaviourTest<JustSaying.AwsTools.MessageHandling.SqsNotificationListener>
     {
         protected const string QueueUrl = "url";
         protected IAmazonSQS Sqs;
@@ -31,10 +31,10 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
         protected IMessageLock MessageLock;
         protected readonly string MessageTypeString = typeof(GenericMessage).ToString();
 
-        protected override AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
+        protected override JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
             var queue = new SqsQueueByUrl(RegionEndpoint.EUWest1, QueueUrl, Sqs);
-            return new AwsTools.MessageHandling.SqsNotificationListener(queue, SerialisationRegister, Monitor, LoggerFactory, null, MessageLock);
+            return new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(queue, SerialisationRegister, Monitor, LoggerFactory, null, MessageLock);
         }
 
         protected override void Given()

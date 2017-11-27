@@ -9,10 +9,10 @@ using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using Xunit;
 using Shouldly;
+using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
     public class WhenThereAreExceptionsInSqsCalling : BaseQueuePollingTest
     {

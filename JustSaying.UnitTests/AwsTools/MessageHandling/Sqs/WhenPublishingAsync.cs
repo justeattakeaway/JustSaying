@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 {
     public class WhenPublishingAsync : XAsyncBehaviourTest<SqsPublisher>
     {

@@ -6,7 +6,7 @@ using NSubstitute;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.Messaging.UnitTests.Serialisation.SerialisationRegister
+namespace JustSaying.UnitTests.Messaging.Serialisation.SerialisationRegister
 {
     public class WhenDeserializingMessage : XBehaviourTest<MessageSerialisationRegister>
     {

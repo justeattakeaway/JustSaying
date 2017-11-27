@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sns.TopicByName
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 {
     public class WhenPublishingAsync : XAsyncBehaviourTest<SnsTopicByName>
     {

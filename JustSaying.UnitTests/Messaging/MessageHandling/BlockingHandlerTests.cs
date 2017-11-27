@@ -9,7 +9,7 @@ using Xunit;
 // we use the obsolete interface"IHandler<T>" here
 #pragma warning disable 618
 
-namespace JustSaying.Messaging.UnitTests.MessageHandling
+namespace JustSaying.UnitTests.Messaging.MessageHandling
 {
     public class BlockingHandlerTests
     {
