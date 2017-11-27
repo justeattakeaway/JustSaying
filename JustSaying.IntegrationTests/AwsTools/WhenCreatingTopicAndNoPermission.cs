@@ -7,6 +7,7 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenCreatingTopicAndNoPermission : WhenCreatingTopicByName
     {
         private SnsTopicByName _topic;

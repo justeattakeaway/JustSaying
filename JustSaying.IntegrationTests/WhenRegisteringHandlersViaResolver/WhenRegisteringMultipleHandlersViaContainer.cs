@@ -9,6 +9,7 @@ using Container = StructureMap.Container;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenRegisteringMultipleHandlersViaContainer : GivenAPublisher
     {
         private IContainer _container;

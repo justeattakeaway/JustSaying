@@ -7,6 +7,7 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenRegisteringAHandlerViaContainerWithMissingRegistration : GivenAPublisher
     {
         protected override void Given()

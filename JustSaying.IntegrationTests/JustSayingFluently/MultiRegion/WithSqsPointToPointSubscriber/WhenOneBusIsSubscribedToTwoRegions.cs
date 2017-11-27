@@ -11,6 +11,7 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPointToPointSubscriber
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenOneBusIsSubscribedToTwoRegions
     {
         private readonly Future<GenericMessage> _handler = new Future<GenericMessage>();

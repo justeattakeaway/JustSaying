@@ -5,6 +5,7 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenICreateAQueueByName : WhenCreatingQueuesByName
     {
         private bool _isQueueCreated;

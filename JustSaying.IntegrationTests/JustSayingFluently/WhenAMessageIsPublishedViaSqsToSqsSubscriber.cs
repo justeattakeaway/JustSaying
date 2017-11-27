@@ -6,6 +6,7 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenAMessageIsPublishedViaSqsToSqsSubscriber : GivenANotificationStack
     {
         private Future<AnotherGenericMessage> _handler;

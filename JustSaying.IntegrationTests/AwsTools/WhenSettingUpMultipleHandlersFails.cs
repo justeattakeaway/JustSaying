@@ -10,6 +10,7 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenSettingUpMultipleHandlersFails : XBehaviourTest<IHaveFulfilledSubscriptionRequirements>
     {
         public class Order : Models.Message

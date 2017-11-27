@@ -7,6 +7,7 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenHandlersThrowAnException : GivenANotificationStack
     {
         private Future<GenericMessage> _handler;

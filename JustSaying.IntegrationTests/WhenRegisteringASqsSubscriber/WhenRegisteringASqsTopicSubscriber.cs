@@ -13,6 +13,7 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenRegisteringASqsTopicSubscriber : FluentNotificationStackTestBase
     {
         protected string TopicName;

@@ -9,6 +9,7 @@ using Assert = Xunit.Assert;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenRegisteringASqsTopicSubscriberInANonDefaultRegion : FluentNotificationStackTestBase
     {
         private string _topicName;

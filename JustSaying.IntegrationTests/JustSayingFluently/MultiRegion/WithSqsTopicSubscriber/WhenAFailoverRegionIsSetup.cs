@@ -11,6 +11,7 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopicSubscriber
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenAFailoverRegionIsSetup
     {
         private static readonly string PrimaryRegion = RegionEndpoint.EUWest1.SystemName;

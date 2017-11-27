@@ -8,6 +8,7 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenPublishingWithoutAMonitor
     {
         private IAmJustSayingFluently _bus;

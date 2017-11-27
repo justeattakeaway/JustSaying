@@ -6,6 +6,7 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenRegisteringAPublisherAndNotInstantiated : FluentNotificationStackTestBase
     {
         protected override void Given()

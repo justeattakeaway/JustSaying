@@ -9,6 +9,7 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
+    [Collection(GlobalSetup.CollectionName)]
     public  class WhenCreatingErrorQueue : XBehaviourTest<ErrorQueue>
     {
         protected string QueueUniqueKey;

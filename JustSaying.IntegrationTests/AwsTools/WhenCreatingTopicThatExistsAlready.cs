@@ -6,6 +6,7 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenCreatingTopicThatExistsAlready : WhenCreatingTopicByName
     {
         private bool _createWasSuccessful;

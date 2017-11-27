@@ -5,6 +5,7 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenUpdatingDeliveryDelay : WhenCreatingQueuesByName
     {
         private int _oldDeliveryDelay;

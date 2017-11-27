@@ -17,6 +17,7 @@ using Xunit;
 namespace JustSaying.IntegrationTests.AwsTools
 {
     // OK, I know it ain't pretty, but we needed this asap & it does the job. Deal with it. :)]
+    [Collection(GlobalSetup.CollectionName)]
     public class BasicHandlingThrottlingTest
     {
         [Xunit.Theory(Skip= "Explicitly ran")]

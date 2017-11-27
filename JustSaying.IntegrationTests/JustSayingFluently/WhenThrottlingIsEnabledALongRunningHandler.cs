@@ -14,6 +14,7 @@ using Xunit;
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
     //Todo: Must rewrite using a loopback transport.
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenThrottlingIsEnabledALongRunningHandler : IDisposable
     {
         private readonly IHandlerAsync<GenericMessage> _handler = Substitute.For<IHandlerAsync<GenericMessage>>();

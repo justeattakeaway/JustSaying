@@ -30,6 +30,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
     [ExactlyOnce]
     public class AnotherSampleHandler : SampleHandler { }
 
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenTwoDifferentHanldersHandleAMessageWithExactlyOnceAttribute
     {
         protected string QueueName;
@@ -66,7 +67,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             await publisher.PublishAsync(_message);
         }
 
-        [Fact(Skip ="waiting for 2 sid-by-side consumers bug to get fixed.")]
+        [Fact(Skip ="waiting for 2 side-by-side consumers bug to get fixed.")]
         public async Task BothHandlersAreTriggered()
         {
             await Act();
@@ -76,7 +77,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             _handler2.NumberOfTimesIHaveBeenCalled().ShouldBe(1);
         }
     }
-    
+
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenHandlerHasExactlyOnceAttribute
     {
         protected string QueueName;

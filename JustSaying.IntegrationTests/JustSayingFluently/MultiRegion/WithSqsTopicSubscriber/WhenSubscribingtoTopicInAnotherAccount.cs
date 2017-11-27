@@ -14,6 +14,7 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopicSubscriber
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenSubscribingtoTopicInAnotherAccount
     {
         private readonly Future<GenericMessage> _signal = new Future<GenericMessage>();

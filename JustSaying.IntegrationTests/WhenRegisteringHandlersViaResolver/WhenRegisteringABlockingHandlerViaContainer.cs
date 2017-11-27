@@ -8,6 +8,7 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenRegisteringABlockingHandlerViaContainer : GivenAPublisher
     {
         private BlockingOrderProcessor _resolvedHandler;

@@ -4,6 +4,7 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class NamedHandlerResolverTests
     {
         private readonly IHandlerResolver _handlerResolver = new StructureMapNamedHandlerResolver();

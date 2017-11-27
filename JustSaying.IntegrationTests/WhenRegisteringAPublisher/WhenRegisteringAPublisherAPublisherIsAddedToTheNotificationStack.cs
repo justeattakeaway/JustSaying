@@ -7,6 +7,7 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenRegisteringAPublisher : FluentNotificationStackTestBase
     {
         private string _topicName;

@@ -4,6 +4,7 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenQueueIsDeleted : WhenCreatingQueuesByName
     {
         protected override Task When()

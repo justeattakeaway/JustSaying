@@ -1,9 +1,11 @@
 using System.Threading.Tasks;
 using JustSaying.AwsTools.QueueCreation;
 using Xunit;
+using JustSaying.TestingFramework;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenIAccessAnExistingQueueWithoutAnErrorQueue : WhenCreatingQueuesByName
     {
         protected override Task When()
