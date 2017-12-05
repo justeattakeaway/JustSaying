@@ -1,13 +1,16 @@
 using System;
 using Amazon;
 using JustBehave;
+using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using Microsoft.Extensions.Logging;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
-namespace JustSaying.AwsTools.IntegrationTests
+namespace JustSaying.IntegrationTests.AwsTools
 {
-    public  class WhenCreatingErrorQueue : BehaviourTest<ErrorQueue>
+    [Collection(GlobalSetup.CollectionName)]
+    public  class WhenCreatingErrorQueue : XBehaviourTest<ErrorQueue>
     {
         protected string QueueUniqueKey;
 
@@ -27,16 +30,17 @@ namespace JustSaying.AwsTools.IntegrationTests
             QueueUniqueKey = "test" + DateTime.Now.Ticks;
             return new ErrorQueue(RegionEndpoint.EUWest1, QueueUniqueKey, CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1), new LoggerFactory());
         }
-        public override void PostAssertTeardown()
+
+        protected override void PostAssertTeardown()
         {
             SystemUnderTest.Delete();
             base.PostAssertTeardown();
         }
 
-        [Test]
+        [Fact]
         public void TheRetentionPeriodOfTheErrorQueueStaysAsMaximum()
         {
-            Assert.AreEqual(100, SystemUnderTest.MessageRetentionPeriod);
+            SystemUnderTest.MessageRetentionPeriod.ShouldBe(100);
         }
     }
 }

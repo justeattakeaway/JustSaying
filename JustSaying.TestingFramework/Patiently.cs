@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
-using NUnit.Framework;
+using Shouldly;
 
 namespace JustSaying.TestingFramework
 {
@@ -24,7 +24,7 @@ namespace JustSaying.TestingFramework
                     $"Waiting for {(DateTime.Now - started).TotalMilliseconds} ms - Still Checking.");
             } while (DateTime.Now < timeoutAt);
 
-            Assert.True(func.Invoke());
+            func.Invoke().ShouldBeTrue();
         }
     }
     public static class Extensions

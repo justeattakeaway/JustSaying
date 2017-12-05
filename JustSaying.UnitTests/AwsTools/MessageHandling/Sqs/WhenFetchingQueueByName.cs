@@ -1,25 +1,23 @@
-﻿using System;
 using System.Collections.Generic;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NSubstitute.ExceptionExtensions;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 {
-    class WhenFetchingQueueByName
+    public class WhenFetchingQueueByName
     {
-        private IAmazonSQS _client;
-        private ILoggerFactory _log;
+        private readonly IAmazonSQS _client;
+        private readonly ILoggerFactory _log;
         private const int RetryCount = 3;
 
-        [SetUp]
-        protected void SetUp()
+        
+        public WhenFetchingQueueByName()
         {
             _client = Substitute.For<IAmazonSQS>();
 
@@ -38,25 +36,25 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
             _log = Substitute.For<ILoggerFactory>();
         }
 
-        [Then]
+        [Fact]
         public void IncorrectQueueNameDoNotMatch()
         {
             var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name1", _client, RetryCount, _log);
-            Assert.IsFalse(sqsQueueByName.Exists());
+            sqsQueueByName.Exists().ShouldBeFalse();
         }
 
-        [Then]
+        [Fact]
         public void IncorrectPartialQueueNameDoNotMatch()
         {
             var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue", _client, RetryCount, _log);
-            Assert.IsFalse(sqsQueueByName.Exists());
+            sqsQueueByName.Exists().ShouldBeFalse();
         }
 
-        [Then]
+        [Fact]
         public void CorrectQueueNameShouldMatch()
         {
             var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name", _client, RetryCount, _log);
-            Assert.IsTrue(sqsQueueByName.Exists());
+            sqsQueueByName.Exists().ShouldBeTrue();
         }
     }
 }

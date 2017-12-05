@@ -1,11 +1,12 @@
-﻿using JustBehave;
+using JustBehave;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.TestingFramework;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
-namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
+namespace JustSaying.UnitTests.Messaging.Serialisation.Newtonsoft
 {
-    public class WhenAskingForANewSerialiser : BehaviourTest<NewtonsoftSerialisationFactory>
+    public class WhenAskingForANewSerialiser : XBehaviourTest<NewtonsoftSerialisationFactory>
     {
         private IMessageSerialiser _result;
 
@@ -19,10 +20,10 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
             _result = SystemUnderTest.GetSerialiser<GenericMessage>();
         }
 
-        [Then]
+        [Fact]
         public void OneIsProvided()
         {
-            Assert.NotNull(_result);
+            _result.ShouldNotBeNull();
         }
     }
 }

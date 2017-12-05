@@ -1,7 +1,8 @@
 using System;
-using JustBehave;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
 {
@@ -17,23 +18,24 @@ namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
             RecordAnyExceptionsThrown();
         }
 
-        protected override void When()
+        protected override Task When()
         {
             CreateMeABus
                 .WithLogging(new LoggerFactory()).InRegion(null)
                 .ConfigurePublisherWith(configuration => { });
+            return Task.CompletedTask;
         }
 
-        [Then]
+        [Fact]
         public void ConfigItemsAreRequired()
         {
-            Assert.IsInstanceOf<ArgumentNullException>(ThrownException);
+            ThrownException.ShouldBeAssignableTo<ArgumentNullException>();
         }
 
-        [Then]
+        [Fact]
         public void RegionIsRequested()
         {
-            Assert.AreEqual(((ArgumentException)ThrownException).ParamName, "config.Regions");
+            ((ArgumentException)ThrownException).ParamName.ShouldBe("config.Regions");
         }
     }
 }

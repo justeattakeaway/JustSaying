@@ -1,11 +1,11 @@
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
-using JustBehave;
-using JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.Support;
 using NSubstitute;
+using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
     /// <summary>
     /// this test exercises different exception handlers to the "handler throws an exception" path in WhenMessageHandlingThrows
@@ -32,19 +32,19 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             await Task.Yield();
         }
 
-        [Then]
+        [Fact]
         public void MessageHandlerWasNotCalled()
         {
             Handler.DidNotReceiveWithAnyArgs().Handle(Arg.Any<GenericMessage>());
         }
 
-        [Then]
+        [Fact]
         public void FailedMessageIsNotRemovedFromQueue()
         {
             Sqs.DidNotReceiveWithAnyArgs().DeleteMessageAsync(Arg.Any<DeleteMessageRequest>());
         }
 
-        [Then]
+        [Fact]
         public void ExceptionIsLoggedToMonitor()
         {
             Monitor.DidNotReceiveWithAnyArgs().HandleException(Arg.Any<string>());

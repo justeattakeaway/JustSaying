@@ -1,11 +1,12 @@
 using JustSaying.IntegrationTests.TestHandlers;
 using Microsoft.Extensions.Logging;
-using NUnit.Framework;
 using Shouldly;
 using StructureMap;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenRegisteringASingleHandlerViaContainer : GivenAPublisher
     {
         private Future<OrderPlaced> _handlerFuture;
@@ -17,7 +18,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
             var handlerResolver = new StructureMapHandlerResolver(container);
             var handler = handlerResolver.ResolveHandler<OrderPlaced>(resolutionContext);
-            Assert.That(handler, Is.Not.Null);
+            handler.ShouldNotBeNull();
 
             _handlerFuture = ((OrderProcessor)handler).Future;
             DoneSignal = _handlerFuture.DoneSignal;
@@ -31,7 +32,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             Subscriber.StartListening();
         }
 
-        [Test]
+        [Fact]
         public void ThenHandlerWillReceiveTheMessage()
         {
             _handlerFuture.ReceivedMessageCount.ShouldBeGreaterThan(0);

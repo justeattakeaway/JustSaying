@@ -1,10 +1,12 @@
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using Microsoft.Extensions.Logging;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
-namespace JustSaying.AwsTools.IntegrationTests
+namespace JustSaying.IntegrationTests.AwsTools
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenCreatingTopicThatExistsAlready : WhenCreatingTopicByName
     {
         private bool _createWasSuccessful;
@@ -16,18 +18,18 @@ namespace JustSaying.AwsTools.IntegrationTests
             _createWasSuccessful = _topic.Create();
         }
 
-        [Test]
+        [Fact]
         public void CreateCallIsStillSuccessful()
         {
-            Assert.True(_createWasSuccessful);
+            _createWasSuccessful.ShouldBeTrue();
         }
 
-        [Test]
+        [Fact]
         public void TopicArnIsPopulated()
         {
-            Assert.That(_topic.Arn, Is.Not.Null);
-            Assert.That(_topic.Arn.EndsWith(_topic.TopicName));
-            Assert.That(_topic.Arn, Is.EqualTo(CreatedTopic.Arn));
+            _topic.Arn.ShouldNotBeNull();
+            _topic.Arn.ShouldEndWith(_topic.TopicName);
+            _topic.Arn.ShouldBe(CreatedTopic.Arn);
         }
 
     }

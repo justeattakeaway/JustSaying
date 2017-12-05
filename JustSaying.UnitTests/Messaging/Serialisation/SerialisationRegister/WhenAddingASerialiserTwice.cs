@@ -2,11 +2,12 @@ using JustBehave;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Models;
 using NSubstitute;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
-namespace JustSaying.Messaging.UnitTests.Serialisation.SerialisationRegister
+namespace JustSaying.UnitTests.Messaging.Serialisation.SerialisationRegister
 {
-    public class WhenAddingASerialiserTwice : BehaviourTest<MessageSerialisationRegister>
+    public class WhenAddingASerialiserTwice : XBehaviourTest<MessageSerialisationRegister>
     {
         protected override void Given()
         {
@@ -19,10 +20,10 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.SerialisationRegister
             SystemUnderTest.AddSerialiser<Message>(Substitute.For<IMessageSerialiser>());
         }
 
-        [Then]
+        [Fact]
         public void ExceptionIsNotThrown()
         {
-            Assert.IsNull(ThrownException);
+            ThrownException.ShouldBeNull();
         }
     }
 }

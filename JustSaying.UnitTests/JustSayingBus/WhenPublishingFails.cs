@@ -1,9 +1,9 @@
 using System.Threading.Tasks;
-using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
 using JustSaying.Models;
 using NSubstitute;
+using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -31,7 +31,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             await SystemUnderTest.PublishAsync(new GenericMessage());
         }
 
-        [Then]
+        [Fact]
         public void EventPublicationWasAttemptedTheConfiguredNumberOfTimes()
         {
             _publisher

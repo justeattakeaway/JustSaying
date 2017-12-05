@@ -1,17 +1,17 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using NSubstitute;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling
+namespace JustSaying.UnitTests.AwsTools.MessageHandling
 {
-    [TestFixture]
     public class MessageHandlerWrapperTests
     {
-        [Test]
+        [Fact]
         public void WrapperReturnsAFunction()
         {
             var messageLock = Substitute.For<IMessageLock>();
@@ -19,9 +19,10 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
 
             var wrapped = handlerWrapper.WrapMessageHandler(() => new UnadornedHandlerAsync());
 
-            Assert.That(wrapped, Is.Not.Null);
+            wrapped.ShouldNotBeNull();
         }
-        [Test]
+
+        [Fact]
         public async Task ReturnedFunctionIsCallable()
         {
             // arrange
@@ -36,10 +37,10 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
 
             var result = await wrapped(new GenericMessage());
 
-            Assert.That(result, Is.True);
+            result.ShouldBeTrue();
         }
 
-        [Test]
+        [Fact]
         public async Task ReturnedFunctionCallsInner()
         {
             // arrange
@@ -55,7 +56,6 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling
             var wrapped = handlerWrapper.WrapMessageHandler(() => mockHandler);
 
             await wrapped(testMessage);
-
 
             await mockHandler.Received().Handle(testMessage);
         }

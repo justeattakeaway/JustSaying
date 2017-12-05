@@ -1,21 +1,24 @@
 using System.Threading.Tasks;
 using JustSaying.AwsTools.QueueCreation;
-using NUnit.Framework;
 using JustSaying.TestingFramework;
+using Xunit;
 
-namespace JustSaying.AwsTools.IntegrationTests
+namespace JustSaying.IntegrationTests.AwsTools
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenQueueIsDeleted : WhenCreatingQueuesByName
     {
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.Create(
                 new SqsReadConfiguration(SubscriptionType.ToTopic), 
                 attempt:600);
             SystemUnderTest.Delete();
+
+            return Task.CompletedTask;
         }
 
-        [Test]
+        [Fact]
         public async Task TheErrorQueueIsDeleted()
         {
             await Patiently.AssertThatAsync(

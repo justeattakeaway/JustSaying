@@ -1,11 +1,12 @@
-﻿using JustBehave;
+using JustBehave;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.TestingFramework;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
-namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
+namespace JustSaying.UnitTests.Messaging.Serialisation.Newtonsoft
 {
-    public class DealingWithPotentiallyMissingConversation : BehaviourTest<NewtonsoftSerialiser>
+    public class DealingWithPotentiallyMissingConversation : XBehaviourTest<NewtonsoftSerialiser>
     {
         private MessageWithEnum _messageOut;
         private MessageWithEnum _messageIn;
@@ -24,17 +25,17 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
             _messageIn = SystemUnderTest.Deserialise(_jsonMessage, typeof(MessageWithEnum)) as MessageWithEnum;
         }
 
-        [Then]
+        [Fact]
         public void
             ItDoesNotHaveConversationPropertySerialisedBecauseItIsNotSet_ThisIsForBackwardsCompatibilityWhenWeDeploy()
         {
-            Assert.That(_jsonMessage, Is.Not.Contain("Conversation"));
+            _jsonMessage.ShouldNotContain("Conversation");
         }
 
-        [Then]
+        [Fact]
         public void DeserialisedMessageHasEmptyConversation_ThisIsForBackwardsCompatibilityWhenWeDeploy()
         {
-            Assert.IsNull(_messageIn.Conversation);
+            _messageIn.Conversation.ShouldBeNull();
         }
     }
 }

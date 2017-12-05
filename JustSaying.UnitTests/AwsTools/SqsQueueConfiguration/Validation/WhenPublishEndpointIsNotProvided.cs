@@ -1,10 +1,12 @@
-﻿using JustBehave;
+using JustBehave;
+using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.SqsQueueConfiguration.Validation
+namespace JustSaying.UnitTests.AwsTools.SqsQueueConfiguration.Validation
 {
-    class WhenPublishEndpointIsNotProvided : BehaviourTest<SqsReadConfiguration>
+    public class WhenPublishEndpointIsNotProvided : XBehaviourTest<SqsReadConfiguration>
     {
         protected override void Given()
         {
@@ -16,10 +18,10 @@ namespace JustSaying.AwsTools.UnitTests.SqsQueueConfiguration.Validation
             SystemUnderTest.Validate();
         }
 
-        [Then]
+        [Fact]
         public void ThrowsException()
         {
-            Assert.IsNotNull(ThrownException);
+            ThrownException.ShouldNotBeNull();
         }
 
         protected override SqsReadConfiguration CreateSystemUnderTest()

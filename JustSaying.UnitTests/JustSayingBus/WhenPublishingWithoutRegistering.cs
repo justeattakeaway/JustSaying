@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
-using JustBehave;
 using JustSaying.Models;
 using NSubstitute;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -20,10 +20,10 @@ namespace JustSaying.UnitTests.JustSayingBus
             await SystemUnderTest.PublishAsync(Substitute.For<Message>());
         }
 
-        [Then]
+        [Fact]
         public void InvalidOperationIsThrown()
         {
-            Assert.IsInstanceOf<InvalidOperationException>(ThrownException);
+            ThrownException.ShouldBeAssignableTo<InvalidOperationException>();
         }
     }
 }

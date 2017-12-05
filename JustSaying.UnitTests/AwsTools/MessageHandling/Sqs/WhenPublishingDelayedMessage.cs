@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -8,10 +9,11 @@ using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 {
-    public class WhenPublishingDelayedMessage : BehaviourTest<SqsPublisher>
+    public class WhenPublishingDelayedMessage : XAsyncBehaviourTest<SqsPublisher>
     {
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
@@ -29,19 +31,19 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
 
         protected override void Given()
         {
-            _sqs.ListQueues(Arg.Any<ListQueuesRequest>()).Returns(new ListQueuesResponse { QueueUrls = new List<string> { Url } });
-            _sqs.GetQueueAttributes(Arg.Any<GetQueueAttributesRequest>()).Returns(new GetQueueAttributesResponse());
+            _sqs.ListQueuesAsync(Arg.Any<ListQueuesRequest>()).Returns(new ListQueuesResponse { QueueUrls = new List<string> { Url } });
+            _sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>()).Returns(new GetQueueAttributesResponse());
         }
 
-        protected override void When()
+        protected override async Task When()
         {
-            SystemUnderTest.Publish(_message);
+            await SystemUnderTest.PublishAsync(_message);
         }
 
-        [Then]
+        [Fact]
         public void MessageIsPublishedWithDelaySecondsPropertySet()
         {
-            _sqs.Received().SendMessage(Arg.Is<SendMessageRequest>(x => x.DelaySeconds.Equals(1)));
+            _sqs.Received().SendMessageAsync(Arg.Is<SendMessageRequest>(x => x.DelaySeconds.Equals(1)));
         }
     }
 }

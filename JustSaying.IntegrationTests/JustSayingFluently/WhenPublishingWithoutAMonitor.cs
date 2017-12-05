@@ -1,22 +1,20 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Amazon;
-using JustBehave;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NUnit.Framework;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
-    [TestFixture]
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenPublishingWithoutAMonitor
     {
         private IAmJustSayingFluently _bus;
         private readonly IHandlerAsync<GenericMessage> _handler = Substitute.For<IHandlerAsync<GenericMessage>>();
 
-        [OneTimeSetUp]
-        public async Task Given()
+        private async Task Given()
         {
             // Setup
             var doneSignal = new TaskCompletionSource<object>();
@@ -44,17 +42,18 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
             // When
             _bus.StartListening();
-            _bus.Publish(new GenericMessage());
+            await _bus.PublishAsync(new GenericMessage());
 
             // Teardown
             await doneSignal.Task;
             bus.StopListening();
         }
 
-        [Then]
-        public void AMessageCanStillBePublishedAndPopsOutTheOtherEnd()
+        [Fact]
+        public async Task AMessageCanStillBePublishedAndPopsOutTheOtherEnd()
         {
-            _handler.Received().Handle(Arg.Any<GenericMessage>());
+            await Given();
+            Received.InOrder(async () => await _handler.Handle(Arg.Any<GenericMessage>()));
         }
     }
 }

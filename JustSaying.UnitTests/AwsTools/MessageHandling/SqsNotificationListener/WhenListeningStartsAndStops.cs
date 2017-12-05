@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
-using JustBehave;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using NSubstitute;
+using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
     public class WhenListeningStartsAndStops : BaseQueuePollingTest
     {
@@ -50,7 +50,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             await Task.Yield();
         }
 
-        [Then]
+        [Fact]
         public void MessagesAreReceived()
         {
             Sqs.Received().ReceiveMessageAsync(
@@ -58,7 +58,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
                 Arg.Any<CancellationToken>());
         }
 
-        [Then]
+        [Fact]
         public void CorrectQueueIsPolled()
         {
             Sqs.Received().ReceiveMessageAsync(
@@ -66,7 +66,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
                 Arg.Any<CancellationToken>());
         }
 
-        [Then]
+        [Fact]
         public void TheMaxMessageAllowanceIsGrabbed()
         {
             Sqs.Received().ReceiveMessageAsync(
@@ -74,7 +74,7 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
                 Arg.Any<CancellationToken>());
         }
 
-        [Then]
+        [Fact]
         public void MessageIsProcessed()
         {
             SerialisationRegister.Received().DeserializeMessage(

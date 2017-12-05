@@ -1,12 +1,14 @@
-﻿using JustSaying.IntegrationTests.TestHandlers;
+using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.Logging;
-using NUnit.Framework;
+
 using Shouldly;
 using StructureMap;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenRegisteringABlockingHandlerViaContainer : GivenAPublisher
     {
         private BlockingOrderProcessor _resolvedHandler;
@@ -18,7 +20,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
            var handlerResolver = new StructureMapHandlerResolver(container);
             var handler = handlerResolver.ResolveHandler<OrderPlaced>(resolutionContext);
-            Assert.That(handler, Is.Not.Null);
+            handler.ShouldNotBeNull();
 
             // we use the obsolete interface"IHandler<T>" here
 #pragma warning disable 618
@@ -37,7 +39,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             Subscriber.StartListening();
         }
 
-        [Test]
+        [Fact]
         public void ThenHandlerWillReceiveTheMessage()
         {
             _resolvedHandler.ReceivedMessageCount.ShouldBeGreaterThan(0);

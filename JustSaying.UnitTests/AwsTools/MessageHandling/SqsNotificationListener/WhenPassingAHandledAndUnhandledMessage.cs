@@ -1,9 +1,9 @@
-﻿using System.Threading;
+using System.Threading;
 using Amazon.SQS.Model;
-using JustBehave;
 using NSubstitute;
+using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
     public class WhenPassingAHandledAndUnhandledMessage : BaseQueuePollingTest
     {
@@ -15,26 +15,26 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
                 .AndDoes(x => Thread.Sleep(1)); // Ensure at least one ms wait on processing
         }
 
-        [Then]
+        [Fact]
         public void MessagesGetDeserialisedByCorrectHandler()
         {
             SerialisationRegister.Received().DeserializeMessage(
                 SqsMessageBody(MessageTypeString));
         }
 
-        [Then]
+        [Fact]
         public void ProcessingIsPassedToTheHandlerForCorrectMessage()
         {
             Handler.Received().Handle(DeserialisedMessage);
         }
 
-        [Then]
+        [Fact]
         public void MonitoringToldMessageHandlingTime()
         {
             Monitor.Received().HandleTime(Arg.Is<long>(x => x > 0));
         }
 
-        [Then]
+        [Fact]
         public void AllMessagesAreClearedFromQueue()
         {
             SerialisationRegister.Received(2).DeserializeMessage(Arg.Any<string>());

@@ -3,13 +3,14 @@ using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using NSubstitute;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
-namespace JustSaying.Messaging.UnitTests.MessageHandling
+namespace JustSaying.UnitTests.Messaging.MessageHandling
 {
     public class WhenEnsuringMessageIsOnlyHandledExactlyOnce
     {
-        [Test]
+        [Fact]
         public async Task WhenMessageIsLockedByAnotherHandler_MessageWillBeLeftInTheQueue()
         {
             var messageLock = Substitute.For<IMessageLock>();
@@ -18,7 +19,7 @@ namespace JustSaying.Messaging.UnitTests.MessageHandling
 
             var result = await sut.Handle(new OrderAccepted());
 
-            Assert.IsFalse(result);
+            result.ShouldBeFalse();
         }
     }
 }

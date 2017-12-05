@@ -1,8 +1,11 @@
-﻿using JustSaying.AwsTools.QueueCreation;
-using NUnit.Framework;
+using System.Threading.Tasks;
+using JustSaying.AwsTools.QueueCreation;
+using Shouldly;
+using Xunit;
 
-namespace JustSaying.AwsTools.IntegrationTests
+namespace JustSaying.IntegrationTests.AwsTools
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenUpdatingRedrivePolicy : WhenCreatingQueuesByName
     {
         private int _newMaximumReceived;
@@ -14,20 +17,19 @@ namespace JustSaying.AwsTools.IntegrationTests
             base.Given();
         }
 
-        protected override void When()
+        protected override async Task When()
         {
 
             SystemUnderTest.Create(new SqsBasicConfiguration());
 
-            SystemUnderTest.UpdateRedrivePolicyAsync(
-                new RedrivePolicy(_newMaximumReceived, SystemUnderTest.ErrorQueue.Arn))
-                .GetAwaiter().GetResult();
+            await SystemUnderTest.UpdateRedrivePolicyAsync(
+                new RedrivePolicy(_newMaximumReceived, SystemUnderTest.ErrorQueue.Arn));
         }
 
-        [Test]
+        [Fact]
         public void TheRedrivePolicyIsUpdatedWithTheNewValue()
         {
-            Assert.AreEqual(_newMaximumReceived, SystemUnderTest.RedrivePolicy.MaximumReceives);
+            SystemUnderTest.RedrivePolicy.MaximumReceives.ShouldBe(_newMaximumReceived);
         }
     }
 }

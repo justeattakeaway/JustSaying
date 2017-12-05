@@ -1,9 +1,9 @@
 using Amazon.SQS.Model;
-using JustBehave;
 using JustSaying.TestingFramework;
 using NSubstitute;
+using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
     public class WhenMessageHandlingFails : BaseQueuePollingTest
     {
@@ -13,20 +13,20 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             Handler.Handle(Arg.Any<GenericMessage>()).ReturnsForAnyArgs(false);
         }
 
-        [Then]
+        [Fact]
         public void MessageHandlerWasCalled()
         {
             Handler.ReceivedWithAnyArgs().Handle(Arg.Any<GenericMessage>());
         }
 
-        [Then]
+        [Fact]
         public void FailedMessageIsNotRemovedFromQueue()
         {
             // The un-handled one is however.
             Sqs.DidNotReceiveWithAnyArgs().DeleteMessageAsync(Arg.Any<DeleteMessageRequest>());
         }
 
-        [Then]
+        [Fact]
         public void ExceptionIsNotLoggedToMonitor()
         {
             Monitor.DidNotReceiveWithAnyArgs().HandleException(Arg.Any<string>());

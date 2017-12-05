@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
@@ -12,18 +13,18 @@ using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NUnit.Framework;
+using Xunit;
 
-namespace JustSaying.AwsTools.IntegrationTests
+namespace JustSaying.IntegrationTests.AwsTools
 {
-    // OK, I know it ain't pretty, but we needed this asap & it does the job. Deal with it. :)
-
-    [TestFixture]
+    // OK, I know it ain't pretty, but we needed this asap & it does the job. Deal with it. :)]
+    [Collection(GlobalSetup.CollectionName)]
     public class BasicHandlingThrottlingTest
     {
-        [TestCase(1000), Explicit]
+        [Xunit.Theory(Skip= "Explicitly ran")]
+        [InlineData(1000)]
         // Use this to manually test the performance / throttling of getting messages out of the queue.
-        public void HandlingManyMessages(int throttleMessageCount)
+        public async Task HandlingManyMessages(int throttleMessageCount)
         {
             var locker = new object();
             var awsQueueClient = CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1);
@@ -54,7 +55,7 @@ namespace JustSaying.AwsTools.IntegrationTests
                     entries.Add(batchEntry);
                     entriesAdded++;
                 }
-                awsQueueClient.SendMessageBatch(new SendMessageBatchRequest { QueueUrl = q.Url, Entries = entries });
+                await awsQueueClient.SendMessageBatchAsync(new SendMessageBatchRequest { QueueUrl = q.Url, Entries = entries });
             }
             while (entriesAdded < throttleMessageCount);
 
@@ -76,7 +77,7 @@ namespace JustSaying.AwsTools.IntegrationTests
             var waitCount = 0;
             do
             {
-                Thread.Sleep(TimeSpan.FromSeconds(5));
+                await Task.Delay(TimeSpan.FromSeconds(5));
                 Console.WriteLine($"{DateTime.Now} - Handled {handleCount} messages. Waiting for completion.");
                 waitCount++;
             }
@@ -89,7 +90,7 @@ namespace JustSaying.AwsTools.IntegrationTests
             Console.WriteLine($"{DateTime.Now} - Took {stopwatch.ElapsedMilliseconds} ms");
             Console.WriteLine(
                 $"{DateTime.Now} - Throughput {(float) handleCount/stopwatch.ElapsedMilliseconds*1000} msg/sec");
-            Assert.AreEqual(throttleMessageCount, handleCount);
+            Assert.Equal(throttleMessageCount, handleCount);
         }
         
     }

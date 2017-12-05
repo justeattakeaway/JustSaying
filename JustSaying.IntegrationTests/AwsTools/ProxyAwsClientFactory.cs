@@ -4,9 +4,10 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using JustSaying.AwsTools;
 using NSubstitute;
 
-namespace JustSaying.AwsTools.IntegrationTests
+namespace JustSaying.IntegrationTests.AwsTools
 {
     /// <summary>
     /// An AWS Client Factory which forwards all AWS calls to SNS/SQS clients
@@ -42,8 +43,8 @@ namespace JustSaying.AwsTools.IntegrationTests
                 .ReturnsForAnyArgs(r => innerClient.FindTopicAsync(r.Arg<string>()))
                 .AndDoes(r => Increment("FindTopic", r.Arg<string>(), r.Arg<string>()));
 
-            client.GetTopicAttributes(Arg.Any<string>())
-            .ReturnsForAnyArgs(r => innerClient.GetTopicAttributes(r.Arg<string>()))
+            client.GetTopicAttributesAsync(Arg.Any<string>())
+            .ReturnsForAnyArgs(r => innerClient.GetTopicAttributesAsync(r.Arg<string>()))
             .AndDoes(r => Increment("GetTopicAttributes", r.Arg<string>(), r.Arg<string>()));
 
             return client;

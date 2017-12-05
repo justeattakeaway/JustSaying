@@ -1,26 +1,25 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Amazon;
-using JustBehave;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
-    [TestFixture]
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenAHandlerThrowsAnException
     {
         private ThrowingHandler _handler;
         private Action<Exception, Amazon.SQS.Model.Message> _globalErrorHandler;
         private bool _handledException;
         private IMessageMonitor _monitoring;
-
-        [OneTimeSetUp]
-        public async Task Setup()
+        
+        private async Task Setup()
         {
             // Setup
             _globalErrorHandler = (ex, m) => { _handledException = true; };
@@ -51,23 +50,19 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             // When
             bus.StartListening();
 
-            bus.Publish(new GenericMessage());
+            await bus.PublishAsync(new GenericMessage());
 
             // Teardown
             await _handler.DoneSignal.Task;
             bus.StopListening();
         }
 
-        [Then]
-        public void MessagePopsOutAtTheOtherEnd()
+        [Fact]
+        public async Task MessageReceivedAndExceptionHandled()
         {
-            Assert.That(_handler.MessageReceived, Is.Not.Null);
-        }
-
-        [Then]
-        public void CustomExceptionHandlingIsCalled()
-        {
-            Assert.That(_handledException, Is.True);
+            await Setup();
+            _handler.MessageReceived.ShouldNotBeNull();
+            _handledException.ShouldBeTrue();
         }
     }
 }

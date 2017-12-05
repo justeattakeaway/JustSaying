@@ -1,12 +1,14 @@
+using System;
 using JustBehave;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Models;
 using NSubstitute;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
-namespace JustSaying.Messaging.UnitTests.Serialisation.SerialisationRegister
+namespace JustSaying.UnitTests.Messaging.Serialisation.SerialisationRegister
 {
-    public class WhenDeserializingMessage : BehaviourTest<MessageSerialisationRegister>
+    public class WhenDeserializingMessage : XBehaviourTest<MessageSerialisationRegister>
     {
         private class CustomMessage : Message
         {
@@ -26,16 +28,16 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.SerialisationRegister
             SystemUnderTest.AddSerialiser<CustomMessage>(messageSerialiser);
         }
 
-        [Then]
+        [Fact]
         public void ThrowsMessageFormatNotSupportedWhenMessabeBodyIsUnserializable()
         {
-            Assert.Throws<MessageFormatNotSupportedException>(() => SystemUnderTest.DeserializeMessage(string.Empty));
+            new Action(() => SystemUnderTest.DeserializeMessage(string.Empty)).ShouldThrow<MessageFormatNotSupportedException>();
         }
 
-        [Then]
+        [Fact]
         public void TheMappingContainsTheSerialiser()
         {
-            Assert.NotNull(SystemUnderTest.DeserializeMessage(messageBody));
+            SystemUnderTest.DeserializeMessage(messageBody).ShouldNotBeNull();
         }
 
     }

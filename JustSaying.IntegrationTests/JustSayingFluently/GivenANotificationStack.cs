@@ -12,7 +12,7 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
-    public abstract class GivenANotificationStack : AsyncBehaviourTest<IAmJustSayingFluently>
+    public abstract class GivenANotificationStack : XAsyncBehaviourTest<IAmJustSayingFluently>
     {
         readonly Stopwatch _stopwatch = new Stopwatch();
         protected IAmJustSayingFluently ServiceBus;
@@ -55,10 +55,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                     .Do(x =>
                     {
                         var msg = (GenericMessage) x.Args()[0];
-                        if (_snsHandler != null)
-                        {
-                            _snsHandler.Complete(msg).Wait(TimeoutMillis);
-                        }
+                        _snsHandler?.Complete(msg).Wait(TimeoutMillis);
                     });
 
             var sqsHandler = Substitute.For<IHandlerAsync<AnotherGenericMessage>>();
@@ -66,10 +63,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                     .Do(x =>
                     {
                         var msg = (AnotherGenericMessage)x.Args()[0];
-                        if (_sqsHandler != null)
-                        {
-                            _sqsHandler.Complete(msg).Wait(TimeoutMillis);
-                        }
+                        _sqsHandler?.Complete(msg).Wait(TimeoutMillis);
                     });
 
             Monitoring = Substitute.For<IMessageMonitor>();
@@ -104,7 +98,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             return ServiceBus;
         }
 
-        public override void PostAssertTeardown()
+        protected override void PostAssertTeardown()
         {
             base.PostAssertTeardown();
             _stopwatch.Stop();

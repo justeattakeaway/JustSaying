@@ -6,9 +6,9 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.AwsTools.IntegrationTests
+namespace JustSaying.IntegrationTests.AwsTools
 {
-    public abstract class WhenCreatingTopicByName : BehaviourTest<SnsTopicByName>
+    public abstract class WhenCreatingTopicByName : XBehaviourTest<SnsTopicByName>
     {
         protected string UniqueName;
         protected SnsTopicByName CreatedTopic;
@@ -26,9 +26,9 @@ namespace JustSaying.AwsTools.IntegrationTests
             return CreatedTopic;
         }
 
-        public override void PostAssertTeardown()
+        protected override void PostAssertTeardown()
         {
-            Bus.DeleteTopic(CreatedTopic.Arn);
+            Bus.DeleteTopicAsync(CreatedTopic.Arn).Wait();
             base.PostAssertTeardown();
         }
 

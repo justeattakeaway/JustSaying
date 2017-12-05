@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.TestingFramework;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.Support
 {
     public class ThrowingBeforeMessageProcessingStrategy : IMessageProcessingStrategy
     {

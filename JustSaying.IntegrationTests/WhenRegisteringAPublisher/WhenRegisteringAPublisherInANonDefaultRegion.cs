@@ -1,10 +1,12 @@
+using System.Threading.Tasks;
 using Amazon.SimpleNotificationService.Model;
-using JustBehave;
 using JustSaying.Models;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenRegisteringAPublisherInANonDefaultRegion : FluentNotificationStackTestBase
     {
         private string _topicName;
@@ -18,27 +20,29 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 
             Configuration = new MessagingConfig();
 
-            DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName);
+            DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName).Wait();
 
         }
 
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.WithSnsMessagePublisher<Message>();
+            return Task.CompletedTask;
         }
 
-        [Then]
-        public void ASnsTopicIsCreatedInTheNonDefaultRegion()
+        [Fact]
+        public async Task ASnsTopicIsCreatedInTheNonDefaultRegion()
         {
-            Assert.IsTrue(TryGetTopic(TestEndpoint, _topicName, out _topic));
+            bool topicExists;
+            (topicExists, _topic) = await TryGetTopic(TestEndpoint, _topicName);
+            topicExists.ShouldBeTrue();
         }
 
-        [TearDown]
-        public void TearDown()
+        protected override void Teardown()
         {
             if (_topic != null)
             {
-                DeleteTopic(TestEndpoint, _topic);
+                DeleteTopic(TestEndpoint, _topic).Wait();
             }
         }
     }

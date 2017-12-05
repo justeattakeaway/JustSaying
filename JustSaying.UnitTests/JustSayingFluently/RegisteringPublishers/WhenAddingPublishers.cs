@@ -1,13 +1,13 @@
-﻿using JustBehave;
+using JustBehave;
 using JustSaying.AwsTools;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NUnit.Framework;
+using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
 {
-    public class WhenAddingPublishers : BehaviourTest<JustSaying.JustSayingFluently>
+    public class WhenAddingPublishers : XBehaviourTest<JustSaying.JustSayingFluently>
     {
         private readonly IAmJustSaying _bus = Substitute.For<IAmJustSaying>();
 
@@ -29,21 +29,21 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
         {
         }
 
-        [Test]
+        [Fact]
         public void ConfigurationIsRequired()
         {
             SystemUnderTest.ConfigurePublisherWith(conf => conf.PublishFailureBackoffMilliseconds = 50);
         }
 
         /// Note: Ignored tests are here for fluent api exploration & expecting compile time issues when working on the fluent interface stuff...
-        [Then, Ignore("Testing compile-time issues")]
+        [Fact(Skip = "Testing compile-time issues")]
         public void ASqsPublisherCanBeSetup()
         {
             SystemUnderTest.ConfigurePublisherWith(conf => conf.PublishFailureBackoffMilliseconds = 50)
                 .WithSnsMessagePublisher<GenericMessage>();
         }
 
-        [Then, Ignore("Testing compile-time issues")]
+        [Fact(Skip = "Testing compile-time issues")]
         public void MultipleSqsPublishersCanBeSetup()
         {
             SystemUnderTest.ConfigurePublisherWith(conf => conf.PublishFailureBackoffMilliseconds = 50)
@@ -51,7 +51,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
                 .WithSnsMessagePublisher<GenericMessage>();
         }
 
-        [Then, Ignore("Testing compile-time issues")]
+        [Fact(Skip = "Testing compile-time issues")]
         public void ASqsPublisherCanBeSetupWithConfiguration()
         {
             SystemUnderTest.WithSqsMessagePublisher<GenericMessage>(c =>

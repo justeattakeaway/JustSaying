@@ -2,11 +2,12 @@ using JustBehave;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.TestingFramework;
 using Newtonsoft.Json;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
-namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
+namespace JustSaying.UnitTests.Messaging.Serialisation.Newtonsoft
 {
-    public class WhenUsingCustomSettings: BehaviourTest<NewtonsoftSerialiser>
+    public class WhenUsingCustomSettings : XBehaviourTest<NewtonsoftSerialiser>
     {
         private MessageWithEnum _messageOut;
         private string _jsonMessage;
@@ -32,17 +33,16 @@ namespace JustSaying.Messaging.UnitTests.Serialisation.Newtonsoft
             _jsonMessage = GetMessageInContext(_messageOut);
         }
 
-        [Then]
+        [Fact]
         public void MessageHasBeenCreated()
         {
-            Assert.NotNull(_messageOut);
+            _messageOut.ShouldNotBeNull();
         }
 
-        [Then]
+        [Fact]
         public void EnumsAreNotRepresentedAsStrings()
         {
-            Assert.That(_jsonMessage, Does.Contain("EnumVal"));
-            Assert.That(_jsonMessage, Does.Not.Contain("Two"));
-        }
+            _jsonMessage.ShouldContain("EnumVal");
+            _jsonMessage.ShouldNotContain("Two");        }
     }
 }

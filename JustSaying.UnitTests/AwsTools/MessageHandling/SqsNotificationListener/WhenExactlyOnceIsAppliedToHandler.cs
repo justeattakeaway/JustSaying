@@ -1,12 +1,13 @@
 using System;
 using System.Threading.Tasks;
-using JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener.Support;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.Support;
 using NSubstitute;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
     public class WhenExactlyOnceIsAppliedToHandler : BaseQueuePollingTest
     {
@@ -43,13 +44,13 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.SqsNotificationListener
             await Task.Yield();
         }
 
-        [Test]
+        [Fact]
         public void ProcessingIsPassedToTheHandler()
         {
-            Assert.That(_handler.HandleWasCalled, Is.True);
+            _handler.HandleWasCalled.ShouldBeTrue();
         }
 
-        [Test]
+        [Fact]
         public void MessageIsLocked()
         {
             var messageId = DeserialisedMessage.Id.ToString();

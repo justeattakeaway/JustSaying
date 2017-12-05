@@ -1,11 +1,10 @@
 using System.Linq;
 using System.Threading.Tasks;
-using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.Models;
 using NSubstitute;
-using NUnit.Framework;
 using Shouldly;
+using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -28,14 +27,14 @@ namespace JustSaying.UnitTests.JustSayingBus
             return Task.CompletedTask;
         }
 
-        [Then]
+        [Fact]
         public void NoExceptionIsThrown()
         {
             // Specifying failover regions mean that messages can be registered more than once.
-            Assert.Null(ThrownException);
+            ThrownException.ShouldBeNull();
         }
 
-        [Then]
+        [Fact]
         public void AndInterrogationShowsNonDuplicatedPublishers()
         {
             var response = SystemUnderTest.WhatDoIHave();

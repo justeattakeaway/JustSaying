@@ -1,28 +1,28 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Amazon;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NUnit.Framework;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
     //Todo: Must rewrite using a loopback transport.
-    [TestFixture]
-    public class WhenThrottlingIsEnabledALongRunningHandler
+    [Collection(GlobalSetup.CollectionName)]
+    public class WhenThrottlingIsEnabledALongRunningHandler : IDisposable
     {
         private readonly IHandlerAsync<GenericMessage> _handler = Substitute.For<IHandlerAsync<GenericMessage>>();
         private IAmJustSayingFluently _publisher;
         private readonly Dictionary<int, Guid> _ids = new Dictionary<int, Guid>();
         private readonly Dictionary<int, GenericMessage> _messages = new Dictionary<int, GenericMessage>();
 
-        [SetUp]
-        public void Given()
+        public WhenThrottlingIsEnabledALongRunningHandler()
         {
             Enumerable.Range(1, 100).ToList().ForEach(i =>
             {
@@ -32,9 +32,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 //First handler takes ages all the others take 100 ms
                 SetUpHandler(_ids[i], i, wait: i == 1 ? 3600000 : 100);
             });
-
-
-
+            
             var publisher = CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion(RegionEndpoint.EUWest1.SystemName)
                 .WithMonitoring(Substitute.For<IMessageMonitor>())
@@ -64,32 +62,30 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             });
         }
 
-        [Test]
-        public void ThenItGetsHandled()
+        [Fact]
+        public async Task ThenItGetsHandled()
         {
             //Publish the message with a long running handler
-            _publisher.Publish(_messages[1]);
+            await _publisher.PublishAsync(_messages[1]);
 
             //Give some time to AWS to schedule the first long running message
-            Thread.Sleep(2000);
+            await Task.Delay(TimeSpan.FromSeconds(2));
 
             //publish the rest of the messages except the last one.
-            Enumerable.Range(2, 98).ToList().ForEach(i => _publisher.Publish(_messages[i]));
+            Enumerable.Range(2, 98).ToList().ForEach(i => _publisher.PublishAsync(_messages[i]).Wait());
 
             //publish the last message after a couple of seconds to guaranty it was scheduled after all the rest
-            Thread.Sleep(2000);
-            _publisher.Publish(_messages[100]);
+            await Task.Delay(TimeSpan.FromSeconds(2));
+            await _publisher.PublishAsync(_messages[100]);
 
             //Wait for a reasonble time before asserting whether the last message has been scheduled.
             //There are 100 messages and all except one takes 100 ms. Therefore, 20 seconds is sufficiently long.
             Thread.Sleep(20000);
 
-            _handler.Received().Handle(Arg.Is<GenericMessage>(x => x.Id == _ids[100]));
-
+            Received.InOrder(async () => await _handler.Handle(Arg.Is<GenericMessage>(x => x.Id == _ids[100])));
         }
 
-        [TearDown]
-        public void ByeBye()
+        public void Dispose()
         {
             _publisher.StopListening();
             _publisher = null;

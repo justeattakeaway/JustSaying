@@ -1,10 +1,12 @@
-﻿using System;
-using JustBehave;
+using System;
+using System.Threading.Tasks;
 using JustSaying.TestingFramework;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenRegisteringAPublisherAndNotInstantiated : FluentNotificationStackTestBase
     {
         protected override void Given()
@@ -16,15 +18,15 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
             RecordAnyExceptionsThrown();
         }
 
-        protected override void When()
+        protected override async Task When()
         {
-            SystemUnderTest.Publish(new GenericMessage());
+            await SystemUnderTest.PublishAsync(new GenericMessage());
         }
 
-        [Then]
+        [Fact]
         public void ExceptionIsRaised()
         {
-            Assert.IsInstanceOf<InvalidOperationException>(ThrownException);
+            ThrownException.ShouldBeAssignableTo<InvalidOperationException>();
         }
     }
 }

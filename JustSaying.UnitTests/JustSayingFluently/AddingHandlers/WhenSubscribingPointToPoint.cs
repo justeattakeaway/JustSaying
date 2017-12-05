@@ -1,12 +1,13 @@
-﻿using System;
-using JustBehave;
+using System;
+using System.Threading.Tasks;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Models;
 using NSubstitute;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
 {
@@ -19,47 +20,49 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         {
         }
 
-        protected override void When()
+        protected override Task When()
         {
             _response = SystemUnderTest
                 .WithSqsPointToPointSubscriber()
                 .IntoDefaultQueue()
                 .ConfigureSubscriptionWith(cfg => { })
                 .WithMessageHandler(_handler);
+
+            return Task.CompletedTask;
         }
 
-        [Then]
+        [Fact]
         public void TheQueueIsCreatedInEachRegion()
         {
             QueueVerifier.Received().EnsureQueueExists("defaultRegion", Arg.Any<SqsReadConfiguration>());
             QueueVerifier.Received().EnsureQueueExists("failoverRegion", Arg.Any<SqsReadConfiguration>());
         }
 
-        [Then]
+        [Fact]
         public void TheSubscriptionIsCreatedInEachRegion()
         {
             Bus.Received(2).AddNotificationSubscriber(Arg.Any<string>(), Arg.Any<INotificationSubscriber>());
         }
 
-        [Then]
+        [Fact]
         public void HandlerIsAddedToBus()
         {
             Bus.Received().AddMessageHandler(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Func<IHandlerAsync<Message>>>());
         }
 
-        [Then]
+        [Fact]
         public void SerialisationIsRegisteredForMessage()
         {
             Bus.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser>());
         }
 
-        [Then]
+        [Fact]
         public void ICanContinueConfiguringTheBus()
         {
-            Assert.IsInstanceOf<IFluentSubscription>(_response);
+            _response.ShouldBeAssignableTo<IFluentSubscription>();
         }
 
-        [Then]
+        [Fact]
         public void NoTopicIsCreated()
         {
             QueueVerifier

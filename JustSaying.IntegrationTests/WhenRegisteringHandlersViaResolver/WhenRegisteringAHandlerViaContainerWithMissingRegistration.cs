@@ -1,12 +1,13 @@
 using System.Threading.Tasks;
-using JustBehave;
 using JustSaying.IntegrationTests.TestHandlers;
 using Microsoft.Extensions.Logging;
-using NUnit.Framework;
+using Shouldly;
 using StructureMap;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenRegisteringAHandlerViaContainerWithMissingRegistration : GivenAPublisher
     {
         protected override void Given()
@@ -27,10 +28,10 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             return Task.FromResult(true);
         }
 
-        [Then]
+        [Fact]
         public void ExceptionIsThrownBecauseHandlerIsNotRegisteredInContainer()
         {
-            Assert.IsInstanceOf<HandlerNotRegisteredWithContainerException>(ThrownException);
+            ThrownException.ShouldBeAssignableTo<HandlerNotRegisteredWithContainerException>();
         }
     }
 }

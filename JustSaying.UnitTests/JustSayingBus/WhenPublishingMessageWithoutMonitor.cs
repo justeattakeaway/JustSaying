@@ -1,9 +1,11 @@
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using NSubstitute;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -11,30 +13,30 @@ namespace JustSaying.UnitTests.JustSayingBus
     {
         private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
         
-        protected override void When()
+        protected override async Task When()
         {
             SystemUnderTest.AddMessagePublisher<GenericMessage>(_publisher, string.Empty);
-            SystemUnderTest.Publish(new GenericMessage());
+            await SystemUnderTest.PublishAsync(new GenericMessage());
         }
 
-        [Then]
+        [Fact]
         public void ANullMonitorIsProvidedByDefault()
         {
-            Assert.IsInstanceOf<NullOpMessageMonitor>(SystemUnderTest.Monitor);
+            SystemUnderTest.Monitor.ShouldBeAssignableTo<NullOpMessageMonitor>();
         }
 
-        [Then]
+        [Fact]
         public void SettingANullMonitorSetsTheMonitorToNullOpMonitor()
         {
             SystemUnderTest.Monitor = null;
-            Assert.IsInstanceOf<NullOpMessageMonitor>(SystemUnderTest.Monitor);
+            SystemUnderTest.Monitor.ShouldBeAssignableTo<NullOpMessageMonitor>();
         }
 
-        [Then]
+        [Fact]
         public void SettingANewMonitorIsAccepted()
         {
             SystemUnderTest.Monitor = new CustomMonitor();
-            Assert.IsInstanceOf<CustomMonitor>(SystemUnderTest.Monitor);
+            SystemUnderTest.Monitor.ShouldBeAssignableTo<CustomMonitor>();
         }
     }
 }

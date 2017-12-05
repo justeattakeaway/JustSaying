@@ -4,11 +4,11 @@ using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
-using NUnit.Framework;
+using Shouldly;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
-    public abstract class GivenAPublisher : AsyncBehaviourTest<IMessagePublisher>
+    public abstract class GivenAPublisher : XAsyncBehaviourTest<IMessagePublisher>
     {
         protected IHaveFulfilledPublishRequirements Publisher;
         protected IHaveFulfilledSubscriptionRequirements Subscriber;
@@ -25,7 +25,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
         protected override async Task When()
         {
-            Publisher.Publish(new OrderPlaced("1234"));
+            await Publisher.PublishAsync(new OrderPlaced("1234"));
 
             await WaitForDone();
 
@@ -40,22 +40,13 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             }
 
             var done = await Tasks.WaitWithTimeoutAsync(DoneSignal);
-            if (!done)
-            {
-                Assert.Fail("Done task timed out");
-            }
+            done.ShouldBe(true, "Done task timed out");
         }
 
         private void TearDownPubSub()
         {
-            if (Publisher != null)
-            {
-                Publisher.StopListening();
-            }
-            if (Subscriber != null)
-            {
-                Subscriber.StopListening();
-            }
+            Publisher?.StopListening();
+            Subscriber?.StopListening();
         }
 
     }

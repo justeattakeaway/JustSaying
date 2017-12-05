@@ -1,7 +1,8 @@
-using JustBehave;
+using System.Threading.Tasks;
 using JustSaying.Messaging.Monitoring;
 using NSubstitute;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingFluently.AddingMonitoring
 {
@@ -12,21 +13,22 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingMonitoring
 
         protected override void Given() { }
 
-        protected override void When()
+        protected override Task When()
         {
             _response = SystemUnderTest.WithMonitoring(_monitor);
+            return Task.CompletedTask;
         }
 
-        [Then]
+        [Fact]
         public void ThatMonitorIsAddedToTheStack()
         {
             Bus.Received().Monitor = _monitor;
         }
 
-        [Then]
+        [Fact]
         public void ICanContinueConfiguringTheBus()
         {
-            Assert.IsInstanceOf<IFluentSubscription>(_response);
+            _response.ShouldBeAssignableTo<IFluentSubscription>();
         }
     }
 }

@@ -1,11 +1,12 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.TestingFramework;
-using NUnit.Framework;
 using Shouldly;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenAMessageIsPublishedViaSnsToSqsSubscriber : GivenANotificationStack
     {
         private Future<GenericMessage> _handler;
@@ -19,12 +20,12 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
         protected override async Task When()
         {
-            ServiceBus.Publish(new GenericMessage());
+            await ServiceBus.PublishAsync(new GenericMessage());
 
             await _handler.DoneSignal;
         }
 
-        [Test]
+        [Fact]
         public void ThenItGetsHandled()
         {
             _handler.ReceivedMessageCount.ShouldBeGreaterThan(0);

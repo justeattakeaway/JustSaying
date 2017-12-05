@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -8,10 +8,11 @@ using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using Xunit;
 
-namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 {
-    public class WhenPublishingAsync : BehaviourTest<SqsPublisher>
+    public class WhenPublishingAsync : XAsyncBehaviourTest<SqsPublisher>
     {
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
@@ -38,20 +39,19 @@ namespace JustSaying.AwsTools.UnitTests.MessageHandling.Sqs
                 .Returns("serialized_contents");
         }
 
-        protected override void When()
+        protected override async Task When()
         {
-            SystemUnderTest.PublishAsync(_message)
-                .GetAwaiter().GetResult();
+            await SystemUnderTest.PublishAsync(_message);
         }
 
-        [Then]
+        [Fact]
         public void MessageIsPublishedToQueue()
         {
             // ToDo: Can be better...
             _sqs.Received().SendMessageAsync(Arg.Is<SendMessageRequest>(x => x.MessageBody.Equals("serialized_contents")));
         }
 
-        [Then]
+        [Fact]
         public void MessageIsPublishedToCorrectLocation()
         {
             _sqs.Received().SendMessageAsync(Arg.Is<SendMessageRequest>(x => x.QueueUrl == Url));

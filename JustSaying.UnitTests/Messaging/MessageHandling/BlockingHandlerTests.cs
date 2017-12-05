@@ -1,26 +1,26 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using NSubstitute;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 // we use the obsolete interface"IHandler<T>" here
 #pragma warning disable 618
 
-namespace JustSaying.Messaging.UnitTests.MessageHandling
+namespace JustSaying.UnitTests.Messaging.MessageHandling
 {
-    [TestFixture]
     public class BlockingHandlerTests
     {
-        [Test]
+        [Fact]
         public void WhenInnerIsNull_ExcpetionIsThrown()
         {
-            Assert.Throws<ArgumentNullException>(() =>
-            { new BlockingHandler<OrderAccepted>(null); });
+            // ReSharper disable once ObjectCreationAsStatement
+            new Action(() => new BlockingHandler<OrderAccepted>(null)).ShouldThrow<ArgumentNullException>();
         }
 
-        [Test]
+        [Fact]
         public async Task WhenAMessageIsHandled_TheInnerIsCalled()
         {
             var inner = Substitute.For<IHandler<OrderAccepted>>();
@@ -36,7 +36,7 @@ namespace JustSaying.Messaging.UnitTests.MessageHandling
             inner.Received().Handle(message);
         }
 
-        [Test]
+        [Fact]
         public async Task WhenAMessageIsHandled_TheInnerResultFalseIsReturned()
         {
             var inner = Substitute.For<IHandler<OrderAccepted>>();
@@ -49,10 +49,10 @@ namespace JustSaying.Messaging.UnitTests.MessageHandling
 
             var result = await handler.Handle(message);
 
-            Assert.That(result, Is.False);
+            result.ShouldBeFalse();
         }
 
-        [Test]
+        [Fact]
         public async Task WhenAMessageIsHandled_TheInnerResultTrueIsReturned()
         {
             var inner = Substitute.For<IHandler<OrderAccepted>>();
@@ -65,7 +65,7 @@ namespace JustSaying.Messaging.UnitTests.MessageHandling
 
             var result = await handler.Handle(message);
 
-            Assert.That(result, Is.True);
+            result.ShouldBeTrue();
         }
     }
 }

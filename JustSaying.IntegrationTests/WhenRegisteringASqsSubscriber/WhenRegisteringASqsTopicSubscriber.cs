@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
-using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
@@ -10,10 +9,11 @@ using JustSaying.TestingFramework;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NUnit.Framework;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 {
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenRegisteringASqsTopicSubscriber : FluentNotificationStackTestBase
     {
         protected string TopicName;
@@ -31,12 +31,12 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
             Configuration = new MessagingConfig();
 
-            DeleteTopicIfItAlreadyExists(TestEndpoint, TopicName);
-            DeleteQueueIfItAlreadyExists(TestEndpoint, QueueName);
+            DeleteTopicIfItAlreadyExists(TestEndpoint, TopicName).Wait();
+            DeleteQueueIfItAlreadyExists(TestEndpoint, QueueName).Wait();
             Client = CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1);
         }
 
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.WithSqsTopicSubscriber()
                 .IntoQueue(QueueName)
@@ -45,39 +45,52 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
                         cfg.MessageRetentionSeconds = 60;
                     })
                 .WithMessageHandler(Substitute.For<IHandlerAsync<Message>>());
+
+            return Task.CompletedTask;
         }
 
-        [Then]
+        [Fact]
         public void SerialisationIsRegisteredForMessage()
         {
             NotificationStack.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser>());
         }
 
-        [Then, Timeout(70000)] // ToDo: Sorry about this, but SQS is a little slow to verify against. Can be better I'm sure? ;)
+        [Fact]
         public async Task QueueIsCreated()
         {
-            var queue = new SqsQueueByName(RegionEndpoint.EUWest1, 
-                QueueName, Client, 0, Substitute.For<ILoggerFactory>());
+            async Task QueueIsCreatedInner()
+            {
+                var queue = new SqsQueueByName(RegionEndpoint.EUWest1,
+                    QueueName, Client, 0, Substitute.For<ILoggerFactory>());
 
-            await Patiently.AssertThatAsync(
-                queue.Exists, TimeSpan.FromSeconds(65));
+                await Patiently.AssertThatAsync(
+                    queue.Exists, TimeSpan.FromSeconds(65));
+            }
+
+            var task = QueueIsCreatedInner();
+
+            if (task == await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(70)))) // ToDo: Sorry about this, but SQS is a little slow to verify against. Can be better I'm sure? ;)
+                await task;
+            else
+                throw new TimeoutException();
         }
 
-        [TearDown]
-        public void TearDown()
+        protected override void PostAssertTeardown()
         {
-            DeleteTopicIfItAlreadyExists(TestEndpoint, TopicName);
-            DeleteQueueIfItAlreadyExists(TestEndpoint, QueueName);
+            DeleteTopicIfItAlreadyExists(TestEndpoint, TopicName).Wait();
+            DeleteQueueIfItAlreadyExists(TestEndpoint, QueueName).Wait();
         }
     }
 
     public class WhenRegisteringASqsTopicSubscriberUsingBasicSyntax : WhenRegisteringASqsTopicSubscriber
     {
-        protected override void When()
+        protected override Task When()
         {
             SystemUnderTest.WithSqsTopicSubscriber()
                 .IntoQueue(QueueName)
                 .WithMessageHandler(Substitute.For<IHandlerAsync<Message>>());
+
+            return Task.CompletedTask;
         }
     }
 }

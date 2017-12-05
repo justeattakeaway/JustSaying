@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Amazon;
 using JustSaying.IntegrationTests.TestHandlers;
@@ -6,11 +6,12 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NUnit.Framework;
+using Shouldly;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopicSubscriber
 {
-    [TestFixture]
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenOneBusIsSubscribedToTwoRegions
     {
         private readonly Future<GenericMessage> _handler = new Future<GenericMessage>();
@@ -22,14 +23,14 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         private GenericMessage _message1;
         private GenericMessage _message2;
 
-        [Test]
+        [Fact]
         public async Task MessagesPublishedToBothRegionsWillBeReceived()
         {
             GivenASubscriptionToAQueueInTwoRegions(RegionEndpoint.EUWest1.SystemName, RegionEndpoint.USEast1.SystemName);
             AndAPublisherToThePrimaryRegion(RegionEndpoint.EUWest1.SystemName);
             AndAPublisherToTheSecondaryRegion(RegionEndpoint.USEast1.SystemName);
 
-            WhenMessagesArePublishedToBothRegions();
+            await WhenMessagesArePublishedToBothRegions();
 
             await ThenTheSubscriberReceivesBothMessages();
 
@@ -73,24 +74,24 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .WithSnsMessagePublisher<GenericMessage>();
         }
 
-        private void WhenMessagesArePublishedToBothRegions()
+        private async Task WhenMessagesArePublishedToBothRegions()
         {
             _message1 = new GenericMessage {Id = Guid.NewGuid()};
             _message2 = new GenericMessage {Id = Guid.NewGuid()};
 
-            _primaryPublisher.Publish(_message1);
+            await _primaryPublisher.PublishAsync(_message1);
 
-            _secondaryPublisher.Publish(_message2);
+            await _secondaryPublisher.PublishAsync(_message2);
         }
 
         private async Task ThenTheSubscriberReceivesBothMessages()
         {
             var done = await Tasks.WaitWithTimeoutAsync(_handler.DoneSignal);
-            Assert.That(done, Is.True);
+            done.ShouldBeTrue();
 
-            Assert.That(_handler.ReceivedMessageCount, Is.GreaterThanOrEqualTo(2));
-            Assert.That(_handler.HasReceived(_message1));
-            Assert.That(_handler.HasReceived(_message2));
+            _handler.ReceivedMessageCount.ShouldBeGreaterThanOrEqualTo(2);
+            _handler.HasReceived(_message1).ShouldBeTrue();
+            _handler.HasReceived(_message2).ShouldBeTrue();
         }
     }
 }

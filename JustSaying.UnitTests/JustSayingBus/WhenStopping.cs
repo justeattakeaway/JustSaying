@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
-using JustBehave;
 using JustSaying.Messaging;
 using NSubstitute;
+using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -29,7 +29,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             return Task.CompletedTask;
         }
 
-        [Then]
+        [Fact]
         public void SubscribersAreToldToStopListening()
         {
             _subscriber1.Received().StopListening();
