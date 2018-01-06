@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
+using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialisation;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,7 @@ namespace JustSaying.AwsTools.MessageHandling
     public abstract class SnsTopicBase : IMessagePublisher
     {
         private readonly IMessageSerialisationRegister _serialisationRegister; // ToDo: Grrr...why is this here even. GET OUT!
+        public SnsWriteConfiguration SnsWriteConfiguration { private get; set; }
         public string Arn { get; protected set; }
         protected IAmazonSimpleNotificationService Client { get; set; }
         private readonly ILogger _eventLog;
@@ -53,9 +55,10 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (Exception ex)
             {
-                throw new PublishException(
-                    $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}",
-                    ex);
+                if (!ClientExceptionHandler(ex, request))
+                    throw new PublishException(
+                        $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}",
+                        ex);
             }
         }
 #endif
@@ -67,14 +70,25 @@ namespace JustSaying.AwsTools.MessageHandling
             try
             {
                 await Client.PublishAsync(request);
+
                 _eventLog.LogInformation($"Published message: '{request.Subject}' with content {request.Message}");
             }
             catch (Exception ex)
             {
-                throw new PublishException(
-                    $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}",
-                    ex);
+                if (!ClientExceptionHandler(ex, request))
+                    throw new PublishException(
+                        $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}",
+                        ex);
             }
+        }
+
+        private bool ClientExceptionHandler(Exception ex, PublishRequest request)
+        {
+            bool exceptionIsHandled = false;
+            if (SnsWriteConfiguration?.OnException != null)
+                exceptionIsHandled = SnsWriteConfiguration.OnException(ex, request);
+
+            return exceptionIsHandled;
         }
 
         private PublishRequest BuildPublishRequest(Message message)

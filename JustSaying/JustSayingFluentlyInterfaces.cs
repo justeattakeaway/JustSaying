@@ -53,10 +53,11 @@ namespace JustSaying
     {
         IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder);
         IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>() where T : Message;
+        IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>(Action<SnsWriteConfiguration> config) where T : Message;
         IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsWriteConfiguration> config) where T : Message;
 
         /// <summary>
-        /// Adds subscriber to topic. 
+        /// Adds subscriber to topic.
         /// </summary>
         /// <param name="topicName">Topic name to subscribe to. If left empty,
         /// topic name will be message type name</param>
