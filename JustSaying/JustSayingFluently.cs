@@ -58,7 +58,26 @@ namespace JustSaying
         /// <returns></returns>
         public IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>() where T : Message
         {
+            return WithSnsMessagePublisher<T>(null);
+        }
+
+        /// <summary>
+        /// Register for publishing messages to SNS
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>(Action<SnsWriteConfiguration> configBuilder) where T : Message
+        {
+            return AddSnsMessagePublisher<T>(configBuilder);
+        }
+
+        private IHaveFulfilledPublishRequirements AddSnsMessagePublisher<T>(Action<SnsWriteConfiguration> configBuilder) where T : Message
+        {
             _log.LogInformation("Adding SNS publisher");
+
+            var config = new SnsWriteConfiguration();
+            configBuilder?.Invoke(config);
+
             _subscriptionConfig.Topic = GetMessageTypeName<T>();
             var namingStrategy = GetNamingStrategy();
 
@@ -72,7 +91,7 @@ namespace JustSaying
                     topicName,
                     _awsClientFactoryProxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
                     Bus.SerialisationRegister,
-                    _loggerFactory);
+                    _loggerFactory) {SnsWriteConfiguration = config};
 
                 eventPublisher.Create();
 

@@ -38,7 +38,7 @@ Here's how to get up & running with simple message publishing.
 ````
 
 ### 2. Registering publishers
-* You will need to tell JustSaying which messages you intend to publish in order that it can setup any missing topics for you.
+* You will need to tell JustSaying which messages you intend to publish in order so it can setup any missing topics for you.
 * In this case, we are telling it to publish the OrderAccepted messages.
 * The topic will be the message type.
 
@@ -74,7 +74,7 @@ BOOM! You're done publishing!
 
 ## Consuming messages
 Here's how to get up & running with message consumption.
-We currently support SQS subscriptions only, but keep checking back for other methods too (http, Kinesis)
+We currently support SQS subscriptions only, but keep checking back for other methods too (HTTP, Kinesis)
 (although we are kinda at the mercy of AWS here for internal HTTP delivery...)
 
 

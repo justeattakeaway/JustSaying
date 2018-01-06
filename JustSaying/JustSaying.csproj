@@ -26,6 +26,6 @@
     <Reference Include="System" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net451' ">
-	<DefineConstants>$(DefineConstants);AWS_SDK_HAS_SYNC</DefineConstants> 
+    <DefineConstants>$(DefineConstants);AWS_SDK_HAS_SYNC</DefineConstants>
   </PropertyGroup>
 </Project>
