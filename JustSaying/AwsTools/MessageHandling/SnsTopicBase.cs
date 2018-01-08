@@ -63,7 +63,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (Exception ex)
             {
-                if (!ClientExceptionHandler(ex, request))
+                if (!ClientExceptionHandler(ex))
                     throw new PublishException(
                         $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}",
                         ex);
@@ -83,18 +83,18 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (Exception ex)
             {
-                if (!ClientExceptionHandler(ex, request))
+                if (!ClientExceptionHandler(ex))
                     throw new PublishException(
                         $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}",
                         ex);
             }
         }
 
-        private bool ClientExceptionHandler(Exception ex, PublishRequest request)
+        private bool ClientExceptionHandler(Exception ex)
         {
             bool exceptionIsHandled = false;
-            if (_snsWriteConfiguration?.OnException != null)
-                exceptionIsHandled = _snsWriteConfiguration.OnException.Invoke(ex, request);
+            if (_snsWriteConfiguration?.HandleException != null)
+                exceptionIsHandled = _snsWriteConfiguration.HandleException.Invoke(ex);
 
             return exceptionIsHandled;
         }
