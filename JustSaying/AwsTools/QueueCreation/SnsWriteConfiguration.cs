@@ -6,9 +6,9 @@ namespace JustSaying.AwsTools.QueueCreation
     public class SnsWriteConfiguration
     {
         /// <summary>
-        /// Extension point allows custom error handling, including ability to specify whether exception has been explictly handled by consumer.
+        /// Extension point enabling custom error handling on a per notification basis, including ability handle the exception.
         /// </summary>
-        /// <returns>Boolean to indicate whether the exception has already been handled by the consumer</returns>
+        /// <returns>Boolean indicating whether the exception has been handled</returns>
         public Func<Exception, bool> HandleException { get; set; }
     }
 }
