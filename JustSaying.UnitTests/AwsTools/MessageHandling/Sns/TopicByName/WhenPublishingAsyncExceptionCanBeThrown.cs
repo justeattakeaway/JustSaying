@@ -26,7 +26,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         {
             var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister, Substitute.For<ILoggerFactory>(), new SnsWriteConfiguration
             {
-                OnException = (ex, request) => false
+                HandleException = ex => false
             });
 
             topic.Exists();
