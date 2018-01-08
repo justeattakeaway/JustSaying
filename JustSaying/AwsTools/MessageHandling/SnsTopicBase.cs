@@ -13,7 +13,7 @@ namespace JustSaying.AwsTools.MessageHandling
     public abstract class SnsTopicBase : IMessagePublisher
     {
         private readonly IMessageSerialisationRegister _serialisationRegister; // ToDo: Grrr...why is this here even. GET OUT!
-        public SnsWriteConfiguration SnsWriteConfiguration { private get; set; }
+        private readonly SnsWriteConfiguration _snsWriteConfiguration;
         public string Arn { get; protected set; }
         protected IAmazonSimpleNotificationService Client { get; set; }
         private readonly ILogger _eventLog;
@@ -24,6 +24,14 @@ namespace JustSaying.AwsTools.MessageHandling
             _serialisationRegister = serialisationRegister;
             _log = loggerFactory.CreateLogger("JustSaying");
             _eventLog = loggerFactory.CreateLogger("EventLog");
+        }
+
+        protected SnsTopicBase(IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory, SnsWriteConfiguration snsWriteConfiguration)
+        {
+            _serialisationRegister = serialisationRegister;
+            _log = loggerFactory.CreateLogger("JustSaying");
+            _eventLog = loggerFactory.CreateLogger("EventLog");
+            _snsWriteConfiguration = snsWriteConfiguration;
         }
 
         protected abstract Task<bool> ExistsAsync();
@@ -85,8 +93,8 @@ namespace JustSaying.AwsTools.MessageHandling
         private bool ClientExceptionHandler(Exception ex, PublishRequest request)
         {
             bool exceptionIsHandled = false;
-            if (SnsWriteConfiguration?.OnException != null)
-                exceptionIsHandled = SnsWriteConfiguration.OnException(ex, request);
+            if (_snsWriteConfiguration?.OnException != null)
+                exceptionIsHandled = _snsWriteConfiguration.OnException.Invoke(ex, request);
 
             return exceptionIsHandled;
         }
@@ -102,6 +110,5 @@ namespace JustSaying.AwsTools.MessageHandling
                 Message = messageToSend
             };
         }
-
     }
 }
