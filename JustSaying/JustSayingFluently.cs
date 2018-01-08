@@ -75,8 +75,8 @@ namespace JustSaying
         {
             _log.LogInformation("Adding SNS publisher");
 
-            var config = new SnsWriteConfiguration();
-            configBuilder?.Invoke(config);
+            var snsWriteConfig = new SnsWriteConfiguration();
+            configBuilder?.Invoke(snsWriteConfig);
 
             _subscriptionConfig.Topic = GetMessageTypeName<T>();
             var namingStrategy = GetNamingStrategy();
@@ -91,7 +91,7 @@ namespace JustSaying
                     topicName,
                     _awsClientFactoryProxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
                     Bus.SerialisationRegister,
-                    _loggerFactory) {SnsWriteConfiguration = config};
+                    _loggerFactory, snsWriteConfig);
 
                 eventPublisher.Create();
 

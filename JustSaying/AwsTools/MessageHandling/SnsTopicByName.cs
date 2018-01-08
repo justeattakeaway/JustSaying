@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
+using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialisation;
 using Microsoft.Extensions.Logging;
 
@@ -16,6 +17,14 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public SnsTopicByName(string topicName, IAmazonSimpleNotificationService client, IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory)
             : base(serialisationRegister, loggerFactory)
+        {
+            TopicName = topicName;
+            Client = client;
+            _log = loggerFactory.CreateLogger("JustSaying");
+        }
+
+        public SnsTopicByName(string topicName, IAmazonSimpleNotificationService client, IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory, SnsWriteConfiguration snsWriteConfiguration)
+            : base(serialisationRegister, loggerFactory, snsWriteConfiguration)
         {
             TopicName = topicName;
             Client = client;
