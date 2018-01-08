@@ -90,14 +90,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        private bool ClientExceptionHandler(Exception ex)
-        {
-            bool exceptionIsHandled = false;
-            if (_snsWriteConfiguration?.HandleException != null)
-                exceptionIsHandled = _snsWriteConfiguration.HandleException.Invoke(ex);
-
-            return exceptionIsHandled;
-        }
+        private bool ClientExceptionHandler(Exception ex) => _snsWriteConfiguration?.HandleException?.Invoke(ex) ?? false;
 
         private PublishRequest BuildPublishRequest(Message message)
         {
