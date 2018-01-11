@@ -191,7 +191,7 @@ namespace JustSaying
                 throw new InvalidOperationException("You must register for message publication before publishing a message");
             }
 
-            await Bus.PublishAsync(message);
+            await Bus.PublishAsync(message).ConfigureAwait(false);
         }
 
         /// <summary>

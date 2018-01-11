@@ -48,7 +48,7 @@ namespace JustSaying.AwsTools
                 }
             };
 
-            var response = await Client.SetQueueAttributesAsync(request);
+            var response = await Client.SetQueueAttributesAsync(request).ConfigureAwait(false);
 
             if (response.HttpStatusCode == HttpStatusCode.OK)
             {

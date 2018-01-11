@@ -16,11 +16,11 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public override async Task<bool> ExistsAsync()
         {
-            var result = await Client.ListQueuesAsync(new ListQueuesRequest());
+            var result = await Client.ListQueuesAsync(new ListQueuesRequest()).ConfigureAwait(false);
 
             if (result.QueueUrls.Any(x => x == Url))
             {
-                await SetQueuePropertiesAsync();
+                await SetQueuePropertiesAsync().ConfigureAwait(false);
                 // Need to set the prefix yet!
                 return true;
             }

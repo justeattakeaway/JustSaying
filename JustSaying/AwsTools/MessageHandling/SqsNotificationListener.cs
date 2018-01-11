@@ -157,7 +157,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                sqsMessageResponse = await GetMessagesFromSqsQueue(ct, queueName, region);
+                sqsMessageResponse = await GetMessagesFromSqsQueue(ct, queueName, region).ConfigureAwait(false);
                 var messageCount = sqsMessageResponse.Messages.Count;
 
                 _log.LogTrace($"Polled for messages - Queue: {queueName}, Region: {region}, MessageCount: {messageCount}");

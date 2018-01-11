@@ -40,7 +40,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public async Task<bool> SubscribeAsync(SqsQueueBase queue)
         {
-            var subscriptionResponse = await Client.SubscribeAsync(Arn, "sqs", queue.Arn);
+            var subscriptionResponse = await Client.SubscribeAsync(Arn, "sqs", queue.Arn).ConfigureAwait(false);
 
             if (!string.IsNullOrEmpty(subscriptionResponse?.SubscriptionArn))
             {
@@ -77,7 +77,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                await Client.PublishAsync(request);
+                await Client.PublishAsync(request).ConfigureAwait(false);
 
                 _eventLog.LogInformation($"Published message: '{request.Subject}' with content {request.Message}");
             }
