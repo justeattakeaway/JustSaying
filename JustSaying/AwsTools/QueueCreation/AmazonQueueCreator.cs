@@ -32,22 +32,22 @@ namespace JustSaying.AwsTools.QueueCreation
             var sqsClient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
             var snsClient = _awsClientFactory.GetAwsClientFactory().GetSnsClient(regionEndpoint);
 
-            var queue = await EnsureQueueExistsAsync(region, queueConfig);
+            var queue = await EnsureQueueExistsAsync(region, queueConfig).ConfigureAwait(false);
 
             if (TopicExistsInAnotherAccount(queueConfig))
             {
                 var arnProvider = new ForeignTopicArnProvider(regionEndpoint, queueConfig.TopicSourceAccount, queueConfig.PublishEndpoint);
 
-                await snsClient.SubscribeQueueAsync(arnProvider.GetArn(), sqsClient, queue.Url);
+                await snsClient.SubscribeQueueAsync(arnProvider.GetArn(), sqsClient, queue.Url).ConfigureAwait(false);
             }
             else
             {
                 var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsClient, serialisationRegister, _loggerFactory);
                 eventTopic.Create();
 
-                await EnsureQueueIsSubscribedToTopic(eventTopic, queue);
+                await EnsureQueueIsSubscribedToTopic(eventTopic, queue).ConfigureAwait(false);
 
-                await SqsPolicy.SaveAsync(eventTopic.Arn, queue.Arn, queue.Url, sqsClient);
+                await SqsPolicy.SaveAsync(eventTopic.Arn, queue.Arn, queue.Url, sqsClient).ConfigureAwait(false);
             }
 
             return queue;
@@ -74,7 +74,7 @@ namespace JustSaying.AwsTools.QueueCreation
                 return queue;
             }
             queue = new SqsQueueByName(regionEndpoint, queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue, _loggerFactory);
-            await queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig);
+            await queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig).ConfigureAwait(false);
 
             _queueCache.AddToCache(region, queue.QueueName, queue);
             return queue;
@@ -82,7 +82,7 @@ namespace JustSaying.AwsTools.QueueCreation
 
         private async Task<bool> EnsureQueueIsSubscribedToTopic(SnsTopicByName eventTopic, SqsQueueByName queue)
         {
-            return await eventTopic.SubscribeAsync(queue);
+            return await eventTopic.SubscribeAsync(queue).ConfigureAwait(false);
         }
     }
 }

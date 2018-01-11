@@ -51,7 +51,7 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (MessageFormatNotSupportedException ex)
             {
                 _log.LogTrace($"Didn't handle message [{message.Body ?? string.Empty}]. No serialiser setup");
-                await DeleteMessageFromQueue(message.ReceiptHandle);
+                await DeleteMessageFromQueue(message.ReceiptHandle).ConfigureAwait(false);
                 _onError(ex, message);
                 return;
             }
@@ -76,7 +76,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 if (handlingSucceeded)
                 {
-                    await DeleteMessageFromQueue(message.ReceiptHandle);
+                    await DeleteMessageFromQueue(message.ReceiptHandle).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
@@ -97,7 +97,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 if (!handlingSucceeded && _messageBackoffStrategy != null)
                 {
-                    await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage, lastException);
+                    await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage, lastException).ConfigureAwait(false);
                 }
             }
         }
@@ -130,7 +130,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 ReceiptHandle = receiptHandle
             };
 
-            await _queue.Client.DeleteMessageAsync(deleteRequest);
+            await _queue.Client.DeleteMessageAsync(deleteRequest).ConfigureAwait(false);
         }
         
         private async Task UpdateMessageVisibilityTimeout(SQSMessage message, string receiptHandle, Message typedMessage, Exception lastException)
@@ -148,7 +148,7 @@ namespace JustSaying.AwsTools.MessageHandling
                         VisibilityTimeout = visibilityTimeoutSeconds
                     };
 
-                    await _queue.Client.ChangeMessageVisibilityAsync(visibilityRequest);
+                    await _queue.Client.ChangeMessageVisibilityAsync(visibilityRequest).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {

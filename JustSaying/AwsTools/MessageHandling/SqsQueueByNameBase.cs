@@ -32,7 +32,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                result = await Client.GetQueueUrlAsync(QueueName);
+                result = await Client.GetQueueUrlAsync(QueueName).ConfigureAwait(false);
             }
             catch (QueueDoesNotExistException)
             {
@@ -45,7 +45,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             Url = result.QueueUrl;
 
-            await SetQueuePropertiesAsync();
+            await SetQueuePropertiesAsync().ConfigureAwait(false);
             return true;
         }
 
@@ -63,13 +63,13 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             try
             {
-                var queueResponse = await Client.CreateQueueAsync(QueueName);
+                var queueResponse = await Client.CreateQueueAsync(QueueName).ConfigureAwait(false);
 
                 if (!string.IsNullOrWhiteSpace(queueResponse?.QueueUrl))
                 {
                     Url = queueResponse.QueueUrl;
-                    await Client.SetQueueAttributesAsync(queueResponse.QueueUrl, GetCreateQueueAttributes(queueConfig));
-                    await SetQueuePropertiesAsync();
+                    await Client.SetQueueAttributesAsync(queueResponse.QueueUrl, GetCreateQueueAttributes(queueConfig)).ConfigureAwait(false);
+                    await SetQueuePropertiesAsync().ConfigureAwait(false);
 
                     _log.LogInformation($"Created Queue: {QueueName} on Arn: {Arn}");
                     return true;
@@ -81,8 +81,8 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     // Ensure we wait for queue delete timeout to expire.
                     _log.LogInformation($"Waiting to create Queue due to AWS time restriction - Queue: {QueueName}, AttemptCount: {attempt + 1}");
-                    await Task.Delay(60000);
-                    await CreateAsync(queueConfig, attempt + 1);
+                    await Task.Delay(60000).ConfigureAwait(false);
+                    await CreateAsync(queueConfig, attempt + 1).ConfigureAwait(false);
                 }
                 else
                 {
