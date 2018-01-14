@@ -17,5 +17,11 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CLSCompliant>true</CLSCompliant>
     <ComVisible>false</ComVisible>
+    <IsTestProject>$(MSBuildProjectName.Contains('Tests'))</IsTestProject>
+    <IsTestProject Condition=" '$(IsTestProject)' != 'true' ">$(MSBuildProjectName.Contains('Testing'))</IsTestProject>
   </PropertyGroup>
+
+  <ItemGroup Condition=" '$(IsTestProject)' != 'true' and '$(NCrunch)' == '' and '$(SourceLinkEnabled)' != 'false' ">
+    <PackageReference Include="SourceLink.Embed.AllSourceFiles" Version="2.7.4" PrivateAssets="All" />
+  </ItemGroup>
 </Project>
