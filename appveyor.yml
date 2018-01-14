@@ -1,11 +1,13 @@
 image: Visual Studio 2017
-version: 5.0.0-rc1-build{build}
+version: 0.0.{build}
 configuration: Release
 cache:
   - packages
 before_build:
   - dotnet restore
 clone_depth: 1
+install:
+  - ps: .\SetAppVeyorBuildVersion.ps1
 build:
   project: JustSaying.sln
   parallel: true

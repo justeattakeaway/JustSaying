@@ -8,7 +8,7 @@
     <Description>A light-weight message bus on top of AWS SNS and SQS</Description>
     <PackageIconUrl>https://avatars3.githubusercontent.com/u/1516790?s=200</PackageIconUrl>
     <PackageProjectUrl>https://github.com/justeat/JustSaying</PackageProjectUrl>
-    <PackageLicenseUrl>$(PackageProjectUrl)/blob/master/LICENSE.md</PackageLicenseUrl>
+    <PackageLicenseUrl>$(PackageProjectUrl)/blob/master/LICENSE</PackageLicenseUrl>
     <PackageReleaseNotes>$(PackageProjectUrl)/releases</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageTags>aws;sns;sqs</PackageTags>
@@ -21,7 +21,7 @@
     <IsTestProject Condition=" '$(IsTestProject)' != 'true' ">$(MSBuildProjectName.Contains('Testing'))</IsTestProject>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(IsTestProject)' != 'true' and '$(NCrunch)' == '' and '$(SourceLinkEnabled)' != 'false' ">
+  <ItemGroup Condition=" '$(IsTestProject)' != 'true' AND '$(NCrunch)' == '' AND '$(SourceLinkEnabled)' != 'false' ">
     <PackageReference Include="SourceLink.Embed.AllSourceFiles" Version="2.7.4" PrivateAssets="All" />
   </ItemGroup>
 </Project>
