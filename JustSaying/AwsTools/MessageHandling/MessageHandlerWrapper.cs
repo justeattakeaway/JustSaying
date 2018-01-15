@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
@@ -19,18 +19,20 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public Func<Message, Task<bool>> WrapMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler) where T : Message
         {
-            IHandlerAsync<T> handler = new FutureHandler<T>(futureHandler);
-            handler = MaybeWrapWithGuaranteedDelivery(futureHandler, handler);
-            handler = MaybeWrapStopwatch(handler);
+            return async message =>
+            {
+                var handler = futureHandler();
+                handler = MaybeWrapWithExactlyOnce(handler);
+                handler = MaybeWrapWithStopwatch(handler);
 
-            return async message => await handler.Handle((T)message).ConfigureAwait(false);
+                return await handler.Handle((T)message).ConfigureAwait(false);
+            };
         }
 
-        private IHandlerAsync<T> MaybeWrapWithGuaranteedDelivery<T>(Func<IHandlerAsync<T>> futureHandler, IHandlerAsync<T> handler) where T : Message
+        private IHandlerAsync<T> MaybeWrapWithExactlyOnce<T>(IHandlerAsync<T> handler) where T : Message
         {
-            var handlerInstance = futureHandler();
-
-            var exactlyOnceMetadata = new ExactlyOnceReader(handlerInstance.GetType());
+            var handlerType = handler.GetType();
+            var exactlyOnceMetadata = new ExactlyOnceReader(handlerType);
             if (!exactlyOnceMetadata.Enabled)
             {
                 return handler;
@@ -41,14 +43,13 @@ namespace JustSaying.AwsTools.MessageHandling
                 throw new Exception("IMessageLock is null. You need to specify an implementation for IMessageLock.");
             }
 
-            var handlerName = handlerInstance.GetType().FullName.ToLower();
+            var handlerName = handlerType.FullName.ToLower();
             return new ExactlyOnceHandler<T>(handler, _messageLock, exactlyOnceMetadata.GetTimeOut(), handlerName);
         }
 
-        private IHandlerAsync<T> MaybeWrapStopwatch<T>(IHandlerAsync<T> handler) where T : Message
+        private IHandlerAsync<T> MaybeWrapWithStopwatch<T>(IHandlerAsync<T> handler) where T : Message
         {
-            var executionTimeMonitoring = _messagingMonitor as IMeasureHandlerExecutionTime;
-            if (executionTimeMonitoring == null)
+            if (!(_messagingMonitor is IMeasureHandlerExecutionTime executionTimeMonitoring))
             {
                 return handler;
             }
