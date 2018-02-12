@@ -28,7 +28,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         protected IMessageMonitor Monitor;
         protected ILoggerFactory LoggerFactory;
         protected IMessageSerialisationRegister SerialisationRegister;
-        protected IMessageLock MessageLock;
+        protected IMessageLockAsync MessageLock;
         protected readonly string MessageTypeString = typeof(GenericMessage).ToString();
 
         protected override JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()

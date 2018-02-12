@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -29,7 +29,7 @@ namespace JustSaying
             set { _monitor = value ?? new NullOpMessageMonitor(); }
         }
         public IMessageSerialisationRegister SerialisationRegister { get; private set; }
-        public IMessageLock MessageLock { get; set; }
+        public IMessageLockAsync MessageLock { get; set; }
         private ILogger _log;
         private readonly object _syncRoot = new object();
         private readonly ICollection<IPublisher> _publishers;

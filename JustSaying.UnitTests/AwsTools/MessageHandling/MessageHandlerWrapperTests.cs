@@ -14,7 +14,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         [Fact]
         public void WrapperReturnsAFunction()
         {
-            var messageLock = Substitute.For<IMessageLock>();
+            var messageLock = Substitute.For<IMessageLockAsync>();
             var handlerWrapper = new MessageHandlerWrapper(messageLock, new NullOpMessageMonitor());
 
             var wrapped = handlerWrapper.WrapMessageHandler(() => new UnadornedHandlerAsync());
@@ -26,7 +26,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         public async Task ReturnedFunctionIsCallable()
         {
             // arrange
-            var messageLock = Substitute.For<IMessageLock>();
+            var messageLock = Substitute.For<IMessageLockAsync>();
             var handlerWrapper = new MessageHandlerWrapper(messageLock, new NullOpMessageMonitor());
 
             var mockHandler = Substitute.For<IHandlerAsync<GenericMessage>>();
@@ -44,7 +44,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         public async Task ReturnedFunctionCallsInner()
         {
             // arrange
-            var messageLock = Substitute.For<IMessageLock>();
+            var messageLock = Substitute.For<IMessageLockAsync>();
             var handlerWrapper = new MessageHandlerWrapper(messageLock, new NullOpMessageMonitor());
 
             var mockHandler = Substitute.For<IHandlerAsync<GenericMessage>>();

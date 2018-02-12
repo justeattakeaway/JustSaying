@@ -25,8 +25,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
                 DoIHaveExclusiveLock = true
             };
 
-            MessageLock = Substitute.For<IMessageLock>();
-            MessageLock.TryAquireLock(Arg.Any<string>(), Arg.Any<TimeSpan>())
+            MessageLock = Substitute.For<IMessageLockAsync>();
+            MessageLock.TryAquireLockAsync(Arg.Any<string>(), Arg.Any<TimeSpan>())
                 .Returns(messageLockResponse);
 
             _handler = new ExactlyOnceSignallingHandler(_tcs);
@@ -49,7 +49,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         {
             var messageId = DeserialisedMessage.Id.ToString();
 
-            MessageLock.Received().TryAquireLock(
+            MessageLock.Received().TryAquireLockAsync(
                 Arg.Is<string>(a => a.Contains(messageId)),
                 TimeSpan.FromSeconds(_maximumTimeout));
         }

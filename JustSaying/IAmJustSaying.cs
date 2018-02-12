@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
@@ -21,6 +21,6 @@ namespace JustSaying
         IMessagingConfig Config { get; }
         IMessageMonitor Monitor { get; set; }
         IMessageSerialisationRegister SerialisationRegister { get; }
-        IMessageLock MessageLock { get; set; }
+        IMessageLockAsync MessageLock { get; set; }
     }
 }

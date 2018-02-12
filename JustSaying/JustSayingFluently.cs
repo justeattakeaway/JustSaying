@@ -207,6 +207,12 @@ namespace JustSaying
 
         public IMayWantOptionalSettings WithMessageLockStoreOf(IMessageLock messageLock)
         {
+            Bus.MessageLock = new BlockingMessageLock(messageLock); 
+            return this;
+        }
+
+        public IMayWantOptionalSettings WithMessageLockStoreOf(IMessageLockAsync messageLock)
+        {
             Bus.MessageLock = messageLock;
             return this;
         }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using JustSaying.Models;
 
@@ -7,11 +7,11 @@ namespace JustSaying.Messaging.MessageHandling
     public class ExactlyOnceHandler<T> : IHandlerAsync<T> where T : Message
     {
         private readonly IHandlerAsync<T> _inner;
-        private readonly IMessageLock _messageLock;
+        private readonly IMessageLockAsync _messageLock;
         private readonly int _timeOut;
         private readonly string _handlerName;
 
-        public ExactlyOnceHandler(IHandlerAsync<T> inner, IMessageLock messageLock, int timeOut, string handlerName)
+        public ExactlyOnceHandler(IHandlerAsync<T> inner, IMessageLockAsync messageLock, int timeOut, string handlerName)
         {
             _inner = inner;
             _messageLock = messageLock;
@@ -25,7 +25,7 @@ namespace JustSaying.Messaging.MessageHandling
         public async Task<bool> Handle(T message)
         {
             var lockKey = $"{message.UniqueKey()}-{typeof(T).Name.ToLower()}-{_handlerName}";
-            var lockResponse = _messageLock.TryAquireLock(lockKey, TimeSpan.FromSeconds(_timeOut));
+            var lockResponse = await _messageLock.TryAquireLockAsync(lockKey, TimeSpan.FromSeconds(_timeOut));
             if (!lockResponse.DoIHaveExclusiveLock)
             {
                 if (lockResponse.IsMessagePermanentlyLocked)
@@ -41,13 +41,13 @@ namespace JustSaying.Messaging.MessageHandling
                 var successfullyHandled = await _inner.Handle(message).ConfigureAwait(false);
                 if (successfullyHandled)
                 {
-                    _messageLock.TryAquireLockPermanently(lockKey);
+                    await _messageLock.TryAquireLockPermanentlyAsync(lockKey);
                 }
                 return successfullyHandled;
             }
             catch
             {
-                _messageLock.ReleaseLock(lockKey);
+                await _messageLock.ReleaseLockAsync(lockKey);
                 throw;
             }
         }
