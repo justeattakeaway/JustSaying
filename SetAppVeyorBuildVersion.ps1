@@ -11,7 +11,7 @@ function Generate-RandomCharacters {
 }
 
 $versionPrefix = (Select-Xml -Path ".\version.props" -XPath "/Project/PropertyGroup/VersionPrefix" | Select-Object -ExpandProperty Node).InnerText
-$versionSuffix = (Select-Xml -Path ".\version.props" -XPath "/Project/PropertyGroup/VersionSuffix" | Select-Object -First 1 -ExpandProperty Node).InnerText
+$versionSuffix = (Select-Xml -Path ".\version.props" -XPath "/Project/PropertyGroup/VersionSuffix[not(@Condition)]" | Select-Object -First 1 -ExpandProperty Node).InnerText
 $buildNumber = $env:APPVEYOR_BUILD_NUMBER
 
 if ($env:APPVEYOR_PULL_REQUEST_NUMBER){
@@ -19,15 +19,15 @@ if ($env:APPVEYOR_PULL_REQUEST_NUMBER){
 }
 
 if ($env:APPVEYOR_REPO_TAG -ne "true") {
-  if ($versionSuffix -ne "") {
+  if ($versionSuffix -ne $null) {
     $versionSuffix += "-build$buildNumber"
   }
-  if ($versionSuffix -eq "") {
+  else {
     $versionSuffix = "build$buildNumber"
   }
 }
 
-if ($versionSuffix -ne "") {
+if ($versionSuffix -ne $null) {
   $version = "$versionPrefix-$versionSuffix"
 } else {
   $version = $versionPrefix
