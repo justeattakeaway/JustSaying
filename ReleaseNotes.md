@@ -43,7 +43,7 @@ public interface IMessageBackoffStrategy
 }
 ```
 
-You simply return the `TimeSpan` you want to wait for, and you can use the message, receive count, or last exception as factors for your backoff duration. Whatever your returned `TimeSpan`, JustSaying will set the message [Visibility Timeout](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html), which can be between 0 and 43200 seconds (12 hours), this ensures nothing else will attempt to dequeue the message for this duration.
+The `GetBackoffDuration` method will be called if your message handler throws an exception, or returns `false`. You simply return the `TimeSpan` you want to wait for, and you can use the message, receive count, or last exception as factors for your backoff duration. Whatever your returned `TimeSpan`, JustSaying will set the message [Visibility Timeout](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html), which can be between 0 and 43200 seconds (12 hours), this ensures nothing else will attempt to dequeue the message for this duration.
 
 Just pass the implementation during the subscription configuration like like:
 ```csharp
