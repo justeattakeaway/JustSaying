@@ -120,16 +120,16 @@ In this release the AWS APIs that are called have changed slightly with regards 
 Here are the actions requred if you are both publishing and subscribing.
 ```
 sns:CreateTopic,
-sns:Subscribe
-sns:ListTopics
 sns:ListSubscriptionsByTopic
-sqs:ListQueues
+sns:ListTopics
+sns:Subscribe
 sqs:CreateQueue
-sqs:ReceiveMessage
 sqs:DeleteMessage
 sqs:GetQueueAttributes
-sqs:SetQueueAttributes
 sqs:GetQueueUrl
+sqs:ListQueues
+sqs:SetQueueAttributes
+sqs:ReceiveMessage
 ```
 
 If you are just publishing then you can omit the SQS actions. If you are just subscribing then you still need the SNS actions (may change in the future).
