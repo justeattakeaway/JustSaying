@@ -101,7 +101,7 @@ var bus = CreateMeABus
 
 After you update the JustSaying pacakge, be sure to tidy up any `app.config` assembly binding redirects that mention `JustSaying.AwsTools` and `JustSaying.Messaging` as these no longer exist, NuGet should do this for you.
 
-The snippet above won't compile as we need to configure a logger before do any further configuration:
+The snippet above won't compile as we need to configure a logger before doing any further configuration:
 ```csharp
 // You might use a LoggerFactory throughout your application,
 //   or you might be using your logging library abstraction, and this is just a bridge
@@ -145,7 +145,7 @@ We are aware that this isn't ideal, and have a branch where we are fixing it by 
 Now that we have added configurable logging, and because the fluent APIs are not lazy, the first thing you have to provide us is a `loggerFactory`. Again this will likely change in v6, where you would configure it at any point before awaiting `.BuildAsync()`.
 
 ### `IHandlerResover` changes
-The `Resolve` method on `IHandlerResolver` previously used to be invoked a few times during initialization, then the returned `IHandlerAsync`  instance was cached as singltons per subscription. This was counter intuative, and was the cause of some confusion. We have simplified the behaviour and now `Resolve` will be called per message. If you rely on this behaviour within `JustSaying` to give you the effect of a singleton handler, you might need to change your resolver to ensure it is explicity shared across invokations.
+The `Resolve` method on `IHandlerResolver` previously used to be invoked a few times during initialization, then the returned `IHandlerAsync`  instance was cached as singltons per subscription. This was counter intuative, and was the cause of some confusion. We have simplified the behaviour and now `Resolve` will be called once per message. If you rely on this behaviour within `JustSaying` to give you the effect of singletons, you might need to change your resolver to ensure it is explicity shared across invocations.
 
 ### Lots of dependencies when consuming from full .NET
 We were careful to hand-pick the packages we depend on, rather than include just `NETStandard.Library`. However because we now depend on `Microsoft.Extensions.Logging.Abstractions`, version `1.1.2` of this will pull in `NETStandard.Library 1.6.1`, which will bring in "the whole world". This might be fixed by additionally targeting `.NET Standard 2.0`, which we may try for JustSaying 5.1
