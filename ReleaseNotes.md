@@ -1,5 +1,4 @@
 # JustSaying 5.0.0 Release Notes
-
 This release has been a long time in the making, I want to say a huge thank you to everyone that contributed, and to everyone that was patient in waiting for this release.
 
 The big changes in this release are:
@@ -35,6 +34,31 @@ Logging is a mandatory requirement for using `JustSaying`, if you want to turn o
 ```
 
 ### Message handling backoff strategies
+We have added the ability to introduce a backoff strategy for message handling retrying.
+There is a new interface `IMessageBackoffStrategy`, which looks like this:
+```csharp
+public interface IMessageBackoffStrategy
+{
+    TimeSpan GetBackoffDuration(Message message, int approximateReceiveCount, Exception lastException = null);
+}
+```
+
+You simply return the `TimeSpan` you want to wait for, and you can use the message, receive count, or last exception as factors for your backoff duration. Whatever your returned `TimeSpan`, JustSaying will set the message [Visibility Timeout](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html), which can be between 0 and 43200 seconds (12 hours), this ensures nothing else will attempt to dequeue the message for this duration.
+
+Just pass the implementation during the subscription configuration like like:
+```csharp
+var bus = CreateMeABus
+            .WithLogging(loggerFactory)
+            .InRegion(RegionEndpoint.EUWest1.SystemName)
+            .WithMonitoring(_monitoring)
+            .WithSqsTopicSubscriber()
+            .IntoQueue("queuename")
+            .ConfigureSubscriptionWith(cfg =>
+                {
+                    cfg.MessageBackoffStrategy = myFancyBackoffStrategy // <- NEW
+                })
+            .WithMessageHandler(_handler);
+```
 
 ### Ability to handle publish exceptions per publisher
 You can now configure publishers and set the `HandleException` property with a delegate that can deal with the exception, and a boolean indicating if it has been handled or if it wants the exception to propagate.
@@ -53,11 +77,62 @@ We now don't make this check, as creating a topic is idempotent, this results in
 
 ## Upgrade instructions
 
-TODO
-Show logging
-Show packages changes with csproj snippet
-Show IAM changes
-Show backoff strategy stuff
+Let's take the following snippet that uses JustSaying v4, and let's update it to v5:
+```csharp
+var bus = CreateMeABus
+            .InRegion(RegionEndpoint.EUWest1.SystemName)
+            .WithMonitoring(_monitoring)
+            .ConfigurePublisherWith(c =>
+                {
+                    c.PublishFailureBackoffMilliseconds = 1;
+                    c.PublishFailureReAttempts = 3;
+                })
+            .WithSnsMessagePublisher<GenericMessage>()
+            .WithSqsTopicSubscriber()
+            .IntoQueue("queuename")
+            .ConfigureSubscriptionWith(cfg =>
+                {
+                    cfg.MessageRetentionSeconds = 60;
+                    cfg.InstancePosition = 1;
+                    cfg.OnError = _globalErrorHandler;
+                })
+            .WithMessageHandler(_handler);
+```
+
+After you update the JustSaying pacakge, be sure to tidy up any `app.config` assembly binding redirects that mention `JustSaying.AwsTools` and `JustSaying.Messaging` as these no longer exist, NuGet should do this for you.
+
+The snippet above won't compile as we need to configure a logger before do any further configuration:
+```csharp
+// You might use a LoggerFactory throughout your application,
+//   or you might be using your logging library abstraction, and this is just a bridge
+var loggerFactory = new LoggerFactory();
+loggerFactory.AddMyFavouriteLoggingLibrary(); // Example: .AddSerilog()
+
+var bus = CreateMeABus
+            .WithLogging(loggerFactory) // <- NEW
+            .InRegion(RegionEndpoint.EUWest1.SystemName)
+            ...
+```
+
+### IAM permissions
+In this release the AWS APIs that are called have changed slightly with regards to SNS, so it might be worth checking that you have the required IAM permissions set up.
+
+Here are the actions requred if you are both publishing and subscribing.
+```
+sns:CreateTopic,
+sns:Subscribe
+sns:ListTopics
+sns:ListSubscriptionsByTopic
+sqs:ListQueues
+sqs:CreateQueue
+sqs:ReceiveMessage
+sqs:DeleteMessage
+sqs:GetQueueAttributes
+sqs:SetQueueAttributes
+sqs:GetQueueUrl
+```
+
+If you are just publishing then you can omit the SQS actions. If you are just subscribing then you still need the SNS actions (may change in the future).
 
 ## Known issues
 
@@ -67,23 +142,26 @@ The fluent configuration is not lazy, and does asynchronous work (on non-full .N
 We are aware that this isn't ideal, and have a branch where we are fixing it by adding an awaitable `.BuildAsync()` method, this is a reasonable breaking change so we want to take the opportunity to refactor and rationalise the fluent API design which will likely come in v6.
 
 ### Logging required up-front
-Now that we have added logging as something you can plug into, because the fluent APIs are not lazy, the first thing you have to provide us is logging. Again this will likely change in v6, where you can configure it at any point before awaiting `.BuildAsync()`.
+Now that we have added configurable logging, and because the fluent APIs are not lazy, the first thing you have to provide us is a `loggerFactory`. Again this will likely change in v6, where you would configure it at any point before awaiting `.BuildAsync()`.
 
 ### `IHandlerResover` changes
+The `Resolve` method on `IHandlerResolver` previously used to be invoked a few times during initialization, then the returned `IHandlerAsync`  instance was cached as singltons per subscription. This was counter intuative, and was the cause of some confusion. We have simplified the behaviour and now `Resolve` will be called per message. If you rely on this behaviour within `JustSaying` to give you the effect of a singleton handler, you might need to change your resolver to ensure it is explicity shared across invokations.
 
 ### Lots of dependencies when consuming from full .NET
 We were careful to hand-pick the packages we depend on, rather than include just `NETStandard.Library`. However because we now depend on `Microsoft.Extensions.Logging.Abstractions`, version `1.1.2` of this will pull in `NETStandard.Library 1.6.1`, which will bring in "the whole world". This might be fixed by additionally targeting `.NET Standard 2.0`, which we may try for JustSaying 5.1
 
 Contributions and thanks to:
-@AnthonlySteele
-@pierskarsenbarg
-@adammorr
-@andrewchaa
-@JosephWoodward
-@shaynevanasperen
-@JonahAcquah
-@brainmurphy
-@martincostello
-Tony Harverson
-Mark England
+- @AnthonlySteele
+- @pierskarsenbarg
+- @adammorr
+- @slang25
+- @andrewchaa
+- @JosephWoodward
+- @shaynevanasperen
+- @JonahAcquah
+- @brainmurphy
+- @martincostello
+- @Liewe
+- Tony Harverson
+- Mark England
 ... hope I haven't missed anyone
