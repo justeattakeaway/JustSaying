@@ -12,7 +12,7 @@ This means you can now consume this from any supporting platforms, including .NE
 ### Project and NuGet Package re-rationalization
 In v4 there were 4 assemblies and one NuGet package. Most of these assemblies weren't logically decoupled and didn't really add anything. In the newer .NET project system, having multiple assemblies per package is fighting against the tools.
 
-We now have 2 pakcages:
+We now have 2 packages:
 `JustSaying`
 `JustSaying.Models`
 
