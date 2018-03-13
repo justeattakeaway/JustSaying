@@ -6,6 +6,8 @@ The big changes in this release are:
 ### Re-implemented on top of AWSSDK v3
 In version 3 of the AWSSDK, Amazon changed the package names, and split them into smaller individual packages per service. They also removed synchronous calls for target frameworks other than the full .NET framework.
 
+[AWSSDK v3](https://aws.amazon.com/about-aws/whats-new/2015/07/version-3-of-the-aws-sdk-for-net-is-available-for-production-use-in-net-3-5-and-4-5/) is more modular that v2, there is a NuGet package for each service, and common code in `AWSSDK.Core`. It also targets .NET Standard 1.3, which makes it more portable and can reach other platforms, such as .NET Core 1.0 and up.
+
 ### .NET Standard 1.6 Support
 This means you can now consume this from any supporting platforms, including .NET Core 1.0 and up. We continue to target `net451`, so no one is left behind in this release.
 
@@ -145,13 +147,13 @@ We are aware that this isn't ideal, and have a branch where we are fixing it by 
 Now that we have added configurable logging, and because the fluent APIs are not lazy, the first thing you have to provide us is a `loggerFactory`. Again this will likely change in v6, where you would configure it at any point before awaiting `.BuildAsync()`.
 
 ### `IHandlerResover` changes
-The `Resolve` method on `IHandlerResolver` previously used to be invoked a few times during initialization, then the returned `IHandlerAsync`  instance was cached as singltons per subscription. This was counter intuative, and was the cause of some confusion. We have simplified the behaviour and now `Resolve` will be called once per message. If you rely on this behaviour within `JustSaying` to give you the effect of singletons, you might need to change your resolver to ensure it is explicity shared across invocations.
+The `Resolve` method on `IHandlerResolver` previously used to be invoked a few times during initialization, then the returned `IHandlerAsync`  instance was cached as singltons per subscription. This was counterintuitive, and was the cause of some confusion. We have simplified the behaviour and now `Resolve` will be called once per message. If you rely on this behaviour within `JustSaying` to give you the effect of singletons, you might need to change your resolver to ensure it is explicity shared across invocations.
 
 ### Lots of dependencies when consuming from full .NET
 We were careful to hand-pick the packages we depend on, rather than include just `NETStandard.Library`. However because we now depend on `Microsoft.Extensions.Logging.Abstractions`, version `1.1.2` of this will pull in `NETStandard.Library 1.6.1`, which will bring in "the whole world". This might be fixed by additionally targeting `.NET Standard 2.0`, which we may try for JustSaying 5.1
 
 Contributions and thanks to:
-- @AnthonlySteele
+- @AnthonySteele
 - @pierskarsenbarg
 - @adammorr
 - @slang25
