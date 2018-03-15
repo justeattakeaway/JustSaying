@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.Models;
 
 namespace JustSaying.Messaging
@@ -9,5 +10,7 @@ namespace JustSaying.Messaging
         void Publish(Message message);
 #endif
         Task PublishAsync(Message message);
+
+        Task PublishAsync(Message message, CancellationToken cancellationToken);
     }
 }

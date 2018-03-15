@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
@@ -42,11 +43,16 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public async Task PublishAsync(Message message)
         {
+            await PublishAsync(message, default(CancellationToken));
+        }
+
+        public async Task PublishAsync(Message message, CancellationToken cancellationToken)
+        {
             var request = BuildSendMessageRequest(message);
 
             try
             {
-                await _client.SendMessageAsync(request).ConfigureAwait(false);
+                await _client.SendMessageAsync(request, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SimpleNotificationService.Model;
@@ -186,12 +187,17 @@ namespace JustSaying
         /// <param name="message"></param>
         public virtual async Task PublishAsync(Message message)
         {
+            await PublishAsync(message, default(CancellationToken));
+        }
+
+        public virtual async Task PublishAsync(Message message, CancellationToken cancellationToken)
+        {
             if (Bus == null)
             {
                 throw new InvalidOperationException("You must register for message publication before publishing a message");
             }
 
-            await Bus.PublishAsync(message).ConfigureAwait(false);
+            await Bus.PublishAsync(message, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
