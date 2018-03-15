@@ -185,11 +185,13 @@ namespace JustSaying
         /// Publish a message to the stack, asynchronously.
         /// </summary>
         /// <param name="message"></param>
-        public virtual async Task PublishAsync(Message message)
-        {
-            await PublishAsync(message, default(CancellationToken));
-        }
+        public virtual async Task PublishAsync(Message message) => await PublishAsync(message, default(CancellationToken));
 
+        /// <summary>
+        /// Publish a message to the stack, asynchronously.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="cancellationToken"></param>
         public virtual async Task PublishAsync(Message message, CancellationToken cancellationToken)
         {
             if (Bus == null)
