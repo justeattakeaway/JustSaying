@@ -27,12 +27,12 @@ namespace JustSaying
             {
                 throw new ArgumentNullException("config.Regions", "Cannot have a blank entry for config.Regions");
             }
+
             var duplicateRegion = Regions.GroupBy(x => x).FirstOrDefault(y => y.Count() > 1);
             if (duplicateRegion != null)
             {
-				throw new ArgumentException($"Region {duplicateRegion.Key} was added multiple times");				
-			}   
-
+                throw new ArgumentException($"Region {duplicateRegion.Key} was added multiple times");
+            }
         }
     }
 }

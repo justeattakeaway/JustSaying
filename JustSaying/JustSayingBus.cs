@@ -162,7 +162,10 @@ namespace JustSaying
         }
 #endif
 
-        public async Task PublishAsync(Message message) => await PublishAsync(message, default(CancellationToken));
+        public async Task PublishAsync(Message message)
+        {
+            await PublishAsync(message, CancellationToken.None);
+        }
 
         public async Task PublishAsync(Message message, CancellationToken cancellationToken)
         {
@@ -202,7 +205,7 @@ namespace JustSaying
             return publishersByTopic[topic];
         }
 
-        private async Task PublishAsync(IMessagePublisher publisher, Message message, int attemptCount = 0, CancellationToken cancellationToken = default (CancellationToken))
+        private async Task PublishAsync(IMessagePublisher publisher, Message message, int attemptCount = 0, CancellationToken cancellationToken = default(CancellationToken))
         {
             attemptCount++;
             try

@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
@@ -21,7 +22,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.Publishing
         public void TheMessageIsPublished()
         {
             // If this ever fails, I have serious questions
-            Received.InOrder(async () => await Bus.PublishAsync(_message));
+            Received.InOrder(async () => await Bus.PublishAsync(_message, CancellationToken.None));
         }
     }
 }
