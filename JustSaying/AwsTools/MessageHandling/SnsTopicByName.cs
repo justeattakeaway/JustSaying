@@ -23,8 +23,10 @@ namespace JustSaying.AwsTools.MessageHandling
             _log = loggerFactory.CreateLogger("JustSaying");
         }
 
-        public SnsTopicByName(string topicName, IAmazonSimpleNotificationService client, IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory, SnsWriteConfiguration snsWriteConfiguration)
-            : base(serialisationRegister, loggerFactory, snsWriteConfiguration)
+        public SnsTopicByName(string topicName, IAmazonSimpleNotificationService client,
+            IMessageSerialisationRegister serialisationRegister, IMessageResponseLogger messageResponseLogger,
+            ILoggerFactory loggerFactory, SnsWriteConfiguration snsWriteConfiguration)
+            : base(serialisationRegister, messageResponseLogger, loggerFactory, snsWriteConfiguration)
         {
             TopicName = topicName;
             Client = client;

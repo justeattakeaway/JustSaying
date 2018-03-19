@@ -15,12 +15,16 @@ namespace JustSaying.AwsTools.MessageHandling
     {
         private readonly IAmazonSQS _client;
         private readonly IMessageSerialisationRegister _serialisationRegister;
+        private readonly IMessageResponseLogger _messageResponseLogger;
 
-        public SqsPublisher(RegionEndpoint region, string queueName, IAmazonSQS client, int retryCountBeforeSendingToErrorQueue, IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory)
+        public SqsPublisher(RegionEndpoint region, string queueName, IAmazonSQS client,
+            int retryCountBeforeSendingToErrorQueue, IMessageSerialisationRegister serialisationRegister,
+            IMessageResponseLogger messageResponseLogger, ILoggerFactory loggerFactory)
             : base(region, queueName, client, retryCountBeforeSendingToErrorQueue, loggerFactory)
         {
             _client = client;
             _serialisationRegister = serialisationRegister;
+            _messageResponseLogger = messageResponseLogger;
         }
 
 #if AWS_SDK_HAS_SYNC
@@ -30,7 +34,13 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                _client.SendMessage(request);
+                var response = _client.SendMessage(request);
+
+                _messageResponseLogger?.ResponseLogger?.Invoke(new MessageResponse
+                {
+                    HttpStatusCode = response?.HttpStatusCode,
+                    MessageId = response?.MessageId
+                }, message);
             }
             catch (Exception ex)
             {
@@ -46,10 +56,25 @@ namespace JustSaying.AwsTools.MessageHandling
         public async Task PublishAsync(Message message, CancellationToken cancellationToken)
         {
             var request = BuildSendMessageRequest(message);
-
             try
             {
-                await _client.SendMessageAsync(request, cancellationToken).ConfigureAwait(false);
+                var response = await _client.SendMessageAsync(request, cancellationToken).ConfigureAwait(false);
+
+                if (_messageResponseLogger?.ResponseLoggerAsync != null)
+                {
+                    await _messageResponseLogger.ResponseLoggerAsync(new MessageResponse
+                    {
+                        HttpStatusCode = response?.HttpStatusCode,
+                        MessageId = response?.MessageId
+                    }, message);
+                } else
+                {
+                    _messageResponseLogger?.ResponseLogger?.Invoke(new MessageResponse
+                    {
+                        HttpStatusCode = response?.HttpStatusCode,
+                        MessageId = response?.MessageId
+                    }, message);
+                }
             }
             catch (Exception ex)
             {

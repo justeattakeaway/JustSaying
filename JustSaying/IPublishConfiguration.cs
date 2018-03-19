@@ -6,6 +6,7 @@ namespace JustSaying
     {
         int PublishFailureReAttempts { get; set; }
         int PublishFailureBackoffMilliseconds { get; set; }
+        IMessageResponseLogger MessageResponseLogger { get; set; }
         IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
     }
 }

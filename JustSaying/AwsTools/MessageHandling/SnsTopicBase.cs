@@ -14,6 +14,7 @@ namespace JustSaying.AwsTools.MessageHandling
     public abstract class SnsTopicBase : IMessagePublisher
     {
         private readonly IMessageSerialisationRegister _serialisationRegister; // ToDo: Grrr...why is this here even. GET OUT!
+        private readonly IMessageResponseLogger _messageResponseLogger;
         private readonly SnsWriteConfiguration _snsWriteConfiguration;
         public string Arn { get; protected set; }
         protected IAmazonSimpleNotificationService Client { get; set; }
@@ -27,9 +28,11 @@ namespace JustSaying.AwsTools.MessageHandling
             _eventLog = loggerFactory.CreateLogger("EventLog");
         }
 
-        protected SnsTopicBase(IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory, SnsWriteConfiguration snsWriteConfiguration)
+        protected SnsTopicBase(IMessageSerialisationRegister serialisationRegister, IMessageResponseLogger messageResponseLogger,
+            ILoggerFactory loggerFactory, SnsWriteConfiguration snsWriteConfiguration)
         {
             _serialisationRegister = serialisationRegister;
+            _messageResponseLogger = messageResponseLogger;
             _log = loggerFactory.CreateLogger("JustSaying");
             _eventLog = loggerFactory.CreateLogger("EventLog");
             _snsWriteConfiguration = snsWriteConfiguration;
@@ -61,12 +64,18 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                Client.Publish(request);
+                var response = Client.Publish(request);
                 _eventLog.LogInformation($"Published message: '{request.Subject}' with content {request.Message}");
+
+                _messageResponseLogger?.ResponseLogger?.Invoke(new MessageResponse
+                {
+                    HttpStatusCode = response?.HttpStatusCode,
+                    MessageId = response?.MessageId
+                }, message);
             }
             catch (Exception ex)
             {
-                if (!ClientExceptionHandler(ex))
+                if (!ClientExceptionHandler(ex, message))
                     throw new PublishException(
                         $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}",
                         ex);
@@ -82,20 +91,35 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                await Client.PublishAsync(request, cancellationToken).ConfigureAwait(false);
-
+                var response = await Client.PublishAsync(request, cancellationToken).ConfigureAwait(false);
                 _eventLog.LogInformation($"Published message: '{request.Subject}' with content {request.Message}");
+
+                if (_messageResponseLogger?.ResponseLoggerAsync != null)
+                {
+                    await _messageResponseLogger.ResponseLoggerAsync(new MessageResponse
+                    {
+                        HttpStatusCode = response?.HttpStatusCode,
+                        MessageId = response?.MessageId
+                    }, message);
+                } else
+                {
+                    _messageResponseLogger?.ResponseLogger?.Invoke(new MessageResponse
+                    {
+                        HttpStatusCode = response?.HttpStatusCode,
+                        MessageId = response?.MessageId
+                    }, message);
+                }
             }
             catch (Exception ex)
             {
-                if (!ClientExceptionHandler(ex))
+                if (!ClientExceptionHandler(ex, message))
                     throw new PublishException(
                         $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}",
                         ex);
             }
         }
 
-        private bool ClientExceptionHandler(Exception ex) => _snsWriteConfiguration?.HandleException?.Invoke(ex) ?? false;
+        private bool ClientExceptionHandler(Exception ex, Message message) => _snsWriteConfiguration?.HandleException?.Invoke(ex, message) ?? false;
 
         private PublishRequest BuildPublishRequest(Message message)
         {
