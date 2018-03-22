@@ -185,7 +185,7 @@ namespace JustSaying
         /// Publish a message to the stack, asynchronously.
         /// </summary>
         /// <param name="message"></param>
-        public virtual async Task PublishAsync(Message message) => await PublishAsync(message, CancellationToken.None);
+        public virtual Task PublishAsync(Message message) => PublishAsync(message, CancellationToken.None);
 
         /// <summary>
         /// Publish a message to the stack, asynchronously.
