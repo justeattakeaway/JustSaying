@@ -5,7 +5,7 @@ using JustSaying.Models;
 
 namespace JustSaying
 {
-    internal class DefaultMessageResponseLogger : IMessageResponseLogger
+    internal class NullMessageResponseLogger : IMessageResponseLogger
     {
         public Action<MessageResponse, Message> ResponseLogger { get; set; }
         public Func<MessageResponse, Message, Task> ResponseLoggerAsync { get; set; }

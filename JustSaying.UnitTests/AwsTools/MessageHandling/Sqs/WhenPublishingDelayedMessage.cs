@@ -25,7 +25,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         protected override SqsPublisher CreateSystemUnderTest()
         {
             var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, _sqs, 0,
-                _serialisationRegister, new DefaultMessageResponseLogger(), Substitute.For<ILoggerFactory>());
+                _serialisationRegister, new NullMessageResponseLogger(), Substitute.For<ILoggerFactory>());
             sqs.Exists();
             return sqs;
         }

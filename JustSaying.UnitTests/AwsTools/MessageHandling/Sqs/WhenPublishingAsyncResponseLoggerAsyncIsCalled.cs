@@ -27,7 +27,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         private const string MessageId = "12345";
         private static MessageResponse _response;
         private static Message _message;
-        public readonly IMessageResponseLogger _responseLogger = new DefaultMessageResponseLogger
+        public readonly IMessageResponseLogger _responseLogger = new NullMessageResponseLogger
         {
             ResponseLoggerAsync = (r, m) =>
             {
