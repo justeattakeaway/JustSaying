@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
@@ -31,13 +32,13 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public void AcceptedOrderWasPublishedOnce()
         {
-            _publisher.Received(1).PublishAsync(Arg.Any<OrderAccepted>());
+            _publisher.Received(1).PublishAsync(Arg.Any<OrderAccepted>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]
         public void RejectedOrderWasPublishedTwice()
         {
-            _publisher.Received(2).PublishAsync(Arg.Any<OrderRejected>());
+            _publisher.Received(2).PublishAsync(Arg.Any<OrderRejected>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]
@@ -46,7 +47,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             var response = SystemUnderTest.WhatDoIHave();
 
             response.Publishers.Count().ShouldBe(2);
-            response.Publishers.First(x => x.MessageType == typeof (OrderAccepted)).ShouldNotBe(null);
+            response.Publishers.First(x => x.MessageType == typeof(OrderAccepted)).ShouldNotBe(null);
             response.Publishers.First(x => x.MessageType == typeof(OrderRejected)).ShouldNotBe(null);
         }
     }

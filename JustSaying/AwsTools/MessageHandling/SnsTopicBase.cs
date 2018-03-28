@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
@@ -38,9 +39,11 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public bool Exists() => ExistsAsync().GetAwaiter().GetResult();
 
-        public async Task<bool> SubscribeAsync(SqsQueueBase queue)
+        public Task<bool> SubscribeAsync(SqsQueueBase queue) => SubscribeAsync(queue, CancellationToken.None);
+
+        public async Task<bool> SubscribeAsync(SqsQueueBase queue, CancellationToken cancellationToken)
         {
-            var subscriptionResponse = await Client.SubscribeAsync(Arn, "sqs", queue.Arn).ConfigureAwait(false);
+            var subscriptionResponse = await Client.SubscribeAsync(Arn, "sqs", queue.Arn, cancellationToken).ConfigureAwait(false);
 
             if (!string.IsNullOrEmpty(subscriptionResponse?.SubscriptionArn))
             {
@@ -71,13 +74,15 @@ namespace JustSaying.AwsTools.MessageHandling
         }
 #endif
 
-        public async Task PublishAsync(Message message)
+        public Task PublishAsync(Message message) => PublishAsync(message, CancellationToken.None);
+
+        public async Task PublishAsync(Message message, CancellationToken cancellationToken)
         {
             var request = BuildPublishRequest(message);
 
             try
             {
-                await Client.PublishAsync(request).ConfigureAwait(false);
+                await Client.PublishAsync(request, cancellationToken).ConfigureAwait(false);
 
                 _eventLog.LogInformation($"Published message: '{request.Subject}' with content {request.Message}");
             }
