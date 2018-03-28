@@ -41,7 +41,7 @@ namespace JustSaying.AwsTools.MessageHandling
         }
 #endif
 
-        public async Task PublishAsync(Message message) => await PublishAsync(message, CancellationToken.None);
+        public Task PublishAsync(Message message) => PublishAsync(message, CancellationToken.None);
 
         public async Task PublishAsync(Message message, CancellationToken cancellationToken)
         {

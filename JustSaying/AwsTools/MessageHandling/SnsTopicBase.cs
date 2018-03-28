@@ -39,7 +39,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public bool Exists() => ExistsAsync().GetAwaiter().GetResult();
 
-        public async Task<bool> SubscribeAsync(SqsQueueBase queue) => await SubscribeAsync(queue, CancellationToken.None);
+        public Task<bool> SubscribeAsync(SqsQueueBase queue) => SubscribeAsync(queue, CancellationToken.None);
 
         public async Task<bool> SubscribeAsync(SqsQueueBase queue, CancellationToken cancellationToken)
         {
@@ -74,7 +74,7 @@ namespace JustSaying.AwsTools.MessageHandling
         }
 #endif
 
-        public async Task PublishAsync(Message message) => await PublishAsync(message, CancellationToken.None);
+        public Task PublishAsync(Message message) => PublishAsync(message, CancellationToken.None);
 
         public async Task PublishAsync(Message message, CancellationToken cancellationToken)
         {
