@@ -13,6 +13,7 @@
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageTags>aws;sns;sqs</PackageTags>
     <RepositoryType>git</RepositoryType>
+    <LangVersion>7.1</LangVersion>
     <RepositoryUrl>$(PackageProjectUrl).git</RepositoryUrl>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CLSCompliant>true</CLSCompliant>
