@@ -6,6 +6,7 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
@@ -24,9 +25,9 @@ namespace JustSaying.AwsTools.MessageHandling
         }
 
         public SnsTopicByName(string topicName, IAmazonSimpleNotificationService client,
-            IMessageSerialisationRegister serialisationRegister, IMessageResponseLogger messageResponseLogger,
+            IMessageSerialisationRegister serialisationRegister,
             ILoggerFactory loggerFactory, SnsWriteConfiguration snsWriteConfiguration)
-            : base(serialisationRegister, messageResponseLogger, loggerFactory, snsWriteConfiguration)
+            : base(serialisationRegister, loggerFactory, snsWriteConfiguration)
         {
             TopicName = topicName;
             Client = client;

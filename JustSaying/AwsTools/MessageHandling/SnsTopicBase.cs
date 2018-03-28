@@ -14,8 +14,8 @@ namespace JustSaying.AwsTools.MessageHandling
     public abstract class SnsTopicBase : IMessagePublisher
     {
         private readonly IMessageSerialisationRegister _serialisationRegister; // ToDo: Grrr...why is this here even. GET OUT!
-        private readonly IMessageResponseLogger _messageResponseLogger;
         private readonly SnsWriteConfiguration _snsWriteConfiguration;
+        public Action<MessageResponse, Message> MessageResponseLogger { get; set; } = (r, m) => {};
         public string Arn { get; protected set; }
         protected IAmazonSimpleNotificationService Client { get; set; }
         private readonly ILogger _eventLog;
@@ -28,11 +28,10 @@ namespace JustSaying.AwsTools.MessageHandling
             _eventLog = loggerFactory.CreateLogger("EventLog");
         }
 
-        protected SnsTopicBase(IMessageSerialisationRegister serialisationRegister, IMessageResponseLogger messageResponseLogger,
+        protected SnsTopicBase(IMessageSerialisationRegister serialisationRegister,
             ILoggerFactory loggerFactory, SnsWriteConfiguration snsWriteConfiguration)
         {
             _serialisationRegister = serialisationRegister;
-            _messageResponseLogger = messageResponseLogger;
             _log = loggerFactory.CreateLogger("JustSaying");
             _eventLog = loggerFactory.CreateLogger("EventLog");
             _snsWriteConfiguration = snsWriteConfiguration;
@@ -67,7 +66,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 var response = Client.Publish(request);
                 _eventLog.LogInformation($"Published message: '{request.Subject}' with content {request.Message}");
 
-                _messageResponseLogger?.ResponseLogger?.Invoke(new MessageResponse
+                MessageResponseLogger?.Invoke(new MessageResponse
                 {
                     HttpStatusCode = response?.HttpStatusCode,
                     MessageId = response?.MessageId
@@ -94,21 +93,11 @@ namespace JustSaying.AwsTools.MessageHandling
                 var response = await Client.PublishAsync(request, cancellationToken).ConfigureAwait(false);
                 _eventLog.LogInformation($"Published message: '{request.Subject}' with content {request.Message}");
 
-                if (_messageResponseLogger?.ResponseLoggerAsync != null)
+                MessageResponseLogger?.Invoke(new MessageResponse
                 {
-                    await _messageResponseLogger.ResponseLoggerAsync(new MessageResponse
-                    {
-                        HttpStatusCode = response?.HttpStatusCode,
-                        MessageId = response?.MessageId
-                    }, message);
-                } else
-                {
-                    _messageResponseLogger?.ResponseLogger?.Invoke(new MessageResponse
-                    {
-                        HttpStatusCode = response?.HttpStatusCode,
-                        MessageId = response?.MessageId
-                    }, message);
-                }
+                    HttpStatusCode = response?.HttpStatusCode,
+                    MessageId = response?.MessageId
+                }, message);
             }
             catch (Exception ex)
             {

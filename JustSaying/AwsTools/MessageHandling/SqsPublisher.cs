@@ -15,16 +15,15 @@ namespace JustSaying.AwsTools.MessageHandling
     {
         private readonly IAmazonSQS _client;
         private readonly IMessageSerialisationRegister _serialisationRegister;
-        private readonly IMessageResponseLogger _messageResponseLogger;
+        public Action<MessageResponse, Message> MessageResponseLogger { get; set; } = (r, m) => {};
 
         public SqsPublisher(RegionEndpoint region, string queueName, IAmazonSQS client,
             int retryCountBeforeSendingToErrorQueue, IMessageSerialisationRegister serialisationRegister,
-            IMessageResponseLogger messageResponseLogger, ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory)
             : base(region, queueName, client, retryCountBeforeSendingToErrorQueue, loggerFactory)
         {
             _client = client;
             _serialisationRegister = serialisationRegister;
-            _messageResponseLogger = messageResponseLogger;
         }
 
 #if AWS_SDK_HAS_SYNC
@@ -36,7 +35,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 var response = _client.SendMessage(request);
 
-                _messageResponseLogger?.ResponseLogger?.Invoke(new MessageResponse
+                MessageResponseLogger?.Invoke(new MessageResponse
                 {
                     HttpStatusCode = response?.HttpStatusCode,
                     MessageId = response?.MessageId
@@ -59,22 +58,11 @@ namespace JustSaying.AwsTools.MessageHandling
             try
             {
                 var response = await _client.SendMessageAsync(request, cancellationToken).ConfigureAwait(false);
-
-                if (_messageResponseLogger?.ResponseLoggerAsync != null)
+                MessageResponseLogger?.Invoke(new MessageResponse
                 {
-                    await _messageResponseLogger.ResponseLoggerAsync(new MessageResponse
-                    {
-                        HttpStatusCode = response?.HttpStatusCode,
-                        MessageId = response?.MessageId
-                    }, message);
-                } else
-                {
-                    _messageResponseLogger?.ResponseLogger?.Invoke(new MessageResponse
-                    {
-                        HttpStatusCode = response?.HttpStatusCode,
-                        MessageId = response?.MessageId
-                    }, message);
-                }
+                    HttpStatusCode = response?.HttpStatusCode,
+                    MessageId = response?.MessageId
+                }, message);
             }
             catch (Exception ex)
             {

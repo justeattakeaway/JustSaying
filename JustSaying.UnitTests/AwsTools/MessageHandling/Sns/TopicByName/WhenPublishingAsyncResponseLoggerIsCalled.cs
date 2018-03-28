@@ -25,20 +25,17 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         private const string MessageId = "12345";
         private static MessageResponse _response;
         private static Message _message;
-        private readonly IMessageResponseLogger _responseLogger = new NullMessageResponseLogger
-        {
-            /* Invoke sync version if async version isn't set */
-            ResponseLoggerAsync = null,
-            ResponseLogger = (r, m) =>
-            {
-                _response = r;
-                _message = m;
-            }
-        };
 
         protected override SnsTopicByName CreateSystemUnderTest()
         {
-            var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister, _responseLogger, Substitute.For<ILoggerFactory>(), Substitute.For<SnsWriteConfiguration>());
+            var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister, Substitute.For<ILoggerFactory>(), Substitute.For<SnsWriteConfiguration>())
+            {
+                MessageResponseLogger = (r, m) =>
+                {
+                    _response = r;
+                    _message = m;
+                }
+            };
 
             topic.Exists();
             return topic;

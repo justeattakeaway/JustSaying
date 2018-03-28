@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Models;
 
 namespace JustSaying
 {
@@ -15,11 +16,12 @@ namespace JustSaying
             PublishFailureBackoffMilliseconds = JustSayingConstants.DEFAULT_PUBLISHER_RETRY_INTERVAL;
             AdditionalSubscriberAccounts = new List<string>();
             Regions = new List<string>();
+            MessageResponseLogger = (r, m) => {};
         }
 
         public int PublishFailureReAttempts { get; set; }
         public int PublishFailureBackoffMilliseconds { get; set; }
-        public IMessageResponseLogger MessageResponseLogger { get; set; }
+        public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
         public IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
         public IList<string> Regions { get; private set; }
         public Func<string> GetActiveRegion { get; set; }

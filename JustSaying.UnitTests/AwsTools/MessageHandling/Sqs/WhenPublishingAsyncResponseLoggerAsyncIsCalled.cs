@@ -27,19 +27,17 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         private const string MessageId = "12345";
         private static MessageResponse _response;
         private static Message _message;
-        public readonly IMessageResponseLogger _responseLogger = new NullMessageResponseLogger
-        {
-            ResponseLoggerAsync = (r, m) =>
-            {
-                _response = r;
-                _message = m;
-                return Task.CompletedTask;
-            }
-        };
 
         protected override SqsPublisher CreateSystemUnderTest()
         {
-            var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, _sqs, 0, _serialisationRegister, _responseLogger, Substitute.For<ILoggerFactory>());
+            var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, _sqs, 0, _serialisationRegister, Substitute.For<ILoggerFactory>())
+            {
+                MessageResponseLogger = (r, m) =>
+                {
+                    _response = r;
+                    _message = m;
+                }
+            };
             sqs.Exists();
             return sqs;
         }

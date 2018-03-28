@@ -24,7 +24,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         protected override SnsTopicByName CreateSystemUnderTest()
         {
-            var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister, new NullMessageResponseLogger(), Substitute.For<ILoggerFactory>(), new SnsWriteConfiguration
+            var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister, Substitute.For<ILoggerFactory>(), new SnsWriteConfiguration
             {
                 HandleException = (ex, m) => false
             });

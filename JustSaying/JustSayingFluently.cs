@@ -90,8 +90,10 @@ namespace JustSaying
                     topicName,
                     _awsClientFactoryProxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
                     Bus.SerialisationRegister,
-                    Bus.Config.MessageResponseLogger,
-                    _loggerFactory, snsWriteConfig);
+                    _loggerFactory, snsWriteConfig)
+                {
+                    MessageResponseLogger = Bus.Config.MessageResponseLogger
+                };
 
                 eventPublisher.Create();
 
@@ -131,8 +133,10 @@ namespace JustSaying
                     _awsClientFactoryProxy.GetAwsClientFactory().GetSqsClient(regionEndpoint),
                     config.RetryCountBeforeSendingToErrorQueue,
                     Bus.SerialisationRegister,
-                    Bus.Config.MessageResponseLogger,
-                    _loggerFactory);
+                    _loggerFactory)
+                {
+                    MessageResponseLogger = Bus.Config.MessageResponseLogger
+                };
 
                 if (!eventPublisher.Exists())
                 {
