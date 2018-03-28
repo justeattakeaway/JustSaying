@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
@@ -20,7 +21,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             Config.PublishFailureBackoffMilliseconds.Returns(0);
             RecordAnyExceptionsThrown();
 
-            _publisher.When(x => x.PublishAsync(Arg.Any<Message>()))
+            _publisher.When(x => x.PublishAsync(Arg.Any<Message>(), Arg.Any<CancellationToken>()))
                 .Do(x => { throw new TestException("Thrown by test WhenPublishingFails"); });
         }
 
@@ -36,7 +37,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             _publisher
                 .Received(PublishAttempts)
-                .PublishAsync(Arg.Any<GenericMessage>());
+                .PublishAsync(Arg.Any<GenericMessage>(), CancellationToken.None);
         }
     }
 }

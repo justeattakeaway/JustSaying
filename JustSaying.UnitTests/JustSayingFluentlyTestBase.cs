@@ -37,7 +37,7 @@ namespace JustSaying.UnitTests
             return fns;
         }
 
-        // ToDo: Must do btter!!
+        // ToDo: Must do better!!
         private void ConfigureNotificationStackMock(JustSaying.JustSayingFluently fns)
         {
             Bus = Substitute.For<IAmJustSaying>();

@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
@@ -20,7 +21,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public void PublisherIsCalledToPublish()
         {
-            _publisher.Received().PublishAsync(Arg.Any<GenericMessage>());
+            _publisher.Received().PublishAsync(Arg.Any<GenericMessage>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]
