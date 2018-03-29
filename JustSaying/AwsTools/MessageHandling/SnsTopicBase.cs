@@ -15,7 +15,7 @@ namespace JustSaying.AwsTools.MessageHandling
     {
         private readonly IMessageSerialisationRegister _serialisationRegister; // ToDo: Grrr...why is this here even. GET OUT!
         private readonly SnsWriteConfiguration _snsWriteConfiguration;
-        public Action<MessageResponse, Message> MessageResponseLogger { get; set; } = (r, m) => {};
+        public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
         public string Arn { get; protected set; }
         protected IAmazonSimpleNotificationService Client { get; set; }
         private readonly ILogger _eventLog;

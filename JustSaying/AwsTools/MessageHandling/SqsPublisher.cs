@@ -15,7 +15,7 @@ namespace JustSaying.AwsTools.MessageHandling
     {
         private readonly IAmazonSQS _client;
         private readonly IMessageSerialisationRegister _serialisationRegister;
-        public Action<MessageResponse, Message> MessageResponseLogger { get; set; } = (r, m) => {};
+        public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
 
         public SqsPublisher(RegionEndpoint region, string queueName, IAmazonSQS client,
             int retryCountBeforeSendingToErrorQueue, IMessageSerialisationRegister serialisationRegister,
