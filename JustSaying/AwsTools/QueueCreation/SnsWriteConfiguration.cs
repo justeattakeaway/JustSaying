@@ -1,5 +1,5 @@
 ﻿using System;
-using Amazon.SimpleNotificationService.Model;
+using JustSaying.Models;
 
 namespace JustSaying.AwsTools.QueueCreation
 {
@@ -9,6 +9,6 @@ namespace JustSaying.AwsTools.QueueCreation
         /// Extension point enabling custom error handling on a per notification basis, including ability handle raised exceptions.
         /// </summary>
         /// <returns>Boolean indicating whether the exception has been handled</returns>
-        public Func<Exception, bool> HandleException { get; set; }
+        public Func<Exception, Message, bool> HandleException { get; set; }
     }
 }

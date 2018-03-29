@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
-using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
@@ -12,7 +11,6 @@ using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using JustSaying.Messaging.Interrogation;
-using JustSaying.Messaging.MessageProcessingStrategies;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying
@@ -92,7 +90,10 @@ namespace JustSaying
                     topicName,
                     _awsClientFactoryProxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
                     Bus.SerialisationRegister,
-                    _loggerFactory, snsWriteConfig);
+                    _loggerFactory, snsWriteConfig)
+                {
+                    MessageResponseLogger = Bus.Config.MessageResponseLogger
+                };
 
                 eventPublisher.Create();
 
@@ -132,7 +133,10 @@ namespace JustSaying
                     _awsClientFactoryProxy.GetAwsClientFactory().GetSqsClient(regionEndpoint),
                     config.RetryCountBeforeSendingToErrorQueue,
                     Bus.SerialisationRegister,
-                    _loggerFactory);
+                    _loggerFactory)
+                {
+                    MessageResponseLogger = Bus.Config.MessageResponseLogger
+                };
 
                 if (!eventPublisher.Exists())
                 {

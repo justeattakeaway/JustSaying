@@ -15,8 +15,11 @@ namespace JustSaying.AwsTools.MessageHandling
     {
         private readonly IAmazonSQS _client;
         private readonly IMessageSerialisationRegister _serialisationRegister;
+        public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
 
-        public SqsPublisher(RegionEndpoint region, string queueName, IAmazonSQS client, int retryCountBeforeSendingToErrorQueue, IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory)
+        public SqsPublisher(RegionEndpoint region, string queueName, IAmazonSQS client,
+            int retryCountBeforeSendingToErrorQueue, IMessageSerialisationRegister serialisationRegister,
+            ILoggerFactory loggerFactory)
             : base(region, queueName, client, retryCountBeforeSendingToErrorQueue, loggerFactory)
         {
             _client = client;
@@ -30,7 +33,13 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                _client.SendMessage(request);
+                var response = _client.SendMessage(request);
+
+                MessageResponseLogger?.Invoke(new MessageResponse
+                {
+                    HttpStatusCode = response?.HttpStatusCode,
+                    MessageId = response?.MessageId
+                }, message);
             }
             catch (Exception ex)
             {
@@ -46,10 +55,14 @@ namespace JustSaying.AwsTools.MessageHandling
         public async Task PublishAsync(Message message, CancellationToken cancellationToken)
         {
             var request = BuildSendMessageRequest(message);
-
             try
             {
-                await _client.SendMessageAsync(request, cancellationToken).ConfigureAwait(false);
+                var response = await _client.SendMessageAsync(request, cancellationToken).ConfigureAwait(false);
+                MessageResponseLogger?.Invoke(new MessageResponse
+                {
+                    HttpStatusCode = response?.HttpStatusCode,
+                    MessageId = response?.MessageId
+                }, message);
             }
             catch (Exception ex)
             {
