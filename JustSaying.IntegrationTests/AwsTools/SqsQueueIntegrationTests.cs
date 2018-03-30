@@ -17,13 +17,13 @@ namespace JustSaying.IntegrationTests.AwsTools
         {
             QueueUniqueKey = "test" + DateTime.Now.Ticks;
             var queue = new SqsQueueByName(RegionEndpoint.EUWest1, QueueUniqueKey, CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1), 1, new LoggerFactory());
-            queue.Exists();
+            queue.ExistsAsync().GetAwaiter().GetResult();
             return queue;
         }
 
         protected override void PostAssertTeardown()
         {
-            SystemUnderTest.Delete();
+            SystemUnderTest.DeleteAsync().GetAwaiter().GetResult();
             base.PostAssertTeardown();
         }
     }

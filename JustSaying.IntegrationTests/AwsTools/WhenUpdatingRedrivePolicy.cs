@@ -20,7 +20,7 @@ namespace JustSaying.IntegrationTests.AwsTools
         protected override async Task When()
         {
 
-            SystemUnderTest.Create(new SqsBasicConfiguration());
+            await SystemUnderTest.CreateAsync(new SqsBasicConfiguration());
 
             await SystemUnderTest.UpdateRedrivePolicyAsync(
                 new RedrivePolicy(_newMaximumReceived, SystemUnderTest.ErrorQueue.Arn));

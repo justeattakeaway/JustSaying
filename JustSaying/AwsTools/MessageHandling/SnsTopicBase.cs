@@ -37,9 +37,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _snsWriteConfiguration = snsWriteConfiguration;
         }
 
-        protected abstract Task<bool> ExistsAsync();
-
-        public bool Exists() => ExistsAsync().GetAwaiter().GetResult();
+        public abstract Task<bool> ExistsAsync();
 
         public Task<bool> SubscribeAsync(SqsQueueBase queue) => SubscribeAsync(queue, CancellationToken.None);
 

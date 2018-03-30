@@ -18,7 +18,7 @@ namespace JustSaying.IntegrationTests.AwsTools
         {
             var snsClient = new NoTopicCreationAwsClientFactory().GetSnsClient(RegionEndpoint.EUWest1);
             _topic = new SnsTopicByName(UniqueName, snsClient, new MessageSerialisationRegister(), new LoggerFactory());
-            _createWasSuccessful = _topic.Create();
+            _createWasSuccessful = _topic.CreateAsync().GetAwaiter().GetResult();
         }
 
         [Fact]

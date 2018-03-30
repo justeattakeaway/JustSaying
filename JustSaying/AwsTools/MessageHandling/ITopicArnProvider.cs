@@ -1,8 +1,10 @@
-﻿namespace JustSaying.AwsTools.MessageHandling
+﻿using System.Threading.Tasks;
+
+namespace JustSaying.AwsTools.MessageHandling
 {
     public interface ITopicArnProvider
     {
-        bool ArnExists();
-        string GetArn();
+        Task<bool> ArnExistsAsync();
+        Task<string> GetArnAsync();
     }
 }

@@ -22,7 +22,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         protected override SnsTopicByName CreateSystemUnderTest()
         {
             var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister, Substitute.For<ILoggerFactory>());
-            topic.Exists();
+            topic.ExistsAsync().GetAwaiter().GetResult();;
             return topic;
         }
 

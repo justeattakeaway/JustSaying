@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -35,8 +36,8 @@ namespace JustSaying.Tools.Commands
             var sourceQueue = new SqsQueueByName(config.RegionEndpoint, SourceQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT, loggerFactory);
             var destinationQueue = new SqsQueueByName(config.RegionEndpoint, DestinationQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT, loggerFactory);
 
-            EnsureQueueExists(sourceQueue);
-            EnsureQueueExists(destinationQueue);
+            EnsureQueueExistsAsync(sourceQueue).GetAwaiter().GetResult();
+            EnsureQueueExistsAsync(destinationQueue).GetAwaiter().GetResult();
 
             var messages = PopMessagesFromSourceQueue(sourceQueue);
             var receiptHandles = messages.ToDictionary(m => m.MessageId, m => m.ReceiptHandle);
@@ -62,9 +63,9 @@ namespace JustSaying.Tools.Commands
             return true;
         }
 
-        private void EnsureQueueExists(SqsQueueByName queue)
+        private async Task EnsureQueueExistsAsync(SqsQueueByName queue)
         {
-            if (!queue.Exists())
+            if (!await queue.ExistsAsync())
             {
                 throw new InvalidOperationException($"{queue.QueueName} does not exist.");
             }

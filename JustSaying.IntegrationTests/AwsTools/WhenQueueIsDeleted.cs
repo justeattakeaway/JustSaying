@@ -8,21 +8,19 @@ namespace JustSaying.IntegrationTests.AwsTools
     [Collection(GlobalSetup.CollectionName)]
     public class WhenQueueIsDeleted : WhenCreatingQueuesByName
     {
-        protected override Task When()
+        protected override async Task When()
         {
-            SystemUnderTest.Create(
-                new SqsReadConfiguration(SubscriptionType.ToTopic), 
+            await SystemUnderTest.CreateAsync(
+                new SqsReadConfiguration(SubscriptionType.ToTopic),
                 attempt:600);
-            SystemUnderTest.Delete();
-
-            return Task.CompletedTask;
+            await SystemUnderTest.DeleteAsync();
         }
 
         [Fact]
         public async Task TheErrorQueueIsDeleted()
         {
             await Patiently.AssertThatAsync(
-                () => !SystemUnderTest.ErrorQueue.Exists());
+                async () => !await SystemUnderTest.ErrorQueue.ExistsAsync());
         }
     }
 }

@@ -19,13 +19,6 @@ namespace JustSaying.AwsTools.QueueCreation
             _loggerFactory = loggerFactory;
         }
 
-        public SqsQueueByName EnsureTopicExistsWithQueueSubscribed(string region,
-            IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
-        {
-            return EnsureTopicExistsWithQueueSubscribedAsync(region, serialisationRegister, queueConfig)
-                  .GetAwaiter().GetResult();
-        }
-
         public async Task<SqsQueueByName> EnsureTopicExistsWithQueueSubscribedAsync(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
         {
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);
@@ -38,12 +31,13 @@ namespace JustSaying.AwsTools.QueueCreation
             {
                 var arnProvider = new ForeignTopicArnProvider(regionEndpoint, queueConfig.TopicSourceAccount, queueConfig.PublishEndpoint);
 
-                await snsClient.SubscribeQueueAsync(arnProvider.GetArn(), sqsClient, queue.Url).ConfigureAwait(false);
+                var topicArn = await arnProvider.GetArnAsync().ConfigureAwait(false);
+                await snsClient.SubscribeQueueAsync(topicArn, sqsClient, queue.Url).ConfigureAwait(false);
             }
             else
             {
                 var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsClient, serialisationRegister, _loggerFactory);
-                eventTopic.Create();
+                await eventTopic.CreateAsync().ConfigureAwait(false);
 
                 await EnsureQueueIsSubscribedToTopic(eventTopic, queue).ConfigureAwait(false);
 
@@ -56,12 +50,6 @@ namespace JustSaying.AwsTools.QueueCreation
         private static bool TopicExistsInAnotherAccount(SqsReadConfiguration queueConfig)
         {
             return !string.IsNullOrWhiteSpace(queueConfig.TopicSourceAccount);
-        }
-
-        public SqsQueueByName EnsureQueueExists(string region, SqsReadConfiguration queueConfig)
-        {
-            return EnsureQueueExistsAsync(region, queueConfig)
-                .GetAwaiter().GetResult();
         }
 
         public async Task<SqsQueueByName> EnsureQueueExistsAsync(string region, SqsReadConfiguration queueConfig)
@@ -80,9 +68,9 @@ namespace JustSaying.AwsTools.QueueCreation
             return queue;
         }
 
-        private async Task<bool> EnsureQueueIsSubscribedToTopic(SnsTopicByName eventTopic, SqsQueueByName queue)
+        private Task<bool> EnsureQueueIsSubscribedToTopic(SnsTopicByName eventTopic, SqsQueueByName queue)
         {
-            return await eventTopic.SubscribeAsync(queue).ConfigureAwait(false);
+            return eventTopic.SubscribeAsync(queue);
         }
     }
 }

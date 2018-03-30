@@ -19,14 +19,12 @@ namespace JustSaying.IntegrationTests.AwsTools
             base.Given();
         }
 
-        protected override Task When()
+        protected override async Task When()
         {
-            SystemUnderTest.Create(new SqsBasicConfiguration { DeliveryDelaySeconds = _oldDeliveryDelay });
+            await SystemUnderTest.CreateAsync(new SqsBasicConfiguration { DeliveryDelaySeconds = _oldDeliveryDelay });
 
-            SystemUnderTest.UpdateQueueAttribute(
+            await SystemUnderTest.UpdateQueueAttributeAsync(
                 new SqsBasicConfiguration {DeliveryDelaySeconds = _newDeliveryDelay});
-
-            return Task.CompletedTask;
         }
 
         [Fact]
