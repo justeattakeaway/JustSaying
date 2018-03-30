@@ -29,20 +29,7 @@ namespace JustSaying.AwsTools.MessageHandling
             Client = client;
         }
 
-        public bool Exists()
-        {
-            return ExistsAsync()
-                .GetAwaiter().GetResult();
-        }
-
         public abstract Task<bool> ExistsAsync();
-
-        public void Delete()
-        {
-            DeleteAsync()
-                .GetAwaiter().GetResult();
-        }
-
 
         public virtual async Task DeleteAsync()
         {
@@ -87,12 +74,6 @@ namespace JustSaying.AwsTools.MessageHandling
             };
 
             return await Client.GetQueueAttributesAsync(request).ConfigureAwait(false);
-        }
-
-        public void UpdateQueueAttribute(SqsBasicConfiguration queueConfig)
-        {
-            UpdateQueueAttributeAsync(queueConfig)
-                .GetAwaiter().GetResult();
         }
 
         public virtual async Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig)

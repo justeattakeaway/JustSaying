@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS.Model;
@@ -28,15 +27,15 @@ namespace JustSaying.IntegrationTests.AwsTools
         {
             var locker = new object();
             var awsQueueClient = CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1);
- 
+
             var q = new SqsQueueByName(RegionEndpoint.EUWest1, "throttle_test", awsQueueClient, 1, new LoggerFactory());
-            if (!q.Exists())
+            if (!await q.ExistsAsync())
             {
-                q.Create(new SqsBasicConfiguration());
-                Thread.Sleep(TimeSpan.FromMinutes(1));  // wait 60 secs for queue creation to be guaranteed completed by aws. :(
+                await q.CreateAsync(new SqsBasicConfiguration());
+                await Task.Delay(TimeSpan.FromMinutes(1));  // wait 60 secs for queue creation to be guaranteed completed by aws. :(
             }
 
-            Assert.True(q.Exists());
+            Assert.True(await q.ExistsAsync());
 
             Console.WriteLine($"{DateTime.Now} - Adding {throttleMessageCount} messages to the queue.");
 
@@ -60,7 +59,7 @@ namespace JustSaying.IntegrationTests.AwsTools
             while (entriesAdded < throttleMessageCount);
 
             Console.WriteLine($"{DateTime.Now} - Done adding messages.");
-            
+
             var handleCount = 0;
             var serialisations = Substitute.For<IMessageSerialisationRegister>();
             var monitor = Substitute.For<IMessageMonitor>();
@@ -92,6 +91,6 @@ namespace JustSaying.IntegrationTests.AwsTools
                 $"{DateTime.Now} - Throughput {(float) handleCount/stopwatch.ElapsedMilliseconds*1000} msg/sec");
             Assert.Equal(throttleMessageCount, handleCount);
         }
-        
+
     }
 }

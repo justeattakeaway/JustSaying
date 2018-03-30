@@ -34,16 +34,16 @@ namespace JustSaying.AwsTools.MessageHandling
             _log = loggerFactory.CreateLogger("JustSaying");
         }
 
-        public void EnsurePolicyIsUpdated(IReadOnlyCollection<string> config)
+        public async Task EnsurePolicyIsUpdatedAsync(IReadOnlyCollection<string> config)
         {
             if (config.Any())
             {
                 var policy = new SnsPolicy(config);
-                policy.Save(Arn, Client);
+                await policy.SaveAsync(Arn, Client).ConfigureAwait(false);
             }
         }
 
-        protected override async Task<bool> ExistsAsync()
+        public override async Task<bool> ExistsAsync()
         {
             if (!string.IsNullOrWhiteSpace(Arn))
             {
@@ -62,8 +62,6 @@ namespace JustSaying.AwsTools.MessageHandling
             return false;
         }
 
-        public bool Create() => CreateAsync().GetAwaiter().GetResult();
-
         public async Task<bool> CreateAsync()
         {
             try
@@ -81,7 +79,7 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (AuthorizationErrorException ex)
             {
                 _log.LogWarning(0, ex, $"Not authorized to create topic: {TopicName}");
-                if (!Exists())
+                if (!await ExistsAsync().ConfigureAwait(false))
                 {
                     throw new InvalidOperationException("Topic does not exist and no permission to create it!");
                 }

@@ -11,10 +11,9 @@ namespace JustSaying.IntegrationTests.AwsTools
     {
         private bool _isQueueCreated;
 
-        protected override Task When()
+        protected override async Task When()
         {
-            _isQueueCreated = SystemUnderTest.Create(new SqsBasicConfiguration(), attempt: 0);
-            return Task.CompletedTask;
+            _isQueueCreated = await SystemUnderTest.CreateAsync(new SqsBasicConfiguration(), attempt: 0);
         }
 
         [Fact]
@@ -27,7 +26,7 @@ namespace JustSaying.IntegrationTests.AwsTools
         public async Task DeadLetterQueueIsCreated()
         {
             await Patiently.AssertThatAsync(
-                () => SystemUnderTest.ErrorQueue.Exists(),
+                async () => await SystemUnderTest.ErrorQueue.ExistsAsync(),
                 40.Seconds());
         }
     }

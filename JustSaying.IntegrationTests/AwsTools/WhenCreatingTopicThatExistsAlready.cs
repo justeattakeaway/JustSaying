@@ -15,7 +15,7 @@ namespace JustSaying.IntegrationTests.AwsTools
         protected override void When()
         {
             _topic = new SnsTopicByName(UniqueName, Bus, new MessageSerialisationRegister(), new LoggerFactory());
-            _createWasSuccessful = _topic.Create();
+            _createWasSuccessful = _topic.CreateAsync().GetAwaiter().GetResult();
         }
 
         [Fact]
