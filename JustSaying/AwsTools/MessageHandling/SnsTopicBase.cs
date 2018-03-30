@@ -15,6 +15,7 @@ namespace JustSaying.AwsTools.MessageHandling
     {
         private readonly IMessageSerialisationRegister _serialisationRegister; // ToDo: Grrr...why is this here even. GET OUT!
         private readonly SnsWriteConfiguration _snsWriteConfiguration;
+        public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
         public string Arn { get; protected set; }
         protected IAmazonSimpleNotificationService Client { get; set; }
         private readonly ILogger _eventLog;
@@ -27,7 +28,8 @@ namespace JustSaying.AwsTools.MessageHandling
             _eventLog = loggerFactory.CreateLogger("EventLog");
         }
 
-        protected SnsTopicBase(IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory, SnsWriteConfiguration snsWriteConfiguration)
+        protected SnsTopicBase(IMessageSerialisationRegister serialisationRegister,
+            ILoggerFactory loggerFactory, SnsWriteConfiguration snsWriteConfiguration)
         {
             _serialisationRegister = serialisationRegister;
             _log = loggerFactory.CreateLogger("JustSaying");
@@ -61,12 +63,18 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                Client.Publish(request);
+                var response = Client.Publish(request);
                 _eventLog.LogInformation($"Published message: '{request.Subject}' with content {request.Message}");
+
+                MessageResponseLogger?.Invoke(new MessageResponse
+                {
+                    HttpStatusCode = response?.HttpStatusCode,
+                    MessageId = response?.MessageId
+                }, message);
             }
             catch (Exception ex)
             {
-                if (!ClientExceptionHandler(ex))
+                if (!ClientExceptionHandler(ex, message))
                     throw new PublishException(
                         $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}",
                         ex);
@@ -82,20 +90,25 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                await Client.PublishAsync(request, cancellationToken).ConfigureAwait(false);
-
+                var response = await Client.PublishAsync(request, cancellationToken).ConfigureAwait(false);
                 _eventLog.LogInformation($"Published message: '{request.Subject}' with content {request.Message}");
+
+                MessageResponseLogger?.Invoke(new MessageResponse
+                {
+                    HttpStatusCode = response?.HttpStatusCode,
+                    MessageId = response?.MessageId
+                }, message);
             }
             catch (Exception ex)
             {
-                if (!ClientExceptionHandler(ex))
+                if (!ClientExceptionHandler(ex, message))
                     throw new PublishException(
                         $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}",
                         ex);
             }
         }
 
-        private bool ClientExceptionHandler(Exception ex) => _snsWriteConfiguration?.HandleException?.Invoke(ex) ?? false;
+        private bool ClientExceptionHandler(Exception ex, Message message) => _snsWriteConfiguration?.HandleException?.Invoke(ex, message) ?? false;
 
         private PublishRequest BuildPublishRequest(Message message)
         {

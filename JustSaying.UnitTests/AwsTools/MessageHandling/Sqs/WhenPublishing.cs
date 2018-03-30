@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
@@ -42,7 +43,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         [Fact]
         public void MessageIsPublishedToQueue()
         {
-            // ToDo: Can be better...
+            // ToDo: Could be better...
             _sqs.Received().SendMessageAsync(Arg.Is<SendMessageRequest>(x => x.MessageBody.Equals("serialized_contents")));
         }
 

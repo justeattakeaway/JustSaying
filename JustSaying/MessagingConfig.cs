@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using JustSaying.AwsTools;
+using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Models;
 
 namespace JustSaying
 {
@@ -17,6 +20,7 @@ namespace JustSaying
 
         public int PublishFailureReAttempts { get; set; }
         public int PublishFailureBackoffMilliseconds { get; set; }
+        public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
         public IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
         public IList<string> Regions { get; private set; }
         public Func<string> GetActiveRegion { get; set; }
