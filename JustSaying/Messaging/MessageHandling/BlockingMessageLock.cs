@@ -7,7 +7,7 @@ namespace JustSaying.Messaging.MessageHandling
     /// Used to convert "IMessageLock " instances into IMessageLockAsync
     /// So that the rest of the system only has to deal with IMessageLockAsync
     /// </summary>
-    internal class BlockingMessageLock : IMessageLockAsync
+    public class BlockingMessageLock : IMessageLockAsync
     {
         public BlockingMessageLock(IMessageLock inner)
         {
