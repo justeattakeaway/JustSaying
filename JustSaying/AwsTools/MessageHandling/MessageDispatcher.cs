@@ -71,6 +71,8 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     typedMessage.ReceiptHandle = message.ReceiptHandle;
                     typedMessage.QueueUrl = _queue.Url;
+                    TryGetApproxReceiveCount(message.Attributes, out int approxReceiveCount);
+                    typedMessage.ApproximateReceiveCount = approxReceiveCount;
                     handlingSucceeded = await CallMessageHandler(typedMessage).ConfigureAwait(false);
                 }
 
