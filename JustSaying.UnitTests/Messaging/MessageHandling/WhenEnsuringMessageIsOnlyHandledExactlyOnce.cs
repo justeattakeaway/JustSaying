@@ -13,8 +13,8 @@ namespace JustSaying.UnitTests.Messaging.MessageHandling
         [Fact]
         public async Task WhenMessageIsLockedByAnotherHandler_MessageWillBeLeftInTheQueue()
         {
-            var messageLock = Substitute.For<IMessageLock>();
-            messageLock.TryAquireLock(Arg.Any<string>(), Arg.Any<TimeSpan>()).Returns(new MessageLockResponse {DoIHaveExclusiveLock = false});
+            var messageLock = Substitute.For<IMessageLockAsync>();
+            messageLock.TryAquireLockAsync(Arg.Any<string>(), Arg.Any<TimeSpan>()).Returns(new MessageLockResponse {DoIHaveExclusiveLock = false});
             var sut = new ExactlyOnceHandler<OrderAccepted>(Substitute.For<IHandlerAsync<OrderAccepted>>(), messageLock, 1, "handlerName");
 
             var result = await sut.Handle(new OrderAccepted());

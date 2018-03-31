@@ -37,7 +37,7 @@ namespace JustSaying.AwsTools.MessageHandling
             IMessageMonitor messagingMonitor,
             ILoggerFactory loggerFactory,
             Action<Exception, Amazon.SQS.Model.Message> onError = null,
-            IMessageLock messageLock = null,
+            IMessageLockAsync messageLock = null,
             IMessageBackoffStrategy messageBackoffStrategy = null)
         {
             _queue = queue;

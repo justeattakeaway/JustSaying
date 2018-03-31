@@ -9,9 +9,9 @@ namespace JustSaying.AwsTools.MessageHandling
     public class MessageHandlerWrapper
     {
         private readonly IMessageMonitor _messagingMonitor;
-        private readonly IMessageLock _messageLock;
+        private readonly IMessageLockAsync _messageLock;
 
-        public MessageHandlerWrapper(IMessageLock messageLock, IMessageMonitor messagingMonitor)
+        public MessageHandlerWrapper(IMessageLockAsync messageLock, IMessageMonitor messagingMonitor)
         {
             _messageLock = messageLock;
             _messagingMonitor = messagingMonitor;
