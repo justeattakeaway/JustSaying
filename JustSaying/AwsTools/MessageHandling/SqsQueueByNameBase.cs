@@ -53,12 +53,6 @@ namespace JustSaying.AwsTools.MessageHandling
             => queueUrl.Substring(queueUrl.LastIndexOf("/", StringComparison.Ordinal) + 1)
                 .Equals(queueName, StringComparison.OrdinalIgnoreCase);
 
-        public bool Create(SqsBasicConfiguration queueConfig, int attempt = 0)
-        {
-            return CreateAsync(queueConfig, attempt)
-                .GetAwaiter().GetResult();
-        }
-
         public virtual async Task<bool> CreateAsync(SqsBasicConfiguration queueConfig, int attempt = 0)
         {
             try

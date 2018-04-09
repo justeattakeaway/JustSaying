@@ -8,16 +8,15 @@ namespace JustSaying.IntegrationTests.AwsTools
     [Collection(GlobalSetup.CollectionName)]
     public class WhenIAccessAnExistingQueueWithoutAnErrorQueue : WhenCreatingQueuesByName
     {
-        protected override Task When()
+        protected override async Task When()
         {
-            SystemUnderTest.Create(new SqsBasicConfiguration {ErrorQueueOptOut = true}, attempt: 0);
-            return Task.CompletedTask;
+            await SystemUnderTest.CreateAsync(new SqsBasicConfiguration {ErrorQueueOptOut = true}, attempt: 0);
         }
 
         [Fact]
         public async Task ThereIsNoErrorQueue()
         {
-            await Patiently.AssertThatAsync(() => !SystemUnderTest.ErrorQueue.Exists());
+            await Patiently.AssertThatAsync(async () => !await SystemUnderTest.ErrorQueue.ExistsAsync());
         }
     }
 }

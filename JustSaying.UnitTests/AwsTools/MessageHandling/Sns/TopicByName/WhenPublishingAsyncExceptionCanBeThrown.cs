@@ -29,7 +29,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
                 HandleException = (ex, m) => false
             });
 
-            topic.Exists();
+            topic.ExistsAsync().GetAwaiter().GetResult();;
             return topic;
         }
 

@@ -19,15 +19,12 @@ namespace JustSaying.IntegrationTests.AwsTools
             base.Given();
         }
 
-        protected override Task When()
+        protected override async Task When()
         {
+            await SystemUnderTest.CreateAsync(new SqsBasicConfiguration { MessageRetentionSeconds = _oldRetentionPeriod });
 
-            SystemUnderTest.Create(new SqsBasicConfiguration { MessageRetentionSeconds = _oldRetentionPeriod });
-
-            SystemUnderTest.UpdateQueueAttribute(
+            await SystemUnderTest.UpdateQueueAttributeAsync(
                 new SqsBasicConfiguration {MessageRetentionSeconds = _newRetentionPeriod});
-
-            return Task.CompletedTask;
         }
 
         [Fact]

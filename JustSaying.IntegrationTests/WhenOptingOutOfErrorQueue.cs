@@ -49,7 +49,7 @@ namespace JustSaying.IntegrationTests
         private void AssertThatQueueDoesNotExist(string name)
         {
             var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, name, _client, 1, new LoggerFactory());
-            sqsQueueByName.Exists().ShouldBeFalse($"Expecting queue '{name}' to not exist but it does.");
+            sqsQueueByName.ExistsAsync().GetAwaiter().GetResult().ShouldBeFalse($"Expecting queue '{name}' to not exist but it does.");
         }
     }
 }

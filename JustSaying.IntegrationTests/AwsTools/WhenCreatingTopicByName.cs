@@ -22,7 +22,7 @@ namespace JustSaying.IntegrationTests.AwsTools
             Bus = CreateMeABus.DefaultClientFactory().GetSnsClient(RegionEndpoint.EUWest1);
             UniqueName = "test" + DateTime.Now.Ticks;
             CreatedTopic = new SnsTopicByName(UniqueName, Bus , new MessageSerialisationRegister(), new LoggerFactory());
-            CreatedTopic.Create();
+            CreatedTopic.CreateAsync().GetAwaiter().GetResult();
             return CreatedTopic;
         }
 

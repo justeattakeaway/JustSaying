@@ -19,10 +19,10 @@ namespace JustSaying.IntegrationTests.AwsTools
         protected override void When()
         {
 
-            SystemUnderTest.Create(new SqsBasicConfiguration { ErrorQueueRetentionPeriodSeconds = JustSayingConstants.MAXIMUM_RETENTION_PERIOD, ErrorQueueOptOut = true});
+            SystemUnderTest.CreateAsync(new SqsBasicConfiguration { ErrorQueueRetentionPeriodSeconds = JustSayingConstants.MAXIMUM_RETENTION_PERIOD, ErrorQueueOptOut = true}).GetAwaiter().GetResult();
 
-            SystemUnderTest.UpdateQueueAttribute(
-                new SqsBasicConfiguration {ErrorQueueRetentionPeriodSeconds = 100});
+            SystemUnderTest.UpdateQueueAttributeAsync(
+                new SqsBasicConfiguration {ErrorQueueRetentionPeriodSeconds = 100}).GetAwaiter().GetResult();
         }
 
         protected override ErrorQueue CreateSystemUnderTest()
@@ -33,7 +33,7 @@ namespace JustSaying.IntegrationTests.AwsTools
 
         protected override void PostAssertTeardown()
         {
-            SystemUnderTest.Delete();
+            SystemUnderTest.DeleteAsync().GetAwaiter().GetResult();
             base.PostAssertTeardown();
         }
 

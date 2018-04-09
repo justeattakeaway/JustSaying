@@ -95,9 +95,9 @@ namespace JustSaying
                     MessageResponseLogger = Bus.Config.MessageResponseLogger
                 };
 
-                eventPublisher.Create();
+                eventPublisher.CreateAsync().GetAwaiter().GetResult();
 
-                eventPublisher.EnsurePolicyIsUpdated(Bus.Config.AdditionalSubscriberAccounts);
+                eventPublisher.EnsurePolicyIsUpdatedAsync(Bus.Config.AdditionalSubscriberAccounts).GetAwaiter().GetResult();
 
                 Bus.AddMessagePublisher<T>(eventPublisher, region);
             }
@@ -138,9 +138,9 @@ namespace JustSaying
                     MessageResponseLogger = Bus.Config.MessageResponseLogger
                 };
 
-                if (!eventPublisher.Exists())
+                if (!eventPublisher.ExistsAsync().GetAwaiter().GetResult())
                 {
-                    eventPublisher.Create(config);
+                    eventPublisher.CreateAsync(config).GetAwaiter().GetResult();
                 }
 
                 Bus.AddMessagePublisher<T>(eventPublisher, region);
@@ -318,7 +318,7 @@ namespace JustSaying
 
             foreach (var region in Bus.Config.Regions)
             {
-                var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribed(region, Bus.SerialisationRegister, _subscriptionConfig);
+                var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribedAsync(region, Bus.SerialisationRegister, _subscriptionConfig).GetAwaiter().GetResult();
                 CreateSubscriptionListener<T>(region, queue);
                 _log.LogInformation($"Created SQS topic subscription - Topic: {_subscriptionConfig.Topic}, QueueName: {_subscriptionConfig.QueueName}");
             }
@@ -333,7 +333,7 @@ namespace JustSaying
 
             foreach (var region in Bus.Config.Regions)
             {
-                var queue = _amazonQueueCreator.EnsureQueueExists(region, _subscriptionConfig);
+                var queue = _amazonQueueCreator.EnsureQueueExistsAsync(region, _subscriptionConfig).GetAwaiter().GetResult();
                 CreateSubscriptionListener<T>(region, queue);
                 _log.LogInformation($"Created SQS subscriber - MessageName: {messageTypeName}, QueueName: {_subscriptionConfig.QueueName}");
             }

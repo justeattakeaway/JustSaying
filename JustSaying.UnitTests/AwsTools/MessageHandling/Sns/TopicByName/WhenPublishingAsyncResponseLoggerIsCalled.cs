@@ -37,7 +37,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
                 }
             };
 
-            topic.Exists();
+            topic.ExistsAsync().GetAwaiter().GetResult();;
             return topic;
         }
 

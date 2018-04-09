@@ -26,6 +26,27 @@ namespace JustSaying.TestingFramework
 
             func.Invoke().ShouldBeTrue();
         }
+
+        public static async Task AssertThatAsync(Func<Task<bool>> func) => await AssertThatAsync(func, 5.Seconds());
+
+        public static async Task AssertThatAsync(Func<Task<bool>> func, TimeSpan timeout)
+        {
+            var started = DateTime.Now;
+            var timeoutAt = DateTime.Now + timeout;
+            do
+            {
+                if (await func.Invoke())
+                {
+                    return;
+                }
+
+                await Task.Delay(50.Milliseconds());
+                Console.WriteLine(
+                    $"Waiting for {(DateTime.Now - started).TotalMilliseconds} ms - Still Checking.");
+            } while (DateTime.Now < timeoutAt);
+
+            (await func.Invoke()).ShouldBeTrue();
+        }
     }
     public static class Extensions
     {

@@ -16,7 +16,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         private readonly ILoggerFactory _log;
         private const int RetryCount = 3;
 
-        
+
         public WhenFetchingQueueByName()
         {
             _client = Substitute.For<IAmazonSQS>();
@@ -40,21 +40,21 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         public void IncorrectQueueNameDoNotMatch()
         {
             var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name1", _client, RetryCount, _log);
-            sqsQueueByName.Exists().ShouldBeFalse();
+            sqsQueueByName.ExistsAsync().GetAwaiter().GetResult().ShouldBeFalse();
         }
 
         [Fact]
         public void IncorrectPartialQueueNameDoNotMatch()
         {
             var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue", _client, RetryCount, _log);
-            sqsQueueByName.Exists().ShouldBeFalse();
+            sqsQueueByName.ExistsAsync().GetAwaiter().GetResult().ShouldBeFalse();
         }
 
         [Fact]
         public void CorrectQueueNameShouldMatch()
         {
             var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name", _client, RetryCount, _log);
-            sqsQueueByName.Exists().ShouldBeTrue();
+            sqsQueueByName.ExistsAsync().GetAwaiter().GetResult().ShouldBeTrue();
         }
     }
 }

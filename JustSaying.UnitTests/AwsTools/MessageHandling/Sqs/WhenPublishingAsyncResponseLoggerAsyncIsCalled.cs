@@ -38,7 +38,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
                     _message = m;
                 }
             };
-            sqs.Exists();
+            sqs.ExistsAsync().GetAwaiter().GetResult();
             return sqs;
         }
 

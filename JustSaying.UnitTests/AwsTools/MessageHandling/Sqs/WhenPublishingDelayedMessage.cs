@@ -26,7 +26,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         {
             var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, _sqs, 0,
                 _serialisationRegister, Substitute.For<ILoggerFactory>());
-            sqs.Exists();
+            sqs.ExistsAsync().GetAwaiter().GetResult();
             return sqs;
         }
 
