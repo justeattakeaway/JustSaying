@@ -71,9 +71,6 @@ namespace JustSaying
 
     public interface IFluentSubscription
     {
-        [Obsolete("Use WithMessageHandler<T>(IHandlerAsync<T> handler)")]
-        IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message;
-
         IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerAsync<T> handler) where T : Message;
 
         IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message;

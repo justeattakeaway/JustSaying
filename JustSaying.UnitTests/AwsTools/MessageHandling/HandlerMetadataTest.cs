@@ -34,35 +34,5 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
 
             reader.GetTimeOut().ShouldBe(42);
         }
-        
-        [Fact]
-        public void OnceTestHandler_DoesHaveExactlyOnce()
-        {
-            var handler = new OnceTestHandler();
-            var reader = HandlerMetadata.ReadExactlyOnce(handler);
-
-            reader.Enabled.ShouldBeTrue();
-        }
-
-        [Fact]
-        public void OnceTestHandler_HasCorrectTimeout()
-        {
-            var handler = new OnceTestHandler();
-            var reader = HandlerMetadata.ReadExactlyOnce(handler);
-
-            reader.GetTimeOut().ShouldBe(23);
-        }
-
-        [Fact]
-        public void WrappedHandler_DoesHaveExactlyOnce()
-        {
-#pragma warning disable 618
-            var wrapped = new BlockingHandler<GenericMessage>(new OnceTestHandler());
-#pragma warning restore 618
-
-            var reader = HandlerMetadata.ReadExactlyOnce(wrapped);
-
-            reader.Enabled.ShouldBeTrue();
-        }
     }
 }
