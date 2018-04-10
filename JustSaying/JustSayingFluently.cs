@@ -219,7 +219,7 @@ namespace JustSaying
 
         public IMayWantOptionalSettings WithMessageLockStoreOf(IMessageLock messageLock)
         {
-            Bus.MessageLock = new BlockingMessageLock(messageLock); 
+            Bus.MessageLock = new BlockingMessageLock(messageLock);
             return this;
         }
 
@@ -255,10 +255,6 @@ namespace JustSaying
             _subscriptionConfig.BaseQueueName = queuename;
             return this;
         }
-
-        [Obsolete("Use WithMessageHandler<T>(IHandlerAsync<T> handler)")]
-        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandler<T> handler) where T : Message
-            => WithMessageHandler(new BlockingHandler<T>(handler));
 
         /// <summary>
         /// Set message handlers for the given topic
