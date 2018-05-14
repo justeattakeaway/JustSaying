@@ -133,7 +133,7 @@ That's it. By calling StartListening() we are telling the stack to begin polling
 
 
 ### 2.(b) Configure Throttling
-JustSaying throttles message handllers, which means JustSaying will limit the maximum number of messages being processed concurrently. The default limit is 8 threads per [processor core](https://msdn.microsoft.com/en-us/library/system.environment.processorcount.aspx), i.e. `Environment.ProcessorCount * 8`.
+JustSaying throttles message handlers, which means JustSaying will limit the maximum number of messages being processed concurrently. The default limit is 8 threads per [processor core](https://msdn.microsoft.com/en-us/library/system.environment.processorcount.aspx), i.e. `Environment.ProcessorCount * 8`.
 We feel that this is a sensible number, but it can be overridden. This is useful for web apps with TCP thread restrictions.
 To override throttling you need to specify optional parameter when setting SqsTopicSubcriber
 
