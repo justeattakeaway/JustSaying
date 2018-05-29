@@ -11,8 +11,8 @@
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.0.11" />
     <PackageReference Include="AWSSDK.SQS" Version="3.3.1.11" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-    <PackageReference Include="NLog" Version="4.5.0-rc01" />
+    <PackageReference Include="NLog" Version="4.5.5" />
     <PackageReference Include="NSubstitute" Version="3.1.0" />
-    <PackageReference Include="Shouldly" Version="3.0.0-beta0003" />
+    <PackageReference Include="Shouldly" Version="3.0.0" />
   </ItemGroup>
 </Project>
