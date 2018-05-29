@@ -20,7 +20,4 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Update="SourceLink.Embed.AllSourceFiles" Version="2.8.1" />
-  </ItemGroup>
 </Project>
