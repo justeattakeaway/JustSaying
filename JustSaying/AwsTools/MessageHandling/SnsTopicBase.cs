@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -114,12 +115,27 @@ namespace JustSaying.AwsTools.MessageHandling
             var messageToSend = _serialisationRegister.Serialise(message, serializeForSnsPublishing: true);
             var messageType = message.GetType().Name;
 
+            var messageAttributeValues = message.MessageAttributes?.ToDictionary(
+                source => source.Key,
+                source =>
+                {
+                    if (source.Value == null)
+                        return null;
+
+                    return new MessageAttributeValue
+                    {
+                        StringValue = source.Value.StringValue,
+                        BinaryValue = source.Value.BinaryValue,
+                        DataType = source.Value.DataType
+                    };
+                });
+            
             return new PublishRequest
             {
                 TopicArn = Arn,
                 Subject = messageType,
                 Message = messageToSend,
-                MessageAttributes = message.MessageAttributes
+                MessageAttributes = messageAttributeValues
             };
         }
     }

@@ -6,7 +6,4 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.0.11" />
-  </ItemGroup>
 </Project>
