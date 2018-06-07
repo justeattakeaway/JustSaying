@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
@@ -112,11 +113,13 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             var messageToSend = _serialisationRegister.Serialise(message, serializeForSnsPublishing: true);
             var messageType = message.GetType().Name;
+
             return new PublishRequest
             {
                 TopicArn = Arn,
                 Subject = messageType,
-                Message = messageToSend
+                Message = messageToSend,
+                MessageAttributes = message.MessageAttributes
             };
         }
     }

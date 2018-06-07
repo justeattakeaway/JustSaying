@@ -1,4 +1,6 @@
+using Amazon.SimpleNotificationService.Model;
 using System;
+using System.Collections.Generic;
 
 namespace JustSaying.Models
 {
@@ -20,6 +22,7 @@ namespace JustSaying.Models
         public string ReceiptHandle { get; set; }
         public string QueueUrl { get; set; }
         public int? DelaySeconds { get; set; }
+        public Dictionary<string, MessageAttributeValue> MessageAttributes { get; set; }
 
         //footprint in order to avoid the same message being processed multiple times.
         public virtual string UniqueKey() => Id.ToString();
