@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -125,7 +125,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     return new MessageAttributeValue
                     {
                         StringValue = source.Value.StringValue,
-                        BinaryValue = source.Value.BinaryValue,
+                        BinaryValue = new MemoryStream(source.Value.BinaryValue, false),
                         DataType = source.Value.DataType
                     };
                 });

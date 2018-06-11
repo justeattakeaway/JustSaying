@@ -31,7 +31,7 @@ namespace JustSaying.Models
         /// data, or images.
         /// </para>
         /// </summary>
-        public MemoryStream BinaryValue { get; set; }
+        public byte[] BinaryValue { get; set; }
 
         /// <summary>
         /// Gets and sets the property StringValue. 
