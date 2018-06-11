@@ -125,7 +125,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     return new MessageAttributeValue
                     {
                         StringValue = source.Value.StringValue,
-                        BinaryValue = new MemoryStream(source.Value.BinaryValue, false),
+                        BinaryValue = source.Value.BinaryValue != null ? new MemoryStream(source.Value.BinaryValue, false) : null,
                         DataType = source.Value.DataType
                     };
                 });
