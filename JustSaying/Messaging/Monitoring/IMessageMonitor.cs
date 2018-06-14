@@ -1,8 +1,10 @@
+using System;
+
 namespace JustSaying.Messaging.Monitoring
 {
     public interface IMessageMonitor
     {
-        void HandleException(string messageType);
+        void HandleException(Type messageType);
         void HandleTime(long handleTimeMs);
         void IssuePublishingMessage();
         void IncrementThrottlingStatistic();

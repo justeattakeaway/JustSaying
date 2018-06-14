@@ -34,8 +34,8 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         [Fact]
         public void TheTopicAndQueueIsCreatedInEachRegion()
         {
-            QueueVerifier.Received().EnsureTopicExistsWithQueueSubscribedAsync("defaultRegion", Bus.SerialisationRegister, Arg.Any<SqsReadConfiguration>());
-            QueueVerifier.Received().EnsureTopicExistsWithQueueSubscribedAsync("failoverRegion", Bus.SerialisationRegister, Arg.Any<SqsReadConfiguration>());
+            QueueVerifier.Received().EnsureTopicExistsWithQueueSubscribedAsync("defaultRegion", Bus.SerialisationRegister, Arg.Any<SqsReadConfiguration>(), Bus.Config.MessageSubjectProvider);
+            QueueVerifier.Received().EnsureTopicExistsWithQueueSubscribedAsync("failoverRegion", Bus.SerialisationRegister, Arg.Any<SqsReadConfiguration>(), Bus.Config.MessageSubjectProvider);
         }
 
         [Fact]

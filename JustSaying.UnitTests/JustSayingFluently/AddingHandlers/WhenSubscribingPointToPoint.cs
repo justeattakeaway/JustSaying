@@ -67,7 +67,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         {
             QueueVerifier
                 .DidNotReceiveWithAnyArgs()
-                .EnsureTopicExistsWithQueueSubscribedAsync(Arg.Any<string>(), Arg.Any<IMessageSerialisationRegister>(), Arg.Any<SqsReadConfiguration>());
+                .EnsureTopicExistsWithQueueSubscribedAsync(Arg.Any<string>(), Arg.Any<IMessageSerialisationRegister>(), Arg.Any<SqsReadConfiguration>(), Arg.Any<IMessageSubjectProvider>());
         }
     }
 }

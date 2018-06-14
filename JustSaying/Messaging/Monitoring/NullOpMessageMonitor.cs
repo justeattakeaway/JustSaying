@@ -1,8 +1,10 @@
+using System;
+
 namespace JustSaying.Messaging.Monitoring
 {
     public class NullOpMessageMonitor : IMessageMonitor
     {
-        public void HandleException(string messageType) { }
+        public void HandleException(Type messageType) { }
 
         public void HandleTime(long handleTimeMs) { }
 

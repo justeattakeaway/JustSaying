@@ -24,7 +24,7 @@ namespace JustSaying.Messaging.MessageHandling
 
         public async Task<bool> Handle(T message)
         {
-            var lockKey = $"{message.UniqueKey()}-{typeof(T).Name.ToLower()}-{_handlerName}";
+            var lockKey = $"{message.UniqueKey()}-{typeof(T).ToString().ToLower()}-{_handlerName}";
             var lockResponse = await _messageLock.TryAquireLockAsync(lockKey, TimeSpan.FromSeconds(_timeOut)).ConfigureAwait(false);
             if (!lockResponse.DoIHaveExclusiveLock)
             {

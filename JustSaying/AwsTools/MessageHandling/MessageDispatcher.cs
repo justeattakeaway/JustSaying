@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon.SQS;
@@ -86,7 +86,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 if (typedMessage != null)
                 {
-                    _messagingMonitor.HandleException(typedMessage.GetType().Name);
+                    _messagingMonitor.HandleException(typedMessage.GetType());
                 }
 
                 _onError(ex, message);
@@ -116,7 +116,7 @@ namespace JustSaying.AwsTools.MessageHandling
             var handlerSucceeded = await handler(message).ConfigureAwait(false);
 
             watch.Stop();
-            _log.LogTrace($"Handled message - MessageType: {message.GetType().Name}");
+            _log.LogTrace($"Handled message - MessageType: {message.GetType()}");
             _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
 
             return handlerSucceeded;

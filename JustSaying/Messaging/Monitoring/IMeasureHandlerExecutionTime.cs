@@ -4,6 +4,6 @@ namespace JustSaying.Messaging.Monitoring
 {
     public interface IMeasureHandlerExecutionTime
     {
-        void HandlerExecutionTime(string typeName, string eventName, TimeSpan executionTime);
+        void HandlerExecutionTime(Type handlerType, Type messageType, TimeSpan executionTime);
     }
 }

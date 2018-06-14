@@ -19,7 +19,7 @@ namespace JustSaying.AwsTools.QueueCreation
             _loggerFactory = loggerFactory;
         }
 
-        public async Task<SqsQueueByName> EnsureTopicExistsWithQueueSubscribedAsync(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig)
+        public async Task<SqsQueueByName> EnsureTopicExistsWithQueueSubscribedAsync(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig, IMessageSubjectProvider messageSubjectProvider)
         {
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);
             var sqsClient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
@@ -36,7 +36,7 @@ namespace JustSaying.AwsTools.QueueCreation
             }
             else
             {
-                var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsClient, serialisationRegister, _loggerFactory);
+                var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsClient, serialisationRegister, _loggerFactory, messageSubjectProvider);
                 await eventTopic.CreateAsync().ConfigureAwait(false);
 
                 await EnsureQueueIsSubscribedToTopic(eventTopic, queue).ConfigureAwait(false);

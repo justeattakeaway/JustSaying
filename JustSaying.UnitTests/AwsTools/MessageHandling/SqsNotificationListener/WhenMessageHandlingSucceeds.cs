@@ -1,3 +1,4 @@
+using System;
 using Amazon.SQS.Model;
 using NSubstitute;
 using Xunit;
@@ -39,7 +40,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         [Fact]
         public void ExceptionIsNotLoggedToMonitor()
         {
-            Monitor.DidNotReceiveWithAnyArgs().HandleException(Arg.Any<string>());
+            Monitor.DidNotReceiveWithAnyArgs().HandleException(Arg.Any<Type>());
         }
     }
 }

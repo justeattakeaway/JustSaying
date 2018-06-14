@@ -18,7 +18,7 @@ namespace JustSaying.UnitTests.Messaging.Serialisation.Newtonsoft
 
         protected override void When()
         {
-            _jsonMessage = SystemUnderTest.Serialise(_messageOut, serializeForSnsPublishing:false);
+            _jsonMessage = SystemUnderTest.Serialise(_messageOut, false, _messageOut.GetType().Name);
 
             //add extra property to see what happens:
             _jsonMessage = _jsonMessage.Replace("{__", "{\"New\":\"Property\",__");

@@ -90,7 +90,8 @@ namespace JustSaying
                     topicName,
                     _awsClientFactoryProxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
                     Bus.SerialisationRegister,
-                    _loggerFactory, snsWriteConfig)
+                    _loggerFactory, snsWriteConfig,
+                    Bus.Config.MessageSubjectProvider)
                 {
                     MessageResponseLogger = Bus.Config.MessageResponseLogger
                 };
@@ -275,8 +276,7 @@ namespace JustSaying
             {
                 Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handler);
             }
-            var messageTypeName = GetMessageTypeName<T>();
-            _log.LogInformation($"Added a message handler - MessageName: {messageTypeName}, QueueName: {_subscriptionConfig.QueueName}, HandlerName: {handler.GetType().Name}");
+            _log.LogInformation($"Added a message handler - MessageType: {typeof(T)}, QueueName: {_subscriptionConfig.QueueName}, HandlerType: {handler.GetType()}");
 
             return thing;
         }
@@ -294,7 +294,7 @@ namespace JustSaying
 
             if (proposedHandler == null)
             {
-                throw new HandlerNotRegisteredWithContainerException($"There is no handler for '{typeof(T).Name}' messages.");
+                throw new HandlerNotRegisteredWithContainerException($"There is no handler for '{typeof(T)}' messages.");
             }
 
             foreach (var region in Bus.Config.Regions)
@@ -314,7 +314,7 @@ namespace JustSaying
 
             foreach (var region in Bus.Config.Regions)
             {
-                var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribedAsync(region, Bus.SerialisationRegister, _subscriptionConfig).GetAwaiter().GetResult();
+                var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribedAsync(region, Bus.SerialisationRegister, _subscriptionConfig, Bus.Config.MessageSubjectProvider).GetAwaiter().GetResult();
                 CreateSubscriptionListener<T>(region, queue);
                 _log.LogInformation($"Created SQS topic subscription - Topic: {_subscriptionConfig.Topic}, QueueName: {_subscriptionConfig.QueueName}");
             }

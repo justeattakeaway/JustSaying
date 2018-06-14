@@ -14,6 +14,9 @@ namespace JustSaying.UnitTests.Messaging.Serialisation.SerialisationRegister
         {
         }
 
+        protected override MessageSerialisationRegister CreateSystemUnderTest() =>
+            new MessageSerialisationRegister(new NonGenericMessageSubjectProvider());
+
         private string messageBody = "msgBody";
         protected override void Given()
         {
@@ -23,7 +26,7 @@ namespace JustSaying.UnitTests.Messaging.Serialisation.SerialisationRegister
         protected override void When()
         {
             var messageSerialiser = Substitute.For<IMessageSerialiser>();
-            messageSerialiser.GetMessageType(messageBody).Returns(typeof(CustomMessage).Name);
+            messageSerialiser.GetMessageSubject(messageBody).Returns(typeof(CustomMessage).Name);
             messageSerialiser.Deserialise(messageBody, typeof (CustomMessage)).Returns(new CustomMessage());
             SystemUnderTest.AddSerialiser<CustomMessage>(messageSerialiser);
         }

@@ -219,11 +219,11 @@ namespace JustSaying
                 if (attemptCount >= Config.PublishFailureReAttempts)
                 {
                     Monitor.IssuePublishingMessage();
-                    _log.LogError(0, ex, $"Failed to publish message {message.GetType().Name}. Halting after attempt {attemptCount}");
+                    _log.LogError(0, ex, $"Failed to publish message {message.GetType()}. Halting after attempt {attemptCount}");
                     throw;
                 }
 
-                _log.LogWarning(0, ex, $"Failed to publish message {message.GetType().Name}. Retrying after attempt {attemptCount} of {Config.PublishFailureReAttempts}");
+                _log.LogWarning(0, ex, $"Failed to publish message {message.GetType()}. Retrying after attempt {attemptCount} of {Config.PublishFailureReAttempts}");
                 await Task.Delay(Config.PublishFailureBackoffMilliseconds * attemptCount, cancellationToken).ConfigureAwait(false);
                 await PublishAsync(publisher, message, attemptCount, cancellationToken).ConfigureAwait(false);
             }

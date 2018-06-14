@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Models;
 
 namespace JustSaying
@@ -16,6 +17,7 @@ namespace JustSaying
             PublishFailureBackoffMilliseconds = JustSayingConstants.DEFAULT_PUBLISHER_RETRY_INTERVAL;
             AdditionalSubscriberAccounts = new List<string>();
             Regions = new List<string>();
+            MessageSubjectProvider = new NonGenericMessageSubjectProvider();
         }
 
         public int PublishFailureReAttempts { get; set; }
@@ -24,6 +26,7 @@ namespace JustSaying
         public IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
         public IList<string> Regions { get; private set; }
         public Func<string> GetActiveRegion { get; set; }
+        public IMessageSubjectProvider MessageSubjectProvider { get; set; }
 
         public virtual void Validate()
         {
@@ -37,6 +40,9 @@ namespace JustSaying
             {
                 throw new ArgumentException($"Region {duplicateRegion.Key} was added multiple times");
             }
+
+            if (MessageSubjectProvider == null)
+                throw new ArgumentNullException("config.MessageSubjectProvider");
         }
     }
 }
