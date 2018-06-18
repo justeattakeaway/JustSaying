@@ -154,14 +154,6 @@ namespace JustSaying
             }
         }
 
-#if AWS_SDK_HAS_SYNC
-        public void Publish(Message message)
-        {
-            var publisher = GetActivePublisherForMessage(message);
-            publisher.Publish(message);
-        }
-#endif
-
         public Task PublishAsync(Message message) => PublishAsync(message, CancellationToken.None);
 
         public async Task PublishAsync(Message message, CancellationToken cancellationToken)

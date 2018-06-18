@@ -60,32 +60,6 @@ namespace JustSaying.AwsTools.MessageHandling
             return false;
         }
 
-#if AWS_SDK_HAS_SYNC
-        public void Publish(Message message)
-        {
-            var request = BuildPublishRequest(message);
-
-            try
-            {
-                var response = Client.Publish(request);
-                _eventLog.LogInformation($"Published message: '{request.Subject}' with content {request.Message}");
-
-                MessageResponseLogger?.Invoke(new MessageResponse
-                {
-                    HttpStatusCode = response?.HttpStatusCode,
-                    MessageId = response?.MessageId
-                }, message);
-            }
-            catch (Exception ex)
-            {
-                if (!ClientExceptionHandler(ex, message))
-                    throw new PublishException(
-                        $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}",
-                        ex);
-            }
-        }
-#endif
-
         public Task PublishAsync(Message message) => PublishAsync(message, CancellationToken.None);
 
         public async Task PublishAsync(Message message, CancellationToken cancellationToken)
