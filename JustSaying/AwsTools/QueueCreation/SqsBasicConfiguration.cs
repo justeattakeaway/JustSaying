@@ -8,6 +8,7 @@ namespace JustSaying.AwsTools.QueueCreation
         public int DeliveryDelaySeconds { get; set; }
         public int RetryCountBeforeSendingToErrorQueue { get; set; }
         public bool ErrorQueueOptOut { get; set; }
+        public ServerSideEncryption ServerSideEncryption { get; set; }
 
         public SqsBasicConfiguration()
         {

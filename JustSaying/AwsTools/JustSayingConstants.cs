@@ -8,6 +8,8 @@ namespace JustSaying.AwsTools
         public const string ATTRIBUTE_VISIBILITY_TIMEOUT = "VisibilityTimeout";
         public const string ATTRIBUTE_DELIVERY_DELAY = "DelaySeconds";
         public const string ATTRIBUTE_POLICY = "Policy";
+        public const string ATTRIBUTE_ENCRYPTION_KEY_ID = "KmsMasterKeyId";
+        public const string ATTRIBUTE_ENCRYPTION_KEY_REUSE_PERIOD_SECOND_ID = "KmsDataKeyReusePeriodSeconds";
 
         /// <summary>
         /// Default visibility timeout for message in seconds
@@ -55,5 +57,15 @@ namespace JustSaying.AwsTools
         /// Maximum message delivery delay for SQS in seconds
         /// </summary>
         public static int MAXIMUM_DELIVERY_DELAY = 900;          //15 minutes
+
+        /// <summary>
+        /// Default ID of an AWS-managed cutomer master key (CMK) for Amazon SQS
+        /// </summary>
+        public static string DEFAULT_ATTRIBUTE_ENCRYPTION_KEY_ID = "alias/aws/sqs";
+
+        /// <summary>
+        /// Default length of time, in seconds, for which Amazon SQS can reuse a data key to encrypt/decrypt messages before calling AWS KMS again
+        /// </summary>
+        public static string DEFAULT_ATTRIBUTE_ENCRYPTION_KEY_REUSE_PERIOD_SECOND = "300";  //5 minutes
     }
 }
