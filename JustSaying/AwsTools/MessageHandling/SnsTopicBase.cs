@@ -115,7 +115,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private PublishRequest BuildPublishRequest(Message message)
         {
             var messageToSend = _serialisationRegister.Serialise(message, serializeForSnsPublishing: true);
-            var messageType = _messageSubjectProvider.GetTypeForSubject(message.GetType());
+            var messageType = _messageSubjectProvider.GetSubjectForType(message.GetType());
             return new PublishRequest
             {
                 TopicArn = Arn,

@@ -8,6 +8,6 @@ namespace JustSaying.Messaging.MessageSerialisation
     /// </summary>
     public class NonGenericMessageSubjectProvider : IMessageSubjectProvider
     {
-        public string GetTypeForSubject(Type messageType) => messageType.Name;
+        public string GetSubjectForType(Type messageType) => messageType.Name;
     }
 }

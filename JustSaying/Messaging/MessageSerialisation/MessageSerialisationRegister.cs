@@ -34,7 +34,7 @@ namespace JustSaying.Messaging.MessageSerialisation
                 }
 
                 var matchedType = formatter.Value.Type;
-                if (!string.Equals(_messageSubjectProvider.GetTypeForSubject(matchedType), messageSubject, StringComparison.CurrentCultureIgnoreCase))
+                if (!string.Equals(_messageSubjectProvider.GetSubjectForType(matchedType), messageSubject, StringComparison.CurrentCultureIgnoreCase))
                 {
                     continue;
                 }
@@ -50,7 +50,7 @@ namespace JustSaying.Messaging.MessageSerialisation
         {
             var messageType = message.GetType();
             var formatter = _map[messageType];
-            return formatter.Serialiser.Serialise(message, serializeForSnsPublishing, _messageSubjectProvider.GetTypeForSubject(messageType));
+            return formatter.Serialiser.Serialise(message, serializeForSnsPublishing, _messageSubjectProvider.GetSubjectForType(messageType));
         }
 
     }

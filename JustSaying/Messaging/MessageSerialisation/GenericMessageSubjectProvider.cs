@@ -23,7 +23,7 @@ namespace JustSaying.Messaging.MessageSerialisation
                 yield return inner;
             }
         }
-        public string GetTypeForSubject(Type messageType) =>
+        public string GetSubjectForType(Type messageType) =>
             string
                 .Join("_",
                     Flatten(messageType).Select(t => Regex.Replace(t.Name + "_" + t.Namespace, "\\W", "_")))
