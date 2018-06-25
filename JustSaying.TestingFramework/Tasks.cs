@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using NLog;
 
@@ -8,7 +8,7 @@ namespace JustSaying.TestingFramework
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-        private const int DefaultTimeoutMillis = 5000;
+        private const int DefaultTimeoutMillis = 10000;
         private const int DelaySendMillis = 200;
 
         public static async Task<bool> WaitWithTimeoutAsync(Task task)
