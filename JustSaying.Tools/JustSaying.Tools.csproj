@@ -10,12 +10,8 @@
     <ProjectReference Include="..\JustSaying\JustSaying.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Core" Version="3.3.24.2" />
-    <PackageReference Include="AWSSDK.SQS" Version="3.3.3.10" />
     <PackageReference Include="Magnum" Version="2.1.3" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
-  </ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.1" />  </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />

@@ -9,13 +9,9 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AutoFixture" Version="4.4.0" />
-    <PackageReference Include="AWSSDK.Core" Version="3.3.24.2" />
-    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.1.2" />
-    <PackageReference Include="AWSSDK.SQS" Version="3.3.3.10" />
     <PackageReference Include="JustBehave" Version="2.0.0-beta-36" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.2" />
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="NSubstitute" Version="3.1.0" />
     <PackageReference Include="StructureMap" Version="4.6.1" />
     <PackageReference Include="xunit" Version="2.3.1" />
