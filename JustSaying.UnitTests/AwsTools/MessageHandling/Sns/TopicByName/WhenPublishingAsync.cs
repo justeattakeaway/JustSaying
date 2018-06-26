@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
@@ -15,6 +17,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
     public class WhenPublishingAsync : XAsyncBehaviourTest<SnsTopicByName>
     {
         private const string Message = "the_message_in_json";
+        private const string MessageAttributeKey = "StringAttribute";
+        private const string MessageAttributeValue = "StringValue";
+        private const string MessageAttributeDataType = "String";
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IAmazonSimpleNotificationService _sns = Substitute.For<IAmazonSimpleNotificationService>();
         private const string TopicArn = "topicarn";
@@ -22,20 +27,33 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         protected override SnsTopicByName CreateSystemUnderTest()
         {
             var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister, Substitute.For<ILoggerFactory>());
-            topic.ExistsAsync().GetAwaiter().GetResult();;
+            topic.ExistsAsync().GetAwaiter().GetResult();
             return topic;
         }
 
         protected override void Given()
         {
             _serialisationRegister.Serialise(Arg.Any<Message>(), Arg.Is(true)).Returns(Message);
+
             _sns.FindTopicAsync("TopicName")
                 .Returns(new Topic { TopicArn = TopicArn });
         }
 
         protected override async Task When()
         {
-            await SystemUnderTest.PublishAsync(new GenericMessage());
+            await SystemUnderTest.PublishAsync(new GenericMessage
+            {
+                MessageAttributes = new Dictionary<string, Models.MessageAttributeValue>
+                {
+                    {
+                        MessageAttributeKey,
+                            new Models.MessageAttributeValue{
+                                StringValue = MessageAttributeValue,
+                                DataType = MessageAttributeDataType
+                            }
+                    }
+                }
+            });
         }
 
         [Fact]
@@ -49,6 +67,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
             return x.Message.Equals(Message);
         }
 
+
         [Fact]
         public void MessageSubjectIsObjectType()
         {
@@ -59,6 +78,24 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         public void MessageIsPublishedToCorrectLocation()
         {
             _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.TopicArn == TopicArn));
+        }
+
+        [Fact]
+        public void MessageAttributeKeyIsPublished()
+        {
+            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.MessageAttributes.Single().Key == MessageAttributeKey));
+        }
+
+        [Fact]
+        public void MessageAttributeValueIsPublished()
+        {
+            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.MessageAttributes.Single().Value.StringValue == MessageAttributeValue));
+        }
+
+        [Fact]
+        public void MessageAttributeDataTypeIsPublished()
+        {
+            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.MessageAttributes.Single().Value.DataType == MessageAttributeDataType));
         }
     }
 }

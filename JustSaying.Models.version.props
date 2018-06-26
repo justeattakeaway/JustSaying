@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup Condition=" '$(MSBuildProjectName)' == 'JustSaying.Models' ">
-    <VersionPrefix>5.0.0</VersionPrefix>
+    <VersionPrefix>5.1.0</VersionPrefix>
     <!-- <VersionSuffix></VersionSuffix> -->
 
     <BuildNumber Condition=" '$(BuildNumber)' == '' ">$(APPVEYOR_BUILD_NUMBER)</BuildNumber>

@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
@@ -112,11 +114,28 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             var messageToSend = _serialisationRegister.Serialise(message, serializeForSnsPublishing: true);
             var messageType = message.GetType().Name;
+
+            var messageAttributeValues = message.MessageAttributes?.ToDictionary(
+                source => source.Key,
+                source =>
+                {
+                    if (source.Value == null)
+                        return null;
+
+                    return new MessageAttributeValue
+                    {
+                        StringValue = source.Value.StringValue,
+                        BinaryValue = source.Value.BinaryValue != null ? new MemoryStream(source.Value.BinaryValue, false) : null,
+                        DataType = source.Value.DataType
+                    };
+                });
+            
             return new PublishRequest
             {
                 TopicArn = Arn,
                 Subject = messageType,
-                Message = messageToSend
+                Message = messageToSend,
+                MessageAttributes = messageAttributeValues
             };
         }
     }
