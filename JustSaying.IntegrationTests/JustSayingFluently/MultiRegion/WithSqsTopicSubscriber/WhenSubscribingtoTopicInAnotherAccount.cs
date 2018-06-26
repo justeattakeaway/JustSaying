@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Amazon.Runtime;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Extensions;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
@@ -65,14 +66,14 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
     }
     class NamingStrategy : INamingStrategy
     {
-        public string GetTopicName(string topicName, string messageType)
+        public string GetTopicName(string topicName, Type messageType)
         {
-            return "test-" + messageType;
+            return "test-" + messageType.ToTopicName();
         }
 
-        public string GetQueueName(SqsReadConfiguration sqsConfig, string messageType)
+        public string GetQueueName(SqsReadConfiguration sqsConfig, Type messageType)
         {
-            return "test-" + messageType;
+            return "test-" + messageType.ToTopicName();
         }
     }
 }

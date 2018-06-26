@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace JustSaying.Extensions
 {
-    internal static class TypeExtensions
+    public static class TypeExtensions
     {
         private const int MAX_TOPIC_NAME_LENGTH = 256;
 
