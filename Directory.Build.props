@@ -21,9 +21,7 @@
     <ComVisible>false</ComVisible>
     <IsTestProject>$(MSBuildProjectName.Contains('Tests'))</IsTestProject>
     <IsTestProject Condition=" '$(IsTestProject)' != 'true' ">$(MSBuildProjectName.Contains('Testing'))</IsTestProject>
+    <EmbedAllSources Condition=" '$(IsTestProject)' != 'true' AND '$(NCrunch)' == '' AND '$(SourceLinkEnabled)' != 'false' ">true</EmbedAllSources>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(IsTestProject)' != 'true' AND '$(NCrunch)' == '' AND '$(SourceLinkEnabled)' != 'false' ">
-    <PackageReference Include="SourceLink.Embed.AllSourceFiles" Version="2.8.3" PrivateAssets="All" />
-  </ItemGroup>
 </Project>
