@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Amazon;
 using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Extensions;
 using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.Logging;
 using Shouldly;
@@ -29,12 +30,12 @@ namespace JustSaying.IntegrationTests.AwsTools
         {
             private readonly long ticks = DateTime.UtcNow.Ticks;
 
-            public string GetTopicName(string topicName, string messageType)
+            public string GetTopicName(string topicName, Type messageType)
             {
-                return (messageType + ticks).ToLower();
+                return (messageType.ToTopicName() + ticks).ToLower();
             }
 
-            public string GetQueueName(SqsReadConfiguration sqsConfig, string messageType)
+            public string GetQueueName(SqsReadConfiguration sqsConfig, Type messageType)
             {
                 return (sqsConfig.BaseQueueName + ticks).ToLower();
             }
