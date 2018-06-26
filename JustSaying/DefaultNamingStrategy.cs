@@ -1,4 +1,6 @@
+using System;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Extensions;
 
 namespace JustSaying
 {
@@ -11,11 +13,11 @@ namespace JustSaying
     /// </summary>
     class DefaultNamingStrategy : INamingStrategy
     {
-        public string GetTopicName(string topicName, string messageType) => messageType.ToLower();
+        public string GetTopicName(string topicName, Type messageType) => messageType.ToTopicName().ToLower();
 
-        public string GetQueueName(SqsReadConfiguration sqsConfig, string messageType)
+        public string GetQueueName(SqsReadConfiguration sqsConfig, Type messageType)
             => string.IsNullOrWhiteSpace(sqsConfig.BaseQueueName)
-                ? messageType.ToLower()
+                ? messageType.ToTopicName().ToLower()
                 : sqsConfig.BaseQueueName.ToLower();
     }
 }
