@@ -24,7 +24,7 @@ namespace JustSaying.UnitTests.Messaging.Serialisation.Newtonsoft
 
         public string GetMessageInContext(MessageWithEnum message)
         {
-            var context = new { Subject = message.GetType().Name, Message = SystemUnderTest.Serialise(message, false) };
+            var context = new { Subject = message.GetType().Name, Message = SystemUnderTest.Serialise(message, false, message.GetType().Name) };
             return JsonConvert.SerializeObject(context);
         }
 

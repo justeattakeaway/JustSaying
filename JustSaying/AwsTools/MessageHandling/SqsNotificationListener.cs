@@ -77,7 +77,7 @@ namespace JustSaying.AwsTools.MessageHandling
             if (_handlerMap.ContainsKey(typeof(T)))
             {
                 throw new NotSupportedException(
-                    $"The handler for '{typeof(T).Name}' messages on this queue has already been registered.");
+                    $"The handler for '{typeof(T)}' messages on this queue has already been registered.");
             }
 
             Subscribers.Add(new Subscriber(typeof(T)));

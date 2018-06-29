@@ -17,7 +17,7 @@ namespace JustSaying.IntegrationTests.AwsTools
         protected override void When()
         {
             var snsClient = new NoTopicCreationAwsClientFactory().GetSnsClient(RegionEndpoint.EUWest1);
-            _topic = new SnsTopicByName(UniqueName, snsClient, new MessageSerialisationRegister(), new LoggerFactory());
+            _topic = new SnsTopicByName(UniqueName, snsClient, new MessageSerialisationRegister(new NonGenericMessageSubjectProvider()), new LoggerFactory(), new NonGenericMessageSubjectProvider());
             _createWasSuccessful = _topic.CreateAsync().GetAwaiter().GetResult();
         }
 

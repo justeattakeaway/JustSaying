@@ -26,7 +26,7 @@ namespace JustSaying.Messaging.MessageSerialisation
             return (Message)JsonConvert.DeserializeObject(messageBody, type, GetJsonSettings());
         }
 
-        public string Serialise(Message message, bool serializeForSnsPublishing)
+        public string Serialise(Message message, bool serializeForSnsPublishing, string subject)
         {
             var settings = GetJsonSettings();
 
@@ -40,7 +40,7 @@ namespace JustSaying.Messaging.MessageSerialisation
             }
 
             // for direct publishing to SQS, add Subject and Message properties manually
-            var context = new { Subject = message.GetType().Name, Message = msg };
+            var context = new { Subject = subject, Message = msg };
             return JsonConvert.SerializeObject(context);
         }
 
@@ -53,7 +53,7 @@ namespace JustSaying.Messaging.MessageSerialisation
                    };
         }
 
-        public string GetMessageType(string sqsMessge)
+        public string GetMessageSubject(string sqsMessge)
         {
             var body = JObject.Parse(sqsMessge);
 
