@@ -167,22 +167,6 @@ namespace JustSaying
             _log.LogInformation("Stopped listening for messages");
         }
 
-#if AWS_SDK_HAS_SYNC
-        /// <summary>
-        /// Publish a message to the stack.
-        /// </summary>
-        /// <param name="message"></param>
-        public virtual void Publish(Message message)
-        {
-            if (Bus == null)
-            {
-                throw new InvalidOperationException("You must register for message publication before publishing a message");
-            }
-
-            Bus.Publish(message);
-        }
-#endif
-
         /// <summary>
         /// Publish a message to the stack, asynchronously.
         /// </summary>

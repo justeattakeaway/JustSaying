@@ -26,30 +26,6 @@ namespace JustSaying.AwsTools.MessageHandling
             _serialisationRegister = serialisationRegister;
         }
 
-#if AWS_SDK_HAS_SYNC
-        public void Publish(Message message)
-        {
-            var request = BuildSendMessageRequest(message);
-
-            try
-            {
-                var response = _client.SendMessage(request);
-
-                MessageResponseLogger?.Invoke(new MessageResponse
-                {
-                    HttpStatusCode = response?.HttpStatusCode,
-                    MessageId = response?.MessageId
-                }, message);
-            }
-            catch (Exception ex)
-            {
-                throw new PublishException(
-                    $"Failed to publish message to SQS. QueueUrl: {request.QueueUrl} MessageBody: {request.MessageBody}",
-                    ex);
-            }
-        }
-#endif
-
         public Task PublishAsync(Message message) => PublishAsync(message, CancellationToken.None);
 
         public async Task PublishAsync(Message message, CancellationToken cancellationToken)
