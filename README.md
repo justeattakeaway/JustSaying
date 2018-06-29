@@ -170,7 +170,7 @@ JustSaying provides you access to the Subscribers and Publishers message types v
 
 JustSaying stack will throw out the following named logs from NLog:
 * "JustSaying"
-        * Information on the setup & your configuration (Info level). This includes all subscriptions, tennants, publication registrations etc.
+        * Information on the setup & your configuration (Info level). This includes all subscriptions, tenants, publication registrations etc.
         * Information on the number of messages handled & heartbeat of queue polling (Trace level). You can use this to confirm you're receiving messages. Beware, it can get big!
 * "EventLog"
         * A full log of all the messages you publish (including the Json serialised version).
@@ -215,5 +215,3 @@ Whilst we appreciate contributions please refrain from submitting breaking chang
 
 ### The End.....
 ...*Happy Messaging!...*
-
-AJ

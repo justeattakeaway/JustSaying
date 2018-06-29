@@ -9,6 +9,9 @@ namespace JustSaying.UnitTests.Messaging.Serialisation.SerialisationRegister
 {
     public class WhenAddingASerialiserTwice : XBehaviourTest<MessageSerialisationRegister>
     {
+        protected override MessageSerialisationRegister CreateSystemUnderTest() =>
+            new MessageSerialisationRegister(new NonGenericMessageSubjectProvider());
+
         protected override void Given()
         {
             RecordAnyExceptionsThrown();

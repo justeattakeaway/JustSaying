@@ -12,8 +12,13 @@ using Xunit;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 {
-    public class WhenPublishing : XAsyncBehaviourTest<SnsTopicByName>
+    public class WhenPublishingAsyncWithGenericMessageSubjectProvider : XAsyncBehaviourTest<SnsTopicByName>
     {
+        public class MessageWithTypeParameters<T, U> : Message
+        {
+
+        }
+
         private const string Message = "the_message_in_json";
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IAmazonSimpleNotificationService _sns = Substitute.For<IAmazonSimpleNotificationService>();
@@ -21,7 +26,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         protected override SnsTopicByName CreateSystemUnderTest()
         {
-            var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister, Substitute.For<ILoggerFactory>(), new NonGenericMessageSubjectProvider());
+            var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister, Substitute.For<ILoggerFactory>(), new GenericMessageSubjectProvider());
             topic.ExistsAsync().GetAwaiter().GetResult();;
             return topic;
         }
@@ -35,7 +40,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         protected override async Task When()
         {
-            await SystemUnderTest.PublishAsync(new GenericMessage());
+            await SystemUnderTest.PublishAsync(new MessageWithTypeParameters<int, string>());
         }
 
         [Fact]
@@ -52,7 +57,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         [Fact]
         public void MessageSubjectIsObjectType()
         {
-            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.Subject == typeof(GenericMessage).Name));
+            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.Subject == new GenericMessageSubjectProvider().GetSubjectForType(typeof(MessageWithTypeParameters<int, string>))));
         }
 
         [Fact]

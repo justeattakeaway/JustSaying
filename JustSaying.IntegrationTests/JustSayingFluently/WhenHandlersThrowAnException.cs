@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.TestingFramework;
@@ -32,7 +33,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         {
             _handler.ReceivedMessageCount.ShouldBeGreaterThan(0);
 
-            Monitoring.Received().HandleException(Arg.Any<string>());
+            Monitoring.Received().HandleException(Arg.Any<Type>());
         }
     }
 }

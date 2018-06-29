@@ -6,14 +6,20 @@ namespace JustSaying.Messaging.MessageSerialisation
 {
     public class MessageSerialisationRegister : IMessageSerialisationRegister
     {
-        private readonly Dictionary<string, TypeSerialiser> _map = new Dictionary<string, TypeSerialiser>();
+        private readonly IMessageSubjectProvider _messageSubjectProvider;
+        private readonly Dictionary<Type, TypeSerialiser> _map = new Dictionary<Type, TypeSerialiser>();
+
+        public MessageSerialisationRegister(IMessageSubjectProvider messageSubjectProvider)
+        {
+            _messageSubjectProvider = messageSubjectProvider;
+        }
 
         public void AddSerialiser<T>(IMessageSerialiser serialiser) where T : Message
         {
-            var keyname = typeof(T).Name;
-            if (!_map.ContainsKey(keyname))
+            var key = typeof(T);
+            if (!_map.ContainsKey(key))
             {
-                _map.Add(keyname, new TypeSerialiser(typeof(T), serialiser));
+                _map.Add(key, new TypeSerialiser(typeof(T), serialiser));
             }
         }
 
@@ -21,14 +27,14 @@ namespace JustSaying.Messaging.MessageSerialisation
         {
             foreach (var formatter in _map)
             {
-                var stringType = formatter.Value.Serialiser.GetMessageType(body);
-                if (string.IsNullOrWhiteSpace(stringType))
+                var messageSubject = formatter.Value.Serialiser.GetMessageSubject(body);
+                if (string.IsNullOrWhiteSpace(messageSubject))
                 {
                     continue;
                 }
 
                 var matchedType = formatter.Value.Type;
-                if (!string.Equals(matchedType.Name, stringType, StringComparison.CurrentCultureIgnoreCase))
+                if (!string.Equals(_messageSubjectProvider.GetSubjectForType(matchedType), messageSubject, StringComparison.CurrentCultureIgnoreCase))
                 {
                     continue;
                 }
@@ -42,8 +48,9 @@ namespace JustSaying.Messaging.MessageSerialisation
 
         public string Serialise(Message message, bool serializeForSnsPublishing)
         {
-            var formatter = _map[message.GetType().Name];
-            return formatter.Serialiser.Serialise(message, serializeForSnsPublishing);
+            var messageType = message.GetType();
+            var formatter = _map[messageType];
+            return formatter.Serialiser.Serialise(message, serializeForSnsPublishing, _messageSubjectProvider.GetSubjectForType(messageType));
         }
 
     }

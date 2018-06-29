@@ -37,14 +37,14 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
 
         /// Note: Ignored tests are here for fluent api exploration & expecting compile time issues when working on the fluent interface stuff...
         [Fact(Skip = "Testing compile-time issues")]
-        public void ASqsPublisherCanBeSetup()
+        public void ASnsPublisherCanBeSetup()
         {
             SystemUnderTest.ConfigurePublisherWith(conf => conf.PublishFailureBackoffMilliseconds = 50)
                 .WithSnsMessagePublisher<GenericMessage>();
         }
 
         [Fact(Skip = "Testing compile-time issues")]
-        public void MultipleSqsPublishersCanBeSetup()
+        public void MultipleSnsPublishersCanBeSetup()
         {
             SystemUnderTest.ConfigurePublisherWith(conf => conf.PublishFailureBackoffMilliseconds = 50)
                 .WithSnsMessagePublisher<GenericMessage>()

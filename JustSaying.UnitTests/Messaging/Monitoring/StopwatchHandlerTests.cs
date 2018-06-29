@@ -36,11 +36,11 @@ namespace JustSaying.UnitTests.Messaging.Monitoring
             await stopWatchHandler.Handle(new OrderAccepted());
 
             monitoring.Received(1). HandlerExecutionTime(
-                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan>());
+                Arg.Any<Type>(), Arg.Any<Type>(), Arg.Any<TimeSpan>());
         }
 
         [Fact]
-        public async Task WhenHandlerIsWrappedinStopWatch_MonitoringIsCalledWithCorrectTypeNames()
+        public async Task WhenHandlerIsWrappedinStopWatch_MonitoringIsCalledWithCorrectTypes()
         {
             var handler = MockHandler();
             var innnerHandlerName = handler.GetType().Name.ToLower();
@@ -52,7 +52,7 @@ namespace JustSaying.UnitTests.Messaging.Monitoring
             await stopWatchHandler.Handle(new OrderAccepted());
 
             monitoring.Received(1).HandlerExecutionTime(
-                innnerHandlerName, "orderaccepted", Arg.Any<TimeSpan>());
+                handler.GetType(), typeof(OrderAccepted), Arg.Any<TimeSpan>());
         }
 
         [Fact]
@@ -66,7 +66,7 @@ namespace JustSaying.UnitTests.Messaging.Monitoring
             await stopWatchHandler.Handle(new OrderAccepted());
 
             monitoring.Received(1).HandlerExecutionTime(
-                Arg.Any<string>(), Arg.Any<string>(), 
+                Arg.Any<Type>(), Arg.Any<Type>(), 
                 Arg.Is<TimeSpan>(ts => ts > TimeSpan.Zero));
         }
 

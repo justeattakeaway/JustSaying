@@ -21,7 +21,7 @@ namespace JustSaying.IntegrationTests.AwsTools
         {
             Bus = CreateMeABus.DefaultClientFactory().GetSnsClient(RegionEndpoint.EUWest1);
             UniqueName = "test" + DateTime.Now.Ticks;
-            CreatedTopic = new SnsTopicByName(UniqueName, Bus , new MessageSerialisationRegister(), new LoggerFactory());
+            CreatedTopic = new SnsTopicByName(UniqueName, Bus , new MessageSerialisationRegister(new NonGenericMessageSubjectProvider()), new LoggerFactory(), new NonGenericMessageSubjectProvider());
             CreatedTopic.CreateAsync().GetAwaiter().GetResult();
             return CreatedTopic;
         }

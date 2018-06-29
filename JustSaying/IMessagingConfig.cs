@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using JustSaying.Messaging.MessageSerialisation;
 
 namespace JustSaying
 {
@@ -7,6 +8,7 @@ namespace JustSaying
     {
         IList<string> Regions { get; }
         Func<string> GetActiveRegion { get; set; }
+        IMessageSubjectProvider MessageSubjectProvider { get; }
 
         void Validate();
     }

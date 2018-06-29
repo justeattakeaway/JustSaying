@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
@@ -14,6 +16,7 @@ namespace JustSaying.AwsTools.MessageHandling
     public abstract class SnsTopicBase : IMessagePublisher
     {
         private readonly IMessageSerialisationRegister _serialisationRegister; // ToDo: Grrr...why is this here even. GET OUT!
+        private readonly IMessageSubjectProvider _messageSubjectProvider;
         private readonly SnsWriteConfiguration _snsWriteConfiguration;
         public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
         public string Arn { get; protected set; }
@@ -21,20 +24,23 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly ILogger _eventLog;
         private readonly ILogger _log;
 
-        protected SnsTopicBase(IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory)
+        protected SnsTopicBase(IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory, IMessageSubjectProvider messageSubjectProvider)
         {
             _serialisationRegister = serialisationRegister;
+            _messageSubjectProvider = messageSubjectProvider;
             _log = loggerFactory.CreateLogger("JustSaying");
             _eventLog = loggerFactory.CreateLogger("EventLog");
         }
 
         protected SnsTopicBase(IMessageSerialisationRegister serialisationRegister,
-            ILoggerFactory loggerFactory, SnsWriteConfiguration snsWriteConfiguration)
+            ILoggerFactory loggerFactory, SnsWriteConfiguration snsWriteConfiguration,
+            IMessageSubjectProvider messageSubjectProvider)
         {
             _serialisationRegister = serialisationRegister;
             _log = loggerFactory.CreateLogger("JustSaying");
             _eventLog = loggerFactory.CreateLogger("EventLog");
             _snsWriteConfiguration = snsWriteConfiguration;
+            _messageSubjectProvider = messageSubjectProvider;
         }
 
         public abstract Task<bool> ExistsAsync();
@@ -111,12 +117,29 @@ namespace JustSaying.AwsTools.MessageHandling
         private PublishRequest BuildPublishRequest(Message message)
         {
             var messageToSend = _serialisationRegister.Serialise(message, serializeForSnsPublishing: true);
-            var messageType = message.GetType().Name;
+            var messageType = _messageSubjectProvider.GetSubjectForType(message.GetType());
+
+            var messageAttributeValues = message.MessageAttributes?.ToDictionary(
+                source => source.Key,
+                source =>
+                {
+                    if (source.Value == null)
+                        return null;
+
+                    return new MessageAttributeValue
+                    {
+                        StringValue = source.Value.StringValue,
+                        BinaryValue = source.Value.BinaryValue != null ? new MemoryStream(source.Value.BinaryValue, false) : null,
+                        DataType = source.Value.DataType
+                    };
+                });
+            
             return new PublishRequest
             {
                 TopicArn = Arn,
                 Subject = messageType,
-                Message = messageToSend
+                Message = messageToSend,
+                MessageAttributes = messageAttributeValues
             };
         }
     }
