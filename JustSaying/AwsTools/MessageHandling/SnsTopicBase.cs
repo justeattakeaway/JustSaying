@@ -44,22 +44,7 @@ namespace JustSaying.AwsTools.MessageHandling
         }
 
         public abstract Task<bool> ExistsAsync();
-
-        public Task<bool> SubscribeAsync(SqsQueueBase queue) => SubscribeAsync(queue, CancellationToken.None);
-
-        public async Task<bool> SubscribeAsync(SqsQueueBase queue, CancellationToken cancellationToken)
-        {
-            var subscriptionResponse = await Client.SubscribeAsync(Arn, "sqs", queue.Arn, cancellationToken).ConfigureAwait(false);
-
-            if (!string.IsNullOrEmpty(subscriptionResponse?.SubscriptionArn))
-            {
-                return true;
-            }
-
-            _log.LogInformation($"Failed to subscribe Queue to Topic: {queue.Arn}, Topic: {Arn}");
-            return false;
-        }
-
+        
         public Task PublishAsync(Message message) => PublishAsync(message, CancellationToken.None);
 
         public async Task PublishAsync(Message message, CancellationToken cancellationToken)
