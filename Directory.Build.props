@@ -1,5 +1,6 @@
 <Project>
   <Import Project="version.props" />
+  <Import Project="JustSaying.Models.version.props" />
   <PropertyGroup>
     <Authors>Just Eat</Authors>
     <Company>Just Eat</Company>
