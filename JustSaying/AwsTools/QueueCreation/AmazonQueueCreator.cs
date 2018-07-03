@@ -80,7 +80,7 @@ namespace JustSaying.AwsTools.QueueCreation
 
             if (!string.IsNullOrEmpty(filterPolicy))
             {
-                await amazonSimpleNotificationService.SetSubscriptionAttributesAsync(subscriptionArn, "FilterPolicy", filterPolicy);
+                await amazonSimpleNotificationService.SetSubscriptionAttributesAsync(subscriptionArn, "FilterPolicy", filterPolicy).ConfigureAwait(false);
             }
         }
     }
