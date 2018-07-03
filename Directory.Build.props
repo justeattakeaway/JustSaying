@@ -1,7 +1,5 @@
 <Project>
   <Import Project="version.props" />
-  <Import Project="JustSaying.Models.version.props" />
-
   <PropertyGroup>
     <Authors>Just Eat</Authors>
     <Company>Just Eat</Company>
@@ -24,5 +22,4 @@
     <IsTestProject Condition=" '$(IsTestProject)' != 'true' ">$(MSBuildProjectName.Contains('Testing'))</IsTestProject>
     <EmbedAllSources Condition=" '$(IsTestProject)' != 'true' AND '$(NCrunch)' == '' AND '$(SourceLinkEnabled)' != 'false' ">true</EmbedAllSources>
   </PropertyGroup>
-
 </Project>
