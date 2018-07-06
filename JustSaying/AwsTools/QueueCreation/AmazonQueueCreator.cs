@@ -1,5 +1,8 @@
+using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
@@ -12,11 +15,13 @@ namespace JustSaying.AwsTools.QueueCreation
         private readonly IAwsClientFactoryProxy _awsClientFactory;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IRegionResourceCache<SqsQueueByName> _queueCache = new RegionResourceCache<SqsQueueByName>();
+        private readonly ILogger _log;
 
         public AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory, ILoggerFactory loggerFactory)
         {
             _awsClientFactory = awsClientFactory;
             _loggerFactory = loggerFactory;
+            _log = loggerFactory.CreateLogger("JustSaying");
         }
 
         public async Task<SqsQueueByName> EnsureTopicExistsWithQueueSubscribedAsync(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig, IMessageSubjectProvider messageSubjectProvider)
@@ -32,14 +37,15 @@ namespace JustSaying.AwsTools.QueueCreation
                 var arnProvider = new ForeignTopicArnProvider(regionEndpoint, queueConfig.TopicSourceAccount, queueConfig.PublishEndpoint);
 
                 var topicArn = await arnProvider.GetArnAsync().ConfigureAwait(false);
-                await snsClient.SubscribeQueueAsync(topicArn, sqsClient, queue.Url).ConfigureAwait(false);
+                await SubscribeQueueAndApplyFilterPolicyAsync(snsClient, topicArn, sqsClient, queue.Url, queueConfig.FilterPolicy).ConfigureAwait(false);
+                
             }
             else
             {
                 var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsClient, serialisationRegister, _loggerFactory, messageSubjectProvider);
                 await eventTopic.CreateAsync().ConfigureAwait(false);
 
-                await EnsureQueueIsSubscribedToTopic(eventTopic, queue).ConfigureAwait(false);
+                await SubscribeQueueAndApplyFilterPolicyAsync(snsClient, eventTopic.Arn, sqsClient, queue.Url, queueConfig.FilterPolicy).ConfigureAwait(false);
 
                 await SqsPolicy.SaveAsync(eventTopic.Arn, queue.Arn, queue.Url, sqsClient).ConfigureAwait(false);
             }
@@ -68,9 +74,14 @@ namespace JustSaying.AwsTools.QueueCreation
             return queue;
         }
 
-        private Task<bool> EnsureQueueIsSubscribedToTopic(SnsTopicByName eventTopic, SqsQueueByName queue)
+        async Task SubscribeQueueAndApplyFilterPolicyAsync(IAmazonSimpleNotificationService amazonSimpleNotificationService, string topicArn, IAmazonSQS amazonSQS, string queueUrl, string filterPolicy)
         {
-            return eventTopic.SubscribeAsync(queue);
+            var subscriptionArn = await amazonSimpleNotificationService.SubscribeQueueAsync(topicArn, amazonSQS, queueUrl).ConfigureAwait(false);
+
+            if (!string.IsNullOrEmpty(filterPolicy))
+            {
+                await amazonSimpleNotificationService.SetSubscriptionAttributesAsync(subscriptionArn, "FilterPolicy", filterPolicy).ConfigureAwait(false);
+            }
         }
     }
 }
