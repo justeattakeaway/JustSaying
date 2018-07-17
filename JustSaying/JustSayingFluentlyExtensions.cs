@@ -11,29 +11,29 @@ namespace JustSaying
 {
     public static class JustSayingFluentlyExtensions
     {
-        public static JustSayingFluentlyLogging WithMessageSubjectProvider(this JustSayingFluentlyLogging logging,
+        public static JustSayingFluentlyDependencies WithMessageSubjectProvider(this JustSayingFluentlyDependencies dependencies,
             IMessageSubjectProvider messageSubjectProvider)
         {
-            logging.MessageSubjectProvider = messageSubjectProvider;
-            return logging;
+            dependencies.MessageSubjectProvider = messageSubjectProvider;
+            return dependencies;
         }
 
         /// <summary>
         /// Note: using this message subject provider may cause incompatibility with applications using prior versions of Just Saying
         /// </summary>
-        public static JustSayingFluentlyLogging WithGenericMessageSubjectProvider(this JustSayingFluentlyLogging logging) =>
-            logging.WithMessageSubjectProvider(new GenericMessageSubjectProvider());
+        public static JustSayingFluentlyDependencies WithGenericMessageSubjectProvider(this JustSayingFluentlyDependencies dependencies) =>
+            dependencies.WithMessageSubjectProvider(new GenericMessageSubjectProvider());
 
-        public static IMayWantOptionalSettings InRegion(this JustSayingFluentlyLogging logging, string region) => InRegions(logging, region);
+        public static IMayWantOptionalSettings InRegion(this JustSayingFluentlyDependencies dependencies, string region) => InRegions(dependencies, region);
 
-        public static IMayWantOptionalSettings InRegions(this JustSayingFluentlyLogging logging, params string[] regions) => InRegions(logging, regions as IEnumerable<string>);
+        public static IMayWantOptionalSettings InRegions(this JustSayingFluentlyDependencies dependencies, params string[] regions) => InRegions(dependencies, regions as IEnumerable<string>);
 
-        public static IMayWantOptionalSettings InRegions(this JustSayingFluentlyLogging logging, IEnumerable<string> regions)
+        public static IMayWantOptionalSettings InRegions(this JustSayingFluentlyDependencies dependencies, IEnumerable<string> regions)
         {
             var config = new MessagingConfig();
 
-            if (logging.MessageSubjectProvider != null)
-                config.MessageSubjectProvider = logging.MessageSubjectProvider;
+            if (dependencies.MessageSubjectProvider != null)
+                config.MessageSubjectProvider = dependencies.MessageSubjectProvider;
 
             if (regions != null)
                 foreach (var region in regions)
@@ -44,12 +44,12 @@ namespace JustSaying
             config.Validate();
 
             var messageSerialisationRegister = new MessageSerialisationRegister(config.MessageSubjectProvider);
-            var justSayingBus = new JustSayingBus(config, messageSerialisationRegister, logging.LoggerFactory);
+            var justSayingBus = new JustSayingBus(config, messageSerialisationRegister, dependencies.LoggerFactory);
 
             var awsClientFactoryProxy = new AwsClientFactoryProxy(() => CreateMeABus.DefaultClientFactory());
 
-            var amazonQueueCreator = new AmazonQueueCreator(awsClientFactoryProxy, logging.LoggerFactory);
-            var bus = new JustSayingFluently(justSayingBus, amazonQueueCreator, awsClientFactoryProxy, logging.LoggerFactory);
+            var amazonQueueCreator = new AmazonQueueCreator(awsClientFactoryProxy, dependencies.LoggerFactory);
+            var bus = new JustSayingFluently(justSayingBus, amazonQueueCreator, awsClientFactoryProxy, dependencies.LoggerFactory);
 
             bus
                 .WithMonitoring(new NullOpMessageMonitor())
