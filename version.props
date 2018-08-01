@@ -7,5 +7,6 @@
     <FileVersion>$(VersionPrefix).$(BuildNumber)</FileVersion>
     <VersionSuffix Condition=" '$(APPVEYOR_REPO_TAG)' != 'true' AND '$(VersionSuffix)' != '' ">$(VersionSuffix)-build$(BuildNumber)</VersionSuffix>
     <VersionSuffix Condition=" '$(APPVEYOR_REPO_TAG)' != 'true' AND '$(VersionSuffix)' == '' ">build$(BuildNumber)</VersionSuffix>
+    <VersionSuffix Condition=" '$(APPVEYOR_REPO_TAG)' == 'true' AND '$(APPVEYOR_REPO_TAG_NAME)' != '' AND '$(APPVEYOR_REPO_TAG_NAME.Contains(`-`))' == 'true' ">$(APPVEYOR_REPO_TAG_NAME.Substring($(APPVEYOR_REPO_TAG_NAME.IndexOf(`-`))).Substring(1))</VersionSuffix>
   </PropertyGroup>
 </Project>
