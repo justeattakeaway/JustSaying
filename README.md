@@ -209,9 +209,8 @@ JustSaying.Tools.exe move -from "source_queue_name" -to "destination_queue_name"
 ````
 
 ## Contributing...
-We've been adding things ONLY as they are needed, so please feel free to either bring up suggestions or to submit pull requests with new *GENERIC* functionalities.
 
-Whilst we appreciate contributions please refrain from submitting breaking changes or anything without adequate test coverage as it's likely to be declined.
+Please read the [contributing guide](./.github/CONTRIBUTING.md "Contributing to JustSaying").
 
 ### The End.....
 ...*Happy Messaging!...*

@@ -4,22 +4,49 @@ VisualStudioVersion = 15.0.26228.10
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4B4A4A0C-31C2-482B-A7D8-094C60C4D0B5}"
 	ProjectSection(SolutionItems) = preProject
-		CONTRIBUTING.md = CONTRIBUTING.md
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		.travis.yml = .travis.yml
+		appveyor.yml = appveyor.yml
+		build.sh = build.sh
+		CHANGELOG.md = CHANGELOG.md
+		CODE_OF_CONDUCT.md = CODE_OF_CONDUCT.md
+		Directory.Build.props = Directory.Build.props
+		global.json = global.json
+		JustSaying.Models.version.props = JustSaying.Models.version.props
 		LICENSE.md = LICENSE.md
 		README.md = README.md
+		release.ps1 = release.ps1
+		SetAppVeyorBuildVersion.ps1 = SetAppVeyorBuildVersion.ps1
+		version.props = version.props
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.Models", "JustSaying.Models\JustSaying.Models.csproj", "{C94866D0-29A6-43F2-B3BC-DFBC51A665C4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Models", "JustSaying.Models\JustSaying.Models.csproj", "{C94866D0-29A6-43F2-B3BC-DFBC51A665C4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying", "JustSaying\JustSaying.csproj", "{150EC9AA-90CB-48E8-BF45-CAE32C1E993D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying", "JustSaying\JustSaying.csproj", "{150EC9AA-90CB-48E8-BF45-CAE32C1E993D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.TestingFramework", "JustSaying.TestingFramework\JustSaying.TestingFramework.csproj", "{BDE31352-56B7-4564-8494-D25BA24E55DC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.TestingFramework", "JustSaying.TestingFramework\JustSaying.TestingFramework.csproj", "{BDE31352-56B7-4564-8494-D25BA24E55DC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.UnitTests", "JustSaying.UnitTests\JustSaying.UnitTests.csproj", "{E87E73DE-A963-4024-83DC-F0D5336E9B17}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.UnitTests", "JustSaying.UnitTests\JustSaying.UnitTests.csproj", "{E87E73DE-A963-4024-83DC-F0D5336E9B17}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.IntegrationTests", "JustSaying.IntegrationTests\JustSaying.IntegrationTests.csproj", "{D6150EE0-13F7-413D-9920-9A31FA647331}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.IntegrationTests", "JustSaying.IntegrationTests\JustSaying.IntegrationTests.csproj", "{D6150EE0-13F7-413D-9920-9A31FA647331}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.Tools", "JustSaying.Tools\JustSaying.Tools.csproj", "{F7B166C4-B4B8-4B99-9038-63E964D2CABB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Tools", "JustSaying.Tools\JustSaying.Tools.csproj", "{F7B166C4-B4B8-4B99-9038-63E964D2CABB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{F0BCBE5F-2132-422D-B17B-23B7FCC4A8A8}"
+	ProjectSection(SolutionItems) = preProject
+		.github\CODEOWNERS = .github\CODEOWNERS
+		.github\CONTRIBUTING.md = .github\CONTRIBUTING.md
+		.github\ISSUE_TEMPLATE.md = .github\ISSUE_TEMPLATE.md
+		.github\PULL_REQUEST_TEMPLATE.md = .github\PULL_REQUEST_TEMPLATE.md
+		.github\stale.yml = .github\stale.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ISSUE_TEMPLATE", "ISSUE_TEMPLATE", "{949EC37A-A278-4D02-A358-CC6F76B6E4CF}"
+	ProjectSection(SolutionItems) = preProject
+		.github\ISSUE_TEMPLATE\bug_report.md = .github\ISSUE_TEMPLATE\bug_report.md
+		.github\ISSUE_TEMPLATE\feature_request.md = .github\ISSUE_TEMPLATE\feature_request.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -54,5 +81,12 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F0BCBE5F-2132-422D-B17B-23B7FCC4A8A8} = {4B4A4A0C-31C2-482B-A7D8-094C60C4D0B5}
+		{949EC37A-A278-4D02-A358-CC6F76B6E4CF} = {F0BCBE5F-2132-422D-B17B-23B7FCC4A8A8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {18FBDF85-C124-4444-9F03-D0D4F2B3A612}
 	EndGlobalSection
 EndGlobal
