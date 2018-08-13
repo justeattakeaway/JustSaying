@@ -8,7 +8,7 @@ about: Create a bug report to help us improve JustSaying
 _A clear and concise description of what the bug is._
 
 **Steps To reproduce**
-_A concise, repeatable, example of how to reproduce the issue._
+_A concise and repeatable example of how to illustrate the issue._
 
 **Expected behaviour**
 _A clear and concise description of what you expected to happen._
