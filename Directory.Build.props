@@ -1,17 +1,26 @@
 <Project>
   <Import Project="version.props" />
   <Import Project="JustSaying.Models.version.props" />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" PrivateAssets="All" />
+    <PackageReference Include="OpenCover" Version="4.6.519" PrivateAssets="All" />
+    <PackageReference Include="ReportGenerator" Version="3.1.2" PrivateAssets="All" />
+  </ItemGroup>
   <PropertyGroup>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <Authors>Just Eat</Authors>
     <Company>Just Eat</Company>
     <Copyright>Copyright (c) Just Eat 2015-$([System.DateTime]::Now.ToString(yyyy))</Copyright>
     <Description>A light-weight message bus on top of AWS SNS and SQS</Description>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
     <PackageIconUrl>https://avatars3.githubusercontent.com/u/1516790?s=200</PackageIconUrl>
     <PackageProjectUrl>https://github.com/justeat/JustSaying</PackageProjectUrl>
     <PackageLicenseUrl>$(PackageProjectUrl)/blob/master/LICENSE</PackageLicenseUrl>
     <PackageReleaseNotes>$(PackageProjectUrl)/releases</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageTags>aws;sns;sqs</PackageTags>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <LangVersion>latest</LangVersion>
     <RepositoryUrl>$(PackageProjectUrl).git</RepositoryUrl>
