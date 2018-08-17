@@ -19,3 +19,5 @@ TestResult.xml
 !3rdparty/*/bin
 lint.db
 BenchmarkDotNet.Artifacts
+.DS_Store
+thumbs.db
