@@ -1,9 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using Amazon;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
-using JustSaying.TestingFramework;
 using NSubstitute;
 using Xunit;
 
@@ -14,22 +12,20 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
     {
         private string _topicName;
         private string _queueName;
-        private RegionEndpoint _regionEndpoint;
 
         protected override void Given()
         {
+            base.Given();
+
             _topicName = "message";
             _queueName = "queue" + DateTime.Now.Ticks;
-            _regionEndpoint = TestEnvironment.SecondaryRegion;
 
             EnableMockedBus();
 
             Configuration = new MessagingConfig();
 
-            TestEndpoint = _regionEndpoint;
-
-            DeleteQueueIfItAlreadyExists(_regionEndpoint, _queueName).Wait();
-            DeleteTopicIfItAlreadyExists(_regionEndpoint, _topicName).Wait();
+            DeleteQueueIfItAlreadyExists(TestEndpoint, _queueName).Wait();
+            DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName).Wait();
         }
 
         protected override Task When()
@@ -43,25 +39,24 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             return Task.CompletedTask;
         }
 
-        [Fact]
+        [NotSimulatorFact] // This doesn't appear to work in GoAws
         public async Task QueueAndTopicAreCreatedAndQueueIsSubscribedToTheTopicWithCorrectPermissions()
         {            
-            var (topicExists, topic) = await TryGetTopic(_regionEndpoint, _topicName);
+            var (topicExists, topic) = await TryGetTopic(TestEndpoint, _topicName);
             Assert.True(topicExists, "Topic does not exist");
 
-            var (queueExists, queueUrl) = await WaitForQueueToExist(_regionEndpoint, _queueName);
+            var (queueExists, queueUrl) = await WaitForQueueToExist(TestEndpoint, _queueName);
             Assert.True(queueExists, "Queue does not exist");
 
-            Assert.True(await IsQueueSubscribedToTopic(_regionEndpoint, topic, queueUrl), "Queue is not subscribed to the topic");
+            Assert.True(await IsQueueSubscribedToTopic(TestEndpoint, topic, queueUrl), "Queue is not subscribed to the topic");
 
-            Assert.True(await QueueHasPolicyForTopic(_regionEndpoint, topic, queueUrl), "Queue does not have a policy for the topic");
-
+            Assert.True(await QueueHasPolicyForTopic(TestEndpoint, topic, queueUrl), "Queue does not have a policy for the topic");
         }
         
         protected override void PostAssertTeardown()
         {
-            DeleteQueueIfItAlreadyExists(_regionEndpoint, _queueName).Wait();
-            DeleteTopicIfItAlreadyExists(_regionEndpoint, _topicName).Wait();
+            DeleteQueueIfItAlreadyExists(TestEndpoint, _queueName).Wait();
+            DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName).Wait();
         }
     }
 }

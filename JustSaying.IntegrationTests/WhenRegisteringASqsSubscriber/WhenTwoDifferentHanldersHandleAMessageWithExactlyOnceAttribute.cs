@@ -55,10 +55,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         {
             await Act();
 
-            if (!TestEnvironment.IsSimulatorConfigured)
-            {
-                await Task.Delay(5.Seconds());
-            }
+            await Task.Delay(5.Seconds());
 
             _handler1.NumberOfTimesIHaveBeenCalled().ShouldBe(1);
             _handler2.NumberOfTimesIHaveBeenCalled().ShouldBe(1);

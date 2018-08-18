@@ -24,7 +24,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             return Task.CompletedTask;
         }
 
-        [Fact]
+        [NotSimulatorFact]
         public async Task SqsPolicyWithAWildcardIsApplied()
         {
             var queue = new SqsQueueByName(TestEnvironment.Region, QueueName, Client, 0, NullLoggerFactory.Instance);
