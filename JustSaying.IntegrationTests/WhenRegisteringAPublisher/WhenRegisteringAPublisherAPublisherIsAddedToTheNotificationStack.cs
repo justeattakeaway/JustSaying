@@ -22,7 +22,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 
             Configuration = new MessagingConfig();
 
-            DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName).Wait();
+            DeleteTopicIfItAlreadyExists(_topicName).ResultSync();
         }
 
         protected override Task When()
@@ -34,7 +34,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         [Fact]
         public void APublisherIsAddedToTheStack()
         {
-            NotificationStack.Received().AddMessagePublisher<Message>(Arg.Any<IMessagePublisher>(), TestEndpoint.SystemName);
+            NotificationStack.Received().AddMessagePublisher<Message>(Arg.Any<IMessagePublisher>(), Region.SystemName);
         }
 
         [Fact]
@@ -46,7 +46,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 
         protected override void PostAssertTeardown()
         {
-            DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName).Wait();
+            DeleteTopicIfItAlreadyExists(_topicName).ResultSync();
         }
     }
 }

@@ -1,9 +1,7 @@
-using System;
-using Amazon;
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.TestingFramework;
-using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
@@ -15,25 +13,24 @@ namespace JustSaying.IntegrationTests.AwsTools
 
         protected override SqsQueueByName CreateSystemUnderTest()
         {
-            string queueName = "test" + DateTime.Now.Ticks;
-            RegionEndpoint region = TestEnvironment.Region;
+            var fixture = new JustSayingFixture();
 
             var queue = new SqsQueueByName(
-                region,
-                queueName,
-                CreateMeABus.DefaultClientFactory().GetSqsClient(region),
+                fixture.Region,
+                fixture.UniqueName,
+                fixture.CreateSqsClient(),
                 1,
-                new LoggerFactory());
+                fixture.LoggerFactory);
 
             // Force queue creation
-            queue.ExistsAsync().GetAwaiter().GetResult();
+            queue.ExistsAsync().ResultSync();
 
             return queue;
         }
 
         protected override void PostAssertTeardown()
         {
-            SystemUnderTest.DeleteAsync().GetAwaiter().GetResult();
+            SystemUnderTest.DeleteAsync().ResultSync();
             base.PostAssertTeardown();
         }
     }

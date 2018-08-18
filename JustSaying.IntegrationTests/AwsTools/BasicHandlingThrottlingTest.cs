@@ -10,7 +10,6 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
-using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
@@ -23,10 +22,7 @@ namespace JustSaying.IntegrationTests.AwsTools
         public BasicHandlingThrottlingTest(ITestOutputHelper outputHelper)
         {
             OutputHelper = outputHelper;
-            LoggerFactory = outputHelper.AsLoggerFactory();
         }
-
-        private ILoggerFactory LoggerFactory { get; }
 
         private ITestOutputHelper OutputHelper { get; }
 
@@ -35,17 +31,16 @@ namespace JustSaying.IntegrationTests.AwsTools
         public async Task HandlingManyMessages(int throttleMessageCount)
         {
             // Arrange
-            bool isSimulator = TestEnvironment.IsSimulatorConfigured;
-            var region = TestEnvironment.Region;
-            var client = CreateMeABus.DefaultClientFactory().GetSqsClient(region);
+            var fixture = new JustSayingFixture(OutputHelper);
+            var client = fixture.CreateSqsClient();
 
-            var queue = new SqsQueueByName(region, "throttle_test", client, 1, LoggerFactory);
+            var queue = new SqsQueueByName(fixture.Region, fixture.UniqueName, client, 1, fixture.LoggerFactory);
 
             if (!await queue.ExistsAsync())
             {
                 await queue.CreateAsync(new SqsBasicConfiguration());
 
-                if (!isSimulator)
+                if (!fixture.IsSimulator)
                 {
                     // Wait for up to 60 secs for queue creation to be guaranteed completed by AWS
                     using (var cts = new CancellationTokenSource(TimeSpan.FromMinutes(1)))
@@ -86,7 +81,7 @@ namespace JustSaying.IntegrationTests.AwsTools
                     entriesAdded++;
                 }
 
-                await client.SendMessageBatchAsync(new SendMessageBatchRequest { QueueUrl = queue.Url, Entries = entries });
+                await client.SendMessageBatchAsync(queue.Url, entries);
             }
             while (entriesAdded < throttleMessageCount);
 
@@ -99,7 +94,7 @@ namespace JustSaying.IntegrationTests.AwsTools
             handler.Handle(null).ReturnsForAnyArgs(true).AndDoes(_ => Interlocked.Increment(ref handleCount));
 
             serialisations.DeserializeMessage(string.Empty).ReturnsForAnyArgs(new SimpleMessage());
-            var listener = new SqsNotificationListener(queue, serialisations, monitor, LoggerFactory);
+            var listener = new SqsNotificationListener(queue, serialisations, monitor, fixture.LoggerFactory);
             listener.AddMessageHandler(() => handler);
 
             // Act
@@ -111,7 +106,7 @@ namespace JustSaying.IntegrationTests.AwsTools
             {
                 do
                 {
-                    if (!isSimulator)
+                    if (!fixture.IsSimulator)
                     {
                         await Task.Delay(TimeSpan.FromSeconds(5));
                     }

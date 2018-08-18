@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
-using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -17,32 +16,27 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
         public WhenHandlerHasExactlyOnceAttribute(ITestOutputHelper outputHelper)
         {
-            LoggerFactory = outputHelper.AsLoggerFactory();
+            OutputHelper = outputHelper;
         }
 
-        private ILoggerFactory LoggerFactory { get; }
+        private ITestOutputHelper OutputHelper { get; }
 
         protected async Task Act()
         {
-            string region = TestEnvironment.Region.SystemName;
             _handler = new ExactlyOnceHandlerWithTimeout();
 
-            var publisher = CreateMeABus
-                .WithLogging(new LoggerFactory())
-                .InRegion(region)
+            var fixture = new JustSayingFixture(OutputHelper);
+
+            var publisher = fixture.Builder()
                 .WithSnsMessagePublisher<SimpleMessage>();
 
-            var bus = CreateMeABus
-                .WithLogging(new LoggerFactory())
-                .InRegion(region)
+            var bus = fixture.Builder()
                 .WithMonitoring(Substitute.For<IMessageMonitor>())
                 .WithMessageLockStoreOf(new MessageLockStore())
                 .WithSqsTopicSubscriber()
-                .IntoQueue("queuename-" + DateTime.Now.Ticks)
-                .ConfigureSubscriptionWith(cfg =>
-                {
-                    cfg.MessageRetentionSeconds = 60;
-                }).WithMessageHandler(_handler);
+                .IntoQueue(fixture.UniqueName)
+                .ConfigureSubscriptionWith(cfg => cfg.MessageRetentionSeconds = 60)
+                .WithMessageHandler(_handler);
 
             publisher.StartListening();
             bus.StartListening();

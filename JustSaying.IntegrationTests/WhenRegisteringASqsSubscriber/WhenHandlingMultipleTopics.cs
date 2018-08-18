@@ -4,7 +4,6 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
-using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json.Linq;
 using NSubstitute;
 using Xunit;
@@ -27,7 +26,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         [NotSimulatorFact]
         public async Task SqsPolicyWithAWildcardIsApplied()
         {
-            var queue = new SqsQueueByName(TestEnvironment.Region, QueueName, Client, 0, NullLoggerFactory.Instance);
+            var queue = new SqsQueueByName(Region, QueueName, Client, 0, TestFixture.LoggerFactory);
 
             await Patiently.AssertThatAsync(() => queue.ExistsAsync(), TimeSpan.FromSeconds(60));
 

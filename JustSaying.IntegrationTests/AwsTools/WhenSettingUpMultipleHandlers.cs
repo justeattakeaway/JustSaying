@@ -1,15 +1,15 @@
 using System.Linq;
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.TestingFramework;
-using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
     [Collection(GlobalSetup.CollectionName)]
-    public class WhenSettingUpMultipleHandlers : XBehaviourTest<IHaveFulfilledSubscriptionRequirements>
+    public class WhenSettingUpMultipleHandlers : XAsyncBehaviourTest<IHaveFulfilledSubscriptionRequirements>
     {
         private ProxyAwsClientFactory _proxyAwsClientFactory;
         private string _topicName;
@@ -19,8 +19,9 @@ namespace JustSaying.IntegrationTests.AwsTools
         {
         }
 
-        protected override void When()
+        protected override Task When()
         {
+            return Task.CompletedTask;
         }
 
         protected override IHaveFulfilledSubscriptionRequirements CreateSystemUnderTest()
@@ -33,17 +34,17 @@ namespace JustSaying.IntegrationTests.AwsTools
             _topicName = uniqueTopicAndQueueNames.GetTopicName(string.Empty, typeof(Order));
             _queueName = uniqueTopicAndQueueNames.GetQueueName(new SqsReadConfiguration(SubscriptionType.ToTopic) { BaseQueueName = baseQueueName }, typeof(Order));
 
-            var bus = CreateMeABus
-                .WithLogging(new LoggerFactory())
-                .InRegion(TestEnvironment.Region.SystemName)
+            var fixture = new JustSayingFixture();
+
+            var subscription = fixture.Builder()
                 .WithAwsClientFactory(() => _proxyAwsClientFactory)
                 .WithNamingStrategy(() => uniqueTopicAndQueueNames)
                 .WithSqsTopicSubscriber()
                 .IntoQueue(baseQueueName)
                 .WithMessageHandlers(new OrderHandler(), new OrderHandler());
 
-            bus.StartListening();
-            return bus;
+            subscription.StartListening();
+            return subscription;
         }
 
         protected override void PostAssertTeardown()

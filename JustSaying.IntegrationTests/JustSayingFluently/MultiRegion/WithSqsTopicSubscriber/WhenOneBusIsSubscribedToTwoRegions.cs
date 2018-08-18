@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopicSubscriber
 {
@@ -21,6 +22,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
 
         private SimpleMessage _message1;
         private SimpleMessage _message2;
+
+        public WhenOneBusIsSubscribedToTwoRegions(ITestOutputHelper outputHelper)
+        {
+            LoggerFactory = outputHelper.AsLoggerFactory();
+        }
+
+        private ILoggerFactory LoggerFactory { get; }
 
         [Fact]
         public async Task MessagesPublishedToBothRegionsWillBeReceived()
@@ -51,20 +59,21 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .Do(async x => await _handler.Complete((SimpleMessage) x.Args()[0]));
 
             _subscriber = CreateMeABus
-                .WithLogging(new LoggerFactory())
+                .WithLogging(LoggerFactory)
                 .InRegion(primaryRegion)
                 .WithFailoverRegion(secondaryRegion)
                 .WithActiveRegion(() => primaryRegion)
                 .WithSqsTopicSubscriber()
                 .IntoQueue("queuename")
                 .WithMessageHandler(handler);
+
             _subscriber.StartListening();
         }
 
         private void AndAPublisherToThePrimaryRegion(string primaryRegion)
         {
             _primaryPublisher = CreateMeABus
-                .WithLogging(new LoggerFactory())
+                .WithLogging(LoggerFactory)
                 .InRegion(primaryRegion)
                 .WithSnsMessagePublisher<SimpleMessage>();
         }
@@ -72,7 +81,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         private void AndAPublisherToTheSecondaryRegion(string secondaryRegion)
         {
             _secondaryPublisher = CreateMeABus
-                .WithLogging(new LoggerFactory())
+                .WithLogging(LoggerFactory)
                 .InRegion(secondaryRegion)
                 .WithSnsMessagePublisher<SimpleMessage>();
         }

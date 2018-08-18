@@ -1,4 +1,4 @@
-using System;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SimpleNotificationService;
 using JustBehave;
@@ -11,17 +11,19 @@ using Xunit;
 namespace JustSaying.IntegrationTests.AwsTools
 {
     [Collection(GlobalSetup.CollectionName)]
-    public abstract class WhenCreatingTopicByName : XBehaviourTest<SnsTopicByName>
+    public abstract class WhenCreatingTopicByName : XAsyncBehaviourTest<SnsTopicByName>
     {
-        protected string UniqueName { get; private set; }
+        protected string UniqueName => TestFixture.UniqueName;
 
         protected SnsTopicByName CreatedTopic { get; private set; }
 
         protected IAmazonSimpleNotificationService Client { get; private set; }
 
-        protected ILoggerFactory LoggerFactory { get; private set; }
+        protected ILoggerFactory LoggerFactory => TestFixture.LoggerFactory;
 
-        protected RegionEndpoint Region => TestEnvironment.Region;
+        protected RegionEndpoint Region => TestFixture.Region;
+
+        private JustSayingFixture TestFixture { get; } = new JustSayingFixture();
 
         protected override void Given()
         {
@@ -29,9 +31,7 @@ namespace JustSaying.IntegrationTests.AwsTools
 
         protected override SnsTopicByName CreateSystemUnderTest()
         {
-            Client = CreateMeABus.DefaultClientFactory().GetSnsClient(Region);
-            LoggerFactory = new LoggerFactory();
-            UniqueName = "test" + DateTime.Now.Ticks;
+            Client = TestFixture.CreateSnsClient();
 
             CreatedTopic = new SnsTopicByName(
                 UniqueName,
@@ -40,14 +40,14 @@ namespace JustSaying.IntegrationTests.AwsTools
                 LoggerFactory,
                 new NonGenericMessageSubjectProvider());
 
-            CreatedTopic.CreateAsync().GetAwaiter().GetResult();
+            CreatedTopic.CreateAsync().ResultSync();
 
             return CreatedTopic;
         }
 
         protected override void PostAssertTeardown()
         {
-            Client.DeleteTopicAsync(CreatedTopic.Arn).Wait();
+            Client.DeleteTopicAsync(CreatedTopic.Arn).ResultSync();
             base.PostAssertTeardown();
         }
     }

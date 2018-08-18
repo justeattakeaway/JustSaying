@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPointToPointSubscriber
 {
@@ -21,6 +22,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
 
         private SimpleMessage _message1;
         private SimpleMessage _message2;
+
+        public WhenOneBusIsSubscribedToTwoRegions(ITestOutputHelper outputHelper)
+        {
+            LoggerFactory = outputHelper.AsLoggerFactory();
+        }
+
+        private ILoggerFactory LoggerFactory { get; }
 
         [Fact]
         public async Task MessagesPublishedToBothRegionsWillBeReceived()
@@ -43,6 +51,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
         private void GivenASubscriptionToAQueueInTwoRegions(string primaryRegion, string secondaryRegion)
         {
             _handler.ExpectedMessageCount = 2;
+
             var handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
             handler.Handle(Arg.Any<SimpleMessage>()).Returns(true);
             handler
@@ -50,20 +59,21 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
                 .Do(async x => await _handler.Complete((SimpleMessage) x.Args()[0]));
 
             _subscriber = CreateMeABus
-                .WithLogging(new LoggerFactory())
+                .WithLogging(LoggerFactory)
                 .InRegion(primaryRegion)
                 .WithFailoverRegion(secondaryRegion)
                 .WithActiveRegion(() => primaryRegion)
                 .WithSqsPointToPointSubscriber()
                 .IntoDefaultQueue()
                 .WithMessageHandler(handler);
+
             _subscriber.StartListening();
         }
 
         private void AndAPublisherToThePrimaryRegion(string primaryRegion)
         {
             _primaryPublisher = CreateMeABus
-                .WithLogging(new LoggerFactory())
+                .WithLogging(LoggerFactory)
                 .InRegion(primaryRegion)
                 .WithSqsMessagePublisher<SimpleMessage>(configuration => { });
         }
@@ -71,7 +81,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
         private void AndAPublisherToTheSecondaryRegion(string secondaryRegion)
         {
             _secondaryPublisher = CreateMeABus
-                .WithLogging(new LoggerFactory())
+                .WithLogging(LoggerFactory)
                 .InRegion(secondaryRegion)
                 .WithSqsMessagePublisher<SimpleMessage>(configuration => { });
         }

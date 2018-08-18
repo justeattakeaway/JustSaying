@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopicSubscriber
 {
@@ -26,6 +27,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
 
         private IHaveFulfilledSubscriptionRequirements _primaryBus;
         private IHaveFulfilledSubscriptionRequirements _secondaryBus;
+
+        public WhenAFailoverRegionIsSetup(ITestOutputHelper outputHelper)
+        {
+            LoggerFactory = outputHelper.AsLoggerFactory();
+        }
+
+        private ILoggerFactory LoggerFactory { get; }
 
         [Fact]
         public async Task MessagesArePublishedToTheActiveRegion()
@@ -53,12 +61,15 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .When(x => x.Handle(Arg.Any<SimpleMessage>()))
                 .Do(async x => await _primaryHandler.Complete((SimpleMessage)x.Args()[0]));
 
+            string queueName = "queuename";
+
             _primaryBus = CreateMeABus
-                .WithLogging(new LoggerFactory())
+                .WithLogging(LoggerFactory)
                 .InRegion(PrimaryRegion)
                 .WithSqsTopicSubscriber()
-                .IntoQueue("queuename")
+                .IntoQueue(queueName)
                 .WithMessageHandler(primaryHandler);
+
             _primaryBus.StartListening();
 
             var secondaryHandler = Substitute.For<IHandlerAsync<SimpleMessage>>();
@@ -68,18 +79,19 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .Do(async x => await _secondaryHandler.Complete((SimpleMessage)x.Args()[0]));
 
             _secondaryBus = CreateMeABus
-                .WithLogging(new LoggerFactory())
+                .WithLogging(LoggerFactory)
                 .InRegion(SecondaryRegion)
                 .WithSqsTopicSubscriber()
-                .IntoQueue("queuename")
+                .IntoQueue(queueName)
                 .WithMessageHandler(secondaryHandler);
+
             _secondaryBus.StartListening();
         }
 
         private void AndAPublisherWithAFailoverRegion()
         {
             _publisher = CreateMeABus
-                .WithLogging(new LoggerFactory())
+                .WithLogging(LoggerFactory)
                 .InRegion(PrimaryRegion)
                 .WithFailoverRegion(SecondaryRegion)
                 .WithActiveRegion(_getActiveRegion)

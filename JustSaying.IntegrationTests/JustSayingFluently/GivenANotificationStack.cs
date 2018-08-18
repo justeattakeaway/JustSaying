@@ -29,9 +29,11 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
         protected IMessageMonitor Monitoring { get; set; }
 
-        protected ILoggerFactory LoggerFactory { get; set; } = new LoggerFactory();
+        protected ILoggerFactory LoggerFactory => TestFixture.LoggerFactory;
 
-        protected RegionEndpoint Region { get; } = TestEnvironment.Region;
+        protected RegionEndpoint Region =>TestFixture.Region;
+
+        private JustSayingFixture TestFixture { get; } = new JustSayingFixture();
 
         protected void RegisterSnsHandler(Future<SimpleMessage> handler)
         {
@@ -75,20 +77,16 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
             Monitoring = Substitute.For<IMessageMonitor>();
 
-            ServiceBus = CreateMeABus
-                .WithLogging(LoggerFactory)
-                .InRegion(Region.SystemName)
+            ServiceBus = TestFixture.Builder()
                 .WithMonitoring(Monitoring)
-
                 .ConfigurePublisherWith(c =>
                 {
                     c.PublishFailureBackoffMilliseconds = _config.PublishFailureBackoffMilliseconds;
                     c.PublishFailureReAttempts = _config.PublishFailureReAttempts;
                 })
-
                 .WithSnsMessagePublisher<SimpleMessage>()
                 .WithSqsTopicSubscriber()
-                .IntoQueue("queuename")
+                .IntoQueue(TestFixture.UniqueName)
                 .ConfigureSubscriptionWith(cf =>
                 {
                     cf.MessageRetentionSeconds = 60;
@@ -96,19 +94,20 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                     cf.InstancePosition = 1;
                 })
                 .WithMessageHandler(snsHandler)
-
                 .WithSqsMessagePublisher<AnotherSimpleMessage>(configuration => { })
                 .WithSqsPointToPointSubscriber()
                 .IntoDefaultQueue()
                 .WithMessageHandler(sqsHandler);
 
             ServiceBus.StartListening();
+
             return ServiceBus;
         }
 
         protected override void PostAssertTeardown()
         {
             base.PostAssertTeardown();
+
             _stopwatch.Stop();
             Teardown();
 

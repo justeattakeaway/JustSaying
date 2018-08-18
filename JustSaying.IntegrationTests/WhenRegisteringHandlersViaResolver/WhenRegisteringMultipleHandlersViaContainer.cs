@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.TestingFramework;
-using Microsoft.Extensions.Logging;
 using Shouldly;
 using StructureMap;
 using Xunit;
@@ -26,8 +25,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         {
             var handlerResolver = new StructureMapHandlerResolver(_container);
 
-            CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion(TestEnvironment.Region.SystemName)
+            new JustSayingFixture()
+                .Builder()
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);

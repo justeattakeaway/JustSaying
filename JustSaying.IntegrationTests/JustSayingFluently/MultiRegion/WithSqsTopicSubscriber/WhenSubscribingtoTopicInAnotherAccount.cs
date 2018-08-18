@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopicSubscriber
 {
@@ -21,9 +22,17 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         private readonly Future<SimpleMessage> _signal = new Future<SimpleMessage>();
         private readonly SimpleMessage _message = new SimpleMessage { Id = Guid.NewGuid() };
 
+        public WhenSubscribingToTopicInAnotherAccount(ITestOutputHelper outputHelper)
+        {
+            LoggerFactory = outputHelper.AsLoggerFactory();
+        }
+
+        private ILoggerFactory LoggerFactory { get; }
+
         [NeedsTwoAwsAccountsFact]
         public async Task ICanReceiveMessagePublishedToTopicInAnotherAccount()
         {
+            // Arrange
             string publisherAccount = TestEnvironment.AccountId;
             string subscriberAccount = TestEnvironment.SecondaryAccountId;
 
@@ -48,12 +57,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .IntoQueue("crossaccount")
                 .ConfigureSubscriptionWith(cfg => cfg.TopicSourceAccount = publisherAccount)
                 .WithMessageHandler(handler);
+
             subscribingBus.StartListening();
 
-            //Act
+            // Act
             await publishingBus.PublishAsync(_message);
 
-            //Assert
+            // Assert
             var done = await Tasks.WaitWithTimeoutAsync(_signal.DoneSignal, TimeSpan.FromMinutes(1));
             _signal.HasReceived(_message).ShouldBeTrue();
         }
@@ -61,7 +71,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         private IMayWantOptionalSettings GetBus(AWSCredentials credentials)
         {
             return CreateMeABus
-                .WithLogging(new LoggerFactory())
+                .WithLogging(LoggerFactory)
                 .InRegion(TestEnvironment.Region.SystemName)
                 .WithAwsClientFactory(() => new DefaultAwsClientFactory(credentials));
         }

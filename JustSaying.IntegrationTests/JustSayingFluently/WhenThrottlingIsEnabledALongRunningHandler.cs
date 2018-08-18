@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
@@ -37,16 +36,19 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 
                 SetUpHandler(_ids[i], i, wait: i == 1 ? waitOne : waitOthers);
             }
+
+            var fixture = new JustSayingFixture(_outputHelper);
             
-            var publisher = CreateMeABus.WithLogging(_outputHelper.AsLoggerFactory())
-                .InRegion(TestEnvironment.Region.SystemName)
+            _publisher = fixture.Builder()
                 .WithMonitoring(Substitute.For<IMessageMonitor>())
                 .ConfigurePublisherWith(c =>
                 {
                     c.PublishFailureBackoffMilliseconds = 1;
                 })
                 .WithSnsMessagePublisher<SimpleMessage>()
-                .WithSqsTopicSubscriber().IntoQueue("queuename").ConfigureSubscriptionWith(
+                .WithSqsTopicSubscriber()
+                .IntoQueue(fixture.UniqueName)
+                .ConfigureSubscriptionWith(
                     cfg =>
                     {
                         cfg.InstancePosition = 1;
@@ -54,8 +56,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                     })
                 .WithMessageHandler(_handler);
 
-            publisher.StartListening();
-            _publisher = publisher;
+            _publisher.StartListening();
         }
 
         private void SetUpHandler(Guid guid, int number, int wait)
@@ -81,7 +82,10 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             await Task.Delay(baseSleep);
 
             // Publish the rest of the messages except the last one.
-            Enumerable.Range(2, 98).ToList().ForEach(i => _publisher.PublishAsync(_messages[i]).Wait());
+            for (int i = 2; i <= 98; i++)
+            {
+                await _publisher.PublishAsync(_messages[i]);
+            }
 
             // Publish the last message after a couple of seconds to guaranty it was scheduled after all the rest
             await Task.Delay(baseSleep);

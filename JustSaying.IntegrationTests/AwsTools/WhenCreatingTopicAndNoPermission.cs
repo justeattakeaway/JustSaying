@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using Shouldly;
@@ -11,7 +12,7 @@ namespace JustSaying.IntegrationTests.AwsTools
         private SnsTopicByName _topic;
         private bool _createWasSuccessful;
 
-        protected override void When()
+        protected override async Task When()
         {
             var snsClient = new NoTopicCreationAwsClientFactory().GetSnsClient(Region);
 
@@ -22,7 +23,7 @@ namespace JustSaying.IntegrationTests.AwsTools
                 LoggerFactory,
                 new NonGenericMessageSubjectProvider());
 
-            _createWasSuccessful = _topic.CreateAsync().GetAwaiter().GetResult();
+            _createWasSuccessful = await _topic.CreateAsync();
         }
 
         [Fact]

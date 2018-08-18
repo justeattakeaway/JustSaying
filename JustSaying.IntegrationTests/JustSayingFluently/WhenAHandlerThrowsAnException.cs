@@ -3,10 +3,10 @@ using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
-using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
@@ -17,7 +17,14 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         private Action<Exception, Amazon.SQS.Model.Message> _globalErrorHandler;
         private bool _handledException;
         private IMessageMonitor _monitoring;
-        
+
+        public WhenAHandlerThrowsAnException(ITestOutputHelper outputHelper)
+        {
+            OutputHelper = outputHelper;
+        }
+
+        private ITestOutputHelper OutputHelper { get; }
+
         private async Task Setup()
         {
             // Setup
@@ -27,9 +34,9 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             // Given
             _handler = new ThrowingHandler();
 
-            var bus = CreateMeABus
-                .WithLogging(new LoggerFactory())
-                .InRegion(TestEnvironment.Region.SystemName)
+            var fixture = new JustSayingFixture(OutputHelper);
+
+            var bus = fixture.Builder()
                 .WithMonitoring(_monitoring)
                 .ConfigurePublisherWith(c =>
                     {
@@ -38,7 +45,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                     })
                 .WithSnsMessagePublisher<SimpleMessage>()
                 .WithSqsTopicSubscriber()
-                .IntoQueue("queuename")
+                .IntoQueue(fixture.UniqueName)
                 .ConfigureSubscriptionWith(cfg =>
                     {
                         cfg.MessageRetentionSeconds = 60;
@@ -61,6 +68,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         public async Task MessageReceivedAndExceptionHandled()
         {
             await Setup();
+
             _handler.MessageReceived.ShouldNotBeNull();
             _handledException.ShouldBeTrue();
         }

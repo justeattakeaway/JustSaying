@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPointToPointSubscriber
 {
@@ -26,6 +27,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
 
         private IHaveFulfilledSubscriptionRequirements _primaryBus;
         private IHaveFulfilledSubscriptionRequirements _secondaryBus;
+
+        public WhenAFailoverRegionIsSetup(ITestOutputHelper outputHelper)
+        {
+            LoggerFactory = outputHelper.AsLoggerFactory();
+        }
+
+        private ILoggerFactory LoggerFactory { get; }
 
         [Fact]
         public async Task MessagesArePublishedToTheActiveRegion()
@@ -54,7 +62,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
                 .Do(async x => await _primaryHandler.Complete((SimpleMessage)x.Args()[0]));
 
             _primaryBus = CreateMeABus
-                .WithLogging(new LoggerFactory())
+                .WithLogging(LoggerFactory)
                 .InRegion(PrimaryRegion)
                 .WithSqsPointToPointSubscriber()
                 .IntoDefaultQueue()
@@ -68,7 +76,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
                 .Do(async x => await _secondaryHandler.Complete((SimpleMessage)x.Args()[0]));
 
             _secondaryBus = CreateMeABus
-                .WithLogging(new LoggerFactory())
+                .WithLogging(LoggerFactory)
                 .InRegion(SecondaryRegion)
                 .WithSqsPointToPointSubscriber()
                 .IntoDefaultQueue()
@@ -79,7 +87,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
         private void AndAPublisherWithAFailoverRegion()
         {
             _publisher = CreateMeABus
-                .WithLogging(new LoggerFactory())
+                .WithLogging(LoggerFactory)
                 .InRegion(PrimaryRegion)
                 .WithFailoverRegion(SecondaryRegion)
                 .WithActiveRegion(_getActiveRegion)

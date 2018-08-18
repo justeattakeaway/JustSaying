@@ -1,36 +1,31 @@
 using System;
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.TestingFramework;
-using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
     [Collection(GlobalSetup.CollectionName)]
-    public class WhenSettingUpMultipleHandlersFails : XBehaviourTest<IHaveFulfilledSubscriptionRequirements>
+    public class WhenSettingUpMultipleHandlersFails : XAsyncBehaviourTest<IHaveFulfilledSubscriptionRequirements>
     {
-        protected string QueueUniqueKey;
-        private ProxyAwsClientFactory proxyAwsClientFactory;
-        private int handlersAttached = 0;
+        private int _handlersAttached = 0;
         private NotSupportedException _capturedException;
 
         protected override void Given()
         {
         }
 
-        protected override void When()
-        {
-        }
+        protected override Task When() => Task.CompletedTask;
 
         protected override IHaveFulfilledSubscriptionRequirements CreateSystemUnderTest()
         {
-            proxyAwsClientFactory = new ProxyAwsClientFactory();
+            var awsClientFactory = new ProxyAwsClientFactory();
+            var fixture = new JustSayingFixture();
 
-            var busConfig = CreateMeABus
-                .WithLogging(new LoggerFactory())
-                .InRegion(TestEnvironment.Region.SystemName)
-                .WithAwsClientFactory(() => proxyAwsClientFactory);
+            var busConfig = fixture.Builder()
+                .WithAwsClientFactory(() => awsClientFactory);
 
             try
             {
@@ -53,13 +48,13 @@ namespace JustSaying.IntegrationTests.AwsTools
                 .IntoDefaultQueue()
                 .WithMessageHandler(new OrderHandler());
 
-            handlersAttached++;
+            _handlersAttached++;
         }
 
         [Fact]
         public void ThenOnlyOneHandlerIsAttached()
         {
-            handlersAttached.ShouldBe(1);
+            _handlersAttached.ShouldBe(1);
         }
 
         [Fact]

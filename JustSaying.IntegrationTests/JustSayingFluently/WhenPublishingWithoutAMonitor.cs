@@ -1,9 +1,9 @@
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
-using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
@@ -12,6 +12,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
     {
         private IAmJustSayingFluently _bus;
         private readonly IHandlerAsync<SimpleMessage> _handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
+
+        public WhenPublishingWithoutAMonitor(ITestOutputHelper outputHelper)
+        {
+            OutputHelper = outputHelper;
+        }
+
+        private ITestOutputHelper OutputHelper { get; }
 
         private async Task Given()
         {
@@ -23,9 +30,9 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .Returns(true)
                 .AndDoes(_ => Tasks.DelaySendDone(doneSignal));
 
-            var bus = CreateMeABus
-                .WithLogging(new LoggerFactory())
-                .InRegion(TestEnvironment.Region.SystemName)
+            var fixture = new JustSayingFixture(OutputHelper);
+
+            _bus = fixture.Builder()
                 .ConfigurePublisherWith(c =>
                     {
                         c.PublishFailureBackoffMilliseconds = 1;
@@ -33,11 +40,9 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                     })
                 .WithSnsMessagePublisher<SimpleMessage>()
                 .WithSqsTopicSubscriber()
-                .IntoQueue("queuename")
+                .IntoQueue(fixture.UniqueName)
                 .ConfigureSubscriptionWith(cfg => cfg.InstancePosition = 1)
                 .WithMessageHandler(_handler);
-
-            _bus = bus;
 
             // When
             _bus.StartListening();
@@ -45,7 +50,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
             // Teardown
             await doneSignal.Task;
-            bus.StopListening();
+            _bus.StopListening();
         }
 
         [Fact]

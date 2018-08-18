@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
-using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -18,34 +17,30 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
         public WhenTwoDifferentHanldersHandleAMessageWithExactlyOnceAttribute(ITestOutputHelper outputHelper)
         {
-            LoggerFactory = outputHelper.AsLoggerFactory();
+            OutputHelper = outputHelper;
         }
 
-        private ILoggerFactory LoggerFactory { get; }
+        private ITestOutputHelper OutputHelper { get; }
 
         protected async Task Act()
         {
             _handler1 = new ExactlyOnceHandlerWithTimeout();
             _handler2 = new ExactlyOnceHandlerNoTimeout();
 
-            string region = TestEnvironment.Region.SystemName;
+            var fixture = new JustSayingFixture(OutputHelper);
 
-            var publisher = CreateMeABus
-                .WithLogging(LoggerFactory)
-                .InRegion(region)
+            var publisher = fixture.Builder()
                 .ConfigurePublisherWith(_ => { })
                 .WithSnsMessagePublisher<SimpleMessage>();
 
-            var bus = CreateMeABus
-                .WithLogging(LoggerFactory)
-                .InRegion(region)
+            var subscribers = fixture.Builder()
                 .WithMonitoring(Substitute.For<IMessageMonitor>())
                 .WithMessageLockStoreOf(new MessageLockStore())
-                .WithSqsTopicSubscriber().IntoQueue("queuename-" + DateTime.Now.Ticks)
+                .WithSqsTopicSubscriber().IntoQueue(fixture.UniqueName)
                 .WithMessageHandlers(_handler1, _handler2);
 
             publisher.StartListening();
-            bus.StartListening();
+            subscribers.StartListening();
 
             await publisher.PublishAsync(new SimpleMessage { Id = Guid.NewGuid() });
         }

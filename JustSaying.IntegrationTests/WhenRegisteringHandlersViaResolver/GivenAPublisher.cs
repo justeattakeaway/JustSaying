@@ -3,7 +3,6 @@ using JustBehave;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
-using Microsoft.Extensions.Logging;
 using Shouldly;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
@@ -18,9 +17,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
         protected override IMessagePublisher CreateSystemUnderTest()
         {
-            Publisher = CreateMeABus
-                .WithLogging(new LoggerFactory())
-                .InRegion(TestEnvironment.Region.SystemName)
+            var fixture = new JustSayingFixture();
+
+            Publisher = fixture.Builder()
                 .WithSnsMessagePublisher<OrderPlaced>();
 
             Publisher.StartListening();

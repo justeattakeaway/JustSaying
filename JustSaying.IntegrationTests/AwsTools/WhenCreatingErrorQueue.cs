@@ -1,23 +1,21 @@
-using System;
-using Amazon;
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.TestingFramework;
-using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
     [Collection(GlobalSetup.CollectionName)]
-    public class WhenCreatingErrorQueue : XBehaviourTest<ErrorQueue>
+    public class WhenCreatingErrorQueue : XAsyncBehaviourTest<ErrorQueue>
     {
         protected override void Given()
         {
         }
 
-        protected override void When()
+        protected override async Task When()
         {
             var queueConfig = new SqsBasicConfiguration
             {
@@ -25,28 +23,27 @@ namespace JustSaying.IntegrationTests.AwsTools
                 ErrorQueueOptOut = true
             };
 
-            SystemUnderTest.CreateAsync(queueConfig).GetAwaiter().GetResult();
+            await SystemUnderTest.CreateAsync(queueConfig);
 
             queueConfig.ErrorQueueRetentionPeriodSeconds = 100;
 
-            SystemUnderTest.UpdateQueueAttributeAsync(queueConfig).GetAwaiter().GetResult();
+            await SystemUnderTest.UpdateQueueAttributeAsync(queueConfig);
         }
 
         protected override ErrorQueue CreateSystemUnderTest()
         {
-            string queueName = "test" + DateTime.Now.Ticks;
-            RegionEndpoint region = TestEnvironment.Region;
+            var fixture = new JustSayingFixture();
 
             return new ErrorQueue(
-                region,
-                queueName,
-                CreateMeABus.DefaultClientFactory().GetSqsClient(region),
-                new LoggerFactory());
+                fixture.Region,
+                fixture.UniqueName,
+                fixture.CreateSqsClient(),
+                fixture.LoggerFactory);
         }
 
         protected override void PostAssertTeardown()
         {
-            SystemUnderTest.DeleteAsync().GetAwaiter().GetResult();
+            SystemUnderTest.DeleteAsync().ResultSync();
             base.PostAssertTeardown();
         }
 

@@ -6,7 +6,6 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
-using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Xunit;
 
@@ -26,21 +25,22 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             base.Given();
 
             TopicName = "CustomerCommunication";
-            QueueName = "queuename-" + DateTime.Now.Ticks;
+            QueueName = TestFixture.UniqueName;
 
             EnableMockedBus();
 
             Configuration = new MessagingConfig();
 
-            DeleteTopicIfItAlreadyExists(TestEndpoint, TopicName).Wait();
-            DeleteQueueIfItAlreadyExists(TestEndpoint, QueueName).Wait();
+            DeleteTopicIfItAlreadyExists(TopicName).ResultSync();
+            DeleteQueueIfItAlreadyExists(QueueName).ResultSync();
 
-            Client = CreateMeABus.DefaultClientFactory().GetSqsClient(TestEnvironment.Region);
+            Client = TestFixture.CreateSqsClient();
         }
 
         protected override Task When()
         {
-            SystemUnderTest.WithSqsTopicSubscriber()
+            SystemUnderTest
+                .WithSqsTopicSubscriber()
                 .IntoQueue(QueueName)
                 .ConfigureSubscriptionWith(cfg => cfg.MessageRetentionSeconds = 60)
                 .WithMessageHandler(Substitute.For<IHandlerAsync<Message>>());
@@ -60,11 +60,11 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             async Task QueueIsCreatedInner()
             {
                 var queue = new SqsQueueByName(
-                    TestEnvironment.Region,
+                    TestFixture.Region,
                     QueueName,
                     Client,
                     0,
-                    NullLoggerFactory.Instance);
+                    TestFixture.LoggerFactory);
 
                 await Patiently.AssertThatAsync(
                     () => queue.ExistsAsync(), TimeSpan.FromSeconds(65));
@@ -84,8 +84,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
         protected override void PostAssertTeardown()
         {
-            DeleteTopicIfItAlreadyExists(TestEndpoint, TopicName).Wait();
-            DeleteQueueIfItAlreadyExists(TestEndpoint, QueueName).Wait();
+            DeleteTopicIfItAlreadyExists(TopicName).ResultSync();
+            DeleteQueueIfItAlreadyExists(QueueName).ResultSync();
         }
     }
 }
