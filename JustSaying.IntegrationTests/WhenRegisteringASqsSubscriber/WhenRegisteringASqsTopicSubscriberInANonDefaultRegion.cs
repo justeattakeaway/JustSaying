@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 using Amazon;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
+using JustSaying.TestingFramework;
 using NSubstitute;
 using Xunit;
-using Assert = Xunit.Assert;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 {
@@ -20,7 +20,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         {
             _topicName = "message";
             _queueName = "queue" + DateTime.Now.Ticks;
-            _regionEndpoint = RegionEndpoint.SAEast1;
+            _regionEndpoint = TestEnvironment.SecondaryRegion;
 
             EnableMockedBus();
 
@@ -34,9 +34,10 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
         protected override Task When()
         {
-            SystemUnderTest.WithSqsTopicSubscriber()
-            .IntoQueue(_queueName)
-            .ConfigureSubscriptionWith(cfg => cfg.MessageRetentionSeconds = 60)
+            SystemUnderTest
+                .WithSqsTopicSubscriber()
+                .IntoQueue(_queueName)
+                .ConfigureSubscriptionWith(cfg => cfg.MessageRetentionSeconds = 60)
                 .WithMessageHandler(Substitute.For<IHandlerAsync<Message>>());
 
             return Task.CompletedTask;
@@ -44,9 +45,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
         [Fact]
         public async Task QueueAndTopicAreCreatedAndQueueIsSubscribedToTheTopicWithCorrectPermissions()
-        {
-            //This is a bad test as we're testing 4 things in 1 test, oh well.
-            
+        {            
             var (topicExists, topic) = await TryGetTopic(_regionEndpoint, _topicName);
             Assert.True(topicExists, "Topic does not exist");
 
