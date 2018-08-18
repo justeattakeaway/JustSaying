@@ -37,7 +37,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
 
         private string QueueName { get; } = new JustSayingFixture().UniqueName;
 
-        [AwsFact]
+        [NotSimulatorFact]
         public async Task MessagesArePublishedToTheActiveRegion()
         {
             GivenSubscriptionsToAQueueInTwoRegions();
