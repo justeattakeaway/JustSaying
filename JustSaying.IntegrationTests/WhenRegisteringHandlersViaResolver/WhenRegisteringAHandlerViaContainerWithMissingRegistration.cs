@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
+using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.Logging;
 using Shouldly;
 using StructureMap;
@@ -17,7 +18,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
         protected override Task When()
         {
-            var handlerResolver = new StructureMapHandlerResolver(new Container());
+            var container = new Container((p) => p.For<IHandlerAsync<OrderPlaced>>().Use<OrderPlacedHandler>());
+
+            var handlerResolver = new StructureMapHandlerResolver(container);
 
             CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion("eu-west-1")

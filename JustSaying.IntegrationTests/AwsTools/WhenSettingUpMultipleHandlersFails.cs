@@ -92,7 +92,7 @@ namespace JustSaying.IntegrationTests.AwsTools
         public void ThenAnExceptionIsThrown()
         {
             _capturedException.ShouldNotBeNull();
-            _capturedException.Message.ShouldStartWith("The handler for 'Order' messages on this queue has already been registered.");
+            _capturedException.Message.ShouldStartWith("The handler for 'JustSaying.IntegrationTests.AwsTools.WhenSettingUpMultipleHandlersFails+Order' messages on this queue has already been registered.");
         }
     }
 }

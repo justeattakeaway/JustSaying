@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -10,9 +11,9 @@ using Xunit;
 
 namespace JustSaying.IntegrationTests
 {
-    public class OrderPlacedHandler : IHandlerAsync<GenericMessage>
+    public class OrderPlacedHandler : IHandlerAsync<OrderPlaced>
     {
-        public Task<bool> Handle(GenericMessage message)
+        public Task<bool> Handle(OrderPlaced message)
         {
             return Task.FromResult(true);
         }
