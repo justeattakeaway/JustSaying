@@ -140,6 +140,12 @@ ForEach ($libraryProject in $libraryProjects) {
     DotNetPack $libraryProject
 }
 
+if ($env:CI -ne $null) {
+    & docker pull pafortin/goaws
+    & docker run -d --name goaws -p 4100:4100 pafortin/goaws
+    $env:AWS_SERVICE_URL="http://localhost:4100"
+}
+
 if ($SkipTests -eq $false) {
     Write-Host "Running tests..." -ForegroundColor Green
     ForEach ($testProject in $testProjects) {

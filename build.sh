@@ -14,6 +14,12 @@ if [ "$dotnet_version" != "$CLI_VERSION" ]; then
     curl -sSL https://raw.githubusercontent.com/dotnet/cli/v$CLI_VERSION/scripts/obtain/dotnet-install.sh | bash /dev/stdin --version "$CLI_VERSION" --install-dir "$DOTNET_INSTALL_DIR"
 fi
 
+if [ "$CI" != "" ]; then
+    docker pull pafortin/goaws
+    docker run -d --name goaws -p 4100:4100 pafortin/goaws
+    export AWS_SERVICE_URL="http://localhost:4100"
+fi
+
 dotnet restore JustSaying.sln --verbosity minimal || exit 1
 dotnet build JustSaying/JustSaying.csproj --output $artifacts --configuration $configuration --framework "netstandard2.0" || exit 1
 
