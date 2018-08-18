@@ -5,9 +5,11 @@ using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using Microsoft.Extensions.Logging;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
+    [Collection(GlobalSetup.CollectionName)]
     public abstract class WhenCreatingTopicByName : XBehaviourTest<SnsTopicByName>
     {
         protected string UniqueName;

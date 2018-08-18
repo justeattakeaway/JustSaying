@@ -18,6 +18,7 @@ namespace JustSaying.IntegrationTests
         }
     }
 
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenOptingOutOfErrorQueue
     {
         private readonly IAmazonSQS _client;
