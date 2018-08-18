@@ -17,7 +17,8 @@ $libraryProjects = @(
 )
 
 $testProjects = @(
-    (Join-Path $solutionPath "JustSaying.UnitTests\JustSaying.UnitTests.csproj")
+    (Join-Path $solutionPath "JustSaying.UnitTests\JustSaying.UnitTests.csproj"),
+    (Join-Path $solutionPath "JustSaying.IntegrationTests\JustSaying.IntegrationTests.csproj")
 )
 
 $dotnetVersion = (Get-Content $sdkFile | Out-String | ConvertFrom-Json).sdk.version

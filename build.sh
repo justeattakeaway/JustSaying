@@ -18,3 +18,4 @@ dotnet restore JustSaying.sln --verbosity minimal || exit 1
 dotnet build JustSaying/JustSaying.csproj --output $artifacts --configuration $configuration --framework "netstandard2.0" || exit 1
 
 dotnet test ./JustSaying.UnitTests/JustSaying.UnitTests.csproj
+dotnet test ./JustSaying.IntegrationTests/JustSaying.IntegrationTests.csproj
