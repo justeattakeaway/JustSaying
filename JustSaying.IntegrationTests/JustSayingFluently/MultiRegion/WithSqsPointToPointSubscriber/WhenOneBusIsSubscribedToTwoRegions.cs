@@ -30,6 +30,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
 
         private ILoggerFactory LoggerFactory { get; }
 
+        private string QueueName { get; } = new JustSayingFixture().UniqueName;
+
         [AwsFact]
         public async Task MessagesPublishedToBothRegionsWillBeReceived()
         {
@@ -64,7 +66,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
                 .WithFailoverRegion(secondaryRegion)
                 .WithActiveRegion(() => primaryRegion)
                 .WithSqsPointToPointSubscriber()
-                .IntoDefaultQueue()
+                .IntoQueue(QueueName)
                 .WithMessageHandler(handler);
 
             _subscriber.StartListening();
@@ -75,7 +77,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
             _primaryPublisher = CreateMeABus
                 .WithLogging(LoggerFactory)
                 .InRegion(primaryRegion)
-                .WithSqsMessagePublisher<SimpleMessage>(configuration => { });
+                .WithSqsMessagePublisher<SimpleMessage>(cfg => cfg.QueueName = QueueName);
         }
 
         private void AndAPublisherToTheSecondaryRegion(string secondaryRegion)
@@ -83,7 +85,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
             _secondaryPublisher = CreateMeABus
                 .WithLogging(LoggerFactory)
                 .InRegion(secondaryRegion)
-                .WithSqsMessagePublisher<SimpleMessage>(configuration => { });
+                .WithSqsMessagePublisher<SimpleMessage>(cfg => cfg.QueueName = QueueName);
         }
 
         private async Task WhenMessagesArePublishedToBothRegions()

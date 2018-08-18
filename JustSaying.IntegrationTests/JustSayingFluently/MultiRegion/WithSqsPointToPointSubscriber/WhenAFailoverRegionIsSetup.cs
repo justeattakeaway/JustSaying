@@ -33,6 +33,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
             LoggerFactory = outputHelper.AsLoggerFactory();
         }
 
+        private string QueueName { get; } = new JustSayingFixture().UniqueName;
+
         private ILoggerFactory LoggerFactory { get; }
 
         [AwsFact]
@@ -65,8 +67,9 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
                 .WithLogging(LoggerFactory)
                 .InRegion(PrimaryRegion)
                 .WithSqsPointToPointSubscriber()
-                .IntoDefaultQueue()
+                .IntoQueue(QueueName)
                 .WithMessageHandler(primaryHandler);
+
             _primaryBus.StartListening();
 
             var secondaryHandler = Substitute.For<IHandlerAsync<SimpleMessage>>();
@@ -79,8 +82,9 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
                 .WithLogging(LoggerFactory)
                 .InRegion(SecondaryRegion)
                 .WithSqsPointToPointSubscriber()
-                .IntoDefaultQueue()
+                .IntoQueue(QueueName)
                 .WithMessageHandler(secondaryHandler);
+
             _secondaryBus.StartListening();
         }
 
@@ -91,7 +95,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
                 .InRegion(PrimaryRegion)
                 .WithFailoverRegion(SecondaryRegion)
                 .WithActiveRegion(_getActiveRegion)
-                .WithSqsMessagePublisher<SimpleMessage>(configuration => { });
+                .WithSqsMessagePublisher<SimpleMessage>(cfg => cfg.QueueName = QueueName);
         }
 
         private void WhenThePrimaryRegionIsActive()

@@ -30,6 +30,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
 
         private ILoggerFactory LoggerFactory { get; }
 
+        private string QueueName { get; } = new JustSayingFixture().UniqueName;
+
         [AwsFact]
         public async Task MessagesPublishedToBothRegionsWillBeReceived()
         {
@@ -58,15 +60,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .When(x => x.Handle(Arg.Any<SimpleMessage>()))
                 .Do(async x => await _handler.Complete((SimpleMessage) x.Args()[0]));
 
-            string queueName = new JustSayingFixture().UniqueName;
-
             _subscriber = CreateMeABus
                 .WithLogging(LoggerFactory)
                 .InRegion(primaryRegion)
                 .WithFailoverRegion(secondaryRegion)
                 .WithActiveRegion(() => primaryRegion)
                 .WithSqsTopicSubscriber()
-                .IntoQueue(queueName)
+                .IntoQueue(QueueName)
                 .WithMessageHandler(handler);
 
             _subscriber.StartListening();
