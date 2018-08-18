@@ -61,7 +61,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .When(x => x.Handle(Arg.Any<SimpleMessage>()))
                 .Do(async x => await _primaryHandler.Complete((SimpleMessage)x.Args()[0]));
 
-            string queueName = "queuename";
+            string queueName = new JustSayingFixture().UniqueName;
 
             _primaryBus = CreateMeABus
                 .WithLogging(LoggerFactory)
@@ -112,6 +112,9 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         {
             _message = new SimpleMessage { Id = Guid.NewGuid() };
             await _publisher.PublishAsync(_message);
+
+            await Task.Yield();
+            await Task.Delay(TimeSpan.FromSeconds(1));
         }
 
         private async Task ThenTheMessageIsReceivedInThatRegion(Future<SimpleMessage> handler)

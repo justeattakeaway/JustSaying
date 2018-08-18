@@ -93,6 +93,9 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
 
             await _primaryPublisher.PublishAsync(_message1);
             await _secondaryPublisher.PublishAsync(_message2);
+
+            await Task.Yield();
+            await Task.Delay(TimeSpan.FromSeconds(1));
         }
 
         private async Task ThenTheSubscriberReceivesBothMessages()
