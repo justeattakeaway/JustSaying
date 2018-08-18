@@ -48,13 +48,13 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             return Task.CompletedTask;
         }
 
-        [Fact]
+        [AwsFact]
         public void SerialisationIsRegisteredForMessage()
         {
             NotificationStack.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser>());
         }
 
-        [Fact]
+        [AwsFact]
         public async Task QueueIsCreated()
         {
             async Task QueueIsCreatedInner()

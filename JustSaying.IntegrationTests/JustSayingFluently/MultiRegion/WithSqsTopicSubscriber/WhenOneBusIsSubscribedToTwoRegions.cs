@@ -30,7 +30,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
 
         private ILoggerFactory LoggerFactory { get; }
 
-        [Fact]
+        [AwsFact]
         public async Task MessagesPublishedToBothRegionsWillBeReceived()
         {
             var region1 = TestEnvironment.Region.SystemName;

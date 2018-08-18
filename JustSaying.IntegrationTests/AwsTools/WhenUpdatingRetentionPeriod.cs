@@ -27,7 +27,7 @@ namespace JustSaying.IntegrationTests.AwsTools
                 new SqsBasicConfiguration { MessageRetentionSeconds = _newRetentionPeriod });
         }
 
-        [Fact]
+        [AwsFact]
         public void TheRedrivePolicyIsUpdatedWithTheNewValue()
         {
             SystemUnderTest.MessageRetentionPeriod.ShouldBe(_newRetentionPeriod);

@@ -35,7 +35,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
 
         private ILoggerFactory LoggerFactory { get; }
 
-        [Fact]
+        [AwsFact]
         public async Task MessagesArePublishedToTheActiveRegion()
         {
             GivenSubscriptionsToAQueueInTwoRegions();

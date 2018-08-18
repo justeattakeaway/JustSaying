@@ -16,7 +16,7 @@ namespace JustSaying.IntegrationTests.AwsTools
                 new SqsBasicConfiguration { ServerSideEncryption = new ServerSideEncryption() });
         }
 
-        [Fact]
+        [AwsFact]
         public void TheServerSideEncryptionIsUpdatedWithTheNewValue()
         {
             SystemUnderTest.ServerSideEncryption.KmsMasterKeyId.ShouldBe("alias/aws/sqs");

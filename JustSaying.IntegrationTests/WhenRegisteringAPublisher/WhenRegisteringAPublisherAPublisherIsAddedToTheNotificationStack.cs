@@ -31,13 +31,13 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
             return Task.CompletedTask;
         }
 
-        [Fact]
+        [AwsFact]
         public void APublisherIsAddedToTheStack()
         {
             NotificationStack.Received().AddMessagePublisher<Message>(Arg.Any<IMessagePublisher>(), Region.SystemName);
         }
 
-        [Fact]
+        [AwsFact]
         public void SerialisationIsRegisteredForMessage()
         {
             NotificationStack.SerialisationRegister.Received()

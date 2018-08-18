@@ -34,7 +34,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             return Task.FromResult(true);
         }
 
-        [Fact]
+        [AwsFact]
         public void ThrowsNotSupportedException()
         {
             ThrownException.ShouldBeAssignableTo<NotSupportedException>();

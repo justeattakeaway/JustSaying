@@ -47,7 +47,7 @@ namespace JustSaying.IntegrationTests.AwsTools
             base.PostAssertTeardown();
         }
 
-        [Fact]
+        [AwsFact]
         public void TheRetentionPeriodOfTheErrorQueueStaysAsMaximum()
         {
             SystemUnderTest.MessageRetentionPeriod.ShouldBe(100);

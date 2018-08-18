@@ -32,7 +32,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             return Task.FromResult(true);
         }
 
-        [Fact]
+        [AwsFact]
         public void ExceptionIsThrownBecauseHandlerIsNotRegisteredInContainer()
         {
             ThrownException.ShouldBeAssignableTo<HandlerNotRegisteredWithContainerException>();

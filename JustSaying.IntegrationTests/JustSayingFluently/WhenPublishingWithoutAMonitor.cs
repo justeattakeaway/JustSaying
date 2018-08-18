@@ -53,7 +53,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             _bus.StopListening();
         }
 
-        [Fact]
+        [AwsFact]
         public async Task AMessageCanStillBePublishedAndPopsOutTheOtherEnd()
         {
             await Given();

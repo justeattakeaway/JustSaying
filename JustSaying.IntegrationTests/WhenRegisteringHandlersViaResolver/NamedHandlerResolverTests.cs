@@ -8,7 +8,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
     {
         private readonly IHandlerResolver _handlerResolver = new StructureMapNamedHandlerResolver();
 
-        [Fact]
+        [AwsFact]
         public void TestQueueAResolution()
         {
             var context = new HandlerResolutionContext("QueueA");
@@ -18,7 +18,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             handler.ShouldBeAssignableTo<HandlerA>();
         }
 
-        [Fact]
+        [AwsFact]
         public void TestQueueBResolution()
         {
             var context = new HandlerResolutionContext("QueueB");
@@ -28,7 +28,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             handler.ShouldBeAssignableTo<HandlerB>();
         }
 
-        [Fact]
+        [AwsFact]
         public void TestOtherQueueNameResolution()
         {
             var context = new HandlerResolutionContext("QueueWithAnyOtherName");

@@ -25,7 +25,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             await _handler.DoneSignal;
         }
 
-        [Fact]
+        [AwsFact]
         public void ThenItGetsHandled()
         {
             _handler.ReceivedMessageCount.ShouldBeGreaterThan(0);

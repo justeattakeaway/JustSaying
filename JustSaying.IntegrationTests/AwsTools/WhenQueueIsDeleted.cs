@@ -17,7 +17,7 @@ namespace JustSaying.IntegrationTests.AwsTools
             await SystemUnderTest.DeleteAsync();
         }
 
-        [Fact]
+        [AwsFact]
         public async Task TheErrorQueueIsDeleted()
         {
             await Patiently.AssertThatAsync(

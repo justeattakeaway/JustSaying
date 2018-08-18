@@ -33,7 +33,7 @@ namespace JustSaying.IntegrationTests.AwsTools
             await SystemUnderTest.UpdateQueueAttributeAsync(queueConfig);
         }
 
-        [Fact]
+        [AwsFact]
         public void TheDeliveryDelayIsUpdatedWithTheNewValue()
         {
             SystemUnderTest.DeliveryDelay.ShouldBe(_newDeliveryDelay);

@@ -53,20 +53,20 @@ namespace JustSaying.IntegrationTests.AwsTools
             base.PostAssertTeardown();
         }
 
-        [Fact]
+        [AwsFact]
         public void CreateTopicCalled()
         {
             _proxyAwsClientFactory.Counters["CreateTopic"][_topicName].Count.ShouldBeGreaterThanOrEqualTo(1);
         }
 
-        [Fact]
+        [AwsFact]
         public void GetQueueAttributesCalledOnce()
         {
             _proxyAwsClientFactory.Counters["GetQueueAttributes"].First(x => x.Key.EndsWith(_queueName)).Value.Count
                 .ShouldBe(1);
         }
 
-        [Fact]
+        [AwsFact]
         public void CreateQueueCalledOnce()
         {
             AssertHasCounterSetToOne("CreateQueue", _queueName);

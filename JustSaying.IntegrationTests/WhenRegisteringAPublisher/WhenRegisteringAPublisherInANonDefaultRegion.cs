@@ -29,7 +29,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
             return Task.CompletedTask;
         }
 
-        [Fact]
+        [AwsFact]
         public async Task ASnsTopicIsCreatedInTheNonDefaultRegion()
         {
             bool topicExists;

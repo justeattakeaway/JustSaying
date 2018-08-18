@@ -24,13 +24,13 @@ namespace JustSaying.IntegrationTests.AwsTools
             _createWasSuccessful = await _topic.CreateAsync();
         }
 
-        [Fact]
+        [AwsFact]
         public void CreateCallIsStillSuccessful()
         {
             _createWasSuccessful.ShouldBeTrue();
         }
 
-        [Fact]
+        [AwsFact]
         public void TopicArnIsPopulated()
         {
             _topic.Arn.ShouldNotBeNull();

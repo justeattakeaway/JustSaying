@@ -33,7 +33,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             Subscriber.StartListening();
         }
 
-        [Fact]
+        [AwsFact]
         public void ThenHandlerWillReceiveTheMessage()
         {
             _handlerFuture.ReceivedMessageCount.ShouldBeGreaterThan(0);

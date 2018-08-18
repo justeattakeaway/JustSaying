@@ -16,13 +16,13 @@ namespace JustSaying.IntegrationTests.AwsTools
             _isQueueCreated = await SystemUnderTest.CreateAsync(new SqsBasicConfiguration(), attempt: 0);
         }
 
-        [Fact]
+        [AwsFact]
         public void TheQueueIsCreated()
         {
             _isQueueCreated.ShouldBeTrue();
         }
 
-        [Fact]
+        [AwsFact]
         public async Task DeadLetterQueueIsCreated()
         {
             await Patiently.AssertThatAsync(

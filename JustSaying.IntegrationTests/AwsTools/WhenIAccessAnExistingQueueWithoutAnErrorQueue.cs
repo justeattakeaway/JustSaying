@@ -13,7 +13,7 @@ namespace JustSaying.IntegrationTests.AwsTools
             await SystemUnderTest.CreateAsync(new SqsBasicConfiguration { ErrorQueueOptOut = true }, attempt: 0);
         }
 
-        [Fact]
+        [AwsFact]
         public async Task ThereIsNoErrorQueue()
         {
             await Patiently.AssertThatAsync(async () => !await SystemUnderTest.ErrorQueue.ExistsAsync());

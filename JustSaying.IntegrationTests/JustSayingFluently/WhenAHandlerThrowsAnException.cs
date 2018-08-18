@@ -64,7 +64,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             bus.StopListening();
         }
 
-        [Fact]
+        [AwsFact]
         public async Task MessageReceivedAndExceptionHandled()
         {
             await Setup();

@@ -28,7 +28,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             await _handler.DoneSignal;
         }
 
-        [Fact]
+        [AwsFact]
         public void ThenExceptionIsRecordedInMonitoring()
         {
             _handler.ReceivedMessageCount.ShouldBeGreaterThan(0);

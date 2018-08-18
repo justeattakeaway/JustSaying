@@ -25,7 +25,7 @@ namespace JustSaying.IntegrationTests.AwsTools
                 new RedrivePolicy(_newMaximumReceived, SystemUnderTest.ErrorQueue.Arn));
         }
 
-        [Fact]
+        [AwsFact]
         public void TheRedrivePolicyIsUpdatedWithTheNewValue()
         {
             SystemUnderTest.RedrivePolicy.MaximumReceives.ShouldBe(_newMaximumReceived);

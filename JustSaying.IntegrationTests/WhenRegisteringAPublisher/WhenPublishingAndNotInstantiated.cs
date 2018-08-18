@@ -23,7 +23,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
             await SystemUnderTest.PublishAsync(new SimpleMessage());
         }
 
-        [Fact]
+        [AwsFact]
         public void ExceptionIsRaised()
         {
             ThrownException.ShouldBeAssignableTo<InvalidOperationException>();

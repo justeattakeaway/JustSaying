@@ -51,13 +51,13 @@ namespace JustSaying.IntegrationTests.AwsTools
             _handlersAttached++;
         }
 
-        [Fact]
+        [AwsFact]
         public void ThenOnlyOneHandlerIsAttached()
         {
             _handlersAttached.ShouldBe(1);
         }
 
-        [Fact]
+        [AwsFact]
         public void ThenAnExceptionIsThrown()
         {
             _capturedException.ShouldNotBeNull();

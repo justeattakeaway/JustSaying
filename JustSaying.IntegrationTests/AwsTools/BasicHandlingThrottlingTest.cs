@@ -26,7 +26,7 @@ namespace JustSaying.IntegrationTests.AwsTools
 
         private ITestOutputHelper OutputHelper { get; }
 
-        [Theory]
+        [AwsTheory]
         [InlineData(1000)]
         public async Task HandlingManyMessages(int throttleMessageCount)
         {

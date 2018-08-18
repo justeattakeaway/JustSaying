@@ -14,6 +14,10 @@ namespace JustSaying.IntegrationTests
             {
                 Skip = "This test is not supported using an AWS simulator.";
             }
+            else if (!TestEnvironment.HasCredentials)
+            {
+                Skip = "This test requires AWS credentials to be configured.";
+            }
         }
     }
 }

@@ -45,7 +45,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             await publisher.PublishAsync(new SimpleMessage { Id = Guid.NewGuid() });
         }
 
-        [Fact]
+        [AwsFact]
         public async Task BothHandlersAreTriggered()
         {
             await Act();

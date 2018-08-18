@@ -47,7 +47,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             await publisher.PublishAsync(message);
         }
 
-        [Fact]
+        [AwsFact]
         public async Task MessageHasBeenCalledOnce()
         {
             await Act();

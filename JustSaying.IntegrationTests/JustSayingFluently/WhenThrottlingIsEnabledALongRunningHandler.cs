@@ -70,7 +70,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 });
         }
 
-        [Fact]
+        [AwsFact]
         public async Task ThenItGetsHandled()
         {
             TimeSpan baseSleep = TestEnvironment.IsSimulatorConfigured ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(2);

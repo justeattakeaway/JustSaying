@@ -15,7 +15,7 @@ namespace JustSaying.IntegrationTests.AwsTools
             await SystemUnderTest.UpdateQueueAttributeAsync(new SqsBasicConfiguration { ServerSideEncryption = null });
         }
 
-        [Fact]
+        [AwsFact]
         public void TheServerSideEncryptionIsUpdatedWithTheNewValue()
         {
             SystemUnderTest.ServerSideEncryption.ShouldBeNull();

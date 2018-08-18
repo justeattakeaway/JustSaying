@@ -27,7 +27,7 @@ namespace JustSaying.IntegrationTests
 
         private ILoggerFactory LoggerFactory { get; }
 
-        [Fact]
+        [AwsFact]
         public async Task ErrorQueueShouldNotBeCreated()
         {
             var queueName = "test-queue-issue-191";
