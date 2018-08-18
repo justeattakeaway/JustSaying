@@ -17,8 +17,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         readonly Stopwatch _stopwatch = new Stopwatch();
         protected IAmJustSayingFluently ServiceBus;
         protected IMessageMonitor Monitoring;
-        private Future<GenericMessage> _snsHandler;
-        private Future<AnotherGenericMessage> _sqsHandler;
+        private Future<SimpleMessage> _snsHandler;
+        private Future<AnotherSimpleMessage> _sqsHandler;
         private IPublishConfiguration _config =
             new MessagingConfig
             {
@@ -26,12 +26,12 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 PublishFailureReAttempts = 3
             };
 
-        protected void RegisterSnsHandler(Future<GenericMessage> handler)
+        protected void RegisterSnsHandler(Future<SimpleMessage> handler)
         {
             _snsHandler = handler;
         }
 
-        protected void RegisterSqsHandler(Future<AnotherGenericMessage> handler)
+        protected void RegisterSqsHandler(Future<AnotherSimpleMessage> handler)
         {
             _sqsHandler = handler;
         }
@@ -50,19 +50,19 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         {
             const int TimeoutMillis = 1000;
 
-            var snsHandler = Substitute.For<IHandlerAsync<GenericMessage>>();
-            snsHandler.When(x => x.Handle(Arg.Any<GenericMessage>()))
+            var snsHandler = Substitute.For<IHandlerAsync<SimpleMessage>>();
+            snsHandler.When(x => x.Handle(Arg.Any<SimpleMessage>()))
                     .Do(x =>
                     {
-                        var msg = (GenericMessage) x.Args()[0];
+                        var msg = (SimpleMessage) x.Args()[0];
                         _snsHandler?.Complete(msg).Wait(TimeoutMillis);
                     });
 
-            var sqsHandler = Substitute.For<IHandlerAsync<AnotherGenericMessage>>();
-            sqsHandler.When(x => x.Handle(Arg.Any<AnotherGenericMessage>()))
+            var sqsHandler = Substitute.For<IHandlerAsync<AnotherSimpleMessage>>();
+            sqsHandler.When(x => x.Handle(Arg.Any<AnotherSimpleMessage>()))
                     .Do(x =>
                     {
-                        var msg = (AnotherGenericMessage)x.Args()[0];
+                        var msg = (AnotherSimpleMessage)x.Args()[0];
                         _sqsHandler?.Complete(msg).Wait(TimeoutMillis);
                     });
 
@@ -78,7 +78,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                     c.PublishFailureReAttempts = _config.PublishFailureReAttempts;
                 })
 
-                .WithSnsMessagePublisher<GenericMessage>()
+                .WithSnsMessagePublisher<SimpleMessage>()
                 .WithSqsTopicSubscriber()
                 .IntoQueue("queuename")
                 .ConfigureSubscriptionWith(cf =>
@@ -89,7 +89,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 })
                 .WithMessageHandler(snsHandler)
 
-                .WithSqsMessagePublisher<AnotherGenericMessage>(configuration => { })
+                .WithSqsMessagePublisher<AnotherSimpleMessage>(configuration => { })
                 .WithSqsPointToPointSubscriber()
                 .IntoDefaultQueue()
                 .WithMessageHandler(sqsHandler);

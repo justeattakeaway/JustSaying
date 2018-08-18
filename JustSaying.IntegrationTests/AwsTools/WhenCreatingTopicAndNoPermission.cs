@@ -1,7 +1,5 @@
-using Amazon;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
-using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit;
 
@@ -11,13 +9,19 @@ namespace JustSaying.IntegrationTests.AwsTools
     public class WhenCreatingTopicAndNoPermission : WhenCreatingTopicByName
     {
         private SnsTopicByName _topic;
-
         private bool _createWasSuccessful;
 
         protected override void When()
         {
-            var snsClient = new NoTopicCreationAwsClientFactory().GetSnsClient(RegionEndpoint.EUWest1);
-            _topic = new SnsTopicByName(UniqueName, snsClient, new MessageSerialisationRegister(new NonGenericMessageSubjectProvider()), new LoggerFactory(), new NonGenericMessageSubjectProvider());
+            var snsClient = new NoTopicCreationAwsClientFactory().GetSnsClient(Region);
+
+            _topic = new SnsTopicByName(
+                UniqueName,
+                snsClient,
+                new MessageSerialisationRegister(new NonGenericMessageSubjectProvider()),
+                LoggerFactory,
+                new NonGenericMessageSubjectProvider());
+
             _createWasSuccessful = _topic.CreateAsync().GetAwaiter().GetResult();
         }
 

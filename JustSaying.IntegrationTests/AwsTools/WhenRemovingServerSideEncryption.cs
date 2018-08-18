@@ -10,9 +10,9 @@ namespace JustSaying.IntegrationTests.AwsTools
     {
         protected override async Task When()
         {
-            await SystemUnderTest.CreateAsync(new SqsBasicConfiguration { ServerSideEncryption = new ServerSideEncryption()});
+            await SystemUnderTest.CreateAsync(new SqsBasicConfiguration { ServerSideEncryption = new ServerSideEncryption() });
 
-            await SystemUnderTest.UpdateQueueAttributeAsync(new SqsBasicConfiguration{ServerSideEncryption = null});
+            await SystemUnderTest.UpdateQueueAttributeAsync(new SqsBasicConfiguration { ServerSideEncryption = null });
         }
 
         [Fact]

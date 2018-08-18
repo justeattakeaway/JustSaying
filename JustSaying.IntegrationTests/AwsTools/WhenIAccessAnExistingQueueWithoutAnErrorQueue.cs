@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using JustSaying.AwsTools.QueueCreation;
-using Xunit;
 using JustSaying.TestingFramework;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
@@ -10,7 +10,7 @@ namespace JustSaying.IntegrationTests.AwsTools
     {
         protected override async Task When()
         {
-            await SystemUnderTest.CreateAsync(new SqsBasicConfiguration {ErrorQueueOptOut = true}, attempt: 0);
+            await SystemUnderTest.CreateAsync(new SqsBasicConfiguration { ErrorQueueOptOut = true }, attempt: 0);
         }
 
         [Fact]

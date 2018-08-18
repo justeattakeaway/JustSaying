@@ -17,11 +17,11 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
         private static readonly string PrimaryRegion = RegionEndpoint.EUWest1.SystemName;
         private static readonly string SecondaryRegion = RegionEndpoint.USEast1.SystemName;
 
-        private readonly Future<GenericMessage> _primaryHandler = new Future<GenericMessage>();
-        private readonly Future<GenericMessage> _secondaryHandler = new Future<GenericMessage>();
+        private readonly Future<SimpleMessage> _primaryHandler = new Future<SimpleMessage>();
+        private readonly Future<SimpleMessage> _secondaryHandler = new Future<SimpleMessage>();
 
         private IHaveFulfilledPublishRequirements _publisher;
-        private GenericMessage _message;
+        private SimpleMessage _message;
         private static string _activeRegion;
         private readonly Func<string> _getActiveRegion = () => _activeRegion;
 
@@ -48,11 +48,11 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
 
         private void GivenSubscriptionsToAQueueInTwoRegions()
         {
-            var primaryHandler = Substitute.For<IHandlerAsync<GenericMessage>>();
-            primaryHandler.Handle(Arg.Any<GenericMessage>()).Returns(true);
+            var primaryHandler = Substitute.For<IHandlerAsync<SimpleMessage>>();
+            primaryHandler.Handle(Arg.Any<SimpleMessage>()).Returns(true);
             primaryHandler
-                .When(x => x.Handle(Arg.Any<GenericMessage>()))
-                .Do(async x => await _primaryHandler.Complete((GenericMessage)x.Args()[0]));
+                .When(x => x.Handle(Arg.Any<SimpleMessage>()))
+                .Do(async x => await _primaryHandler.Complete((SimpleMessage)x.Args()[0]));
 
             _primaryBus = CreateMeABus
                 .WithLogging(new LoggerFactory())
@@ -62,11 +62,11 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
                 .WithMessageHandler(primaryHandler);
             _primaryBus.StartListening();
 
-            var secondaryHandler = Substitute.For<IHandlerAsync<GenericMessage>>();
-            secondaryHandler.Handle(Arg.Any<GenericMessage>()).Returns(true);
+            var secondaryHandler = Substitute.For<IHandlerAsync<SimpleMessage>>();
+            secondaryHandler.Handle(Arg.Any<SimpleMessage>()).Returns(true);
             secondaryHandler
-                .When(x => x.Handle(Arg.Any<GenericMessage>()))
-                .Do(async x => await _secondaryHandler.Complete((GenericMessage)x.Args()[0]));
+                .When(x => x.Handle(Arg.Any<SimpleMessage>()))
+                .Do(async x => await _secondaryHandler.Complete((SimpleMessage)x.Args()[0]));
 
             _secondaryBus = CreateMeABus
                 .WithLogging(new LoggerFactory())
@@ -84,7 +84,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
                 .InRegion(PrimaryRegion)
                 .WithFailoverRegion(SecondaryRegion)
                 .WithActiveRegion(_getActiveRegion)
-                .WithSqsMessagePublisher<GenericMessage>(configuration => { });
+                .WithSqsMessagePublisher<SimpleMessage>(configuration => { });
         }
 
         private void WhenThePrimaryRegionIsActive()
@@ -99,11 +99,11 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
 
         private async Task AndAMessageIsPublished()
         {
-            _message = new GenericMessage { Id = Guid.NewGuid() };
+            _message = new SimpleMessage { Id = Guid.NewGuid() };
             await _publisher.PublishAsync(_message);
         }
 
-        private async Task ThenTheMessageIsReceivedInThatRegion(Future<GenericMessage> handler)
+        private async Task ThenTheMessageIsReceivedInThatRegion(Future<SimpleMessage> handler)
         {
             var done = await Tasks.WaitWithTimeoutAsync(handler.DoneSignal);
             done.ShouldBeTrue();

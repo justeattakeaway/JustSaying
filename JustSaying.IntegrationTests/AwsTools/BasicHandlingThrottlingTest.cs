@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Amazon;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
@@ -36,7 +35,8 @@ namespace JustSaying.IntegrationTests.AwsTools
         public async Task HandlingManyMessages(int throttleMessageCount)
         {
             // Arrange
-            var region = RegionEndpoint.EUWest1;
+            bool isSimulator = TestEnvironment.IsSimulatorConfigured;
+            var region = TestEnvironment.Region;
             var client = CreateMeABus.DefaultClientFactory().GetSqsClient(region);
 
             var queue = new SqsQueueByName(region, "throttle_test", client, 1, LoggerFactory);
@@ -45,16 +45,19 @@ namespace JustSaying.IntegrationTests.AwsTools
             {
                 await queue.CreateAsync(new SqsBasicConfiguration());
 
-                // Wait for up to 60 secs for queue creation to be guaranteed completed by AWS
-                using (var cts = new CancellationTokenSource(TimeSpan.FromMinutes(1)))
+                if (!isSimulator)
                 {
-                    while (!cts.IsCancellationRequested)
+                    // Wait for up to 60 secs for queue creation to be guaranteed completed by AWS
+                    using (var cts = new CancellationTokenSource(TimeSpan.FromMinutes(1)))
                     {
-                        await Task.Delay(TimeSpan.FromSeconds(2));
-
-                        if (await queue.ExistsAsync())
+                        while (!cts.IsCancellationRequested)
                         {
-                            break;
+                            await Task.Delay(TimeSpan.FromSeconds(2));
+
+                            if (await queue.ExistsAsync())
+                            {
+                                break;
+                            }
                         }
                     }
                 }
@@ -92,10 +95,10 @@ namespace JustSaying.IntegrationTests.AwsTools
             var handleCount = 0;
             var serialisations = Substitute.For<IMessageSerialisationRegister>();
             var monitor = Substitute.For<IMessageMonitor>();
-            var handler = Substitute.For<IHandlerAsync<GenericMessage>>();
+            var handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
             handler.Handle(null).ReturnsForAnyArgs(true).AndDoes(_ => Interlocked.Increment(ref handleCount));
 
-            serialisations.DeserializeMessage(string.Empty).ReturnsForAnyArgs(new GenericMessage());
+            serialisations.DeserializeMessage(string.Empty).ReturnsForAnyArgs(new SimpleMessage());
             var listener = new SqsNotificationListener(queue, serialisations, monitor, LoggerFactory);
             listener.AddMessageHandler(() => handler);
 
@@ -103,22 +106,27 @@ namespace JustSaying.IntegrationTests.AwsTools
             var stopwatch = Stopwatch.StartNew();
 
             listener.Listen();
-            var waitCount = 0;
 
-            do
+            using (var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5)))
             {
-                await Task.Delay(TimeSpan.FromSeconds(5));
-                OutputHelper.WriteLine($"{DateTime.Now} - Handled {handleCount} messages. Waiting for completion.");
-                waitCount++;
+                do
+                {
+                    if (!isSimulator)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(5));
+                    }
+
+                    OutputHelper.WriteLine($"{DateTime.Now} - Handled {handleCount} messages. Waiting for completion.");
+                }
+                while (handleCount < throttleMessageCount && !cts.IsCancellationRequested);
             }
-            while (handleCount < throttleMessageCount && waitCount < 100);
 
             listener.StopListening();
             stopwatch.Stop();
 
-            OutputHelper.WriteLine($"{DateTime.Now} - Handled {handleCount} messages.");
+            OutputHelper.WriteLine($"{DateTime.Now} - Handled {handleCount:N0} messages.");
             OutputHelper.WriteLine($"{DateTime.Now} - Took {stopwatch.ElapsedMilliseconds} ms");
-            OutputHelper.WriteLine($"{DateTime.Now} - Throughput {(float) handleCount/stopwatch.ElapsedMilliseconds*1000} msg/sec");
+            OutputHelper.WriteLine($"{DateTime.Now} - Throughput {(float)handleCount / stopwatch.ElapsedMilliseconds * 1000} messages/second");
 
             // Assert
             Assert.Equal(throttleMessageCount, handleCount);

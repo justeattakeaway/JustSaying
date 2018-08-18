@@ -51,7 +51,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         protected override Task When()
         {
-            SystemUnderTest.PublishAsync(new GenericMessage()).Wait();
+            SystemUnderTest.PublishAsync(new SimpleMessage()).Wait();
 
             return Task.CompletedTask;
         }

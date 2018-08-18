@@ -13,10 +13,10 @@ using Xunit;
 namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 {
     [ExactlyOnce(TimeOut = 10)]
-    public class SampleHandler : IHandlerAsync<GenericMessage>
+    public class SampleHandler : IHandlerAsync<SimpleMessage>
     {
         private int _count;
-        public Task<bool> Handle(GenericMessage message)
+        public Task<bool> Handle(SimpleMessage message)
         {
             Interlocked.Increment(ref _count);
             return Task.FromResult(true);
@@ -27,6 +27,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             return _count;
         }
     }
+
     [ExactlyOnce]
     public class AnotherSampleHandler : SampleHandler { }
 
@@ -34,7 +35,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
     public class WhenTwoDifferentHanldersHandleAMessageWithExactlyOnceAttribute
     {
         protected string QueueName;
-        private readonly GenericMessage _message;
+        private readonly SimpleMessage _message;
         private SampleHandler _handler1;
         private SampleHandler _handler2;
         private const string region = "eu-west-1";
@@ -42,7 +43,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         public WhenTwoDifferentHanldersHandleAMessageWithExactlyOnceAttribute()
         {
             QueueName = "queuename-" + DateTime.Now.Ticks;
-            _message = new GenericMessage { Id = Guid.NewGuid() };
+            _message = new SimpleMessage { Id = Guid.NewGuid() };
         }
 
         protected async Task Act()
@@ -52,7 +53,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             var publisher = CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion(region)
                 .ConfigurePublisherWith(_ => { })
-                .WithSnsMessagePublisher<GenericMessage>();
+                .WithSnsMessagePublisher<SimpleMessage>();
 
             var bus = CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion(region)
@@ -84,14 +85,14 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
     public class WhenHandlerHasExactlyOnceAttribute
     {
         protected string QueueName;
-        private readonly GenericMessage _message;
+        private readonly SimpleMessage _message;
         private SampleHandler _sampleHandler;
         private const string region = "eu-west-1";
         
         public WhenHandlerHasExactlyOnceAttribute()
         {
             QueueName = "queuename-" + DateTime.Now.Ticks;
-            _message = new GenericMessage{Id = Guid.NewGuid()};
+            _message = new SimpleMessage { Id = Guid.NewGuid()};
         }
 
         protected async Task Act()
@@ -99,7 +100,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             _sampleHandler = new SampleHandler();
             var publisher = CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion(region)
-                .WithSnsMessagePublisher<GenericMessage>();
+                .WithSnsMessagePublisher<SimpleMessage>();
 
             var bus = CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion(region)

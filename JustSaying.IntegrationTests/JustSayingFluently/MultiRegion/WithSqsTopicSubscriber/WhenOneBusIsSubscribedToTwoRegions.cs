@@ -14,14 +14,14 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
     [Collection(GlobalSetup.CollectionName)]
     public class WhenOneBusIsSubscribedToTwoRegions
     {
-        private readonly Future<GenericMessage> _handler = new Future<GenericMessage>();
+        private readonly Future<SimpleMessage> _handler = new Future<SimpleMessage>();
 
         private IHaveFulfilledPublishRequirements _primaryPublisher;
         private IHaveFulfilledPublishRequirements _secondaryPublisher;
         private IHaveFulfilledSubscriptionRequirements _subscriber;
 
-        private GenericMessage _message1;
-        private GenericMessage _message2;
+        private SimpleMessage _message1;
+        private SimpleMessage _message2;
 
         [Fact]
         public async Task MessagesPublishedToBothRegionsWillBeReceived()
@@ -45,11 +45,11 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         {
             _handler.ExpectedMessageCount = 2;
 
-            var handler = Substitute.For<IHandlerAsync<GenericMessage>>();
-            handler.Handle(Arg.Any<GenericMessage>()).Returns(true);
+            var handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
+            handler.Handle(Arg.Any<SimpleMessage>()).Returns(true);
             handler
-                .When(x => x.Handle(Arg.Any<GenericMessage>()))
-                .Do(async x => await _handler.Complete((GenericMessage) x.Args()[0]));
+                .When(x => x.Handle(Arg.Any<SimpleMessage>()))
+                .Do(async x => await _handler.Complete((SimpleMessage) x.Args()[0]));
 
             _subscriber = CreateMeABus
                 .WithLogging(new LoggerFactory())
@@ -67,7 +67,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             _primaryPublisher = CreateMeABus
                 .WithLogging(new LoggerFactory())
                 .InRegion(primaryRegion)
-                .WithSnsMessagePublisher<GenericMessage>();
+                .WithSnsMessagePublisher<SimpleMessage>();
         }
 
         private void AndAPublisherToTheSecondaryRegion(string secondaryRegion)
@@ -75,13 +75,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             _secondaryPublisher = CreateMeABus
                 .WithLogging(new LoggerFactory())
                 .InRegion(secondaryRegion)
-                .WithSnsMessagePublisher<GenericMessage>();
+                .WithSnsMessagePublisher<SimpleMessage>();
         }
 
         private async Task WhenMessagesArePublishedToBothRegions()
         {
-            _message1 = new GenericMessage { Id = Guid.NewGuid() };
-            _message2 = new GenericMessage { Id = Guid.NewGuid() };
+            _message1 = new SimpleMessage { Id = Guid.NewGuid() };
+            _message2 = new SimpleMessage { Id = Guid.NewGuid() };
 
             await _primaryPublisher.PublishAsync(_message1);
 

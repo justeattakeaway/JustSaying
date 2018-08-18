@@ -13,7 +13,7 @@ namespace JustSaying.IntegrationTests.AwsTools
             await SystemUnderTest.CreateAsync(new SqsBasicConfiguration());
 
             await SystemUnderTest.UpdateQueueAttributeAsync(
-                new SqsBasicConfiguration { ServerSideEncryption = new ServerSideEncryption()});
+                new SqsBasicConfiguration { ServerSideEncryption = new ServerSideEncryption() });
         }
 
         [Fact]

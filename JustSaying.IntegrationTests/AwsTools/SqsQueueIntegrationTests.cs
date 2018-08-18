@@ -2,22 +2,32 @@ using System;
 using Amazon;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
     public abstract class WhenCreatingQueuesByName : XAsyncBehaviourTest<SqsQueueByName>
     {
-        protected string QueueUniqueKey;
-
         protected override void Given()
-        { }
+        {
+        }
 
         protected override SqsQueueByName CreateSystemUnderTest()
         {
-            QueueUniqueKey = "test" + DateTime.Now.Ticks;
-            var queue = new SqsQueueByName(RegionEndpoint.EUWest1, QueueUniqueKey, CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1), 1, new LoggerFactory());
+            string queueName = "test" + DateTime.Now.Ticks;
+            RegionEndpoint region = TestEnvironment.Region;
+
+            var queue = new SqsQueueByName(
+                region,
+                queueName,
+                CreateMeABus.DefaultClientFactory().GetSqsClient(region),
+                1,
+                new LoggerFactory());
+
+            // Force queue creation
             queue.ExistsAsync().GetAwaiter().GetResult();
+
             return queue;
         }
 

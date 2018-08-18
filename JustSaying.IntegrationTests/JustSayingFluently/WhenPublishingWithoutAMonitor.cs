@@ -12,7 +12,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
     public class WhenPublishingWithoutAMonitor
     {
         private IAmJustSayingFluently _bus;
-        private readonly IHandlerAsync<GenericMessage> _handler = Substitute.For<IHandlerAsync<GenericMessage>>();
+        private readonly IHandlerAsync<SimpleMessage> _handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
 
         private async Task Given()
         {
@@ -20,7 +20,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             var doneSignal = new TaskCompletionSource<object>();
 
             // Given
-            _handler.Handle(Arg.Any<GenericMessage>())
+            _handler.Handle(Arg.Any<SimpleMessage>())
                 .Returns(true)
                 .AndDoes(_ => Tasks.DelaySendDone(doneSignal));
 
@@ -32,7 +32,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                         c.PublishFailureReAttempts = 1;
 
                     })
-                .WithSnsMessagePublisher<GenericMessage>()
+                .WithSnsMessagePublisher<SimpleMessage>()
                 .WithSqsTopicSubscriber()
                 .IntoQueue("queuename")
                 .ConfigureSubscriptionWith(cfg => cfg.InstancePosition = 1)
@@ -42,7 +42,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
             // When
             _bus.StartListening();
-            await _bus.PublishAsync(new GenericMessage());
+            await _bus.PublishAsync(new SimpleMessage());
 
             // Teardown
             await doneSignal.Task;
@@ -53,7 +53,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         public async Task AMessageCanStillBePublishedAndPopsOutTheOtherEnd()
         {
             await Given();
-            Received.InOrder(async () => await _handler.Handle(Arg.Any<GenericMessage>()));
+            Received.InOrder(async () => await _handler.Handle(Arg.Any<SimpleMessage>()));
         }
     }
 }

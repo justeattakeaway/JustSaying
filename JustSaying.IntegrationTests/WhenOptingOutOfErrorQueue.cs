@@ -35,7 +35,7 @@ namespace JustSaying.IntegrationTests
             var queueName = "test-queue-issue-191";
             CreateMeABus.WithLogging(new LoggerFactory())
                 .InRegion("eu-west-1")
-                .WithSnsMessagePublisher<GenericMessage>()
+                .WithSnsMessagePublisher<SimpleMessage>()
 
                 .WithSqsTopicSubscriber()
                 .IntoQueue(queueName)

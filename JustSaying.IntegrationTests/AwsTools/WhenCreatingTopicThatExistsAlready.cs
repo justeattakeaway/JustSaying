@@ -1,6 +1,5 @@
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
-using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit;
 
@@ -14,7 +13,13 @@ namespace JustSaying.IntegrationTests.AwsTools
 
         protected override void When()
         {
-            _topic = new SnsTopicByName(UniqueName, Bus, new MessageSerialisationRegister(new NonGenericMessageSubjectProvider()), new LoggerFactory(), new NonGenericMessageSubjectProvider());
+            _topic = new SnsTopicByName(
+                UniqueName,
+                Client,
+                new MessageSerialisationRegister(new NonGenericMessageSubjectProvider()),
+                LoggerFactory,
+                new NonGenericMessageSubjectProvider());
+
             _createWasSuccessful = _topic.CreateAsync().GetAwaiter().GetResult();
         }
 
@@ -31,6 +36,5 @@ namespace JustSaying.IntegrationTests.AwsTools
             _topic.Arn.ShouldEndWith(_topic.TopicName);
             _topic.Arn.ShouldBe(CreatedTopic.Arn);
         }
-
     }
 }

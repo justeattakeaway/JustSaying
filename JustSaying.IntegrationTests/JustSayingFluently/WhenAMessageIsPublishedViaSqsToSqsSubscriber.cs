@@ -9,18 +9,18 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
     [Collection(GlobalSetup.CollectionName)]
     public class WhenAMessageIsPublishedViaSqsToSqsSubscriber : GivenANotificationStack
     {
-        private Future<AnotherGenericMessage> _handler;
+        private Future<AnotherSimpleMessage> _handler;
 
         protected override void Given()
         {
             base.Given();
-            _handler = new Future<AnotherGenericMessage>();
+            _handler = new Future<AnotherSimpleMessage>();
             RegisterSqsHandler(_handler);
         }
 
         protected override async Task When()
         {
-            await ServiceBus.PublishAsync(new AnotherGenericMessage());
+            await ServiceBus.PublishAsync(new AnotherSimpleMessage());
             await _handler.DoneSignal;
         }
 

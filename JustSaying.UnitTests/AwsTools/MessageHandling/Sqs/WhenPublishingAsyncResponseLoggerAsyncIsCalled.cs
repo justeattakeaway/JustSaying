@@ -21,7 +21,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private const string Url = "https://blablabla/" + QueueName;
-        private readonly GenericMessage _testMessage = new GenericMessage {Content = "Hello"};
+        private readonly SimpleMessage _testMessage = new SimpleMessage { Content = "Hello" };
         private const string QueueName = "queuename";
 
         private const string MessageId = "12345";

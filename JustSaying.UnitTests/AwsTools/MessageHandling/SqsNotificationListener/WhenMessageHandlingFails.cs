@@ -11,13 +11,13 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         protected override void Given()
         {
             base.Given();
-            Handler.Handle(Arg.Any<GenericMessage>()).ReturnsForAnyArgs(false);
+            Handler.Handle(Arg.Any<SimpleMessage>()).ReturnsForAnyArgs(false);
         }
 
         [Fact]
         public void MessageHandlerWasCalled()
         {
-            Handler.ReceivedWithAnyArgs().Handle(Arg.Any<GenericMessage>());
+            Handler.ReceivedWithAnyArgs().Handle(Arg.Any<SimpleMessage>());
         }
 
         [Fact]

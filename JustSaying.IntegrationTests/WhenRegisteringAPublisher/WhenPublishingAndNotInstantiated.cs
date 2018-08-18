@@ -20,7 +20,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 
         protected override async Task When()
         {
-            await SystemUnderTest.PublishAsync(new GenericMessage());
+            await SystemUnderTest.PublishAsync(new SimpleMessage());
         }
 
         [Fact]

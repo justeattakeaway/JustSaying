@@ -11,12 +11,10 @@ using NSubstitute;
 namespace JustSaying.IntegrationTests.AwsTools
 {
     /// <summary>
-    /// An AWS Client Factory which forwards all AWS calls to SNS/SQS clients
-    /// and stores all calls in a dictionary.
-    ///
-    /// Use to inspect what operations and which arguments have been passed
+    /// An AWS Client Factory which forwards all AWS calls to SNS/SQS clients and stores all calls in a dictionary.
+    /// Used to inspect what operations and which arguments have been passed
     /// </summary>
-    public class ProxyAwsClientFactory : IAwsClientFactory
+    internal class ProxyAwsClientFactory : IAwsClientFactory
     {
         public Dictionary<string, Dictionary<string, List<object>>> Counters { get; } = new Dictionary<string, Dictionary<string, List<object>>>();
 
@@ -26,16 +24,16 @@ namespace JustSaying.IntegrationTests.AwsTools
             var client = Substitute.For<IAmazonSimpleNotificationService>();
 
             client.CreateTopicAsync(Arg.Any<CreateTopicRequest>())
-                .ReturnsForAnyArgs(r => innerClient.CreateTopicAsync(r.Arg<CreateTopicRequest>(), r.Arg<CancellationToken>()))
-                .AndDoes(r => Increment("CreateTopic", r.Arg<CreateTopicRequest>().Name, r.Arg<CreateTopicRequest>()));
+                  .ReturnsForAnyArgs(r => innerClient.CreateTopicAsync(r.Arg<CreateTopicRequest>(), r.Arg<CancellationToken>()))
+                  .AndDoes(r => Increment("CreateTopic", r.Arg<CreateTopicRequest>().Name, r.Arg<CreateTopicRequest>()));
 
             client.FindTopicAsync(Arg.Any<string>())
-                .ReturnsForAnyArgs(r => innerClient.FindTopicAsync(r.Arg<string>()))
-                .AndDoes(r => Increment("FindTopic", r.Arg<string>(), r.Arg<string>()));
+                  .ReturnsForAnyArgs(r => innerClient.FindTopicAsync(r.Arg<string>()))
+                  .AndDoes(r => Increment("FindTopic", r.Arg<string>(), r.Arg<string>()));
 
             client.GetTopicAttributesAsync(Arg.Any<string>())
-                .ReturnsForAnyArgs(r => innerClient.GetTopicAttributesAsync(r.Arg<string>(), r.Arg<CancellationToken>()))
-                .AndDoes(r => Increment("GetTopicAttributes", r.Arg<string>(), r.Arg<string>()));
+                  .ReturnsForAnyArgs(r => innerClient.GetTopicAttributesAsync(r.Arg<string>(), r.Arg<CancellationToken>()))
+                  .AndDoes(r => Increment("GetTopicAttributes", r.Arg<string>(), r.Arg<string>()));
 
             return client;
         }
@@ -48,12 +46,12 @@ namespace JustSaying.IntegrationTests.AwsTools
             }
 
             var operation = Counters[operationName];
-            if (!operation.ContainsKey(paramKey))
+
+            if (!operation.TryGetValue(paramKey, out List<object> paramOperation))
             {
-                operation.Add(paramKey, new List<object>());
+                operation[paramKey] = paramOperation = new List<object>();
             }
 
-            var paramOperation = operation[paramKey];
             paramOperation.Add(extraParams);
         }
 

@@ -19,8 +19,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
     [Collection(GlobalSetup.CollectionName)]
     public class WhenSubscribingtoTopicInAnotherAccount
     {
-        private readonly Future<GenericMessage> _signal = new Future<GenericMessage>();
-        readonly GenericMessage _message = new GenericMessage {Id = Guid.NewGuid()};
+        private readonly Future<SimpleMessage> _signal = new Future<SimpleMessage>();
+        readonly SimpleMessage _message = new SimpleMessage { Id = Guid.NewGuid()};
 
         // TODO Only works with real accounts and for two accounts
         [Fact(Skip = "Requires credentials for 2 accounts")]
@@ -34,14 +34,14 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             publishingBus
                 .WithNamingStrategy(() => new NamingStrategy())
                 .ConfigurePublisherWith(cfg => cfg.AdditionalSubscriberAccounts = new List<string> { subscriberAccount })
-                .WithSnsMessagePublisher<GenericMessage>();
+                .WithSnsMessagePublisher<SimpleMessage>();
 
 
-            var handler = Substitute.For<IHandlerAsync<GenericMessage>>();
-            handler.Handle(Arg.Any<GenericMessage>()).Returns(true);
+            var handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
+            handler.Handle(Arg.Any<SimpleMessage>()).Returns(true);
             handler
-                .When(x => x.Handle(Arg.Any<GenericMessage>()))
-                .Do(async x => await _signal.Complete((GenericMessage)x.Args()[0]));
+                .When(x => x.Handle(Arg.Any<SimpleMessage>()))
+                .Do(async x => await _signal.Complete((SimpleMessage)x.Args()[0]));
 
             subscribingBus
                 .WithNamingStrategy(() => new NamingStrategy())

@@ -17,7 +17,7 @@ namespace JustSaying.UnitTests.Messaging.Serialisation.Newtonsoft
 
         protected override void When()
         {
-            _result = SystemUnderTest.GetSerialiser<GenericMessage>();
+            _result = SystemUnderTest.GetSerialiser<SimpleMessage>();
         }
 
         [Fact]

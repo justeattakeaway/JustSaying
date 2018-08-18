@@ -48,7 +48,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         [Fact]
         public async Task ExceptionIsThrown()
         {
-            await Should.ThrowAsync<PublishException>(() => SystemUnderTest.PublishAsync(new GenericMessage()));
+            await Should.ThrowAsync<PublishException>(() => SystemUnderTest.PublishAsync(new SimpleMessage()));
         }
 
         [Fact]
@@ -56,7 +56,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         {
             try
             {
-                await SystemUnderTest.PublishAsync(new GenericMessage());
+                await SystemUnderTest.PublishAsync(new SimpleMessage());
             }
             catch (Exception e)
             {

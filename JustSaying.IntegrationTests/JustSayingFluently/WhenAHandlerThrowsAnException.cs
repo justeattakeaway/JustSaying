@@ -36,7 +36,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                         c.PublishFailureBackoffMilliseconds = 1;
                         c.PublishFailureReAttempts = 3;
                     })
-                .WithSnsMessagePublisher<GenericMessage>()
+                .WithSnsMessagePublisher<SimpleMessage>()
                 .WithSqsTopicSubscriber()
                 .IntoQueue("queuename")
                 .ConfigureSubscriptionWith(cfg =>
@@ -50,7 +50,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             // When
             bus.StartListening();
 
-            await bus.PublishAsync(new GenericMessage());
+            await bus.PublishAsync(new SimpleMessage());
 
             // Teardown
             await _handler.DoneSignal.Task;

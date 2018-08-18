@@ -14,7 +14,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         public void EmptyMapDoesNotContainKey()
         {
             var map = new HandlerMap();
-            map.ContainsKey(typeof(GenericMessage)).ShouldBeFalse();
+            map.ContainsKey(typeof(SimpleMessage)).ShouldBeFalse();
         }
 
         [Fact]
@@ -22,7 +22,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         {
             var map = new HandlerMap();
 
-            var handler = map.Get(typeof (GenericMessage));
+            var handler = map.Get(typeof(SimpleMessage));
 
             handler.ShouldBeNull();
         }
@@ -31,9 +31,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         public void HandlerIsReturnedForMatchingType()
         {
             var map = new HandlerMap();
-            map.Add(typeof(GenericMessage), m => Task.FromResult(true) );
+            map.Add(typeof(SimpleMessage), m => Task.FromResult(true) );
 
-            var handler = map.Get(typeof(GenericMessage));
+            var handler = map.Get(typeof(SimpleMessage));
 
             handler.ShouldNotBeNull();
         }
@@ -42,19 +42,19 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         public void HandlerContainsKeyForMatchingTypeOnly()
         {
             var map = new HandlerMap();
-            map.Add(typeof(GenericMessage), m => Task.FromResult(true));
+            map.Add(typeof(SimpleMessage), m => Task.FromResult(true));
 
-            map.ContainsKey(typeof(GenericMessage)).ShouldBeTrue();
-            map.ContainsKey(typeof(AnotherGenericMessage)).ShouldBeFalse();
+            map.ContainsKey(typeof(SimpleMessage)).ShouldBeTrue();
+            map.ContainsKey(typeof(AnotherSimpleMessage)).ShouldBeFalse();
         }
 
         [Fact]
         public void HandlerIsNotReturnedForNonMatchingType()
         {
             var map = new HandlerMap();
-            map.Add(typeof(GenericMessage), m => Task.FromResult(true));
+            map.Add(typeof(SimpleMessage), m => Task.FromResult(true));
 
-            var handler = map.Get(typeof(AnotherGenericMessage));
+            var handler = map.Get(typeof(AnotherSimpleMessage));
 
             handler.ShouldBeNull();
         }
@@ -66,14 +66,14 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             Func<Message, Task<bool>> fn2 = m => Task.FromResult(true);
 
             var map = new HandlerMap();
-            map.Add(typeof(GenericMessage), fn1);
-            map.Add(typeof(AnotherGenericMessage), fn2);
+            map.Add(typeof(SimpleMessage), fn1);
+            map.Add(typeof(AnotherSimpleMessage), fn2);
 
-            var handler1 = map.Get(typeof(GenericMessage));
+            var handler1 = map.Get(typeof(SimpleMessage));
 
             handler1.ShouldBe(fn1);
             
-            var handler2 = map.Get(typeof(AnotherGenericMessage));
+            var handler2 = map.Get(typeof(AnotherSimpleMessage));
 
             handler2.ShouldBe(fn2);
         }
@@ -86,8 +86,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
 
             var map = new HandlerMap();
 
-            map.Add(typeof(GenericMessage), fn1);
-            new Action(() => map.Add(typeof(GenericMessage), fn2)).ShouldThrow<ArgumentException>();
+            map.Add(typeof(SimpleMessage), fn1);
+            new Action(() => map.Add(typeof(SimpleMessage), fn2)).ShouldThrow<ArgumentException>();
         }
 
         [Fact]
@@ -98,9 +98,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             Func<Message, Task<bool>> fn3 = m => Task.FromResult(true);
 
             var map = new HandlerMap();
-            map.Add(typeof(GenericMessage), fn1);
-            map.Add(typeof(AnotherGenericMessage), fn3);
-            new Action(() => map.Add(typeof(GenericMessage), fn2)).ShouldThrow<ArgumentException>();
+            map.Add(typeof(SimpleMessage), fn1);
+            map.Add(typeof(AnotherSimpleMessage), fn3);
+            new Action(() => map.Add(typeof(SimpleMessage), fn2)).ShouldThrow<ArgumentException>();
         }
     }
 }

@@ -13,15 +13,15 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override async Task When()
         {
-            SystemUnderTest.AddMessagePublisher<GenericMessage>(_publisher, string.Empty);
+            SystemUnderTest.AddMessagePublisher<SimpleMessage>(_publisher, string.Empty);
 
-            await SystemUnderTest.PublishAsync(new GenericMessage());
+            await SystemUnderTest.PublishAsync(new SimpleMessage());
         }
 
         [Fact]
         public void PublisherIsCalledToPublish()
         {
-            _publisher.Received().PublishAsync(Arg.Any<GenericMessage>(), Arg.Any<CancellationToken>());
+            _publisher.Received().PublishAsync(Arg.Any<SimpleMessage>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]

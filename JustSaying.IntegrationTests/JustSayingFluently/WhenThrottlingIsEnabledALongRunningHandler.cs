@@ -16,10 +16,10 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
     [Collection(GlobalSetup.CollectionName)]
     public class WhenThrottlingIsEnabledALongRunningHandler : IDisposable
     {
-        private readonly IHandlerAsync<GenericMessage> _handler = Substitute.For<IHandlerAsync<GenericMessage>>();
+        private readonly IHandlerAsync<SimpleMessage> _handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
         private IAmJustSayingFluently _publisher;
         private readonly Dictionary<int, Guid> _ids = new Dictionary<int, Guid>();
-        private readonly Dictionary<int, GenericMessage> _messages = new Dictionary<int, GenericMessage>();
+        private readonly Dictionary<int, SimpleMessage> _messages = new Dictionary<int, SimpleMessage>();
         private ITestOutputHelper _outputHelper;
 
         public WhenThrottlingIsEnabledALongRunningHandler(ITestOutputHelper outputHelper)
@@ -29,7 +29,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             for (int i = 1; i <= 100; i++)
             {
                 _ids.Add(i, Guid.NewGuid());
-                _messages.Add(i, new GenericMessage() { Id = _ids[i] });
+                _messages.Add(i, new SimpleMessage() { Id = _ids[i] });
 
                 // First handler takes ages all the others take 100 ms
                 SetUpHandler(_ids[i], i, wait: i == 1 ? 3600000 : 100);
@@ -42,7 +42,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 {
                     c.PublishFailureBackoffMilliseconds = 1;
                 })
-                .WithSnsMessagePublisher<GenericMessage>()
+                .WithSnsMessagePublisher<SimpleMessage>()
                 .WithSqsTopicSubscriber().IntoQueue("queuename").ConfigureSubscriptionWith(
                     cfg =>
                     {
@@ -58,7 +58,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         private void SetUpHandler(Guid guid, int number, int wait)
         {
             _handler
-                .When(x => x.Handle(Arg.Is<GenericMessage>(y => y.Id == guid)))
+                .When(x => x.Handle(Arg.Is<SimpleMessage>(y => y.Id == guid)))
                 .Do(t =>
                 {
                     _outputHelper.WriteLine($"Running task {number}");
@@ -87,7 +87,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             // There are 100 messages and all except one takes 100 ms. Therefore, 20 seconds is sufficiently long.
             await Task.Delay(TimeSpan.FromSeconds(20));
 
-            Received.InOrder(() => _handler.Handle(Arg.Is<GenericMessage>(x => x.Id == _ids[100])));
+            Received.InOrder(() => _handler.Handle(Arg.Is<SimpleMessage>(x => x.Id == _ids[100])));
         }
 
         public void Dispose()

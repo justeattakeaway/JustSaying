@@ -40,21 +40,21 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
         public void ASnsPublisherCanBeSetup()
         {
             SystemUnderTest.ConfigurePublisherWith(conf => conf.PublishFailureBackoffMilliseconds = 50)
-                .WithSnsMessagePublisher<GenericMessage>();
+                .WithSnsMessagePublisher<SimpleMessage>();
         }
 
         [Fact(Skip = "Testing compile-time issues")]
         public void MultipleSnsPublishersCanBeSetup()
         {
             SystemUnderTest.ConfigurePublisherWith(conf => conf.PublishFailureBackoffMilliseconds = 50)
-                .WithSnsMessagePublisher<GenericMessage>()
-                .WithSnsMessagePublisher<GenericMessage>();
+                .WithSnsMessagePublisher<SimpleMessage>()
+                .WithSnsMessagePublisher<SimpleMessage>();
         }
 
         [Fact(Skip = "Testing compile-time issues")]
         public void ASqsPublisherCanBeSetupWithConfiguration()
         {
-            SystemUnderTest.WithSqsMessagePublisher<GenericMessage>(c =>
+            SystemUnderTest.WithSqsMessagePublisher<SimpleMessage>(c =>
             {
                 c.VisibilityTimeoutSeconds = 1;
                 c.RetryCountBeforeSendingToErrorQueue = 2;

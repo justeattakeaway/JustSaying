@@ -22,14 +22,14 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
     {
         protected const string QueueUrl = "url";
         protected IAmazonSQS Sqs;
-        protected GenericMessage DeserialisedMessage;
+        protected SimpleMessage DeserialisedMessage;
         protected const string MessageBody = "object";
-        protected IHandlerAsync<GenericMessage> Handler;
+        protected IHandlerAsync<SimpleMessage> Handler;
         protected IMessageMonitor Monitor;
         protected ILoggerFactory LoggerFactory;
         protected IMessageSerialisationRegister SerialisationRegister;
         protected IMessageLockAsync MessageLock;
-        protected readonly string MessageTypeString = typeof(GenericMessage).ToString();
+        protected readonly string MessageTypeString = typeof(SimpleMessage).ToString();
 
         protected override JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
@@ -43,7 +43,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             Sqs = Substitute.For<IAmazonSQS>();
             SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
             Monitor = Substitute.For<IMessageMonitor>();
-            Handler = Substitute.For<IHandlerAsync<GenericMessage>>();
+            Handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
             LoggerFactory = Substitute.For<ILoggerFactory>();
             
             var response = GenerateResponseMessage(MessageTypeString, Guid.NewGuid());
@@ -55,13 +55,13 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
                     x => Task.FromResult(response),
                     x => Task.FromResult(new ReceiveMessageResponse()));
 
-            DeserialisedMessage = new GenericMessage { RaisingComponent = "Component" };
+            DeserialisedMessage = new SimpleMessage { RaisingComponent = "Component" };
             SerialisationRegister.DeserializeMessage(Arg.Any<string>()).Returns(DeserialisedMessage);
         }
         protected override async Task When()
         {
             var doneSignal = new TaskCompletionSource<object>();
-            var signallingHandler = new SignallingHandler<GenericMessage>(doneSignal, Handler);
+            var signallingHandler = new SignallingHandler<SimpleMessage>(doneSignal, Handler);
 
             SystemUnderTest.AddMessageHandler(() => signallingHandler);
             SystemUnderTest.Listen();
