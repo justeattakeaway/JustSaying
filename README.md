@@ -13,9 +13,9 @@ Before you can start publishing or consuming messages, you want to configure the
 			    new DefaultAwsClientFactory(new BasicAWSCredentials("accessKey", "secretKey"))
 ````
 
-You will also need to create a `ILoggerFactory` ([see here](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging)), if you do not want logging then you can always create an empty logger factory like so:
+You will also need a `ILoggerFactory` ([see here](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging)); if you do not want logging then you can use an empty logger factory like so:
 ````c#
-        var loggerFactory = new LoggerFactory();
+    ILoggerFactory loggerFactory = NullLoggerFactory.Instance;
 ````
 
 ## Publishing messages
