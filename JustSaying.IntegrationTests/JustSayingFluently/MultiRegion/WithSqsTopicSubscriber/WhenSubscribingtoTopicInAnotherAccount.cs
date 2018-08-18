@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Amazon;
 using Amazon.Runtime;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
@@ -21,7 +22,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         private readonly Future<GenericMessage> _signal = new Future<GenericMessage>();
         readonly GenericMessage _message = new GenericMessage {Id = Guid.NewGuid()};
 
-        [Fact(Skip = "Requires credentials for 2 accounts"), Trait("Category", "Integration")]
+        // TODO Only works with real accounts and for two accounts
+        [Fact(Skip = "Requires credentials for 2 accounts")]
         public async Task ICanReceiveMessagePublishedToTopicInAnotherAccount()
         {
             string publisherAccount = "<enter publisher account id>";
@@ -55,16 +57,18 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             //Assert
             var done = await Tasks.WaitWithTimeoutAsync(_signal.DoneSignal, TimeSpan.FromMinutes(1));
             _signal.HasReceived(_message).ShouldBeTrue();
-
         }
 
         private IMayWantOptionalSettings GetBus(string accessKey, string secretKey)
         {
             return CreateMeABus
-                .WithLogging(new LoggerFactory()).InRegion("eu-west-1").WithAwsClientFactory(()=>new DefaultAwsClientFactory(new BasicAWSCredentials(accessKey, secretKey) ));
+                .WithLogging(new LoggerFactory())
+                .InRegion(RegionEndpoint.EUWest1.SystemName)
+                .WithAwsClientFactory(()=>new DefaultAwsClientFactory(new BasicAWSCredentials(accessKey, secretKey)));
         }
     }
-    class NamingStrategy : INamingStrategy
+
+    internal class NamingStrategy : INamingStrategy
     {
         public string GetTopicName(string topicName, Type messageType)
         {

@@ -67,12 +67,14 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             await publisher.PublishAsync(_message);
         }
 
-        [Fact(Skip ="waiting for 2 side-by-side consumers bug to get fixed.")]
+        [Fact]
         public async Task BothHandlersAreTriggered()
         {
             await Act();
 
+            // TODO Should only need to do this in real AWS
             await Task.Delay(5.Seconds());
+
             _handler1.NumberOfTimesIHaveBeenCalled().ShouldBe(1);
             _handler2.NumberOfTimesIHaveBeenCalled().ShouldBe(1);
         }
@@ -121,7 +123,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         {
             await Act();
 
+            // TODO Only need to do this in real AWS
             await Task.Delay(5.Seconds());
+
             _sampleHandler.NumberOfTimesIHaveBeenCalled().ShouldBe(1);
         }
     }

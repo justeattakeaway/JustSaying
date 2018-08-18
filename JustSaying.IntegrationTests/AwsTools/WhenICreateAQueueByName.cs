@@ -22,11 +22,11 @@ namespace JustSaying.IntegrationTests.AwsTools
             _isQueueCreated.ShouldBeTrue();
         }
 
-        [Fact(Skip = "Extremely long running test")]
+        [Fact]
         public async Task DeadLetterQueueIsCreated()
         {
             await Patiently.AssertThatAsync(
-                async () => await SystemUnderTest.ErrorQueue.ExistsAsync(),
+                () => SystemUnderTest.ErrorQueue.ExistsAsync(),
                 40.Seconds());
         }
     }

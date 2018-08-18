@@ -21,7 +21,6 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
             Configuration = new MessagingConfig();
 
             DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName).Wait();
-
         }
 
         protected override Task When()

@@ -26,9 +26,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         [Fact]
         public async Task MessagesPublishedToBothRegionsWillBeReceived()
         {
-            GivenASubscriptionToAQueueInTwoRegions(RegionEndpoint.EUWest1.SystemName, RegionEndpoint.USEast1.SystemName);
-            AndAPublisherToThePrimaryRegion(RegionEndpoint.EUWest1.SystemName);
-            AndAPublisherToTheSecondaryRegion(RegionEndpoint.USEast1.SystemName);
+            var region1 = RegionEndpoint.EUWest1.SystemName;
+            var region2 = RegionEndpoint.USEast1.SystemName;
+
+            GivenASubscriptionToAQueueInTwoRegions(region1, region2);
+
+            AndAPublisherToThePrimaryRegion(region1);
+            AndAPublisherToTheSecondaryRegion(region2);
 
             await WhenMessagesArePublishedToBothRegions();
 
@@ -76,8 +80,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
 
         private async Task WhenMessagesArePublishedToBothRegions()
         {
-            _message1 = new GenericMessage {Id = Guid.NewGuid()};
-            _message2 = new GenericMessage {Id = Guid.NewGuid()};
+            _message1 = new GenericMessage { Id = Guid.NewGuid() };
+            _message2 = new GenericMessage { Id = Guid.NewGuid() };
 
             await _primaryPublisher.PublishAsync(_message1);
 

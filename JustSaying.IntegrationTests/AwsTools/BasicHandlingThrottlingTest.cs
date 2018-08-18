@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS.Model;
@@ -13,71 +14,101 @@ using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
-    // OK, I know it ain't pretty, but we needed this asap & it does the job. Deal with it. :)]
     [Collection(GlobalSetup.CollectionName)]
     public class BasicHandlingThrottlingTest
     {
-        [Xunit.Theory(Skip= "Explicitly ran")]
+        public BasicHandlingThrottlingTest(ITestOutputHelper outputHelper)
+        {
+            OutputHelper = outputHelper;
+            LoggerFactory = outputHelper.AsLoggerFactory();
+        }
+
+        private ILoggerFactory LoggerFactory { get; }
+
+        private ITestOutputHelper OutputHelper { get; }
+
+        [Theory]
         [InlineData(1000)]
-        // Use this to manually test the performance / throttling of getting messages out of the queue.
         public async Task HandlingManyMessages(int throttleMessageCount)
         {
-            var locker = new object();
-            var awsQueueClient = CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1);
+            // Arrange
+            var region = RegionEndpoint.EUWest1;
+            var client = CreateMeABus.DefaultClientFactory().GetSqsClient(region);
 
-            var q = new SqsQueueByName(RegionEndpoint.EUWest1, "throttle_test", awsQueueClient, 1, new LoggerFactory());
-            if (!await q.ExistsAsync())
+            var queue = new SqsQueueByName(region, "throttle_test", client, 1, LoggerFactory);
+
+            if (!await queue.ExistsAsync())
             {
-                await q.CreateAsync(new SqsBasicConfiguration());
-                await Task.Delay(TimeSpan.FromMinutes(1));  // wait 60 secs for queue creation to be guaranteed completed by aws. :(
+                await queue.CreateAsync(new SqsBasicConfiguration());
+
+                // Wait for up to 60 secs for queue creation to be guaranteed completed by AWS
+                using (var cts = new CancellationTokenSource(TimeSpan.FromMinutes(1)))
+                {
+                    while (!cts.IsCancellationRequested)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(2));
+
+                        if (await queue.ExistsAsync())
+                        {
+                            break;
+                        }
+                    }
+                }
             }
 
-            Assert.True(await q.ExistsAsync());
+            Assert.True(await queue.ExistsAsync(), "The queue was not created.");
 
-            Console.WriteLine($"{DateTime.Now} - Adding {throttleMessageCount} messages to the queue.");
+            OutputHelper.WriteLine($"{DateTime.Now} - Adding {throttleMessageCount} messages to the queue.");
 
             var entriesAdded = 0;
+
             // Add some messages
             do
             {
                 var entries = new List<SendMessageBatchRequestEntry>();
+
                 for (var j = 0; j < 10; j++)
                 {
                     var batchEntry = new SendMessageBatchRequestEntry
-                                         {
-                                             MessageBody = "{\"Subject\":\"GenericMessage\", \"Message\": \"" + entriesAdded.ToString() + "\"}",
-                                             Id = Guid.NewGuid().ToString()
-                                         };
+                    {
+                        MessageBody = $"{{\"Subject\":\"GenericMessage\", \"Message\": \"{entriesAdded}\"}}",
+                        Id = Guid.NewGuid().ToString()
+                    };
+
                     entries.Add(batchEntry);
                     entriesAdded++;
                 }
-                await awsQueueClient.SendMessageBatchAsync(new SendMessageBatchRequest { QueueUrl = q.Url, Entries = entries });
+
+                await client.SendMessageBatchAsync(new SendMessageBatchRequest { QueueUrl = queue.Url, Entries = entries });
             }
             while (entriesAdded < throttleMessageCount);
 
-            Console.WriteLine($"{DateTime.Now} - Done adding messages.");
+            OutputHelper.WriteLine($"{DateTime.Now} - Done adding messages.");
 
             var handleCount = 0;
             var serialisations = Substitute.For<IMessageSerialisationRegister>();
             var monitor = Substitute.For<IMessageMonitor>();
             var handler = Substitute.For<IHandlerAsync<GenericMessage>>();
-            handler.Handle(null).ReturnsForAnyArgs(true).AndDoes(x => {lock (locker) { handleCount++; } });
+            handler.Handle(null).ReturnsForAnyArgs(true).AndDoes(_ => Interlocked.Increment(ref handleCount));
 
             serialisations.DeserializeMessage(string.Empty).ReturnsForAnyArgs(new GenericMessage());
-            var listener = new SqsNotificationListener(q, serialisations, monitor, new LoggerFactory());
+            var listener = new SqsNotificationListener(queue, serialisations, monitor, LoggerFactory);
             listener.AddMessageHandler(() => handler);
 
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
+            // Act
+            var stopwatch = Stopwatch.StartNew();
+
             listener.Listen();
             var waitCount = 0;
+
             do
             {
                 await Task.Delay(TimeSpan.FromSeconds(5));
-                Console.WriteLine($"{DateTime.Now} - Handled {handleCount} messages. Waiting for completion.");
+                OutputHelper.WriteLine($"{DateTime.Now} - Handled {handleCount} messages. Waiting for completion.");
                 waitCount++;
             }
             while (handleCount < throttleMessageCount && waitCount < 100);
@@ -85,12 +116,12 @@ namespace JustSaying.IntegrationTests.AwsTools
             listener.StopListening();
             stopwatch.Stop();
 
-            Console.WriteLine($"{DateTime.Now} - Handled {handleCount} messages.");
-            Console.WriteLine($"{DateTime.Now} - Took {stopwatch.ElapsedMilliseconds} ms");
-            Console.WriteLine(
-                $"{DateTime.Now} - Throughput {(float) handleCount/stopwatch.ElapsedMilliseconds*1000} msg/sec");
+            OutputHelper.WriteLine($"{DateTime.Now} - Handled {handleCount} messages.");
+            OutputHelper.WriteLine($"{DateTime.Now} - Took {stopwatch.ElapsedMilliseconds} ms");
+            OutputHelper.WriteLine($"{DateTime.Now} - Throughput {(float) handleCount/stopwatch.ElapsedMilliseconds*1000} msg/sec");
+
+            // Assert
             Assert.Equal(throttleMessageCount, handleCount);
         }
-
     }
 }
