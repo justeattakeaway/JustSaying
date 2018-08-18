@@ -42,7 +42,7 @@ namespace JustSaying.TestingFramework
         /// <summary>
         /// Gets the URL for the configured AWS simulator, if any.
         /// </summary>
-        public static string SimulatorUrl => "http://localhost:4100" ?? Environment.GetEnvironmentVariable("AWS_SERVICE_URL") ?? string.Empty;
+        public static string SimulatorUrl => Environment.GetEnvironmentVariable("AWS_SERVICE_URL") ?? string.Empty;
 
         /// <summary>
         /// Gets a value indicating whether AWS credentials are configured.
