@@ -14,8 +14,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
     [Collection(GlobalSetup.CollectionName)]
     public class WhenAFailoverRegionIsSetup
     {
-        private static readonly string PrimaryRegion = TestEnvironment.Region.SystemName;
-        private static readonly string SecondaryRegion = TestEnvironment.SecondaryRegion.SystemName;
+        private static string PrimaryRegion => TestEnvironment.Region.SystemName;
+        private static string SecondaryRegion => TestEnvironment.SecondaryRegion.SystemName;
 
         private readonly Future<SimpleMessage> _primaryHandler = new Future<SimpleMessage>();
         private readonly Future<SimpleMessage> _secondaryHandler = new Future<SimpleMessage>();
@@ -45,11 +45,11 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
 
             WhenThePrimaryRegionIsActive();
             await AndAMessageIsPublished();
-            await ThenTheMessageIsReceivedInThatRegion(_primaryHandler);
+            await ThenTheMessageIsReceivedInThatRegion(_primaryHandler, PrimaryRegion);
 
             WhenTheFailoverRegionIsActive();
             await AndAMessageIsPublished();
-            await ThenTheMessageIsReceivedInThatRegion(_secondaryHandler);
+            await ThenTheMessageIsReceivedInThatRegion(_secondaryHandler, SecondaryRegion);
 
             _primaryBus.StopListening();
             _secondaryBus.StopListening();
@@ -117,13 +117,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             await Task.Delay(TimeSpan.FromSeconds(1));
         }
 
-        private async Task ThenTheMessageIsReceivedInThatRegion(Future<SimpleMessage> handler)
+        private async Task ThenTheMessageIsReceivedInThatRegion(Future<SimpleMessage> handler, string regionName)
         {
             var done = await Tasks.WaitWithTimeoutAsync(handler.DoneSignal);
-            done.ShouldBeTrue();
+            done.ShouldBeTrue($"Handler did not complete in region {regionName}.");
 
-            handler.ReceivedMessageCount.ShouldBeGreaterThanOrEqualTo(1);
-            handler.HasReceived(_message).ShouldBeTrue();
+            handler.ReceivedMessageCount.ShouldBeGreaterThanOrEqualTo(1, $"Received message count was incorrect in region {regionName}.");
+            handler.HasReceived(_message).ShouldBeTrue($"Message was not received in region {regionName}.");
         }
     }
 }

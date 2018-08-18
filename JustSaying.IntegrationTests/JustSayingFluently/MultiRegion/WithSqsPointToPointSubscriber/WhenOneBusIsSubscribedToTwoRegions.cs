@@ -106,8 +106,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
             done.ShouldBeTrue();
             
             _handler.ReceivedMessageCount.ShouldBeGreaterThanOrEqualTo(2);
-            _handler.HasReceived(_message1).ShouldBeTrue();
-            _handler.HasReceived(_message2).ShouldBeTrue();
+            _handler.HasReceived(_message1).ShouldBeTrue("The first message was not received.");
+            _handler.HasReceived(_message2).ShouldBeTrue("The second message was not received.");
         }
     }
 }
