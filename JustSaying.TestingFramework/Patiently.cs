@@ -20,6 +20,8 @@ namespace JustSaying.TestingFramework
                 }
 
                 await Task.Delay(50.Milliseconds());
+
+                // TODO Use ITestOutputHelper
                 Console.WriteLine(
                     $"Waiting for {(DateTime.Now - started).TotalMilliseconds} ms - Still Checking.");
             } while (DateTime.Now < timeoutAt);
@@ -41,6 +43,8 @@ namespace JustSaying.TestingFramework
                 }
 
                 await Task.Delay(50.Milliseconds());
+
+                // TODO Use ITestOutputHelper
                 Console.WriteLine(
                     $"Waiting for {(DateTime.Now - started).TotalMilliseconds} ms - Still Checking.");
             } while (DateTime.Now < timeoutAt);
@@ -48,6 +52,7 @@ namespace JustSaying.TestingFramework
             (await func.Invoke()).ShouldBeTrue();
         }
     }
+
     public static class Extensions
     {
         public static TimeSpan Seconds(this int n) => TimeSpan.FromSeconds(n);

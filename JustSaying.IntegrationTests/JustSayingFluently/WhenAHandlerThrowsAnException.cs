@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Amazon;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
@@ -28,8 +27,9 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             // Given
             _handler = new ThrowingHandler();
 
-            var bus = CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion(RegionEndpoint.EUWest1.SystemName)
+            var bus = CreateMeABus
+                .WithLogging(new LoggerFactory())
+                .InRegion(TestEnvironment.Region.SystemName)
                 .WithMonitoring(_monitoring)
                 .ConfigurePublisherWith(c =>
                     {

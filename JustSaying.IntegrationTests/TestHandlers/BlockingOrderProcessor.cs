@@ -1,12 +1,10 @@
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.TestingFramework;
 
 namespace JustSaying.IntegrationTests.TestHandlers
 {
     public class BlockingOrderProcessor : IHandlerAsync<OrderPlaced>
     {
-
         public BlockingOrderProcessor()
         {
         }

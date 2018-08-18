@@ -10,6 +10,11 @@ namespace JustSaying.TestingFramework
     public static class TestEnvironment
     {
         /// <summary>
+        /// Gets the configured AWS account ID, if any.
+        /// </summary>
+        public static string AccountId => Environment.GetEnvironmentVariable("AWS_ACCOUNT_ID");
+
+        /// <summary>
         /// Gets the AWS region configured for use.
         /// </summary>
         public static RegionEndpoint Region
@@ -48,6 +53,11 @@ namespace JustSaying.TestingFramework
         /// Gets the configured AWS credentials, if any.
         /// </summary>
         public static AWSCredentials Credentials => HasCredentials ? null : new BasicAWSCredentials(AccessKey, SecretKey);
+
+        /// <summary>
+        /// Gets the configured secondary AWS account ID, if any.
+        /// </summary>
+        public static string SecondaryAccountId => Environment.GetEnvironmentVariable("AWS_ACCOUNT_ID_SECONDARY");
 
         /// <summary>
         /// Gets the secondary AWS region configured for use.

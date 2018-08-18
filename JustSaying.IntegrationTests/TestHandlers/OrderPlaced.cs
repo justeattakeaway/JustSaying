@@ -8,6 +8,7 @@ namespace JustSaying.IntegrationTests.TestHandlers
         {
             OrderId = orderId;
         }
+
         public string OrderId { get; private set; }
     }
 }

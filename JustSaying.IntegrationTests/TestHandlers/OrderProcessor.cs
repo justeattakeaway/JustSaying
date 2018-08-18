@@ -5,19 +5,17 @@ namespace JustSaying.IntegrationTests.TestHandlers
 {
     public class OrderProcessor : IHandlerAsync<OrderPlaced>
     {
-        private readonly Future<OrderPlaced> _future;
-
         public OrderProcessor(Future<OrderPlaced> future)
         {
-            _future = future;
+            Future = future;
         }
 
         public async Task<bool> Handle(OrderPlaced message)
         {
-            await _future.Complete(message);
+            await Future.Complete(message);
             return true;
         }
 
-        public Future<OrderPlaced> Future => _future;
+        public Future<OrderPlaced> Future { get; }
     }
 }

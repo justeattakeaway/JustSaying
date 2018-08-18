@@ -14,9 +14,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 {
     public abstract class GivenANotificationStack : XAsyncBehaviourTest<IAmJustSayingFluently>
     {
-        readonly Stopwatch _stopwatch = new Stopwatch();
-        protected IAmJustSayingFluently ServiceBus;
-        protected IMessageMonitor Monitoring;
+        private readonly Stopwatch _stopwatch = new Stopwatch();
+
         private Future<SimpleMessage> _snsHandler;
         private Future<AnotherSimpleMessage> _sqsHandler;
         private IPublishConfiguration _config =
@@ -25,6 +24,14 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 PublishFailureBackoffMilliseconds = 1,
                 PublishFailureReAttempts = 3
             };
+
+        protected IAmJustSayingFluently ServiceBus { get; set; }
+
+        protected IMessageMonitor Monitoring { get; set; }
+
+        protected ILoggerFactory LoggerFactory { get; set; } = new LoggerFactory();
+
+        protected RegionEndpoint Region { get; } = TestEnvironment.Region;
 
         protected void RegisterSnsHandler(Future<SimpleMessage> handler)
         {
@@ -68,8 +75,9 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
             Monitoring = Substitute.For<IMessageMonitor>();
 
-            ServiceBus = CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion(RegionEndpoint.EUWest1.SystemName)
+            ServiceBus = CreateMeABus
+                .WithLogging(LoggerFactory)
+                .InRegion(Region.SystemName)
                 .WithMonitoring(Monitoring)
 
                 .ConfigurePublisherWith(c =>
@@ -103,7 +111,9 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             base.PostAssertTeardown();
             _stopwatch.Stop();
             Teardown();
-            Console.WriteLine($"The test took {_stopwatch.ElapsedMilliseconds/1000} seconds.");
+
+            // TODO ITestOutputHelper
+            Console.WriteLine($"The test took {_stopwatch.ElapsedMilliseconds / 1000} seconds.");
 
             ServiceBus.StopListening();
         }

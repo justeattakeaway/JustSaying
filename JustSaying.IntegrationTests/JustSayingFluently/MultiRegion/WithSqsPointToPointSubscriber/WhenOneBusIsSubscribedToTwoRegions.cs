@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Amazon;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
@@ -26,8 +25,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
         [Fact]
         public async Task MessagesPublishedToBothRegionsWillBeReceived()
         {
-            var region1 = RegionEndpoint.EUWest1.SystemName;
-            var region2 = RegionEndpoint.USEast1.SystemName;
+            var region1 = TestEnvironment.Region.SystemName;
+            var region2 = TestEnvironment.SecondaryRegion.SystemName;
 
             GivenASubscriptionToAQueueInTwoRegions(region1, region2);
 
@@ -79,8 +78,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
 
         private async Task WhenMessagesArePublishedToBothRegions()
         {
-            _message1 = new SimpleMessage { Id = Guid.NewGuid()};
-            _message2 = new SimpleMessage { Id = Guid.NewGuid()};
+            _message1 = new SimpleMessage { Id = Guid.NewGuid() };
+            _message2 = new SimpleMessage { Id = Guid.NewGuid() };
 
             await _primaryPublisher.PublishAsync(_message1);
             await _secondaryPublisher.PublishAsync(_message2);

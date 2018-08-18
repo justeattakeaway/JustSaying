@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Amazon;
 using Amazon.Runtime;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
@@ -17,22 +16,22 @@ using Xunit;
 namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopicSubscriber
 {
     [Collection(GlobalSetup.CollectionName)]
-    public class WhenSubscribingtoTopicInAnotherAccount
+    public class WhenSubscribingToTopicInAnotherAccount
     {
         private readonly Future<SimpleMessage> _signal = new Future<SimpleMessage>();
-        readonly SimpleMessage _message = new SimpleMessage { Id = Guid.NewGuid()};
+        private readonly SimpleMessage _message = new SimpleMessage { Id = Guid.NewGuid() };
 
-        // TODO Only works with real accounts and for two accounts
-        [Fact(Skip = "Requires credentials for 2 accounts")]
+        [NeedsTwoAwsAccountsFact]
         public async Task ICanReceiveMessagePublishedToTopicInAnotherAccount()
         {
-            string publisherAccount = "<enter publisher account id>";
-            string subscriberAccount = "<enter subscriber account id>";
-            var publishingBus = GetBus("<enter publisher access key>", "<enter publisher secret key>");
-            var subscribingBus = GetBus("<enter subscriber access key>", "<enter subscriber secret key>");
+            string publisherAccount = TestEnvironment.AccountId;
+            string subscriberAccount = TestEnvironment.SecondaryAccountId;
+
+            var publishingBus = GetBus(TestEnvironment.Credentials);
+            var subscribingBus = GetBus(TestEnvironment.SecondaryCredentials);
 
             publishingBus
-                .WithNamingStrategy(() => new NamingStrategy())
+                .WithNamingStrategy(() => new CrossAccountNamingStrategy())
                 .ConfigurePublisherWith(cfg => cfg.AdditionalSubscriberAccounts = new List<string> { subscriberAccount })
                 .WithSnsMessagePublisher<SimpleMessage>();
 
@@ -44,7 +43,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .Do(async x => await _signal.Complete((SimpleMessage)x.Args()[0]));
 
             subscribingBus
-                .WithNamingStrategy(() => new NamingStrategy())
+                .WithNamingStrategy(() => new CrossAccountNamingStrategy())
                 .WithSqsTopicSubscriber()
                 .IntoQueue("crossaccount")
                 .ConfigureSubscriptionWith(cfg => cfg.TopicSourceAccount = publisherAccount)
@@ -59,25 +58,25 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             _signal.HasReceived(_message).ShouldBeTrue();
         }
 
-        private IMayWantOptionalSettings GetBus(string accessKey, string secretKey)
+        private IMayWantOptionalSettings GetBus(AWSCredentials credentials)
         {
             return CreateMeABus
                 .WithLogging(new LoggerFactory())
-                .InRegion(RegionEndpoint.EUWest1.SystemName)
-                .WithAwsClientFactory(()=>new DefaultAwsClientFactory(new BasicAWSCredentials(accessKey, secretKey)));
-        }
-    }
-
-    internal class NamingStrategy : INamingStrategy
-    {
-        public string GetTopicName(string topicName, Type messageType)
-        {
-            return "test-" + messageType.ToTopicName();
+                .InRegion(TestEnvironment.Region.SystemName)
+                .WithAwsClientFactory(() => new DefaultAwsClientFactory(credentials));
         }
 
-        public string GetQueueName(SqsReadConfiguration sqsConfig, Type messageType)
+        private class CrossAccountNamingStrategy : INamingStrategy
         {
-            return "test-" + messageType.ToTopicName();
+            public string GetTopicName(string topicName, Type messageType)
+            {
+                return "test-" + messageType.ToTopicName();
+            }
+
+            public string GetQueueName(SqsReadConfiguration sqsConfig, Type messageType)
+            {
+                return "test-" + messageType.ToTopicName();
+            }
         }
     }
 }

@@ -24,7 +24,7 @@ namespace JustSaying.IntegrationTests.AwsTools
             await SystemUnderTest.CreateAsync(new SqsBasicConfiguration { MessageRetentionSeconds = _oldRetentionPeriod });
 
             await SystemUnderTest.UpdateQueueAttributeAsync(
-                new SqsBasicConfiguration {MessageRetentionSeconds = _newRetentionPeriod});
+                new SqsBasicConfiguration { MessageRetentionSeconds = _newRetentionPeriod });
         }
 
         [Fact]

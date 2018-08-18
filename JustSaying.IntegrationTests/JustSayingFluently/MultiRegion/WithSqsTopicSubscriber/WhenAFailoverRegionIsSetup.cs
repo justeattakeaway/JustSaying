@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Amazon;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
@@ -14,8 +13,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
     [Collection(GlobalSetup.CollectionName)]
     public class WhenAFailoverRegionIsSetup
     {
-        private static readonly string PrimaryRegion = RegionEndpoint.EUWest1.SystemName;
-        private static readonly string SecondaryRegion = RegionEndpoint.USEast1.SystemName;
+        private static readonly string PrimaryRegion = TestEnvironment.Region.SystemName;
+        private static readonly string SecondaryRegion = TestEnvironment.SecondaryRegion.SystemName;
 
         private readonly Future<SimpleMessage> _primaryHandler = new Future<SimpleMessage>();
         private readonly Future<SimpleMessage> _secondaryHandler = new Future<SimpleMessage>();

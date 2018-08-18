@@ -18,8 +18,10 @@ namespace JustSaying.IntegrationTests.TestHandlers
         public async Task<bool> Handle(SimpleMessage message)
         {
             MessageReceived = message;
+
             await Task.Delay(0);
             Tasks.DelaySendDone(DoneSignal);
+
             throw new TestException("ThrowingHandler has thrown");
         }
     }

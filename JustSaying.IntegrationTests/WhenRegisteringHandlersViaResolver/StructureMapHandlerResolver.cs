@@ -1,4 +1,4 @@
-﻿using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.MessageHandling;
 using StructureMap;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
@@ -13,14 +13,6 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         }
 
         public IHandlerAsync<T> ResolveHandler<T>(HandlerResolutionContext context)
-        {
-            var handler = _container.GetInstance<IHandlerAsync<T>>();
-            if (handler != null)
-            {
-                return handler;
-            }
-
-            return null;
-        }
+            => _container.GetInstance<IHandlerAsync<T>>();
     }
 }

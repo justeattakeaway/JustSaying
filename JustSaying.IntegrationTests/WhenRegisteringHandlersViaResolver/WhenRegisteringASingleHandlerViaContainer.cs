@@ -1,4 +1,5 @@
 using JustSaying.IntegrationTests.TestHandlers;
+using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using Shouldly;
 using StructureMap;
@@ -24,7 +25,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             DoneSignal = _handlerFuture.DoneSignal;
 
             Subscriber = CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion("eu-west-1")
+                .InRegion(TestEnvironment.Region.SystemName)
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);

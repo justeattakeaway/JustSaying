@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using Amazon;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -24,13 +23,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .Returns(true)
                 .AndDoes(_ => Tasks.DelaySendDone(doneSignal));
 
-            var bus = CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion(RegionEndpoint.EUWest1.SystemName)
+            var bus = CreateMeABus
+                .WithLogging(new LoggerFactory())
+                .InRegion(TestEnvironment.Region.SystemName)
                 .ConfigurePublisherWith(c =>
                     {
                         c.PublishFailureBackoffMilliseconds = 1;
                         c.PublishFailureReAttempts = 1;
-
                     })
                 .WithSnsMessagePublisher<SimpleMessage>()
                 .WithSqsTopicSubscriber()

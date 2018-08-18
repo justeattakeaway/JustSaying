@@ -7,14 +7,15 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.IntegrationTests.TestHandlers
 {
-    public class Future<TMessage> where TMessage : Message
+    public class Future<TMessage>
+        where TMessage : Message
     {
         private readonly TaskCompletionSource<object> _doneSignal = new TaskCompletionSource<object>();
-
         private readonly Func<Task> _action;
         private readonly List<TMessage> _messages = new List<TMessage>();
 
-        public Future(): this(null)
+        public Future()
+            : this(null)
         {
         }
 

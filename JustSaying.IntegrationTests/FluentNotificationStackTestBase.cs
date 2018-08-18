@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using Amazon.SQS.Model;
 using JustBehave;
+using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
@@ -16,11 +16,14 @@ namespace JustSaying.IntegrationTests
 {
     public abstract class FluentNotificationStackTestBase : XAsyncBehaviourTest<JustSaying.JustSayingFluently>
     {
-        private static readonly RegionEndpoint DefaultEndpoint = RegionEndpoint.EUWest1;
+        private static RegionEndpoint DefaultEndpoint => TestEnvironment.Region;
+
         protected static RegionEndpoint TestEndpoint { get; set; }
 
-        protected IPublishConfiguration Configuration;
+        protected IPublishConfiguration Configuration { get; set; }
+
         protected IAmJustSaying NotificationStack { get; private set; }
+
         private bool _enableMockedBus;
 
         protected override void Given()
@@ -30,7 +33,8 @@ namespace JustSaying.IntegrationTests
 
         protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
-            var fns = CreateMeABus.WithLogging(new LoggerFactory())
+            var fns = CreateMeABus
+                .WithLogging(new LoggerFactory())
                 .InRegion(TestEndpoint.SystemName)
                 .ConfigurePublisherWith(x =>
                 {
@@ -81,6 +85,7 @@ namespace JustSaying.IntegrationTests
             await Task.WhenAll(topics.Select(t => DeleteTopic(regionEndpoint, t)));
 
             var (topicExists, _) = await TryGetTopic(regionEndpoint, topicName);
+
             if (topicExists)
             {
                 throw new Exception("Deleted topic still exists!");
@@ -93,36 +98,37 @@ namespace JustSaying.IntegrationTests
 
             queues.ForEach(t => DeleteQueue(regionEndpoint, t).Wait());
 
-            const int maxSleepTime = 60;
-            const int sleepStep = 5;
+            bool isSimulator = TestEnvironment.IsSimulatorConfigured;
+            int maxSleepTime = isSimulator ? 10 : 60;
+            int sleepStep = isSimulator ? 1 : 5;
 
             var start = DateTime.Now;
 
             while ((DateTime.Now - start).TotalSeconds <= maxSleepTime)
             {
                 if (!(await GetAllQueues(regionEndpoint, queueName)).Any())
+                {
                     return;
+                }
 
-                Thread.Sleep(TimeSpan.FromSeconds(sleepStep));
+                await Task.Delay(TimeSpan.FromSeconds(sleepStep));
             }
 
-            throw new Exception(
-                $"Deleted queue still exists {(DateTime.Now - start).TotalSeconds} seconds after deletion!");
-
+            throw new Exception($"Deleted queue still exists {(DateTime.Now - start).TotalSeconds} seconds after deletion!");
         }
 
-        // ToDo: All these can go because we have already implemented them in AwsTools... Seriously. Wasted effort.
+        // TODO: All these can go because we have already implemented them in AwsTools... Seriously. Wasted effort.
 
         protected static async Task DeleteTopic(RegionEndpoint regionEndpoint, Topic topic)
         {
             var client = CreateMeABus.DefaultClientFactory().GetSnsClient(regionEndpoint);
-            await client.DeleteTopicAsync(new DeleteTopicRequest {TopicArn = topic.TopicArn});
+            await client.DeleteTopicAsync(new DeleteTopicRequest { TopicArn = topic.TopicArn });
         }
 
         private static async Task DeleteQueue(RegionEndpoint regionEndpoint, string queueUrl)
         {
             var client = CreateMeABus.DefaultClientFactory().GetSqsClient(regionEndpoint);
-            await client.DeleteQueueAsync(new DeleteQueueRequest {QueueUrl = queueUrl});
+            await client.DeleteQueueAsync(new DeleteQueueRequest { QueueUrl = queueUrl });
         }
 
         private static async Task<List<Topic>> GetAllTopics(RegionEndpoint regionEndpoint, string topicName)
@@ -130,25 +136,28 @@ namespace JustSaying.IntegrationTests
             var client = CreateMeABus.DefaultClientFactory().GetSnsClient(regionEndpoint);
             var topics = new List<Topic>();
             string nextToken = null;
+
             do
             {
-                var topicsResponse = await client.ListTopicsAsync(new ListTopicsRequest{NextToken = nextToken});
+                var topicsResponse = await client.ListTopicsAsync(new ListTopicsRequest { NextToken = nextToken });
                 nextToken = topicsResponse.NextToken;
                 topics.AddRange(topicsResponse.Topics);
-            } while (nextToken != null);
+            }
+            while (nextToken != null);
 
-            return
-                topics.Where(x => x.TopicArn.IndexOf(topicName, StringComparison.InvariantCultureIgnoreCase) >= 0)
-                    .ToList();
+            return topics
+                .Where(x => x.TopicArn.IndexOf(topicName, StringComparison.InvariantCultureIgnoreCase) >= 0)
+                .ToList();
         }
 
         private static async Task<List<string>> GetAllQueues(RegionEndpoint regionEndpoint, string queueName)
         {
             var client = CreateMeABus.DefaultClientFactory().GetSqsClient(regionEndpoint);
             var topics = await client.ListQueuesAsync(new ListQueuesRequest());
-            return
-                topics.QueueUrls.Where(x => x.IndexOf(queueName, StringComparison.InvariantCultureIgnoreCase) >= 0)
-                    .ToList();
+
+            return topics.QueueUrls
+                .Where(x => x.IndexOf(queueName, StringComparison.InvariantCultureIgnoreCase) >= 0)
+                .ToList();
         }
 
         protected static async Task<(bool topicExists, Topic topic)> TryGetTopic(RegionEndpoint regionEndpoint, string topicName)
@@ -160,8 +169,9 @@ namespace JustSaying.IntegrationTests
 
         protected static async Task<(bool queueExists,string queueUrl)> WaitForQueueToExist(RegionEndpoint regionEndpoint, string queueName)
         {
-            const int maxSleepTime = 60;
-            const int sleepStep = 5;
+            bool isSimulator = TestEnvironment.IsSimulatorConfigured;
+            int maxSleepTime = isSimulator ? 10 : 60;
+            int sleepStep = isSimulator ? 1 : 5;
 
             var start = DateTime.Now;
 
@@ -169,10 +179,12 @@ namespace JustSaying.IntegrationTests
             {
                 var queueUrl = (await GetAllQueues(regionEndpoint, queueName)).FirstOrDefault();
 
-                if (!String.IsNullOrEmpty(queueUrl))
+                if (!string.IsNullOrEmpty(queueUrl))
+                {
                     return (true, queueUrl);
+                }
 
-                Thread.Sleep(TimeSpan.FromSeconds(sleepStep));
+                await Task.Delay(TimeSpan.FromSeconds(sleepStep));
             }
             
             return (false, null);
@@ -183,7 +195,7 @@ namespace JustSaying.IntegrationTests
             var request = new GetQueueAttributesRequest
             {
                 QueueUrl = queueUrl,
-                AttributeNames = new List<string> {"QueueArn"}
+                AttributeNames = new List<string> { "QueueArn" }
             };
 
             var sqsclient = CreateMeABus.DefaultClientFactory().GetSqsClient(regionEndpoint);
@@ -206,7 +218,7 @@ namespace JustSaying.IntegrationTests
                 (await client.GetQueueAttributesAsync(new GetQueueAttributesRequest
                 {
                     QueueUrl = queueUrl,
-                    AttributeNames = new List<string> {"Policy"}
+                    AttributeNames = new List<string> { "Policy" }
                 })).Policy;
 
             int pos = topic.TopicArn.LastIndexOf(':');

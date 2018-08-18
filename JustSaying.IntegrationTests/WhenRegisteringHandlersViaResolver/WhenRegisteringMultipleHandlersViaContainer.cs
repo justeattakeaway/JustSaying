@@ -1,9 +1,10 @@
 using System;
-using StructureMap;
 using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
+using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using Shouldly;
+using StructureMap;
 using Xunit;
 using Container = StructureMap.Container;
 
@@ -26,7 +27,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             var handlerResolver = new StructureMapHandlerResolver(_container);
 
             CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion("eu-west-1")
+                .InRegion(TestEnvironment.Region.SystemName)
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);
