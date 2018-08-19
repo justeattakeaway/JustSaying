@@ -30,7 +30,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
 
         public WhenAFailoverRegionIsSetup(ITestOutputHelper outputHelper)
         {
-            LoggerFactory = outputHelper.AsLoggerFactory();
+            LoggerFactory = outputHelper.ToLoggerFactory();
         }
 
         private ILoggerFactory LoggerFactory { get; }

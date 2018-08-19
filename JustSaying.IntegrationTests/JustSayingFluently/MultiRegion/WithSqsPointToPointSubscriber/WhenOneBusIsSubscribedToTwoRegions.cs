@@ -25,7 +25,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
 
         public WhenOneBusIsSubscribedToTwoRegions(ITestOutputHelper outputHelper)
         {
-            LoggerFactory = outputHelper.AsLoggerFactory();
+            LoggerFactory = outputHelper.ToLoggerFactory();
         }
 
         private ILoggerFactory LoggerFactory { get; }

@@ -24,7 +24,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
 
         public WhenSubscribingToTopicInAnotherAccount(ITestOutputHelper outputHelper)
         {
-            LoggerFactory = outputHelper.AsLoggerFactory();
+            LoggerFactory = outputHelper.ToLoggerFactory();
         }
 
         private ILoggerFactory LoggerFactory { get; }

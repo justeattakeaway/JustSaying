@@ -17,7 +17,7 @@ namespace JustSaying.TestingFramework
 
         public JustSayingFixture(ITestOutputHelper outputHelper)
         {
-            LoggerFactory = outputHelper.AsLoggerFactory();
+            LoggerFactory = outputHelper.ToLoggerFactory();
         }
 
         public AWSCredentials Credentials { get; set; } = TestEnvironment.Credentials;

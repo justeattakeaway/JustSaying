@@ -30,7 +30,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
 
         public WhenAFailoverRegionIsSetup(ITestOutputHelper outputHelper)
         {
-            LoggerFactory = outputHelper.AsLoggerFactory();
+            LoggerFactory = outputHelper.ToLoggerFactory();
         }
 
         private string QueueName { get; } = new JustSayingFixture().UniqueName;

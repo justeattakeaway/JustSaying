@@ -19,7 +19,7 @@ namespace JustSaying.IntegrationTests
         public WhenOptingOutOfErrorQueue(ITestOutputHelper outputHelper)
         {
             Region = TestEnvironment.Region;
-            LoggerFactory = outputHelper.AsLoggerFactory();
+            LoggerFactory = outputHelper.ToLoggerFactory();
             _client = CreateMeABus.DefaultClientFactory().GetSqsClient(Region);
         }
 
