@@ -18,7 +18,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private const string Url = "https://blablabla/" + QueueName;
-        private readonly GenericMessage _message = new GenericMessage {Content = "Hello"};
+        private readonly SimpleMessage _message = new SimpleMessage { Content = "Hello" };
         private const string QueueName = "queuename";
 
         protected override SqsPublisher CreateSystemUnderTest()

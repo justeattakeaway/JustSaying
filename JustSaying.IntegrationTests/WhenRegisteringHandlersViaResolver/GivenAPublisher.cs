@@ -3,23 +3,27 @@ using JustBehave;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
-using Microsoft.Extensions.Logging;
 using Shouldly;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
     public abstract class GivenAPublisher : XAsyncBehaviourTest<IMessagePublisher>
     {
-        protected IHaveFulfilledPublishRequirements Publisher;
-        protected IHaveFulfilledSubscriptionRequirements Subscriber;
-        protected Task DoneSignal;
+        protected IHaveFulfilledPublishRequirements Publisher { get; set; }
+
+        protected IHaveFulfilledSubscriptionRequirements Subscriber { get; set; }
+
+        protected Task DoneSignal { get; set; }
 
         protected override IMessagePublisher CreateSystemUnderTest()
         {
-            Publisher = CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion("eu-west-1")
+            var fixture = new JustSayingFixture();
+
+            Publisher = fixture.Builder()
                 .WithSnsMessagePublisher<OrderPlaced>();
+
             Publisher.StartListening();
+
             return Publisher;
         }
 
@@ -48,6 +52,5 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             Publisher?.StopListening();
             Subscriber?.StopListening();
         }
-
     }
 }

@@ -4,22 +4,24 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.IntegrationTests.TestHandlers
 {
-    public class ThrowingHandler : IHandlerAsync<GenericMessage>
+    public class ThrowingHandler : IHandlerAsync<SimpleMessage>
     {
         public ThrowingHandler()
         {
             DoneSignal = new TaskCompletionSource<object>();
         }
 
-        public GenericMessage MessageReceived { get; set; }
+        public SimpleMessage MessageReceived { get; set; }
 
         public TaskCompletionSource<object> DoneSignal { get; private set; }
 
-        public async Task<bool> Handle(GenericMessage message)
+        public async Task<bool> Handle(SimpleMessage message)
         {
             MessageReceived = message;
+
             await Task.Delay(0);
             Tasks.DelaySendDone(DoneSignal);
+
             throw new TestException("ThrowingHandler has thrown");
         }
     }

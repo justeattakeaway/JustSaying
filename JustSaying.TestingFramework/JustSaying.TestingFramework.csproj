@@ -1,14 +1,17 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj" />
     <ProjectReference Include="..\JustSaying\JustSaying.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NLog" Version="4.5.5" />
+    <PackageReference Include="AutoFixture" Version="4.5.0" />
+    <PackageReference Include="JustBehave" Version="2.0.0-beta-51" />
+    <PackageReference Include="MartinCostello.Logging.XUnit" Version="0.1.0-alpha4" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.1.1" />
     <PackageReference Include="NSubstitute" Version="3.1.0" />
     <PackageReference Include="Shouldly" Version="3.0.0" />
+    <PackageReference Include="xunit" Version="2.4.0" />
   </ItemGroup>
 </Project>

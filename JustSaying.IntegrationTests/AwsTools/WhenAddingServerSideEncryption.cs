@@ -13,10 +13,10 @@ namespace JustSaying.IntegrationTests.AwsTools
             await SystemUnderTest.CreateAsync(new SqsBasicConfiguration());
 
             await SystemUnderTest.UpdateQueueAttributeAsync(
-                new SqsBasicConfiguration { ServerSideEncryption = new ServerSideEncryption()});
+                new SqsBasicConfiguration { ServerSideEncryption = new ServerSideEncryption() });
         }
 
-        [Fact]
+        [AwsFact]
         public void TheServerSideEncryptionIsUpdatedWithTheNewValue()
         {
             SystemUnderTest.ServerSideEncryption.KmsMasterKeyId.ShouldBe("alias/aws/sqs");

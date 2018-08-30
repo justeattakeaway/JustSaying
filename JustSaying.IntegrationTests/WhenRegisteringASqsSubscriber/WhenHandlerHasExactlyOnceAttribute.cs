@@ -1,152 +1,60 @@
 using System;
-using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
-using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
-using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 {
-    [ExactlyOnce(TimeOut = 10)]
-    public class SampleHandler : IHandlerAsync<GenericMessage>
-    {
-        private int _count;
-        public Task<bool> Handle(GenericMessage message)
-        {
-            Interlocked.Increment(ref _count);
-            return Task.FromResult(true);
-        }
-
-        public int NumberOfTimesIHaveBeenCalled()
-        {
-            return _count;
-        }
-    }
-    [ExactlyOnce]
-    public class AnotherSampleHandler : SampleHandler { }
-
-    [Collection(GlobalSetup.CollectionName)]
-    public class WhenTwoDifferentHanldersHandleAMessageWithExactlyOnceAttribute
-    {
-        protected string QueueName;
-        private readonly GenericMessage _message;
-        private SampleHandler _handler1;
-        private SampleHandler _handler2;
-        private const string region = "eu-west-1";
-        
-        public WhenTwoDifferentHanldersHandleAMessageWithExactlyOnceAttribute()
-        {
-            QueueName = "queuename-" + DateTime.Now.Ticks;
-            _message = new GenericMessage { Id = Guid.NewGuid() };
-        }
-
-        protected async Task Act()
-        {
-            _handler1 = new SampleHandler();
-            _handler2 = new AnotherSampleHandler();
-            var publisher = CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion(region)
-                .ConfigurePublisherWith(_ => { })
-                .WithSnsMessagePublisher<GenericMessage>();
-
-            var bus = CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion(region)
-                .WithMonitoring(Substitute.For<IMessageMonitor>())
-                .WithMessageLockStoreOf(new MessageLockStore())
-                .WithSqsTopicSubscriber().IntoQueue(QueueName)
-                .WithMessageHandlers(_handler1, _handler2);
-
-            publisher.StartListening();
-            bus.StartListening();
-
-            await publisher.PublishAsync(_message);
-        }
-
-        [Fact(Skip ="waiting for 2 side-by-side consumers bug to get fixed.")]
-        public async Task BothHandlersAreTriggered()
-        {
-            await Act();
-
-            await Task.Delay(5.Seconds());
-            _handler1.NumberOfTimesIHaveBeenCalled().ShouldBe(1);
-            _handler2.NumberOfTimesIHaveBeenCalled().ShouldBe(1);
-        }
-    }
-
     [Collection(GlobalSetup.CollectionName)]
     public class WhenHandlerHasExactlyOnceAttribute
     {
-        protected string QueueName;
-        private readonly GenericMessage _message;
-        private SampleHandler _sampleHandler;
-        private const string region = "eu-west-1";
-        
-        public WhenHandlerHasExactlyOnceAttribute()
+        private ExactlyOnceHandlerWithTimeout _handler;
+
+        public WhenHandlerHasExactlyOnceAttribute(ITestOutputHelper outputHelper)
         {
-            QueueName = "queuename-" + DateTime.Now.Ticks;
-            _message = new GenericMessage{Id = Guid.NewGuid()};
+            OutputHelper = outputHelper;
         }
+
+        private ITestOutputHelper OutputHelper { get; }
 
         protected async Task Act()
         {
-            _sampleHandler = new SampleHandler();
-            var publisher = CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion(region)
-                .WithSnsMessagePublisher<GenericMessage>();
+            _handler = new ExactlyOnceHandlerWithTimeout();
 
-            var bus = CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion(region)
+            var fixture = new JustSayingFixture(OutputHelper);
+
+            var publisher = fixture.Builder()
+                .WithSnsMessagePublisher<SimpleMessage>();
+
+            var bus = fixture.Builder()
                 .WithMonitoring(Substitute.For<IMessageMonitor>())
                 .WithMessageLockStoreOf(new MessageLockStore())
                 .WithSqsTopicSubscriber()
-                .IntoQueue(QueueName)
-                .ConfigureSubscriptionWith(cfg =>
-                {
-                    cfg.MessageRetentionSeconds = 60;
-                }).WithMessageHandler(_sampleHandler);
+                .IntoQueue(fixture.UniqueName)
+                .ConfigureSubscriptionWith(cfg => cfg.MessageRetentionSeconds = 60)
+                .WithMessageHandler(_handler);
+
             publisher.StartListening();
             bus.StartListening();
 
-            await publisher.PublishAsync(_message);
-            await publisher.PublishAsync(_message);
+            var message = new SimpleMessage { Id = Guid.NewGuid() };
+
+            await publisher.PublishAsync(message);
+            await publisher.PublishAsync(message);
         }
 
-        [Fact]
+        [AwsFact]
         public async Task MessageHasBeenCalledOnce()
         {
             await Act();
 
             await Task.Delay(5.Seconds());
-            _sampleHandler.NumberOfTimesIHaveBeenCalled().ShouldBe(1);
-        }
-    }
 
-    internal class MessageLockStore : IMessageLock
-    {
-        private readonly Dictionary<string, int> _store = new Dictionary<string, int>();
-
-        public MessageLockResponse TryAquireLockPermanently(string key)
-        {
-            int value;
-            var canAquire = !_store.TryGetValue(key, out value);
-            if (canAquire)
-                _store.Add(key, 1);
-            return new MessageLockResponse {DoIHaveExclusiveLock = canAquire};
-        }
-
-        public MessageLockResponse TryAquireLock(string key, TimeSpan howLong)
-        {
-            return TryAquireLockPermanently(key);
-        }
-
-        public void ReleaseLock(string key)
-        {
-            _store.Remove(key);
+            _handler.NumberOfTimesIHaveBeenCalled().ShouldBe(1);
         }
     }
 }

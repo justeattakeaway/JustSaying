@@ -1,13 +1,10 @@
 using System;
 using System.Threading.Tasks;
-using NLog;
 
 namespace JustSaying.TestingFramework
 {
     public static class Tasks
     {
-        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
-
         private const int DefaultTimeoutMillis = 10000;
         private const int DelaySendMillis = 200;
 
@@ -20,7 +17,6 @@ namespace JustSaying.TestingFramework
             var firstToComplete = await Task.WhenAny(task, timeoutTask).ConfigureAwait(false);
 
             if (firstToComplete != timeoutTask) return true;
-            Log.Error("Task did not complete before timeout of " + timeoutDuration);
             return false;
         }
         public static void DelaySendDone(TaskCompletionSource<object> doneSignal)

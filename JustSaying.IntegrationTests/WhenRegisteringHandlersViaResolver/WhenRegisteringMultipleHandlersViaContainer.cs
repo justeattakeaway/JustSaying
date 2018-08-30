@@ -1,9 +1,9 @@
 using System;
-using StructureMap;
 using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
-using Microsoft.Extensions.Logging;
+using JustSaying.TestingFramework;
 using Shouldly;
+using StructureMap;
 using Xunit;
 using Container = StructureMap.Container;
 
@@ -25,8 +25,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         {
             var handlerResolver = new StructureMapHandlerResolver(_container);
 
-            CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion("eu-west-1")
+            new JustSayingFixture()
+                .Builder()
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);
@@ -34,7 +34,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             return Task.FromResult(true);
         }
 
-        [Fact]
+        [AwsFact]
         public void ThrowsNotSupportedException()
         {
             ThrownException.ShouldBeAssignableTo<NotSupportedException>();

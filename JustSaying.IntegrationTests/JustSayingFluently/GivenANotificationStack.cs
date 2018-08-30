@@ -14,11 +14,10 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 {
     public abstract class GivenANotificationStack : XAsyncBehaviourTest<IAmJustSayingFluently>
     {
-        readonly Stopwatch _stopwatch = new Stopwatch();
-        protected IAmJustSayingFluently ServiceBus;
-        protected IMessageMonitor Monitoring;
-        private Future<GenericMessage> _snsHandler;
-        private Future<AnotherGenericMessage> _sqsHandler;
+        private readonly Stopwatch _stopwatch = new Stopwatch();
+
+        private Future<SimpleMessage> _snsHandler;
+        private Future<AnotherSimpleMessage> _sqsHandler;
         private IPublishConfiguration _config =
             new MessagingConfig
             {
@@ -26,12 +25,22 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 PublishFailureReAttempts = 3
             };
 
-        protected void RegisterSnsHandler(Future<GenericMessage> handler)
+        protected IAmJustSayingFluently ServiceBus { get; set; }
+
+        protected IMessageMonitor Monitoring { get; set; }
+
+        protected ILoggerFactory LoggerFactory => TestFixture.LoggerFactory;
+
+        protected RegionEndpoint Region =>TestFixture.Region;
+
+        private JustSayingFixture TestFixture { get; } = new JustSayingFixture();
+
+        protected void RegisterSnsHandler(Future<SimpleMessage> handler)
         {
             _snsHandler = handler;
         }
 
-        protected void RegisterSqsHandler(Future<AnotherGenericMessage> handler)
+        protected void RegisterSqsHandler(Future<AnotherSimpleMessage> handler)
         {
             _sqsHandler = handler;
         }
@@ -50,37 +59,34 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         {
             const int TimeoutMillis = 1000;
 
-            var snsHandler = Substitute.For<IHandlerAsync<GenericMessage>>();
-            snsHandler.When(x => x.Handle(Arg.Any<GenericMessage>()))
+            var snsHandler = Substitute.For<IHandlerAsync<SimpleMessage>>();
+            snsHandler.When(x => x.Handle(Arg.Any<SimpleMessage>()))
                     .Do(x =>
                     {
-                        var msg = (GenericMessage) x.Args()[0];
+                        var msg = (SimpleMessage) x.Args()[0];
                         _snsHandler?.Complete(msg).Wait(TimeoutMillis);
                     });
 
-            var sqsHandler = Substitute.For<IHandlerAsync<AnotherGenericMessage>>();
-            sqsHandler.When(x => x.Handle(Arg.Any<AnotherGenericMessage>()))
+            var sqsHandler = Substitute.For<IHandlerAsync<AnotherSimpleMessage>>();
+            sqsHandler.When(x => x.Handle(Arg.Any<AnotherSimpleMessage>()))
                     .Do(x =>
                     {
-                        var msg = (AnotherGenericMessage)x.Args()[0];
+                        var msg = (AnotherSimpleMessage)x.Args()[0];
                         _sqsHandler?.Complete(msg).Wait(TimeoutMillis);
                     });
 
             Monitoring = Substitute.For<IMessageMonitor>();
 
-            ServiceBus = CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion(RegionEndpoint.EUWest1.SystemName)
+            ServiceBus = TestFixture.Builder()
                 .WithMonitoring(Monitoring)
-
                 .ConfigurePublisherWith(c =>
                 {
                     c.PublishFailureBackoffMilliseconds = _config.PublishFailureBackoffMilliseconds;
                     c.PublishFailureReAttempts = _config.PublishFailureReAttempts;
                 })
-
-                .WithSnsMessagePublisher<GenericMessage>()
+                .WithSnsMessagePublisher<SimpleMessage>()
                 .WithSqsTopicSubscriber()
-                .IntoQueue("queuename")
+                .IntoQueue(TestFixture.UniqueName)
                 .ConfigureSubscriptionWith(cf =>
                 {
                     cf.MessageRetentionSeconds = 60;
@@ -88,22 +94,25 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                     cf.InstancePosition = 1;
                 })
                 .WithMessageHandler(snsHandler)
-
-                .WithSqsMessagePublisher<AnotherGenericMessage>(configuration => { })
+                .WithSqsMessagePublisher<AnotherSimpleMessage>(configuration => { })
                 .WithSqsPointToPointSubscriber()
                 .IntoDefaultQueue()
                 .WithMessageHandler(sqsHandler);
 
             ServiceBus.StartListening();
+
             return ServiceBus;
         }
 
         protected override void PostAssertTeardown()
         {
             base.PostAssertTeardown();
+
             _stopwatch.Stop();
             Teardown();
-            Console.WriteLine($"The test took {_stopwatch.ElapsedMilliseconds/1000} seconds.");
+
+            // TODO ITestOutputHelper
+            Console.WriteLine($"The test took {_stopwatch.ElapsedMilliseconds / 1000} seconds.");
 
             ServiceBus.StopListening();
         }

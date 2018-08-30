@@ -11,24 +11,24 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
     [Collection(GlobalSetup.CollectionName)]
     public class WhenHandlersThrowAnException : GivenANotificationStack
     {
-        private Future<GenericMessage> _handler;
+        private Future<SimpleMessage> _handler;
 
         protected override void Given()
         {
             RecordAnyExceptionsThrown();
 
             base.Given();
-            _handler = new Future<GenericMessage>(() => throw new TestException("Test Exception from WhenHandlersThrowAnException"));
+            _handler = new Future<SimpleMessage>(() => throw new TestException("Test Exception from WhenHandlersThrowAnException"));
             RegisterSnsHandler(_handler);
         }
 
         protected override async Task When()
         {
-            await ServiceBus.PublishAsync(new GenericMessage());
+            await ServiceBus.PublishAsync(new SimpleMessage());
             await _handler.DoneSignal;
         }
 
-        [Fact]
+        [AwsFact]
         public void ThenExceptionIsRecordedInMonitoring()
         {
             _handler.ReceivedMessageCount.ShouldBeGreaterThan(0);

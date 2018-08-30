@@ -1,37 +1,54 @@
-using System;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SimpleNotificationService;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
+using Xunit;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
-    public abstract class WhenCreatingTopicByName : XBehaviourTest<SnsTopicByName>
+    [Collection(GlobalSetup.CollectionName)]
+    public abstract class WhenCreatingTopicByName : XAsyncBehaviourTest<SnsTopicByName>
     {
-        protected string UniqueName;
-        protected SnsTopicByName CreatedTopic;
-        protected IAmazonSimpleNotificationService Bus;
+        protected string UniqueName => TestFixture.UniqueName;
+
+        protected SnsTopicByName CreatedTopic { get; private set; }
+
+        protected IAmazonSimpleNotificationService Client { get; private set; }
+
+        protected ILoggerFactory LoggerFactory => TestFixture.LoggerFactory;
+
+        protected RegionEndpoint Region => TestFixture.Region;
+
+        private JustSayingFixture TestFixture { get; } = new JustSayingFixture();
 
         protected override void Given()
-        { }
+        {
+        }
 
         protected override SnsTopicByName CreateSystemUnderTest()
         {
-            Bus = CreateMeABus.DefaultClientFactory().GetSnsClient(RegionEndpoint.EUWest1);
-            UniqueName = "test" + DateTime.Now.Ticks;
-            CreatedTopic = new SnsTopicByName(UniqueName, Bus , new MessageSerialisationRegister(new NonGenericMessageSubjectProvider()), new LoggerFactory(), new NonGenericMessageSubjectProvider());
-            CreatedTopic.CreateAsync().GetAwaiter().GetResult();
+            Client = TestFixture.CreateSnsClient();
+
+            CreatedTopic = new SnsTopicByName(
+                UniqueName,
+                Client,
+                new MessageSerialisationRegister(new NonGenericMessageSubjectProvider()),
+                LoggerFactory,
+                new NonGenericMessageSubjectProvider());
+
+            CreatedTopic.CreateAsync().ResultSync();
+
             return CreatedTopic;
         }
 
         protected override void PostAssertTeardown()
         {
-            Bus.DeleteTopicAsync(CreatedTopic.Arn).Wait();
+            Client.DeleteTopicAsync(CreatedTopic.Arn).ResultSync();
             base.PostAssertTeardown();
         }
-
-
     }
 }

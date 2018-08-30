@@ -22,7 +22,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 
             Configuration = new MessagingConfig();
 
-            DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName).Wait();
+            DeleteTopicIfItAlreadyExists(_topicName).ResultSync();
         }
 
         protected override Task When()
@@ -31,13 +31,13 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
             return Task.CompletedTask;
         }
 
-        [Fact]
+        [AwsFact]
         public void APublisherIsAddedToTheStack()
         {
-            NotificationStack.Received().AddMessagePublisher<Message>(Arg.Any<IMessagePublisher>(), TestEndpoint.SystemName);
+            NotificationStack.Received().AddMessagePublisher<Message>(Arg.Any<IMessagePublisher>(), Region.SystemName);
         }
 
-        [Fact]
+        [AwsFact]
         public void SerialisationIsRegisteredForMessage()
         {
             NotificationStack.SerialisationRegister.Received()
@@ -46,7 +46,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 
         protected override void PostAssertTeardown()
         {
-            DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName).Wait();
+            DeleteTopicIfItAlreadyExists(_topicName).ResultSync();
         }
     }
 }

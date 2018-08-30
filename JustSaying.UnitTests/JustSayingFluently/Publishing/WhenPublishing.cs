@@ -9,7 +9,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.Publishing
 {
     public class WhenPublishing : JustSayingFluentlyTestBase
     {
-        private readonly Message _message = new GenericMessage();
+        private readonly Message _message = new SimpleMessage();
 
         protected override void Given(){}
 

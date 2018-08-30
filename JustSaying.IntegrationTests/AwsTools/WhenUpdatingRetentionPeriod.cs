@@ -24,10 +24,10 @@ namespace JustSaying.IntegrationTests.AwsTools
             await SystemUnderTest.CreateAsync(new SqsBasicConfiguration { MessageRetentionSeconds = _oldRetentionPeriod });
 
             await SystemUnderTest.UpdateQueueAttributeAsync(
-                new SqsBasicConfiguration {MessageRetentionSeconds = _newRetentionPeriod});
+                new SqsBasicConfiguration { MessageRetentionSeconds = _newRetentionPeriod });
         }
 
-        [Fact]
+        [AwsFact]
         public void TheRedrivePolicyIsUpdatedWithTheNewValue()
         {
             SystemUnderTest.MessageRetentionPeriod.ShouldBe(_newRetentionPeriod);

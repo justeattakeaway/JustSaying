@@ -19,14 +19,13 @@ namespace JustSaying.IntegrationTests.AwsTools
 
         protected override async Task When()
         {
-
             await SystemUnderTest.CreateAsync(new SqsBasicConfiguration());
 
             await SystemUnderTest.UpdateRedrivePolicyAsync(
                 new RedrivePolicy(_newMaximumReceived, SystemUnderTest.ErrorQueue.Arn));
         }
 
-        [Fact]
+        [AwsFact]
         public void TheRedrivePolicyIsUpdatedWithTheNewValue()
         {
             SystemUnderTest.RedrivePolicy.MaximumReceives.ShouldBe(_newMaximumReceived);

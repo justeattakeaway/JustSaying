@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Amazon;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
@@ -8,27 +7,37 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopicSubscriber
 {
     [Collection(GlobalSetup.CollectionName)]
     public class WhenAFailoverRegionIsSetup
     {
-        private static readonly string PrimaryRegion = RegionEndpoint.EUWest1.SystemName;
-        private static readonly string SecondaryRegion = RegionEndpoint.USEast1.SystemName;
+        private static string PrimaryRegion => TestEnvironment.Region.SystemName;
+        private static string SecondaryRegion => TestEnvironment.SecondaryRegion.SystemName;
 
-        private readonly Future<GenericMessage> _primaryHandler = new Future<GenericMessage>();
-        private readonly Future<GenericMessage> _secondaryHandler = new Future<GenericMessage>();
+        private readonly Future<SimpleMessage> _primaryHandler = new Future<SimpleMessage>();
+        private readonly Future<SimpleMessage> _secondaryHandler = new Future<SimpleMessage>();
 
         private IHaveFulfilledPublishRequirements _publisher;
-        private GenericMessage _message;
+        private SimpleMessage _message;
         private static string _activeRegion;
         private readonly Func<string> _getActiveRegion = () => _activeRegion;
 
         private IHaveFulfilledSubscriptionRequirements _primaryBus;
         private IHaveFulfilledSubscriptionRequirements _secondaryBus;
 
-        [Fact]
+        public WhenAFailoverRegionIsSetup(ITestOutputHelper outputHelper)
+        {
+            LoggerFactory = outputHelper.ToLoggerFactory();
+        }
+
+        private ILoggerFactory LoggerFactory { get; }
+
+        private string QueueName { get; } = new JustSayingFixture().UniqueName;
+
+        [NotSimulatorFact]
         public async Task MessagesArePublishedToTheActiveRegion()
         {
             GivenSubscriptionsToAQueueInTwoRegions();
@@ -36,11 +45,11 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
 
             WhenThePrimaryRegionIsActive();
             await AndAMessageIsPublished();
-            await ThenTheMessageIsReceivedInThatRegion(_primaryHandler);
+            await ThenTheMessageIsReceivedInThatRegion(_primaryHandler, PrimaryRegion);
 
             WhenTheFailoverRegionIsActive();
             await AndAMessageIsPublished();
-            await ThenTheMessageIsReceivedInThatRegion(_secondaryHandler);
+            await ThenTheMessageIsReceivedInThatRegion(_secondaryHandler, SecondaryRegion);
 
             _primaryBus.StopListening();
             _secondaryBus.StopListening();
@@ -48,43 +57,45 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
 
         private void GivenSubscriptionsToAQueueInTwoRegions()
         {
-            var primaryHandler = Substitute.For<IHandlerAsync<GenericMessage>>();
-            primaryHandler.Handle(Arg.Any<GenericMessage>()).Returns(true);
+            var primaryHandler = Substitute.For<IHandlerAsync<SimpleMessage>>();
+            primaryHandler.Handle(Arg.Any<SimpleMessage>()).Returns(true);
             primaryHandler
-                .When(x => x.Handle(Arg.Any<GenericMessage>()))
-                .Do(async x => await _primaryHandler.Complete((GenericMessage)x.Args()[0]));
+                .When(x => x.Handle(Arg.Any<SimpleMessage>()))
+                .Do(async x => await _primaryHandler.Complete((SimpleMessage)x.Args()[0]));
 
             _primaryBus = CreateMeABus
-                .WithLogging(new LoggerFactory())
+                .WithLogging(LoggerFactory)
                 .InRegion(PrimaryRegion)
                 .WithSqsTopicSubscriber()
-                .IntoQueue("queuename")
+                .IntoQueue(QueueName)
                 .WithMessageHandler(primaryHandler);
+
             _primaryBus.StartListening();
 
-            var secondaryHandler = Substitute.For<IHandlerAsync<GenericMessage>>();
-            secondaryHandler.Handle(Arg.Any<GenericMessage>()).Returns(true);
+            var secondaryHandler = Substitute.For<IHandlerAsync<SimpleMessage>>();
+            secondaryHandler.Handle(Arg.Any<SimpleMessage>()).Returns(true);
             secondaryHandler
-                .When(x => x.Handle(Arg.Any<GenericMessage>()))
-                .Do(async x => await _secondaryHandler.Complete((GenericMessage)x.Args()[0]));
+                .When(x => x.Handle(Arg.Any<SimpleMessage>()))
+                .Do(async x => await _secondaryHandler.Complete((SimpleMessage)x.Args()[0]));
 
             _secondaryBus = CreateMeABus
-                .WithLogging(new LoggerFactory())
+                .WithLogging(LoggerFactory)
                 .InRegion(SecondaryRegion)
                 .WithSqsTopicSubscriber()
-                .IntoQueue("queuename")
+                .IntoQueue(QueueName)
                 .WithMessageHandler(secondaryHandler);
+
             _secondaryBus.StartListening();
         }
 
         private void AndAPublisherWithAFailoverRegion()
         {
             _publisher = CreateMeABus
-                .WithLogging(new LoggerFactory())
+                .WithLogging(LoggerFactory)
                 .InRegion(PrimaryRegion)
                 .WithFailoverRegion(SecondaryRegion)
                 .WithActiveRegion(_getActiveRegion)
-                .WithSnsMessagePublisher<GenericMessage>();
+                .WithSnsMessagePublisher<SimpleMessage>();
         }
 
         private void WhenThePrimaryRegionIsActive()
@@ -99,17 +110,20 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
 
         private async Task AndAMessageIsPublished()
         {
-            _message = new GenericMessage { Id = Guid.NewGuid() };
+            _message = new SimpleMessage { Id = Guid.NewGuid() };
             await _publisher.PublishAsync(_message);
+
+            await Task.Yield();
+            await Task.Delay(TimeSpan.FromSeconds(1));
         }
 
-        private async Task ThenTheMessageIsReceivedInThatRegion(Future<GenericMessage> handler)
+        private async Task ThenTheMessageIsReceivedInThatRegion(Future<SimpleMessage> handler, string regionName)
         {
             var done = await Tasks.WaitWithTimeoutAsync(handler.DoneSignal);
-            done.ShouldBeTrue();
+            done.ShouldBeTrue($"Handler did not complete in region {regionName}.");
 
-            handler.ReceivedMessageCount.ShouldBeGreaterThanOrEqualTo(1);
-            handler.HasReceived(_message).ShouldBeTrue();
+            handler.ReceivedMessageCount.ShouldBeGreaterThanOrEqualTo(1, $"Received message count was incorrect in region {regionName}.");
+            handler.HasReceived(_message).ShouldBeTrue($"Message was not received in region {regionName}.");
         }
     }
 }

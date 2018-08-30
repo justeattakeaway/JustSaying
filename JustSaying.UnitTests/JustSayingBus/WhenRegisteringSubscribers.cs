@@ -27,7 +27,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             });
             _subscriber2 = Substitute.For<INotificationSubscriber>();
             _subscriber2.Queue.Returns("queue2");
-            _subscriber2.Subscribers.Returns(new Collection<ISubscriber> {new Subscriber(typeof (GenericMessage))});
+            _subscriber2.Subscribers.Returns(new Collection<ISubscriber> {new Subscriber(typeof (SimpleMessage))});
         }
 
         protected override Task When()
@@ -68,7 +68,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             response.Subscribers.Count().ShouldBe(3);
             response.Subscribers.First(x => x.MessageType == typeof(OrderAccepted)).ShouldNotBe(null);
             response.Subscribers.First(x => x.MessageType == typeof(OrderRejected)).ShouldNotBe(null);
-            response.Subscribers.First(x => x.MessageType == typeof(GenericMessage)).ShouldNotBe(null);
+            response.Subscribers.First(x => x.MessageType == typeof(SimpleMessage)).ShouldNotBe(null);
         }
     }
 }

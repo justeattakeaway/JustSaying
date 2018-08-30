@@ -1,29 +1,36 @@
-using System;
-using Amazon;
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
-using Microsoft.Extensions.Logging;
+using JustSaying.TestingFramework;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
     public abstract class WhenCreatingQueuesByName : XAsyncBehaviourTest<SqsQueueByName>
     {
-        protected string QueueUniqueKey;
-
         protected override void Given()
-        { }
+        {
+        }
 
         protected override SqsQueueByName CreateSystemUnderTest()
         {
-            QueueUniqueKey = "test" + DateTime.Now.Ticks;
-            var queue = new SqsQueueByName(RegionEndpoint.EUWest1, QueueUniqueKey, CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1), 1, new LoggerFactory());
-            queue.ExistsAsync().GetAwaiter().GetResult();
+            var fixture = new JustSayingFixture();
+
+            var queue = new SqsQueueByName(
+                fixture.Region,
+                fixture.UniqueName,
+                fixture.CreateSqsClient(),
+                1,
+                fixture.LoggerFactory);
+
+            // Force queue creation
+            queue.ExistsAsync().ResultSync();
+
             return queue;
         }
 
         protected override void PostAssertTeardown()
         {
-            SystemUnderTest.DeleteAsync().GetAwaiter().GetResult();
+            SystemUnderTest.DeleteAsync().ResultSync();
             base.PostAssertTeardown();
         }
     }

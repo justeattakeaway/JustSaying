@@ -47,7 +47,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         [Fact]
         public void FailSilently()
         {
-            Should.NotThrow(() => SystemUnderTest.PublishAsync(new GenericMessage()).Wait());
+            Should.NotThrow(() => SystemUnderTest.PublishAsync(new SimpleMessage()).Wait());
         }
 
         private static Task<PublishResponse> ThrowsException(CallInfo callInfo)

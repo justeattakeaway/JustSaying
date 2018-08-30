@@ -3,7 +3,8 @@ param(
     [Parameter(Mandatory = $false)][string] $VersionSuffix = "",
     [Parameter(Mandatory = $false)][string] $OutputPath = "",
     [Parameter(Mandatory = $false)][switch] $SkipTests,
-    [Parameter(Mandatory = $false)][switch] $EnableCodeCoverage
+    [Parameter(Mandatory = $false)][switch] $EnableCodeCoverage,
+    [Parameter(Mandatory = $false)][switch] $EnableIntegrationTests
 )
 
 $ErrorActionPreference = "Stop"
@@ -19,6 +20,10 @@ $libraryProjects = @(
 $testProjects = @(
     (Join-Path $solutionPath "JustSaying.UnitTests\JustSaying.UnitTests.csproj")
 )
+
+if ($EnableIntegrationTests -eq $true) {
+  $testProjects += (Join-Path $solutionPath "JustSaying.IntegrationTests\JustSaying.IntegrationTests.csproj");
+}
 
 $dotnetVersion = (Get-Content $sdkFile | Out-String | ConvertFrom-Json).sdk.version
 
@@ -137,6 +142,12 @@ Write-Host "Creating packages..." -ForegroundColor Green
 
 ForEach ($libraryProject in $libraryProjects) {
     DotNetPack $libraryProject
+}
+
+if (($null -ne $env:CI) -And ($EnableIntegrationTests -eq $true)) {
+    & docker pull pafortin/goaws
+    & docker run -d --name goaws -p 4100:4100 pafortin/goaws
+    $env:AWS_SERVICE_URL="http://localhost:4100"
 }
 
 if ($SkipTests -eq $false) {

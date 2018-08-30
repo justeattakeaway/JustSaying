@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
-using Microsoft.Extensions.Logging;
+using JustSaying.Messaging.MessageHandling;
+using JustSaying.TestingFramework;
 using Shouldly;
 using StructureMap;
 using Xunit;
@@ -17,10 +18,13 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
         protected override Task When()
         {
-            var handlerResolver = new StructureMapHandlerResolver(new Container());
+            var container = new Container((p) => p.For<IHandlerAsync<OrderPlaced>>().Use<OrderPlacedHandler>());
 
-            CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion("eu-west-1")
+            var handlerResolver = new StructureMapHandlerResolver(container);
+
+            var fixture = new JustSayingFixture();
+
+            fixture.Builder()
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);
@@ -28,7 +32,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             return Task.FromResult(true);
         }
 
-        [Fact]
+        [AwsFact]
         public void ExceptionIsThrownBecauseHandlerIsNotRegisteredInContainer()
         {
             ThrownException.ShouldBeAssignableTo<HandlerNotRegisteredWithContainerException>();

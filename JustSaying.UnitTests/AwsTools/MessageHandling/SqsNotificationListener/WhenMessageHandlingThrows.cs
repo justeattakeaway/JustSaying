@@ -13,7 +13,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         protected override void Given()
         {
             base.Given();
-            Handler.Handle(Arg.Any<GenericMessage>()).Returns(
+            Handler.Handle(Arg.Any<SimpleMessage>()).Returns(
                 _ => ExceptionOnFirstCall());
         }
 
@@ -31,7 +31,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         [Fact]
         public void MessageHandlerWasCalled()
         {
-            Handler.ReceivedWithAnyArgs().Handle(Arg.Any<GenericMessage>());
+            Handler.ReceivedWithAnyArgs().Handle(Arg.Any<SimpleMessage>());
         }
 
         [Fact]

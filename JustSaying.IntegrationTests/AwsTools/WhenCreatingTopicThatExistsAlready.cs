@@ -1,6 +1,6 @@
+using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
-using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit;
 
@@ -12,25 +12,30 @@ namespace JustSaying.IntegrationTests.AwsTools
         private bool _createWasSuccessful;
         private SnsTopicByName _topic;
 
-        protected override void When()
+        protected override async Task When()
         {
-            _topic = new SnsTopicByName(UniqueName, Bus, new MessageSerialisationRegister(new NonGenericMessageSubjectProvider()), new LoggerFactory(), new NonGenericMessageSubjectProvider());
-            _createWasSuccessful = _topic.CreateAsync().GetAwaiter().GetResult();
+            _topic = new SnsTopicByName(
+                UniqueName,
+                Client,
+                new MessageSerialisationRegister(new NonGenericMessageSubjectProvider()),
+                LoggerFactory,
+                new NonGenericMessageSubjectProvider());
+
+            _createWasSuccessful = await _topic.CreateAsync();
         }
 
-        [Fact]
+        [AwsFact]
         public void CreateCallIsStillSuccessful()
         {
             _createWasSuccessful.ShouldBeTrue();
         }
 
-        [Fact]
+        [AwsFact]
         public void TopicArnIsPopulated()
         {
             _topic.Arn.ShouldNotBeNull();
             _topic.Arn.ShouldEndWith(_topic.TopicName);
             _topic.Arn.ShouldBe(CreatedTopic.Arn);
         }
-
     }
 }

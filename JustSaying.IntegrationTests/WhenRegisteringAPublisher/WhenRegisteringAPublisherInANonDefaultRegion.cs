@@ -20,8 +20,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 
             Configuration = new MessagingConfig();
 
-            DeleteTopicIfItAlreadyExists(TestEndpoint, _topicName).Wait();
-
+            DeleteTopicIfItAlreadyExists(_topicName).ResultSync();
         }
 
         protected override Task When()
@@ -30,11 +29,11 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
             return Task.CompletedTask;
         }
 
-        [Fact]
+        [AwsFact]
         public async Task ASnsTopicIsCreatedInTheNonDefaultRegion()
         {
             bool topicExists;
-            (topicExists, _topic) = await TryGetTopic(TestEndpoint, _topicName);
+            (topicExists, _topic) = await TryGetTopic(_topicName);
             topicExists.ShouldBeTrue();
         }
 
@@ -42,7 +41,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         {
             if (_topic != null)
             {
-                DeleteTopic(TestEndpoint, _topic).Wait();
+                DeleteTopic(_topic).ResultSync();
             }
         }
     }

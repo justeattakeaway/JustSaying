@@ -21,13 +21,19 @@ namespace JustSaying.IntegrationTests.AwsTools
 
         protected override async Task When()
         {
-            await SystemUnderTest.CreateAsync(new SqsBasicConfiguration { DeliveryDelaySeconds = _oldDeliveryDelay });
+            var queueConfig = new SqsBasicConfiguration
+            {
+                DeliveryDelaySeconds = _oldDeliveryDelay
+            };
 
-            await SystemUnderTest.UpdateQueueAttributeAsync(
-                new SqsBasicConfiguration {DeliveryDelaySeconds = _newDeliveryDelay});
+            await SystemUnderTest.CreateAsync(queueConfig);
+
+            queueConfig.DeliveryDelaySeconds = _newDeliveryDelay;
+
+            await SystemUnderTest.UpdateQueueAttributeAsync(queueConfig);
         }
 
-        [Fact]
+        [AwsFact]
         public void TheDeliveryDelayIsUpdatedWithTheNewValue()
         {
             SystemUnderTest.DeliveryDelay.ShouldBe(_newDeliveryDelay);

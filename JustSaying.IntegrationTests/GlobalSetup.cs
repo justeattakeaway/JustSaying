@@ -1,26 +1,32 @@
 using System;
+using JustSaying.AwsTools;
 using JustSaying.TestingFramework;
-using Xunit;
 
 namespace JustSaying.IntegrationTests
 {
-    public class GlobalSetup : IDisposable
+    public sealed class GlobalSetup : IDisposable
     {
         public const string CollectionName = "Global Fixture Setup";
 
         public GlobalSetup()
         {
-            CreateMeABus.DefaultClientFactory = () => new IntegrationAwsClientFactory();
+            IAwsClientFactory clientFactory;
+
+            if (TestEnvironment.IsSimulatorConfigured)
+            {
+                clientFactory = new LocalAwsClientFactory(TestEnvironment.SimulatorUrl);
+            }
+            else
+            {
+                clientFactory = new RemoteAwsClientFactory();
+            }
+
+            CreateMeABus.DefaultClientFactory = () => clientFactory;
         }
 
         public void Dispose()
         {
+            CreateMeABus.DefaultClientFactory = () => new DefaultAwsClientFactory();
         }
-    }
-
-    [CollectionDefinition(GlobalSetup.CollectionName)]
-    public class GlobalSetupCollection : ICollectionFixture<GlobalSetup>
-    {
-        
     }
 }

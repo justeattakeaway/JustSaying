@@ -1,10 +1,9 @@
 using System.Threading.Tasks;
-using Amazon;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
-using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
@@ -12,7 +11,14 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
     public class WhenPublishingWithoutAMonitor
     {
         private IAmJustSayingFluently _bus;
-        private readonly IHandlerAsync<GenericMessage> _handler = Substitute.For<IHandlerAsync<GenericMessage>>();
+        private readonly IHandlerAsync<SimpleMessage> _handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
+
+        public WhenPublishingWithoutAMonitor(ITestOutputHelper outputHelper)
+        {
+            OutputHelper = outputHelper;
+        }
+
+        private ITestOutputHelper OutputHelper { get; }
 
         private async Task Given()
         {
@@ -20,40 +26,38 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             var doneSignal = new TaskCompletionSource<object>();
 
             // Given
-            _handler.Handle(Arg.Any<GenericMessage>())
+            _handler.Handle(Arg.Any<SimpleMessage>())
                 .Returns(true)
                 .AndDoes(_ => Tasks.DelaySendDone(doneSignal));
 
-            var bus = CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion(RegionEndpoint.EUWest1.SystemName)
+            var fixture = new JustSayingFixture(OutputHelper);
+
+            _bus = fixture.Builder()
                 .ConfigurePublisherWith(c =>
                     {
                         c.PublishFailureBackoffMilliseconds = 1;
                         c.PublishFailureReAttempts = 1;
-
                     })
-                .WithSnsMessagePublisher<GenericMessage>()
+                .WithSnsMessagePublisher<SimpleMessage>()
                 .WithSqsTopicSubscriber()
-                .IntoQueue("queuename")
+                .IntoQueue(fixture.UniqueName)
                 .ConfigureSubscriptionWith(cfg => cfg.InstancePosition = 1)
                 .WithMessageHandler(_handler);
 
-            _bus = bus;
-
             // When
             _bus.StartListening();
-            await _bus.PublishAsync(new GenericMessage());
+            await _bus.PublishAsync(new SimpleMessage());
 
             // Teardown
             await doneSignal.Task;
-            bus.StopListening();
+            _bus.StopListening();
         }
 
-        [Fact]
+        [AwsFact]
         public async Task AMessageCanStillBePublishedAndPopsOutTheOtherEnd()
         {
             await Given();
-            Received.InOrder(async () => await _handler.Handle(Arg.Any<GenericMessage>()));
+            Received.InOrder(async () => await _handler.Handle(Arg.Any<SimpleMessage>()));
         }
     }
 }

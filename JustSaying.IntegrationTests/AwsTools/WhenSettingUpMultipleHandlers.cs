@@ -1,76 +1,50 @@
-using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Amazon;
 using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Extensions;
-using JustSaying.Messaging.MessageHandling;
-using Microsoft.Extensions.Logging;
+using JustSaying.TestingFramework;
 using Shouldly;
 using Xunit;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
     [Collection(GlobalSetup.CollectionName)]
-    public class WhenSettingUpMultipleHandlers : XBehaviourTest<IHaveFulfilledSubscriptionRequirements>
+    public class WhenSettingUpMultipleHandlers : XAsyncBehaviourTest<IHaveFulfilledSubscriptionRequirements>
     {
-        public class Order : Models.Message
-        {
-        }
+        private ProxyAwsClientFactory _proxyAwsClientFactory;
+        private string _topicName;
+        private string _queueName;
 
-        public class OrderHandler : IHandlerAsync<Order>
-        {
-            public Task<bool> Handle(Order message)
-            {
-                return Task.FromResult(true);
-            }
-        }
-
-        public class UniqueTopicAndQueueNames : INamingStrategy
-        {
-            private readonly long ticks = DateTime.UtcNow.Ticks;
-
-            public string GetTopicName(string topicName, Type messageType)
-            {
-                return (messageType.ToTopicName() + ticks).ToLower();
-            }
-
-            public string GetQueueName(SqsReadConfiguration sqsConfig, Type messageType)
-            {
-                return (sqsConfig.BaseQueueName + ticks).ToLower();
-            }
-        }
-
-        protected string QueueUniqueKey;
-        private UniqueTopicAndQueueNames uniqueTopicAndQueueNames;
-        private ProxyAwsClientFactory proxyAwsClientFactory;
-        IHaveFulfilledSubscriptionRequirements bus;
-        private string topicName;
-        private string queueName;
         protected override void Given()
-        { }
+        {
+        }
+
+        protected override Task When()
+        {
+            return Task.CompletedTask;
+        }
 
         protected override IHaveFulfilledSubscriptionRequirements CreateSystemUnderTest()
         {
             // Given 2 handlers
-            uniqueTopicAndQueueNames = new UniqueTopicAndQueueNames();
-            proxyAwsClientFactory = new ProxyAwsClientFactory();
+            var uniqueTopicAndQueueNames = new UniqueNamingStrategy();
+            _proxyAwsClientFactory = new ProxyAwsClientFactory();
 
             var baseQueueName = "CustomerOrders_";
-            topicName = uniqueTopicAndQueueNames.GetTopicName(string.Empty, typeof(Order));
-            queueName = uniqueTopicAndQueueNames.GetQueueName(new SqsReadConfiguration(SubscriptionType.ToTopic) { BaseQueueName = baseQueueName }, typeof(Order));
+            _topicName = uniqueTopicAndQueueNames.GetTopicName(string.Empty, typeof(Order));
+            _queueName = uniqueTopicAndQueueNames.GetQueueName(new SqsReadConfiguration(SubscriptionType.ToTopic) { BaseQueueName = baseQueueName }, typeof(Order));
 
-            bus = CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion(RegionEndpoint.EUWest1.SystemName)
-                .WithAwsClientFactory(() => proxyAwsClientFactory)
+            var fixture = new JustSayingFixture();
+
+            var subscription = fixture.Builder()
+                .WithAwsClientFactory(() => _proxyAwsClientFactory)
                 .WithNamingStrategy(() => uniqueTopicAndQueueNames)
                 .WithSqsTopicSubscriber()
-                .IntoQueue(baseQueueName) // generate unique queue name
+                .IntoQueue(baseQueueName)
                 .WithMessageHandlers(new OrderHandler(), new OrderHandler());
 
-            bus.StartListening();
-            return bus;
+            subscription.StartListening();
+            return subscription;
         }
 
         protected override void PostAssertTeardown()
@@ -79,32 +53,28 @@ namespace JustSaying.IntegrationTests.AwsTools
             base.PostAssertTeardown();
         }
 
-        protected override void When()
-        {
-        }
-
-        [Fact]
+        [AwsFact]
         public void CreateTopicCalled()
         {
-            proxyAwsClientFactory.Counters["CreateTopic"][topicName].Count.ShouldBeGreaterThanOrEqualTo(1);
+            _proxyAwsClientFactory.Counters["CreateTopic"][_topicName].Count.ShouldBeGreaterThanOrEqualTo(1);
         }
 
-        [Fact]
+        [AwsFact]
         public void GetQueueAttributesCalledOnce()
         {
-            proxyAwsClientFactory.Counters["GetQueueAttributes"].First(x => x.Key.EndsWith(queueName)).Value.Count
+            _proxyAwsClientFactory.Counters["GetQueueAttributes"].First(x => x.Key.EndsWith(_queueName)).Value.Count
                 .ShouldBe(1);
         }
 
-        [Fact]
+        [AwsFact]
         public void CreateQueueCalledOnce()
         {
-            AssertHasCounterSetToOne("CreateQueue", queueName);
+            AssertHasCounterSetToOne("CreateQueue", _queueName);
         }
 
         private void AssertHasCounterSetToOne(string counter, string testQueueName)
         {
-            var counters = proxyAwsClientFactory.Counters;
+            var counters = _proxyAwsClientFactory.Counters;
 
             counters.ShouldContainKey(counter, $"no counter: {counter}");
             counters[counter].ShouldContainKey(testQueueName, $"no queueName: {testQueueName}");

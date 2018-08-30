@@ -2,54 +2,52 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.MessageHandling;
+using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests
 {
-    public class OrderPlacedHandler : IHandlerAsync<GenericMessage>
-    {
-        public Task<bool> Handle(GenericMessage message)
-        {
-            return Task.FromResult(true);
-        }
-    }
-
+    [Collection(GlobalSetup.CollectionName)]
     public class WhenOptingOutOfErrorQueue
     {
         private readonly IAmazonSQS _client;
 
-        public WhenOptingOutOfErrorQueue()
+        public WhenOptingOutOfErrorQueue(ITestOutputHelper outputHelper)
         {
-            _client = CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1);
+            Region = TestEnvironment.Region;
+            LoggerFactory = outputHelper.ToLoggerFactory();
+            _client = CreateMeABus.DefaultClientFactory().GetSqsClient(Region);
         }
 
-        [Fact]
-        public void ErrorQueueShouldNotBeCreated()
+        private RegionEndpoint Region { get; }
+
+        private ILoggerFactory LoggerFactory { get; }
+
+        [AwsFact]
+        public async Task ErrorQueueShouldNotBeCreated()
         {
             var queueName = "test-queue-issue-191";
-            CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion("eu-west-1")
-                .WithSnsMessagePublisher<GenericMessage>()
 
+            CreateMeABus
+                .WithLogging(LoggerFactory)
+                .InRegion(Region.SystemName)
+                .WithSnsMessagePublisher<SimpleMessage>()
                 .WithSqsTopicSubscriber()
                 .IntoQueue(queueName)
-                .ConfigureSubscriptionWith(policy =>
-                {
-                    policy.ErrorQueueOptOut = true;
-                })
+                .ConfigureSubscriptionWith(policy => policy.ErrorQueueOptOut = true)
                 .WithMessageHandler(new OrderPlacedHandler());
 
-            AssertThatQueueDoesNotExist(queueName+ "_error");
+            await AssertThatQueueDoesNotExist(queueName + "_error");
         }
 
-        private void AssertThatQueueDoesNotExist(string name)
+        private async Task AssertThatQueueDoesNotExist(string name)
         {
-            var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, name, _client, 1, new LoggerFactory());
-            sqsQueueByName.ExistsAsync().GetAwaiter().GetResult().ShouldBeFalse($"Expecting queue '{name}' to not exist but it does.");
+            var sqsQueueByName = new SqsQueueByName(Region, name, _client, 1, LoggerFactory);
+            (await sqsQueueByName.ExistsAsync()).ShouldBeFalse($"Expecting queue '{name}' to not exist but it does.");
         }
     }
 }

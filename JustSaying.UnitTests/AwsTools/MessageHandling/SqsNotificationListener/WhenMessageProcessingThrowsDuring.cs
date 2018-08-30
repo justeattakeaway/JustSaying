@@ -36,7 +36,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         [Fact]
         public void MessageHandlerWasNotCalled()
         {
-            Handler.DidNotReceiveWithAnyArgs().Handle(Arg.Any<GenericMessage>());
+            Handler.DidNotReceiveWithAnyArgs().Handle(Arg.Any<SimpleMessage>());
         }
 
         [Fact]

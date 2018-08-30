@@ -1,13 +1,12 @@
 using System;
 using System.Threading.Tasks;
-using Amazon;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
-using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently
 {
@@ -18,7 +17,14 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         private Action<Exception, Amazon.SQS.Model.Message> _globalErrorHandler;
         private bool _handledException;
         private IMessageMonitor _monitoring;
-        
+
+        public WhenAHandlerThrowsAnException(ITestOutputHelper outputHelper)
+        {
+            OutputHelper = outputHelper;
+        }
+
+        private ITestOutputHelper OutputHelper { get; }
+
         private async Task Setup()
         {
             // Setup
@@ -28,17 +34,18 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             // Given
             _handler = new ThrowingHandler();
 
-            var bus = CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion(RegionEndpoint.EUWest1.SystemName)
+            var fixture = new JustSayingFixture(OutputHelper);
+
+            var bus = fixture.Builder()
                 .WithMonitoring(_monitoring)
                 .ConfigurePublisherWith(c =>
                     {
                         c.PublishFailureBackoffMilliseconds = 1;
                         c.PublishFailureReAttempts = 3;
                     })
-                .WithSnsMessagePublisher<GenericMessage>()
+                .WithSnsMessagePublisher<SimpleMessage>()
                 .WithSqsTopicSubscriber()
-                .IntoQueue("queuename")
+                .IntoQueue(fixture.UniqueName)
                 .ConfigureSubscriptionWith(cfg =>
                     {
                         cfg.MessageRetentionSeconds = 60;
@@ -50,17 +57,18 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             // When
             bus.StartListening();
 
-            await bus.PublishAsync(new GenericMessage());
+            await bus.PublishAsync(new SimpleMessage());
 
             // Teardown
             await _handler.DoneSignal.Task;
             bus.StopListening();
         }
 
-        [Fact]
+        [AwsFact]
         public async Task MessageReceivedAndExceptionHandled()
         {
             await Setup();
+
             _handler.MessageReceived.ShouldNotBeNull();
             _handledException.ShouldBeTrue();
         }

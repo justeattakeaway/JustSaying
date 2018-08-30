@@ -27,9 +27,9 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override async Task When()
         {
-            SystemUnderTest.AddMessagePublisher<GenericMessage>(_publisher, string.Empty);
+            SystemUnderTest.AddMessagePublisher<SimpleMessage>(_publisher, string.Empty);
 
-            await SystemUnderTest.PublishAsync(new GenericMessage());
+            await SystemUnderTest.PublishAsync(new SimpleMessage());
         }
 
         [Fact]
@@ -37,7 +37,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             _publisher
                 .Received(PublishAttempts)
-                .PublishAsync(Arg.Any<GenericMessage>(), CancellationToken.None);
+                .PublishAsync(Arg.Any<SimpleMessage>(), CancellationToken.None);
         }
     }
 }

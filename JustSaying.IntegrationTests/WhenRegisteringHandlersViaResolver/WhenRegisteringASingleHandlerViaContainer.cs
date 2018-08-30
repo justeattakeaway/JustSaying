@@ -1,5 +1,5 @@
 using JustSaying.IntegrationTests.TestHandlers;
-using Microsoft.Extensions.Logging;
+using JustSaying.TestingFramework;
 using Shouldly;
 using StructureMap;
 using Xunit;
@@ -23,8 +23,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             _handlerFuture = ((OrderProcessor)handler).Future;
             DoneSignal = _handlerFuture.DoneSignal;
 
-            Subscriber = CreateMeABus.WithLogging(new LoggerFactory())
-                .InRegion("eu-west-1")
+            var fixture = new JustSayingFixture();
+
+            Subscriber = fixture.Builder()
                 .WithSqsTopicSubscriber()
                 .IntoQueue("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);
@@ -32,7 +33,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             Subscriber.StartListening();
         }
 
-        [Fact]
+        [AwsFact]
         public void ThenHandlerWillReceiveTheMessage()
         {
             _handlerFuture.ReceivedMessageCount.ShouldBeGreaterThan(0);

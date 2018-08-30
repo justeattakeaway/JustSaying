@@ -1,43 +1,53 @@
-using System;
-using Amazon;
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
-using Microsoft.Extensions.Logging;
+using JustSaying.TestingFramework;
 using Shouldly;
 using Xunit;
 
 namespace JustSaying.IntegrationTests.AwsTools
 {
     [Collection(GlobalSetup.CollectionName)]
-    public  class WhenCreatingErrorQueue : XBehaviourTest<ErrorQueue>
+    public class WhenCreatingErrorQueue : XAsyncBehaviourTest<ErrorQueue>
     {
-        protected string QueueUniqueKey;
-
         protected override void Given()
-        { }
-        protected override void When()
         {
+        }
 
-            SystemUnderTest.CreateAsync(new SqsBasicConfiguration { ErrorQueueRetentionPeriodSeconds = JustSayingConstants.MAXIMUM_RETENTION_PERIOD, ErrorQueueOptOut = true}).GetAwaiter().GetResult();
+        protected override async Task When()
+        {
+            var queueConfig = new SqsBasicConfiguration
+            {
+                ErrorQueueRetentionPeriodSeconds = JustSayingConstants.MAXIMUM_RETENTION_PERIOD,
+                ErrorQueueOptOut = true
+            };
 
-            SystemUnderTest.UpdateQueueAttributeAsync(
-                new SqsBasicConfiguration {ErrorQueueRetentionPeriodSeconds = 100}).GetAwaiter().GetResult();
+            await SystemUnderTest.CreateAsync(queueConfig);
+
+            queueConfig.ErrorQueueRetentionPeriodSeconds = 100;
+
+            await SystemUnderTest.UpdateQueueAttributeAsync(queueConfig);
         }
 
         protected override ErrorQueue CreateSystemUnderTest()
         {
-            QueueUniqueKey = "test" + DateTime.Now.Ticks;
-            return new ErrorQueue(RegionEndpoint.EUWest1, QueueUniqueKey, CreateMeABus.DefaultClientFactory().GetSqsClient(RegionEndpoint.EUWest1), new LoggerFactory());
+            var fixture = new JustSayingFixture();
+
+            return new ErrorQueue(
+                fixture.Region,
+                fixture.UniqueName,
+                fixture.CreateSqsClient(),
+                fixture.LoggerFactory);
         }
 
         protected override void PostAssertTeardown()
         {
-            SystemUnderTest.DeleteAsync().GetAwaiter().GetResult();
+            SystemUnderTest.DeleteAsync().ResultSync();
             base.PostAssertTeardown();
         }
 
-        [Fact]
+        [AwsFact]
         public void TheRetentionPeriodOfTheErrorQueueStaysAsMaximum()
         {
             SystemUnderTest.MessageRetentionPeriod.ShouldBe(100);

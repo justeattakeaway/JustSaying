@@ -12,11 +12,12 @@ namespace JustSaying.IntegrationTests.AwsTools
         {
             await SystemUnderTest.CreateAsync(
                 new SqsReadConfiguration(SubscriptionType.ToTopic),
-                attempt:600);
+                attempt: 600);
+
             await SystemUnderTest.DeleteAsync();
         }
 
-        [Fact]
+        [AwsFact]
         public async Task TheErrorQueueIsDeleted()
         {
             await Patiently.AssertThatAsync(

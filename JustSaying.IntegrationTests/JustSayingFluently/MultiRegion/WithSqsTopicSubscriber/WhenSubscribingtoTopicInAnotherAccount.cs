@@ -12,68 +12,81 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopicSubscriber
 {
     [Collection(GlobalSetup.CollectionName)]
-    public class WhenSubscribingtoTopicInAnotherAccount
+    public class WhenSubscribingToTopicInAnotherAccount
     {
-        private readonly Future<GenericMessage> _signal = new Future<GenericMessage>();
-        readonly GenericMessage _message = new GenericMessage {Id = Guid.NewGuid()};
+        private readonly Future<SimpleMessage> _signal = new Future<SimpleMessage>();
+        private readonly SimpleMessage _message = new SimpleMessage { Id = Guid.NewGuid() };
 
-        [Fact(Skip = "Requires credentials for 2 accounts"), Trait("Category", "Integration")]
+        public WhenSubscribingToTopicInAnotherAccount(ITestOutputHelper outputHelper)
+        {
+            LoggerFactory = outputHelper.ToLoggerFactory();
+        }
+
+        private ILoggerFactory LoggerFactory { get; }
+
+        [NeedsTwoAwsAccountsFact]
         public async Task ICanReceiveMessagePublishedToTopicInAnotherAccount()
         {
-            string publisherAccount = "<enter publisher account id>";
-            string subscriberAccount = "<enter subscriber account id>";
-            var publishingBus = GetBus("<enter publisher access key>", "<enter publisher secret key>");
-            var subscribingBus = GetBus("<enter subscriber access key>", "<enter subscriber secret key>");
+            // Arrange
+            string publisherAccount = TestEnvironment.AccountId;
+            string subscriberAccount = TestEnvironment.SecondaryAccountId;
+
+            var publishingBus = GetBus(TestEnvironment.Credentials);
+            var subscribingBus = GetBus(TestEnvironment.SecondaryCredentials);
 
             publishingBus
-                .WithNamingStrategy(() => new NamingStrategy())
+                .WithNamingStrategy(() => new CrossAccountNamingStrategy())
                 .ConfigurePublisherWith(cfg => cfg.AdditionalSubscriberAccounts = new List<string> { subscriberAccount })
-                .WithSnsMessagePublisher<GenericMessage>();
+                .WithSnsMessagePublisher<SimpleMessage>();
 
 
-            var handler = Substitute.For<IHandlerAsync<GenericMessage>>();
-            handler.Handle(Arg.Any<GenericMessage>()).Returns(true);
+            var handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
+            handler.Handle(Arg.Any<SimpleMessage>()).Returns(true);
             handler
-                .When(x => x.Handle(Arg.Any<GenericMessage>()))
-                .Do(async x => await _signal.Complete((GenericMessage)x.Args()[0]));
+                .When(x => x.Handle(Arg.Any<SimpleMessage>()))
+                .Do(async x => await _signal.Complete((SimpleMessage)x.Args()[0]));
 
             subscribingBus
-                .WithNamingStrategy(() => new NamingStrategy())
+                .WithNamingStrategy(() => new CrossAccountNamingStrategy())
                 .WithSqsTopicSubscriber()
                 .IntoQueue("crossaccount")
                 .ConfigureSubscriptionWith(cfg => cfg.TopicSourceAccount = publisherAccount)
                 .WithMessageHandler(handler);
+
             subscribingBus.StartListening();
 
-            //Act
+            // Act
             await publishingBus.PublishAsync(_message);
 
-            //Assert
+            // Assert
             var done = await Tasks.WaitWithTimeoutAsync(_signal.DoneSignal, TimeSpan.FromMinutes(1));
             _signal.HasReceived(_message).ShouldBeTrue();
-
         }
 
-        private IMayWantOptionalSettings GetBus(string accessKey, string secretKey)
+        private IMayWantOptionalSettings GetBus(AWSCredentials credentials)
         {
             return CreateMeABus
-                .WithLogging(new LoggerFactory()).InRegion("eu-west-1").WithAwsClientFactory(()=>new DefaultAwsClientFactory(new BasicAWSCredentials(accessKey, secretKey) ));
-        }
-    }
-    class NamingStrategy : INamingStrategy
-    {
-        public string GetTopicName(string topicName, Type messageType)
-        {
-            return "test-" + messageType.ToTopicName();
+                .WithLogging(LoggerFactory)
+                .InRegion(TestEnvironment.Region.SystemName)
+                .WithAwsClientFactory(() => new DefaultAwsClientFactory(credentials));
         }
 
-        public string GetQueueName(SqsReadConfiguration sqsConfig, Type messageType)
+        private class CrossAccountNamingStrategy : INamingStrategy
         {
-            return "test-" + messageType.ToTopicName();
+            public string GetTopicName(string topicName, Type messageType)
+            {
+                return "test-" + messageType.ToTopicName();
+            }
+
+            public string GetQueueName(SqsReadConfiguration sqsConfig, Type messageType)
+            {
+                return "test-" + messageType.ToTopicName();
+            }
         }
     }
 }

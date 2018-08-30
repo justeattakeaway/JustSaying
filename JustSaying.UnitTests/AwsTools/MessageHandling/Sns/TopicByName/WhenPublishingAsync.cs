@@ -41,7 +41,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         protected override async Task When()
         {
-            await SystemUnderTest.PublishAsync(new GenericMessage
+            await SystemUnderTest.PublishAsync(new SimpleMessage
             {
                 MessageAttributes = new Dictionary<string, Models.MessageAttributeValue>
                 {
@@ -71,7 +71,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         [Fact]
         public void MessageSubjectIsObjectType()
         {
-            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.Subject == typeof(GenericMessage).Name));
+            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.Subject == typeof(SimpleMessage).Name));
         }
 
         [Fact]
