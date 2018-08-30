@@ -3,7 +3,8 @@ param(
     [Parameter(Mandatory = $false)][string] $VersionSuffix = "",
     [Parameter(Mandatory = $false)][string] $OutputPath = "",
     [Parameter(Mandatory = $false)][switch] $SkipTests,
-    [Parameter(Mandatory = $false)][switch] $EnableCodeCoverage
+    [Parameter(Mandatory = $false)][switch] $EnableCodeCoverage,
+    [Parameter(Mandatory = $false)][switch] $EnableIntegrationTests
 )
 
 $ErrorActionPreference = "Stop"
@@ -17,9 +18,12 @@ $libraryProjects = @(
 )
 
 $testProjects = @(
-    (Join-Path $solutionPath "JustSaying.UnitTests\JustSaying.UnitTests.csproj"),
-    (Join-Path $solutionPath "JustSaying.IntegrationTests\JustSaying.IntegrationTests.csproj")
+    (Join-Path $solutionPath "JustSaying.UnitTests\JustSaying.UnitTests.csproj")
 )
+
+if ($EnableIntegrationTests -eq $true) {
+  $testProjects += (Join-Path $solutionPath "JustSaying.IntegrationTests\JustSaying.IntegrationTests.csproj");
+}
 
 $dotnetVersion = (Get-Content $sdkFile | Out-String | ConvertFrom-Json).sdk.version
 
