@@ -144,7 +144,7 @@ ForEach ($libraryProject in $libraryProjects) {
     DotNetPack $libraryProject
 }
 
-if ($env:CI -ne $null) {
+if (($null -ne $env:CI) -And ($EnableIntegrationTests -eq $true)) {
     & docker pull pafortin/goaws
     & docker run -d --name goaws -p 4100:4100 pafortin/goaws
     $env:AWS_SERVICE_URL="http://localhost:4100"
