@@ -9,7 +9,12 @@
     <PackageReference Include="AWSSDK.Core" Version="3.3.*" />
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.*" />
     <PackageReference Include="AWSSDK.SQS" Version="3.3.*" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="1.1.2" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.1.1" />
   </ItemGroup>
 </Project>
