@@ -6,6 +6,7 @@
     <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\JustSaying.Extensions\JustSaying.Extensions.csproj" />
     <ProjectReference Include="..\JustSaying.TestingFramework\JustSaying.TestingFramework.csproj" />
   </ItemGroup>
   <ItemGroup>
