@@ -17,6 +17,8 @@ namespace JustSaying.AwsTools.QueueCreation
         private readonly IRegionResourceCache<SqsQueueByName> _queueCache = new RegionResourceCache<SqsQueueByName>();
         private readonly ILogger _log;
 
+        private const string EmptyFilterPolicy = "{}";
+
         public AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory, ILoggerFactory loggerFactory)
         {
             _awsClientFactory = awsClientFactory;
@@ -78,10 +80,8 @@ namespace JustSaying.AwsTools.QueueCreation
         {
             var subscriptionArn = await amazonSimpleNotificationService.SubscribeQueueAsync(topicArn, amazonSQS, queueUrl).ConfigureAwait(false);
 
-            if (!string.IsNullOrEmpty(filterPolicy))
-            {
-                await amazonSimpleNotificationService.SetSubscriptionAttributesAsync(subscriptionArn, "FilterPolicy", filterPolicy).ConfigureAwait(false);
-            }
+            var actualFilterPolicy = string.IsNullOrWhiteSpace(filterPolicy) ? EmptyFilterPolicy : filterPolicy;
+            await amazonSimpleNotificationService.SetSubscriptionAttributesAsync(subscriptionArn, "FilterPolicy", actualFilterPolicy).ConfigureAwait(false);
         }
     }
 }
