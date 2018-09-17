@@ -5,7 +5,7 @@ namespace JustSaying
 {
     public interface INamingStrategy
     {
-        string GetTopicName(string topicName, Type messageType);
+        string GetTopicName(string baseTopicName, Type messageType);
         string GetQueueName(SqsReadConfiguration sqsConfig, Type messageType);
     }
 }

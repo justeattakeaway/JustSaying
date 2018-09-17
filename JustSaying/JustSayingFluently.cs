@@ -75,12 +75,11 @@ namespace JustSaying
             var snsWriteConfig = new SnsWriteConfiguration();
             configBuilder?.Invoke(snsWriteConfig);
 
-            _subscriptionConfig.Topic = typeof(T).ToTopicName();
             var namingStrategy = GetNamingStrategy();
 
             Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
 
-            var topicName = namingStrategy.GetTopicName(_subscriptionConfig.BaseTopicName, typeof(T));
+            var topicName = namingStrategy.GetTopicName(snsWriteConfig.BaseTopicName, typeof(T));
             foreach (var region in Bus.Config.Regions)
             {
                 // TODO pass region down into topic creation for when we have foreign topics so we can generate the arn
@@ -101,7 +100,7 @@ namespace JustSaying
                 Bus.AddMessagePublisher<T>(eventPublisher, region);
             }
 
-            _log.LogInformation($"Created SNS topic publisher - Topic: {_subscriptionConfig.Topic}");
+            _log.LogInformation($"Created SNS topic publisher - Topic: {typeof(T).ToTopicName()}");
 
             return this;
         }
