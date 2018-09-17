@@ -5,7 +5,7 @@ using JustSaying.Extensions;
 namespace JustSaying
 {
     /// <summary>
-    /// A default namign strategy for JustSaying bus.
+    /// A default naming strategy for JustSaying bus.
     /// Topic names are defaulted to message type name, lowercase (one topic per message type).
     /// Queue name is default to queue name.
     /// 
@@ -13,7 +13,10 @@ namespace JustSaying
     /// </summary>
     class DefaultNamingStrategy : INamingStrategy
     {
-        public string GetTopicName(string topicName, Type messageType) => messageType.ToTopicName().ToLower();
+        public string GetTopicName(string baseTopicName, Type messageType)
+            => string.IsNullOrEmpty(baseTopicName)
+                ? messageType.ToTopicName().ToLower()
+                : baseTopicName;
 
         public string GetQueueName(SqsReadConfiguration sqsConfig, Type messageType)
             => string.IsNullOrWhiteSpace(sqsConfig.BaseQueueName)
