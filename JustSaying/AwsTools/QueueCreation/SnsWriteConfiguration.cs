@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using JustSaying.Models;
 
 namespace JustSaying.AwsTools.QueueCreation
@@ -10,5 +10,6 @@ namespace JustSaying.AwsTools.QueueCreation
         /// </summary>
         /// <returns>Boolean indicating whether the exception has been handled</returns>
         public Func<Exception, Message, bool> HandleException { get; set; }
+        public string BaseTopicName { get; set; }
     }
 }
