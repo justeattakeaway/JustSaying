@@ -84,11 +84,15 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                     c.PublishFailureBackoffMilliseconds = _config.PublishFailureBackoffMilliseconds;
                     c.PublishFailureReAttempts = _config.PublishFailureReAttempts;
                 })
-                .WithSnsMessagePublisher<SimpleMessage>()
+                .WithSnsMessagePublisher<SimpleMessage>(cf =>
+                {
+                    cf.BaseTopicName = "this-is-my-topic";
+                })
                 .WithSqsTopicSubscriber()
                 .IntoQueue(TestFixture.UniqueName)
                 .ConfigureSubscriptionWith(cf =>
                 {
+                    cf.BaseTopicName = "this-is-my-topic";
                     cf.MessageRetentionSeconds = 60;
                     cf.VisibilityTimeoutSeconds = JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT;
                     cf.InstancePosition = 1;
