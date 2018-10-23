@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying
 {
-    public interface IAmJustSaying : IMessagePublisher
+    public interface IAmJustSaying : IMessagePublisher, IDisposable
     {
         bool Listening { get; }
         void AddNotificationSubscriber(string region, INotificationSubscriber subscriber);

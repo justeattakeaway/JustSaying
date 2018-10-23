@@ -59,8 +59,7 @@ namespace JustSaying
                 throw new ArgumentNullException(nameof(region));
             }
 
-            Dictionary<string, INotificationSubscriber> subscribersForRegion;
-            if (!_subscribersByRegionAndQueue.TryGetValue(region, out subscribersForRegion))
+            if (!_subscribersByRegionAndQueue.TryGetValue(region, out var subscribersForRegion))
             {
                 subscribersForRegion = new Dictionary<string,INotificationSubscriber>();
                 _subscribersByRegionAndQueue.Add(region, subscribersForRegion);
@@ -102,8 +101,7 @@ namespace JustSaying
                 _log.LogWarning("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages!");
             }
 
-            Dictionary<string, IMessagePublisher> publishersByTopic;
-            if (!_publishersByRegionAndTopic.TryGetValue(region, out publishersByTopic))
+            if (!_publishersByRegionAndTopic.TryGetValue(region, out var publishersByTopic))
             {
                 publishersByTopic = new Dictionary<string, IMessagePublisher>();
                 _publishersByRegionAndTopic.Add(region, publishersByTopic);
@@ -161,6 +159,16 @@ namespace JustSaying
             await PublishAsync(publisher, message, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
 
+        public IInterrogationResponse WhatDoIHave()
+        {
+            return new InterrogationResponse(Config.Regions, _subscribers, _publishers);
+        }
+
+        public void Dispose()
+        {
+            _subscriberCancellationTokenSource?.Dispose();
+        }
+
         private IMessagePublisher GetActivePublisherForMessage(Message message)
         {
             string activeRegion;
@@ -193,7 +201,7 @@ namespace JustSaying
             return publishersByTopic[topic];
         }
 
-        private async Task PublishAsync(IMessagePublisher publisher, Message message, int attemptCount = 0, CancellationToken cancellationToken = default(CancellationToken))
+        private async Task PublishAsync(IMessagePublisher publisher, Message message, int attemptCount = 0, CancellationToken cancellationToken = default)
         {
             attemptCount++;
             try
@@ -221,11 +229,6 @@ namespace JustSaying
 
                 await PublishAsync(publisher, message, attemptCount, cancellationToken).ConfigureAwait(false);
             }
-        }
-
-        public IInterrogationResponse WhatDoIHave()
-        {
-            return new InterrogationResponse(Config.Regions, _subscribers, _publishers);
         }
     }
 }

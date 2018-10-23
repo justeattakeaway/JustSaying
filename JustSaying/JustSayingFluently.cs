@@ -23,7 +23,7 @@ namespace JustSaying
     /// 3. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc // ToDo: Shouldn't be enforced in base! Is a JE concern.
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings, IMayWantARegionPicker, IAmJustInterrogating
+    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings, IMayWantARegionPicker, IAmJustInterrogating, IDisposable
     {
         private readonly ILogger _log;
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
@@ -405,6 +405,12 @@ namespace JustSaying
         {
             _awsClientFactoryProxy.SetAwsClientFactory(awsClientFactory);
             return this;
+        }
+
+        public void Dispose()
+        {
+            Bus?.Dispose();
+            _loggerFactory?.Dispose();
         }
     }
 }
