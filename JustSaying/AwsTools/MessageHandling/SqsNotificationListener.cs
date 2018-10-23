@@ -27,8 +27,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly MessageHandlerWrapper _messageHandlerWrapper;
         private IMessageProcessingStrategy _messageProcessingStrategy;
         private readonly HandlerMap _handlerMap = new HandlerMap();
-
-        private CancellationTokenSource _cts = new CancellationTokenSource();
+        
         private readonly ILogger _log;
 
         public SqsNotificationListener(
@@ -86,27 +85,21 @@ namespace JustSaying.AwsTools.MessageHandling
             _handlerMap.Add(typeof(T), handlerFunc);
         }
 
-        public void Listen()
+        public void Listen(CancellationToken cancellationToken)
         {
             var queue = _queue.QueueName;
             var region = _queue.Region.SystemName;
             var queueInfo = $"Queue: {queue}, Region: {region}";
 
-            _cts = new CancellationTokenSource();
-            Task.Factory.StartNew(async () =>
-                {
-                    while (!_cts.IsCancellationRequested)
-                    {
-                        await ListenLoop(_cts.Token).ConfigureAwait(false);
-                    }
-                })
+            Task.Factory.StartNew(async () => { await ListenLoop(cancellationToken).ConfigureAwait(false); },
+                    cancellationToken)
                 .Unwrap()
-                .ContinueWith(t => LogTaskEndState(t, queueInfo, _cts, _log));
+                .ContinueWith(t => LogTaskEndState(t, queueInfo, _log), cancellationToken);
 
             _log.LogInformation($"Starting Listening - {queueInfo}");
         }
 
-        private static void LogTaskEndState(Task task, string queueInfo, CancellationTokenSource cts, ILogger log)
+        private static void LogTaskEndState(Task task, string queueInfo, ILogger log)
         {
             if (task.IsFaulted)
             {
@@ -114,11 +107,8 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             else
             {
-                var endState = task.Status.ToString();
-                log.LogInformation($"[{endState}] Stopped Listening - {queueInfo}");
+                log.LogInformation($"[{task.Status}] Stopped Listening - {queueInfo}");
             }
-
-            cts.Dispose();
         }
 
         private static string AggregateExceptionDetails(AggregateException ex)
@@ -143,13 +133,6 @@ namespace JustSaying.AwsTools.MessageHandling
             }
 
             return innerExDetails.ToString();
-        }
-
-        public void StopListening()
-        {
-            _cts.Cancel();
-
-            _log.LogInformation($"Stopping Listening - Queue: {_queue.QueueName}, Region: {_queue.Region.SystemName}");
         }
 
         internal async Task ListenLoop(CancellationToken ct)

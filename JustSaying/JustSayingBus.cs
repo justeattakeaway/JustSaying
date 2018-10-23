@@ -36,6 +36,8 @@ namespace JustSaying
         private readonly ICollection<IPublisher> _publishers;
         private readonly ICollection<ISubscriber> _subscribers;
 
+        private CancellationTokenSource _subscriberCancellationTokenSource;
+
         public JustSayingBus(IMessagingConfig config, IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory)
         {
             _log = loggerFactory.CreateLogger("JustSaying");
@@ -122,11 +124,13 @@ namespace JustSaying
                     return;
                 }
 
+                _subscriberCancellationTokenSource = new CancellationTokenSource();
+
                 foreach (var regionSubscriber in _subscribersByRegionAndQueue)
                 {
                     foreach (var queueSubscriber in regionSubscriber.Value)
                     {
-                        queueSubscriber.Value.Listen();
+                        queueSubscriber.Value.Listen(_subscriberCancellationTokenSource.Token);
                     }
                 }
 
@@ -143,13 +147,8 @@ namespace JustSaying
                     return;
                 }
 
-                foreach (var regionSubscriber in _subscribersByRegionAndQueue)
-                {
-                    foreach (var queueSubscriber in regionSubscriber.Value)
-                    {
-                        queueSubscriber.Value.StopListening();
-                    }
-                }
+                _subscriberCancellationTokenSource.Cancel();
+
                 Listening = false;
             }
         }
