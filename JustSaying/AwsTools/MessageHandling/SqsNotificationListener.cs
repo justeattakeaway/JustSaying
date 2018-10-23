@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -102,12 +101,12 @@ namespace JustSaying.AwsTools.MessageHandling
                     }
                 })
                 .Unwrap()
-                .ContinueWith(t => LogTaskEndState(t, queueInfo, _log));
+                .ContinueWith(t => LogTaskEndState(t, queueInfo, _cts, _log));
 
             _log.LogInformation($"Starting Listening - {queueInfo}");
         }
 
-        private static void LogTaskEndState(Task task, string queueInfo, ILogger log)
+        private static void LogTaskEndState(Task task, string queueInfo, CancellationTokenSource cts, ILogger log)
         {
             if (task.IsFaulted)
             {
@@ -118,6 +117,8 @@ namespace JustSaying.AwsTools.MessageHandling
                 var endState = task.Status.ToString();
                 log.LogInformation($"[{endState}] Stopped Listening - {queueInfo}");
             }
+
+            cts.Dispose();
         }
 
         private static string AggregateExceptionDetails(AggregateException ex)
@@ -135,8 +136,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
 
             var innerExDetails = new StringBuilder();
-            innerExDetails.AppendFormat(CultureInfo.InvariantCulture,
-                "AggregateException containing {0} inner exceptions", flatEx.InnerExceptions.Count);
+            innerExDetails.AppendFormat("AggregateException containing {0} inner exceptions", flatEx.InnerExceptions.Count);
             foreach (var innerEx in flatEx.InnerExceptions)
             {
                 innerExDetails.AppendLine(innerEx.ToString());
@@ -148,6 +148,7 @@ namespace JustSaying.AwsTools.MessageHandling
         public void StopListening()
         {
             _cts.Cancel();
+
             _log.LogInformation($"Stopping Listening - Queue: {_queue.QueueName}, Region: {_queue.Region.SystemName}");
         }
 
