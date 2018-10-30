@@ -20,7 +20,7 @@ namespace JustSaying.UnitTests
         public void ToTopicName_GenericType_GivesLowercaseFullNameWithNonWordCharactersReplaced()
         {
             //Don't hardcode this, otherwise test will fail on assembly version upgrade
-            var assemblyNamePart = Regex.Replace(typeof(Bar<>).Assembly.FullName.ToLower(), @"\W", "_");
+            var assemblyNamePart = Regex.Replace(typeof(Bar<>).Assembly.FullName.ToLowerInvariant(), @"\W", "_");
             typeof(Bar<Foo>).ToTopicName()
                 .ShouldBe($"justsaying_unittests_typeextensiontests_bar_1__justsaying_unittests_typeextensiontests_foo__{assemblyNamePart}__");
         }

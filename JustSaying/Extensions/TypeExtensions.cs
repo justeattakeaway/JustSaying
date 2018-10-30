@@ -11,8 +11,8 @@ namespace JustSaying.Extensions
         public static string ToTopicName(this Type type)
         {
             var name = type.GetTypeInfo().IsGenericType
-                ? Regex.Replace(type.FullName, "\\W", "_").ToLower()
-                : type.Name.ToLower();
+                ? Regex.Replace(type.FullName, "\\W", "_").ToLowerInvariant()
+                : type.Name.ToLowerInvariant();
 
             return name.TruncateTo(MAX_TOPIC_NAME_LENGTH);
         }

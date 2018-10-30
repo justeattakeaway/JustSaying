@@ -43,7 +43,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 throw new Exception("IMessageLock is null. You need to specify an implementation for IMessageLock.");
             }
 
-            var handlerName = handlerType.FullName.ToLower();
+            var handlerName = handlerType.FullName.ToLowerInvariant();
             return new ExactlyOnceHandler<T>(handler, _messageLock, exactlyOnceMetadata.GetTimeOut(), handlerName);
         }
 
