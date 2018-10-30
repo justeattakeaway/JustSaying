@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Runtime.Serialization;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -13,6 +14,11 @@ namespace JustSaying.AwsTools.MessageHandling
         {
         }
         public PublishException(string message, Exception inner) : base(message, inner)
+        {
+        }
+
+        protected PublishException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
         }
     }

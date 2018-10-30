@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.Serialization;
 
 namespace JustSaying.AwsTools.QueueCreation
 {
@@ -10,6 +11,15 @@ namespace JustSaying.AwsTools.QueueCreation
         }
 
         public ConfigurationErrorsException(string message) : base(message)
+        {
+        }
+
+        public ConfigurationErrorsException(string message, Exception inner) : base(message, inner)
+        {
+        }
+
+        protected ConfigurationErrorsException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
         }
     }
