@@ -6,7 +6,7 @@ namespace JustSaying.Messaging.MessageSerialisation
     [Serializable]
     public class MessageFormatNotSupportedException : Exception
     {
-        public MessageFormatNotSupportedException() : base("message format not supported")
+        public MessageFormatNotSupportedException() : base("Message format not supported")
         {
         }
 
