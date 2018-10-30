@@ -6,7 +6,7 @@ namespace JustSaying
     [Serializable]
     public class HandlerNotRegisteredWithContainerException: Exception
     {
-        public HandlerNotRegisteredWithContainerException()
+        public HandlerNotRegisteredWithContainerException(): base("Handler not registered with container")
         {
         }
 

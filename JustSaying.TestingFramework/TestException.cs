@@ -18,7 +18,7 @@ namespace JustSaying.TestingFramework
         {
         }
 
-        protected TestException(SerializationInfo info, StreamingContext context): base(info, context)
+        protected TestException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }
     }

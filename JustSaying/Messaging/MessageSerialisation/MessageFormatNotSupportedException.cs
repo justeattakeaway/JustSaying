@@ -6,7 +6,7 @@ namespace JustSaying.Messaging.MessageSerialisation
     [Serializable]
     public class MessageFormatNotSupportedException : Exception
     {
-        public MessageFormatNotSupportedException()
+        public MessageFormatNotSupportedException() : base("message format not supported")
         {
         }
 
@@ -14,13 +14,11 @@ namespace JustSaying.Messaging.MessageSerialisation
         {
         }
 
-        public MessageFormatNotSupportedException(string message, Exception innerException)
-            : base(message, innerException)
+        public MessageFormatNotSupportedException(string message, Exception innerException) : base(message, innerException)
         {
         }
 
-        protected MessageFormatNotSupportedException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
+        protected MessageFormatNotSupportedException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }
     }
