@@ -43,7 +43,7 @@ namespace JustSaying.UnitTests.Messaging.Monitoring
         public async Task WhenHandlerIsWrappedinStopWatch_MonitoringIsCalledWithCorrectTypes()
         {
             var handler = MockHandler();
-            var innnerHandlerName = handler.GetType().Name.ToLower();
+            var innnerHandlerName = handler.GetType().Name.ToLowerInvariant();
 
             var monitoring = Substitute.For<IMeasureHandlerExecutionTime>();
 

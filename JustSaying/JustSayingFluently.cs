@@ -221,7 +221,7 @@ namespace JustSaying
         {
             _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic)
             {
-                BaseTopicName = (topicName ?? string.Empty).ToLower()
+                BaseTopicName = (topicName ?? string.Empty).ToLowerInvariant()
             };
             return this;
         }
