@@ -6,7 +6,7 @@ namespace JustSaying.AwsTools.QueueCreation
     [Serializable]
     public class ConfigurationErrorsException : Exception
     {
-        public ConfigurationErrorsException()
+        public ConfigurationErrorsException() : base("Invalid configuration")
         {
         }
 
@@ -18,8 +18,7 @@ namespace JustSaying.AwsTools.QueueCreation
         {
         }
 
-        protected ConfigurationErrorsException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
+        protected ConfigurationErrorsException(SerializationInfo info, StreamingContext context): base(info, context)
         {
         }
     }
