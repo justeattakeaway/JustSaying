@@ -43,7 +43,7 @@ namespace JustSaying.AwsTools
                 {
                     {
                         JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD,
-                        queueConfig.ErrorQueueRetentionPeriodSeconds.ToString()
+                        queueConfig.ErrorQueueRetentionPeriodSeconds.ToString(CultureInfo.InvariantCulture)
                     }
                 }
             };

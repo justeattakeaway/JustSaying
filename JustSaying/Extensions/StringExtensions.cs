@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Linq;
 
 namespace JustSaying.Extensions
@@ -8,7 +9,7 @@ namespace JustSaying.Extensions
         {
             if (s.Length > maxLength)
             {
-                var suffix = s.GetInvariantHashCode().ToString();
+                var suffix = s.GetInvariantHashCode().ToString(CultureInfo.InvariantCulture);
                 s = s.Substring(0, maxLength - suffix.Length) + suffix;
             }
 
