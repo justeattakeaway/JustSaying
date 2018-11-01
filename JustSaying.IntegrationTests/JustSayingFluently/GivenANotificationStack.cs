@@ -90,7 +90,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .ConfigureSubscriptionWith(cf =>
                 {
                     cf.MessageRetentionSeconds = 60;
-                    cf.VisibilityTimeoutSeconds = JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT;
+                    cf.VisibilityTimeoutSeconds = JustSayingConstants.DefaultVisibilityTimeout;
                     cf.InstancePosition = 1;
                 })
                 .WithMessageHandler(snsHandler)

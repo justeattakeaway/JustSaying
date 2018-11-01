@@ -61,7 +61,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     QueueUrl = Url,
                     Attributes = new Dictionary<string, string>
                         {
-                            {JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY, requestedRedrivePolicy.ToString()}
+                            {JustSayingConstants.AttributeRedrivePolicy, requestedRedrivePolicy.ToString()}
                         }
                 };
 
@@ -120,13 +120,13 @@ namespace JustSaying.AwsTools.MessageHandling
             };
             if (NeedErrorQueue(queueConfig))
             {
-                policy.Add(JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY, new RedrivePolicy(_retryCountBeforeSendingToErrorQueue, ErrorQueue.Arn).ToString());
+                policy.Add(JustSayingConstants.AttributeRedrivePolicy, new RedrivePolicy(_retryCountBeforeSendingToErrorQueue, ErrorQueue.Arn).ToString());
             }
 
             if (queueConfig.ServerSideEncryption != null)
             {
-                policy.Add(JustSayingConstants.ATTRIBUTE_ENCRYPTION_KEY_ID, queueConfig.ServerSideEncryption.KmsMasterKeyId);
-                policy.Add(JustSayingConstants.ATTRIBUTE_ENCRYPTION_KEY_REUSE_PERIOD_SECOND_ID, queueConfig.ServerSideEncryption.KmsDataKeyReusePeriodSeconds);
+                policy.Add(JustSayingConstants.AttributeEncryptionKeyId, queueConfig.ServerSideEncryption.KmsMasterKeyId);
+                policy.Add(JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId, queueConfig.ServerSideEncryption.KmsDataKeyReusePeriodSeconds);
             }
 
             return policy;
