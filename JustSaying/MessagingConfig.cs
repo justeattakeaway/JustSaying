@@ -13,8 +13,8 @@ namespace JustSaying
     {
         public MessagingConfig()
         {
-            PublishFailureReAttempts = JustSayingConstants.DEFAULT_PUBLISHER_RETRY_COUNT;
-            PublishFailureBackoffMilliseconds = JustSayingConstants.DEFAULT_PUBLISHER_RETRY_INTERVAL;
+            PublishFailureReAttempts = JustSayingConstants.DefaultPublisherRetryCount;
+            PublishFailureBackoffMilliseconds = JustSayingConstants.DefaultPublisherRetryInterval;
             AdditionalSubscriberAccounts = new List<string>();
             Regions = new List<string>();
             MessageSubjectProvider = new NonGenericMessageSubjectProvider();

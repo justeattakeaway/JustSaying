@@ -25,7 +25,7 @@ namespace JustSaying.AwsTools
             return new Dictionary<string, string>
             {
                 { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD , queueConfig.ErrorQueueRetentionPeriodSeconds.ToString(CultureInfo.InvariantCulture)},
-                { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT.ToString(CultureInfo.InvariantCulture)},
+                { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , JustSayingConstants.DefaultVisibilityTimeout.ToString(CultureInfo.InvariantCulture)},
             };
         }
 
@@ -42,7 +42,7 @@ namespace JustSaying.AwsTools
                 Attributes = new Dictionary<string, string>
                 {
                     {
-                        JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD,
+                        JustSayingConstants.AttributeRetentionPeriod,
                         queueConfig.ErrorQueueRetentionPeriodSeconds.ToString(CultureInfo.InvariantCulture)
                     }
                 }

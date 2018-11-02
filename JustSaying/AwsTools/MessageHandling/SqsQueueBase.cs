@@ -52,14 +52,14 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             var keys = new[]
                 {
-                    JustSayingConstants.ATTRIBUTE_ARN,
-                    JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY,
-                    JustSayingConstants.ATTRIBUTE_POLICY,
-                    JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD,
-                    JustSayingConstants.ATTRIBUTE_VISIBILITY_TIMEOUT,
-                    JustSayingConstants.ATTRIBUTE_DELIVERY_DELAY,
-                    JustSayingConstants.ATTRIBUTE_ENCRYPTION_KEY_ID,
-                    JustSayingConstants.ATTRIBUTE_ENCRYPTION_KEY_REUSE_PERIOD_SECOND_ID
+                    JustSayingConstants.AttributeArn,
+                    JustSayingConstants.AttributeRedrivePolicy,
+                    JustSayingConstants.AttributePolicy,
+                    JustSayingConstants.AttributeRetentionPeriod,
+                    JustSayingConstants.AttributeVisibilityTimeout,
+                    JustSayingConstants.AttributeDeliveryDelay,
+                    JustSayingConstants.AttributeEncryptionKeyId,
+                    JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId
                 };
             var attributes = await GetAttrsAsync(keys).ConfigureAwait(false);
             Arn = attributes.QueueARN;
@@ -87,19 +87,19 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 var attributes = new Dictionary<string, string>
                 {
-                    {JustSayingConstants.ATTRIBUTE_RETENTION_PERIOD, queueConfig.MessageRetentionSeconds.ToString(CultureInfo.InvariantCulture) },
-                    {JustSayingConstants.ATTRIBUTE_VISIBILITY_TIMEOUT, queueConfig.VisibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture) },
-                    {JustSayingConstants.ATTRIBUTE_DELIVERY_DELAY, queueConfig.DeliveryDelaySeconds.ToString(CultureInfo.InvariantCulture) }
+                    {JustSayingConstants.AttributeRetentionPeriod, queueConfig.MessageRetentionSeconds.ToString(CultureInfo.InvariantCulture) },
+                    {JustSayingConstants.AttributeVisibilityTimeout, queueConfig.VisibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture) },
+                    {JustSayingConstants.AttributeDeliveryDelay, queueConfig.DeliveryDelaySeconds.ToString(CultureInfo.InvariantCulture) }
                 };
                 if (queueConfig.ServerSideEncryption != null)
                 {
-                    attributes.Add(JustSayingConstants.ATTRIBUTE_ENCRYPTION_KEY_ID, queueConfig.ServerSideEncryption.KmsMasterKeyId);
-                    attributes.Add(JustSayingConstants.ATTRIBUTE_ENCRYPTION_KEY_REUSE_PERIOD_SECOND_ID, queueConfig.ServerSideEncryption.KmsDataKeyReusePeriodSeconds);
+                    attributes.Add(JustSayingConstants.AttributeEncryptionKeyId, queueConfig.ServerSideEncryption.KmsMasterKeyId);
+                    attributes.Add(JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId, queueConfig.ServerSideEncryption.KmsDataKeyReusePeriodSeconds);
                 }
 
                 if (queueConfig.ServerSideEncryption == null)
                 {
-                    attributes.Add(JustSayingConstants.ATTRIBUTE_ENCRYPTION_KEY_ID, string.Empty);
+                    attributes.Add(JustSayingConstants.AttributeEncryptionKeyId, string.Empty);
                 }
                 var request = new SetQueueAttributesRequest
                 {
@@ -145,23 +145,23 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private RedrivePolicy ExtractRedrivePolicyFromQueueAttributes(Dictionary<string, string> queueAttributes)
         {
-            if (!queueAttributes.ContainsKey(JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY))
+            if (!queueAttributes.ContainsKey(JustSayingConstants.AttributeRedrivePolicy))
             {
                 return null;
             }
-            return RedrivePolicy.ConvertFromString(queueAttributes[JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY]);
+            return RedrivePolicy.ConvertFromString(queueAttributes[JustSayingConstants.AttributeRedrivePolicy]);
         }
 
         private ServerSideEncryption ExtractServerSideEncryptionFromQueueAttributes(Dictionary<string, string> queueAttributes)
         {
-            if (!queueAttributes.ContainsKey(JustSayingConstants.ATTRIBUTE_ENCRYPTION_KEY_ID))
+            if (!queueAttributes.ContainsKey(JustSayingConstants.AttributeEncryptionKeyId))
             {
                 return null;
             }
             return new ServerSideEncryption
             {
-                KmsMasterKeyId = queueAttributes[JustSayingConstants.ATTRIBUTE_ENCRYPTION_KEY_ID],
-                KmsDataKeyReusePeriodSeconds = queueAttributes[JustSayingConstants.ATTRIBUTE_ENCRYPTION_KEY_REUSE_PERIOD_SECOND_ID]
+                KmsMasterKeyId = queueAttributes[JustSayingConstants.AttributeEncryptionKeyId],
+                KmsDataKeyReusePeriodSeconds = queueAttributes[JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId]
             };
         }
     }

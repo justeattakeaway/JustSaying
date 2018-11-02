@@ -12,34 +12,34 @@ namespace JustSaying.AwsTools.QueueCreation
 
         public SqsBasicConfiguration()
         {
-            MessageRetentionSeconds = JustSayingConstants.DEFAULT_RETENTION_PERIOD;
-            ErrorQueueRetentionPeriodSeconds = JustSayingConstants.MAXIMUM_RETENTION_PERIOD;
-            VisibilityTimeoutSeconds = JustSayingConstants.DEFAULT_VISIBILITY_TIMEOUT;
-            RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT;
-            DeliveryDelaySeconds = JustSayingConstants.MINIMUM_DELIVERY_DELAY;
+            MessageRetentionSeconds = JustSayingConstants.DefaultRetentionPeriod;
+            ErrorQueueRetentionPeriodSeconds = JustSayingConstants.MaximumRetentionPeriod;
+            VisibilityTimeoutSeconds = JustSayingConstants.DefaultVisibilityTimeout;
+            RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
+            DeliveryDelaySeconds = JustSayingConstants.MinimumDeliveryDelay;
         }
 
         public virtual void Validate()
         {
-            if (MessageRetentionSeconds < JustSayingConstants.MINIMUM_RETENTION_PERIOD ||
-                MessageRetentionSeconds > JustSayingConstants.MAXIMUM_RETENTION_PERIOD)
+            if (MessageRetentionSeconds < JustSayingConstants.MinimumRetentionPeriod ||
+                MessageRetentionSeconds > JustSayingConstants.MaximumRetentionPeriod)
             {
                 throw new ConfigurationErrorsException(
-                    $"Invalid configuration. MessageRetentionSeconds must be between {JustSayingConstants.MINIMUM_RETENTION_PERIOD} and {JustSayingConstants.MAXIMUM_RETENTION_PERIOD}.");
+                    $"Invalid configuration. MessageRetentionSeconds must be between {JustSayingConstants.MinimumRetentionPeriod} and {JustSayingConstants.MaximumRetentionPeriod}.");
             }
 
-            if (ErrorQueueRetentionPeriodSeconds < JustSayingConstants.MINIMUM_RETENTION_PERIOD ||
-                ErrorQueueRetentionPeriodSeconds > JustSayingConstants.MAXIMUM_RETENTION_PERIOD)
+            if (ErrorQueueRetentionPeriodSeconds < JustSayingConstants.MinimumRetentionPeriod ||
+                ErrorQueueRetentionPeriodSeconds > JustSayingConstants.MaximumRetentionPeriod)
             {
                 throw new ConfigurationErrorsException(
-                    $"Invalid configuration. ErrorQueueRetentionPeriodSeconds must be between {JustSayingConstants.MINIMUM_RETENTION_PERIOD} and {JustSayingConstants.MAXIMUM_RETENTION_PERIOD}.");
+                    $"Invalid configuration. ErrorQueueRetentionPeriodSeconds must be between {JustSayingConstants.MinimumRetentionPeriod} and {JustSayingConstants.MaximumRetentionPeriod}.");
             }
 
-            if (DeliveryDelaySeconds < JustSayingConstants.MINIMUM_DELIVERY_DELAY ||
-                DeliveryDelaySeconds > JustSayingConstants.MAXIMUM_DELIVERY_DELAY)
+            if (DeliveryDelaySeconds < JustSayingConstants.MinimumDeliveryDelay ||
+                DeliveryDelaySeconds > JustSayingConstants.MaximumDeliveryDelay)
             {
                 throw new ConfigurationErrorsException(
-                    $"Invalid configuration. DeliveryDelaySeconds must be between {JustSayingConstants.MINIMUM_DELIVERY_DELAY} and {JustSayingConstants.MAXIMUM_DELIVERY_DELAY}.");
+                    $"Invalid configuration. DeliveryDelaySeconds must be between {JustSayingConstants.MinimumDeliveryDelay} and {JustSayingConstants.MaximumDeliveryDelay}.");
             }
         }
     }

@@ -19,7 +19,7 @@ namespace JustSaying.IntegrationTests.AwsTools
         {
             var queueConfig = new SqsBasicConfiguration
             {
-                ErrorQueueRetentionPeriodSeconds = JustSayingConstants.MAXIMUM_RETENTION_PERIOD,
+                ErrorQueueRetentionPeriodSeconds = JustSayingConstants.MaximumRetentionPeriod,
                 ErrorQueueOptOut = true
             };
 

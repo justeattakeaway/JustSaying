@@ -25,6 +25,6 @@ namespace JustSaying.UnitTests
         }
 
         protected override SqsReadConfiguration CreateSystemUnderTest()
-            => new SqsReadConfiguration(SubscriptionType.ToTopic) { MessageRetentionSeconds = JustSayingConstants.MINIMUM_RETENTION_PERIOD +1, Topic = "ATopic", PublishEndpoint = null };
+            => new SqsReadConfiguration(SubscriptionType.ToTopic) { MessageRetentionSeconds = JustSayingConstants.MinimumRetentionPeriod +1, Topic = "ATopic", PublishEndpoint = null };
     }
 }
