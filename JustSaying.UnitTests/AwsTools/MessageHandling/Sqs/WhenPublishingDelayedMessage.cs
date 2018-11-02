@@ -18,7 +18,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
     {
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
-        private const string Url = "https://blablabla/" + QueueName;
+        private const string Url = "https://testurl.com/" + QueueName;
         private readonly DelayedMessage _message = new DelayedMessage(delaySeconds: 1);
         private const string QueueName = "queuename";
 
