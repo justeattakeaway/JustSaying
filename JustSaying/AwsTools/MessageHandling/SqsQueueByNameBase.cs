@@ -43,7 +43,8 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 return false;
             }
-            Url = result.QueueUrl;
+
+            Uri = new Uri(result.QueueUrl);
 
             await SetQueuePropertiesAsync().ConfigureAwait(false);
             return true;
@@ -61,7 +62,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 if (!string.IsNullOrWhiteSpace(queueResponse?.QueueUrl))
                 {
-                    Url = queueResponse.QueueUrl;
+                    Uri = new Uri(queueResponse.QueueUrl);
                     await Client.SetQueueAttributesAsync(queueResponse.QueueUrl, GetCreateQueueAttributes(queueConfig)).ConfigureAwait(false);
                     await SetQueuePropertiesAsync().ConfigureAwait(false);
 

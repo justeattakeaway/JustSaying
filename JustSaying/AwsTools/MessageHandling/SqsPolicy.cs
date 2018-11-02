@@ -15,7 +15,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _policy = policy;
         }
 
-        public static async Task SaveAsync(string sourceArn, string queueArn, string queueUrl, IAmazonSQS client)
+        public static async Task SaveAsync(string sourceArn, string queueArn, Uri queueUri, IAmazonSQS client)
         {
             var topicArnWildcard = CreateTopicArnWildcard(sourceArn);
             ActionIdentifier[] actions = { SQSActionIdentifiers.SendMessage };
@@ -28,8 +28,11 @@ namespace JustSaying.AwsTools.MessageHandling
                     .WithActionIdentifiers(actions));
             var setQueueAttributesRequest = new SetQueueAttributesRequest
             {
-                QueueUrl = queueUrl,
-                Attributes = { ["Policy"] = sqsPolicy.ToJson() }
+                QueueUrl = queueUri.AbsoluteUri,
+                Attributes =
+                {
+                    ["Policy"] = sqsPolicy.ToJson()
+                }
             };
 
             await client.SetQueueAttributesAsync(setQueueAttributesRequest).ConfigureAwait(false);

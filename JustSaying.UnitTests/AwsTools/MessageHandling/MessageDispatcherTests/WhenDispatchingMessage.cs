@@ -21,9 +21,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 {
     public class DummySqsQueue : SqsQueueBase
     {
-        public DummySqsQueue(string url, IAmazonSQS client) : base(RegionEndpoint.EUWest1, client)
+        public DummySqsQueue(Uri uri, IAmazonSQS client) : base(RegionEndpoint.EUWest1, client)
         {
-            Url = url;
+            Uri = uri;
         }
 
         public override Task<bool> ExistsAsync() => Task.FromResult(true);
@@ -31,7 +31,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
     
     public class WhenDispatchingMessage : XAsyncBehaviourTest<MessageDispatcher>
     {
-        private const string ExpectedQueueUrl = "http://queueurl";
+        private const string ExpectedQueueUrl = "http://testurl.com/queue";
         
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IMessageMonitor _messageMonitor = Substitute.For<IMessageMonitor>();
@@ -57,7 +57,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             };
 
             _loggerFactory.CreateLogger(Arg.Any<string>()).Returns(_logger);
-            _queue = new DummySqsQueue(ExpectedQueueUrl, _amazonSqsClient);
+            _queue = new DummySqsQueue(new Uri(ExpectedQueueUrl), _amazonSqsClient);
             _serialisationRegister.DeserializeMessage(Arg.Any<string>()).Returns(_typedMessage);
         }
 

@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SimpleNotificationService;
@@ -39,7 +38,7 @@ namespace JustSaying.AwsTools.QueueCreation
                 var arnProvider = new ForeignTopicArnProvider(regionEndpoint, queueConfig.TopicSourceAccount, queueConfig.PublishEndpoint);
 
                 var topicArn = await arnProvider.GetArnAsync().ConfigureAwait(false);
-                await SubscribeQueueAndApplyFilterPolicyAsync(snsClient, topicArn, sqsClient, queue.Url, queueConfig.FilterPolicy).ConfigureAwait(false);
+                await SubscribeQueueAndApplyFilterPolicyAsync(snsClient, topicArn, sqsClient, queue.Uri, queueConfig.FilterPolicy).ConfigureAwait(false);
                 
             }
             else
@@ -47,9 +46,9 @@ namespace JustSaying.AwsTools.QueueCreation
                 var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsClient, serialisationRegister, _loggerFactory, messageSubjectProvider);
                 await eventTopic.CreateAsync().ConfigureAwait(false);
 
-                await SubscribeQueueAndApplyFilterPolicyAsync(snsClient, eventTopic.Arn, sqsClient, queue.Url, queueConfig.FilterPolicy).ConfigureAwait(false);
+                await SubscribeQueueAndApplyFilterPolicyAsync(snsClient, eventTopic.Arn, sqsClient, queue.Uri, queueConfig.FilterPolicy).ConfigureAwait(false);
 
-                await SqsPolicy.SaveAsync(eventTopic.Arn, queue.Arn, queue.Url, sqsClient).ConfigureAwait(false);
+                await SqsPolicy.SaveAsync(eventTopic.Arn, queue.Arn, queue.Uri, sqsClient).ConfigureAwait(false);
             }
 
             return queue;
@@ -76,9 +75,12 @@ namespace JustSaying.AwsTools.QueueCreation
             return queue;
         }
 
-        async Task SubscribeQueueAndApplyFilterPolicyAsync(IAmazonSimpleNotificationService amazonSimpleNotificationService, string topicArn, IAmazonSQS amazonSQS, string queueUrl, string filterPolicy)
+        async Task SubscribeQueueAndApplyFilterPolicyAsync(
+            IAmazonSimpleNotificationService amazonSimpleNotificationService,
+            string topicArn, IAmazonSQS amazonSQS, Uri queueUrl, string filterPolicy)
         {
-            var subscriptionArn = await amazonSimpleNotificationService.SubscribeQueueAsync(topicArn, amazonSQS, queueUrl).ConfigureAwait(false);
+            var subscriptionArn = await amazonSimpleNotificationService.SubscribeQueueAsync(topicArn, amazonSQS, queueUrl.AbsoluteUri)
+                .ConfigureAwait(false);
 
             var actualFilterPolicy = string.IsNullOrWhiteSpace(filterPolicy) ? EmptyFilterPolicy : filterPolicy;
             await amazonSimpleNotificationService.SetSubscriptionAttributesAsync(subscriptionArn, "FilterPolicy", actualFilterPolicy).ConfigureAwait(false);

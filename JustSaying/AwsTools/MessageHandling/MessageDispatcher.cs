@@ -70,7 +70,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 if (typedMessage != null)
                 {
                     typedMessage.ReceiptHandle = message.ReceiptHandle;
-                    typedMessage.QueueUrl = _queue.Url;
+                    typedMessage.QueueUri = _queue.Uri;
                     handlingSucceeded = await CallMessageHandler(typedMessage).ConfigureAwait(false);
                 }
 
@@ -126,7 +126,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             var deleteRequest = new DeleteMessageRequest
             {
-                QueueUrl = _queue.Url,
+                QueueUrl = _queue.Uri.AbsoluteUri,
                 ReceiptHandle = receiptHandle
             };
 
@@ -143,7 +143,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     var visibilityRequest = new ChangeMessageVisibilityRequest
                     {
-                        QueueUrl = _queue.Url,
+                        QueueUrl = _queue.Uri.AbsoluteUri,
                         ReceiptHandle = receiptHandle,
                         VisibilityTimeout = visibilityTimeoutSeconds
                     };

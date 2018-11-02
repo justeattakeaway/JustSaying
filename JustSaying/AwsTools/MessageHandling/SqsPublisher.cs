@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
@@ -43,7 +43,7 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (Exception ex)
             {
                 throw new PublishException(
-                    $"Failed to publish message to SQS. QueueUrl: {request.QueueUrl} MessageBody: {request.MessageBody}",
+                    $"Failed to publish message to SQS. {nameof(request.QueueUrl)}: {request.QueueUrl},{nameof(request.MessageBody)}: {request.MessageBody}",
                     ex);
             }
         }
@@ -53,7 +53,7 @@ namespace JustSaying.AwsTools.MessageHandling
             var request = new SendMessageRequest
             {
                 MessageBody = GetMessageInContext(message),
-                QueueUrl = Url
+                QueueUrl = Uri?.AbsoluteUri
             };
 
             if (message.DelaySeconds.HasValue)

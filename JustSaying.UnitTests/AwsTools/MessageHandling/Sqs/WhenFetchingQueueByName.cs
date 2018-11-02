@@ -25,7 +25,10 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
                 .Returns(x =>
                 {
                     if (x.Arg<string>() == "some-queue-name")
-                        return new GetQueueUrlResponse {QueueUrl = "some-queue-name"};
+                        return new GetQueueUrlResponse
+                        {
+                            QueueUrl = "https://testqueues.com/some-queue-name"
+                        };
                     throw new QueueDoesNotExistException("some-queue-name not found");
                 });
             _client.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>())

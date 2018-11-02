@@ -19,7 +19,7 @@ namespace JustSaying.Models
         public string Tenant { get; set; }
         public string Conversation { get; set; }
         public string ReceiptHandle { get; set; }
-        public string QueueUrl { get; set; }
+        public Uri QueueUri { get; set; }
         public int? DelaySeconds { get; set; }
         public IDictionary<string, MessageAttributeValue> MessageAttributes { get; set; }
 
