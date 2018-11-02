@@ -21,7 +21,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 {
     public class DummySqsQueue : SqsQueueBase
     {
-        public DummySqsQueue(string url, IAmazonSQS client) : base(RegionEndpoint.EUWest1, client)
+        public DummySqsQueue(Uri url, IAmazonSQS client) : base(RegionEndpoint.EUWest1, client)
         {
             Url = url;
         }
@@ -57,7 +57,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             };
 
             _loggerFactory.CreateLogger(Arg.Any<string>()).Returns(_logger);
-            _queue = new DummySqsQueue(ExpectedQueueUrl, _amazonSqsClient);
+            _queue = new DummySqsQueue(new Uri(ExpectedQueueUrl), _amazonSqsClient);
             _serialisationRegister.DeserializeMessage(Arg.Any<string>()).Returns(_typedMessage);
         }
 

@@ -33,8 +33,8 @@ namespace JustSaying.Tools.Commands
 
             var config = new AmazonSQSConfig { RegionEndpoint = RegionEndpoint.GetBySystemName(Region) };
             var client = new DefaultAwsClientFactory().GetSqsClient(config.RegionEndpoint);
-            var sourceQueue = new SqsQueueByName(config.RegionEndpoint, SourceQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT, loggerFactory);
-            var destinationQueue = new SqsQueueByName(config.RegionEndpoint, DestinationQueueName, client, JustSayingConstants.DEFAULT_HANDLER_RETRY_COUNT, loggerFactory);
+            var sourceQueue = new SqsQueueByName(config.RegionEndpoint, SourceQueueName, client, JustSayingConstants.DefaultHandlerRetryCount, loggerFactory);
+            var destinationQueue = new SqsQueueByName(config.RegionEndpoint, DestinationQueueName, client, JustSayingConstants.DefaultHandlerRetryCount, loggerFactory);
 
             EnsureQueueExistsAsync(sourceQueue).GetAwaiter().GetResult();
             EnsureQueueExistsAsync(destinationQueue).GetAwaiter().GetResult();
@@ -44,13 +44,13 @@ namespace JustSaying.Tools.Commands
 
             var sendResponse = destinationQueue.Client.SendMessageBatch(new SendMessageBatchRequest
             {
-                QueueUrl = destinationQueue.Url,
+                QueueUrl = destinationQueue.Url.ToString(),
                 Entries = messages.Select(x => new SendMessageBatchRequestEntry { Id = x.MessageId, MessageBody = x.Body }).ToList()
             });
 
             sourceQueue.Client.DeleteMessageBatch(new DeleteMessageBatchRequest
             {
-                QueueUrl = sourceQueue.Url,
+                QueueUrl = sourceQueue.Url.ToString(),
                 Entries = sendResponse.Successful.Select(x => new DeleteMessageBatchRequestEntry
                 {
                     Id = x.Id,
@@ -79,7 +79,7 @@ namespace JustSaying.Tools.Commands
             {
                 receiveResponse = sourceQueue.Client.ReceiveMessage(new ReceiveMessageRequest
                 {
-                    QueueUrl = sourceQueue.Url,
+                    QueueUrl = sourceQueue.Url.ToString(),
                     MaxNumberOfMessages = Count,
                 });
                 messages.AddRange(receiveResponse.Messages);

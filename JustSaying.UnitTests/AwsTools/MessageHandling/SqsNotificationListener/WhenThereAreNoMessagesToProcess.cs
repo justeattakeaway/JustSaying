@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,7 +23,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         protected override JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
             return new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
-                new SqsQueueByUrl(RegionEndpoint.EUWest1, "", _sqs),
+                new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri("http://foo.com"), _sqs),
                 null,
                 Substitute.For<IMessageMonitor>(),
                 Substitute.For<ILoggerFactory>());
