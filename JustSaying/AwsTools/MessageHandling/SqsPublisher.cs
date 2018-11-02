@@ -43,7 +43,7 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (Exception ex)
             {
                 throw new PublishException(
-                    $"Failed to publish message to SQS. QueueUri: {request.QueueUrl} MessageBody: {request.MessageBody}",
+                    $"Failed to publish message to SQS. {nameof(request.QueueUrl)}: {request.QueueUrl},{nameof(request.MessageBody)}: {request.MessageBody}",
                     ex);
             }
         }
