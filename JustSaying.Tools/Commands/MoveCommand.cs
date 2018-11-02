@@ -80,7 +80,7 @@ namespace JustSaying.Tools.Commands
                 receiveResponse = sourceQueue.Client.ReceiveMessage(new ReceiveMessageRequest
                 {
                     QueueUrl = sourceQueue.Url.ToString(),
-                    MaxNumberOfMessages = Count,
+                    MaxNumberOfMessages = Count
                 });
                 messages.AddRange(receiveResponse.Messages);
             } while (messages.Count < Count && receiveResponse.Messages.Any());
