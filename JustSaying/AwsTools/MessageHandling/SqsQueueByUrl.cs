@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon;
@@ -8,7 +9,7 @@ namespace JustSaying.AwsTools.MessageHandling
 {
     public class SqsQueueByUrl : SqsQueueBase
     {
-        public SqsQueueByUrl(RegionEndpoint region, string queueUrl, IAmazonSQS client)
+        public SqsQueueByUrl(RegionEndpoint region, Uri queueUrl, IAmazonSQS client)
             : base(region, client)
         {
             Url = queueUrl;
@@ -18,7 +19,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             var result = await Client.ListQueuesAsync(new ListQueuesRequest()).ConfigureAwait(false);
 
-            if (result.QueueUrls.Any(x => x == Url))
+            if (result.QueueUrls.Any(x => x == Url.ToString()))
             {
                 await SetQueuePropertiesAsync().ConfigureAwait(false);
                 // Need to set the prefix yet!

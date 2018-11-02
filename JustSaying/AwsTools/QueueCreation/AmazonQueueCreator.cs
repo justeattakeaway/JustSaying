@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SimpleNotificationService;
@@ -76,9 +75,12 @@ namespace JustSaying.AwsTools.QueueCreation
             return queue;
         }
 
-        async Task SubscribeQueueAndApplyFilterPolicyAsync(IAmazonSimpleNotificationService amazonSimpleNotificationService, string topicArn, IAmazonSQS amazonSQS, string queueUrl, string filterPolicy)
+        async Task SubscribeQueueAndApplyFilterPolicyAsync(
+            IAmazonSimpleNotificationService amazonSimpleNotificationService,
+            string topicArn, IAmazonSQS amazonSQS, Uri queueUrl, string filterPolicy)
         {
-            var subscriptionArn = await amazonSimpleNotificationService.SubscribeQueueAsync(topicArn, amazonSQS, queueUrl).ConfigureAwait(false);
+            var subscriptionArn = await amazonSimpleNotificationService.SubscribeQueueAsync(topicArn, amazonSQS, queueUrl.ToString())
+                .ConfigureAwait(false);
 
             var actualFilterPolicy = string.IsNullOrWhiteSpace(filterPolicy) ? EmptyFilterPolicy : filterPolicy;
             await amazonSimpleNotificationService.SetSubscriptionAttributesAsync(subscriptionArn, "FilterPolicy", actualFilterPolicy).ConfigureAwait(false);

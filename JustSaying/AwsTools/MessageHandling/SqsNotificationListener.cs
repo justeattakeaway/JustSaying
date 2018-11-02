@@ -204,7 +204,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             var request = new ReceiveMessageRequest
             {
-                QueueUrl = _queue.Url,
+                QueueUrl = _queue.Url.ToString(),
                 MaxNumberOfMessages = numberOfMessagesToReadFromSqs,
                 WaitTimeSeconds = 20,
                 AttributeNames = _requestMessageAttributeNames

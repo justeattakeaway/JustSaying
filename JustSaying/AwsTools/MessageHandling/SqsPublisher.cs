@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
@@ -53,7 +53,7 @@ namespace JustSaying.AwsTools.MessageHandling
             var request = new SendMessageRequest
             {
                 MessageBody = GetMessageInContext(message),
-                QueueUrl = Url
+                QueueUrl = Url.ToString()
             };
 
             if (message.DelaySeconds.HasValue)
