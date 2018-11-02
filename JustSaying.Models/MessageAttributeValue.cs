@@ -32,7 +32,7 @@ namespace JustSaying.Models
         /// data, or images.
         /// </para>
         /// </summary>
-        public IEnumerable<byte> BinaryValue { get; set; }
+        public IReadOnlyCollection<byte> BinaryValue { get; set; }
 
         /// <summary>
         /// Gets and sets the property StringValue. 
