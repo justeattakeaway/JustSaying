@@ -38,7 +38,7 @@ namespace JustSaying.AwsTools
 
             var request = new SetQueueAttributesRequest
             {
-                QueueUrl = Url,
+                QueueUrl = Url.ToString(),
                 Attributes = new Dictionary<string, string>
                 {
                     {

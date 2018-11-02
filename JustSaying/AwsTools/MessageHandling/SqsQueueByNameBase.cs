@@ -61,7 +61,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 if (!string.IsNullOrWhiteSpace(queueResponse?.QueueUrl))
                 {
-                    Url = queueResponse.QueueUrl;
+                    Url = new Uri(queueResponse.QueueUrl);
                     await Client.SetQueueAttributesAsync(queueResponse.QueueUrl, GetCreateQueueAttributes(queueConfig)).ConfigureAwait(false);
                     await SetQueuePropertiesAsync().ConfigureAwait(false);
 

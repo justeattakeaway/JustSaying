@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
@@ -12,7 +13,7 @@ namespace JustSaying.AwsTools.MessageHandling
     public abstract class SqsQueueBase
     {
         public string Arn { get; protected set; }
-        public string Url { get; protected set; }
+        public Uri Url { get; protected set; }
         public IAmazonSQS Client { get; private set; }
         public string QueueName { get; protected set; }
         public RegionEndpoint Region { get; protected set; }
@@ -41,7 +42,11 @@ namespace JustSaying.AwsTools.MessageHandling
             var exists = await ExistsAsync().ConfigureAwait(false);
             if (exists)
             {
-                await Client.DeleteQueueAsync(new DeleteQueueRequest { QueueUrl = Url }).ConfigureAwait(false);
+                var request = new DeleteQueueRequest
+                    {
+                        QueueUrl = Url.ToString()
+                    };
+                await Client.DeleteQueueAsync(request).ConfigureAwait(false);
 
                 Arn = null;
                 Url = null;
@@ -73,10 +78,11 @@ namespace JustSaying.AwsTools.MessageHandling
 
         protected async Task<GetQueueAttributesResponse> GetAttrsAsync(IEnumerable<string> attrKeys)
         {
-            var request = new GetQueueAttributesRequest {
-                QueueUrl = Url,
-                AttributeNames = new List<string>(attrKeys)
-            };
+            var request = new GetQueueAttributesRequest
+                {
+                    QueueUrl = Url.ToString(),
+                    AttributeNames = new List<string>(attrKeys)
+                };
 
             return await Client.GetQueueAttributesAsync(request).ConfigureAwait(false);
         }
@@ -103,7 +109,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
                 var request = new SetQueueAttributesRequest
                 {
-                    QueueUrl = Url,
+                    QueueUrl = Url.ToString(),
                     Attributes = attributes
                 };
 
