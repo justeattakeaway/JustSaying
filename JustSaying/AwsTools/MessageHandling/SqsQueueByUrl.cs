@@ -19,7 +19,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             var result = await Client.ListQueuesAsync(new ListQueuesRequest()).ConfigureAwait(false);
 
-            if (result.QueueUrls.Any(x => x == Uri.ToString()))
+            if (result.QueueUrls.Any(x => x == Uri.AbsoluteUri))
             {
                 await SetQueuePropertiesAsync().ConfigureAwait(false);
                 // Need to set the prefix yet!

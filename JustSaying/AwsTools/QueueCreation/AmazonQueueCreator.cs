@@ -79,7 +79,7 @@ namespace JustSaying.AwsTools.QueueCreation
             IAmazonSimpleNotificationService amazonSimpleNotificationService,
             string topicArn, IAmazonSQS amazonSQS, Uri queueUrl, string filterPolicy)
         {
-            var subscriptionArn = await amazonSimpleNotificationService.SubscribeQueueAsync(topicArn, amazonSQS, queueUrl.ToString())
+            var subscriptionArn = await amazonSimpleNotificationService.SubscribeQueueAsync(topicArn, amazonSQS, queueUrl.AbsoluteUri)
                 .ConfigureAwait(false);
 
             var actualFilterPolicy = string.IsNullOrWhiteSpace(filterPolicy) ? EmptyFilterPolicy : filterPolicy;

@@ -28,8 +28,11 @@ namespace JustSaying.AwsTools.MessageHandling
                     .WithActionIdentifiers(actions));
             var setQueueAttributesRequest = new SetQueueAttributesRequest
             {
-                QueueUrl = queueUri.ToString(),
-                Attributes = { ["Policy"] = sqsPolicy.ToJson() }
+                QueueUrl = queueUri.AbsoluteUri,
+                Attributes =
+                {
+                    ["Policy"] = sqsPolicy.ToJson()
+                }
             };
 
             await client.SetQueueAttributesAsync(setQueueAttributesRequest).ConfigureAwait(false);
