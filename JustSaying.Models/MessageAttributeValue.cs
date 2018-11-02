@@ -3,7 +3,7 @@
  */
 
 
-using System.IO;
+using System.Collections.Generic;
 
 
 namespace JustSaying.Models
@@ -31,7 +31,7 @@ namespace JustSaying.Models
         /// data, or images.
         /// </para>
         /// </summary>
-        public byte[] BinaryValue { get; set; }
+        public IReadOnlyCollection<byte> BinaryValue { get; set; }
 
         /// <summary>
         /// Gets and sets the property StringValue. 
