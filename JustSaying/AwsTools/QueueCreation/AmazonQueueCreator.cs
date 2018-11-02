@@ -38,7 +38,7 @@ namespace JustSaying.AwsTools.QueueCreation
                 var arnProvider = new ForeignTopicArnProvider(regionEndpoint, queueConfig.TopicSourceAccount, queueConfig.PublishEndpoint);
 
                 var topicArn = await arnProvider.GetArnAsync().ConfigureAwait(false);
-                await SubscribeQueueAndApplyFilterPolicyAsync(snsClient, topicArn, sqsClient, queue.Url, queueConfig.FilterPolicy).ConfigureAwait(false);
+                await SubscribeQueueAndApplyFilterPolicyAsync(snsClient, topicArn, sqsClient, queue.Uri, queueConfig.FilterPolicy).ConfigureAwait(false);
                 
             }
             else
@@ -46,9 +46,9 @@ namespace JustSaying.AwsTools.QueueCreation
                 var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsClient, serialisationRegister, _loggerFactory, messageSubjectProvider);
                 await eventTopic.CreateAsync().ConfigureAwait(false);
 
-                await SubscribeQueueAndApplyFilterPolicyAsync(snsClient, eventTopic.Arn, sqsClient, queue.Url, queueConfig.FilterPolicy).ConfigureAwait(false);
+                await SubscribeQueueAndApplyFilterPolicyAsync(snsClient, eventTopic.Arn, sqsClient, queue.Uri, queueConfig.FilterPolicy).ConfigureAwait(false);
 
-                await SqsPolicy.SaveAsync(eventTopic.Arn, queue.Arn, queue.Url, sqsClient).ConfigureAwait(false);
+                await SqsPolicy.SaveAsync(eventTopic.Arn, queue.Arn, queue.Uri, sqsClient).ConfigureAwait(false);
             }
 
             return queue;

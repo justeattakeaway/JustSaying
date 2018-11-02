@@ -21,9 +21,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 {
     public class DummySqsQueue : SqsQueueBase
     {
-        public DummySqsQueue(Uri url, IAmazonSQS client) : base(RegionEndpoint.EUWest1, client)
+        public DummySqsQueue(Uri uri, IAmazonSQS client) : base(RegionEndpoint.EUWest1, client)
         {
-            Url = url;
+            Uri = uri;
         }
 
         public override Task<bool> ExistsAsync() => Task.FromResult(true);

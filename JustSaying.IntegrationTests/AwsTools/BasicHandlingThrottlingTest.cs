@@ -81,7 +81,7 @@ namespace JustSaying.IntegrationTests.AwsTools
                     entriesAdded++;
                 }
 
-                await client.SendMessageBatchAsync(queue.Url.ToString(), entries);
+                await client.SendMessageBatchAsync(queue.Uri.ToString(), entries);
             }
             while (entriesAdded < throttleMessageCount);
 

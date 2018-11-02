@@ -9,17 +9,17 @@ namespace JustSaying.AwsTools.MessageHandling
 {
     public class SqsQueueByUrl : SqsQueueBase
     {
-        public SqsQueueByUrl(RegionEndpoint region, Uri queueUrl, IAmazonSQS client)
+        public SqsQueueByUrl(RegionEndpoint region, Uri queueUri, IAmazonSQS client)
             : base(region, client)
         {
-            Url = queueUrl;
+            Uri = queueUri;
         }
 
         public override async Task<bool> ExistsAsync()
         {
             var result = await Client.ListQueuesAsync(new ListQueuesRequest()).ConfigureAwait(false);
 
-            if (result.QueueUrls.Any(x => x == Url.ToString()))
+            if (result.QueueUrls.Any(x => x == Uri.ToString()))
             {
                 await SetQueuePropertiesAsync().ConfigureAwait(false);
                 // Need to set the prefix yet!

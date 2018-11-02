@@ -53,7 +53,7 @@ namespace JustSaying.AwsTools.MessageHandling
             var request = new SendMessageRequest
             {
                 MessageBody = GetMessageInContext(message),
-                QueueUrl = Url.ToString()
+                QueueUrl = Uri.ToString()
             };
 
             if (message.DelaySeconds.HasValue)

@@ -44,13 +44,13 @@ namespace JustSaying.Tools.Commands
 
             var sendResponse = destinationQueue.Client.SendMessageBatch(new SendMessageBatchRequest
             {
-                QueueUrl = destinationQueue.Url.ToString(),
+                QueueUrl = destinationQueue.Uri.ToString(),
                 Entries = messages.Select(x => new SendMessageBatchRequestEntry { Id = x.MessageId, MessageBody = x.Body }).ToList()
             });
 
             sourceQueue.Client.DeleteMessageBatch(new DeleteMessageBatchRequest
             {
-                QueueUrl = sourceQueue.Url.ToString(),
+                QueueUrl = sourceQueue.Uri.ToString(),
                 Entries = sendResponse.Successful.Select(x => new DeleteMessageBatchRequestEntry
                 {
                     Id = x.Id,
@@ -79,7 +79,7 @@ namespace JustSaying.Tools.Commands
             {
                 receiveResponse = sourceQueue.Client.ReceiveMessage(new ReceiveMessageRequest
                 {
-                    QueueUrl = sourceQueue.Url.ToString(),
+                    QueueUrl = sourceQueue.Uri.ToString(),
                     MaxNumberOfMessages = Count
                 });
                 messages.AddRange(receiveResponse.Messages);

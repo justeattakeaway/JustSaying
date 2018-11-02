@@ -13,7 +13,7 @@ namespace JustSaying.AwsTools.MessageHandling
     public abstract class SqsQueueBase
     {
         public string Arn { get; protected set; }
-        public Uri Url { get; protected set; }
+        public Uri Uri { get; protected set; }
         public IAmazonSQS Client { get; private set; }
         public string QueueName { get; protected set; }
         public RegionEndpoint Region { get; protected set; }
@@ -37,19 +37,19 @@ namespace JustSaying.AwsTools.MessageHandling
         public virtual async Task DeleteAsync()
         {
             Arn = null;
-            Url = null;
+            Uri = null;
 
             var exists = await ExistsAsync().ConfigureAwait(false);
             if (exists)
             {
                 var request = new DeleteQueueRequest
                     {
-                        QueueUrl = Url.ToString()
+                        QueueUrl = Uri.ToString()
                     };
                 await Client.DeleteQueueAsync(request).ConfigureAwait(false);
 
                 Arn = null;
-                Url = null;
+                Uri = null;
             }
         }
 
@@ -80,7 +80,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             var request = new GetQueueAttributesRequest
                 {
-                    QueueUrl = Url.ToString(),
+                    QueueUrl = Uri.ToString(),
                     AttributeNames = new List<string>(attrKeys)
                 };
 
@@ -109,7 +109,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
                 var request = new SetQueueAttributesRequest
                 {
-                    QueueUrl = Url.ToString(),
+                    QueueUrl = Uri.ToString(),
                     Attributes = attributes
                 };
 
