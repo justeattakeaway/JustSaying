@@ -20,7 +20,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
     public abstract class BaseQueuePollingTest : XAsyncBehaviourTest<JustSaying.AwsTools.MessageHandling.SqsNotificationListener>
     {
-        protected const string QueueUrl = "http://url.com";
+        protected const string QueueUrl = "http://testurl.com/queue";
         protected IAmazonSQS Sqs;
         protected SimpleMessage DeserialisedMessage;
         protected const string MessageBody = "object";
@@ -71,7 +71,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 
             SystemUnderTest.StopListening();
 
-            doneOk.ShouldBeTrue("Timout occured before done signal");
+            doneOk.ShouldBeTrue("Timeout occured before done signal");
         }
 
         protected ReceiveMessageResponse GenerateResponseMessage(string messageType, Guid messageId)

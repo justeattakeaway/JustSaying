@@ -31,7 +31,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
     
     public class WhenDispatchingMessage : XAsyncBehaviourTest<MessageDispatcher>
     {
-        private const string ExpectedQueueUrl = "http://queueurl";
+        private const string ExpectedQueueUrl = "http://testurl.com/queue";
         
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IMessageMonitor _messageMonitor = Substitute.For<IMessageMonitor>();
