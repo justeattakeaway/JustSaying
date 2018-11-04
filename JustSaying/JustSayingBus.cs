@@ -15,7 +15,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying
 {
-    public class JustSayingBus : IAmJustSaying, IAmJustInterrogating
+    public sealed class JustSayingBus : IAmJustSaying, IAmJustInterrogating
     {
         public bool Listening { get; private set; }
 
@@ -31,7 +31,10 @@ namespace JustSaying
         }
         public IMessageSerialisationRegister SerialisationRegister { get; private set; }
         public IMessageLockAsync MessageLock { get; set; }
+
         private ILogger _log;
+        private bool _disposed;
+
         private readonly object _syncRoot = new object();
         private readonly ICollection<IPublisher> _publishers;
         private readonly ICollection<ISubscriber> _subscribers;
@@ -166,7 +169,14 @@ namespace JustSaying
 
         public void Dispose()
         {
+            if (_disposed)
+            {
+                return;
+            }
+
             _subscriberCancellationTokenSource?.Dispose();
+
+            _disposed = true;
         }
 
         private IMessagePublisher GetActivePublisherForMessage(Message message)

@@ -141,42 +141,46 @@ namespace JustSaying.AwsTools.MessageHandling
             var region = _queue.Region.SystemName;
             ReceiveMessageResponse sqsMessageResponse = null;
 
-            try
+            do
             {
-                sqsMessageResponse = await GetMessagesFromSqsQueue(ct, queueName, region).ConfigureAwait(false);
-                var messageCount = sqsMessageResponse.Messages.Count;
-
-                _log.LogTrace($"Polled for messages - Queue: {queueName}, Region: {region}, MessageCount: {messageCount}");
-            }
-            catch (InvalidOperationException ex)
-            {
-                _log.LogTrace($"Could not determine number of messages to read from [{queueName}], region: [{region}]. Ex: {ex}");
-            }
-            catch (OperationCanceledException ex)
-            {
-                _log.LogTrace($"Suspected no message in queue [{queueName}], region: [{region}]. Ex: {ex}");
-            }
-            catch (Exception ex)
-            {
-                var msg = $"Issue receiving messages for queue {queueName}, region {region}";
-                _log.LogError(0, ex, msg);
-            }
-
-            try
-            {
-                if (sqsMessageResponse != null)
+                try
                 {
-                    foreach (var message in sqsMessageResponse.Messages)
+                    sqsMessageResponse = await GetMessagesFromSqsQueue(ct, queueName, region).ConfigureAwait(false);
+                    var messageCount = sqsMessageResponse.Messages.Count;
+
+                    _log.LogTrace(
+                        $"Polled for messages - Queue: {queueName}, Region: {region}, MessageCount: {messageCount}");
+                }
+                catch (InvalidOperationException ex)
+                {
+                    _log.LogTrace(
+                        $"Could not determine number of messages to read from [{queueName}], region: [{region}]. Ex: {ex}");
+                }
+                catch (OperationCanceledException ex)
+                {
+                    _log.LogTrace($"Suspected no message in queue [{queueName}], region: [{region}]. Ex: {ex}");
+                }
+                catch (Exception ex)
+                {
+                    _log.LogError(0, ex, $"Issue receiving messages for queue {queueName}, region {region}");
+                }
+
+                try
+                {
+                    if (sqsMessageResponse != null)
                     {
-                        HandleMessage(message);
+                        foreach (var message in sqsMessageResponse.Messages)
+                        {
+                            HandleMessage(message);
+                        }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                var msg = $"Issue in message handling loop for queue {queueName}, region {region}";
-                _log.LogError(0, ex, msg);
-            }
+                catch (Exception ex)
+                {
+                    _log.LogError(0, ex, $"Issue in message handling loop for queue {queueName}, region {region}");
+                }
+
+            } while (!ct.IsCancellationRequested);
         }
 
         private async Task<ReceiveMessageResponse> GetMessagesFromSqsQueue(CancellationToken ct, string queueName, string region)
