@@ -141,7 +141,7 @@ namespace JustSaying.AwsTools.MessageHandling
             var region = _queue.Region.SystemName;
             ReceiveMessageResponse sqsMessageResponse = null;
 
-            while(!ct.IsCancellationRequested)
+            while (!ct.IsCancellationRequested)
             {
                 try
                 {
