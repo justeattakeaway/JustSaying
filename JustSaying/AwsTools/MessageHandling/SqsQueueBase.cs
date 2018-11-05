@@ -149,7 +149,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return true;
         }
 
-        private RedrivePolicy ExtractRedrivePolicyFromQueueAttributes(Dictionary<string, string> queueAttributes)
+        private static RedrivePolicy ExtractRedrivePolicyFromQueueAttributes(Dictionary<string, string> queueAttributes)
         {
             if (!queueAttributes.ContainsKey(JustSayingConstants.AttributeRedrivePolicy))
             {

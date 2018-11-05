@@ -75,7 +75,7 @@ namespace JustSaying.AwsTools.QueueCreation
             return queue;
         }
 
-        async Task SubscribeQueueAndApplyFilterPolicyAsync(
+        private static async Task SubscribeQueueAndApplyFilterPolicyAsync(
             IAmazonSimpleNotificationService amazonSimpleNotificationService,
             string topicArn, IAmazonSQS amazonSQS, Uri queueUrl, string filterPolicy)
         {
