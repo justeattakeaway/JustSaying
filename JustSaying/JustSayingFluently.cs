@@ -179,11 +179,6 @@ namespace JustSaying
             await Bus.PublishAsync(message, cancellationToken).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// States whether the stack is listening for messages (subscriptions are running)
-        /// </summary>
-        public bool Listening => Bus?.Listening == true;
-
         public IMayWantOptionalSettings WithSerialisationFactory(IMessageSerialisationFactory factory)
         {
             _serialisationFactory = factory;

@@ -66,7 +66,6 @@ namespace JustSaying
         ISubscriberIntoQueue WithSqsTopicSubscriber(string topicName = null);
         ISubscriberIntoQueue WithSqsPointToPointSubscriber();
         void StartListening(CancellationToken cancellationToken = default);
-        bool Listening { get; }
     }
 
     public interface IFluentSubscription

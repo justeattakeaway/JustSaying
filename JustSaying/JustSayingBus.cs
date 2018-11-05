@@ -17,8 +17,6 @@ namespace JustSaying
 {
     public sealed class JustSayingBus : IAmJustSaying, IAmJustInterrogating
     {
-        public bool Listening { get; private set; }
-
         private readonly Dictionary<string, Dictionary<string, INotificationSubscriber>> _subscribersByRegionAndQueue;
         private readonly Dictionary<string, Dictionary<string, IMessagePublisher>> _publishersByRegionAndTopic;
         public IMessagingConfig Config { get; private set; }
@@ -33,6 +31,7 @@ namespace JustSaying
         public IMessageLockAsync MessageLock { get; set; }
 
         private ILogger _log;
+        private bool _subscribersAreListening;
 
         private readonly object _syncRoot = new object();
         private readonly ICollection<IPublisher> _publishers;
@@ -117,7 +116,7 @@ namespace JustSaying
         {
             lock (_syncRoot)
             {
-                if (Listening)
+                if (_subscribersAreListening)
                 {
                     return;
                 }
@@ -130,7 +129,7 @@ namespace JustSaying
                     }
                 }
 
-                Listening = true;
+                _subscribersAreListening = true;
             }
         }
 
