@@ -129,6 +129,7 @@ namespace JustSaying
                     }
                 }
 
+                cancellationToken.Register(() => _subscribersAreListening = false);
                 _subscribersAreListening = true;
             }
         }
