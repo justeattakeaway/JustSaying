@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
@@ -8,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying
 {
-    public interface IAmJustSaying : IMessagePublisher, IDisposable
+    public interface IAmJustSaying : IMessagePublisher
     {
         bool Listening { get; }
         void AddNotificationSubscriber(string region, INotificationSubscriber subscriber);
@@ -16,8 +17,7 @@ namespace JustSaying
 
         // TODO - swap params
         void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message;
-        void Start();
-        void Stop();
+        void Start(CancellationToken cancellationToken = default);
         IMessagingConfig Config { get; }
         IMessageMonitor Monitor { get; set; }
         IMessageSerialisationRegister SerialisationRegister { get; }

@@ -85,7 +85,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _handlerMap.Add(typeof(T), handlerFunc);
         }
 
-        public void Listen(CancellationToken cancellationToken)
+        public void Listen(CancellationToken cancellationToken = default)
         {
             var queue = _queue.QueueName;
             var region = _queue.Region.SystemName;
@@ -141,7 +141,7 @@ namespace JustSaying.AwsTools.MessageHandling
             var region = _queue.Region.SystemName;
             ReceiveMessageResponse sqsMessageResponse = null;
 
-            do
+            while(!ct.IsCancellationRequested)
             {
                 try
                 {
@@ -180,7 +180,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     _log.LogError(0, ex, $"Issue in message handling loop for queue {queueName}, region {region}");
                 }
 
-            } while (!ct.IsCancellationRequested);
+            }
         }
 
         private async Task<ReceiveMessageResponse> GetMessagesFromSqsQueue(CancellationToken ct, string queueName, string region)

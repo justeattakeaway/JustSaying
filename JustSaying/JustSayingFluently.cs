@@ -23,7 +23,7 @@ namespace JustSaying
     /// 3. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc // ToDo: Shouldn't be enforced in base! Is a JE concern.
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings, IMayWantARegionPicker, IAmJustInterrogating, IDisposable
+    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings, IMayWantARegionPicker, IAmJustInterrogating
     {
         private readonly ILogger _log;
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
@@ -152,19 +152,10 @@ namespace JustSaying
         /// <summary>
         /// I'm done setting up. Fire up listening on this baby...
         /// </summary>
-        public void StartListening()
+        public void StartListening(CancellationToken cancellationToken = default)
         {
-            Bus.Start();
+            Bus.Start(cancellationToken);
             _log.LogInformation("Started listening for messages");
-        }
-
-        /// <summary>
-        /// Gor graceful shutdown of all listening threads
-        /// </summary>
-        public void StopListening()
-        {
-            Bus.Stop();
-            _log.LogInformation("Stopped listening for messages");
         }
 
         /// <summary>
@@ -391,8 +382,7 @@ namespace JustSaying
 
         public IInterrogationResponse WhatDoIHave()
         {
-            var iterrogationBus = Bus as IAmJustInterrogating;
-            return iterrogationBus.WhatDoIHave();
+            return (Bus as IAmJustInterrogating)?.WhatDoIHave();
         }
 
         public IMayWantOptionalSettings WithNamingStrategy(Func<INamingStrategy> busNamingStrategy)
@@ -405,12 +395,6 @@ namespace JustSaying
         {
             _awsClientFactoryProxy.SetAwsClientFactory(awsClientFactory);
             return this;
-        }
-
-        public void Dispose()
-        {
-            Bus?.Dispose();
-            _loggerFactory?.Dispose();
         }
     }
 }

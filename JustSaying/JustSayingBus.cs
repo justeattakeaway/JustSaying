@@ -33,13 +33,10 @@ namespace JustSaying
         public IMessageLockAsync MessageLock { get; set; }
 
         private ILogger _log;
-        private bool _disposed;
 
         private readonly object _syncRoot = new object();
         private readonly ICollection<IPublisher> _publishers;
         private readonly ICollection<ISubscriber> _subscribers;
-
-        private CancellationTokenSource _subscriberCancellationTokenSource;
 
         public JustSayingBus(IMessagingConfig config, IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory)
         {
@@ -116,7 +113,7 @@ namespace JustSaying
             publishersByTopic[topic] = messagePublisher;
         }
 
-        public void Start()
+        public void Start(CancellationToken cancellationToken = default)
         {
             lock (_syncRoot)
             {
@@ -125,32 +122,15 @@ namespace JustSaying
                     return;
                 }
 
-                _subscriberCancellationTokenSource = new CancellationTokenSource();
-
                 foreach (var regionSubscriber in _subscribersByRegionAndQueue)
                 {
                     foreach (var queueSubscriber in regionSubscriber.Value)
                     {
-                        queueSubscriber.Value.Listen(_subscriberCancellationTokenSource.Token);
+                        queueSubscriber.Value.Listen(cancellationToken);
                     }
                 }
 
                 Listening = true;
-            }
-        }
-
-        public void Stop()
-        {
-            lock (_syncRoot)
-            {
-                if (!Listening)
-                {
-                    return;
-                }
-
-                _subscriberCancellationTokenSource.Cancel();
-
-                Listening = false;
             }
         }
 
@@ -165,18 +145,6 @@ namespace JustSaying
         public IInterrogationResponse WhatDoIHave()
         {
             return new InterrogationResponse(Config.Regions, _subscribers, _publishers);
-        }
-
-        public void Dispose()
-        {
-            if (_disposed)
-            {
-                return;
-            }
-
-            _subscriberCancellationTokenSource?.Dispose();
-
-            _disposed = true;
         }
 
         private IMessagePublisher GetActivePublisherForMessage(Message message)
