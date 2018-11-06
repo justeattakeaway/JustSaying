@@ -85,16 +85,15 @@ namespace JustSaying.AwsTools.MessageHandling
             _handlerMap.Add(typeof(T), handlerFunc);
         }
 
-        public void Listen(CancellationToken cancellationToken = default)
+        public void Listen(CancellationToken cancellationToken)
         {
             var queue = _queue.QueueName;
             var region = _queue.Region.SystemName;
             var queueInfo = $"Queue: {queue}, Region: {region}";
 
-            Task.Factory.StartNew(async () => { await ListenLoop(cancellationToken).ConfigureAwait(false); },
-                    cancellationToken)
+            Task.Factory.StartNew(async () => { await ListenLoop(cancellationToken).ConfigureAwait(false); })
                 .Unwrap()
-                .ContinueWith(t => LogTaskEndState(t, queueInfo, _log), cancellationToken);
+                .ContinueWith(t => LogTaskEndState(t, queueInfo, _log));
 
             _log.LogInformation($"Starting Listening - {queueInfo}");
         }
