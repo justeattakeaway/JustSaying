@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
@@ -24,7 +23,7 @@ namespace JustSaying
         public int PublishFailureBackoffMilliseconds { get; set; }
         public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
         public IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
-        public IList<string> Regions { get; private set; }
+        public IList<string> Regions { get; }
         public Func<string> GetActiveRegion { get; set; }
         public IMessageSubjectProvider MessageSubjectProvider { get; set; }
 
@@ -32,17 +31,22 @@ namespace JustSaying
         {
             if (!Regions.Any() || string.IsNullOrWhiteSpace(Regions.First()))
             {
-                throw new ArgumentNullException("config.Regions", "Cannot have a blank entry for config.Regions");
+                throw new InvalidOperationException("Cannot have a blank entry for config.Regions");
             }
 
-            var duplicateRegion = Regions.GroupBy(x => x).FirstOrDefault(y => y.Count() > 1);
+            var duplicateRegion = Regions
+                .GroupBy(x => x)
+                .FirstOrDefault(y => y.Count() > 1);
+
             if (duplicateRegion != null)
             {
-                throw new ArgumentException($"Region {duplicateRegion.Key} was added multiple times");
+                throw new InvalidOperationException($"Region {duplicateRegion.Key} was added multiple times");
             }
 
             if (MessageSubjectProvider == null)
-                throw new ArgumentNullException("config.MessageSubjectProvider");
+            {
+                throw new InvalidOperationException("config.MessageSubjectProvider cannot be null");
+            }
         }
     }
 }
