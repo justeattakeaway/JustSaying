@@ -21,21 +21,24 @@ namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
         protected override Task When()
         {
             CreateMeABus
-                .WithLogging(new LoggerFactory()).InRegion(null)
+                .WithLogging(new LoggerFactory())
+                .InRegion(null)
                 .ConfigurePublisherWith(configuration => { });
+
             return Task.CompletedTask;
         }
 
         [Fact]
         public void ConfigItemsAreRequired()
         {
-            ThrownException.ShouldBeAssignableTo<ArgumentNullException>();
+            ThrownException.ShouldNotBeNull();
+            ThrownException.ShouldBeAssignableTo<InvalidOperationException>();
         }
 
         [Fact]
         public void RegionIsRequested()
         {
-            ((ArgumentException)ThrownException).ParamName.ShouldBe("config.Regions");
+            ThrownException.Message.ShouldBe("Config cannot have a blank entry for the Regions property.");
         }
     }
 }
