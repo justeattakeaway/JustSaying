@@ -29,9 +29,14 @@ namespace JustSaying
 
         public virtual void Validate()
         {
-            if (!Regions.Any() || string.IsNullOrWhiteSpace(Regions.First()))
+            if (!Regions.Any())
             {
-                throw new InvalidOperationException("Cannot have a blank entry for config.Regions");
+                throw new InvalidOperationException($"Config needs values for the {nameof(Regions)} property.");
+            }
+
+            if (string.IsNullOrWhiteSpace(Regions.First()))
+            {
+                throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(Regions)} property.");
             }
 
             var duplicateRegion = Regions
@@ -40,12 +45,12 @@ namespace JustSaying
 
             if (duplicateRegion != null)
             {
-                throw new InvalidOperationException($"Region {duplicateRegion.Key} was added multiple times");
+                throw new InvalidOperationException($"Config has a duplicate in {nameof(Regions)} for '{duplicateRegion.Key}'.");
             }
 
             if (MessageSubjectProvider == null)
             {
-                throw new InvalidOperationException("config.MessageSubjectProvider cannot be null");
+                throw new InvalidOperationException($"Config cannot have a null for the {nameof(MessageSubjectProvider)} property.");
             }
         }
     }
