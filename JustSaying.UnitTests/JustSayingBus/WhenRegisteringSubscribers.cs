@@ -42,22 +42,16 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public void SubscribersStartedUp()
         {
-            _subscriber1.Received().Listen();
-            _subscriber2.Received().Listen();
-        }
-
-        [Fact]
-        public void StateIsListening()
-        {
-            SystemUnderTest.Listening.ShouldBeTrue();
+            _subscriber1.Received().Listen(default);
+            _subscriber2.Received().Listen(default);
         }
 
         [Fact]
         public void CallingStartTwiceDoesNotStartListeningTwice()
         {
             SystemUnderTest.Start();
-            _subscriber1.Received(1).Listen();
-            _subscriber2.Received(1).Listen();
+            _subscriber1.Received(1).Listen(default);
+            _subscriber2.Received(1).Listen(default);
         }
 
         [Fact]

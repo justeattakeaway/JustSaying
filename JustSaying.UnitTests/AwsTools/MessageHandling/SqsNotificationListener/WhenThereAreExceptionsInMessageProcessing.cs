@@ -20,16 +20,16 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
     public class WhenThereAreExceptionsInMessageProcessing : XAsyncBehaviourTest<JustSaying.AwsTools.MessageHandling.SqsNotificationListener>
     {
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
-        private readonly IMessageSerialisationRegister _serialisationRegister = 
+        private readonly IMessageSerialisationRegister _serialisationRegister =
             Substitute.For<IMessageSerialisationRegister>();
-        
+
         private int _callCount;
 
         protected override JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
             return new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
-                new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri("http://foo.com"), _sqs), 
-                _serialisationRegister, 
+                new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri("http://foo.com"), _sqs),
+                _serialisationRegister,
                 Substitute.For<IMessageMonitor>(),
                 Substitute.For<ILoggerFactory>());
         }
@@ -52,9 +52,10 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 
         protected override async Task When()
         {
-            SystemUnderTest.Listen();
+            var cts = new CancellationTokenSource();
+            SystemUnderTest.Listen(cts.Token);
             await Task.Delay(100);
-            SystemUnderTest.StopListening();
+            cts.Cancel();
             await Task.Yield();
         }
 

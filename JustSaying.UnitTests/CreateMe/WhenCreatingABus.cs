@@ -23,7 +23,7 @@ namespace JustSaying.UnitTests.CreateMe
         public void PublishConfigurationIsOptional()
         {
             // Enforced by the fact we can do other configurations on the bus.
-            CreateMeABus.WithLogging(new LoggerFactory()).InRegion(_region).StopListening();
+            CreateMeABus.WithLogging(new LoggerFactory()).InRegion(_region);
         }
 
         [Fact]
@@ -42,7 +42,7 @@ namespace JustSaying.UnitTests.CreateMe
         public void MonitoringIsNotEnforced()
         {
             // Enforced by the fact we can do other configurations on the bus.
-            CreateMeABus.WithLogging(new LoggerFactory()).InRegion(_region).ConfigurePublisherWith(_config).StopListening();
+            CreateMeABus.WithLogging(new LoggerFactory()).InRegion(_region).ConfigurePublisherWith(_config);
         }
 
         [Fact]
@@ -55,7 +55,7 @@ namespace JustSaying.UnitTests.CreateMe
         public void CustomSerialisationIsNotEnforced()
         {
             // Enforced by the fact we can do other configurations on the bus.
-            CreateMeABus.WithLogging(new LoggerFactory()).InRegion(_region).WithSerialisationFactory(null).StopListening();
+            CreateMeABus.WithLogging(new LoggerFactory()).InRegion(_region).WithSerialisationFactory(null);
         }
     }
 }

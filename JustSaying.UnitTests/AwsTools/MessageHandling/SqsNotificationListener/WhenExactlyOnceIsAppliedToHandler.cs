@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
@@ -36,11 +37,12 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         protected override async Task When()
         {
             SystemUnderTest.AddMessageHandler(() => Handler);
-            SystemUnderTest.Listen();
+            var cts = new CancellationTokenSource();
+            SystemUnderTest.Listen(cts.Token);
 
             // wait until it's done
             await Tasks.WaitWithTimeoutAsync(_tcs.Task);
-            SystemUnderTest.StopListening();
+            cts.Cancel();
             await Task.Yield();
         }
 

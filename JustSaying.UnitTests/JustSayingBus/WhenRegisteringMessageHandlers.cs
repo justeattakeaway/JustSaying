@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
@@ -16,7 +17,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         private string _region;
         private Func<IHandlerAsync<Message>> _futureHandler1;
         private Func<IHandlerAsync<Message2>> _futureHandler2;
-        
+
         protected override void Given()
         {
             base.Given();
@@ -53,7 +54,7 @@ namespace JustSaying.UnitTests.JustSayingBus
                 {
                     _subscriber.AddMessageHandler(Arg.Any<Func<IHandlerAsync<Message>>>());
                     _subscriber.AddMessageHandler(Arg.Any<Func<IHandlerAsync<Message2>>>());
-                    _subscriber.Listen();
+                    _subscriber.Listen(default);
                 });
         }
 

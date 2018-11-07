@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
@@ -26,7 +27,9 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
         private readonly Func<string> _getActiveRegion = () => _activeRegion;
 
         private IHaveFulfilledSubscriptionRequirements _primaryBus;
+        private CancellationTokenSource _primaryBusCts;
         private IHaveFulfilledSubscriptionRequirements _secondaryBus;
+        private CancellationTokenSource _secondaryBusCts;
 
         public WhenAFailoverRegionIsSetup(ITestOutputHelper outputHelper)
         {
@@ -51,8 +54,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
             await AndAMessageIsPublished();
             await ThenTheMessageIsReceivedInThatRegion(_secondaryHandler, SecondaryRegion);
 
-            _primaryBus.StopListening();
-            _secondaryBus.StopListening();
+            _primaryBusCts.Cancel();
+            _secondaryBusCts.Cancel();
         }
 
         private void GivenSubscriptionsToAQueueInTwoRegions()
@@ -70,7 +73,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
                 .IntoQueue(QueueName)
                 .WithMessageHandler(primaryHandler);
 
-            _primaryBus.StartListening();
+            _primaryBusCts = new CancellationTokenSource();
+            _primaryBus.StartListening(_primaryBusCts.Token);
 
             var secondaryHandler = Substitute.For<IHandlerAsync<SimpleMessage>>();
             secondaryHandler.Handle(Arg.Any<SimpleMessage>()).Returns(true);
@@ -85,7 +89,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
                 .IntoQueue(QueueName)
                 .WithMessageHandler(secondaryHandler);
 
-            _secondaryBus.StartListening();
+            _secondaryBusCts = new CancellationTokenSource();
+            _secondaryBus.StartListening(_secondaryBusCts.Token);
         }
 
         private void AndAPublisherWithAFailoverRegion()

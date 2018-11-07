@@ -27,7 +27,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly MessageHandlerWrapper _messageHandlerWrapper;
         private IMessageProcessingStrategy _messageProcessingStrategy;
         private readonly HandlerMap _handlerMap = new HandlerMap();
-        
+
         private readonly ILogger _log;
 
         public SqsNotificationListener(

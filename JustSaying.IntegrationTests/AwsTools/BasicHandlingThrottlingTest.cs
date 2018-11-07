@@ -100,7 +100,8 @@ namespace JustSaying.IntegrationTests.AwsTools
             // Act
             var stopwatch = Stopwatch.StartNew();
 
-            listener.Listen();
+            var listenerCts = new CancellationTokenSource();
+            listener.Listen(listenerCts.Token);
 
             using (var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5)))
             {
@@ -116,7 +117,7 @@ namespace JustSaying.IntegrationTests.AwsTools
                 while (handleCount < throttleMessageCount && !cts.IsCancellationRequested);
             }
 
-            listener.StopListening();
+            listenerCts.Cancel();
             stopwatch.Stop();
 
             OutputHelper.WriteLine($"{DateTime.Now} - Handled {handleCount:N0} messages.");
