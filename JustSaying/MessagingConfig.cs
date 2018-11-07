@@ -34,18 +34,21 @@ namespace JustSaying
                 throw new InvalidOperationException($"Config needs values for the {nameof(Regions)} property.");
             }
 
-            if (string.IsNullOrWhiteSpace(Regions.First()))
+            if (Regions.Any(string.IsNullOrWhiteSpace))
             {
                 throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(Regions)} property.");
             }
 
-            var duplicateRegion = Regions
+            var duplicateRegions = Regions
                 .GroupBy(x => x)
-                .FirstOrDefault(y => y.Count() > 1);
+                .Where(y => y.Count() > 1)
+                .Select(r => r.Key)
+                .ToList();
 
-            if (duplicateRegion != null)
+            if (duplicateRegions.Count > 0)
             {
-                throw new InvalidOperationException($"Config has a duplicate in {nameof(Regions)} for '{duplicateRegion.Key}'.");
+                var regionsText = string.Join(",", duplicateRegions);
+                throw new InvalidOperationException($"Config has duplicates in {nameof(Regions)} for '{regionsText}'.");
             }
 
             if (MessageSubjectProvider == null)
