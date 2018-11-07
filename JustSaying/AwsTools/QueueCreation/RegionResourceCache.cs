@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace JustSaying.AwsTools.QueueCreation
 {
-    public sealed class RegionResourceCache<T> : IRegionResourceCache<T>
+    public sealed class RegionResourceCache<T>
     {
         private readonly Dictionary<string, Dictionary<string, T>> _regionsData
             = new Dictionary<string, Dictionary<string, T>>();

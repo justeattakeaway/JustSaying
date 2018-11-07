@@ -13,7 +13,7 @@ namespace JustSaying.AwsTools.QueueCreation
     {
         private readonly IAwsClientFactoryProxy _awsClientFactory;
         private readonly ILoggerFactory _loggerFactory;
-        private readonly IRegionResourceCache<SqsQueueByName> _queueCache = new RegionResourceCache<SqsQueueByName>();
+        private readonly RegionResourceCache<SqsQueueByName> _queueCache = new RegionResourceCache<SqsQueueByName>();
         private readonly ILogger _log;
 
         private const string EmptyFilterPolicy = "{}";
