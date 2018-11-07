@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Shouldly;
@@ -6,7 +5,7 @@ using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
 {
-    public class WhenNoRegionIsProvided : JustSayingFluentlyTestBase
+    public class WhenConfigIsValid : JustSayingFluentlyTestBase
     {
         protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
@@ -22,23 +21,16 @@ namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
         {
             CreateMeABus
                 .WithLogging(new LoggerFactory())
-                .InRegion(null)
+                .InRegion("eu-west-1")
                 .ConfigurePublisherWith(configuration => { });
 
             return Task.CompletedTask;
         }
 
         [Fact]
-        public void ConfigItemsAreRequired()
+        public void NoExceptionIsThrownByConfig()
         {
-            ThrownException.ShouldNotBeNull();
-            ThrownException.ShouldBeAssignableTo<InvalidOperationException>();
-        }
-
-        [Fact]
-        public void RegionIsRequested()
-        {
-            ThrownException.Message.ShouldBe("Config cannot have a blank entry for the Regions property.");
+            ThrownException.ShouldBeNull();
         }
     }
 }

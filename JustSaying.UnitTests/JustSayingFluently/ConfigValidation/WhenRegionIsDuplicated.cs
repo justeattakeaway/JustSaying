@@ -6,7 +6,7 @@ using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
 {
-    public class WhenNoRegionIsProvided : JustSayingFluentlyTestBase
+    public class WhenRegionIsDuplicated : JustSayingFluentlyTestBase
     {
         protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
@@ -22,23 +22,23 @@ namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
         {
             CreateMeABus
                 .WithLogging(new LoggerFactory())
-                .InRegion(null)
+                .InRegions("dup1", "andalso2", "uniq", "andalso2", "dup1")
                 .ConfigurePublisherWith(configuration => { });
 
             return Task.CompletedTask;
         }
 
         [Fact]
-        public void ConfigItemsAreRequired()
+        public void DuplicateRegionsAreRejectedWithException()
         {
             ThrownException.ShouldNotBeNull();
             ThrownException.ShouldBeAssignableTo<InvalidOperationException>();
         }
 
         [Fact]
-        public void RegionIsRequested()
+        public void ExceptionMessageListsDuplicateRegions()
         {
-            ThrownException.Message.ShouldBe("Config cannot have a blank entry for the Regions property.");
+            ThrownException.Message.ShouldBe("Config has duplicates in Regions for 'dup1,andalso2'.");
         }
     }
 }

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
@@ -24,25 +23,38 @@ namespace JustSaying
         public int PublishFailureBackoffMilliseconds { get; set; }
         public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
         public IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
-        public IList<string> Regions { get; private set; }
+        public IList<string> Regions { get; }
         public Func<string> GetActiveRegion { get; set; }
         public IMessageSubjectProvider MessageSubjectProvider { get; set; }
 
         public virtual void Validate()
         {
-            if (!Regions.Any() || string.IsNullOrWhiteSpace(Regions.First()))
+            if (!Regions.Any())
             {
-                throw new ArgumentNullException("config.Regions", "Cannot have a blank entry for config.Regions");
+                throw new InvalidOperationException($"Config needs values for the {nameof(Regions)} property.");
             }
 
-            var duplicateRegion = Regions.GroupBy(x => x).FirstOrDefault(y => y.Count() > 1);
-            if (duplicateRegion != null)
+            if (Regions.Any(string.IsNullOrWhiteSpace))
             {
-                throw new ArgumentException($"Region {duplicateRegion.Key} was added multiple times");
+                throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(Regions)} property.");
+            }
+
+            var duplicateRegions = Regions
+                .GroupBy(x => x)
+                .Where(y => y.Count() > 1)
+                .Select(r => r.Key)
+                .ToList();
+
+            if (duplicateRegions.Count > 0)
+            {
+                var regionsText = string.Join(",", duplicateRegions);
+                throw new InvalidOperationException($"Config has duplicates in {nameof(Regions)} for '{regionsText}'.");
             }
 
             if (MessageSubjectProvider == null)
-                throw new ArgumentNullException("config.MessageSubjectProvider");
+            {
+                throw new InvalidOperationException($"Config cannot have a null for the {nameof(MessageSubjectProvider)} property.");
+            }
         }
     }
 }
