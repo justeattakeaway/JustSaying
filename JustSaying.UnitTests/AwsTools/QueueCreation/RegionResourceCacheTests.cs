@@ -16,6 +16,17 @@ namespace JustSaying.UnitTests.AwsTools.QueueCreation
         }
 
         [Fact]
+        public void KeysAreCaseInsensitive()
+        {
+            var cache = new RegionResourceCache<string>();
+            cache.AddToCache("eu-west1", "testKey", "42");
+
+            var value = cache.TryGetFromCache("EU-West1", "TESTKEY");
+
+            value.ShouldBe("42");
+        }
+
+        [Fact]
         public void CanRetrieveValueByRegionAndKey()
         {
             var cache = new RegionResourceCache<string>();
