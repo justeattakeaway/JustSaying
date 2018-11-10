@@ -200,6 +200,29 @@ Here's a snippet of the expected configuration:
 JustSaying supports error queues and this option is enabled by default. When a handler is unable to handle a message, JustSaying will attempt to re-deliver the message up to 5 times (Handler retry count is configurable) and if the handler is still unable to handle the message then the message will be moved to an error queue.
 You can opt out during subscription configuration.
 
+## IAM Requirements
+
+JustSaying requires the following IAM actions to run smoothly;
+
+```text
+// SNS
+sns:CreateTopic
+sns:ListSubscriptionsByTopic
+sns:ListTopics
+sns:SetSubscriptionAttributes
+sns:Subscribe
+
+// SQS
+sqs:ChangeMessageVisibility
+sqs:CreateQueue
+sqs:DeleteMessage
+sqs:GetQueueAttributes
+sqs:GetQueueUrl
+sqs:ListQueues
+sqs:ReceiveMessage
+sqs:SetQueueAttributes
+```
+
 ## Power tool
 
 JustSaying comes with a power tool console app that helps you mange your SQS queues from the command line.
