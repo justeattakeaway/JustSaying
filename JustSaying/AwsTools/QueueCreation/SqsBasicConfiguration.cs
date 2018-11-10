@@ -27,21 +27,21 @@ namespace JustSaying.AwsTools.QueueCreation
                 MessageRetention > JustSayingConstants.MaximumRetentionPeriod)
             {
                 throw new ConfigurationErrorsException(
-                    $"Invalid configuration. MessageRetention must be between {JustSayingConstants.MinimumRetentionPeriod} and {JustSayingConstants.MaximumRetentionPeriod}.");
+                    $"Invalid configuration. {nameof(MessageRetention)} must be between {JustSayingConstants.MinimumRetentionPeriod} and {JustSayingConstants.MaximumRetentionPeriod}.");
             }
 
             if (ErrorQueueRetentionPeriod < JustSayingConstants.MinimumRetentionPeriod ||
                 ErrorQueueRetentionPeriod > JustSayingConstants.MaximumRetentionPeriod)
             {
                 throw new ConfigurationErrorsException(
-                    $"Invalid configuration. ErrorQueueRetentionPeriod must be between {JustSayingConstants.MinimumRetentionPeriod} and {JustSayingConstants.MaximumRetentionPeriod}.");
+                    $"Invalid configuration. {nameof(ErrorQueueRetentionPeriod)} must be between {JustSayingConstants.MinimumRetentionPeriod} and {JustSayingConstants.MaximumRetentionPeriod}.");
             }
 
             if (DeliveryDelaySeconds < JustSayingConstants.MinimumDeliveryDelay ||
                 DeliveryDelaySeconds > JustSayingConstants.MaximumDeliveryDelay)
             {
                 throw new ConfigurationErrorsException(
-                    $"Invalid configuration. DeliveryDelaySeconds must be between {JustSayingConstants.MinimumDeliveryDelay} and {JustSayingConstants.MaximumDeliveryDelay}.");
+                    $"Invalid configuration. {nameof(DeliveryDelaySeconds)} must be between {JustSayingConstants.MinimumDeliveryDelay} and {JustSayingConstants.MaximumDeliveryDelay}.");
             }
         }
     }
