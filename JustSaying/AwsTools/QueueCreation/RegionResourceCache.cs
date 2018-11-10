@@ -1,32 +1,29 @@
-using System.Collections.Generic;
+using System;
+using System.Collections.Concurrent;
 
 namespace JustSaying.AwsTools.QueueCreation
 {
-    public class RegionResourceCache<T> : Dictionary<string, Dictionary<string, T>>, IRegionResourceCache<T>
+    public sealed class RegionResourceCache<T>
     {
+        private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, T>> _regionsData
+            = new ConcurrentDictionary<string, ConcurrentDictionary<string, T>>(StringComparer.OrdinalIgnoreCase);
+
         public T TryGetFromCache(string region, string key)
         {
-            if (! ContainsKey(region))
+            if (_regionsData.TryGetValue(region, out var regionDict)
+                && regionDict.TryGetValue(key, out var value))
             {
-                return default(T);
+                return value;
             }
 
-            var regionDict = this[region];
-            if (! regionDict.ContainsKey(key))
-            {
-                return default(T);
-            }
-
-            return regionDict[key];
+            return default;
         }
 
         public void AddToCache(string region, string key, T value)
         {
-            if (!ContainsKey(region))
-            {
-                this[region] = new Dictionary<string, T>();
-            }
-            var regionDict = this[region];
+            var regionDict = _regionsData.GetOrAdd(region,
+                r => new ConcurrentDictionary<string, T>(StringComparer.OrdinalIgnoreCase));
+
             regionDict[key] = value;
         }
     }

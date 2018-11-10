@@ -13,8 +13,7 @@ namespace JustSaying.AwsTools.QueueCreation
     {
         private readonly IAwsClientFactoryProxy _awsClientFactory;
         private readonly ILoggerFactory _loggerFactory;
-        private readonly IRegionResourceCache<SqsQueueByName> _queueCache = new RegionResourceCache<SqsQueueByName>();
-        private readonly ILogger _log;
+        private readonly RegionResourceCache<SqsQueueByName> _queueCache = new RegionResourceCache<SqsQueueByName>();
 
         private const string EmptyFilterPolicy = "{}";
 
@@ -22,7 +21,6 @@ namespace JustSaying.AwsTools.QueueCreation
         {
             _awsClientFactory = awsClientFactory;
             _loggerFactory = loggerFactory;
-            _log = loggerFactory.CreateLogger("JustSaying");
         }
 
         public async Task<SqsQueueByName> EnsureTopicExistsWithQueueSubscribedAsync(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig, IMessageSubjectProvider messageSubjectProvider)
