@@ -93,7 +93,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 var attributes = new Dictionary<string, string>
                 {
-                    {JustSayingConstants.AttributeRetentionPeriod, queueConfig.MessageRetention.TotalSeconds.ToString(CultureInfo.InvariantCulture) },
+                    {JustSayingConstants.AttributeRetentionPeriod, queueConfig.MessageRetention.TotalSeconds.ToString("F0", CultureInfo.InvariantCulture) },
                     {JustSayingConstants.AttributeVisibilityTimeout, queueConfig.VisibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture) },
                     {JustSayingConstants.AttributeDeliveryDelay, queueConfig.DeliveryDelaySeconds.ToString(CultureInfo.InvariantCulture) }
                 };

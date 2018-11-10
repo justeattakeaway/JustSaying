@@ -117,7 +117,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             var policy = new Dictionary<string, string>
             {
-                { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD ,queueConfig.MessageRetention.TotalSeconds.ToString(CultureInfo.InvariantCulture)},
+                { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD ,queueConfig.MessageRetention.TotalSeconds.ToString("F0", CultureInfo.InvariantCulture)},
                 { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , queueConfig.VisibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture)},
                 { SQSConstants.ATTRIBUTE_DELAY_SECONDS  , queueConfig.DeliveryDelaySeconds.ToString(CultureInfo.InvariantCulture)},
             };

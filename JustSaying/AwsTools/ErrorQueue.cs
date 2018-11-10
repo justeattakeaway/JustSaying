@@ -24,8 +24,8 @@ namespace JustSaying.AwsTools
         {
             return new Dictionary<string, string>
             {
-                { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD , queueConfig.ErrorQueueRetentionPeriod.TotalSeconds.ToString(CultureInfo.InvariantCulture)},
-                { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , JustSayingConstants.DefaultVisibilityTimeout.ToString(CultureInfo.InvariantCulture)},
+                { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD, queueConfig.ErrorQueueRetentionPeriod.TotalSeconds.ToString("F0", CultureInfo.InvariantCulture)},
+                { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT, JustSayingConstants.DefaultVisibilityTimeout.ToString(CultureInfo.InvariantCulture)},
             };
         }
 
@@ -43,7 +43,7 @@ namespace JustSaying.AwsTools
                 {
                     {
                         JustSayingConstants.AttributeRetentionPeriod,
-                        queueConfig.ErrorQueueRetentionPeriod.TotalSeconds.ToString(CultureInfo.InvariantCulture)
+                        queueConfig.ErrorQueueRetentionPeriod.TotalSeconds.ToString("F0", CultureInfo.InvariantCulture)
                     }
                 }
             };
