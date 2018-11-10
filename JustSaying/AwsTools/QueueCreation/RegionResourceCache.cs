@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace JustSaying.AwsTools.QueueCreation
 {
@@ -9,12 +10,10 @@ namespace JustSaying.AwsTools.QueueCreation
 
         public T TryGetFromCache(string region, string key)
         {
-            if (_regionsData.TryGetValue(region, out var regionDict))
+            if (_regionsData.TryGetValue(region, out var regionDict)
+                && regionDict.TryGetValue(key, out var value))
             {
-                if (regionDict.TryGetValue(key, out var value))
-                {
-                    return value;
-                }
+                return value;
             }
 
             return default;
