@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Collections.Concurrent;
 
 namespace JustSaying.AwsTools.QueueCreation
