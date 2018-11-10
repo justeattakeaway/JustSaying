@@ -49,6 +49,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public void CallingStartTwiceDoesNotStartListeningTwice()
         {
+            _subscriber1.IsListening.Returns(true);
+            _subscriber2.IsListening.Returns(true);
             SystemUnderTest.Start();
             _subscriber1.Received(1).Listen(default);
             _subscriber2.Received(1).Listen(default);
