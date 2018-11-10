@@ -30,6 +30,8 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private readonly ILogger _log;
 
+        public bool IsListening { get; private set; }
+
         public SqsNotificationListener(
             SqsQueueBase queue,
             IMessageSerialisationRegister serialisationRegister,
@@ -95,11 +97,14 @@ namespace JustSaying.AwsTools.MessageHandling
                 .Unwrap()
                 .ContinueWith(t => LogTaskEndState(t, queueInfo, _log));
 
+            IsListening = true;
             _log.LogInformation($"Starting Listening - {queueInfo}");
         }
 
-        private static void LogTaskEndState(Task task, string queueInfo, ILogger log)
+        private void LogTaskEndState(Task task, string queueInfo, ILogger log)
         {
+            IsListening = false;
+
             if (task.IsFaulted)
             {
                 log.LogWarning($"[Faulted] Stopped Listening - {queueInfo}\n{AggregateExceptionDetails(task.Exception)}");

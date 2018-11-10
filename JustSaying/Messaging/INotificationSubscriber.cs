@@ -8,6 +8,7 @@ namespace JustSaying.Messaging
 {
     public interface INotificationSubscriber : INotificationSubscriberInterrogation
     {
+        bool IsListening { get; }
         void AddMessageHandler<T>(Func<IHandlerAsync<T>> handler) where T : Message;
         void Listen(CancellationToken cancellationToken);
         string Queue { get; }

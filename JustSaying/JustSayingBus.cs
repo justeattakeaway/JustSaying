@@ -31,7 +31,6 @@ namespace JustSaying
         public IMessageLockAsync MessageLock { get; set; }
 
         private ILogger _log;
-        private bool _subscribersAreListening;
 
         private readonly object _syncRoot = new object();
         private readonly ICollection<IPublisher> _publishers;
@@ -116,21 +115,18 @@ namespace JustSaying
         {
             lock (_syncRoot)
             {
-                if (_subscribersAreListening)
-                {
-                    return;
-                }
-
                 foreach (var regionSubscriber in _subscribersByRegionAndQueue)
                 {
                     foreach (var queueSubscriber in regionSubscriber.Value)
                     {
+                        if (queueSubscriber.Value.IsListening)
+                        {
+                            continue;
+                        }
+
                         queueSubscriber.Value.Listen(cancellationToken);
                     }
                 }
-
-                cancellationToken.Register(() => _subscribersAreListening = false);
-                _subscribersAreListening = true;
             }
         }
 
