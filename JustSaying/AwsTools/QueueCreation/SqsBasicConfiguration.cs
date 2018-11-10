@@ -27,14 +27,14 @@ namespace JustSaying.AwsTools.QueueCreation
                 MessageRetention > JustSayingConstants.MaximumRetentionPeriod)
             {
                 throw new ConfigurationErrorsException(
-                    $"Invalid configuration. MessageRetentionSeconds must be between {JustSayingConstants.MinimumRetentionPeriod} and {JustSayingConstants.MaximumRetentionPeriod}.");
+                    $"Invalid configuration. MessageRetention must be between {JustSayingConstants.MinimumRetentionPeriod} and {JustSayingConstants.MaximumRetentionPeriod}.");
             }
 
             if (ErrorQueueRetentionPeriod < JustSayingConstants.MinimumRetentionPeriod ||
                 ErrorQueueRetentionPeriod > JustSayingConstants.MaximumRetentionPeriod)
             {
                 throw new ConfigurationErrorsException(
-                    $"Invalid configuration. ErrorQueueRetentionPeriodSeconds must be between {JustSayingConstants.MinimumRetentionPeriod} and {JustSayingConstants.MaximumRetentionPeriod}.");
+                    $"Invalid configuration. ErrorQueueRetentionPeriod must be between {JustSayingConstants.MinimumRetentionPeriod} and {JustSayingConstants.MaximumRetentionPeriod}.");
             }
 
             if (DeliveryDelaySeconds < JustSayingConstants.MinimumDeliveryDelay ||
