@@ -1,6 +1,4 @@
 using System;
-using System.Globalization;
-using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
@@ -30,11 +28,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
         public override Task<bool> ExistsAsync() => Task.FromResult(true);
     }
-    
+
     public class WhenDispatchingMessage : XAsyncBehaviourTest<MessageDispatcher>
     {
         private const string ExpectedQueueUrl = "http://testurl.com/queue";
-        
+
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IMessageMonitor _messageMonitor = Substitute.For<IMessageMonitor>();
         private readonly Action<Exception, SQSMessage> _onError = Substitute.For<Action<Exception, SQSMessage>>();
@@ -43,12 +41,12 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
         private readonly ILogger _logger = Substitute.For<ILogger>();
         private readonly IMessageBackoffStrategy _messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
         private readonly IAmazonSQS _amazonSqsClient = Substitute.For<IAmazonSQS>();
-        
+
         private DummySqsQueue _queue;
         private SQSMessage _sqsMessage;
         private Message _typedMessage;
-        
-        protected override void Given()
+
+        protected override Task Given()
         {
             _typedMessage = new OrderAccepted();
 
@@ -61,20 +59,21 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             _loggerFactory.CreateLogger(Arg.Any<string>()).Returns(_logger);
             _queue = new DummySqsQueue(new Uri(ExpectedQueueUrl), _amazonSqsClient);
             _serialisationRegister.DeserializeMessage(Arg.Any<string>()).Returns(_typedMessage);
+            return Task.CompletedTask;
         }
 
         protected override async Task When() =>  await SystemUnderTest.DispatchMessage(_sqsMessage, CancellationToken.None);
 
-        protected override MessageDispatcher CreateSystemUnderTest()
+        protected override Task<MessageDispatcher> CreateSystemUnderTestAsync()
         {
-            return new MessageDispatcher(_queue, _serialisationRegister, _messageMonitor, _onError, _handlerMap, _loggerFactory, _messageBackoffStrategy);
+            return Task.FromResult(new MessageDispatcher(_queue, _serialisationRegister, _messageMonitor, _onError, _handlerMap, _loggerFactory, _messageBackoffStrategy));
         }
 
         public class AndMessageProcessingSucceeds : WhenDispatchingMessage
         {
-            protected override void Given()
+            protected override async Task Given()
             {
-                base.Given();
+                await base.Given();
                 _handlerMap.Add(typeof(OrderAccepted), m => Task.FromResult(true));
             }
 
@@ -97,12 +96,12 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             private readonly TimeSpan _expectedBackoffTimeSpan = TimeSpan.FromMinutes(4);
             private readonly Exception _expectedException = new Exception("Something failed when processing");
 
-            protected override void Given()
+            protected override async Task Given()
             {
-                base.Given();
+                await base.Given();
                 _messageBackoffStrategy.GetBackoffDuration(_typedMessage, 1, _expectedException).Returns(_expectedBackoffTimeSpan);
                 _handlerMap.Add(typeof(OrderAccepted), m => throw _expectedException);
-                _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString(CultureInfo.InvariantCulture));
+                _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString());
             }
 
             [Fact]
@@ -120,9 +119,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
         public class AndUpdatingMessageVisibilityErrors : WhenDispatchingMessage
         {
-            protected override void Given()
+            protected override async Task Given()
             {
-                base.Given();
+                await base.Given();
                 _messageBackoffStrategy.GetBackoffDuration(_typedMessage, Arg.Any<int>()).Returns(TimeSpan.FromMinutes(4));
                 _amazonSqsClient.ChangeMessageVisibilityAsync(Arg.Any<ChangeMessageVisibilityRequest>()).Throws(new Exception("Something gone wrong"));
 

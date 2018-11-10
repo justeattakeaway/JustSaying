@@ -1,18 +1,23 @@
-using System.Globalization;
-using System.Linq;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using JustSaying.Tools.Commands;
 using Magnum.CommandLineParser;
 using Magnum.Monads.Parser;
 
 namespace JustSaying.Tools
 {
-    public static class CommandParser
+    public class CommandParser
     {
-        public static bool Parse(string commandText)
+        public async Task<bool> ParseAndExecuteAsync(string commandText)
         {
-            return CommandLine
+            bool anyCommandFailure = false;
+            await CommandLine
                 .Parse<ICommand>(commandText, InitializeCommandLineParser)
-                .All(option => option.Execute());
+                .ForEachAsync(async option =>
+                {
+                    anyCommandFailure |= !await option.ExecuteAsync();
+                });
+            return anyCommandFailure;
         }
 
         private static void InitializeCommandLineParser(ICommandLineElementParser<ICommand> x)
@@ -29,8 +34,7 @@ namespace JustSaying.Tools
                     from destinationQueueName in x.Definition("to")
                     from region in x.Definition("in")
                     from count in (from d in x.Definition("count") select d).Optional("count", "1")
-                    select (ICommand) new MoveCommand(sourceQueueName.Value, destinationQueueName.Value, region.Value,
-                        int.Parse(count.Value, CultureInfo.InvariantCulture)))
+                    select (ICommand) new MoveCommand(sourceQueueName.Value, destinationQueueName.Value, region.Value, int.Parse(count.Value)))
                 );
         }
     }

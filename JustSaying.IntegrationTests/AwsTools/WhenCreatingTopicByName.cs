@@ -25,11 +25,9 @@ namespace JustSaying.IntegrationTests.AwsTools
 
         private JustSayingFixture TestFixture { get; } = new JustSayingFixture();
 
-        protected override void Given()
-        {
-        }
+        protected override Task Given() => Task.CompletedTask;
 
-        protected override SnsTopicByName CreateSystemUnderTest()
+        protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
         {
             Client = TestFixture.CreateSnsClient();
 
@@ -40,15 +38,14 @@ namespace JustSaying.IntegrationTests.AwsTools
                 LoggerFactory,
                 new NonGenericMessageSubjectProvider());
 
-            CreatedTopic.CreateAsync().ResultSync();
+            await CreatedTopic.CreateAsync();
 
             return CreatedTopic;
         }
 
-        protected override void PostAssertTeardown()
+        protected override Task PostAssertTeardownAsync()
         {
-            Client.DeleteTopicAsync(CreatedTopic.Arn).ResultSync();
-            base.PostAssertTeardown();
+            return Client.DeleteTopicAsync(CreatedTopic.Arn);
         }
     }
 }

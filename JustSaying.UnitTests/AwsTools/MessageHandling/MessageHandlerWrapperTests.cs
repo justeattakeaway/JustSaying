@@ -30,7 +30,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             var handlerWrapper = new MessageHandlerWrapper(messageLock, new NullOpMessageMonitor());
 
             var mockHandler = Substitute.For<IHandlerAsync<SimpleMessage>>();
-            mockHandler.Handle(Arg.Any<SimpleMessage>()).Returns(Task.FromResult(true));
+            mockHandler.Handle(Arg.Any<SimpleMessage>()).Returns(true);
 
             // act
              var wrapped = handlerWrapper.WrapMessageHandler(() => mockHandler);
@@ -48,7 +48,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             var handlerWrapper = new MessageHandlerWrapper(messageLock, new NullOpMessageMonitor());
 
             var mockHandler = Substitute.For<IHandlerAsync<SimpleMessage>>();
-            mockHandler.Handle(Arg.Any<SimpleMessage>()).Returns(Task.FromResult(true));
+            mockHandler.Handle(Arg.Any<SimpleMessage>()).Returns(true);
 
             var testMessage = new SimpleMessage();
 

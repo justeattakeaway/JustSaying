@@ -15,9 +15,9 @@ namespace JustSaying.UnitTests.JustSayingBus
         private INotificationSubscriber _subscriber1;
         private INotificationSubscriber _subscriber2;
 
-        protected override void Given()
+        protected override async Task Given()
         {
-            base.Given();
+            await base.Given();
             _subscriber1 = Substitute.For<INotificationSubscriber>();
             _subscriber1.Queue.Returns("queue1");
             _subscriber1.Subscribers.Returns(new Collection<ISubscriber>

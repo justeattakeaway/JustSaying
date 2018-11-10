@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Threading.Tasks;
 using JustSaying.AwsTools.QueueCreation;
 using JustBehave;
 using Microsoft.Extensions.Logging;
@@ -12,7 +13,7 @@ namespace JustSaying.UnitTests
         protected IAmJustSaying Bus;
         protected readonly IVerifyAmazonQueues QueueVerifier = Substitute.For<IVerifyAmazonQueues>();
 
-        protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
+        protected override Task<JustSaying.JustSayingFluently> CreateSystemUnderTestAsync()
         {
             if (Configuration == null)
             {
@@ -34,7 +35,7 @@ namespace JustSaying.UnitTests
             ConfigureNotificationStackMock(fns);
             ConfigureAmazonQueueCreator(fns);
 
-            return fns;
+            return Task.FromResult(fns);
         }
 
         // ToDo: Must do better!!

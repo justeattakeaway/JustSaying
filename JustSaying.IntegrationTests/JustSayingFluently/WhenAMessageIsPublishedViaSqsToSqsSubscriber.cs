@@ -11,9 +11,9 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
     {
         private Future<AnotherSimpleMessage> _handler;
 
-        protected override void Given()
+        protected override async Task Given()
         {
-            base.Given();
+            await base.Given();
             _handler = new Future<AnotherSimpleMessage>();
             RegisterSqsHandler(_handler);
         }

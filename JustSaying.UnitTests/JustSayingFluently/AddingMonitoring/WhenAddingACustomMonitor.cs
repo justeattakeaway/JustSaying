@@ -11,7 +11,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingMonitoring
         readonly IMessageMonitor _monitor = Substitute.For<IMessageMonitor>();
         private object _response;
 
-        protected override void Given() { }
+        protected override Task Given() => Task.CompletedTask;
 
         protected override Task When()
         {

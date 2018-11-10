@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using Amazon;
 using JustBehave;
 using JustSaying.AwsTools;
@@ -34,7 +35,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
         protected ILoggerFactory LoggerFactory => TestFixture.LoggerFactory;
 
-        protected RegionEndpoint Region =>TestFixture.Region;
+        protected RegionEndpoint Region => TestFixture.Region;
 
         private JustSayingFixture TestFixture { get; } = new JustSayingFixture();
 
@@ -53,30 +54,30 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             _config = config;
         }
 
-        protected override void Given()
+        protected override Task Given()
         {
             _stopwatch.Start();
+            return Task.CompletedTask;
         }
 
-        protected override IAmJustSayingFluently CreateSystemUnderTest()
+        protected override Task<IAmJustSayingFluently> CreateSystemUnderTestAsync()
         {
-            const int TimeoutMillis = 1000;
+            var timeout = TimeSpan.FromSeconds(1);
 
             var snsHandler = Substitute.For<IHandlerAsync<SimpleMessage>>();
-            snsHandler.When(x => x.Handle(Arg.Any<SimpleMessage>()))
-                    .Do(x =>
-                    {
-                        var msg = (SimpleMessage) x.Args()[0];
-                        _snsHandler?.Complete(msg).Wait(TimeoutMillis);
-                    });
+            snsHandler.Handle(Arg.Any<SimpleMessage>()).Returns(async x =>
+            {
+                var msg = (SimpleMessage) x.Args()[0];
+                await Tasks.WaitWithTimeoutAsync(_snsHandler?.Complete(msg), timeout);
+            });
 
             var sqsHandler = Substitute.For<IHandlerAsync<AnotherSimpleMessage>>();
-            sqsHandler.When(x => x.Handle(Arg.Any<AnotherSimpleMessage>()))
-                    .Do(x =>
-                    {
-                        var msg = (AnotherSimpleMessage)x.Args()[0];
-                        _sqsHandler?.Complete(msg).Wait(TimeoutMillis);
-                    });
+            sqsHandler.Handle(Arg.Any<AnotherSimpleMessage>())
+                .Returns(async x =>
+                {
+                    var msg = (AnotherSimpleMessage)x.Args()[0];
+                    await Tasks.WaitWithTimeoutAsync(_sqsHandler?.Complete(msg), timeout);
+                });
 
             Monitoring = Substitute.For<IMessageMonitor>();
 
@@ -105,13 +106,11 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             _subscriberCts = new CancellationTokenSource();
             ServiceBus.StartListening(_subscriberCts.Token);
 
-            return ServiceBus;
+            return Task.FromResult(ServiceBus);
         }
 
-        protected override void PostAssertTeardown()
+        protected override Task PostAssertTeardownAsync()
         {
-            base.PostAssertTeardown();
-
             _stopwatch.Stop();
             Teardown();
 
@@ -119,6 +118,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             Console.WriteLine($"The test took {_stopwatch.ElapsedMilliseconds / 1000} seconds.");
 
             _subscriberCts.Cancel();
+            return Task.CompletedTask;
         }
     }
 }

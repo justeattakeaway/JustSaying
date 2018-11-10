@@ -20,9 +20,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
         protected IAmazonSQS Client { get; set; }
 
-        protected override void Given()
+        protected override async Task Given()
         {
-            base.Given();
+            await base.Given();
 
             TopicName = "CustomerCommunication";
             QueueName = TestFixture.UniqueName;
@@ -31,8 +31,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
             Configuration = new MessagingConfig();
 
-            DeleteTopicIfItAlreadyExists(TopicName).ResultSync();
-            DeleteQueueIfItAlreadyExists(QueueName).ResultSync();
+            await DeleteTopicIfItAlreadyExists(TopicName);
+            await DeleteQueueIfItAlreadyExists(QueueName);
 
             Client = TestFixture.CreateSqsClient();
         }
@@ -83,10 +83,10 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             }
         }
 
-        protected override void PostAssertTeardown()
+        protected override async Task PostAssertTeardownAsync()
         {
-            DeleteTopicIfItAlreadyExists(TopicName).ResultSync();
-            DeleteQueueIfItAlreadyExists(QueueName).ResultSync();
+            await DeleteTopicIfItAlreadyExists(TopicName);
+            await DeleteQueueIfItAlreadyExists(QueueName);
         }
     }
 }

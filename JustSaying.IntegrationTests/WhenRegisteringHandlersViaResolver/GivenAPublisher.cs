@@ -19,7 +19,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
         protected Task DoneSignal { get; set; }
 
-        protected override IMessagePublisher CreateSystemUnderTest()
+        protected override Task<IMessagePublisher> CreateSystemUnderTestAsync()
         {
             var fixture = new JustSayingFixture();
 
@@ -29,7 +29,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             PublisherCts = new CancellationTokenSource();
             Publisher.StartListening(PublisherCts.Token);
 
-            return Publisher;
+            return Task.FromResult<IMessagePublisher>(Publisher);
         }
 
         protected override async Task When()

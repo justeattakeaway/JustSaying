@@ -9,9 +9,9 @@ namespace JustSaying.UnitTests.JustSayingBus
 {
     public class WhenUsingMultipleRegions : GivenAServiceBus
     {
-        protected override void Given()
+        protected override async Task Given()
         {
-            base.Given();
+            await base.Given();
             Config.Regions.Returns(new List<string>{"region1", "region2"});
         }
 

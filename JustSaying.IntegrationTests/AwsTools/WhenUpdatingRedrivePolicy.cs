@@ -10,11 +10,11 @@ namespace JustSaying.IntegrationTests.AwsTools
     {
         private int _newMaximumReceived;
 
-        protected override void Given()
+        protected override Task Given()
         {
             _newMaximumReceived = 2;
 
-            base.Given();
+            return base.Given();
         }
 
         protected override async Task When()

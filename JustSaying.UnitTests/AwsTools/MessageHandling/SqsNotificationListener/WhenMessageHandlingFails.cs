@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.TestingFramework;
 using NSubstitute;
@@ -8,9 +9,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
     public class WhenMessageHandlingFails : BaseQueuePollingTest
     {
-        protected override void Given()
+        protected override async Task Given()
         {
-            base.Given();
+            await base.Given();
             Handler.Handle(Arg.Any<SimpleMessage>()).ReturnsForAnyArgs(false);
         }
 

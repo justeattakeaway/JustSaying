@@ -20,18 +20,19 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         private readonly IAmazonSimpleNotificationService _sns = Substitute.For<IAmazonSimpleNotificationService>();
         private const string TopicArn = "topicarn";
 
-        protected override SnsTopicByName CreateSystemUnderTest()
+        protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
         {
             var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister, Substitute.For<ILoggerFactory>(), new NonGenericMessageSubjectProvider());
-            topic.ExistsAsync().GetAwaiter().GetResult();;
+            await topic.ExistsAsync();
             return topic;
         }
 
-        protected override void Given()
+        protected override Task Given()
         {
             _serialisationRegister.Serialise(Arg.Any<Message>(), Arg.Is(true)).Returns(Message);
             _sns.FindTopicAsync("TopicName")
                 .Returns(new Topic { TopicArn = TopicArn });
+            return Task.CompletedTask;
         }
 
         protected override async Task When()

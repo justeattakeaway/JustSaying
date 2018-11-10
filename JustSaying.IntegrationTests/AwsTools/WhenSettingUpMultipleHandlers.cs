@@ -1,5 +1,4 @@
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
@@ -15,18 +14,15 @@ namespace JustSaying.IntegrationTests.AwsTools
         private ProxyAwsClientFactory _proxyAwsClientFactory;
         private string _topicName;
         private string _queueName;
-        private CancellationTokenSource _subscriberCts;
 
-        protected override void Given()
-        {
-        }
+        protected override Task Given() => Task.CompletedTask;
 
         protected override Task When()
         {
             return Task.CompletedTask;
         }
 
-        protected override IHaveFulfilledSubscriptionRequirements CreateSystemUnderTest()
+        protected override Task<IHaveFulfilledSubscriptionRequirements> CreateSystemUnderTestAsync()
         {
             // Given 2 handlers
             var uniqueTopicAndQueueNames = new UniqueNamingStrategy();
@@ -45,15 +41,14 @@ namespace JustSaying.IntegrationTests.AwsTools
                 .IntoQueue(baseQueueName)
                 .WithMessageHandlers(new OrderHandler(), new OrderHandler());
 
-            _subscriberCts = new CancellationTokenSource();
-            subscription.StartListening(_subscriberCts.Token);
-            return subscription;
+            subscription.StartListening();
+            return Task.FromResult(subscription);
         }
 
-        protected override void PostAssertTeardown()
+        protected override Task PostAssertTeardownAsync()
         {
-            _subscriberCts.Cancel();
-            base.PostAssertTeardown();
+            SystemUnderTest.StopListening();
+            return Task.CompletedTask;
         }
 
         [AwsFact]

@@ -28,7 +28,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         private static MessageResponse _response;
         private static Message _message;
 
-        protected override SqsPublisher CreateSystemUnderTest()
+        protected override async Task<SqsPublisher> CreateSystemUnderTestAsync()
         {
             var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, _sqs, 0, _serialisationRegister, Substitute.For<ILoggerFactory>())
             {
@@ -38,11 +38,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
                     _message = m;
                 }
             };
-            sqs.ExistsAsync().GetAwaiter().GetResult();
+            await sqs.ExistsAsync();
             return sqs;
         }
 
-        protected override void Given()
+        protected override Task Given()
         {
             _sqs.GetQueueUrlAsync(Arg.Any<string>())
                 .Returns(new GetQueueUrlResponse { QueueUrl = Url });
@@ -55,6 +55,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 
             _sqs.SendMessageAsync(Arg.Any<SendMessageRequest>())
                 .Returns(PublishResult);
+
+            return Task.CompletedTask;
         }
 
         protected override async Task When()

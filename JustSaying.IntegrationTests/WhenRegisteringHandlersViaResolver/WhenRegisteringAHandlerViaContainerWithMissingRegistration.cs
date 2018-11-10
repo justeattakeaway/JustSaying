@@ -11,9 +11,10 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
     [Collection(GlobalSetup.CollectionName)]
     public class WhenRegisteringAHandlerViaContainerWithMissingRegistration : GivenAPublisher
     {
-        protected override void Given()
+        protected override Task Given()
         {
             RecordAnyExceptionsThrown();
+            return Task.CompletedTask;
         }
 
         protected override Task When()

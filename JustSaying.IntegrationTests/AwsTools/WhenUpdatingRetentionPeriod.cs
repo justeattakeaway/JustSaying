@@ -12,12 +12,12 @@ namespace JustSaying.IntegrationTests.AwsTools
         private TimeSpan _oldRetentionPeriod;
         private TimeSpan _newRetentionPeriod;
 
-        protected override void Given()
+        protected override Task Given()
         {
             _oldRetentionPeriod = TimeSpan.FromSeconds(600);
             _newRetentionPeriod = TimeSpan.FromSeconds(700);
 
-            base.Given();
+            return base.Given();
         }
 
         protected override async Task When()

@@ -31,13 +31,13 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         protected IMessageLockAsync MessageLock;
         protected readonly string MessageTypeString = typeof(SimpleMessage).ToString();
 
-        protected override JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
+        protected override Task<JustSaying.AwsTools.MessageHandling.SqsNotificationListener> CreateSystemUnderTestAsync()
         {
             var queue = new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri(QueueUrl), Sqs);
-            return new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(queue, SerialisationRegister, Monitor, LoggerFactory, null, MessageLock);
+            return Task.FromResult(new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(queue, SerialisationRegister, Monitor, LoggerFactory, null, MessageLock));
         }
 
-        protected override void Given()
+        protected override Task Given()
         {
             LoggerFactory = new LoggerFactory();
             Sqs = Substitute.For<IAmazonSQS>();
@@ -57,6 +57,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 
             DeserialisedMessage = new SimpleMessage { RaisingComponent = "Component" };
             SerialisationRegister.DeserializeMessage(Arg.Any<string>()).Returns(DeserialisedMessage);
+            return Task.CompletedTask;
         }
         protected override async Task When()
         {
@@ -95,7 +96,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             };
         }
 
-        protected static string SqsMessageBody(string messageType)
+        protected string SqsMessageBody(string messageType)
         {
             return "{\"Subject\":\"" + messageType + "\"," + "\"Message\":\"" + MessageBody + "\"}";
         }

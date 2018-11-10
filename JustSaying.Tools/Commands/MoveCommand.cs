@@ -26,7 +26,7 @@ namespace JustSaying.Tools.Commands
         public string Region { get; set; }
         public int Count { get; set; }
 
-        public bool Execute()
+        public async Task<bool> ExecuteAsync()
         {
             Console.WriteLine($"Moving {Count} messages from {SourceQueueName} to {DestinationQueueName} in {Region}.");
             var loggerFactory = new LoggerFactory();
@@ -36,8 +36,8 @@ namespace JustSaying.Tools.Commands
             var sourceQueue = new SqsQueueByName(config.RegionEndpoint, SourceQueueName, client, JustSayingConstants.DefaultHandlerRetryCount, loggerFactory);
             var destinationQueue = new SqsQueueByName(config.RegionEndpoint, DestinationQueueName, client, JustSayingConstants.DefaultHandlerRetryCount, loggerFactory);
 
-            EnsureQueueExistsAsync(sourceQueue).GetAwaiter().GetResult();
-            EnsureQueueExistsAsync(destinationQueue).GetAwaiter().GetResult();
+            await EnsureQueueExistsAsync(sourceQueue);
+            await EnsureQueueExistsAsync(destinationQueue);
 
             var messages = PopMessagesFromSourceQueue(sourceQueue);
             var receiptHandles = messages.ToDictionary(m => m.MessageId, m => m.ReceiptHandle);

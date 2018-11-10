@@ -17,10 +17,10 @@ namespace JustSaying.UnitTests.JustSayingBus
         private string _region;
         private Func<IHandlerAsync<Message>> _futureHandler1;
         private Func<IHandlerAsync<Message2>> _futureHandler2;
-
-        protected override void Given()
+        
+        protected override async Task Given()
         {
-            base.Given();
+            await base.Given();
             _futureHandler1 = () => _handler1;
             _futureHandler2 = () => _handler2;
             _subscriber = Substitute.For<INotificationSubscriber>();

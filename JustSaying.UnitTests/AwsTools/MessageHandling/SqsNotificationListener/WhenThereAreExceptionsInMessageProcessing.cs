@@ -25,20 +25,20 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 
         private int _callCount;
 
-        protected override JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
+        protected override Task<JustSaying.AwsTools.MessageHandling.SqsNotificationListener> CreateSystemUnderTestAsync()
         {
-            return new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
+            return Task.FromResult(new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
                 new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri("http://foo.com"), _sqs),
                 _serialisationRegister,
                 Substitute.For<IMessageMonitor>(),
-                Substitute.For<ILoggerFactory>());
+                Substitute.For<ILoggerFactory>()));
         }
 
-        protected override void Given()
+        protected override Task Given()
         {
             _serialisationRegister
                 .DeserializeMessage(Arg.Any<string>())
-                .Returns(x => { throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing"); });
+                .Returns(x => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing"));
             _sqs.ReceiveMessageAsync(
                     Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>())
@@ -48,6 +48,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
                     Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>()))
                 .Do(x => _callCount++);
+            return Task.CompletedTask;
         }
 
         protected override async Task When()

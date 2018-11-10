@@ -12,9 +12,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
     {
         private string _topicName;
 
-        protected override void Given()
+        protected override async Task Given()
         {
-            base.Given();
+            await base.Given();
 
             _topicName = "CustomerCommunication";
 
@@ -22,7 +22,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
 
             Configuration = new MessagingConfig();
 
-            DeleteTopicIfItAlreadyExists(_topicName).ResultSync();
+            await DeleteTopicIfItAlreadyExists(_topicName);
         }
 
         protected override Task When()
@@ -44,9 +44,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
                 .AddSerialiser<Message>(Arg.Any<IMessageSerialiser>());
         }
 
-        protected override void PostAssertTeardown()
+        protected override Task PostAssertTeardownAsync()
         {
-            DeleteTopicIfItAlreadyExists(_topicName).ResultSync();
+            return DeleteTopicIfItAlreadyExists(_topicName);
         }
     }
 }

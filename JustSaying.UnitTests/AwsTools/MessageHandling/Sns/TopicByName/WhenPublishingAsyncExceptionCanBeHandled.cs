@@ -1,3 +1,4 @@
+using System;
 using System.Net;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
@@ -21,21 +22,22 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         private readonly IAmazonSimpleNotificationService _sns = Substitute.For<IAmazonSimpleNotificationService>();
         private const string TopicArn = "topicarn";
 
-        protected override SnsTopicByName CreateSystemUnderTest()
+        protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
         {
             var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister, Substitute.For<ILoggerFactory>(), new SnsWriteConfiguration
             {
                 HandleException = (ex, m) => true
             }, Substitute.For<IMessageSubjectProvider>());
 
-            topic.ExistsAsync().GetAwaiter().GetResult();;
+            await topic.ExistsAsync();
             return topic;
         }
 
-        protected override void Given()
+        protected override Task Given()
         {
             _sns.FindTopicAsync("TopicName")
                 .Returns(new Topic { TopicArn = TopicArn });
+            return Task.CompletedTask;
         }
 
         protected override Task When()
@@ -45,9 +47,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         }
 
         [Fact]
-        public void FailSilently()
+        public async Task FailSilently()
         {
-            Should.NotThrow(() => SystemUnderTest.PublishAsync(new SimpleMessage()).Wait());
+            var unexpectedException = await Record.ExceptionAsync(
+                () => SystemUnderTest.PublishAsync(new SimpleMessage()));
+            unexpectedException.ShouldBeNull();
         }
 
         private static Task<PublishResponse> ThrowsException(CallInfo callInfo)

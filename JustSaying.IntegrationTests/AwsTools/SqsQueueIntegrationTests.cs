@@ -7,11 +7,9 @@ namespace JustSaying.IntegrationTests.AwsTools
 {
     public abstract class WhenCreatingQueuesByName : XAsyncBehaviourTest<SqsQueueByName>
     {
-        protected override void Given()
-        {
-        }
+        protected override Task Given() => Task.CompletedTask;
 
-        protected override SqsQueueByName CreateSystemUnderTest()
+        protected override async Task<SqsQueueByName> CreateSystemUnderTestAsync()
         {
             var fixture = new JustSayingFixture();
 
@@ -23,15 +21,14 @@ namespace JustSaying.IntegrationTests.AwsTools
                 fixture.LoggerFactory);
 
             // Force queue creation
-            queue.ExistsAsync().ResultSync();
+            await queue.ExistsAsync();
 
             return queue;
         }
 
-        protected override void PostAssertTeardown()
+        protected override async Task PostAssertTeardownAsync()
         {
-            SystemUnderTest.DeleteAsync().ResultSync();
-            base.PostAssertTeardown();
+            await SystemUnderTest.DeleteAsync();
         }
     }
 }

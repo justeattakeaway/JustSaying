@@ -14,9 +14,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
     /// </summary>
     public class WhenMessageProcessingThrowsBefore : BaseQueuePollingTest
     {
-        protected override void Given()
+        protected override async Task Given()
         {
-            base.Given();
+            await base.Given();
             Handler.Handle(null).ReturnsForAnyArgs(true);
         }
 

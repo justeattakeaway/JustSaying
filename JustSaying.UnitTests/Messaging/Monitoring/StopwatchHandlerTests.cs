@@ -74,7 +74,7 @@ namespace JustSaying.UnitTests.Messaging.Monitoring
         {
             var handler = Substitute.For<IHandlerAsync<OrderAccepted>>();
             handler.Handle(Arg.Any<OrderAccepted>())
-                .Returns(Task.FromResult(true));
+                .Returns(true);
             return handler;
         }
     }

@@ -7,9 +7,9 @@ namespace JustSaying.UnitTests.JustSayingBus
 {
     public class WhenSubscribingAndNotPassingATopic : GivenAServiceBus
     {
-        protected override void Given()
+        protected override async Task Given()
         {
-            base.Given();
+            await base.Given();
             RecordAnyExceptionsThrown();
         }
 

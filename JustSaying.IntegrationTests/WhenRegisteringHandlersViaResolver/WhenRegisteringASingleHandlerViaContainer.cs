@@ -1,4 +1,5 @@
 using System.Threading;
+using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.TestingFramework;
 using Shouldly;
@@ -12,9 +13,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
     {
         private Future<OrderPlaced> _handlerFuture;
 
-        protected override void Given()
+        protected override Task Given()
         {
-           var container = new Container(x => x.AddRegistry(new SingleHandlerRegistry()));
+            var container = new Container(x => x.AddRegistry(new SingleHandlerRegistry()));
             var resolutionContext = new HandlerResolutionContext("test");
 
             var handlerResolver = new StructureMapHandlerResolver(container);
@@ -33,6 +34,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
             SubscriberCts = new CancellationTokenSource();
             Subscriber.StartListening(SubscriberCts.Token);
+            
+            return Task.CompletedTask;
         }
 
         [AwsFact]
