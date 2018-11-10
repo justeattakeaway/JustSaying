@@ -1,3 +1,5 @@
+using System;
+
 namespace JustSaying.AwsTools
 {
     public static class JustSayingConstants
@@ -32,21 +34,21 @@ namespace JustSaying.AwsTools
         /// wait {interval}*{attemptCount} miliseconds before retrying,
         /// </summary>
         public static int DefaultPublisherRetryInterval => 100;//100 milliseconds
-        
+
         /// <summary>
         /// Minimum message retention period on a queue.
         /// </summary>
-        public static int MinimumRetentionPeriod => 60;         //1 minute
+        public static TimeSpan MinimumRetentionPeriod => TimeSpan.FromMinutes(1);
 
         /// <summary>
-        /// Default message retention period on a queue in seconds
+        /// Default message retention period on a queue.
         /// </summary>
-        public static int DefaultRetentionPeriod => 345600;    //4 days
+        public static TimeSpan DefaultRetentionPeriod => TimeSpan.FromDays(4);
 
         /// <summary>
-        /// Maximum message retention period on a queue in seconds
+        /// Maximum message retention period on a queue.
         /// </summary>
-        public static int MaximumRetentionPeriod => 1209600;    //14 days
+        public static TimeSpan MaximumRetentionPeriod => TimeSpan.FromDays(14);
         
         /// <summary>
         /// Minimum delay in message delivery for SQS i nseconds. This is also the default.

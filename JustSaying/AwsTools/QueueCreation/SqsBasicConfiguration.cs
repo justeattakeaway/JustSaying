@@ -1,9 +1,11 @@
+using System;
+
 namespace JustSaying.AwsTools.QueueCreation
 {
     public class SqsBasicConfiguration
     {
-        public int MessageRetentionSeconds { get; set; }
-        public int ErrorQueueRetentionPeriodSeconds { get; set; }
+        public TimeSpan MessageRetention { get; set; }
+        public TimeSpan ErrorQueueRetentionPeriod { get; set; }
         public int VisibilityTimeoutSeconds { get; set; }
         public int DeliveryDelaySeconds { get; set; }
         public int RetryCountBeforeSendingToErrorQueue { get; set; }
@@ -12,8 +14,8 @@ namespace JustSaying.AwsTools.QueueCreation
 
         public SqsBasicConfiguration()
         {
-            MessageRetentionSeconds = JustSayingConstants.DefaultRetentionPeriod;
-            ErrorQueueRetentionPeriodSeconds = JustSayingConstants.MaximumRetentionPeriod;
+            MessageRetention = JustSayingConstants.DefaultRetentionPeriod;
+            ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod;
             VisibilityTimeoutSeconds = JustSayingConstants.DefaultVisibilityTimeout;
             RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
             DeliveryDelaySeconds = JustSayingConstants.MinimumDeliveryDelay;
@@ -21,15 +23,15 @@ namespace JustSaying.AwsTools.QueueCreation
 
         public virtual void Validate()
         {
-            if (MessageRetentionSeconds < JustSayingConstants.MinimumRetentionPeriod ||
-                MessageRetentionSeconds > JustSayingConstants.MaximumRetentionPeriod)
+            if (MessageRetention < JustSayingConstants.MinimumRetentionPeriod ||
+                MessageRetention > JustSayingConstants.MaximumRetentionPeriod)
             {
                 throw new ConfigurationErrorsException(
                     $"Invalid configuration. MessageRetentionSeconds must be between {JustSayingConstants.MinimumRetentionPeriod} and {JustSayingConstants.MaximumRetentionPeriod}.");
             }
 
-            if (ErrorQueueRetentionPeriodSeconds < JustSayingConstants.MinimumRetentionPeriod ||
-                ErrorQueueRetentionPeriodSeconds > JustSayingConstants.MaximumRetentionPeriod)
+            if (ErrorQueueRetentionPeriod < JustSayingConstants.MinimumRetentionPeriod ||
+                ErrorQueueRetentionPeriod > JustSayingConstants.MaximumRetentionPeriod)
             {
                 throw new ConfigurationErrorsException(
                     $"Invalid configuration. ErrorQueueRetentionPeriodSeconds must be between {JustSayingConstants.MinimumRetentionPeriod} and {JustSayingConstants.MaximumRetentionPeriod}.");

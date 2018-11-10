@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.AwsTools;
@@ -19,13 +20,13 @@ namespace JustSaying.IntegrationTests.AwsTools
         {
             var queueConfig = new SqsBasicConfiguration
             {
-                ErrorQueueRetentionPeriodSeconds = JustSayingConstants.MaximumRetentionPeriod,
+                ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod,
                 ErrorQueueOptOut = true
             };
 
             await SystemUnderTest.CreateAsync(queueConfig);
 
-            queueConfig.ErrorQueueRetentionPeriodSeconds = 100;
+            queueConfig.ErrorQueueRetentionPeriod =  TimeSpan.FromSeconds(100);
 
             await SystemUnderTest.UpdateQueueAttributeAsync(queueConfig);
         }
@@ -50,7 +51,7 @@ namespace JustSaying.IntegrationTests.AwsTools
         [AwsFact]
         public void TheRetentionPeriodOfTheErrorQueueStaysAsMaximum()
         {
-            SystemUnderTest.MessageRetentionPeriod.ShouldBe(100);
+            SystemUnderTest.MessageRetentionPeriod.ShouldBe(TimeSpan.FromSeconds(100));
         }
     }
 }

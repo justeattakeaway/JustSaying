@@ -24,7 +24,7 @@ namespace JustSaying.AwsTools
         {
             return new Dictionary<string, string>
             {
-                { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD , queueConfig.ErrorQueueRetentionPeriodSeconds.ToString(CultureInfo.InvariantCulture)},
+                { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD , queueConfig.ErrorQueueRetentionPeriod.TotalSeconds.ToString(CultureInfo.InvariantCulture)},
                 { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , JustSayingConstants.DefaultVisibilityTimeout.ToString(CultureInfo.InvariantCulture)},
             };
         }
@@ -43,7 +43,7 @@ namespace JustSaying.AwsTools
                 {
                     {
                         JustSayingConstants.AttributeRetentionPeriod,
-                        queueConfig.ErrorQueueRetentionPeriodSeconds.ToString(CultureInfo.InvariantCulture)
+                        queueConfig.ErrorQueueRetentionPeriod.TotalSeconds.ToString(CultureInfo.InvariantCulture)
                     }
                 }
             };
@@ -52,11 +52,11 @@ namespace JustSaying.AwsTools
 
             if (response.HttpStatusCode == HttpStatusCode.OK)
             {
-                MessageRetentionPeriod = queueConfig.ErrorQueueRetentionPeriodSeconds;
+                MessageRetentionPeriod = queueConfig.ErrorQueueRetentionPeriod;
             }
         }
 
         protected override bool QueueNeedsUpdating(SqsBasicConfiguration queueConfig)
-            => MessageRetentionPeriod != queueConfig.ErrorQueueRetentionPeriodSeconds;
+            => MessageRetentionPeriod != queueConfig.ErrorQueueRetentionPeriod;
     }
 }

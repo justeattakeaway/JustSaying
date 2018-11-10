@@ -29,8 +29,11 @@ namespace JustSaying.AwsTools.MessageHandling
                 var exisits = await ErrorQueue.ExistsAsync().ConfigureAwait(false);
                 if (!exisits)
                 {
-                    await ErrorQueue.CreateAsync(
-                        new SqsBasicConfiguration { ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds, ErrorQueueOptOut = true }).ConfigureAwait(false);
+                    await ErrorQueue.CreateAsync(new SqsBasicConfiguration
+                        {
+                            ErrorQueueRetentionPeriod = queueConfig.ErrorQueueRetentionPeriod,
+                            ErrorQueueOptOut = true
+                        }).ConfigureAwait(false);
                 }
             }
 
@@ -91,7 +94,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 var errorQueueConfig = new SqsReadConfiguration(SubscriptionType.ToTopic)
                 {
-                    ErrorQueueRetentionPeriodSeconds = queueConfig.ErrorQueueRetentionPeriodSeconds,
+                    ErrorQueueRetentionPeriod = queueConfig.ErrorQueueRetentionPeriod,
                     ErrorQueueOptOut = true
                 };
 
@@ -114,7 +117,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             var policy = new Dictionary<string, string>
             {
-                { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD ,queueConfig.MessageRetentionSeconds.ToString(CultureInfo.InvariantCulture)},
+                { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD ,queueConfig.MessageRetention.TotalSeconds.ToString(CultureInfo.InvariantCulture)},
                 { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , queueConfig.VisibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture)},
                 { SQSConstants.ATTRIBUTE_DELAY_SECONDS  , queueConfig.DeliveryDelaySeconds.ToString(CultureInfo.InvariantCulture)},
             };

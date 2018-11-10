@@ -35,7 +35,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
                 .WithMessageLockStoreOf(new MessageLockStore())
                 .WithSqsTopicSubscriber()
                 .IntoQueue(fixture.UniqueName)
-                .ConfigureSubscriptionWith(cfg => cfg.MessageRetentionSeconds = 60)
+                .ConfigureSubscriptionWith(cfg => cfg.MessageRetention = TimeSpan.FromSeconds(60))
                 .WithMessageHandler(_handler);
 
             publisher.StartListening();

@@ -3,6 +3,7 @@ using JustSaying.AwsTools;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using System;
 using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
@@ -58,7 +59,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
             {
                 c.VisibilityTimeoutSeconds = 1;
                 c.RetryCountBeforeSendingToErrorQueue = 2;
-                c.MessageRetentionSeconds = 3;
+                c.MessageRetention = TimeSpan.FromSeconds(3);
                 c.ErrorQueueOptOut = true;
             });
         }

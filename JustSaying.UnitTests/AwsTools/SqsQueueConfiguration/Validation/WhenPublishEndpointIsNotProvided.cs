@@ -1,3 +1,4 @@
+using System;
 using JustBehave;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
@@ -26,7 +27,12 @@ namespace JustSaying.UnitTests.AwsTools.SqsQueueConfiguration.Validation
 
         protected override SqsReadConfiguration CreateSystemUnderTest()
         {
-            return new SqsReadConfiguration(SubscriptionType.ToTopic) { MessageRetentionSeconds = JustSayingConstants.MinimumRetentionPeriod +1, Topic = "ATopic", PublishEndpoint = null };
+            return new SqsReadConfiguration(SubscriptionType.ToTopic)
+            {
+                MessageRetention = JustSayingConstants.MinimumRetentionPeriod.Add(TimeSpan.FromSeconds(1)),
+                Topic = "ATopic",
+                PublishEndpoint = null
+            };
         }
     }
 }
