@@ -4,6 +4,9 @@ using JustSaying.AwsTools.QueueCreation;
 using JustBehave;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using Xunit;
+
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace JustSaying.UnitTests
 {
