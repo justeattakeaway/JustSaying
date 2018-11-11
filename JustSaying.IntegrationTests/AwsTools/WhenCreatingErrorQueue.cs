@@ -24,7 +24,7 @@ namespace JustSaying.IntegrationTests.AwsTools
 
             await SystemUnderTest.CreateAsync(queueConfig);
 
-            queueConfig.ErrorQueueRetentionPeriod = TimeSpam.FromSeconds(100);
+            queueConfig.ErrorQueueRetentionPeriod = TimeSpan.FromSeconds(100);
 
             await SystemUnderTest.UpdateQueueAttributeAsync(queueConfig);
         }
