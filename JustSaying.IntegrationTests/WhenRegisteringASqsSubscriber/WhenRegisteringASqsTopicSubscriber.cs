@@ -42,7 +42,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             SystemUnderTest
                 .WithSqsTopicSubscriber()
                 .IntoQueue(QueueName)
-                .ConfigureSubscriptionWith(cfg => cfg.MessageRetentionSeconds = 60)
+                .ConfigureSubscriptionWith(cfg =>
+                    cfg.MessageRetention = TimeSpan.FromSeconds(60))
                 .WithMessageHandler(Substitute.For<IHandlerAsync<Message>>());
 
             return Task.CompletedTask;

@@ -18,7 +18,7 @@ namespace JustSaying.AwsTools.MessageHandling
         public string QueueName { get; protected set; }
         public RegionEndpoint Region { get; protected set; }
         public ErrorQueue ErrorQueue { get; protected set; }
-        internal int MessageRetentionPeriod { get; set; }
+        internal TimeSpan MessageRetentionPeriod { get; set; }
         internal int VisibilityTimeout { get; set; }
         internal int DeliveryDelay { get; set; }
         internal RedrivePolicy RedrivePolicy { get; set; }
@@ -68,7 +68,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 };
             var attributes = await GetAttrsAsync(keys).ConfigureAwait(false);
             Arn = attributes.QueueARN;
-            MessageRetentionPeriod = attributes.MessageRetentionPeriod;
+            MessageRetentionPeriod = TimeSpan.FromSeconds(attributes.MessageRetentionPeriod);
             VisibilityTimeout = attributes.VisibilityTimeout;
             Policy = attributes.Policy;
             DeliveryDelay = attributes.DelaySeconds;
@@ -93,7 +93,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 var attributes = new Dictionary<string, string>
                 {
-                    {JustSayingConstants.AttributeRetentionPeriod, queueConfig.MessageRetentionSeconds.ToString(CultureInfo.InvariantCulture) },
+                    {JustSayingConstants.AttributeRetentionPeriod, queueConfig.MessageRetention.TotalSeconds.ToString("F0", CultureInfo.InvariantCulture) },
                     {JustSayingConstants.AttributeVisibilityTimeout, queueConfig.VisibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture) },
                     {JustSayingConstants.AttributeDeliveryDelay, queueConfig.DeliveryDelaySeconds.ToString(CultureInfo.InvariantCulture) }
                 };
@@ -117,7 +117,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 if (response.HttpStatusCode == HttpStatusCode.OK)
                 {
-                    MessageRetentionPeriod = queueConfig.MessageRetentionSeconds;
+                    MessageRetentionPeriod = queueConfig.MessageRetention;
                     VisibilityTimeout = queueConfig.VisibilityTimeoutSeconds;
                     DeliveryDelay = queueConfig.DeliveryDelaySeconds;
                     ServerSideEncryption = queueConfig.ServerSideEncryption;
@@ -127,7 +127,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         protected virtual bool QueueNeedsUpdating(SqsBasicConfiguration queueConfig)
         {
-            return MessageRetentionPeriod != queueConfig.MessageRetentionSeconds
+            return MessageRetentionPeriod != queueConfig.MessageRetention
                    || VisibilityTimeout != queueConfig.VisibilityTimeoutSeconds
                    || DeliveryDelay != queueConfig.DeliveryDelaySeconds
                    || QueueNeedsUpdatingBecauseOfEncryption(queueConfig);

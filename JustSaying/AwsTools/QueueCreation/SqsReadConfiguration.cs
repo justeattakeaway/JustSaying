@@ -10,8 +10,8 @@ namespace JustSaying.AwsTools.QueueCreation
         public SqsReadConfiguration(SubscriptionType subscriptionType)
         {
             SubscriptionType = subscriptionType;
-            MessageRetentionSeconds = JustSayingConstants.DefaultRetentionPeriod;
-            ErrorQueueRetentionPeriodSeconds = JustSayingConstants.MaximumRetentionPeriod;
+            MessageRetention = JustSayingConstants.DefaultRetentionPeriod;
+            ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod;
             VisibilityTimeoutSeconds = JustSayingConstants.DefaultVisibilityTimeout;
             RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
         }

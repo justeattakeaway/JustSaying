@@ -48,7 +48,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .IntoQueue(fixture.UniqueName)
                 .ConfigureSubscriptionWith(cfg =>
                     {
-                        cfg.MessageRetentionSeconds = 60;
+                        cfg.MessageRetention = TimeSpan.FromSeconds(60);
                         cfg.InstancePosition = 1;
                         cfg.OnError = _globalErrorHandler;
                     })

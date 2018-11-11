@@ -89,7 +89,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .IntoQueue(TestFixture.UniqueName)
                 .ConfigureSubscriptionWith(cf =>
                 {
-                    cf.MessageRetentionSeconds = 60;
+                    cf.MessageRetention = TimeSpan.FromSeconds(60);
                     cf.VisibilityTimeoutSeconds = JustSayingConstants.DefaultVisibilityTimeout;
                     cf.InstancePosition = 1;
                 })
