@@ -7,7 +7,7 @@ namespace JustSaying.AwsTools.QueueCreation
         public TimeSpan MessageRetention { get; set; }
         public TimeSpan ErrorQueueRetentionPeriod { get; set; }
         public int VisibilityTimeoutSeconds { get; set; }
-        public int DeliveryDelaySeconds { get; set; }
+        public TimeSpan DeliveryDelay { get; set; }
         public int RetryCountBeforeSendingToErrorQueue { get; set; }
         public bool ErrorQueueOptOut { get; set; }
         public ServerSideEncryption ServerSideEncryption { get; set; }
@@ -18,7 +18,7 @@ namespace JustSaying.AwsTools.QueueCreation
             ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod;
             VisibilityTimeoutSeconds = JustSayingConstants.DefaultVisibilityTimeout;
             RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
-            DeliveryDelaySeconds = JustSayingConstants.MinimumDeliveryDelay;
+            DeliveryDelay = JustSayingConstants.MinimumDeliveryDelay;
         }
 
         public virtual void Validate()
@@ -37,11 +37,11 @@ namespace JustSaying.AwsTools.QueueCreation
                     $"Invalid configuration. {nameof(ErrorQueueRetentionPeriod)} must be between {JustSayingConstants.MinimumRetentionPeriod} and {JustSayingConstants.MaximumRetentionPeriod}.");
             }
 
-            if (DeliveryDelaySeconds < JustSayingConstants.MinimumDeliveryDelay ||
-                DeliveryDelaySeconds > JustSayingConstants.MaximumDeliveryDelay)
+            if (DeliveryDelay < JustSayingConstants.MinimumDeliveryDelay ||
+                DeliveryDelay > JustSayingConstants.MaximumDeliveryDelay)
             {
                 throw new ConfigurationErrorsException(
-                    $"Invalid configuration. {nameof(DeliveryDelaySeconds)} must be between {JustSayingConstants.MinimumDeliveryDelay} and {JustSayingConstants.MaximumDeliveryDelay}.");
+                    $"Invalid configuration. {nameof(DeliveryDelay)} must be between {JustSayingConstants.MinimumDeliveryDelay} and {JustSayingConstants.MaximumDeliveryDelay}.");
             }
         }
     }

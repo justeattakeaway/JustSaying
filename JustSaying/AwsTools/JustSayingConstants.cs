@@ -51,14 +51,14 @@ namespace JustSaying.AwsTools
         public static TimeSpan MaximumRetentionPeriod => TimeSpan.FromDays(14);
         
         /// <summary>
-        /// Minimum delay in message delivery for SQS i nseconds. This is also the default.
+        /// Minimum delay in message delivery for SQS. This is also the default.
         /// </summary>
-        public static int MinimumDeliveryDelay => 0;
+        public static TimeSpan MinimumDeliveryDelay => TimeSpan.Zero;
 
         /// <summary>
-        /// Maximum message delivery delay for SQS in seconds
+        /// Maximum message delivery delay for SQS
         /// </summary>
-        public static int MaximumDeliveryDelay => 900;          //15 minutes
+        public static TimeSpan MaximumDeliveryDelay => TimeSpan.FromMinutes(15);
 
         /// <summary>
         /// Default ID of an AWS-managed customer master key (CMK) for Amazon SQS

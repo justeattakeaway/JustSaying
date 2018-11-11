@@ -119,7 +119,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD ,queueConfig.MessageRetention.TotalSeconds.ToString("F0", CultureInfo.InvariantCulture)},
                 { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , queueConfig.VisibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture)},
-                { SQSConstants.ATTRIBUTE_DELAY_SECONDS  , queueConfig.DeliveryDelaySeconds.ToString(CultureInfo.InvariantCulture)},
+                { SQSConstants.ATTRIBUTE_DELAY_SECONDS  , queueConfig.DeliveryDelay.TotalSeconds.ToString("F0", CultureInfo.InvariantCulture)},
             };
             if (NeedErrorQueue(queueConfig))
             {
