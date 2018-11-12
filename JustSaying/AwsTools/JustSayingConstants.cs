@@ -31,7 +31,7 @@ namespace JustSaying.AwsTools
 
         /// <summary>
         /// Every time a publisher is not able to deliver a message, it will 
-        /// wait {interval}*{attemptCount}  before retrying,
+        /// wait {interval} * {attemptCount} before retrying,
         /// </summary>
         public static TimeSpan DefaultPublisherRetryInterval => TimeSpan.FromMilliseconds(100);
 
