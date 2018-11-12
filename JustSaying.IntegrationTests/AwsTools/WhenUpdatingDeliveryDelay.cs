@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.QueueCreation;
 using Shouldly;
@@ -8,13 +9,13 @@ namespace JustSaying.IntegrationTests.AwsTools
     [Collection(GlobalSetup.CollectionName)]
     public class WhenUpdatingDeliveryDelay : WhenCreatingQueuesByName
     {
-        private int _oldDeliveryDelay;
-        private int _newDeliveryDelay;
+        private TimeSpan _oldDeliveryDelay;
+        private TimeSpan _newDeliveryDelay;
 
         protected override void Given()
         {
-            _oldDeliveryDelay = 120;
-            _newDeliveryDelay = 300;
+            _oldDeliveryDelay = TimeSpan.FromMinutes(2);
+            _newDeliveryDelay = TimeSpan.FromMinutes(5);
 
             base.Given();
         }
@@ -23,12 +24,12 @@ namespace JustSaying.IntegrationTests.AwsTools
         {
             var queueConfig = new SqsBasicConfiguration
             {
-                DeliveryDelaySeconds = _oldDeliveryDelay
+                DeliveryDelay = _oldDeliveryDelay
             };
 
             await SystemUnderTest.CreateAsync(queueConfig);
 
-            queueConfig.DeliveryDelaySeconds = _newDeliveryDelay;
+            queueConfig.DeliveryDelay = _newDeliveryDelay;
 
             await SystemUnderTest.UpdateQueueAttributeAsync(queueConfig);
         }
