@@ -46,7 +46,6 @@ namespace JustSaying.AwsTools.MessageHandling
                     SNSActionIdentifiers.RemovePermission,
                     SNSActionIdentifiers.DeleteTopic,
                     SNSActionIdentifiers.Subscribe,
-                    SNSActionIdentifiers.ListSubscriptionsByTopic,
                     SNSActionIdentifiers.Publish)
                 .WithResources(new Resource(sourceArn))
                 .WithConditions(new Condition("StringEquals", "AWS:SourceOwner", sourceAccountId));
