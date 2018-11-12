@@ -8,6 +8,7 @@ using Amazon.SQS.Model;
 using Amazon.SQS.Util;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools
@@ -24,8 +25,8 @@ namespace JustSaying.AwsTools
         {
             return new Dictionary<string, string>
             {
-                { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD, queueConfig.ErrorQueueRetentionPeriod.TotalSeconds.ToString("F0", CultureInfo.InvariantCulture)},
-                { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT, JustSayingConstants.DefaultVisibilityTimeout.TotalSeconds.ToString("F0", CultureInfo.InvariantCulture)},
+                { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD, queueConfig.ErrorQueueRetentionPeriod.AsSecondsString() },
+                { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT, JustSayingConstants.DefaultVisibilityTimeout.AsSecondsString() },
             };
         }
 
@@ -42,8 +43,7 @@ namespace JustSaying.AwsTools
                 Attributes = new Dictionary<string, string>
                 {
                     {
-                        JustSayingConstants.AttributeRetentionPeriod,
-                        queueConfig.ErrorQueueRetentionPeriod.TotalSeconds.ToString("F0", CultureInfo.InvariantCulture)
+                        JustSayingConstants.AttributeRetentionPeriod, queueConfig.ErrorQueueRetentionPeriod.AsSecondsString()
                     }
                 }
             };

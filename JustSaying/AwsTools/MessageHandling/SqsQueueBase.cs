@@ -7,6 +7,7 @@ using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Extensions;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -93,9 +94,9 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 var attributes = new Dictionary<string, string>
                 {
-                    {JustSayingConstants.AttributeRetentionPeriod, queueConfig.MessageRetention.TotalSeconds.ToString("F0", CultureInfo.InvariantCulture) },
-                    {JustSayingConstants.AttributeVisibilityTimeout, queueConfig.VisibilityTimeout.TotalSeconds.ToString("F0",CultureInfo.InvariantCulture) },
-                    {JustSayingConstants.AttributeDeliveryDelay, queueConfig.DeliveryDelay.TotalSeconds.ToString("F0", CultureInfo.InvariantCulture) }
+                    {JustSayingConstants.AttributeRetentionPeriod, queueConfig.MessageRetention.AsSecondsString() },
+                    {JustSayingConstants.AttributeVisibilityTimeout, queueConfig.VisibilityTimeout.AsSecondsString() },
+                    {JustSayingConstants.AttributeDeliveryDelay, queueConfig.DeliveryDelay.AsSecondsString() }
                 };
 
                 if (queueConfig.ServerSideEncryption != null)
