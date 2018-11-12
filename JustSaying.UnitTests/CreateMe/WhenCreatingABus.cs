@@ -14,7 +14,7 @@ namespace JustSaying.UnitTests.CreateMe
             _region = "region-1";
             _config = x =>
             {
-                x.PublishFailureBackoffMilliseconds = 50;
+                x.PublishFailureBackoff = TimeSpan.FromMilliseconds(50);
                 x.PublishFailureReAttempts = 2;
             };
         }

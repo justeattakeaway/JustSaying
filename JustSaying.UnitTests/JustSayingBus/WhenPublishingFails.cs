@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
@@ -18,7 +19,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             base.Given();
 
             Config.PublishFailureReAttempts.Returns(PublishAttempts);
-            Config.PublishFailureBackoffMilliseconds.Returns(0);
+            Config.PublishFailureBackoff.Returns(TimeSpan.Zero);
             RecordAnyExceptionsThrown();
 
             _publisher.When(x => x.PublishAsync(Arg.Any<Message>(), Arg.Any<CancellationToken>()))

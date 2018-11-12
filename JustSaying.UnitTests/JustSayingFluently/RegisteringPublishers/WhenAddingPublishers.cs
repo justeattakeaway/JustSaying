@@ -33,21 +33,24 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
         [Fact]
         public void ConfigurationIsRequired()
         {
-            SystemUnderTest.ConfigurePublisherWith(conf => conf.PublishFailureBackoffMilliseconds = 50);
+            SystemUnderTest.ConfigurePublisherWith(
+                conf => conf.PublishFailureBackoff = TimeSpan.FromMilliseconds(50));
         }
 
         /// Note: Ignored tests are here for fluent api exploration & expecting compile time issues when working on the fluent interface stuff...
         [Fact(Skip = "Testing compile-time issues")]
         public void ASnsPublisherCanBeSetup()
         {
-            SystemUnderTest.ConfigurePublisherWith(conf => conf.PublishFailureBackoffMilliseconds = 50)
+            SystemUnderTest.ConfigurePublisherWith(
+                    conf => conf.PublishFailureBackoff = TimeSpan.FromMilliseconds(50))
                 .WithSnsMessagePublisher<SimpleMessage>();
         }
 
         [Fact(Skip = "Testing compile-time issues")]
         public void MultipleSnsPublishersCanBeSetup()
         {
-            SystemUnderTest.ConfigurePublisherWith(conf => conf.PublishFailureBackoffMilliseconds = 50)
+            SystemUnderTest.ConfigurePublisherWith(
+                    conf => conf.PublishFailureBackoff = TimeSpan.FromMilliseconds(50))
                 .WithSnsMessagePublisher<SimpleMessage>()
                 .WithSnsMessagePublisher<SimpleMessage>();
         }
@@ -57,7 +60,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
         {
             SystemUnderTest.WithSqsMessagePublisher<SimpleMessage>(c =>
             {
-                c.VisibilityTimeoutSeconds = 1;
+                c.VisibilityTimeout = TimeSpan.FromSeconds(1);
                 c.RetryCountBeforeSendingToErrorQueue = 2;
                 c.MessageRetention = TimeSpan.FromSeconds(3);
                 c.ErrorQueueOptOut = true;

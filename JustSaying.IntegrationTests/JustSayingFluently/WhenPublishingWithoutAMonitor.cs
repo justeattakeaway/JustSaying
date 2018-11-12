@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
@@ -35,7 +36,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             _bus = fixture.Builder()
                 .ConfigurePublisherWith(c =>
                     {
-                        c.PublishFailureBackoffMilliseconds = 1;
+                        c.PublishFailureBackoff = TimeSpan.FromMilliseconds(1);
                         c.PublishFailureReAttempts = 1;
                     })
                 .WithSnsMessagePublisher<SimpleMessage>()

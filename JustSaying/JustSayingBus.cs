@@ -216,7 +216,8 @@ namespace JustSaying
                 }
 
                 _log.LogWarning(0, ex, $"Failed to publish message {message.GetType()}. Retrying after attempt {attemptCount} of {Config.PublishFailureReAttempts}");
-                await Task.Delay(Config.PublishFailureBackoffMilliseconds * attemptCount, cancellationToken).ConfigureAwait(false);
+                var millisDelay = (int)(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
+                await Task.Delay(millisDelay, cancellationToken).ConfigureAwait(false);
                 await PublishAsync(publisher, message, attemptCount, cancellationToken).ConfigureAwait(false);
             }
         }

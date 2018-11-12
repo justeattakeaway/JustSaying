@@ -8,7 +8,7 @@ namespace JustSaying
     public interface IPublishConfiguration
     {
         int PublishFailureReAttempts { get; set; }
-        int PublishFailureBackoffMilliseconds { get; set; }
+        TimeSpan PublishFailureBackoff { get; set; }
         Action<MessageResponse, Message> MessageResponseLogger { get; set;}
         IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
     }

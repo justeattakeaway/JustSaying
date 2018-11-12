@@ -6,7 +6,7 @@ namespace JustSaying.AwsTools.QueueCreation
     {
         public TimeSpan MessageRetention { get; set; }
         public TimeSpan ErrorQueueRetentionPeriod { get; set; }
-        public int VisibilityTimeoutSeconds { get; set; }
+        public TimeSpan VisibilityTimeout { get; set; }
         public TimeSpan DeliveryDelay { get; set; }
         public int RetryCountBeforeSendingToErrorQueue { get; set; }
         public bool ErrorQueueOptOut { get; set; }
@@ -16,7 +16,7 @@ namespace JustSaying.AwsTools.QueueCreation
         {
             MessageRetention = JustSayingConstants.DefaultRetentionPeriod;
             ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod;
-            VisibilityTimeoutSeconds = JustSayingConstants.DefaultVisibilityTimeout;
+            VisibilityTimeout = JustSayingConstants.DefaultVisibilityTimeout;
             RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
             DeliveryDelay = JustSayingConstants.MinimumDeliveryDelay;
         }

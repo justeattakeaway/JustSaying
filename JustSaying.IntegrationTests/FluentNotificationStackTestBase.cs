@@ -33,7 +33,7 @@ namespace JustSaying.IntegrationTests
             var fluent = TestFixture.Builder()
                 .ConfigurePublisherWith(x =>
                 {
-                    x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;
+                    x.PublishFailureBackoff = Configuration.PublishFailureBackoff;
                     x.PublishFailureReAttempts = Configuration.PublishFailureReAttempts;
                 }) as JustSaying.JustSayingFluently;
 

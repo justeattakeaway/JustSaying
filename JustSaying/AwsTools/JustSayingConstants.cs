@@ -14,9 +14,9 @@ namespace JustSaying.AwsTools
         public const string AttributeEncryptionKeyReusePeriodSecondId = "KmsDataKeyReusePeriodSeconds";
 
         /// <summary>
-        /// Default visibility timeout for message in seconds
+        /// Default visibility timeout for message
         /// </summary>
-        public static int DefaultVisibilityTimeout => 30;
+        public static TimeSpan DefaultVisibilityTimeout => TimeSpan.FromSeconds(30);
         
         /// <summary>
         /// Number of times a handler will retry a message until a message 
@@ -31,9 +31,9 @@ namespace JustSaying.AwsTools
 
         /// <summary>
         /// Every time a publisher is not able to deliver a message, it will 
-        /// wait {interval}*{attemptCount} miliseconds before retrying,
+        /// wait {interval}*{attemptCount}  before retrying,
         /// </summary>
-        public static int DefaultPublisherRetryInterval => 100;//100 milliseconds
+        public static TimeSpan DefaultPublisherRetryInterval => TimeSpan.FromMilliseconds(100);
 
         /// <summary>
         /// Minimum message retention period on a queue.
