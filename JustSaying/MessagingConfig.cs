@@ -13,14 +13,14 @@ namespace JustSaying
         public MessagingConfig()
         {
             PublishFailureReAttempts = JustSayingConstants.DefaultPublisherRetryCount;
-            PublishFailureBackoffMilliseconds = JustSayingConstants.DefaultPublisherRetryInterval;
+            PublishFailureBackoff = JustSayingConstants.DefaultPublisherRetryInterval;
             AdditionalSubscriberAccounts = new List<string>();
             Regions = new List<string>();
             MessageSubjectProvider = new NonGenericMessageSubjectProvider();
         }
 
         public int PublishFailureReAttempts { get; set; }
-        public int PublishFailureBackoffMilliseconds { get; set; }
+        public TimeSpan PublishFailureBackoff { get; set; }
         public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
         public IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
         public IList<string> Regions { get; }

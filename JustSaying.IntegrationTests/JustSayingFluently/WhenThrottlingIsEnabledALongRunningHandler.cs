@@ -43,7 +43,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .WithMonitoring(Substitute.For<IMessageMonitor>())
                 .ConfigurePublisherWith(c =>
                 {
-                    c.PublishFailureBackoffMilliseconds = 1;
+                    c.PublishFailureBackoff = TimeSpan.FromMilliseconds(1);
                 })
                 .WithSnsMessagePublisher<SimpleMessage>()
                 .WithSqsTopicSubscriber()

@@ -26,7 +26,7 @@ namespace JustSaying.UnitTests
                 .WithActiveRegion(() => "defaultRegion")
                 .ConfigurePublisherWith(x =>
                 {
-                    x.PublishFailureBackoffMilliseconds = Configuration.PublishFailureBackoffMilliseconds;
+                    x.PublishFailureBackoff = Configuration.PublishFailureBackoff;
                     x.PublishFailureReAttempts = Configuration.PublishFailureReAttempts;
 
                 }) as JustSaying.JustSayingFluently;

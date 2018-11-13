@@ -6,7 +6,7 @@ namespace JustSaying.AwsTools.QueueCreation
         {
             MessageRetention = JustSayingConstants.DefaultRetentionPeriod;
             ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod;
-            VisibilityTimeoutSeconds = JustSayingConstants.DefaultVisibilityTimeout;
+            VisibilityTimeout = JustSayingConstants.DefaultVisibilityTimeout;
             RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
         }
 

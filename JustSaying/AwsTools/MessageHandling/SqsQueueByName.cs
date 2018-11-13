@@ -7,6 +7,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using Amazon.SQS.Util;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
@@ -117,10 +118,11 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             var policy = new Dictionary<string, string>
             {
-                { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD ,queueConfig.MessageRetention.TotalSeconds.ToString("F0", CultureInfo.InvariantCulture)},
-                { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , queueConfig.VisibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture)},
-                { SQSConstants.ATTRIBUTE_DELAY_SECONDS  , queueConfig.DeliveryDelay.TotalSeconds.ToString("F0", CultureInfo.InvariantCulture)},
+                { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD ,queueConfig.MessageRetention.AsSecondsString() },
+                { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT  , queueConfig.VisibilityTimeout.AsSecondsString() },
+                { SQSConstants.ATTRIBUTE_DELAY_SECONDS  , queueConfig.DeliveryDelay.AsSecondsString() },
             };
+
             if (NeedErrorQueue(queueConfig))
             {
                 policy.Add(JustSayingConstants.AttributeRedrivePolicy, new RedrivePolicy(_retryCountBeforeSendingToErrorQueue, ErrorQueue.Arn).ToString());

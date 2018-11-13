@@ -40,7 +40,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .WithMonitoring(_monitoring)
                 .ConfigurePublisherWith(c =>
                     {
-                        c.PublishFailureBackoffMilliseconds = 1;
+                        c.PublishFailureBackoff = TimeSpan.FromMilliseconds(1);
                         c.PublishFailureReAttempts = 3;
                     })
                 .WithSnsMessagePublisher<SimpleMessage>()

@@ -21,7 +21,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         private IPublishConfiguration _config =
             new MessagingConfig
             {
-                PublishFailureBackoffMilliseconds = 1,
+                PublishFailureBackoff = TimeSpan.FromMilliseconds(1),
                 PublishFailureReAttempts = 3
             };
 
@@ -81,7 +81,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .WithMonitoring(Monitoring)
                 .ConfigurePublisherWith(c =>
                 {
-                    c.PublishFailureBackoffMilliseconds = _config.PublishFailureBackoffMilliseconds;
+                    c.PublishFailureBackoff = _config.PublishFailureBackoff;
                     c.PublishFailureReAttempts = _config.PublishFailureReAttempts;
                 })
                 .WithSnsMessagePublisher<SimpleMessage>()
@@ -90,7 +90,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .ConfigureSubscriptionWith(cf =>
                 {
                     cf.MessageRetention = TimeSpan.FromSeconds(60);
-                    cf.VisibilityTimeoutSeconds = JustSayingConstants.DefaultVisibilityTimeout;
+                    cf.VisibilityTimeout = JustSayingConstants.DefaultVisibilityTimeout;
                     cf.InstancePosition = 1;
                 })
                 .WithMessageHandler(snsHandler)

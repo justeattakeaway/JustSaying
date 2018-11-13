@@ -7,6 +7,7 @@ using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Extensions;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -19,7 +20,7 @@ namespace JustSaying.AwsTools.MessageHandling
         public RegionEndpoint Region { get; protected set; }
         public ErrorQueue ErrorQueue { get; protected set; }
         internal TimeSpan MessageRetentionPeriod { get; set; }
-        internal int VisibilityTimeout { get; set; }
+        internal TimeSpan VisibilityTimeout { get; set; }
         internal TimeSpan DeliveryDelay { get; set; }
         internal RedrivePolicy RedrivePolicy { get; set; }
         internal ServerSideEncryption ServerSideEncryption { get; set; }
@@ -69,7 +70,7 @@ namespace JustSaying.AwsTools.MessageHandling
             var attributes = await GetAttrsAsync(keys).ConfigureAwait(false);
             Arn = attributes.QueueARN;
             MessageRetentionPeriod = TimeSpan.FromSeconds(attributes.MessageRetentionPeriod);
-            VisibilityTimeout = attributes.VisibilityTimeout;
+            VisibilityTimeout = TimeSpan.FromSeconds(attributes.VisibilityTimeout);
             Policy = attributes.Policy;
             DeliveryDelay = TimeSpan.FromSeconds(attributes.DelaySeconds);
             RedrivePolicy = ExtractRedrivePolicyFromQueueAttributes(attributes.Attributes);
@@ -93,10 +94,11 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 var attributes = new Dictionary<string, string>
                 {
-                    {JustSayingConstants.AttributeRetentionPeriod, queueConfig.MessageRetention.TotalSeconds.ToString("F0", CultureInfo.InvariantCulture) },
-                    {JustSayingConstants.AttributeVisibilityTimeout, queueConfig.VisibilityTimeoutSeconds.ToString(CultureInfo.InvariantCulture) },
-                    {JustSayingConstants.AttributeDeliveryDelay, queueConfig.DeliveryDelay.TotalSeconds.ToString("F0", CultureInfo.InvariantCulture) }
+                    {JustSayingConstants.AttributeRetentionPeriod, queueConfig.MessageRetention.AsSecondsString() },
+                    {JustSayingConstants.AttributeVisibilityTimeout, queueConfig.VisibilityTimeout.AsSecondsString() },
+                    {JustSayingConstants.AttributeDeliveryDelay, queueConfig.DeliveryDelay.AsSecondsString() }
                 };
+
                 if (queueConfig.ServerSideEncryption != null)
                 {
                     attributes.Add(JustSayingConstants.AttributeEncryptionKeyId, queueConfig.ServerSideEncryption.KmsMasterKeyId);
@@ -118,7 +120,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 if (response.HttpStatusCode == HttpStatusCode.OK)
                 {
                     MessageRetentionPeriod = queueConfig.MessageRetention;
-                    VisibilityTimeout = queueConfig.VisibilityTimeoutSeconds;
+                    VisibilityTimeout = queueConfig.VisibilityTimeout;
                     DeliveryDelay = queueConfig.DeliveryDelay;
                     ServerSideEncryption = queueConfig.ServerSideEncryption;
                 }
@@ -128,7 +130,7 @@ namespace JustSaying.AwsTools.MessageHandling
         protected virtual bool QueueNeedsUpdating(SqsBasicConfiguration queueConfig)
         {
             return MessageRetentionPeriod != queueConfig.MessageRetention
-                   || VisibilityTimeout != queueConfig.VisibilityTimeoutSeconds
+                   || VisibilityTimeout != queueConfig.VisibilityTimeout
                    || DeliveryDelay != queueConfig.DeliveryDelay
                    || QueueNeedsUpdatingBecauseOfEncryption(queueConfig);
         }
