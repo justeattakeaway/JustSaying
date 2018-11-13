@@ -28,7 +28,7 @@ namespace JustSaying
         private readonly ILogger _log;
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
         private readonly IAwsClientFactoryProxy _awsClientFactoryProxy;
-        protected readonly IAmJustSaying Bus;
+        protected IAmJustSaying Bus { get; }
         private SqsReadConfiguration _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic);
         private IMessageSerialisationFactory _serialisationFactory;
         private Func<INamingStrategy> _busNamingStrategyFunc;
