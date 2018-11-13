@@ -9,7 +9,8 @@ namespace JustSaying
         /// <summary>
         /// Allows to override default <see cref="IAwsClientFactory"/> globally.
         /// </summary>
-        public static Func<IAwsClientFactory> DefaultClientFactory = () => new DefaultAwsClientFactory();
+        public static Func<IAwsClientFactory> DefaultClientFactory { get; set; }
+            = () => new DefaultAwsClientFactory();
 
         public static JustSayingFluentlyDependencies WithLogging(ILoggerFactory loggerFactory) => 
             new JustSayingFluentlyDependencies { LoggerFactory = loggerFactory};
