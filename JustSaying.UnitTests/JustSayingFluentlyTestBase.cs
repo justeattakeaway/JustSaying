@@ -40,15 +40,12 @@ namespace JustSaying.UnitTests
         // ToDo: Must do better!!
         private void ConfigureNotificationStackMock(JustSaying.JustSayingFluently fns)
         {
+            var constructedStack = (JustSaying.JustSayingBus)fns.Bus;
+
             Bus = Substitute.For<IAmJustSaying>();
-
-            var notificationStackField = fns.GetType().GetProperty("Bus", BindingFlags.Instance | BindingFlags.NonPublic);
-
-            var constructedStack = (JustSaying.JustSayingBus)notificationStackField.GetValue(fns);
-
             Bus.Config.Returns(constructedStack.Config);
 
-            notificationStackField.SetValue(fns, Bus);
+            fns.Bus = Bus;
         }
 
         private void ConfigureAmazonQueueCreator(JustSaying.JustSayingFluently fns)
