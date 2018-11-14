@@ -42,7 +42,7 @@ namespace JustSaying.UnitTests
         {
             Bus = Substitute.For<IAmJustSaying>();
 
-            var notificationStackField = fns.GetType().GetField("Bus", BindingFlags.Instance | BindingFlags.NonPublic);
+            var notificationStackField = fns.GetType().GetProperty("Bus", BindingFlags.Instance | BindingFlags.NonPublic);
 
             var constructedStack = (JustSaying.JustSayingBus)notificationStackField.GetValue(fns);
 
