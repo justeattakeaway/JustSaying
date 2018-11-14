@@ -47,15 +47,12 @@ namespace JustSaying.IntegrationTests
 
         private void InjectMockJustSayingBus(JustSaying.JustSayingFluently fluent)
         {
+            var constructedStack = (JustSayingBus)fluent.Bus;
+
             NotificationStack = Substitute.For<IAmJustSaying>();
-
-            var notificationStackField = fluent.GetType().GetField("Bus", BindingFlags.Instance | BindingFlags.NonPublic);
-
-            var constructedStack = (JustSayingBus) notificationStackField.GetValue(fluent);
-
             NotificationStack.Config.Returns(constructedStack.Config);
 
-            notificationStackField.SetValue(fluent, NotificationStack);
+            fluent.Bus = NotificationStack;
         }
 
         protected override Task When() => Task.CompletedTask;
