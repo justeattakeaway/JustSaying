@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="CodeProjects" Description="Code analysis rules for JustSaying Code." ToolsVersion="15.0">
+  <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
+    <Rule Id="CA1001" Action="None" />
+    <Rule Id="CA1068" Action="None" />
+    <Rule Id="CA1308" Action="None" />
+    <Rule Id="CA1716" Action="None" />
+    <Rule Id="CA1724" Action="None" />
+    <Rule Id="CA2008" Action="None" />
+  </Rules>
+</RuleSet>
