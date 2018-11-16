@@ -22,7 +22,7 @@ namespace JustSaying.TestingFramework
 
         public AWSCredentials Credentials { get; set; } = TestEnvironment.Credentials;
 
-        public bool IsSimulator => TestEnvironment.IsSimulatorConfigured;
+        public static bool IsSimulator => TestEnvironment.IsSimulatorConfigured;
 
         public ILoggerFactory LoggerFactory { get; set; } = NullLoggerFactory.Instance;
 

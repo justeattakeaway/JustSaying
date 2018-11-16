@@ -1,4 +1,5 @@
-﻿using System.Linq;
+using System.Globalization;
+using System.Linq;
 using JustSaying.Tools.Commands;
 using Magnum.CommandLineParser;
 using Magnum.Monads.Parser;
@@ -28,7 +29,8 @@ namespace JustSaying.Tools
                     from destinationQueueName in x.Definition("to")
                     from region in x.Definition("in")
                     from count in (from d in x.Definition("count") select d).Optional("count", "1")
-                    select (ICommand) new MoveCommand(sourceQueueName.Value, destinationQueueName.Value, region.Value, int.Parse(count.Value)))
+                    select (ICommand) new MoveCommand(sourceQueueName.Value, destinationQueueName.Value, region.Value,
+                        int.Parse(count.Value, CultureInfo.InvariantCulture)))
                 );
         }
     }
