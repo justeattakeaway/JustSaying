@@ -64,7 +64,19 @@ namespace JustSaying.AwsTools.MessageHandling
                             BinaryValue = source.Value.BinaryValue?.ToArray(),
                             DataType = source.Value.DataType
                         };
-                    });
+                typedMessage = _serialisationRegister.DeserializeMessage(message.Body);
+
+                Models.MessageAttributeValue MapAttribute(MessageAttributeValue sourceAttribute) =>
+                    new Models.MessageAttributeValue
+                    {
+                        StringValue = sourceAttribute.StringValue,
+                        BinaryValue = sourceAttribute.BinaryValue?.ToArray(),
+                        DataType = sourceAttribute.DataType
+                    };
+                
+                typedMessage.MessageAttributes = message.MessageAttributes?.ToDictionary(
+                    source => source.Key,
+                    source => source.Value == null ? null : MapAttribute(source.Value));
             }
             catch (MessageFormatNotSupportedException ex)
             {
