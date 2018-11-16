@@ -63,7 +63,7 @@ namespace JustSaying.Tools.Commands
             return true;
         }
 
-        private async Task EnsureQueueExistsAsync(SqsQueueByName queue)
+        private static async Task EnsureQueueExistsAsync(SqsQueueByName queue)
         {
             if (!await queue.ExistsAsync().ConfigureAwait(false))
             {

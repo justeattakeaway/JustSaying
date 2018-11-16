@@ -6,9 +6,9 @@ using Magnum.Monads.Parser;
 
 namespace JustSaying.Tools
 {
-    public class CommandParser
+    public static class CommandParser
     {
-        public bool Parse(string commandText)
+        public static bool Parse(string commandText)
         {
             return CommandLine
                 .Parse<ICommand>(commandText, InitializeCommandLineParser)
