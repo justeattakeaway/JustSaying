@@ -47,7 +47,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         private static bool B(PublishRequest x)
         {
-            return x.Message.Equals(Message, StringComparison.OrdinalIgnoreCase);
+            return x.Message.Equals(Message, StringComparison.Ordinal);
         }
 
         [Fact]
