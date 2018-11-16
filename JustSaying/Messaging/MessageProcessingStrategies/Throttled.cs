@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,10 +18,16 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             _semaphore = new SemaphoreSlim(maxWorkers, maxWorkers);
         }
 
-        public void StartWorker(Func<Task> action)
+        public void StartWorker(Func<Task> action, CancellationToken ct)
         {
             var messageProcessingTask = new Task<Task>(() => ReleaseOnCompleted(action));
-            _semaphore.Wait();
+            _semaphore.Wait(ct);
+
+            if (ct.IsCancellationRequested)
+            {
+                return;
+            }
+
             messageProcessingTask.Start();
         }
 

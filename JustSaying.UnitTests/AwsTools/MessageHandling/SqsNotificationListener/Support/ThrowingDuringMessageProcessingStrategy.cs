@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.TestingFramework;
@@ -24,7 +25,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.
             await Task.Yield();
         }
 
-        public void StartWorker(Func<Task> action)
+        public void StartWorker(Func<Task> action, CancellationToken ct)
         {
             if (_firstTime)
             {

@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JustSaying.Messaging.MessageProcessingStrategies
@@ -21,7 +22,8 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         /// Launch a worker to start processing a message.
         /// </summary>
         /// <param name="action"></param>
-        void StartWorker(Func<Task> action);
+        /// <param name="ct">The cancellation token</param>
+        void StartWorker(Func<Task> action, CancellationToken ct);
 
         /// <summary>
         /// After awaiting this, you should be in a position to start another worker

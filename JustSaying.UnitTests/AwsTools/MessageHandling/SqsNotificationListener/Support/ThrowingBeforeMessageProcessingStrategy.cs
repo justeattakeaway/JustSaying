@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.TestingFramework;
@@ -40,7 +41,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.
             return Task.FromResult(true);
         }
 
-        public void StartWorker(Func<Task> action)
+        public void StartWorker(Func<Task> action, CancellationToken ct)
         {
         }
 

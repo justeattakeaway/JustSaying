@@ -175,7 +175,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     {
                         foreach (var message in sqsMessageResponse.Messages)
                         {
-                            HandleMessage(message);
+                            HandleMessage(message, ct);
                         }
                     }
                 }
@@ -202,30 +202,32 @@ namespace JustSaying.AwsTools.MessageHandling
                 AttributeNames = _requestMessageAttributeNames
             };
 
-            var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));
-            ReceiveMessageResponse sqsMessageResponse;
-
-            try
+            using (var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300)))
             {
-                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, receiveTimeout.Token))
+                ReceiveMessageResponse sqsMessageResponse;
+
+                try
                 {
-                    sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCts.Token)
-                        .ConfigureAwait(false);
+                    using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, receiveTimeout.Token))
+                    {
+                        sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCts.Token)
+                            .ConfigureAwait(false);
+                    }
                 }
-            }
-            finally
-            {
-                if (receiveTimeout.Token.IsCancellationRequested)
+                finally
                 {
-                    _log.LogInformation($"Receiving messages from queue {queueName}, region {region}, timed out");
+                    if (receiveTimeout.Token.IsCancellationRequested)
+                    {
+                        _log.LogInformation($"Receiving messages from queue {queueName}, region {region}, timed out");
+                    }
                 }
+
+                watch.Stop();
+
+                _messagingMonitor.ReceiveMessageTime(watch.ElapsedMilliseconds, queueName, region);
+
+                return sqsMessageResponse;
             }
-
-            watch.Stop();
-
-            _messagingMonitor.ReceiveMessageTime(watch.ElapsedMilliseconds, queueName, region);
-
-            return sqsMessageResponse;
         }
 
         private async Task<int> GetNumberOfMessagesToReadFromSqs()
@@ -247,10 +249,10 @@ namespace JustSaying.AwsTools.MessageHandling
             return numberOfMessagesToReadFromSqs;
         }
 
-        private void HandleMessage(Amazon.SQS.Model.Message message)
+        private void HandleMessage(Amazon.SQS.Model.Message message, CancellationToken ct)
         {
-            var action = new Func<Task>(() => _messageDispatcher.DispatchMessage(message));
-            _messageProcessingStrategy.StartWorker(action);
+            var action = new Func<Task>(() => _messageDispatcher.DispatchMessage(message, ct));
+            _messageProcessingStrategy.StartWorker(action, ct);
         }
 
         public ICollection<ISubscriber> Subscribers { get; set; }

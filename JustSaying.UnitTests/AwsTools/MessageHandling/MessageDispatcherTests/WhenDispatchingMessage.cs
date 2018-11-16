@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
@@ -62,7 +63,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             _serialisationRegister.DeserializeMessage(Arg.Any<string>()).Returns(_typedMessage);
         }
 
-        protected override async Task When() =>  await SystemUnderTest.DispatchMessage(_sqsMessage);
+        protected override async Task When() =>  await SystemUnderTest.DispatchMessage(_sqsMessage, CancellationToken.None);
 
         protected override MessageDispatcher CreateSystemUnderTest()
         {
