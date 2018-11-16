@@ -49,23 +49,6 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 typedMessage = _serialisationRegister.DeserializeMessage(message.Body);
 
-                typedMessage.MessageAttributes = message.MessageAttributes?.ToDictionary(
-                    source => source.Key,
-                    source =>
-                    {
-                        if (source.Value == null)
-                        {
-                            return null;
-                        }
-
-                        return new JustSaying.Models.MessageAttributeValue
-                        {
-                            StringValue = source.Value.StringValue,
-                            BinaryValue = source.Value.BinaryValue?.ToArray(),
-                            DataType = source.Value.DataType
-                        };
-                typedMessage = _serialisationRegister.DeserializeMessage(message.Body);
-
                 Models.MessageAttributeValue MapAttribute(MessageAttributeValue sourceAttribute) =>
                     new Models.MessageAttributeValue
                     {
@@ -73,7 +56,7 @@ namespace JustSaying.AwsTools.MessageHandling
                         BinaryValue = sourceAttribute.BinaryValue?.ToArray(),
                         DataType = sourceAttribute.DataType
                     };
-                
+
                 typedMessage.MessageAttributes = message.MessageAttributes?.ToDictionary(
                     source => source.Key,
                     source => source.Value == null ? null : MapAttribute(source.Value));
