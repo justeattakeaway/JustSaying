@@ -52,7 +52,7 @@ namespace JustSaying.TestingFramework
                     return null;
                 }
 
-                return new Uri(awsEnv);
+                return new Uri(awsEnv, UriKind.Absolute);
             }
         }
 
