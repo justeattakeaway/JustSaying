@@ -10,9 +10,10 @@
     <PackageReference Include="Text.Analyzers" Version="2.6.2" PrivateAssets="All" />
   </ItemGroup>
   <PropertyGroup>
-    <CodeAnalysisRuleSet>..\CodeAnalysisRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)CodeAnalysisRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <PropertyGroup>    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+  <PropertyGroup>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)justeat-oss.snk</AssemblyOriginatorKeyFile>
     <Authors>JUSTEAT_OSS</Authors>
     <Company>Just Eat</Company>
