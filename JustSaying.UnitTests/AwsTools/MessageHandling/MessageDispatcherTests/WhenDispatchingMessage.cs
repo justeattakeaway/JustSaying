@@ -1,4 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
@@ -13,6 +17,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Shouldly;
 using Xunit;
 using Message = JustSaying.Models.Message;
 using SQSMessage = Amazon.SQS.Model.Message;
@@ -132,6 +137,57 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             public void ShouldLogException()
             {
                 _logger.ReceivedWithAnyArgs().LogError(0, null, "msg");
+            }
+        }
+
+        public class AndSqsMessageContainsAttributes : WhenDispatchingMessage
+        {
+            private Message _dispatchedMessage = null;
+
+            protected override void Given()
+            {
+                base.Given();
+
+                _handlerMap.Add(typeof(OrderAccepted), (msg) =>
+                {
+                    _dispatchedMessage = msg;
+                    return Task.FromResult(true);
+                });
+
+                _sqsMessage.MessageAttributes = new Dictionary<string, MessageAttributeValue>
+                {
+                    ["some_attribute"] = new MessageAttributeValue
+                    {
+                        StringValue = "some_string_value",
+                        DataType = "some_data_type",
+                        BinaryValue = new MemoryStream(Encoding.ASCII.GetBytes("some_binary_data"))
+                    },
+
+                    [MessageSystemAttributeName.ApproximateReceiveCount] = new MessageAttributeValue
+                    {
+                        StringValue = "1",
+                        DataType = "Number",
+                        BinaryValue = null
+                    }
+                };
+            }
+
+            [Fact]
+            public void ShouldPopulateAttributesOnTypedMessage()
+            {
+                var someAttribute = _dispatchedMessage.MessageAttributes["some_attribute"];
+                someAttribute.ShouldNotBeNull();
+
+                someAttribute.StringValue.ShouldBe("some_string_value");
+                someAttribute.DataType.ShouldBe("some_data_type");
+                someAttribute.BinaryValue.ToArray().ShouldBe(Encoding.ASCII.GetBytes("some_binary_data"));
+
+                var approximateReceiveCount = _dispatchedMessage.MessageAttributes[MessageSystemAttributeName.ApproximateReceiveCount];
+                approximateReceiveCount.ShouldNotBeNull();
+
+                approximateReceiveCount.StringValue.ShouldBe("1");
+                approximateReceiveCount.DataType.ShouldBe("Number");
+                approximateReceiveCount.BinaryValue.ShouldBe(null);
             }
         }
     }
