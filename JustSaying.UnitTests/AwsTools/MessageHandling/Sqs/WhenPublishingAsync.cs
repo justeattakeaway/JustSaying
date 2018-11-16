@@ -49,7 +49,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         public void MessageIsPublishedToQueue()
         {
             // ToDo: Could be better...
-            _sqs.Received().SendMessageAsync(Arg.Is<SendMessageRequest>(x => x.MessageBody.Equals("serialized_contents")));
+            _sqs.Received().SendMessageAsync(Arg.Is<SendMessageRequest>(
+                x => x.MessageBody.Equals("serialized_contents", StringComparison.InvariantCulture)));
         }
 
         [Fact]

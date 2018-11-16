@@ -105,7 +105,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
             fakeMonitor.DidNotReceive().IncrementThrottlingStatistic();
         }
 
-        private async Task ListenLoopExecuted(Queue<Func<Task>> actions,
+        private static async Task ListenLoopExecuted(Queue<Func<Task>> actions,
             IMessageProcessingStrategy messageProcessingStrategy)
         {
             var initalActionCount = actions.Count;
@@ -136,7 +136,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
             }
         }
 
-        private IList<Func<Task>> GetFromFakeSnsQueue(Queue<Func<Task>> actions, int requestedBatchSize)
+        private static IList<Func<Task>> GetFromFakeSnsQueue(Queue<Func<Task>> actions, int requestedBatchSize)
         {
             var batchSize = Math.Min(requestedBatchSize, MaxAmazonBatchSize);
             batchSize = Math.Min(batchSize, actions.Count);
@@ -150,7 +150,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
             return batch;
         }
 
-        private Queue<Func<Task>> BuildFakeIncomingMessages(int numberOfMessagesToCreate, ThreadSafeCounter counter)
+        private static Queue<Func<Task>> BuildFakeIncomingMessages(int numberOfMessagesToCreate, ThreadSafeCounter counter)
         {
             var random = new Random();
             var actions = new Queue<Func<Task>>();
