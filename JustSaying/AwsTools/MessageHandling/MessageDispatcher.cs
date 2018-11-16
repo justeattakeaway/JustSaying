@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -47,6 +48,23 @@ namespace JustSaying.AwsTools.MessageHandling
             try
             {
                 typedMessage = _serialisationRegister.DeserializeMessage(message.Body);
+
+                typedMessage.MessageAttributes = message.MessageAttributes?.ToDictionary(
+                    source => source.Key,
+                    source =>
+                    {
+                        if (source.Value == null)
+                        {
+                            return null;
+                        }
+
+                        return new JustSaying.Models.MessageAttributeValue
+                        {
+                            StringValue = source.Value.StringValue,
+                            BinaryValue = source.Value.BinaryValue?.ToArray(),
+                            DataType = source.Value.DataType
+                        };
+                    });
             }
             catch (MessageFormatNotSupportedException ex)
             {
@@ -132,7 +150,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             await _queue.Client.DeleteMessageAsync(deleteRequest).ConfigureAwait(false);
         }
-        
+
         private async Task UpdateMessageVisibilityTimeout(SQSMessage message, string receiptHandle, Message typedMessage, Exception lastException)
         {
             if (TryGetApproxReceiveCount(message.Attributes, out int approxReceiveCount))
