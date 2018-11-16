@@ -50,7 +50,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         {
             // ToDo: Could be better...
             _sqs.Received().SendMessageAsync(Arg.Is<SendMessageRequest>(
-                x => x.MessageBody.Equals("serialized_contents", StringComparison.InvariantCulture)));
+                x => x.MessageBody.Equals("serialized_contents", StringComparison.Ordinal)));
         }
 
         [Fact]
