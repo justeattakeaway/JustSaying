@@ -94,7 +94,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             };
         }
 
-        protected string SqsMessageBody(string messageType)
+        protected static string SqsMessageBody(string messageType)
         {
             return "{\"Subject\":\"" + messageType + "\"," + "\"Message\":\"" + MessageBody + "\"}";
         }

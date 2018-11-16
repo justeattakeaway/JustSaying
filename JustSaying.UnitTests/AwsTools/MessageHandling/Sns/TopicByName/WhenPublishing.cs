@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
@@ -46,7 +47,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         private static bool B(PublishRequest x)
         {
-            return x.Message.Equals(Message);
+            return x.Message.Equals(Message, StringComparison.Ordinal);
         }
 
         [Fact]

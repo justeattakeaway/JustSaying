@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
@@ -100,7 +101,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
                 base.Given();
                 _messageBackoffStrategy.GetBackoffDuration(_typedMessage, 1, _expectedException).Returns(_expectedBackoffTimeSpan);
                 _handlerMap.Add(typeof(OrderAccepted), m => throw _expectedException);
-                _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString());
+                _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString(CultureInfo.InvariantCulture));
             }
 
             [Fact]

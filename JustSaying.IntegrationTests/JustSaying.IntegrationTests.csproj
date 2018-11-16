@@ -2,6 +2,9 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>$(NoWarn);CA2007;CA1054;CA1307;CA1063;CA1822;CA1052;CA1034;CA1816</NoWarn>
+  </PropertyGroup>
   <ItemGroup>
     <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
