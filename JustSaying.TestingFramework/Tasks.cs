@@ -9,7 +9,8 @@ namespace JustSaying.TestingFramework
         private const int DelaySendMillis = 200;
 
         public static async Task<bool> WaitWithTimeoutAsync(Task task)
-            => await WaitWithTimeoutAsync(task, TimeSpan.FromMilliseconds(DefaultTimeoutMillis));
+            => await WaitWithTimeoutAsync(task, TimeSpan.FromMilliseconds(DefaultTimeoutMillis))
+                .ConfigureAwait(false);
 
         public static async Task<bool> WaitWithTimeoutAsync(Task task, TimeSpan timeoutDuration)
         {
@@ -24,7 +25,7 @@ namespace JustSaying.TestingFramework
             Task.Run(async () =>
             {
                 await Task.Yield();
-                await Task.Delay(DelaySendMillis);
+                await Task.Delay(DelaySendMillis).ConfigureAwait(false);
                 doneSignal.SetResult(null);
             });
         }

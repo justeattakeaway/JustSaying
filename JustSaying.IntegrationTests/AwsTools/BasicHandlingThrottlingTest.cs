@@ -40,7 +40,7 @@ namespace JustSaying.IntegrationTests.AwsTools
             {
                 await queue.CreateAsync(new SqsBasicConfiguration());
 
-                if (!fixture.IsSimulator)
+                if (!JustSayingFixture.IsSimulator)
                 {
                     // Wait for up to 60 secs for queue creation to be guaranteed completed by AWS
                     using (var cts = new CancellationTokenSource(TimeSpan.FromMinutes(1)))
@@ -106,7 +106,7 @@ namespace JustSaying.IntegrationTests.AwsTools
             {
                 do
                 {
-                    if (!fixture.IsSimulator)
+                    if (!JustSayingFixture.IsSimulator)
                     {
                         await Task.Delay(TimeSpan.FromSeconds(5));
                     }

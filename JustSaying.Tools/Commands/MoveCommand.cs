@@ -65,7 +65,7 @@ namespace JustSaying.Tools.Commands
 
         private async Task EnsureQueueExistsAsync(SqsQueueByName queue)
         {
-            if (!await queue.ExistsAsync())
+            if (!await queue.ExistsAsync().ConfigureAwait(false))
             {
                 throw new InvalidOperationException($"{queue.QueueName} does not exist.");
             }

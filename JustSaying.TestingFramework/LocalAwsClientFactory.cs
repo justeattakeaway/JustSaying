@@ -1,3 +1,4 @@
+using System;
 using Amazon;
 using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
@@ -8,19 +9,19 @@ namespace JustSaying.TestingFramework
 {
     public class LocalAwsClientFactory : IAwsClientFactory
     {
-        public LocalAwsClientFactory(string serviceUrl)
+        public LocalAwsClientFactory(Uri serviceUrl)
         {
             ServiceUrl = serviceUrl;
         }
 
-        private string ServiceUrl { get; }
+        private Uri ServiceUrl { get; }
 
         public IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region)
         {
             var credentials = new AnonymousAWSCredentials();
             var clientConfig = new AmazonSimpleNotificationServiceConfig
             {
-                ServiceURL = ServiceUrl
+                ServiceURL = ServiceUrl.ToString()
             };
 
             return new AmazonSimpleNotificationServiceClient(credentials, clientConfig);
@@ -31,7 +32,7 @@ namespace JustSaying.TestingFramework
             var credentials = new AnonymousAWSCredentials();
             var clientConfig = new AmazonSQSConfig
             {
-                ServiceURL = ServiceUrl
+                ServiceURL = ServiceUrl.ToString()
             };
 
             return new AmazonSQSClient(credentials, clientConfig);

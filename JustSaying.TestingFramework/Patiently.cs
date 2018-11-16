@@ -6,7 +6,8 @@ namespace JustSaying.TestingFramework
 {
     public static class Patiently
     {
-        public static async Task AssertThatAsync(Func<bool> func) => await AssertThatAsync(func, 5.Seconds());
+        public static async Task AssertThatAsync(Func<bool> func)
+            => await AssertThatAsync(func, 5.Seconds()).ConfigureAwait(false);
 
         public static async Task AssertThatAsync(Func<bool> func, TimeSpan timeout)
         {
@@ -19,7 +20,7 @@ namespace JustSaying.TestingFramework
                     return;
                 }
 
-                await Task.Delay(50.Milliseconds());
+                await Task.Delay(50.Milliseconds()).ConfigureAwait(false);
 
                 // TODO Use ITestOutputHelper
                 Console.WriteLine(
@@ -29,7 +30,8 @@ namespace JustSaying.TestingFramework
             func.Invoke().ShouldBeTrue();
         }
 
-        public static async Task AssertThatAsync(Func<Task<bool>> func) => await AssertThatAsync(func, 5.Seconds());
+        public static async Task AssertThatAsync(Func<Task<bool>> func) =>
+            await AssertThatAsync(func, 5.Seconds()).ConfigureAwait(false);
 
         public static async Task AssertThatAsync(Func<Task<bool>> func, TimeSpan timeout)
         {
@@ -37,19 +39,20 @@ namespace JustSaying.TestingFramework
             var timeoutAt = DateTime.Now + timeout;
             do
             {
-                if (await func.Invoke())
+                if (await func.Invoke().ConfigureAwait(false))
                 {
                     return;
                 }
 
-                await Task.Delay(50.Milliseconds());
+                await Task.Delay(50.Milliseconds()).ConfigureAwait(false);
 
                 // TODO Use ITestOutputHelper
                 Console.WriteLine(
                     $"Waiting for {(DateTime.Now - started).TotalMilliseconds} ms - Still Checking.");
             } while (DateTime.Now < timeoutAt);
 
-            (await func.Invoke()).ShouldBeTrue();
+            var result = await func.Invoke().ConfigureAwait(false);
+            result.ShouldBeTrue();
         }
     }
 
