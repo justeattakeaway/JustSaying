@@ -37,12 +37,24 @@ namespace JustSaying.TestingFramework
         /// <summary>
         /// Gets a value indicating whether an AWS simulator is configured for use.
         /// </summary>
-        public static bool IsSimulatorConfigured => !string.IsNullOrEmpty(SimulatorUrl);
+        public static bool IsSimulatorConfigured => (SimulatorUrl != null);
 
         /// <summary>
         /// Gets the URL for the configured AWS simulator, if any.
         /// </summary>
-        public static string SimulatorUrl => Environment.GetEnvironmentVariable("AWS_SERVICE_URL") ?? string.Empty;
+        public static Uri SimulatorUrl
+        {
+            get
+            {
+                var awsEnv = Environment.GetEnvironmentVariable("AWS_SERVICE_URL");
+                if (string.IsNullOrWhiteSpace(awsEnv))
+                {
+                    return null;
+                }
+
+                return new Uri(awsEnv);
+            }
+        }
 
         /// <summary>
         /// Gets a value indicating whether AWS credentials are configured.

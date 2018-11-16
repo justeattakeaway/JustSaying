@@ -19,7 +19,7 @@ namespace JustSaying.UnitTests.Messaging.Serialisation.Newtonsoft
 
         protected override void Given()
         {
-            _messageOut = new MessageWithEnum(Values.Two);
+            _messageOut = new MessageWithEnum(Value.Two);
         }
 
         public string GetMessageInContext(MessageWithEnum message)
