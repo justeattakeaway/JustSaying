@@ -1,4 +1,4 @@
-﻿using Magnum.CommandLineParser;
+using Magnum.CommandLineParser;
 using Magnum.Extensions;
 
 namespace JustSaying.Tools
@@ -16,8 +16,7 @@ namespace JustSaying.Tools
 
         private static bool ProcessLine(string line)
         {
-            var commandParser = new CommandParser();
-            return commandParser.Parse(line);
+            return CommandParser.Parse(line);
         }
     }
 }
