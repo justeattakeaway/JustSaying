@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -130,7 +131,8 @@ namespace JustSaying.AwsTools.MessageHandling
             }
 
             var innerExDetails = new StringBuilder();
-            innerExDetails.AppendFormat("AggregateException containing {0} inner exceptions", flatEx.InnerExceptions.Count);
+            innerExDetails.AppendFormat(CultureInfo.InvariantCulture,
+                "AggregateException containing {0} inner exceptions", flatEx.InnerExceptions.Count);
             foreach (var innerEx in flatEx.InnerExceptions)
             {
                 innerExDetails.AppendLine(innerEx.ToString());
