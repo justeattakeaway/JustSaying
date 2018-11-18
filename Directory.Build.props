@@ -34,6 +34,7 @@
     <LangVersion>latest</LangVersion>
     <RepositoryUrl>$(PackageProjectUrl).git</RepositoryUrl>
     <SignAssembly>false</SignAssembly>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <DefineConstants Condition=" '$(SignAssembly)' == 'true' ">$(DefineConstants);STRONG_NAME</DefineConstants>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CLSCompliant>true</CLSCompliant>
