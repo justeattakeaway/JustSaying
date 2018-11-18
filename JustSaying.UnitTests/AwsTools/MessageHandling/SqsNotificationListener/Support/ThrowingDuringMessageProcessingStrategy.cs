@@ -25,7 +25,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.
             await Task.Yield();
         }
 
-        public void StartWorker(Func<Task> action, CancellationToken ct)
+        public void StartWorker(Func<Task> action, CancellationToken cancellationToken)
         {
             if (_firstTime)
             {

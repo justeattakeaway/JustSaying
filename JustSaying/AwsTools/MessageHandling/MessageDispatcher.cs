@@ -42,9 +42,9 @@ namespace JustSaying.AwsTools.MessageHandling
             _messageBackoffStrategy = messageBackoffStrategy;
         }
 
-        public async Task DispatchMessage(SQSMessage message, CancellationToken ct)
+        public async Task DispatchMessage(SQSMessage message, CancellationToken cancellationToken)
         {
-            if (ct.IsCancellationRequested)
+            if (cancellationToken.IsCancellationRequested)
             {
                 return;
             }
