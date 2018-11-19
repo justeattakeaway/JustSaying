@@ -152,19 +152,10 @@ namespace JustSaying
         /// <summary>
         /// I'm done setting up. Fire up listening on this baby...
         /// </summary>
-        public void StartListening()
+        public void StartListening(CancellationToken cancellationToken = default)
         {
-            Bus.Start();
+            Bus.Start(cancellationToken);
             _log.LogInformation("Started listening for messages");
-        }
-
-        /// <summary>
-        /// Gor graceful shutdown of all listening threads
-        /// </summary>
-        public void StopListening()
-        {
-            Bus.Stop();
-            _log.LogInformation("Stopped listening for messages");
         }
 
         /// <summary>
@@ -187,11 +178,6 @@ namespace JustSaying
 
             await Bus.PublishAsync(message, cancellationToken).ConfigureAwait(false);
         }
-
-        /// <summary>
-        /// States whether the stack is listening for messages (subscriptions are running)
-        /// </summary>
-        public bool Listening => Bus?.Listening == true;
 
         public IMayWantOptionalSettings WithSerialisationFactory(IMessageSerialisationFactory factory)
         {
@@ -391,8 +377,7 @@ namespace JustSaying
 
         public IInterrogationResponse WhatDoIHave()
         {
-            var iterrogationBus = Bus as IAmJustInterrogating;
-            return iterrogationBus.WhatDoIHave();
+            return (Bus as IAmJustInterrogating)?.WhatDoIHave();
         }
 
         public IMayWantOptionalSettings WithNamingStrategy(Func<INamingStrategy> busNamingStrategy)

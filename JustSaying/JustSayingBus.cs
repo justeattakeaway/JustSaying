@@ -15,10 +15,8 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying
 {
-    public class JustSayingBus : IAmJustSaying, IAmJustInterrogating
+    public sealed class JustSayingBus : IAmJustSaying, IAmJustInterrogating
     {
-        public bool Listening { get; private set; }
-
         private readonly Dictionary<string, Dictionary<string, INotificationSubscriber>> _subscribersByRegionAndQueue;
         private readonly Dictionary<string, Dictionary<string, IMessagePublisher>> _publishersByRegionAndTopic;
         public IMessagingConfig Config { get; private set; }
@@ -31,7 +29,9 @@ namespace JustSaying
         }
         public IMessageSerialisationRegister SerialisationRegister { get; private set; }
         public IMessageLockAsync MessageLock { get; set; }
+
         private ILogger _log;
+
         private readonly object _syncRoot = new object();
         private readonly ICollection<IPublisher> _publishers;
         private readonly ICollection<ISubscriber> _subscribers;
@@ -57,8 +57,7 @@ namespace JustSaying
                 throw new ArgumentNullException(nameof(region));
             }
 
-            Dictionary<string, INotificationSubscriber> subscribersForRegion;
-            if (!_subscribersByRegionAndQueue.TryGetValue(region, out subscribersForRegion))
+            if (!_subscribersByRegionAndQueue.TryGetValue(region, out var subscribersForRegion))
             {
                 subscribersForRegion = new Dictionary<string,INotificationSubscriber>();
                 _subscribersByRegionAndQueue.Add(region, subscribersForRegion);
@@ -100,8 +99,7 @@ namespace JustSaying
                 _log.LogWarning("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages!");
             }
 
-            Dictionary<string, IMessagePublisher> publishersByTopic;
-            if (!_publishersByRegionAndTopic.TryGetValue(region, out publishersByTopic))
+            if (!_publishersByRegionAndTopic.TryGetValue(region, out var publishersByTopic))
             {
                 publishersByTopic = new Dictionary<string, IMessagePublisher>();
                 _publishersByRegionAndTopic.Add(region, publishersByTopic);
@@ -113,44 +111,22 @@ namespace JustSaying
             publishersByTopic[topic] = messagePublisher;
         }
 
-        public void Start()
+        public void Start(CancellationToken cancellationToken = default)
         {
             lock (_syncRoot)
             {
-                if (Listening)
-                {
-                    return;
-                }
-
                 foreach (var regionSubscriber in _subscribersByRegionAndQueue)
                 {
                     foreach (var queueSubscriber in regionSubscriber.Value)
                     {
-                        queueSubscriber.Value.Listen();
+                        if (queueSubscriber.Value.IsListening)
+                        {
+                            continue;
+                        }
+
+                        queueSubscriber.Value.Listen(cancellationToken);
                     }
                 }
-
-                Listening = true;
-            }
-        }
-
-        public void Stop()
-        {
-            lock (_syncRoot)
-            {
-                if (!Listening)
-                {
-                    return;
-                }
-
-                foreach (var regionSubscriber in _subscribersByRegionAndQueue)
-                {
-                    foreach (var queueSubscriber in regionSubscriber.Value)
-                    {
-                        queueSubscriber.Value.StopListening();
-                    }
-                }
-                Listening = false;
             }
         }
 
@@ -160,6 +136,11 @@ namespace JustSaying
         {
             var publisher = GetActivePublisherForMessage(message);
             await PublishAsync(publisher, message, cancellationToken: cancellationToken).ConfigureAwait(false);
+        }
+
+        public IInterrogationResponse WhatDoIHave()
+        {
+            return new InterrogationResponse(Config.Regions, _subscribers, _publishers);
         }
 
         private IMessagePublisher GetActivePublisherForMessage(Message message)
@@ -194,7 +175,7 @@ namespace JustSaying
             return publishersByTopic[topic];
         }
 
-        private async Task PublishAsync(IMessagePublisher publisher, Message message, int attemptCount = 0, CancellationToken cancellationToken = default(CancellationToken))
+        private async Task PublishAsync(IMessagePublisher publisher, Message message, int attemptCount = 0, CancellationToken cancellationToken = default)
         {
             attemptCount++;
             try
@@ -222,11 +203,6 @@ namespace JustSaying
 
                 await PublishAsync(publisher, message, attemptCount, cancellationToken).ConfigureAwait(false);
             }
-        }
-
-        public IInterrogationResponse WhatDoIHave()
-        {
-            return new InterrogationResponse(Config.Regions, _subscribers, _publishers);
         }
     }
 }

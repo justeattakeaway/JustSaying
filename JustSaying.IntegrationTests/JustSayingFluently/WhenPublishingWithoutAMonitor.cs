@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
@@ -12,6 +13,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
     public class WhenPublishingWithoutAMonitor
     {
         private IAmJustSayingFluently _bus;
+        private CancellationTokenSource _busCts;
         private readonly IHandlerAsync<SimpleMessage> _handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
 
         public WhenPublishingWithoutAMonitor(ITestOutputHelper outputHelper)
@@ -46,12 +48,13 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .WithMessageHandler(_handler);
 
             // When
-            _bus.StartListening();
+            _busCts = new CancellationTokenSource();
+            _bus.StartListening(_busCts.Token);
             await _bus.PublishAsync(new SimpleMessage());
 
             // Teardown
             await doneSignal.Task;
-            _bus.StopListening();
+            _busCts.Cancel();
         }
 
         [AwsFact]

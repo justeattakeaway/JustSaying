@@ -45,11 +45,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             Monitor = Substitute.For<IMessageMonitor>();
             Handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
             LoggerFactory = Substitute.For<ILoggerFactory>();
-            
+
             var response = GenerateResponseMessage(MessageTypeString, Guid.NewGuid());
-            
+
             Sqs.ReceiveMessageAsync(
-                    Arg.Any<ReceiveMessageRequest>(), 
+                    Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>())
                 .Returns(
                     x => Task.FromResult(response),
@@ -64,12 +64,13 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             var signallingHandler = new SignallingHandler<SimpleMessage>(doneSignal, Handler);
 
             SystemUnderTest.AddMessageHandler(() => signallingHandler);
-            SystemUnderTest.Listen();
+            var cts = new CancellationTokenSource();
+            SystemUnderTest.Listen(cts.Token);
 
             // wait until it's done
             var doneOk = await Tasks.WaitWithTimeoutAsync(doneSignal.Task);
 
-            SystemUnderTest.StopListening();
+            cts.Cancel();
 
             doneOk.ShouldBeTrue("Timeout occured before done signal");
         }
@@ -81,7 +82,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
                 Messages = new List<Message>
                 {
                     new Message
-                    {   
+                    {
                         MessageId = messageId.ToString(),
                         Body = SqsMessageBody(messageType)
                     },

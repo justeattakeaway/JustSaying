@@ -19,6 +19,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
         private readonly Dictionary<int, Guid> _ids = new Dictionary<int, Guid>();
         private readonly Dictionary<int, SimpleMessage> _messages = new Dictionary<int, SimpleMessage>();
         private IAmJustSayingFluently _publisher;
+        private CancellationTokenSource _publisherCts;
 
         public WhenThrottlingIsEnabledALongRunningHandler(ITestOutputHelper outputHelper)
         {
@@ -33,12 +34,12 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 _ids.Add(i, Guid.NewGuid());
                 _messages.Add(i, new SimpleMessage() { Id = _ids[i] });
 
-                
+
                 SetUpHandler(_ids[i], i, wait: i == 1 ? waitOne : waitOthers);
             }
 
             var fixture = new JustSayingFixture(_outputHelper);
-            
+
             _publisher = fixture.Builder()
                 .WithMonitoring(Substitute.For<IMessageMonitor>())
                 .ConfigurePublisherWith(c =>
@@ -56,7 +57,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                     })
                 .WithMessageHandler(_handler);
 
-            _publisher.StartListening();
+            _publisherCts = new CancellationTokenSource();
+            _publisher.StartListening(_publisherCts.Token);
         }
 
         private void SetUpHandler(Guid guid, int number, int wait)
@@ -99,7 +101,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
         public void Dispose()
         {
-            _publisher.StopListening();
+            _publisherCts.Cancel();
             _publisher = null;
         }
     }

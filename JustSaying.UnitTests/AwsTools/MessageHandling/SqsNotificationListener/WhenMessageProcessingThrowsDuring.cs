@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.TestingFramework;
@@ -25,11 +26,12 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             SystemUnderTest.WithMessageProcessingStrategy(new ThrowingDuringMessageProcessingStrategy(doneSignal));
 
             SystemUnderTest.AddMessageHandler(() => Handler);
-            SystemUnderTest.Listen();
+            var cts = new CancellationTokenSource();
+            SystemUnderTest.Listen(cts.Token);
 
             await Tasks.WaitWithTimeoutAsync(doneSignal.Task);
 
-            SystemUnderTest.StopListening();
+            cts.Cancel();
             await Task.Yield();
         }
 

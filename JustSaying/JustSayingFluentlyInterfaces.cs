@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Threading;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
@@ -64,9 +65,7 @@ namespace JustSaying
         /// <returns></returns>
         ISubscriberIntoQueue WithSqsTopicSubscriber(string topicName = null);
         ISubscriberIntoQueue WithSqsPointToPointSubscriber();
-        void StartListening();
-        void StopListening();
-        bool Listening { get; }
+        void StartListening(CancellationToken cancellationToken = default);
     }
 
     public interface IFluentSubscription

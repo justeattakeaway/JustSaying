@@ -1,3 +1,4 @@
+using System.Threading;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.TestingFramework;
 using Shouldly;
@@ -30,7 +31,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
                 .IntoQueue("container-test")
                 .WithMessageHandler<OrderPlaced>(handlerResolver);
 
-            Subscriber.StartListening();
+            SubscriberCts = new CancellationTokenSource();
+            Subscriber.StartListening(SubscriberCts.Token);
         }
 
         [AwsFact]

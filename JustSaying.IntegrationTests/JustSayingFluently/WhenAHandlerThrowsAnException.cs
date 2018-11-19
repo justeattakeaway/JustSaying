@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.Monitoring;
@@ -55,13 +56,14 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .WithMessageHandler(_handler);
 
             // When
-            bus.StartListening();
+            var cts = new CancellationTokenSource();
+            bus.StartListening(cts.Token);
 
             await bus.PublishAsync(new SimpleMessage());
 
             // Teardown
             await _handler.DoneSignal.Task;
-            bus.StopListening();
+            cts.Cancel();
         }
 
         [AwsFact]

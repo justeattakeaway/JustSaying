@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.IntegrationTests.TestHandlers;
@@ -13,6 +14,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
         protected IHaveFulfilledSubscriptionRequirements Subscriber { get; set; }
 
+        protected CancellationTokenSource PublisherCts { get; set; }
+        protected CancellationTokenSource SubscriberCts { get; set; }
+
         protected Task DoneSignal { get; set; }
 
         protected override IMessagePublisher CreateSystemUnderTest()
@@ -22,7 +26,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
             Publisher = fixture.Builder()
                 .WithSnsMessagePublisher<OrderPlaced>();
 
-            Publisher.StartListening();
+            PublisherCts = new CancellationTokenSource();
+            Publisher.StartListening(PublisherCts.Token);
 
             return Publisher;
         }
@@ -49,8 +54,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
         private void TearDownPubSub()
         {
-            Publisher?.StopListening();
-            Subscriber?.StopListening();
+            PublisherCts?.Cancel();
+            SubscriberCts?.Cancel();
         }
     }
 }

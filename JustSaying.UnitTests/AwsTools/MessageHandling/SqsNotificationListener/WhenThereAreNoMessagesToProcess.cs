@@ -44,9 +44,10 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 
         protected override async Task When()
         {
-            SystemUnderTest.Listen();
+            var cts = new CancellationTokenSource();
+            SystemUnderTest.Listen(cts.Token);
             await Task.Delay(100);
-            SystemUnderTest.StopListening();
+            cts.Cancel();
             await Task.Yield();
         }
 

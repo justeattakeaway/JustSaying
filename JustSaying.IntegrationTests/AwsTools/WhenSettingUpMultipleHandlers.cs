@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.AwsTools.QueueCreation;
@@ -14,6 +15,7 @@ namespace JustSaying.IntegrationTests.AwsTools
         private ProxyAwsClientFactory _proxyAwsClientFactory;
         private string _topicName;
         private string _queueName;
+        private CancellationTokenSource _subscriberCts;
 
         protected override void Given()
         {
@@ -43,13 +45,14 @@ namespace JustSaying.IntegrationTests.AwsTools
                 .IntoQueue(baseQueueName)
                 .WithMessageHandlers(new OrderHandler(), new OrderHandler());
 
-            subscription.StartListening();
+            _subscriberCts = new CancellationTokenSource();
+            subscription.StartListening(_subscriberCts.Token);
             return subscription;
         }
 
         protected override void PostAssertTeardown()
         {
-            SystemUnderTest.StopListening();
+            _subscriberCts.Cancel();
             base.PostAssertTeardown();
         }
 

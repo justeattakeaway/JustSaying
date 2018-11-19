@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -41,8 +42,13 @@ namespace JustSaying.AwsTools.MessageHandling
             _messageBackoffStrategy = messageBackoffStrategy;
         }
 
-        public async Task DispatchMessage(SQSMessage message)
+        public async Task DispatchMessage(SQSMessage message, CancellationToken cancellationToken)
         {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
             Message typedMessage;
             try
             {

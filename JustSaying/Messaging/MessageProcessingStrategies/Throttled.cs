@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,6 +6,7 @@ using JustSaying.Messaging.Monitoring;
 
 namespace JustSaying.Messaging.MessageProcessingStrategies
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "Known issue")]
     public class Throttled : IMessageProcessingStrategy
     {
         private readonly IMessageMonitor _messageMonitor;
@@ -18,10 +19,19 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             _semaphore = new SemaphoreSlim(maxWorkers, maxWorkers);
         }
 
-        public void StartWorker(Func<Task> action)
+        public void StartWorker(Func<Task> action, CancellationToken cancellationToken)
         {
             var messageProcessingTask = new Task<Task>(() => ReleaseOnCompleted(action));
-            _semaphore.Wait();
+
+            try
+            {
+                _semaphore.Wait(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
             messageProcessingTask.Start();
         }
 

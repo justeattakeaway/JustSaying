@@ -29,8 +29,9 @@ namespace JustSaying.AwsTools.MessageHandling
         private IMessageProcessingStrategy _messageProcessingStrategy;
         private readonly HandlerMap _handlerMap = new HandlerMap();
 
-        private CancellationTokenSource _cts = new CancellationTokenSource();
         private readonly ILogger _log;
+
+        public bool IsListening { get; private set; }
 
         public SqsNotificationListener(
             SqsQueueBase queue,
@@ -87,36 +88,31 @@ namespace JustSaying.AwsTools.MessageHandling
             _handlerMap.Add(typeof(T), handlerFunc);
         }
 
-        public void Listen()
+        public void Listen(CancellationToken cancellationToken)
         {
             var queue = _queue.QueueName;
             var region = _queue.Region.SystemName;
             var queueInfo = $"Queue: {queue}, Region: {region}";
 
-            _cts = new CancellationTokenSource();
-            Task.Factory.StartNew(async () =>
-                {
-                    while (!_cts.IsCancellationRequested)
-                    {
-                        await ListenLoop(_cts.Token).ConfigureAwait(false);
-                    }
-                })
+            Task.Factory.StartNew(async () => { await ListenLoop(cancellationToken).ConfigureAwait(false); })
                 .Unwrap()
                 .ContinueWith(t => LogTaskEndState(t, queueInfo, _log));
 
+            IsListening = true;
             _log.LogInformation($"Starting Listening - {queueInfo}");
         }
 
-        private static void LogTaskEndState(Task task, string queueInfo, ILogger log)
+        private void LogTaskEndState(Task task, string queueInfo, ILogger log)
         {
+            IsListening = false;
+
             if (task.IsFaulted)
             {
                 log.LogWarning($"[Faulted] Stopped Listening - {queueInfo}\n{AggregateExceptionDetails(task.Exception)}");
             }
             else
             {
-                var endState = task.Status.ToString();
-                log.LogInformation($"[{endState}] Stopped Listening - {queueInfo}");
+                log.LogInformation($"[{task.Status}] Stopped Listening - {queueInfo}");
             }
         }
 
@@ -145,53 +141,51 @@ namespace JustSaying.AwsTools.MessageHandling
             return innerExDetails.ToString();
         }
 
-        public void StopListening()
-        {
-            _cts.Cancel();
-            _log.LogInformation($"Stopping Listening - Queue: {_queue.QueueName}, Region: {_queue.Region.SystemName}");
-        }
-
         internal async Task ListenLoop(CancellationToken ct)
         {
             var queueName = _queue.QueueName;
             var region = _queue.Region.SystemName;
             ReceiveMessageResponse sqsMessageResponse = null;
 
-            try
+            while (!ct.IsCancellationRequested)
             {
-                sqsMessageResponse = await GetMessagesFromSqsQueue(ct, queueName, region).ConfigureAwait(false);
-                var messageCount = sqsMessageResponse.Messages.Count;
-
-                _log.LogTrace($"Polled for messages - Queue: {queueName}, Region: {region}, MessageCount: {messageCount}");
-            }
-            catch (InvalidOperationException ex)
-            {
-                _log.LogTrace($"Could not determine number of messages to read from [{queueName}], region: [{region}]. Ex: {ex}");
-            }
-            catch (OperationCanceledException ex)
-            {
-                _log.LogTrace($"Suspected no message in queue [{queueName}], region: [{region}]. Ex: {ex}");
-            }
-            catch (Exception ex)
-            {
-                var msg = $"Issue receiving messages for queue {queueName}, region {region}";
-                _log.LogError(0, ex, msg);
-            }
-
-            try
-            {
-                if (sqsMessageResponse != null)
+                try
                 {
-                    foreach (var message in sqsMessageResponse.Messages)
+                    sqsMessageResponse = await GetMessagesFromSqsQueue(ct, queueName, region).ConfigureAwait(false);
+                    var messageCount = sqsMessageResponse.Messages.Count;
+
+                    _log.LogTrace(
+                        $"Polled for messages - Queue: {queueName}, Region: {region}, MessageCount: {messageCount}");
+                }
+                catch (InvalidOperationException ex)
+                {
+                    _log.LogTrace(
+                        $"Could not determine number of messages to read from [{queueName}], region: [{region}]. Ex: {ex}");
+                }
+                catch (OperationCanceledException ex)
+                {
+                    _log.LogTrace($"Suspected no message in queue [{queueName}], region: [{region}]. Ex: {ex}");
+                }
+                catch (Exception ex)
+                {
+                    _log.LogError(0, ex, $"Issue receiving messages for queue {queueName}, region {region}");
+                }
+
+                try
+                {
+                    if (sqsMessageResponse != null)
                     {
-                        HandleMessage(message);
+                        foreach (var message in sqsMessageResponse.Messages)
+                        {
+                            HandleMessage(message, ct);
+                        }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                var msg = $"Issue in message handling loop for queue {queueName}, region {region}";
-                _log.LogError(0, ex, msg);
+                catch (Exception ex)
+                {
+                    _log.LogError(0, ex, $"Issue in message handling loop for queue {queueName}, region {region}");
+                }
+
             }
         }
 
@@ -210,30 +204,32 @@ namespace JustSaying.AwsTools.MessageHandling
                 AttributeNames = _requestMessageAttributeNames
             };
 
-            var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));
-            ReceiveMessageResponse sqsMessageResponse;
-
-            try
+            using (var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300)))
             {
-                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, receiveTimeout.Token))
+                ReceiveMessageResponse sqsMessageResponse;
+
+                try
                 {
-                    sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCts.Token)
-                        .ConfigureAwait(false);
+                    using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, receiveTimeout.Token))
+                    {
+                        sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCts.Token)
+                            .ConfigureAwait(false);
+                    }
                 }
-            }
-            finally
-            {
-                if (receiveTimeout.Token.IsCancellationRequested)
+                finally
                 {
-                    _log.LogInformation($"Receiving messages from queue {queueName}, region {region}, timed out");
+                    if (receiveTimeout.Token.IsCancellationRequested)
+                    {
+                        _log.LogInformation($"Receiving messages from queue {queueName}, region {region}, timed out");
+                    }
                 }
+
+                watch.Stop();
+
+                _messagingMonitor.ReceiveMessageTime(watch.ElapsedMilliseconds, queueName, region);
+
+                return sqsMessageResponse;
             }
-
-            watch.Stop();
-
-            _messagingMonitor.ReceiveMessageTime(watch.ElapsedMilliseconds, queueName, region);
-
-            return sqsMessageResponse;
         }
 
         private async Task<int> GetNumberOfMessagesToReadFromSqs()
@@ -255,10 +251,10 @@ namespace JustSaying.AwsTools.MessageHandling
             return numberOfMessagesToReadFromSqs;
         }
 
-        private void HandleMessage(Amazon.SQS.Model.Message message)
+        private void HandleMessage(Amazon.SQS.Model.Message message, CancellationToken ct)
         {
-            var action = new Func<Task>(() => _messageDispatcher.DispatchMessage(message));
-            _messageProcessingStrategy.StartWorker(action);
+            var action = new Func<Task>(() => _messageDispatcher.DispatchMessage(message, ct));
+            _messageProcessingStrategy.StartWorker(action, ct);
         }
 
         public ICollection<ISubscriber> Subscribers { get; set; }

@@ -14,7 +14,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
 {
     public class ThreadSafeCounter
     {
-        private int _count = 0;
+        private int _count;
 
         public void Increment()
         {
@@ -119,7 +119,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
 
                 foreach (var action in batch)
                 {
-                    messageProcessingStrategy.StartWorker(action);
+                    messageProcessingStrategy.StartWorker(action, CancellationToken.None);
                 }
 
                 if (!actions.Any())

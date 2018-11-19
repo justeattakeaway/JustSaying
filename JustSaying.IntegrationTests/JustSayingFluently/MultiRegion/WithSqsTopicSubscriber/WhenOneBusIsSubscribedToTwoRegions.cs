@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
@@ -19,6 +20,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
         private IHaveFulfilledPublishRequirements _primaryPublisher;
         private IHaveFulfilledPublishRequirements _secondaryPublisher;
         private IHaveFulfilledSubscriptionRequirements _subscriber;
+        private CancellationTokenSource _subscriberCts;
 
         private SimpleMessage _message1;
         private SimpleMessage _message2;
@@ -47,7 +49,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
 
             await ThenTheSubscriberReceivesBothMessages();
 
-            _subscriber.StopListening();
+            _subscriberCts.Cancel();
         }
 
         private void GivenASubscriptionToAQueueInTwoRegions(string primaryRegion, string secondaryRegion)
@@ -69,7 +71,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
                 .IntoQueue(QueueName)
                 .WithMessageHandler(handler);
 
-            _subscriber.StartListening();
+            _subscriberCts = new CancellationTokenSource();
+            _subscriber.StartListening(_subscriberCts.Token);
         }
 
         private void AndAPublisherToThePrimaryRegion(string primaryRegion)

@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Threading;
 using Amazon;
 using JustBehave;
 using JustSaying.AwsTools;
@@ -24,6 +25,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 PublishFailureBackoff = TimeSpan.FromMilliseconds(1),
                 PublishFailureReAttempts = 3
             };
+
+        private CancellationTokenSource _subscriberCts;
 
         protected IAmJustSayingFluently ServiceBus { get; set; }
 
@@ -99,7 +102,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
                 .IntoDefaultQueue()
                 .WithMessageHandler(sqsHandler);
 
-            ServiceBus.StartListening();
+            _subscriberCts = new CancellationTokenSource();
+            ServiceBus.StartListening(_subscriberCts.Token);
 
             return ServiceBus;
         }
@@ -114,7 +118,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
             // TODO ITestOutputHelper
             Console.WriteLine($"The test took {_stopwatch.ElapsedMilliseconds / 1000} seconds.");
 
-            ServiceBus.StopListening();
+            _subscriberCts.Cancel();
         }
     }
 }

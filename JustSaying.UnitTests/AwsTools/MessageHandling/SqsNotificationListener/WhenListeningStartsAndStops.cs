@@ -22,7 +22,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 
             // we expect to get max 10 messages per batch
             // except on single-core machines when we top out at ParallelHandlerExecutionPerCore=8
-            expectedMaxMessageCount = Math.Min(MessageConstants.MaxAmazonMessageCap, 
+            expectedMaxMessageCount = Math.Min(MessageConstants.MaxAmazonMessageCap,
                 Environment.ProcessorCount * MessageConstants.ParallelHandlerExecutionPerCore);
 
             var response1 = GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid());
@@ -43,10 +43,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         {
             await base.When();
 
-            SystemUnderTest.Listen();
+            var cts = new CancellationTokenSource();
+            SystemUnderTest.Listen(cts.Token);
             await Task.Yield();
 
-            SystemUnderTest.StopListening();
+            cts.Cancel();
             await Task.Yield();
         }
 
