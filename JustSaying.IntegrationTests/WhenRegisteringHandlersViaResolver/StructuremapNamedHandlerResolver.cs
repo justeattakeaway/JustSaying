@@ -3,6 +3,7 @@ using StructureMap;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "Acceptable in tests")]
     public class StructureMapNamedHandlerResolver : IHandlerResolver
     {
         private readonly IContainer _container;
