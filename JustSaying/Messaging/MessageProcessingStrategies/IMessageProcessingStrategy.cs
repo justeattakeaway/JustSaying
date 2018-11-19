@@ -23,6 +23,10 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         /// </summary>
         /// <param name="action"></param>
         /// <param name="cancellationToken">The cancellation token</param>
+        /// <returns>
+        /// A <see cref="Task"/> representing the asynchronous operation of queuing <paramref name="action"/>,
+        /// including waiting for a worker to become available.
+        /// </returns>
         Task StartWorker(Func<Task> action, CancellationToken cancellationToken);
 
         /// <summary>
