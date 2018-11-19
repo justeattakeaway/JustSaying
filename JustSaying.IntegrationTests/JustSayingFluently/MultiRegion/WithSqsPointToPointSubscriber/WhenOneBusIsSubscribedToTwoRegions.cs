@@ -12,7 +12,6 @@ using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPointToPointSubscriber
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "Acceptable in tests")]
     [Collection(GlobalSetup.CollectionName)]
     public class WhenOneBusIsSubscribedToTwoRegions
     {
