@@ -21,8 +21,6 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
 
         public async Task StartWorker(Func<Task> action, CancellationToken cancellationToken)
         {
-            var messageProcessingTask = new Task<Task>(() => ReleaseOnCompleted(action));
-
             try
             {
                 await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -32,7 +30,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
                 return;
             }
 
-            messageProcessingTask.Start();
+            _ = Task.Run(() => ReleaseOnCompleted(action));
         }
 
         private async Task ReleaseOnCompleted(Func<Task> action)
