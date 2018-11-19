@@ -11,7 +11,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
     public class ThrottledTests
     {
         private readonly IMessageMonitor _fakeMonitor;
-        
+
         public ThrottledTests()
         {
             _fakeMonitor = Substitute.For<IMessageMonitor>();
@@ -39,7 +39,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
             var messageProcessingStrategy = new Throttled(123, _fakeMonitor);
             var tcs = new TaskCompletionSource<object>();
 
-            messageProcessingStrategy.StartWorker(() => tcs.Task, CancellationToken.None);
+            await messageProcessingStrategy.StartWorker(() => tcs.Task, CancellationToken.None);
 
             messageProcessingStrategy.MaxWorkers.ShouldBe(123);
 
@@ -52,7 +52,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
             var messageProcessingStrategy = new Throttled(123, _fakeMonitor);
             var tcs = new TaskCompletionSource<object>();
 
-            messageProcessingStrategy.StartWorker(() => tcs.Task, CancellationToken.None);
+            await messageProcessingStrategy.StartWorker(() => tcs.Task, CancellationToken.None);
 
             messageProcessingStrategy.AvailableWorkers.ShouldBe(122);
             await AllowTasksToComplete(tcs);
@@ -64,7 +64,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
             var messageProcessingStrategy = new Throttled(3, _fakeMonitor);
             var tcs = new TaskCompletionSource<object>();
 
-            messageProcessingStrategy.StartWorker(() => tcs.Task, CancellationToken.None);
+            await messageProcessingStrategy.StartWorker(() => tcs.Task, CancellationToken.None);
 
             messageProcessingStrategy.AvailableWorkers.ShouldBe(2);
 
@@ -83,7 +83,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
 
             for (int i = 0; i < capacity; i++)
             {
-                messageProcessingStrategy.StartWorker(() => tcs.Task, CancellationToken.None);
+                await messageProcessingStrategy.StartWorker(() => tcs.Task, CancellationToken.None);
             }
 
             messageProcessingStrategy.MaxWorkers.ShouldBe(capacity);
@@ -100,7 +100,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
 
             for (int i = 0; i < capacity; i++)
             {
-                messageProcessingStrategy.StartWorker(() => tcs.Task, CancellationToken.None);
+                await messageProcessingStrategy.StartWorker(() => tcs.Task, CancellationToken.None);
             }
 
             messageProcessingStrategy.AvailableWorkers.ShouldBe(0);
@@ -120,7 +120,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
 
             for (int i = 0; i < capacity; i++)
             {
-                messageProcessingStrategy.StartWorker(() => tcs.Task, CancellationToken.None);
+                await messageProcessingStrategy.StartWorker(() => tcs.Task, CancellationToken.None);
                 messageProcessingStrategy.AvailableWorkers.ShouldBeGreaterThanOrEqualTo(0);
             }
 

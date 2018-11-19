@@ -177,7 +177,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     {
                         foreach (var message in sqsMessageResponse.Messages)
                         {
-                            HandleMessage(message, ct);
+                            await HandleMessage(message, ct).ConfigureAwait(false);
                         }
                     }
                 }
@@ -251,10 +251,10 @@ namespace JustSaying.AwsTools.MessageHandling
             return numberOfMessagesToReadFromSqs;
         }
 
-        private void HandleMessage(Amazon.SQS.Model.Message message, CancellationToken ct)
+        private Task HandleMessage(Amazon.SQS.Model.Message message, CancellationToken ct)
         {
             var action = new Func<Task>(() => _messageDispatcher.DispatchMessage(message, ct));
-            _messageProcessingStrategy.StartWorker(action, ct);
+            return _messageProcessingStrategy.StartWorker(action, ct);
         }
 
         public ICollection<ISubscriber> Subscribers { get; set; }

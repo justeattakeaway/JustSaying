@@ -19,13 +19,13 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             _semaphore = new SemaphoreSlim(maxWorkers, maxWorkers);
         }
 
-        public void StartWorker(Func<Task> action, CancellationToken cancellationToken)
+        public async Task StartWorker(Func<Task> action, CancellationToken cancellationToken)
         {
             var messageProcessingTask = new Task<Task>(() => ReleaseOnCompleted(action));
 
             try
             {
-                _semaphore.Wait(cancellationToken);
+                await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {

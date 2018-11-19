@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,7 +13,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
 
         /// <summary>
         /// The number of worker tasks that are free to run messages handlers right now,
-        /// Always in the range 0 to MaxWorkers 
+        /// Always in the range 0 to MaxWorkers
         /// the number of currently running workers will be = (MaxWorkers - AvailableWorkers)
         /// </summary>
         int AvailableWorkers { get; }
@@ -23,7 +23,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         /// </summary>
         /// <param name="action"></param>
         /// <param name="cancellationToken">The cancellation token</param>
-        void StartWorker(Func<Task> action, CancellationToken cancellationToken);
+        Task StartWorker(Func<Task> action, CancellationToken cancellationToken);
 
         /// <summary>
         /// After awaiting this, you should be in a position to start another worker
