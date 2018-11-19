@@ -6,6 +6,7 @@ using JustSaying.Messaging.Monitoring;
 
 namespace JustSaying.Messaging.MessageProcessingStrategies
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "Known issue")]
     public class Throttled : IMessageProcessingStrategy
     {
         private readonly IMessageMonitor _messageMonitor;

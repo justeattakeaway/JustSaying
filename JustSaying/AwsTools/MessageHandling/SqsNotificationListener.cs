@@ -18,6 +18,7 @@ using Message = JustSaying.Models.Message;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "Known issue")]
     public class SqsNotificationListener : INotificationSubscriber
     {
         private readonly SqsQueueBase _queue;
