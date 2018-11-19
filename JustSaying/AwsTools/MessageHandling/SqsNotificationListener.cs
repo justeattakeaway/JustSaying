@@ -117,7 +117,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 try
                 {
-                    sqsMessageResponse = await GetMessagesFromSqsQueue(ct, queueName, region).ConfigureAwait(false);
+                    sqsMessageResponse = await GetMessagesFromSqsQueue(queueName, region, ct).ConfigureAwait(false);
                     var messageCount = sqsMessageResponse.Messages.Count;
 
                     _log.LogTrace(
@@ -155,7 +155,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        private async Task<ReceiveMessageResponse> GetMessagesFromSqsQueue(CancellationToken ct, string queueName, string region)
+        private async Task<ReceiveMessageResponse> GetMessagesFromSqsQueue(string queueName, string region, CancellationToken ct)
         {
             var numberOfMessagesToReadFromSqs = await GetNumberOfMessagesToReadFromSqs()
                 .ConfigureAwait(false);
