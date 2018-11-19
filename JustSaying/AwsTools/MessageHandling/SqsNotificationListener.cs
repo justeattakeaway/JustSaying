@@ -94,51 +94,17 @@ namespace JustSaying.AwsTools.MessageHandling
             var region = _queue.Region.SystemName;
             var queueInfo = $"Queue: {queue}, Region: {region}";
 
-            Task.Factory.StartNew(async () => { await ListenLoop(cancellationToken).ConfigureAwait(false); })
-                .Unwrap()
-                .ContinueWith(t => LogTaskEndState(t, queueInfo, _log));
+            // Run task in background
+            // ListenLoop will cancel gracefully, so no need to pass cancellation token to Task.Run
+            _ = Task.Run(async () =>
+            {
+                await ListenLoop(cancellationToken).ConfigureAwait(false);
+                IsListening = false;
+                _log.LogInformation($"Stopped Listening - {queueInfo}");
+            });
 
             IsListening = true;
             _log.LogInformation($"Starting Listening - {queueInfo}");
-        }
-
-        private void LogTaskEndState(Task task, string queueInfo, ILogger log)
-        {
-            IsListening = false;
-
-            if (task.IsFaulted)
-            {
-                log.LogWarning($"[Faulted] Stopped Listening - {queueInfo}\n{AggregateExceptionDetails(task.Exception)}");
-            }
-            else
-            {
-                log.LogInformation($"[{task.Status}] Stopped Listening - {queueInfo}");
-            }
-        }
-
-        private static string AggregateExceptionDetails(AggregateException ex)
-        {
-            var flatEx = ex.Flatten();
-
-            if (flatEx.InnerExceptions.Count == 0)
-            {
-                return "AggregateException containing no inner exceptions\n" + ex;
-            }
-
-            if (flatEx.InnerExceptions.Count == 1)
-            {
-                return ex.InnerExceptions[0].ToString();
-            }
-
-            var innerExDetails = new StringBuilder();
-            innerExDetails.AppendFormat(CultureInfo.InvariantCulture,
-                "AggregateException containing {0} inner exceptions", flatEx.InnerExceptions.Count);
-            foreach (var innerEx in flatEx.InnerExceptions)
-            {
-                innerExDetails.AppendLine(innerEx.ToString());
-            }
-
-            return innerExDetails.ToString();
         }
 
         internal async Task ListenLoop(CancellationToken ct)
