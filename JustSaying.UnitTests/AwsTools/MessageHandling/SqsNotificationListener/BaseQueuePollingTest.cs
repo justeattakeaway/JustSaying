@@ -59,7 +59,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             SerialisationRegister.DeserializeMessage(Arg.Any<string>()).Returns(DeserialisedMessage);
             return Task.CompletedTask;
         }
-        
+
         protected override async Task When()
         {
             var doneSignal = new TaskCompletionSource<object>();
@@ -97,7 +97,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             };
         }
 
-        protected string SqsMessageBody(string messageType)
+        protected static string SqsMessageBody(string messageType)
         {
             return "{\"Subject\":\"" + messageType + "\"," + "\"Message\":\"" + MessageBody + "\"}";
         }
