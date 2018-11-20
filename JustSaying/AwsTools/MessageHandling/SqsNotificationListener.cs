@@ -143,6 +143,10 @@ namespace JustSaying.AwsTools.MessageHandling
                     {
                         foreach (var message in sqsMessageResponse.Messages)
                         {
+                            if (ct.IsCancellationRequested)
+                            {
+                                return;
+                            }
                             await HandleMessage(message, ct).ConfigureAwait(false);
                         }
                     }
