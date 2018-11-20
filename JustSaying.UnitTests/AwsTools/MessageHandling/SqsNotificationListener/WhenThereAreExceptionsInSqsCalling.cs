@@ -29,7 +29,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             GenerateResponseMessage(MessageTypeString, Guid.NewGuid());
 
             DeserialisedMessage = new SimpleMessage { RaisingComponent = "Component" };
-            
+
             Sqs.ReceiveMessageAsync(
                     Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>())
@@ -62,7 +62,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             // wait until it's done
             await Tasks.WaitWithTimeoutAsync(_tcs.Task);
             cts.Cancel();
-            await Task.Yield();
         }
 
         [Fact]

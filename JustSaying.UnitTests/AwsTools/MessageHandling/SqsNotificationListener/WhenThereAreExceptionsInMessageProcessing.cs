@@ -57,7 +57,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             SystemUnderTest.Listen(cts.Token);
             await Task.Delay(100);
             cts.Cancel();
-            await Task.Yield();
         }
 
         [Fact]

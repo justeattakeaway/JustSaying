@@ -43,7 +43,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             // wait until it's done
             await Tasks.WaitWithTimeoutAsync(_tcs.Task);
             cts.Cancel();
-            await Task.Yield();
         }
 
         [Fact]

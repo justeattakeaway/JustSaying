@@ -32,7 +32,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             await Tasks.WaitWithTimeoutAsync(doneSignal.Task);
 
             cts.Cancel();
-            await Task.Yield();
         }
 
         [Fact]

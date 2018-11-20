@@ -51,9 +51,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
 
             watch.Stop();
 
-            await Task.Yield();
             await Task.Delay(2000);
-            await Task.Yield();
 
             counter.Count.ShouldBe(numberOfMessagesToProcess);
         }

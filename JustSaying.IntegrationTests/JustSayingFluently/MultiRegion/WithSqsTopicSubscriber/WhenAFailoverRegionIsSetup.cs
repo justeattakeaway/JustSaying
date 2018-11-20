@@ -118,7 +118,6 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             _message = new SimpleMessage { Id = Guid.NewGuid() };
             await _publisher.PublishAsync(_message);
 
-            await Task.Yield();
             await Task.Delay(TimeSpan.FromSeconds(1));
         }
 

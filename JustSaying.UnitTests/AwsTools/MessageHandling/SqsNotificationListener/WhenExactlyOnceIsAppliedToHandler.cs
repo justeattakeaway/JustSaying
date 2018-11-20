@@ -40,11 +40,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             var cts = new CancellationTokenSource();
             SystemUnderTest.Listen(cts.Token);
 
-
             // wait until it's done
             await Tasks.WaitWithTimeoutAsync(_tcs.Task);
             cts.Cancel();
-            await Task.Yield();
         }
 
         [Fact]
