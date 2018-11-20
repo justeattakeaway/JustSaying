@@ -25,16 +25,18 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.
             await Task.Yield();
         }
 
-        public void StartWorker(Func<Task> action, CancellationToken cancellationToken)
+        public Task StartWorker(Func<Task> action, CancellationToken cancellationToken)
         {
             if (_firstTime)
             {
                 _firstTime = false;
-                Fail();
+                return Fail();
             }
+
+            return Task.CompletedTask;
         }
 
-        private void Fail()
+        private Task Fail()
         {
             Tasks.DelaySendDone(_doneSignal);
             throw new TestException("Thrown by test ProcessMessage");

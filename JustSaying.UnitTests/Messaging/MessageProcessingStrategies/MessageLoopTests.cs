@@ -23,7 +23,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
 
         public int Count => _count;
     }
-    
+
     public class MessageLoopTests
     {
         private const int MinTaskDuration = 10;
@@ -119,7 +119,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
 
                 foreach (var action in batch)
                 {
-                    messageProcessingStrategy.StartWorker(action, CancellationToken.None);
+                    await messageProcessingStrategy.StartWorker(action, CancellationToken.None);
                 }
 
                 if (!actions.Any())
