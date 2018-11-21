@@ -24,7 +24,6 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
         public int Count => _count;
     }
 
-    [CollectionDefinition(nameof(MessageLoopTests), DisableParallelization = true)]
     public class MessageLoopTests
     {
         private const int MinTaskDuration = 10;
