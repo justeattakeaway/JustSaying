@@ -13,7 +13,8 @@ namespace JustSaying.Models
         public Message Message { get; }
 
         public int? DelaySeconds { get; set; }
-        public IDictionary<string, MessageAttributeValue> MessageAttributes { get; set; }
+
+        public IDictionary<string, MessageAttributeValue> MessageAttributes { get; } = new Dictionary<string, MessageAttributeValue>();
     }
 
     public abstract class Message
