@@ -11,14 +11,14 @@ namespace JustSaying.Tools
             var line = CommandLine.GetUnparsedCommandLine().Trim();
             if (line.IsNotEmpty())
             {
-                await ProcessLine(line);
+                await ProcessLine(line).ConfigureAwait(false);
             }
         }
 
         private static async Task<bool> ProcessLine(string line)
         {
             var commandParser = new CommandParser();
-            return await commandParser.ParseAndExecuteAsync(line);
+            return await commandParser.ParseAndExecuteAsync(line).ConfigureAwait(false);
         }
     }
 }

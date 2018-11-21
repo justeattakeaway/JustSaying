@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Globalization;
 using System.Threading.Tasks;
 using JustSaying.Tools.Commands;
 using Magnum.CommandLineParser;
@@ -15,8 +15,10 @@ namespace JustSaying.Tools
                 .Parse<ICommand>(commandText, InitializeCommandLineParser)
                 .ForEachAsync(async option =>
                 {
-                    anyCommandFailure |= !await option.ExecuteAsync();
-                });
+                    var optionSuccess = await option.ExecuteAsync().ConfigureAwait(false);
+                    anyCommandFailure |= !optionSuccess;
+                }).ConfigureAwait(false);
+
             return anyCommandFailure;
         }
 
