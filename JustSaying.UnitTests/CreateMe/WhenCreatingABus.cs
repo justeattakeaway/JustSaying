@@ -4,6 +4,7 @@ using Xunit;
 
 namespace JustSaying.UnitTests.CreateMe
 {
+    [CollectionDefinition(nameof(WhenCreatingABus), DisableParallelization = true)]
     public class WhenCreatingABus
     {
         private readonly Action<IPublishConfiguration> _config;

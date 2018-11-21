@@ -8,6 +8,7 @@ using Xunit;
 
 namespace JustSaying.UnitTests
 {
+    [CollectionDefinition(nameof(JustSayingFluentlyTestBase), DisableParallelization = true)]
     public abstract class JustSayingFluentlyTestBase : XAsyncBehaviourTest<JustSaying.JustSayingFluently>
     {
         protected IPublishConfiguration Configuration;
