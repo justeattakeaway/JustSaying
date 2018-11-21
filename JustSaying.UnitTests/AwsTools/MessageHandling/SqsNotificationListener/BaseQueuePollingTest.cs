@@ -15,9 +15,11 @@ using JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.Supp
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
+using Xunit;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
+    [CollectionDefinition(nameof(BaseQueuePollingTest), DisableParallelization = true)]
     public abstract class BaseQueuePollingTest : XAsyncBehaviourTest<JustSaying.AwsTools.MessageHandling.SqsNotificationListener>
     {
         protected const string QueueUrl = "http://testurl.com/queue";
