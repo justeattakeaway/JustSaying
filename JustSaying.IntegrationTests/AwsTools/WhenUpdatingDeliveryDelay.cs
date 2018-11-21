@@ -12,12 +12,12 @@ namespace JustSaying.IntegrationTests.AwsTools
         private TimeSpan _oldDeliveryDelay;
         private TimeSpan _newDeliveryDelay;
 
-        protected override void Given()
+        protected override Task Given()
         {
             _oldDeliveryDelay = TimeSpan.FromMinutes(2);
             _newDeliveryDelay = TimeSpan.FromMinutes(5);
 
-            base.Given();
+            return base.Given();
         }
 
         protected override async Task When()

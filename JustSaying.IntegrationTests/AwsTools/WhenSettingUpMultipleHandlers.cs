@@ -17,16 +17,14 @@ namespace JustSaying.IntegrationTests.AwsTools
         private string _queueName;
         private CancellationTokenSource _subscriberCts;
 
-        protected override void Given()
-        {
-        }
+        protected override Task Given() => Task.CompletedTask;
 
         protected override Task When()
         {
             return Task.CompletedTask;
         }
 
-        protected override IHaveFulfilledSubscriptionRequirements CreateSystemUnderTest()
+        protected override Task<IHaveFulfilledSubscriptionRequirements> CreateSystemUnderTestAsync()
         {
             // Given 2 handlers
             var uniqueTopicAndQueueNames = new UniqueNamingStrategy();
@@ -47,13 +45,13 @@ namespace JustSaying.IntegrationTests.AwsTools
 
             _subscriberCts = new CancellationTokenSource();
             subscription.StartListening(_subscriberCts.Token);
-            return subscription;
+            return Task.FromResult(subscription);
         }
 
-        protected override void PostAssertTeardown()
+        protected override Task PostAssertTeardownAsync()
         {
             _subscriberCts.Cancel();
-            base.PostAssertTeardown();
+            return Task.CompletedTask;
         }
 
         [AwsFact]

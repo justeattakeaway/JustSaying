@@ -12,9 +12,7 @@ namespace JustSaying.IntegrationTests.AwsTools
     [Collection(GlobalSetup.CollectionName)]
     public class WhenCreatingErrorQueue : XAsyncBehaviourTest<ErrorQueue>
     {
-        protected override void Given()
-        {
-        }
+        protected override Task Given() => Task.CompletedTask;
 
         protected override async Task When()
         {
@@ -26,26 +24,25 @@ namespace JustSaying.IntegrationTests.AwsTools
 
             await SystemUnderTest.CreateAsync(queueConfig);
 
-            queueConfig.ErrorQueueRetentionPeriod =  TimeSpan.FromSeconds(100);
+            queueConfig.ErrorQueueRetentionPeriod = TimeSpan.FromSeconds(100);
 
             await SystemUnderTest.UpdateQueueAttributeAsync(queueConfig);
         }
 
-        protected override ErrorQueue CreateSystemUnderTest()
+        protected override Task<ErrorQueue> CreateSystemUnderTestAsync()
         {
             var fixture = new JustSayingFixture();
 
-            return new ErrorQueue(
+            return Task.FromResult(new ErrorQueue(
                 fixture.Region,
                 fixture.UniqueName,
                 fixture.CreateSqsClient(),
-                fixture.LoggerFactory);
+                fixture.LoggerFactory));
         }
 
-        protected override void PostAssertTeardown()
+        protected override async Task PostAssertTeardownAsync()
         {
-            SystemUnderTest.DeleteAsync().ResultSync();
-            base.PostAssertTeardown();
+            await SystemUnderTest.DeleteAsync();
         }
 
         [AwsFact]

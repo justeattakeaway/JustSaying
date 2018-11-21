@@ -13,9 +13,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         private string _topicName;
         private string _queueName;
 
-        protected override void Given()
+        protected override async Task Given()
         {
-            base.Given();
+            await base.Given();
 
             _topicName = "message";
             _queueName = TestFixture.UniqueName;
@@ -24,8 +24,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
             Configuration = new MessagingConfig();
 
-            DeleteQueueIfItAlreadyExists(_queueName).ResultSync();
-            DeleteTopicIfItAlreadyExists(_topicName).ResultSync();
+            await DeleteQueueIfItAlreadyExists(_queueName);
+            await DeleteTopicIfItAlreadyExists(_topicName);
         }
 
         protected override Task When()
@@ -42,7 +42,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
         [NotSimulatorFact] // This doesn't appear to work in GoAws
         public async Task QueueAndTopicAreCreatedAndQueueIsSubscribedToTheTopicWithCorrectPermissions()
-        {            
+        {
             var (topicExists, topic) = await TryGetTopic(_topicName);
             Assert.True(topicExists, "Topic does not exist");
 
@@ -53,11 +53,11 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
             Assert.True(await QueueHasPolicyForTopic(topic, queueUrl), "Queue does not have a policy for the topic");
         }
-        
-        protected override void PostAssertTeardown()
+
+        protected override async Task PostAssertTeardownAsync()
         {
-            DeleteQueueIfItAlreadyExists(_queueName).ResultSync();
-            DeleteTopicIfItAlreadyExists(_topicName).ResultSync();
+            await DeleteQueueIfItAlreadyExists(_queueName);
+            await DeleteTopicIfItAlreadyExists(_topicName);
         }
     }
 }

@@ -9,9 +9,9 @@ namespace JustSaying.UnitTests.JustSayingBus
 {
     public class WhenPublishingWithoutRegistering : GivenAServiceBus
     {
-        protected override void Given()
+        protected override async Task Given()
         {
-            base.Given();
+            await base.Given();
             RecordAnyExceptionsThrown();
         }
 

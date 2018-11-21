@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using JustBehave;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
@@ -11,14 +12,15 @@ namespace JustSaying.UnitTests.JustSayingBus
         protected IMessageMonitor Monitor;
         protected ILoggerFactory LoggerFactory;
 
-        protected override void Given()
+        protected override Task Given()
         {
             Config = Substitute.For<IMessagingConfig>();
             Monitor = Substitute.For<IMessageMonitor>();
             LoggerFactory = Substitute.For<ILoggerFactory>();
+            return Task.CompletedTask;
         }
 
-        protected override JustSaying.JustSayingBus CreateSystemUnderTest()
-            => new JustSaying.JustSayingBus(Config, null, LoggerFactory) {Monitor = Monitor};
+        protected override Task<JustSaying.JustSayingBus> CreateSystemUnderTestAsync()
+            => Task.FromResult(new JustSaying.JustSayingBus(Config, null, LoggerFactory) {Monitor = Monitor});
     }
 }

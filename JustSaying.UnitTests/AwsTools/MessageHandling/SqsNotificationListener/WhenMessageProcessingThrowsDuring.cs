@@ -14,9 +14,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
     /// </summary>
     public class WhenMessageProcessingThrowsDuring : BaseQueuePollingTest
     {
-        protected override void Given()
+        protected override async Task Given()
         {
-            base.Given();
+            await base.Given();
             Handler.Handle(null).ReturnsForAnyArgs(true);
         }
 
@@ -32,7 +32,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             await Tasks.WaitWithTimeoutAsync(doneSignal.Task);
 
             cts.Cancel();
-            await Task.Yield();
         }
 
         [Fact]

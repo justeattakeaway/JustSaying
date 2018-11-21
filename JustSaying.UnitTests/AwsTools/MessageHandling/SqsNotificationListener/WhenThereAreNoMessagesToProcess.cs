@@ -20,16 +20,16 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private int _callCount;
 
-        protected override JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
+        protected override Task<JustSaying.AwsTools.MessageHandling.SqsNotificationListener> CreateSystemUnderTestAsync()
         {
-            return new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
+            return Task.FromResult(new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
                 new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri("http://foo.com"), _sqs),
                 null,
                 Substitute.For<IMessageMonitor>(),
-                Substitute.For<ILoggerFactory>());
+                Substitute.For<ILoggerFactory>()));
         }
 
-        protected override void Given()
+        protected override Task Given()
         {
             _sqs.ReceiveMessageAsync(
                     Arg.Any<ReceiveMessageRequest>(),
@@ -40,6 +40,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
                     Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>()))
                 .Do(x => _callCount++);
+
+            return Task.CompletedTask;
         }
 
         protected override async Task When()
@@ -48,7 +50,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             SystemUnderTest.Listen(cts.Token);
             await Task.Delay(100);
             cts.Cancel();
-            await Task.Yield();
         }
 
         [Fact]

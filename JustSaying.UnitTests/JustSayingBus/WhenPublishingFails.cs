@@ -14,9 +14,9 @@ namespace JustSaying.UnitTests.JustSayingBus
         private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
         private const int PublishAttempts = 2;
 
-        protected override void Given()
+        protected override async Task Given()
         {
-            base.Given();
+            await base.Given();
 
             Config.PublishFailureReAttempts.Returns(PublishAttempts);
             Config.PublishFailureBackoff.Returns(TimeSpan.Zero);

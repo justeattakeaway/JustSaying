@@ -13,13 +13,11 @@ namespace JustSaying.IntegrationTests.AwsTools
         private int _handlersAttached = 0;
         private NotSupportedException _capturedException;
 
-        protected override void Given()
-        {
-        }
+        protected override Task Given() => Task.CompletedTask;
 
         protected override Task When() => Task.CompletedTask;
 
-        protected override IHaveFulfilledSubscriptionRequirements CreateSystemUnderTest()
+        protected override Task<IHaveFulfilledSubscriptionRequirements> CreateSystemUnderTestAsync()
         {
             var awsClientFactory = new ProxyAwsClientFactory();
             var fixture = new JustSayingFixture();
@@ -38,7 +36,7 @@ namespace JustSaying.IntegrationTests.AwsTools
                 _capturedException = ex;
             }
 
-            return null;
+            return Task.FromResult<IHaveFulfilledSubscriptionRequirements>(null);
         }
 
         private void AttachAHandler(IMayWantOptionalSettings busConfig)

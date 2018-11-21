@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
@@ -21,14 +22,14 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         private readonly SimpleMessage _message = new SimpleMessage { Content = "Hello" };
         private const string QueueName = "queuename";
 
-        protected override SqsPublisher CreateSystemUnderTest()
+        protected override async Task<SqsPublisher> CreateSystemUnderTestAsync()
         {
             var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, _sqs, 0, _serialisationRegister, Substitute.For<ILoggerFactory>());
-            sqs.ExistsAsync().GetAwaiter().GetResult();
+            await sqs.ExistsAsync();
             return sqs;
         }
 
-        protected override void Given()
+        protected override Task Given()
         {
             _sqs.GetQueueUrlAsync(Arg.Any<string>())
                 .Returns(new GetQueueUrlResponse { QueueUrl = Url });
@@ -38,19 +39,20 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 
             _serialisationRegister.Serialise(_message, false)
                 .Returns("serialized_contents");
+
+            return Task.CompletedTask;
         }
 
         protected override async Task When()
         {
-            await SystemUnderTest.PublishAsync(_message);
+            await SystemUnderTest.PublishAsync(_message, CancellationToken.None);
         }
 
         [Fact]
         public void MessageIsPublishedToQueue()
         {
             // ToDo: Could be better...
-            _sqs.Received().SendMessageAsync(Arg.Is<SendMessageRequest>(
-                x => x.MessageBody.Equals("serialized_contents", StringComparison.Ordinal)));
+            _sqs.Received().SendMessageAsync(Arg.Is<SendMessageRequest>(x => x.MessageBody.Equals("serialized_contents")));
         }
 
         [Fact]

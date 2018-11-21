@@ -130,7 +130,6 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
         private static async Task AllowTasksToComplete(TaskCompletionSource<object> doneSignal)
         {
             doneSignal.SetResult(null);
-            await Task.Yield();
             await Task.Delay(100);
         }
     }

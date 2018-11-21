@@ -14,11 +14,12 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
     {
         private IContainer _container;
 
-        protected override void Given()
+        protected override Task Given()
         {
             RecordAnyExceptionsThrown();
 
             _container = new Container(x => x.AddRegistry(new MultipleHandlerRegistry()));
+            return Task.CompletedTask;
         }
 
         protected override Task When()

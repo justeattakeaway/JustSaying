@@ -12,9 +12,9 @@ namespace JustSaying.UnitTests.JustSayingBus
     {
         private IMessagePublisher _publisher;
 
-        protected override void Given()
+        protected override async Task Given()
         {
-            base.Given();
+            await base.Given();
             _publisher = Substitute.For<IMessagePublisher>();
             RecordAnyExceptionsThrown();
         }

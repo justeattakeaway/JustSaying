@@ -9,9 +9,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
     [Collection(GlobalSetup.CollectionName)]
     public class WhenRegisteringAPublisherAndNotInstantiated : FluentNotificationStackTestBase
     {
-        protected override void Given()
+        protected override async Task Given()
         {
-            base.Given();
+            await base.Given();
 
             Configuration = new MessagingConfig();
 

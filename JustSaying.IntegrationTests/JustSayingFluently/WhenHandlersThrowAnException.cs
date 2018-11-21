@@ -13,11 +13,11 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
     {
         private Future<SimpleMessage> _handler;
 
-        protected override void Given()
+        protected override async Task Given()
         {
             RecordAnyExceptionsThrown();
 
-            base.Given();
+            await base.Given();
             _handler = new Future<SimpleMessage>(() => throw new TestException("Test Exception from WhenHandlersThrowAnException"));
             RegisterSnsHandler(_handler);
         }

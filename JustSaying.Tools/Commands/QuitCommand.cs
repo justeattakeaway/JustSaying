@@ -1,7 +1,9 @@
+using System.Threading.Tasks;
+
 namespace JustSaying.Tools.Commands
 {
     public class QuitCommand : ICommand
     {
-        public bool Execute() => true;
+        public Task<bool> ExecuteAsync() => Task.FromResult(true);
     }
 }

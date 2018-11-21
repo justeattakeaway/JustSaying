@@ -26,7 +26,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         private static MessageResponse _response;
         private static Message _message;
 
-        protected override SnsTopicByName CreateSystemUnderTest()
+        protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
         {
             var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister, Substitute.For<ILoggerFactory>(), Substitute.For<SnsWriteConfiguration>(), Substitute.For<IMessageSubjectProvider>())
             {
@@ -37,23 +37,23 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
                 }
             };
 
-            topic.ExistsAsync().GetAwaiter().GetResult();;
+            await topic.ExistsAsync();
             return topic;
         }
 
-        protected override void Given()
+        protected override Task Given()
         {
             _sns.FindTopicAsync("TopicName")
                 .Returns(new Topic { TopicArn = TopicArn });
             _sns.PublishAsync(Arg.Any<PublishRequest>())
                 .Returns(PublishResult);
+
+            return Task.CompletedTask;
         }
 
         protected override Task When()
         {
-            SystemUnderTest.PublishAsync(new SimpleMessage()).Wait();
-
-            return Task.CompletedTask;
+            return SystemUnderTest.PublishAsync(new SimpleMessage());
         }
 
         private static Task<PublishResponse> PublishResult(CallInfo arg)

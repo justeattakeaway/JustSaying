@@ -24,11 +24,9 @@ namespace JustSaying.IntegrationTests
 
         private bool _enableMockedBus;
 
-        protected override void Given()
-        {
-        }
+        protected override Task Given() => Task.CompletedTask;
 
-        protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
+        protected override Task<JustSaying.JustSayingFluently> CreateSystemUnderTestAsync()
         {
             var fluent = TestFixture.Builder()
                 .ConfigurePublisherWith(x =>
@@ -42,7 +40,7 @@ namespace JustSaying.IntegrationTests
                 InjectMockJustSayingBus(fluent);
             }
 
-            return fluent;
+            return Task.FromResult(fluent);
         }
 
         private void InjectMockJustSayingBus(JustSaying.JustSayingFluently fluent)
@@ -65,8 +63,8 @@ namespace JustSaying.IntegrationTests
         protected async Task DeleteTopicIfItAlreadyExists(string topicName)
         {
             var topics = await GetAllTopics(topicName).ConfigureAwait(false);
-            
-            await Task.WhenAll(topics.Select(t => DeleteTopic(t))).ConfigureAwait(false);
+
+            await Task.WhenAll(topics.Select(DeleteTopicAsync)).ConfigureAwait(false);
 
             var (topicExists, _) = await TryGetTopic(topicName).ConfigureAwait(false);
 
@@ -104,7 +102,7 @@ namespace JustSaying.IntegrationTests
             throw new Exception($"Deleted queue still exists {(DateTime.Now - start).TotalSeconds} seconds after deletion!");
         }
 
-        protected async Task DeleteTopic(Topic topic)
+        protected async Task DeleteTopicAsync(Topic topic)
         {
             var client = TestFixture.CreateSnsClient();
             await client.DeleteTopicAsync(topic.TopicArn).ConfigureAwait(false);
@@ -171,7 +169,7 @@ namespace JustSaying.IntegrationTests
 
                 await Task.Delay(TimeSpan.FromSeconds(sleepStep)).ConfigureAwait(false);
             }
-            
+
             return (false, null);
         }
 

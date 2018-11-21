@@ -24,7 +24,6 @@ namespace JustSaying.TestingFramework
         {
             Task.Run(async () =>
             {
-                await Task.Yield();
                 await Task.Delay(DelaySendMillis).ConfigureAwait(false);
                 doneSignal.SetResult(null);
             });

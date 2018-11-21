@@ -1,18 +1,23 @@
-using System.Globalization;
-using System.Linq;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using JustSaying.Tools.Commands;
 using Magnum.CommandLineParser;
 using Magnum.Monads.Parser;
 
 namespace JustSaying.Tools
 {
-    public static class CommandParser
+    public class CommandParser
     {
-        public static bool Parse(string commandText)
+        public async Task<bool> ParseAndExecuteAsync(string commandText)
         {
-            return CommandLine
+            bool anyCommandFailure = false;
+            await CommandLine
                 .Parse<ICommand>(commandText, InitializeCommandLineParser)
-                .All(option => option.Execute());
+                .ForEachAsync(async option =>
+                {
+                    anyCommandFailure |= !await option.ExecuteAsync();
+                });
+            return anyCommandFailure;
         }
 
         private static void InitializeCommandLineParser(ICommandLineElementParser<ICommand> x)
@@ -23,7 +28,7 @@ namespace JustSaying.Tools
                     select (ICommand) new ExitCommand())
                 .Or(from arg in x.Argument("help")
                     select (ICommand) new HelpCommand())
-                
+
                 .Or(from arg in x.Argument("move")
                     from sourceQueueName in x.Definition("from")
                     from destinationQueueName in x.Definition("to")

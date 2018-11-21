@@ -12,15 +12,15 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         private string _topicName;
         private Topic _topic;
 
-        protected override void Given()
+        protected override async Task Given()
         {
-            base.Given();
+            await base.Given();
 
             _topicName = "message";
 
             Configuration = new MessagingConfig();
 
-            DeleteTopicIfItAlreadyExists(_topicName).ResultSync();
+            await DeleteTopicIfItAlreadyExists(_topicName);
         }
 
         protected override Task When()
@@ -37,11 +37,11 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
             topicExists.ShouldBeTrue();
         }
 
-        protected override void Teardown()
+        protected override async Task PostAssertTeardownAsync()
         {
             if (_topic != null)
             {
-                DeleteTopic(_topic).ResultSync();
+                await DeleteTopicAsync(_topic);
             }
         }
     }

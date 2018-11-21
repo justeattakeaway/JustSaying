@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -40,24 +41,24 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         }
 
         [Fact]
-        public void IncorrectQueueNameDoNotMatch()
+        public async Task IncorrectQueueNameDoNotMatch()
         {
             var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name1", _client, RetryCount, _log);
-            sqsQueueByName.ExistsAsync().GetAwaiter().GetResult().ShouldBeFalse();
+            (await sqsQueueByName.ExistsAsync()).ShouldBeFalse();
         }
 
         [Fact]
-        public void IncorrectPartialQueueNameDoNotMatch()
+        public async Task IncorrectPartialQueueNameDoNotMatch()
         {
             var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue", _client, RetryCount, _log);
-            sqsQueueByName.ExistsAsync().GetAwaiter().GetResult().ShouldBeFalse();
+            (await sqsQueueByName.ExistsAsync()).ShouldBeFalse();
         }
 
         [Fact]
-        public void CorrectQueueNameShouldMatch()
+        public async Task CorrectQueueNameShouldMatch()
         {
             var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name", _client, RetryCount, _log);
-            sqsQueueByName.ExistsAsync().GetAwaiter().GetResult().ShouldBeTrue();
+            (await sqsQueueByName.ExistsAsync()).ShouldBeTrue();
         }
     }
 }

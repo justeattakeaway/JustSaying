@@ -16,9 +16,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 
         private int expectedMaxMessageCount;
 
-        protected override void Given()
+        protected override async Task Given()
         {
-            base.Given();
+            await base.Given();
 
             // we expect to get max 10 messages per batch
             // except on single-core machines when we top out at ParallelHandlerExecutionPerCore=8
@@ -35,8 +35,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
                 Arg.Any<ReceiveMessageRequest>(),
                 Arg.Any<CancellationToken>())
             .Returns(
-                _ => Task.FromResult(response1),
-                _ => Task.FromResult(response2));
+                _ => response1,
+                _ => response2);
         }
 
         protected override async Task When()
@@ -45,10 +45,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 
             var cts = new CancellationTokenSource();
             SystemUnderTest.Listen(cts.Token);
-            await Task.Yield();
 
             cts.Cancel();
-            await Task.Yield();
         }
 
         [Fact]

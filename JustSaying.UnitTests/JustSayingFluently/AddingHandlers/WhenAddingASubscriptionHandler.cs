@@ -16,9 +16,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         private readonly IHandlerAsync<Message> _handler = Substitute.For<IHandlerAsync<Message>>();
         private object _response;
 
-        protected override void Given()
-        {
-        }
+        protected override Task Given() => Task.CompletedTask;
 
         protected override Task When()
         {

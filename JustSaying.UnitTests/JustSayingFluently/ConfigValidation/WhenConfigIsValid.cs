@@ -7,14 +7,15 @@ namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
 {
     public class WhenConfigIsValid : JustSayingFluentlyTestBase
     {
-        protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
+        protected override Task<JustSaying.JustSayingFluently> CreateSystemUnderTestAsync()
         {
-            return null;
+            return Task.FromResult<JustSaying.JustSayingFluently>(null);
         }
 
-        protected override void Given()
+        protected override Task Given()
         {
             RecordAnyExceptionsThrown();
+            return Task.CompletedTask;
         }
 
         protected override Task When()

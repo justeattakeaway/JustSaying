@@ -19,7 +19,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         private int _sqsCallCounter;
         private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
 
-        protected override void Given()
+        protected override Task Given()
         {
             Sqs = Substitute.For<IAmazonSQS>();
             SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
@@ -34,6 +34,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
                     Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>())
                 .Returns(_ =>  ExceptionOnFirstCall());
+
+            return Task.CompletedTask;
         }
 
         private Task ExceptionOnFirstCall()
@@ -60,7 +62,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             // wait until it's done
             await Tasks.WaitWithTimeoutAsync(_tcs.Task);
             cts.Cancel();
-            await Task.Yield();
         }
 
         [Fact]
