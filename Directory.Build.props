@@ -13,7 +13,6 @@
     <PackageReference Include="Text.Analyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
   </ItemGroup>
   <PropertyGroup>
-    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)justeat-oss.snk</AssemblyOriginatorKeyFile>
     <Authors>JUSTEAT_OSS</Authors>
     <Company>Just Eat</Company>
