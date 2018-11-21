@@ -11,16 +11,14 @@ namespace JustSaying.Messaging
 
     public static class MessagePublisherHelpers
     {
-        public static async Task PublishAsync<T>(this IMessagePublisher publisher, T message)
-         where T: Message
+        public static async Task PublishAsync(this IMessagePublisher publisher, Message message)
         {
             await publisher.PublishAsync(new PublishEnvelope(message), CancellationToken.None)
                 .ConfigureAwait(false);
         }
 
-        public static async Task PublishAsync<T>(this IMessagePublisher publisher,
-            T message, CancellationToken cancellationToken)
-            where T : Message
+        public static async Task PublishAsync(this IMessagePublisher publisher,
+            Message message, CancellationToken cancellationToken)
         {
             await publisher.PublishAsync(new PublishEnvelope(message), cancellationToken)
                 .ConfigureAwait(false);

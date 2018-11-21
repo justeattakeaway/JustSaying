@@ -48,11 +48,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
                 MessageAttributes = new Dictionary<string, Models.MessageAttributeValue>
                 {
                     {
-                        MessageAttributeKey,
-                        new Models.MessageAttributeValue
-                        {
-                            StringValue = MessageAttributeValue, DataType = MessageAttributeDataType
-                        }
+                        MessageAttributeKey, new Models.MessageAttributeValue
+                            {
+                                StringValue = MessageAttributeValue,
+                                DataType = MessageAttributeDataType
+                            }
                     }
                 }
             };
