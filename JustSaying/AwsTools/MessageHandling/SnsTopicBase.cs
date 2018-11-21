@@ -44,9 +44,9 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public abstract Task<bool> ExistsAsync();
         
-        public async Task PublishAsync(PublishEnvelope env, CancellationToken cancellationToken)
+        public async Task PublishAsync(PublishEnvelope envelope, CancellationToken cancellationToken)
         {
-            var request = BuildPublishRequest(env);
+            var request = BuildPublishRequest(envelope);
 
             try
             {
@@ -57,11 +57,11 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     HttpStatusCode = response?.HttpStatusCode,
                     MessageId = response?.MessageId
-                }, env.Message);
+                }, envelope.Message);
             }
             catch (Exception ex)
             {
-                if (!ClientExceptionHandler(ex, env.Message))
+                if (!ClientExceptionHandler(ex, envelope.Message))
                     throw new PublishException(
                         $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}",
                         ex);
@@ -70,12 +70,12 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private bool ClientExceptionHandler(Exception ex, Message message) => _snsWriteConfiguration?.HandleException?.Invoke(ex, message) ?? false;
 
-        private PublishRequest BuildPublishRequest(PublishEnvelope env)
+        private PublishRequest BuildPublishRequest(PublishEnvelope envelope)
         {
-            var messageToSend = _serialisationRegister.Serialise(env.Message, serializeForSnsPublishing: true);
-            var messageType = _messageSubjectProvider.GetSubjectForType(env.Message.GetType());
+            var messageToSend = _serialisationRegister.Serialise(envelope.Message, serializeForSnsPublishing: true);
+            var messageType = _messageSubjectProvider.GetSubjectForType(envelope.Message.GetType());
 
-            var messageAttributeValues = env.MessageAttributes?.ToDictionary(
+            var messageAttributeValues = envelope.MessageAttributes?.ToDictionary(
                 source => source.Key,
                 source =>
                 {

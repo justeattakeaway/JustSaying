@@ -130,10 +130,10 @@ namespace JustSaying
             }
         }
 
-        public async Task PublishAsync(PublishEnvelope env, CancellationToken cancellationToken)
+        public async Task PublishAsync(PublishEnvelope envelope, CancellationToken cancellationToken)
         {
-            var publisher = GetActivePublisherForMessage(env.Message);
-            await PublishAsync(publisher, env, cancellationToken: cancellationToken).ConfigureAwait(false);
+            var publisher = GetActivePublisherForMessage(envelope.Message);
+            await PublishAsync(publisher, envelope, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
 
         public IInterrogationResponse WhatDoIHave()
@@ -173,14 +173,18 @@ namespace JustSaying
             return publishersByTopic[topic];
         }
 
-        private async Task PublishAsync(IMessagePublisher publisher, PublishEnvelope env, int attemptCount = 0, CancellationToken cancellationToken = default)
+        private async Task PublishAsync(
+            IMessagePublisher publisher,
+            PublishEnvelope envelope,
+            int attemptCount = 0,
+            CancellationToken cancellationToken = default)
         {
             attemptCount++;
             try
             {
                 var watch = Stopwatch.StartNew();
 
-                await publisher.PublishAsync(env, cancellationToken).ConfigureAwait(false);
+                await publisher.PublishAsync(envelope, cancellationToken).ConfigureAwait(false);
 
                 watch.Stop();
                 Monitor.PublishMessageTime(watch.ElapsedMilliseconds);
@@ -190,16 +194,16 @@ namespace JustSaying
                 if (attemptCount >= Config.PublishFailureReAttempts)
                 {
                     Monitor.IssuePublishingMessage();
-                    _log.LogError(0, ex, $"Failed to publish message {env.Message.GetType()}. Halting after attempt {attemptCount}");
+                    _log.LogError(0, ex, $"Failed to publish message {envelope.Message.GetType()}. Halting after attempt {attemptCount}");
                     throw;
                 }
 
-                _log.LogWarning(0, ex, $"Failed to publish message {env.Message.GetType()}. Retrying after attempt {attemptCount} of {Config.PublishFailureReAttempts}");
+                _log.LogWarning(0, ex, $"Failed to publish message {envelope.Message.GetType()}. Retrying after attempt {attemptCount} of {Config.PublishFailureReAttempts}");
 
                 var delayForAttempt = TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
                 await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);
 
-                await PublishAsync(publisher, env, attemptCount, cancellationToken).ConfigureAwait(false);
+                await PublishAsync(publisher, envelope, attemptCount, cancellationToken).ConfigureAwait(false);
             }
         }
     }
