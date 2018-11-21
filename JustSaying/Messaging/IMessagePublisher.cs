@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Models;
@@ -9,6 +10,7 @@ namespace JustSaying.Messaging
         Task PublishAsync(PublishEnvelope message, CancellationToken cancellationToken);
     }
 
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static class MessagePublisherHelpers
     {
         public static async Task PublishAsync(this IMessagePublisher publisher, Message message)
