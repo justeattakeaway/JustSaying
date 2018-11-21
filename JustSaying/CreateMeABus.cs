@@ -9,10 +9,12 @@ namespace JustSaying
         /// <summary>
         /// Allows to override default <see cref="IAwsClientFactory"/> globally.
         /// </summary>
+        ////[Obsolete("Use the BusBuilder class to create message buses.")]
         public static Func<IAwsClientFactory> DefaultClientFactory { get; set; }
             = () => new DefaultAwsClientFactory();
 
-        public static JustSayingFluentlyDependencies WithLogging(ILoggerFactory loggerFactory) => 
+        ////[Obsolete("Use the BusBuilder class to create message buses.")]
+        public static JustSayingFluentlyDependencies WithLogging(ILoggerFactory loggerFactory) =>
             new JustSayingFluentlyDependencies { LoggerFactory = loggerFactory};
     }
 }
