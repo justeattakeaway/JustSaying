@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using JustSaying.Messaging;
 using JustSaying.Models;
 using NSubstitute;
 using Shouldly;

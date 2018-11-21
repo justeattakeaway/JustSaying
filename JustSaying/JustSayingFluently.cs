@@ -162,21 +162,15 @@ namespace JustSaying
         /// Publish a message to the stack, asynchronously.
         /// </summary>
         /// <param name="message"></param>
-        public virtual Task PublishAsync(Message message) => PublishAsync(message, CancellationToken.None);
-
-        /// <summary>
-        /// Publish a message to the stack, asynchronously.
-        /// </summary>
-        /// <param name="message"></param>
         /// <param name="cancellationToken"></param>
-        public virtual async Task PublishAsync(Message message, CancellationToken cancellationToken)
+        public virtual async Task PublishAsync(PublishEnvelope env, CancellationToken cancellationToken)
         {
             if (Bus == null)
             {
                 throw new InvalidOperationException("You must register for message publication before publishing a message");
             }
 
-            await Bus.PublishAsync(message, cancellationToken).ConfigureAwait(false);
+            await Bus.PublishAsync(env, cancellationToken).ConfigureAwait(false);
         }
 
         public IMayWantOptionalSettings WithSerialisationFactory(IMessageSerialisationFactory factory)

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
@@ -42,19 +43,21 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         protected override async Task When()
         {
-            await SystemUnderTest.PublishAsync(new SimpleMessage
+            var publishData = new PublishEnvelope(new SimpleMessage())
             {
                 MessageAttributes = new Dictionary<string, Models.MessageAttributeValue>
                 {
                     {
                         MessageAttributeKey,
-                            new Models.MessageAttributeValue{
-                                StringValue = MessageAttributeValue,
-                                DataType = MessageAttributeDataType
-                            }
+                        new Models.MessageAttributeValue
+                        {
+                            StringValue = MessageAttributeValue, DataType = MessageAttributeDataType
+                        }
                     }
                 }
-            });
+            };
+
+            await SystemUnderTest.PublishAsync(publishData, CancellationToken.None);
         }
 
         [Fact]

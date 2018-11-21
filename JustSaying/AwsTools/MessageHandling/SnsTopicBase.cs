@@ -8,8 +8,10 @@ using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
+using MessageAttributeValue = Amazon.SimpleNotificationService.Model.MessageAttributeValue;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -22,13 +24,11 @@ namespace JustSaying.AwsTools.MessageHandling
         public string Arn { get; protected set; }
         protected IAmazonSimpleNotificationService Client { get; set; }
         private readonly ILogger _eventLog;
-        private readonly ILogger _log;
 
         protected SnsTopicBase(IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory, IMessageSubjectProvider messageSubjectProvider)
         {
             _serialisationRegister = serialisationRegister;
             _messageSubjectProvider = messageSubjectProvider;
-            _log = loggerFactory.CreateLogger("JustSaying");
             _eventLog = loggerFactory.CreateLogger("EventLog");
         }
 
@@ -37,7 +37,6 @@ namespace JustSaying.AwsTools.MessageHandling
             IMessageSubjectProvider messageSubjectProvider)
         {
             _serialisationRegister = serialisationRegister;
-            _log = loggerFactory.CreateLogger("JustSaying");
             _eventLog = loggerFactory.CreateLogger("EventLog");
             _snsWriteConfiguration = snsWriteConfiguration;
             _messageSubjectProvider = messageSubjectProvider;
@@ -45,11 +44,9 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public abstract Task<bool> ExistsAsync();
         
-        public Task PublishAsync(Message message) => PublishAsync(message, CancellationToken.None);
-
-        public async Task PublishAsync(Message message, CancellationToken cancellationToken)
+        public async Task PublishAsync(PublishEnvelope env, CancellationToken cancellationToken)
         {
-            var request = BuildPublishRequest(message);
+            var request = BuildPublishRequest(env);
 
             try
             {
@@ -60,11 +57,11 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     HttpStatusCode = response?.HttpStatusCode,
                     MessageId = response?.MessageId
-                }, message);
+                }, env.Message);
             }
             catch (Exception ex)
             {
-                if (!ClientExceptionHandler(ex, message))
+                if (!ClientExceptionHandler(ex, env.Message))
                     throw new PublishException(
                         $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}",
                         ex);
@@ -73,12 +70,12 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private bool ClientExceptionHandler(Exception ex, Message message) => _snsWriteConfiguration?.HandleException?.Invoke(ex, message) ?? false;
 
-        private PublishRequest BuildPublishRequest(Message message)
+        private PublishRequest BuildPublishRequest(PublishEnvelope env)
         {
-            var messageToSend = _serialisationRegister.Serialise(message, serializeForSnsPublishing: true);
-            var messageType = _messageSubjectProvider.GetSubjectForType(message.GetType());
+            var messageToSend = _serialisationRegister.Serialise(env.Message, serializeForSnsPublishing: true);
+            var messageType = _messageSubjectProvider.GetSubjectForType(env.Message.GetType());
 
-            var messageAttributeValues = message.MessageAttributes?.ToDictionary(
+            var messageAttributeValues = env.MessageAttributes?.ToDictionary(
                 source => source.Key,
                 source =>
                 {

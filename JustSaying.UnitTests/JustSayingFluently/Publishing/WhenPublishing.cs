@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using JustSaying.Messaging;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using NSubstitute;
@@ -9,13 +10,13 @@ namespace JustSaying.UnitTests.JustSayingFluently.Publishing
 {
     public class WhenPublishing : JustSayingFluentlyTestBase
     {
-        private readonly Message _message = new SimpleMessage();
+        private readonly PublishEnvelope _message = new PublishEnvelope(new SimpleMessage());
 
         protected override Task Given() => Task.CompletedTask;
 
         protected override async Task When()
         {
-            await SystemUnderTest.PublishAsync(_message);
+            await SystemUnderTest.PublishAsync(_message, CancellationToken.None);
         }
 
         [Fact]

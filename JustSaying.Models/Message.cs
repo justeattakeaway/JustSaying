@@ -3,6 +3,19 @@ using System.Collections.Generic;
 
 namespace JustSaying.Models
 {
+    public class PublishEnvelope
+    {
+        public PublishEnvelope(Message message)
+        {
+            Message = message ?? throw new ArgumentNullException(nameof(message));
+        }
+
+        public Message Message { get; }
+
+        public int? DelaySeconds { get; set; }
+        public IDictionary<string, MessageAttributeValue> MessageAttributes { get; set; }
+    }
+
     public abstract class Message
     {
         protected Message()
@@ -20,8 +33,6 @@ namespace JustSaying.Models
         public string Conversation { get; set; }
         public string ReceiptHandle { get; set; }
         public Uri QueueUri { get; set; }
-        public int? DelaySeconds { get; set; }
-        public IDictionary<string, MessageAttributeValue> MessageAttributes { get; set; }
 
         //footprint in order to avoid the same message being processed multiple times.
         public virtual string UniqueKey() => Id.ToString();

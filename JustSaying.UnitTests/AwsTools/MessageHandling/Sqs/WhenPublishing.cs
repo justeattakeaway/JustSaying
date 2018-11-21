@@ -1,10 +1,10 @@
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustBehave;
+using JustSaying.Messaging;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.TestingFramework;

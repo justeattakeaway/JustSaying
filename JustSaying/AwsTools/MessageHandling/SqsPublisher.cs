@@ -6,6 +6,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
 
@@ -26,11 +27,9 @@ namespace JustSaying.AwsTools.MessageHandling
             _serialisationRegister = serialisationRegister;
         }
 
-        public Task PublishAsync(Message message) => PublishAsync(message, CancellationToken.None);
-
-        public async Task PublishAsync(Message message, CancellationToken cancellationToken)
+        public async Task PublishAsync(PublishEnvelope env, CancellationToken cancellationToken)
         {
-            var request = BuildSendMessageRequest(message);
+            var request = BuildSendMessageRequest(env);
             try
             {
                 var response = await _client.SendMessageAsync(request, cancellationToken).ConfigureAwait(false);
@@ -38,7 +37,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     HttpStatusCode = response?.HttpStatusCode,
                     MessageId = response?.MessageId
-                }, message);
+                }, env.Message);
             }
             catch (Exception ex)
             {
@@ -48,17 +47,17 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        private SendMessageRequest BuildSendMessageRequest(Message message)
+        private SendMessageRequest BuildSendMessageRequest(PublishEnvelope env)
         {
             var request = new SendMessageRequest
             {
-                MessageBody = GetMessageInContext(message),
+                MessageBody = GetMessageInContext(env.Message),
                 QueueUrl = Uri?.AbsoluteUri
             };
 
-            if (message.DelaySeconds.HasValue)
+            if (env.DelaySeconds.HasValue)
             {
-                request.DelaySeconds = message.DelaySeconds.Value;
+                request.DelaySeconds = env.DelaySeconds.Value;
             }
             return request;
         }
