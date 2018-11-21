@@ -36,8 +36,8 @@ namespace JustSaying.Tools.Commands
             var sourceQueue = new SqsQueueByName(config.RegionEndpoint, SourceQueueName, client, JustSayingConstants.DefaultHandlerRetryCount, loggerFactory);
             var destinationQueue = new SqsQueueByName(config.RegionEndpoint, DestinationQueueName, client, JustSayingConstants.DefaultHandlerRetryCount, loggerFactory);
 
-            await EnsureQueueExistsAsync(sourceQueue);
-            await EnsureQueueExistsAsync(destinationQueue);
+            await EnsureQueueExistsAsync(sourceQueue).ConfigureAwait(false);
+            await EnsureQueueExistsAsync(destinationQueue).ConfigureAwait(false);
 
             var messages = PopMessagesFromSourceQueue(sourceQueue);
             var receiptHandles = messages.ToDictionary(m => m.MessageId, m => m.ReceiptHandle);

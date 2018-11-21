@@ -10,7 +10,7 @@ namespace JustSaying.Tools
         {
             foreach (var item in source)
             {
-                await func(item);
+                await func(item).ConfigureAwait(false);
             }
         }
     }
