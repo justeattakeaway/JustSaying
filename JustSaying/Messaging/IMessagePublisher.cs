@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +16,11 @@ namespace JustSaying.Messaging
     {
         public static async Task PublishAsync(this IMessagePublisher publisher, Message message)
         {
+            if (publisher == null)
+            {
+                throw new ArgumentNullException(nameof(publisher));
+            }
+
             await publisher.PublishAsync(new PublishEnvelope(message), CancellationToken.None)
                 .ConfigureAwait(false);
         }
@@ -22,6 +28,11 @@ namespace JustSaying.Messaging
         public static async Task PublishAsync(this IMessagePublisher publisher,
             Message message, CancellationToken cancellationToken)
         {
+            if (publisher == null)
+            {
+                throw new ArgumentNullException(nameof(publisher));
+            }
+
             await publisher.PublishAsync(new PublishEnvelope(message), cancellationToken)
                 .ConfigureAwait(false);
         }
