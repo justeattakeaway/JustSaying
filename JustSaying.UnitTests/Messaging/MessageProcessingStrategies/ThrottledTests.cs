@@ -8,6 +8,7 @@ using Xunit;
 
 namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
 {
+    [CollectionDefinition(nameof(ThrottledTests), DisableParallelization = true)]
     public class ThrottledTests
     {
         private readonly IMessageMonitor _fakeMonitor;

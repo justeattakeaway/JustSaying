@@ -6,8 +6,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
-
 namespace JustSaying.UnitTests
 {
     public abstract class JustSayingFluentlyTestBase : XAsyncBehaviourTest<JustSaying.JustSayingFluently>

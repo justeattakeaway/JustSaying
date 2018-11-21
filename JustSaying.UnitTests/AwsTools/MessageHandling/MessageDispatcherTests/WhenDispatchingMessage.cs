@@ -31,6 +31,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
         public override Task<bool> ExistsAsync() => Task.FromResult(true);
     }
 
+    [CollectionDefinition(nameof(WhenDispatchingMessage), DisableParallelization = true)]
     public class WhenDispatchingMessage : XAsyncBehaviourTest<MessageDispatcher>
     {
         private const string ExpectedQueueUrl = "http://testurl.com/queue";
