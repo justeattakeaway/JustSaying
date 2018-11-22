@@ -7,7 +7,7 @@ using JustSaying.Models;
 namespace JustSaying.Messaging
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public static class MessagePublisherHelpers
+    public static class MessagePublisherExtensions
     {
         public static Task PublishAsync(this IMessagePublisher publisher, Message message)
         {
