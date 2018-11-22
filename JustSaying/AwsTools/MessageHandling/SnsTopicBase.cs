@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -74,33 +75,47 @@ namespace JustSaying.AwsTools.MessageHandling
             var messageToSend = _serialisationRegister.Serialise(envelope.Message, serializeForSnsPublishing: true);
             var messageType = _messageSubjectProvider.GetSubjectForType(envelope.Message.GetType());
 
-            var messageAttributeValues = envelope.MessageAttributes?.ToDictionary(
-                source => source.Key,
-                source =>
-                {
-                    if (source.Value == null)
-                    {
-                        return null;
-                    }
-
-                    var binaryValueStream = source.Value.BinaryValue != null
-                        ? new MemoryStream(source.Value.BinaryValue.ToArray(), false)
-                        : null;
-
-                    return new MessageAttributeValue
-                    {
-                        StringValue = source.Value.StringValue,
-                        BinaryValue = binaryValueStream,
-                        DataType = source.Value.DataType
-                    };
-                });
+            var messageAttributeValues = BuildMessageAttributes(envelope);
             
-            return new PublishRequest
+            var request= new PublishRequest
             {
                 TopicArn = Arn,
                 Subject = messageType,
                 Message = messageToSend,
                 MessageAttributes = messageAttributeValues
+            };
+
+            return request;
+        }
+
+        private static Dictionary<string, MessageAttributeValue> BuildMessageAttributes(PublishEnvelope envelope)
+        {
+            if (envelope.MessageAttributes == null || envelope.MessageAttributes.Count == 0)
+            {
+                return null;
+            }
+
+            return envelope.MessageAttributes.ToDictionary(
+                source => source.Key,
+                source => BuildMessageAttributeValue(source.Value));
+        }
+
+        private static MessageAttributeValue BuildMessageAttributeValue(Messaging.MessageAttributeValue value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+
+            var binaryValueStream = value.BinaryValue != null
+                ? new MemoryStream(value.BinaryValue.ToArray(), false)
+                : null;
+
+            return new MessageAttributeValue
+            {
+                StringValue = value.StringValue,
+                BinaryValue = binaryValueStream,
+                DataType = value.DataType
             };
         }
     }
