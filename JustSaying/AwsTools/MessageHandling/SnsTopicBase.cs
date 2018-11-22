@@ -75,17 +75,13 @@ namespace JustSaying.AwsTools.MessageHandling
             var messageToSend = _serialisationRegister.Serialise(envelope.Message, serializeForSnsPublishing: true);
             var messageType = _messageSubjectProvider.GetSubjectForType(envelope.Message.GetType());
 
-            var messageAttributeValues = BuildMessageAttributes(envelope);
-            
-            var request= new PublishRequest
+            return new PublishRequest
             {
                 TopicArn = Arn,
                 Subject = messageType,
                 Message = messageToSend,
-                MessageAttributes = messageAttributeValues
+                MessageAttributes = BuildMessageAttributes(envelope)
             };
-
-            return request;
         }
 
         private static Dictionary<string, MessageAttributeValue> BuildMessageAttributes(PublishEnvelope envelope)
