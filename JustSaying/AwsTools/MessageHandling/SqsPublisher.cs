@@ -54,9 +54,9 @@ namespace JustSaying.AwsTools.MessageHandling
                 QueueUrl = Uri?.AbsoluteUri
             };
 
-            if (envelope.DelaySeconds.HasValue)
+            if (envelope.Delay.HasValue)
             {
-                request.DelaySeconds = envelope.DelaySeconds.Value;
+                request.DelaySeconds = (int)envelope.Delay.Value.TotalSeconds;
             }
             return request;
         }

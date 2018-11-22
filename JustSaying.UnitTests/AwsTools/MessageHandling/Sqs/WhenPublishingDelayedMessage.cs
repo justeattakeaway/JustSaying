@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,7 +24,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 
         private readonly PublishEnvelope _message = new PublishEnvelope(new SimpleMessage())
         {
-            DelaySeconds = 1
+            Delay = TimeSpan.FromSeconds(1)
         };
         private const string QueueName = "queuename";
 
