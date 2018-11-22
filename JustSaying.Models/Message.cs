@@ -1,22 +1,7 @@
 using System;
-using System.Collections.Generic;
 
 namespace JustSaying.Models
 {
-    public class PublishEnvelope
-    {
-        public PublishEnvelope(Message message)
-        {
-            Message = message ?? throw new ArgumentNullException(nameof(message));
-        }
-
-        public Message Message { get; }
-
-        public int? DelaySeconds { get; set; }
-
-        public IDictionary<string, MessageAttributeValue> MessageAttributes { get; } = new Dictionary<string, MessageAttributeValue>();
-    }
-
     public abstract class Message
     {
         protected Message()

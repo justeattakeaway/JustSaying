@@ -6,6 +6,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Extensions;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;

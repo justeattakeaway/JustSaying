@@ -8,7 +8,6 @@ using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialisation;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
 using MessageAttributeValue = Amazon.SimpleNotificationService.Model.MessageAttributeValue;

@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
-using JustSaying.Models;
 using NSubstitute;
 using Xunit;
 

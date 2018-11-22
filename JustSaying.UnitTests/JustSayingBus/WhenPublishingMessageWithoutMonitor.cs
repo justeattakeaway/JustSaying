@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;

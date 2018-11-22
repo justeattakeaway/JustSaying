@@ -1,6 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
-using JustSaying.Models;
+using JustSaying.Messaging;
 using JustSaying.TestingFramework;
 using NSubstitute;
 using Xunit;

@@ -6,7 +6,6 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialisation;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling

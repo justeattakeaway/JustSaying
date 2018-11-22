@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,6 +5,7 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Models;
 using JustSaying.TestingFramework;

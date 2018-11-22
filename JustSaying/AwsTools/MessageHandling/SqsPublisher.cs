@@ -6,7 +6,6 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialisation;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
 
