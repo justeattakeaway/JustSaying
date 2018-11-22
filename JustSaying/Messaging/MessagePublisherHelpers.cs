@@ -11,7 +11,7 @@ namespace JustSaying.Messaging
     {
         public static Task PublishAsync(this IMessagePublisher publisher, Message message)
         {
-            return PublishAsync(publisher, message, CancellationToken.None);
+            return publisher.PublishAsync(message, CancellationToken.None);
         }
 
         public static async Task PublishAsync(this IMessagePublisher publisher,
