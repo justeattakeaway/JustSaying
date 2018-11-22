@@ -44,8 +44,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         protected override async Task When()
         {
             var publishData = new PublishEnvelope(new SimpleMessage());
-            publishData.MessageAttributes.Add(MessageAttributeKey, new Models.MessageAttributeValue
-                {
+            publishData.MessageAttributes.Add(MessageAttributeKey, new JustSaying.Messaging.MessageAttributeValue
+            {
                     StringValue = MessageAttributeValue,
                     DataType = MessageAttributeDataType
                 });

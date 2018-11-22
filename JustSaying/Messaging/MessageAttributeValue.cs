@@ -5,8 +5,7 @@
 
 using System.Collections.Generic;
 
-
-namespace JustSaying.Models
+namespace JustSaying.Messaging
 {
     /// <summary>
     /// The user-specified message attribute value. For string data types, the value attribute
