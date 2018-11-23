@@ -44,9 +44,9 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public abstract Task<bool> ExistsAsync();
         
-        public async Task PublishAsync(PublishEnvelope envelope, CancellationToken cancellationToken)
+        public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
-            var request = BuildPublishRequest(envelope);
+            var request = BuildPublishRequest(message, metadata);
 
             try
             {
@@ -57,11 +57,11 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     HttpStatusCode = response?.HttpStatusCode,
                     MessageId = response?.MessageId
-                }, envelope.Message);
+                }, message);
             }
             catch (Exception ex)
             {
-                if (!ClientExceptionHandler(ex, envelope.Message))
+                if (!ClientExceptionHandler(ex, message))
                     throw new PublishException(
                         $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}",
                         ex);
@@ -70,28 +70,28 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private bool ClientExceptionHandler(Exception ex, Message message) => _snsWriteConfiguration?.HandleException?.Invoke(ex, message) ?? false;
 
-        private PublishRequest BuildPublishRequest(PublishEnvelope envelope)
+        private PublishRequest BuildPublishRequest(Message message, PublishMetadata metadata)
         {
-            var messageToSend = _serialisationRegister.Serialise(envelope.Message, serializeForSnsPublishing: true);
-            var messageType = _messageSubjectProvider.GetSubjectForType(envelope.Message.GetType());
+            var messageToSend = _serialisationRegister.Serialise(message, serializeForSnsPublishing: true);
+            var messageType = _messageSubjectProvider.GetSubjectForType(message.GetType());
 
             return new PublishRequest
             {
                 TopicArn = Arn,
                 Subject = messageType,
                 Message = messageToSend,
-                MessageAttributes = BuildMessageAttributes(envelope)
+                MessageAttributes = BuildMessageAttributes(metadata)
             };
         }
 
-        private static Dictionary<string, MessageAttributeValue> BuildMessageAttributes(PublishEnvelope envelope)
+        private static Dictionary<string, MessageAttributeValue> BuildMessageAttributes(PublishMetadata metadata)
         {
-            if (envelope.MessageAttributes == null || envelope.MessageAttributes.Count == 0)
+            if (metadata?.MessageAttributes == null || metadata.MessageAttributes.Count == 0)
             {
                 return null;
             }
 
-            return envelope.MessageAttributes.ToDictionary(
+            return metadata.MessageAttributes.ToDictionary(
                 source => source.Key,
                 source => BuildMessageAttributeValue(source.Value));
         }

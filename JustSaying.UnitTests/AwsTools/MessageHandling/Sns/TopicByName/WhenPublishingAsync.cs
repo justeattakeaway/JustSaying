@@ -42,10 +42,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         protected override async Task When()
         {
-            var publishData = new PublishEnvelope(new SimpleMessage());
+            var message = new SimpleMessage();
+            var publishData = new PublishMetadata();
             publishData.AddMessageAttribute(MessageAttributeKey, MessageAttributeValue);
 
-            await SystemUnderTest.PublishAsync(publishData, CancellationToken.None);
+            await SystemUnderTest.PublishAsync(message, publishData, CancellationToken.None);
         }
 
         [Fact]

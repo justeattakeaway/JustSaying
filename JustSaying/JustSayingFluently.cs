@@ -164,14 +164,14 @@ namespace JustSaying
         /// </summary>
         /// <param name="message"></param>
         /// <param name="cancellationToken"></param>
-        public virtual async Task PublishAsync(PublishEnvelope envelope, CancellationToken cancellationToken)
+        public virtual async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
             if (Bus == null)
             {
                 throw new InvalidOperationException("You must register for message publication before publishing a message");
             }
 
-            await Bus.PublishAsync(envelope, cancellationToken).ConfigureAwait(false);
+            await Bus.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
         }
 
         public IMayWantOptionalSettings WithSerialisationFactory(IMessageSerialisationFactory factory)

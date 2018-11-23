@@ -26,9 +26,9 @@ namespace JustSaying.AwsTools.MessageHandling
             _serialisationRegister = serialisationRegister;
         }
 
-        public async Task PublishAsync(PublishEnvelope envelope, CancellationToken cancellationToken)
+        public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
-            var request = BuildSendMessageRequest(envelope);
+            var request = BuildSendMessageRequest(message, metadata);
             try
             {
                 var response = await _client.SendMessageAsync(request, cancellationToken).ConfigureAwait(false);
@@ -36,7 +36,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     HttpStatusCode = response?.HttpStatusCode,
                     MessageId = response?.MessageId
-                }, envelope.Message);
+                }, message);
             }
             catch (Exception ex)
             {
@@ -46,17 +46,17 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        private SendMessageRequest BuildSendMessageRequest(PublishEnvelope envelope)
+        private SendMessageRequest BuildSendMessageRequest(Message message, PublishMetadata metadata)
         {
             var request = new SendMessageRequest
             {
-                MessageBody = GetMessageInContext(envelope.Message),
+                MessageBody = GetMessageInContext(message),
                 QueueUrl = Uri?.AbsoluteUri
             };
 
-            if (envelope.Delay.HasValue)
+            if (metadata?.Delay != null)
             {
-                request.DelaySeconds = (int)envelope.Delay.Value.TotalSeconds;
+                request.DelaySeconds = (int)metadata.Delay.Value.TotalSeconds;
             }
             return request;
         }

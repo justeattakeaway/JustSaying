@@ -9,7 +9,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.Publishing
 {
     public class WhenPublishing : JustSayingFluentlyTestBase
     {
-        private readonly PublishEnvelope _message = new PublishEnvelope(new SimpleMessage());
+        private readonly SimpleMessage _message = new SimpleMessage();
 
         protected override Task Given() => Task.CompletedTask;
 
@@ -21,8 +21,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.Publishing
         [Fact]
         public void TheMessageIsPublished()
         {
-            // If this ever fails, I have serious questions
-            Received.InOrder(async () => await Bus.PublishAsync(_message, CancellationToken.None));
+            Received.InOrder(async () => await Bus.PublishAsync(_message, null, CancellationToken.None));
         }
     }
 }

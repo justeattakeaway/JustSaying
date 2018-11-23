@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
+using JustSaying.Models;
 using JustSaying.TestingFramework;
 using NSubstitute;
 using Shouldly;
@@ -33,7 +34,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         public void AcceptedOrderWasPublishedOnce()
         {
             _publisher.Received(1).PublishAsync(
-                Arg.Is<PublishEnvelope>(env =>  env.Message is OrderAccepted),
+                Arg.Is<Message>(m => m is OrderAccepted),
+                Arg.Any<PublishMetadata>(),
                 Arg.Any<CancellationToken>());
         }
 
@@ -41,7 +43,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         public void RejectedOrderWasPublishedTwice()
         {
             _publisher.Received(2).PublishAsync(
-                Arg.Is<PublishEnvelope>(env => env.Message is OrderRejected),
+                Arg.Is<Message>(m => m is OrderRejected),
+                Arg.Any<PublishMetadata>(),
                 Arg.Any<CancellationToken>());
         }
 

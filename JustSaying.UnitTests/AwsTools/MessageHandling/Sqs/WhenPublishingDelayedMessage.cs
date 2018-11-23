@@ -22,10 +22,12 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private const string Url = "https://testurl.com/" + QueueName;
 
-        private readonly PublishEnvelope _message = new PublishEnvelope(new SimpleMessage())
+        private readonly SimpleMessage _message = new SimpleMessage();
+        private readonly PublishMetadata _metadata = new PublishMetadata
         {
             Delay = TimeSpan.FromSeconds(1)
         };
+
         private const string QueueName = "queuename";
 
         protected override async Task<SqsPublisher> CreateSystemUnderTestAsync()
@@ -45,7 +47,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 
         protected override async Task When()
         {
-            await SystemUnderTest.PublishAsync(_message, CancellationToken.None);
+            await SystemUnderTest.PublishAsync(_message, _metadata, CancellationToken.None);
         }
 
         [Fact]

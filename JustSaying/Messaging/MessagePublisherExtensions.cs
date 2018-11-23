@@ -22,7 +22,7 @@ namespace JustSaying.Messaging
                 throw new ArgumentNullException(nameof(publisher));
             }
 
-            await publisher.PublishAsync(new PublishEnvelope(message), cancellationToken)
+            await publisher.PublishAsync(message, null, cancellationToken)
                 .ConfigureAwait(false);
         }
     }
