@@ -20,7 +20,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         private const string Message = "the_message_in_json";
         private const string MessageAttributeKey = "StringAttribute";
         private const string MessageAttributeValue = "StringValue";
-        private const string MessageAttributeDataType = "String";
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IAmazonSimpleNotificationService _sns = Substitute.For<IAmazonSimpleNotificationService>();
         private const string TopicArn = "topicarn";
@@ -44,11 +43,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         protected override async Task When()
         {
             var publishData = new PublishEnvelope(new SimpleMessage());
-            publishData.MessageAttributes.Add(MessageAttributeKey, new JustSaying.Messaging.MessageAttributeValue
-            {
-                    StringValue = MessageAttributeValue,
-                    DataType = MessageAttributeDataType
-                });
+            publishData.AddMessageAttribute(MessageAttributeKey, MessageAttributeValue);
 
             await SystemUnderTest.PublishAsync(publishData, CancellationToken.None);
         }
@@ -92,7 +87,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         [Fact]
         public void MessageAttributeDataTypeIsPublished()
         {
-            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.MessageAttributes.Single().Value.DataType == MessageAttributeDataType));
+            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.MessageAttributes.Single().Value.DataType == "String"));
         }
     }
 }
