@@ -28,23 +28,25 @@ namespace JustSaying.Messaging.MessageSerialisation
 
         public Message DeserializeMessage(string body)
         {
-            foreach (var formatter in _map)
+            foreach (var pair in _map)
             {
-                string messageSubject = formatter.Value.Serialiser.GetMessageSubject(body);
+                TypeSerialiser typeSerializer = pair.Value;
+                string messageSubject = typeSerializer.Serialiser.GetMessageSubject(body);
 
                 if (string.IsNullOrWhiteSpace(messageSubject))
                 {
                     continue;
                 }
 
-                Type matchedType = formatter.Value.Type;
+                Type matchedType = typeSerializer.Type;
 
                 if (!string.Equals(_messageSubjectProvider.GetSubjectForType(matchedType), messageSubject, StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
 
-                return formatter.Value.Serialiser.Deserialise(body, matchedType);
+                IMessageSerialiser messageSerializer = typeSerializer.Serialiser;
+                return messageSerializer.Deserialise(body, matchedType);
             }
 
             // TODO Maybe we should log the body separately (at debug/trace?), rather than include it in the exception message. Then they're easier to filter.
@@ -56,13 +58,14 @@ namespace JustSaying.Messaging.MessageSerialisation
         {
             var messageType = message.GetType();
 
-            if (!_map.TryGetValue(messageType, out TypeSerialiser serializer))
+            if (!_map.TryGetValue(messageType, out TypeSerialiser typeSerializer))
             {
                 // TODO Log out what *is* registered at debug?
                 throw new MessageFormatNotSupportedException($"Failed to serialize message of type {messageType} because it is not registered for serialization.");
             }
 
-            return serializer.Serialiser.Serialise(message, serializeForSnsPublishing, _messageSubjectProvider.GetSubjectForType(messageType));
+            IMessageSerialiser messageSerializer = typeSerializer.Serialiser;
+            return messageSerializer.Serialise(message, serializeForSnsPublishing, _messageSubjectProvider.GetSubjectForType(messageType));
         }
     }
 }
