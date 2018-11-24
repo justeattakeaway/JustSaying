@@ -113,6 +113,11 @@ namespace JustSaying
 
         public void Start(CancellationToken cancellationToken = default)
         {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
             lock (_syncRoot)
             {
                 foreach (var regionSubscriber in _subscribersByRegionAndQueue)
