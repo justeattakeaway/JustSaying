@@ -1,10 +1,11 @@
 using System;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace JustSaying.AwsTools
 {
-    public class AsyncLazy<T> : Lazy<Task<T>>
+    // TODO Does this still meet async best-practice?
+
+    internal sealed class AsyncLazy<T> : Lazy<Task<T>>
     {
         public AsyncLazy(Func<T> valueFactory) :
             base(() => Task.Factory.StartNew(valueFactory)) { }
