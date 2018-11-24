@@ -1,4 +1,5 @@
 using System;
+using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialisation;
 using Microsoft.Extensions.Logging;
@@ -10,6 +11,11 @@ namespace JustSaying.Fluent
     /// </summary>
     public class MessagingBusBuilder : Builder<IMessagingBus, MessagingBusBuilder>
     {
+        /// <summary>
+        /// Gets the optional <see cref="IServiceResolver"/> to use.
+        /// </summary>
+        internal IServiceResolver ServiceResolver { get; private set; }
+
         /// <inheritdoc />
         protected override MessagingBusBuilder Self => this;
 
@@ -22,6 +28,11 @@ namespace JustSaying.Fluent
         /// Gets or sets the builder to use to configure messaging.
         /// </summary>
         private MessagingConfigurationBuilder MessagingConfig { get; set; }
+
+        /// <summary>
+        /// Gets or sets the builder to use for subscriptions.
+        /// </summary>
+        private SubscriptionBuilder SubscriptionBuilder { get; set; }
 
         /// <summary>
         /// Gets or sets a delegate to a method to create the <see cref="ILoggerFactory"/> to use.
@@ -71,6 +82,22 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
+        /// Configures the subscriptions.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="SubscriptionBuilder"/> to use to configure the subscriptions.
+        /// </returns>
+        public SubscriptionBuilder Subscriptions()
+        {
+            if (SubscriptionBuilder == null)
+            {
+                SubscriptionBuilder = new SubscriptionBuilder(this);
+            }
+
+            return SubscriptionBuilder;
+        }
+
+        /// <summary>
         /// Specifies the <see cref="ILoggerFactory"/> to use.
         /// </summary>
         /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to use.</param>
@@ -117,6 +144,19 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
+        /// Specifies the <see cref="IServiceResolver"/> to use.
+        /// </summary>
+        /// <param name="serviceResolver">The <see cref="IServiceResolver"/> to use.</param>
+        /// <returns>
+        /// The current <see cref="MessagingBusBuilder"/>.
+        /// </returns>
+        public MessagingBusBuilder WithServiceResolver(IServiceResolver serviceResolver)
+        {
+            ServiceResolver = serviceResolver;
+            return Self;
+        }
+
+        /// <summary>
         /// Creates a new instance of <see cref="IMessagingBus"/>.
         /// </summary>
         /// <returns>
@@ -124,28 +164,92 @@ namespace JustSaying.Fluent
         /// </returns>
         public override IMessagingBus Build()
         {
-            IMessagingConfig config = Messaging().Build();
+            IMessagingConfig config = CreateConfig();
+
             config.Validate();
 
-            IMessageSerialisationRegister register = SerializationRegister?.Invoke() ?? new MessageSerialisationRegister(config.MessageSubjectProvider);
-            ILoggerFactory loggerFactory = LoggerFactory?.Invoke();
+            ILoggerFactory loggerFactory =
+                LoggerFactory?.Invoke() ?? ServiceResolver?.ResolveService<ILoggerFactory>() ?? new NullLoggerFactory();
 
-            var bus = new JustSayingBus(config, register, loggerFactory);
-
-            // TODO Remove the need to use the old fluent interface
-            // TODO Provide a way to configure these via this builder if needed?
-            var proxy = new AwsTools.AwsClientFactoryProxy(Client().Build);
-            var queueCreator = new AmazonQueueCreator(proxy, loggerFactory);
-            var fluent = new JustSayingFluently(bus, queueCreator, proxy, loggerFactory);
+            JustSayingBus bus = CreateBus(config, loggerFactory);
+            JustSayingFluently fluent = CreateFluent(bus, loggerFactory);
 
             if (NamingStrategy != null)
             {
                 fluent.WithNamingStrategy(NamingStrategy);
             }
 
-            // TODO Subscriptions, handlers and publishers
+            // TODO Publishers
+            // TODO Where do topic/queue names come in?
+            if (SubscriptionBuilder != null)
+            {
+                SubscriptionBuilder.Configure(fluent);
+            }
 
             return bus;
+        }
+
+        private JustSayingBus CreateBus(IMessagingConfig config, ILoggerFactory loggerFactory)
+        {
+            IMessageSerialisationRegister register =
+                SerializationRegister?.Invoke() ?? ServiceResolver?.ResolveService<IMessageSerialisationRegister>() ?? new MessageSerialisationRegister(config.MessageSubjectProvider);
+
+            return new JustSayingBus(config, register, loggerFactory);
+        }
+
+        private IMessagingConfig CreateConfig()
+        {
+            return MessagingConfig != null ?
+                MessagingConfig.Build() :
+                ServiceResolver?.ResolveService<IMessagingConfig>() ?? new MessagingConfig();
+        }
+
+        private IAwsClientFactoryProxy CreateFactoryProxy()
+        {
+            return ClientFactoryBuilder != null ?
+                new AwsClientFactoryProxy(ClientFactoryBuilder.Build) :
+                ServiceResolver?.ResolveService<IAwsClientFactoryProxy>() ?? new AwsClientFactoryProxy();
+        }
+
+        private JustSayingFluently CreateFluent(JustSayingBus bus, ILoggerFactory loggerFactory)
+        {
+            IAwsClientFactoryProxy proxy = CreateFactoryProxy();
+            IVerifyAmazonQueues queueCreator = ServiceResolver?.ResolveService<IVerifyAmazonQueues>() ?? new AmazonQueueCreator(proxy, loggerFactory);
+
+            return new JustSayingFluently(bus, queueCreator, proxy, loggerFactory);
+        }
+
+        private sealed class NullLoggerFactory : ILoggerFactory
+        {
+            public void AddProvider(ILoggerProvider provider)
+            {
+            }
+
+            public ILogger CreateLogger(string categoryName)
+            {
+                return new NullLogger();
+            }
+
+            public void Dispose()
+            {
+            }
+
+            private sealed class NullLogger : ILogger
+            {
+                public IDisposable BeginScope<TState>(TState state)
+                {
+                    return null;
+                }
+
+                public bool IsEnabled(LogLevel logLevel)
+                {
+                    return false;
+                }
+
+                public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+                {
+                }
+            }
         }
     }
 }

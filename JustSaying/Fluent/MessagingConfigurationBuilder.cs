@@ -325,7 +325,7 @@ namespace JustSaying.Fluent
         /// </returns>
         public override IMessagingConfig Build()
         {
-            var config = new MessagingConfig();
+            var config = Parent.ServiceResolver?.ResolveService<IMessagingConfig>() ?? new MessagingConfig();
 
             if (Regions?.Count > 0)
             {
