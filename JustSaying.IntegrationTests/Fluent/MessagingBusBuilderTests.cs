@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,7 +9,7 @@ using Microsoft.Extensions.Logging;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.Fluent
+namespace JustSaying.IntegrationTests
 {
     public class MessagingBusBuilderTests
     {
@@ -19,7 +20,7 @@ namespace JustSaying.Fluent
 
         private ITestOutputHelper OutputHelper { get; }
 
-        [Fact]
+        [AwsFact]
         public void Can_Create_Messaging_Bus_Fluently()
         {
             // Arrange
