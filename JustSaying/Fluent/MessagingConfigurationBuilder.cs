@@ -10,7 +10,7 @@ namespace JustSaying.Fluent
     /// <summary>
     /// A class representing a builder for instances of <see cref="IMessagingConfig"/>. This class cannot be inherited.
     /// </summary>
-    public sealed class MessagingConfigurationBuilder : Builder<IMessagingConfig, MessagingConfigurationBuilder>
+    public sealed class MessagingConfigurationBuilder
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="MessagingConfigurationBuilder"/> class.
@@ -23,9 +23,6 @@ namespace JustSaying.Fluent
 
         /// <inheritdoc />
         public MessagingBusBuilder BusBuilder { get; }
-
-        /// <inheritdoc />
-        protected override MessagingConfigurationBuilder Self => this;
 
         /// <summary>
         /// Gets or sets the optional value to use for <see cref="IPublishConfiguration.AdditionalSubscriberAccounts"/>
@@ -115,7 +112,7 @@ namespace JustSaying.Fluent
         public MessagingConfigurationBuilder WithActiveRegion(Func<string> evaluator)
         {
             GetActiveRegion = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
-            return Self;
+            return this;
         }
 
         /// <summary>
@@ -149,7 +146,7 @@ namespace JustSaying.Fluent
             }
 
             AdditionalSubscriberAccounts = new List<string>(accountIds);
-            return Self;
+            return this;
         }
 
         /// <summary>
@@ -175,7 +172,7 @@ namespace JustSaying.Fluent
             }
 
             AdditionalSubscriberAccounts.Add(accountId);
-            return Self;
+            return this;
         }
 
         /// <summary>
@@ -191,7 +188,7 @@ namespace JustSaying.Fluent
         public MessagingConfigurationBuilder WithMessageResponseLogger(Action<MessageResponse, Message> logger)
         {
             MessageResponseLogger = logger ?? throw new ArgumentNullException(nameof(logger));
-            return Self;
+            return this;
         }
 
         /// <summary>
@@ -207,7 +204,7 @@ namespace JustSaying.Fluent
         public MessagingConfigurationBuilder WithMessageSubjectProvider(IMessageSubjectProvider subjectProvider)
         {
             MessageSubjectProvider = subjectProvider ?? throw new ArgumentNullException(nameof(subjectProvider));
-            return Self;
+            return this;
         }
 
         /// <summary>
@@ -220,7 +217,7 @@ namespace JustSaying.Fluent
         public MessagingConfigurationBuilder WithPublishFailureBackoff(TimeSpan value)
         {
             PublishFailureBackoff = value;
-            return Self;
+            return this;
         }
 
         /// <summary>
@@ -233,7 +230,7 @@ namespace JustSaying.Fluent
         public MessagingConfigurationBuilder WithPublishFailureReattempts(int value)
         {
             PublishFailureReAttempts = value;
-            return Self;
+            return this;
         }
 
         /// <summary>
@@ -267,7 +264,7 @@ namespace JustSaying.Fluent
             }
 
             Regions = new List<string>(regions);
-            return Self;
+            return this;
         }
 
         /// <summary>
@@ -293,7 +290,7 @@ namespace JustSaying.Fluent
             }
 
             Regions.Add(region);
-            return Self;
+            return this;
         }
 
         /// <summary>
@@ -322,7 +319,7 @@ namespace JustSaying.Fluent
         /// <returns>
         /// The created instance of <see cref="IMessagingConfig"/>.
         /// </returns>
-        public override IMessagingConfig Build()
+        public IMessagingConfig Build()
         {
             var config = BusBuilder.ServiceResolver?.ResolveService<IMessagingConfig>() ?? new MessagingConfig();
 

@@ -7,7 +7,7 @@ namespace JustSaying.Fluent
     /// <summary>
     /// A class representing a builder for instances of <see cref="IAwsClientFactory"/>. This class cannot be inherited.
     /// </summary>
-    public sealed class AwsClientFactoryBuilder : Builder<IAwsClientFactory, AwsClientFactoryBuilder>
+    public sealed class AwsClientFactoryBuilder
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AwsClientFactoryBuilder"/> class.
@@ -20,9 +20,6 @@ namespace JustSaying.Fluent
 
         /// <inheritdoc />
         public MessagingBusBuilder BusBuilder { get; }
-
-        /// <inheritdoc />
-        protected override AwsClientFactoryBuilder Self => this;
 
         /// <summary>
         /// Gets or sets a delegate to use to create the <see cref="IAwsClientFactory"/> to use.
@@ -45,7 +42,7 @@ namespace JustSaying.Fluent
         /// <returns>
         /// The created instance of <see cref="IAwsClientFactory"/>.
         /// </returns>
-        public override IAwsClientFactory Build()
+        public IAwsClientFactory Build()
         {
             if (ClientFactory != null)
             {
@@ -78,7 +75,7 @@ namespace JustSaying.Fluent
         public AwsClientFactoryBuilder WithClientFactory(Func<IAwsClientFactory> clientFactory)
         {
             ClientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
-            return Self;
+            return this;
         }
 
         /// <summary>
@@ -91,7 +88,7 @@ namespace JustSaying.Fluent
         public AwsClientFactoryBuilder WithCredentials(AWSCredentials credentials)
         {
             Credentials = credentials ?? throw new ArgumentNullException(nameof(credentials));
-            return Self;
+            return this;
         }
 
         /// <summary>
@@ -105,7 +102,7 @@ namespace JustSaying.Fluent
         public AwsClientFactoryBuilder WithBasicCredentials(string accessKey, string secretKey)
         {
             Credentials = new BasicAWSCredentials(accessKey, secretKey);
-            return Self;
+            return this;
         }
 
         /// <summary>
@@ -120,7 +117,7 @@ namespace JustSaying.Fluent
         public AwsClientFactoryBuilder WithSessionCredentials(string accessKeyId, string secretAccessKey, string token)
         {
             Credentials = new SessionAWSCredentials(accessKeyId, secretAccessKey, token);
-            return Self;
+            return this;
         }
 
         /// <summary>
@@ -175,7 +172,7 @@ namespace JustSaying.Fluent
 
             ServiceUri = uri;
 
-            return Self;
+            return this;
         }
     }
 }

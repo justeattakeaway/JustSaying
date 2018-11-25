@@ -10,15 +10,12 @@ namespace JustSaying.Fluent
     /// <summary>
     /// A class representing a builder for an <see cref="IMessagingBus"/>.
     /// </summary>
-    public class MessagingBusBuilder : Builder<IMessagingBus, MessagingBusBuilder>
+    public class MessagingBusBuilder
     {
         /// <summary>
         /// Gets the optional <see cref="IServiceResolver"/> to use.
         /// </summary>
         internal IServiceResolver ServiceResolver { get; private set; }
-
-        /// <inheritdoc />
-        protected override MessagingBusBuilder Self => this;
 
         /// <summary>
         /// Gets or sets the builder to use for creating an AWS client factory.
@@ -74,7 +71,7 @@ namespace JustSaying.Fluent
 
             configure(ClientFactoryBuilder);
 
-            return Self;
+            return this;
         }
 
         /// <summary>
@@ -101,7 +98,7 @@ namespace JustSaying.Fluent
 
             configure(MessagingConfig);
 
-            return Self;
+            return this;
         }
 
         /// <summary>
@@ -128,7 +125,7 @@ namespace JustSaying.Fluent
 
             configure(SubscriptionBuilder);
 
-            return Self;
+            return this;
         }
 
         /// <summary>
@@ -187,7 +184,7 @@ namespace JustSaying.Fluent
         public MessagingBusBuilder WithServiceResolver(IServiceResolver serviceResolver)
         {
             ServiceResolver = serviceResolver;
-            return Self;
+            return this;
         }
 
         /// <summary>
@@ -196,7 +193,7 @@ namespace JustSaying.Fluent
         /// <returns>
         /// The created instance of <see cref="IMessagingBus"/>
         /// </returns>
-        public override IMessagingBus Build()
+        public IMessagingBus Build()
         {
             IMessagingConfig config = CreateConfig();
 
