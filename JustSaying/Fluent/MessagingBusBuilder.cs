@@ -2,6 +2,7 @@ using System;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent
@@ -247,9 +248,17 @@ namespace JustSaying.Fluent
         private JustSayingFluently CreateFluent(JustSayingBus bus, ILoggerFactory loggerFactory)
         {
             IAwsClientFactoryProxy proxy = CreateFactoryProxy();
-            IVerifyAmazonQueues queueCreator = ServiceResolver?.ResolveService<IVerifyAmazonQueues>() ?? new AmazonQueueCreator(proxy, loggerFactory);
+            IVerifyAmazonQueues queueCreator = new AmazonQueueCreator(proxy, loggerFactory);
 
-            return new JustSayingFluently(bus, queueCreator, proxy, loggerFactory);
+            var fluent = new JustSayingFluently(bus, queueCreator, proxy, loggerFactory);
+
+            IMessageSerialisationFactory serializationFactory = ServiceResolver?.ResolveService<IMessageSerialisationFactory>() ?? new NewtonsoftSerialisationFactory();
+            IMessageMonitor messageMonitor = ServiceResolver?.ResolveService<IMessageMonitor>() ?? new NullOpMessageMonitor();
+
+            fluent.WithSerialisationFactory(serializationFactory)
+                  .WithMonitoring(messageMonitor);
+
+            return fluent;
         }
 
         private sealed class NullLoggerFactory : ILoggerFactory
