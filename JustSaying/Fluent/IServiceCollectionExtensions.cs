@@ -3,6 +3,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -70,8 +71,9 @@ namespace JustSaying.Fluent
             services.TryAddSingleton<IAwsClientFactory, DefaultAwsClientFactory>();
             services.TryAddSingleton<IAwsClientFactoryProxy>((p) => new AwsClientFactoryProxy(p.GetRequiredService<IAwsClientFactory>));
             services.TryAddSingleton<IMessagingConfig, MessagingConfig>();
+            services.TryAddSingleton<IMessageMonitor, NullOpMessageMonitor>();
+            services.TryAddSingleton<IMessageSerialisationFactory, NewtonsoftSerialisationFactory>();
             services.TryAddSingleton<IVerifyAmazonQueues, AmazonQueueCreator>();
-
             services.TryAddSingleton<IMessageSerialisationRegister>(
                 (p) =>
                 {
