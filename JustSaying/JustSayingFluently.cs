@@ -232,6 +232,11 @@ namespace JustSaying
         /// <returns></returns>
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerAsync<T> handler) where T : Message
         {
+            if (handler == null)
+            {
+                throw new ArgumentNullException(nameof(handler));
+            }
+
             if (_serialisationFactory == null)
             {
                 throw new InvalidOperationException($"No {nameof(IMessageSerialisationFactory)} has been configured.");
