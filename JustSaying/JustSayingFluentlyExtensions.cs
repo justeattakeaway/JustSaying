@@ -66,9 +66,14 @@ namespace JustSaying
         public static IHaveFulfilledSubscriptionRequirements WithMessageHandlers<T>(
              this IFluentSubscription sub, params IHandlerAsync<T>[] handlers) where T : Message
         {
+            if (handlers == null)
+            {
+                throw new ArgumentNullException(nameof(handlers));
+            }
+
             if (handlers.Length == 0)
             {
-                throw new ArgumentException("No handlers in list");
+                throw new ArgumentException("No message handlers specified.", nameof(handlers));
             }
 
             if (handlers.Length == 1)
