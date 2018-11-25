@@ -10,20 +10,19 @@ namespace JustSaying.Fluent
     /// <summary>
     /// A class representing a builder for instances of <see cref="IMessagingConfig"/>. This class cannot be inherited.
     /// </summary>
-    public sealed class MessagingConfigurationBuilder : Builder<IMessagingConfig, MessagingConfigurationBuilder>,
-        IBuilderChild<IMessagingConfig, MessagingBusBuilder>
+    public sealed class MessagingConfigurationBuilder : Builder<IMessagingConfig, MessagingConfigurationBuilder>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="MessagingConfigurationBuilder"/> class.
         /// </summary>
-        /// <param name="parent">The <see cref="MessagingBusBuilder"/> that owns this instance.</param>
-        internal MessagingConfigurationBuilder(MessagingBusBuilder parent)
+        /// <param name="busBuilder">The <see cref="MessagingBusBuilder"/> that owns this instance.</param>
+        internal MessagingConfigurationBuilder(MessagingBusBuilder busBuilder)
         {
-            Parent = parent;
+            BusBuilder = busBuilder;
         }
 
         /// <inheritdoc />
-        public MessagingBusBuilder Parent { get; }
+        public MessagingBusBuilder BusBuilder { get; }
 
         /// <inheritdoc />
         protected override MessagingConfigurationBuilder Self => this;
@@ -325,7 +324,7 @@ namespace JustSaying.Fluent
         /// </returns>
         public override IMessagingConfig Build()
         {
-            var config = Parent.ServiceResolver?.ResolveService<IMessagingConfig>() ?? new MessagingConfig();
+            var config = BusBuilder.ServiceResolver?.ResolveService<IMessagingConfig>() ?? new MessagingConfig();
 
             if (Regions?.Count > 0)
             {

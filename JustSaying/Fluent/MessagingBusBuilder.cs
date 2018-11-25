@@ -52,49 +52,82 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Configures the factory for AWS clients.
         /// </summary>
+        /// <param name="configure">A delegate to a method to use to configure the AWS clients.</param>
         /// <returns>
-        /// The <see cref="AwsClientFactoryBuilder"/> to use to configure the client.
+        /// The current <see cref="MessagingBusBuilder"/>.
         /// </returns>
-        public AwsClientFactoryBuilder Client()
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public MessagingBusBuilder Client(Action<AwsClientFactoryBuilder> configure)
         {
+            if (configure == null)
+            {
+                throw new ArgumentNullException(nameof(configure));
+            }
+
             if (ClientFactoryBuilder == null)
             {
                 ClientFactoryBuilder = new AwsClientFactoryBuilder(this);
             }
 
-            return ClientFactoryBuilder;
+            configure(ClientFactoryBuilder);
+
+            return Self;
         }
 
         /// <summary>
         /// Configures messaging.
         /// </summary>
+        /// <param name="configure">A delegate to a method to use to configure messaging.</param>
         /// <returns>
-        /// The <see cref="MessagingConfigurationBuilder"/> to use to configure messaging.
+        /// The current <see cref="MessagingBusBuilder"/>.
         /// </returns>
-        public MessagingConfigurationBuilder Messaging()
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public MessagingBusBuilder Messaging(Action<MessagingConfigurationBuilder> configure)
         {
+            if (configure == null)
+            {
+                throw new ArgumentNullException(nameof(configure));
+            }
+
             if (MessagingConfig == null)
             {
                 MessagingConfig = new MessagingConfigurationBuilder(this);
             }
 
-            return MessagingConfig;
+            configure(MessagingConfig);
+
+            return Self;
         }
 
         /// <summary>
         /// Configures the subscriptions.
         /// </summary>
+        /// <param name="configure">A delegate to a method to use to configure subscriptions.</param>
         /// <returns>
-        /// The <see cref="SubscriptionBuilder"/> to use to configure the subscriptions.
+        /// The current <see cref="MessagingBusBuilder"/>.
         /// </returns>
-        public SubscriptionBuilder Subscriptions()
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public MessagingBusBuilder Subscriptions(Action<SubscriptionBuilder> configure)
         {
+            if (configure == null)
+            {
+                throw new ArgumentNullException(nameof(configure));
+            }
+
             if (SubscriptionBuilder == null)
             {
                 SubscriptionBuilder = new SubscriptionBuilder(this);
             }
 
-            return SubscriptionBuilder;
+            configure(SubscriptionBuilder);
+
+            return Self;
         }
 
         /// <summary>

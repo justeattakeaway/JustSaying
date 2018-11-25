@@ -7,20 +7,19 @@ namespace JustSaying.Fluent
     /// <summary>
     /// A class representing a builder for instances of <see cref="IAwsClientFactory"/>. This class cannot be inherited.
     /// </summary>
-    public sealed class AwsClientFactoryBuilder : Builder<IAwsClientFactory, AwsClientFactoryBuilder>,
-        IBuilderChild<IAwsClientFactory, MessagingBusBuilder>
+    public sealed class AwsClientFactoryBuilder : Builder<IAwsClientFactory, AwsClientFactoryBuilder>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AwsClientFactoryBuilder"/> class.
         /// </summary>
-        /// <param name="parent">The <see cref="MessagingBusBuilder"/> that owns this instance.</param>
-        internal AwsClientFactoryBuilder(MessagingBusBuilder parent)
+        /// <param name="busBuilder">The <see cref="MessagingBusBuilder"/> that owns this instance.</param>
+        internal AwsClientFactoryBuilder(MessagingBusBuilder busBuilder)
         {
-            Parent = parent;
+            BusBuilder = busBuilder;
         }
 
         /// <inheritdoc />
-        public MessagingBusBuilder Parent { get; }
+        public MessagingBusBuilder BusBuilder { get; }
 
         /// <inheritdoc />
         protected override AwsClientFactoryBuilder Self => this;

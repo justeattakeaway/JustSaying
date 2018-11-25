@@ -26,7 +26,12 @@ namespace JustSaying.Fluent
                 throw new ArgumentNullException(nameof(regions));
             }
 
-            return services.AddJustSaying((builder) => builder.Messaging().WithRegions(regions));
+            return services
+                .AddJustSaying(
+                    (builder) =>
+                    {
+                        builder.Messaging((options) => options.WithRegions(regions));
+                    });
         }
 
         public static IServiceCollection AddJustSaying(this IServiceCollection services, Action<MessagingBusBuilder> configure)

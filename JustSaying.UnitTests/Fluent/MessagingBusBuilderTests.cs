@@ -28,16 +28,9 @@ namespace JustSaying.Fluent
                 .AddJustSaying(
                     (builder) =>
                     {
-                        builder.Client()
-                               .WithBasicCredentials("accessKey", "secretKey")
-                               .And().Parent
-                               .Messaging()
-                               .WithRegions("eu-west-1", "eu-central-1")
-                               .And()
-                               .WithActiveRegion("eu-west-1")
-                               .And().Parent
-                               .Subscriptions()
-                               .WithHandler<MyMessage>();
+                        builder.Client((options) => options.WithBasicCredentials("accessKey", "secretKey"))
+                               .Messaging((options) => options.WithRegions("eu-west-1", "eu-central-1").And().WithActiveRegion("eu-west-1"))
+                               .Subscriptions((options) => options.WithHandler<MyMessage>());
                     })
                 .AddJustSayingHandler<MyMessage, MyHandler>();
 
