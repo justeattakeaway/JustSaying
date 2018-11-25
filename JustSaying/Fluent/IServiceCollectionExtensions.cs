@@ -73,6 +73,7 @@ namespace JustSaying.Fluent
             services.TryAddSingleton<IMessagingConfig, MessagingConfig>();
             services.TryAddSingleton<IMessageMonitor, NullOpMessageMonitor>();
             services.TryAddSingleton<IMessageSerialisationFactory, NewtonsoftSerialisationFactory>();
+            services.TryAddSingleton<IMessageSubjectProvider, GenericMessageSubjectProvider>();
             services.TryAddSingleton<IVerifyAmazonQueues, AmazonQueueCreator>();
             services.TryAddSingleton<IMessageSerialisationRegister>(
                 (p) =>

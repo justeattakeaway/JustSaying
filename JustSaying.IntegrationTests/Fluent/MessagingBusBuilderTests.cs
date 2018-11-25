@@ -38,7 +38,7 @@ namespace JustSaying.IntegrationTests
                                                         .And()
                                                         .WithActiveRegion("eu-west-1"))
                                .Subscriptions(
-                                    (options) => options.WithHandler<MyMessage>());
+                                    (options) => options.WithSubscription<MyMessage>((p) => p.IntoQueue("foo")));
                     })
                 .AddJustSayingHandler<MyMessage, MyHandler>();
 

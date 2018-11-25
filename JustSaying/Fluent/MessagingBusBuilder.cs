@@ -33,7 +33,7 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Gets or sets the builder to use for subscriptions.
         /// </summary>
-        private SubscriptionBuilder SubscriptionBuilder { get; set; }
+        private SubscriptionsBuilder SubscriptionBuilder { get; set; }
 
         /// <summary>
         /// Gets or sets a delegate to a method to create the <see cref="ILoggerFactory"/> to use.
@@ -114,7 +114,7 @@ namespace JustSaying.Fluent
         /// <exception cref="ArgumentNullException">
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
-        public MessagingBusBuilder Subscriptions(Action<SubscriptionBuilder> configure)
+        public MessagingBusBuilder Subscriptions(Action<SubscriptionsBuilder> configure)
         {
             if (configure == null)
             {
@@ -123,7 +123,7 @@ namespace JustSaying.Fluent
 
             if (SubscriptionBuilder == null)
             {
-                SubscriptionBuilder = new SubscriptionBuilder(this);
+                SubscriptionBuilder = new SubscriptionsBuilder(this);
             }
 
             configure(SubscriptionBuilder);
