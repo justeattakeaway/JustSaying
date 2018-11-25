@@ -35,6 +35,11 @@ namespace JustSaying.Fluent
         private AWSCredentials Credentials { get; set; }
 
         /// <summary>
+        /// Gets or sets the URI for the AWS services to use.
+        /// </summary>
+        private Uri ServiceUri { get; set; }
+
+        /// <summary>
         /// Creates a new instance of <see cref="IAwsClientFactory"/>.
         /// </summary>
         /// <returns>
@@ -47,10 +52,20 @@ namespace JustSaying.Fluent
                 return ClientFactory();
             }
 
-            return
-                Credentials == null ?
-                new DefaultAwsClientFactory() :
-                new DefaultAwsClientFactory(Credentials);
+            DefaultAwsClientFactory factory;
+
+            if (Credentials == null)
+            {
+                factory = new DefaultAwsClientFactory();
+            }
+            else
+            {
+                factory = new DefaultAwsClientFactory(Credentials);
+            }
+
+            factory.ServiceUri = ServiceUri;
+
+            return factory;
         }
 
         /// <summary>
@@ -105,6 +120,61 @@ namespace JustSaying.Fluent
         public AwsClientFactoryBuilder WithSessionCredentials(string accessKeyId, string secretAccessKey, string token)
         {
             Credentials = new SessionAWSCredentials(accessKeyId, secretAccessKey, token);
+            return Self;
+        }
+
+        /// <summary>
+        /// Specifies the AWS service URL to use.
+        /// </summary>
+        /// <param name="url">The URL to use for AWS services.</param>
+        /// <returns>
+        /// The current <see cref="AwsClientFactoryBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="url"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="url"/> is not an absolute URI.
+        /// </exception>
+#pragma warning disable CA1054 // Uri parameters should not be strings
+        public AwsClientFactoryBuilder WithServiceUrl(string url)
+#pragma warning restore CA1054 // Uri parameters should not be strings
+        {
+            if (url == null)
+            {
+                throw new ArgumentNullException(nameof(url));
+            }
+
+            return WithServiceUri(new Uri(url, UriKind.Absolute));
+        }
+
+        /// <summary>
+        /// Specifies the AWS service URI to use.
+        /// </summary>
+        /// <param name="uri">The URI to use for AWS services.</param>
+        /// <returns>
+        /// The current <see cref="AwsClientFactoryBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="uri"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="uri"/> is not an absolute URI.
+        /// </exception>
+        public AwsClientFactoryBuilder WithServiceUri(Uri uri)
+        {
+            if (uri == null)
+            {
+                throw new ArgumentNullException(nameof(uri));
+            }
+
+            if (!uri.IsAbsoluteUri)
+            {
+                throw new ArgumentException("The AWS service URI must be an absolute URI.", nameof(uri));
+            }
+
+            ServiceUri = uri;
+
             return Self;
         }
     }
