@@ -241,7 +241,7 @@ namespace JustSaying.Fluent
         private IAwsClientFactoryProxy CreateFactoryProxy()
         {
             return ClientFactoryBuilder != null ?
-                new AwsClientFactoryProxy(ClientFactoryBuilder.Build) :
+                new AwsClientFactoryProxy(new Lazy<IAwsClientFactory>(ClientFactoryBuilder.Build)) :
                 ServiceResolver?.ResolveService<IAwsClientFactoryProxy>() ?? new AwsClientFactoryProxy();
         }
 
