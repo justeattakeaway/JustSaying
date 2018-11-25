@@ -16,6 +16,11 @@ namespace JustSaying.AwsTools
             _awsClientFactoryFunc = awsClientFactoryFunc;
         }
 
+        public AwsClientFactoryProxy(Lazy<IAwsClientFactory> factory)
+        {
+            _awsClientFactoryFunc = () => factory.Value;
+        }
+
         public IAwsClientFactory GetAwsClientFactory() => _awsClientFactoryFunc();
 
         public void SetAwsClientFactory(Func<IAwsClientFactory> func) => _awsClientFactoryFunc = func;
