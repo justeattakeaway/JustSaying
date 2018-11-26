@@ -28,6 +28,11 @@ namespace JustSaying.Fluent
         private MessagingConfigurationBuilder MessagingConfig { get; set; }
 
         /// <summary>
+        /// Gets or sets the builder to use for publications.
+        /// </summary>
+        private PublicationsBuilder PublicationsBuilder { get; set; }
+
+        /// <summary>
         /// Gets or sets the builder to use for services.
         /// </summary>
         private ServicesBuilder ServicesBuilder { get; set; }
@@ -87,6 +92,33 @@ namespace JustSaying.Fluent
             }
 
             configure(MessagingConfig);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Configures the publications.
+        /// </summary>
+        /// <param name="configure">A delegate to a method to use to configure publications.</param>
+        /// <returns>
+        /// The current <see cref="MessagingBusBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public MessagingBusBuilder Publications(Action<PublicationsBuilder> configure)
+        {
+            if (configure == null)
+            {
+                throw new ArgumentNullException(nameof(configure));
+            }
+
+            if (PublicationsBuilder == null)
+            {
+                PublicationsBuilder = new PublicationsBuilder(this);
+            }
+
+            configure(PublicationsBuilder);
 
             return this;
         }
@@ -184,8 +216,11 @@ namespace JustSaying.Fluent
                 fluent.WithNamingStrategy(ServicesBuilder.NamingStrategy);
             }
 
-            // TODO Publishers
-            // TODO Where do topic/queue names come in?
+            if (PublicationsBuilder != null)
+            {
+                PublicationsBuilder.Configure(fluent);
+            }
+
             if (SubscriptionBuilder != null)
             {
                 SubscriptionBuilder.Configure(fluent);

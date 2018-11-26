@@ -122,7 +122,7 @@ namespace JustSaying
             _log.LogInformation("Adding SQS publisher");
 
             var config = new SqsWriteConfiguration();
-            configBuilder(config);
+            configBuilder?.Invoke(config);
 
             var queueName = GetNamingStrategy().GetQueueName(new SqsReadConfiguration(SubscriptionType.PointToPoint){BaseQueueName = config.QueueName}, typeof(T));
 

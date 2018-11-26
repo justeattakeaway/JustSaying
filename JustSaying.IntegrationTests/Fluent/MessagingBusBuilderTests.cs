@@ -36,6 +36,9 @@ namespace JustSaying.IntegrationTests
                                .Messaging(
                                     (options) => options.WithRegions("eu-west-1", "eu-central-1")
                                                         .WithActiveRegion("eu-west-1"))
+                               .Publications(
+                                    (options) => options.WithQueue<MyMessage>()
+                                                        .WithTopic<MyMessage>())
                                .Subscriptions(
                                     (options) => options.WithSubscription<MyMessage>((p) => p.IntoQueue("foo")))
                                .Services(
