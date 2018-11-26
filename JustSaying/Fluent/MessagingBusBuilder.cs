@@ -1,6 +1,7 @@
 using System;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
@@ -41,6 +42,11 @@ namespace JustSaying.Fluent
         /// Gets or sets a delegate to a method to create the <see cref="IMessageMonitor"/> to use.
         /// </summary>
         private Func<IMessageMonitor> MessageMonitoring { get; set; }
+
+        /// <summary>
+        /// Gets or sets a delegate to a method to create the <see cref="IMessageLockAsync"/> to use.
+        /// </summary>
+        private Func<IMessageLockAsync> MessageLock { get; set; }
 
         /// <summary>
         /// Gets or sets a delegate to a method to create the <see cref="IMessageSerializationFactory"/> to use.
@@ -158,6 +164,22 @@ namespace JustSaying.Fluent
         public MessagingBusBuilder WithLoggerFactory(Func<ILoggerFactory> loggerFactory)
         {
             LoggerFactory = loggerFactory;
+            return this;
+        }
+
+        /// <summary>
+        /// Specifies the <see cref="IMessageLockAsync"/> to use.
+        /// </summary>
+        /// <param name="messageLock">A delegate to a method to get the <see cref="IMessageLockAsync"/> to use.</param>
+        /// <returns>
+        /// The current <see cref="MessagingBusBuilder"/>.
+        /// </returns>
+        /// <exception cref="">
+        /// <paramref name="messageLock"/> is <see langword="null"/>.
+        /// </exception>
+        public MessagingBusBuilder WithMessageLock(Func<IMessageLockAsync> messageLock)
+        {
+            MessageLock = messageLock ?? throw new ArgumentNullException(nameof(messageLock));
             return this;
         }
 
@@ -296,6 +318,11 @@ namespace JustSaying.Fluent
 
             fluent.WithSerializationFactory(serializationFactory)
                   .WithMonitoring(messageMonitor);
+
+            if (MessageLock != null)
+            {
+                fluent.WithMessageLockStoreOf(MessageLock());
+            }
 
             return fluent;
         }
