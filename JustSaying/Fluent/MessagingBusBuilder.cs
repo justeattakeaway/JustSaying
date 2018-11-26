@@ -151,8 +151,18 @@ namespace JustSaying.Fluent
         /// <returns>
         /// The current <see cref="MessagingBusBuilder"/>.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="loggerFactory"/> is <see langword="null"/>.
+        /// </exception>
         public MessagingBusBuilder WithLoggerFactory(ILoggerFactory loggerFactory)
-            => WithLoggerFactory(() => loggerFactory);
+        {
+            if (loggerFactory == null)
+            {
+                throw new ArgumentNullException(nameof(loggerFactory));
+            }
+
+            return WithLoggerFactory(() => loggerFactory);
+        }
 
         /// <summary>
         /// Specifies the <see cref="ILoggerFactory"/> to use.
@@ -161,9 +171,12 @@ namespace JustSaying.Fluent
         /// <returns>
         /// The current <see cref="MessagingBusBuilder"/>.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="loggerFactory"/> is <see langword="null"/>.
+        /// </exception>
         public MessagingBusBuilder WithLoggerFactory(Func<ILoggerFactory> loggerFactory)
         {
-            LoggerFactory = loggerFactory;
+            LoggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             return this;
         }
 
@@ -174,7 +187,7 @@ namespace JustSaying.Fluent
         /// <returns>
         /// The current <see cref="MessagingBusBuilder"/>.
         /// </returns>
-        /// <exception cref="">
+        /// <exception cref="ArgumentNullException">
         /// <paramref name="messageLock"/> is <see langword="null"/>.
         /// </exception>
         public MessagingBusBuilder WithMessageLock(Func<IMessageLockAsync> messageLock)
@@ -190,7 +203,7 @@ namespace JustSaying.Fluent
         /// <returns>
         /// The current <see cref="MessagingBusBuilder"/>.
         /// </returns>
-        /// <exception cref="">
+        /// <exception cref="ArgumentNullException">
         /// <paramref name="monitoring"/> is <see langword="null"/>.
         /// </exception>
         public MessagingBusBuilder WithMessageMonitoring(Func<IMessageMonitor> monitoring)
@@ -206,9 +219,12 @@ namespace JustSaying.Fluent
         /// <returns>
         /// The current <see cref="MessagingBusBuilder"/>.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="strategy"/> is <see langword="null"/>.
+        /// </exception>
         public MessagingBusBuilder WithNamingStrategy(Func<INamingStrategy> strategy)
         {
-            NamingStrategy = strategy;
+            NamingStrategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
             return this;
         }
 
@@ -219,7 +235,7 @@ namespace JustSaying.Fluent
         /// <returns>
         /// The current <see cref="MessagingBusBuilder"/>.
         /// </returns>
-        /// <exception cref="">
+        /// <exception cref="ArgumentNullException">
         /// <paramref name="factory"/> is <see langword="null"/>.
         /// </exception>
         public MessagingBusBuilder WithMessageSerializationFactory(Func<IMessageSerializationFactory> factory)
@@ -235,9 +251,12 @@ namespace JustSaying.Fluent
         /// <returns>
         /// The current <see cref="MessagingBusBuilder"/>.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="serviceResolver"/> is <see langword="null"/>.
+        /// </exception>
         public MessagingBusBuilder WithServiceResolver(IServiceResolver serviceResolver)
         {
-            ServiceResolver = serviceResolver;
+            ServiceResolver = serviceResolver ?? throw new ArgumentNullException(nameof(serviceResolver));
             return this;
         }
 
