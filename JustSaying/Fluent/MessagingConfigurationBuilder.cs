@@ -321,7 +321,7 @@ namespace JustSaying.Fluent
         /// </returns>
         public IMessagingConfig Build()
         {
-            var config = BusBuilder.ServiceResolver?.ResolveService<IMessagingConfig>() ?? new MessagingConfig();
+            var config = BusBuilder.ServiceResolver.ResolveService<IMessagingConfig>();
 
             if (Regions?.Count > 0)
             {

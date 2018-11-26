@@ -64,7 +64,7 @@ namespace JustSaying.Fluent
         /// </exception>
         internal void Configure(JustSayingFluently bus)
         {
-            IHandlerResolver resolver = Parent.ServiceResolver?.ResolveService<IHandlerResolver>();
+            IHandlerResolver resolver = Parent.ServiceResolver.ResolveService<IHandlerResolver>();
 
             if (resolver == null)
             {

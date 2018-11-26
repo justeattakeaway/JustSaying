@@ -14,9 +14,9 @@ namespace JustSaying.Fluent
     public class MessagingBusBuilder
     {
         /// <summary>
-        /// Gets the optional <see cref="IServiceResolver"/> to use.
+        /// Gets the <see cref="IServiceResolver"/> to use.
         /// </summary>
-        internal IServiceResolver ServiceResolver { get; private set; }
+        internal IServiceResolver ServiceResolver { get; private set; } = new DefaultServiceResolver();
 
         /// <summary>
         /// Gets or sets the builder to use for creating an AWS client factory.
@@ -273,7 +273,7 @@ namespace JustSaying.Fluent
             config.Validate();
 
             ILoggerFactory loggerFactory =
-                LoggerFactory?.Invoke() ?? ServiceResolver?.ResolveService<ILoggerFactory>() ?? new NullLoggerFactory();
+                LoggerFactory?.Invoke() ?? ServiceResolver.ResolveService<ILoggerFactory>();
 
             JustSayingBus bus = CreateBus(config, loggerFactory);
             JustSayingFluently fluent = CreateFluent(bus, loggerFactory);
@@ -296,7 +296,7 @@ namespace JustSaying.Fluent
         private JustSayingBus CreateBus(IMessagingConfig config, ILoggerFactory loggerFactory)
         {
             IMessageSerializationRegister register =
-                SerializationRegister?.Invoke() ?? ServiceResolver?.ResolveService<IMessageSerializationRegister>() ?? new MessageSerializationRegister(config.MessageSubjectProvider);
+                SerializationRegister?.Invoke() ?? ServiceResolver.ResolveService<IMessageSerializationRegister>();
 
             return new JustSayingBus(config, register, loggerFactory);
         }
@@ -305,24 +305,24 @@ namespace JustSaying.Fluent
         {
             return MessagingConfig != null ?
                 MessagingConfig.Build() :
-                ServiceResolver?.ResolveService<IMessagingConfig>() ?? new MessagingConfig();
+                ServiceResolver.ResolveService<IMessagingConfig>();
         }
 
         private IAwsClientFactoryProxy CreateFactoryProxy()
         {
             return ClientFactoryBuilder != null ?
                 new AwsClientFactoryProxy(new Lazy<IAwsClientFactory>(ClientFactoryBuilder.Build)) :
-                ServiceResolver?.ResolveService<IAwsClientFactoryProxy>() ?? new AwsClientFactoryProxy();
+                ServiceResolver.ResolveService<IAwsClientFactoryProxy>();
         }
 
         private IMessageMonitor CreateMessageMonitor()
         {
-            return MessageMonitoring?.Invoke() ?? ServiceResolver?.ResolveService<IMessageMonitor>() ?? new NullOpMessageMonitor();
+            return MessageMonitoring?.Invoke() ?? ServiceResolver.ResolveService<IMessageMonitor>();
         }
 
         private IMessageSerializationFactory CreateMessageSerializationFactory()
         {
-            return MessageSerializationFactory?.Invoke() ?? ServiceResolver?.ResolveService<IMessageSerializationFactory>() ?? new NewtonsoftSerializationFactory();
+            return MessageSerializationFactory?.Invoke() ?? ServiceResolver.ResolveService<IMessageSerializationFactory>();
         }
 
         private JustSayingFluently CreateFluent(JustSayingBus bus, ILoggerFactory loggerFactory)
@@ -344,39 +344,6 @@ namespace JustSaying.Fluent
             }
 
             return fluent;
-        }
-
-        private sealed class NullLoggerFactory : ILoggerFactory
-        {
-            public void AddProvider(ILoggerProvider provider)
-            {
-            }
-
-            public ILogger CreateLogger(string categoryName)
-            {
-                return new NullLogger();
-            }
-
-            public void Dispose()
-            {
-            }
-
-            private sealed class NullLogger : ILogger
-            {
-                public IDisposable BeginScope<TState>(TState state)
-                {
-                    return null;
-                }
-
-                public bool IsEnabled(LogLevel logLevel)
-                {
-                    return false;
-                }
-
-                public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
-                {
-                }
-            }
         }
     }
 }
