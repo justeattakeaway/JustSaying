@@ -38,6 +38,11 @@ namespace JustSaying.Fluent
         private Func<ILoggerFactory> LoggerFactory { get; set; }
 
         /// <summary>
+        /// Gets or sets a delegate to a method to create the <see cref="IMessageMonitor"/> to use.
+        /// </summary>
+        private Func<IMessageMonitor> MessageMonitoring { get; set; }
+
+        /// <summary>
         /// Gets or sets a delegate to a method to create the <see cref="IMessageSerializationFactory"/> to use.
         /// </summary>
         private Func<IMessageSerializationFactory> MessageSerializationFactory { get; set; }
@@ -157,6 +162,22 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
+        /// Specifies the <see cref="IMessageMonitor"/> to use.
+        /// </summary>
+        /// <param name="monitoring">A delegate to a method to get the <see cref="IMessageMonitor"/> to use.</param>
+        /// <returns>
+        /// The current <see cref="MessagingBusBuilder"/>.
+        /// </returns>
+        /// <exception cref="">
+        /// <paramref name="monitoring"/> is <see langword="null"/>.
+        /// </exception>
+        public MessagingBusBuilder WithMessageMonitoring(Func<IMessageMonitor> monitoring)
+        {
+            MessageMonitoring = monitoring ?? throw new ArgumentNullException(nameof(monitoring));
+            return this;
+        }
+
+        /// <summary>
         /// Specifies the <see cref="INamingStrategy"/> to use.
         /// </summary>
         /// <param name="strategy">A delegate to a method to get the <see cref="INamingStrategy"/> to use.</param>
@@ -253,6 +274,11 @@ namespace JustSaying.Fluent
                 ServiceResolver?.ResolveService<IAwsClientFactoryProxy>() ?? new AwsClientFactoryProxy();
         }
 
+        private IMessageMonitor CreateMessageMonitor()
+        {
+            return MessageMonitoring?.Invoke() ?? ServiceResolver?.ResolveService<IMessageMonitor>() ?? new NullOpMessageMonitor();
+        }
+
         private IMessageSerializationFactory CreateMessageSerializationFactory()
         {
             return MessageSerializationFactory?.Invoke() ?? ServiceResolver?.ResolveService<IMessageSerializationFactory>() ?? new NewtonsoftSerializationFactory();
@@ -266,7 +292,7 @@ namespace JustSaying.Fluent
             var fluent = new JustSayingFluently(bus, queueCreator, proxy, loggerFactory);
 
             IMessageSerializationFactory serializationFactory = CreateMessageSerializationFactory();
-            IMessageMonitor messageMonitor = ServiceResolver?.ResolveService<IMessageMonitor>() ?? new NullOpMessageMonitor();
+            IMessageMonitor messageMonitor = CreateMessageMonitor();
 
             fluent.WithSerializationFactory(serializationFactory)
                   .WithMonitoring(messageMonitor);
