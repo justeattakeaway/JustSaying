@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using NSubstitute;
 using Shouldly;
@@ -49,9 +49,9 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         }
 
         [Fact]
-        public void SerialisationIsRegisteredForMessage()
+        public void SerializationIsRegisteredForMessage()
         {
-            Bus.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser>());
+            Bus.SerializationRegister.Received().AddSerializer<Message>(Arg.Any<IMessageSerializer>());
         }
 
         [Fact]
@@ -65,7 +65,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         {
             QueueVerifier
                 .DidNotReceiveWithAnyArgs()
-                .EnsureTopicExistsWithQueueSubscribedAsync(Arg.Any<string>(), Arg.Any<IMessageSerialisationRegister>(), Arg.Any<SqsReadConfiguration>(), Arg.Any<IMessageSubjectProvider>());
+                .EnsureTopicExistsWithQueueSubscribedAsync(Arg.Any<string>(), Arg.Any<IMessageSerializationRegister>(), Arg.Any<SqsReadConfiguration>(), Arg.Any<IMessageSubjectProvider>());
         }
     }
 }

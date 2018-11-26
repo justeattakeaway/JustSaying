@@ -8,7 +8,7 @@ using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.Support;
@@ -22,26 +22,26 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
     {
         protected const string QueueUrl = "http://testurl.com/queue";
         protected IAmazonSQS Sqs;
-        protected SimpleMessage DeserialisedMessage;
+        protected SimpleMessage DeserializedMessage;
         protected const string MessageBody = "object";
         protected IHandlerAsync<SimpleMessage> Handler;
         protected IMessageMonitor Monitor;
         protected ILoggerFactory LoggerFactory;
-        protected IMessageSerialisationRegister SerialisationRegister;
+        protected IMessageSerializationRegister SerializationRegister;
         protected IMessageLockAsync MessageLock;
         protected readonly string MessageTypeString = typeof(SimpleMessage).ToString();
 
         protected override Task<JustSaying.AwsTools.MessageHandling.SqsNotificationListener> CreateSystemUnderTestAsync()
         {
             var queue = new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri(QueueUrl), Sqs);
-            return Task.FromResult(new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(queue, SerialisationRegister, Monitor, LoggerFactory, null, MessageLock));
+            return Task.FromResult(new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(queue, SerializationRegister, Monitor, LoggerFactory, null, MessageLock));
         }
 
         protected override Task Given()
         {
             LoggerFactory = new LoggerFactory();
             Sqs = Substitute.For<IAmazonSQS>();
-            SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
+            SerializationRegister = Substitute.For<IMessageSerializationRegister>();
             Monitor = Substitute.For<IMessageMonitor>();
             Handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
             LoggerFactory = Substitute.For<ILoggerFactory>();
@@ -55,8 +55,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
                     x => Task.FromResult(response),
                     x => Task.FromResult(new ReceiveMessageResponse()));
 
-            DeserialisedMessage = new SimpleMessage { RaisingComponent = "Component" };
-            SerialisationRegister.DeserializeMessage(Arg.Any<string>()).Returns(DeserialisedMessage);
+            DeserializedMessage = new SimpleMessage { RaisingComponent = "Component" };
+            SerializationRegister.DeserializeMessage(Arg.Any<string>()).Returns(DeserializedMessage);
             return Task.CompletedTask;
         }
 

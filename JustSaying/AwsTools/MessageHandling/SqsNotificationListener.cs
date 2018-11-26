@@ -9,7 +9,7 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
@@ -33,7 +33,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public SqsNotificationListener(
             SqsQueueBase queue,
-            IMessageSerialisationRegister serialisationRegister,
+            IMessageSerializationRegister serializationRegister,
             IMessageMonitor messagingMonitor,
             ILoggerFactory loggerFactory,
             Action<Exception, Amazon.SQS.Model.Message> onError = null,
@@ -47,7 +47,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             _messageProcessingStrategy = new DefaultThrottledThroughput(_messagingMonitor);
             _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor);
-            _messageDispatcher = new MessageDispatcher(queue, serialisationRegister, messagingMonitor, onError, _handlerMap, loggerFactory, messageBackoffStrategy);
+            _messageDispatcher = new MessageDispatcher(queue, serializationRegister, messagingMonitor, onError, _handlerMap, loggerFactory, messageBackoffStrategy);
 
             Subscribers = new Collection<ISubscriber>();
 

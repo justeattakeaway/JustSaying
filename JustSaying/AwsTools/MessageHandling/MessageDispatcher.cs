@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageProcessingStrategies;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using Message = JustSaying.Models.Message;
 using SQSMessage = Amazon.SQS.Model.Message;
@@ -16,7 +16,7 @@ namespace JustSaying.AwsTools.MessageHandling
     public class MessageDispatcher
     {
         private readonly SqsQueueBase _queue;
-        private readonly IMessageSerialisationRegister _serialisationRegister;
+        private readonly IMessageSerializationRegister _serializationRegister;
         private readonly IMessageMonitor _messagingMonitor;
         private readonly Action<Exception, SQSMessage> _onError;
         private readonly HandlerMap _handlerMap;
@@ -26,7 +26,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public MessageDispatcher(
             SqsQueueBase queue,
-            IMessageSerialisationRegister serialisationRegister,
+            IMessageSerializationRegister serializationRegister,
             IMessageMonitor messagingMonitor,
             Action<Exception, SQSMessage> onError,
             HandlerMap handlerMap,
@@ -34,7 +34,7 @@ namespace JustSaying.AwsTools.MessageHandling
             IMessageBackoffStrategy messageBackoffStrategy)
         {
             _queue = queue;
-            _serialisationRegister = serialisationRegister;
+            _serializationRegister = serializationRegister;
             _messagingMonitor = messagingMonitor;
             _onError = onError;
             _handlerMap = handlerMap;
@@ -52,18 +52,18 @@ namespace JustSaying.AwsTools.MessageHandling
             Message typedMessage;
             try
             {
-                typedMessage = _serialisationRegister.DeserializeMessage(message.Body);
+                typedMessage = _serializationRegister.DeserializeMessage(message.Body);
             }
             catch (MessageFormatNotSupportedException ex)
             {
-                _log.LogTrace($"Didn't handle message [{message.Body ?? string.Empty}]. No serialiser setup");
+                _log.LogTrace($"Didn't handle message [{message.Body ?? string.Empty}]. No serializer setup");
                 await DeleteMessageFromQueue(message.ReceiptHandle).ConfigureAwait(false);
                 _onError(ex, message);
                 return;
             }
             catch (Exception ex)
             {
-                _log.LogError(0, ex, "Error deserialising message");
+                _log.LogError(0, ex, "Error deserializing message");
                 _onError(ex, message);
                 return;
             }

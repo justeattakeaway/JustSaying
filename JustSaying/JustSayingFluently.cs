@@ -7,11 +7,11 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Extensions;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
-using JustSaying.Messaging.Interrogation;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying
@@ -31,7 +31,7 @@ namespace JustSaying
         private readonly IAwsClientFactoryProxy _awsClientFactoryProxy;
         protected internal IAmJustSaying Bus { get; set; }
         private SqsReadConfiguration _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic);
-        private IMessageSerialisationFactory _serialisationFactory;
+        private IMessageSerializationFactory _serializationFactory;
         private Func<INamingStrategy> _busNamingStrategyFunc;
         private readonly ILoggerFactory _loggerFactory;
 
@@ -79,7 +79,7 @@ namespace JustSaying
             _subscriptionConfig.Topic = typeof(T).ToTopicName();
             var namingStrategy = GetNamingStrategy();
 
-            Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
+            Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
 
             var topicName = namingStrategy.GetTopicName(_subscriptionConfig.BaseTopicName, typeof(T));
             foreach (var region in Bus.Config.Regions)
@@ -88,7 +88,7 @@ namespace JustSaying
                 var eventPublisher = new SnsTopicByName(
                     topicName,
                     _awsClientFactoryProxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
-                    Bus.SerialisationRegister,
+                    Bus.SerializationRegister,
                     _loggerFactory, snsWriteConfig,
                     Bus.Config.MessageSubjectProvider)
                 {
@@ -121,7 +121,7 @@ namespace JustSaying
 
             var queueName = GetNamingStrategy().GetQueueName(new SqsReadConfiguration(SubscriptionType.PointToPoint){BaseQueueName = config.QueueName}, typeof(T));
 
-            Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
+            Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
 
             foreach (var region in Bus.Config.Regions)
             {
@@ -131,7 +131,7 @@ namespace JustSaying
                     queueName,
                     _awsClientFactoryProxy.GetAwsClientFactory().GetSqsClient(regionEndpoint),
                     config.RetryCountBeforeSendingToErrorQueue,
-                    Bus.SerialisationRegister,
+                    Bus.SerializationRegister,
                     _loggerFactory)
                 {
                     MessageResponseLogger = Bus.Config.MessageResponseLogger
@@ -162,7 +162,7 @@ namespace JustSaying
         /// <summary>
         /// Publish a message to the stack, asynchronously.
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="envelope"></param>
         /// <param name="cancellationToken"></param>
         public virtual async Task PublishAsync(PublishEnvelope envelope, CancellationToken cancellationToken)
         {
@@ -174,9 +174,9 @@ namespace JustSaying
             await Bus.PublishAsync(envelope, cancellationToken).ConfigureAwait(false);
         }
 
-        public IMayWantOptionalSettings WithSerialisationFactory(IMessageSerialisationFactory factory)
+        public IMayWantOptionalSettings WithSerializationFactory(IMessageSerializationFactory factory)
         {
-            _serialisationFactory = factory;
+            _serializationFactory = factory;
             return this;
         }
 
@@ -227,13 +227,23 @@ namespace JustSaying
         /// <returns></returns>
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerAsync<T> handler) where T : Message
         {
+            if (handler == null)
+            {
+                throw new ArgumentNullException(nameof(handler));
+            }
+
+            if (_serializationFactory == null)
+            {
+                throw new InvalidOperationException($"No {nameof(IMessageSerializationFactory)} has been configured.");
+            }
+
             // TODO - Subscription listeners should be just added once per queue,
             // and not for each message handler
             var thing =  _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
                 ? PointToPointHandler<T>()
                 : TopicHandler<T>();
 
-            Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
+            Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
             foreach (var region in Bus.Config.Regions)
             {
                 Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handler);
@@ -245,11 +255,16 @@ namespace JustSaying
 
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message
         {
+            if (_serializationFactory == null)
+            {
+                throw new InvalidOperationException($"No {nameof(IMessageSerializationFactory)} has been configured.");
+            }
+
             var thing = _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
                 ? PointToPointHandler<T>()
                 : TopicHandler<T>();
 
-            Bus.SerialisationRegister.AddSerialiser<T>(_serialisationFactory.GetSerialiser<T>());
+            Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
 
             var resolutionContext = new HandlerResolutionContext(_subscriptionConfig.QueueName);
             var proposedHandler = handlerResolver.ResolveHandler<T>(resolutionContext);
@@ -275,7 +290,7 @@ namespace JustSaying
 
             foreach (var region in Bus.Config.Regions)
             {
-                var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribedAsync(region, Bus.SerialisationRegister, _subscriptionConfig, Bus.Config.MessageSubjectProvider).GetAwaiter().GetResult();
+                var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribedAsync(region, Bus.SerializationRegister, _subscriptionConfig, Bus.Config.MessageSubjectProvider).GetAwaiter().GetResult();
                 CreateSubscriptionListener<T>(region, queue);
                 _log.LogInformation($"Created SQS topic subscription - Topic: {_subscriptionConfig.Topic}, QueueName: {_subscriptionConfig.QueueName}");
             }
@@ -299,7 +314,7 @@ namespace JustSaying
 
         private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue) where T : Message
         {
-            var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerialisationRegister, Bus.Monitor, _loggerFactory, _subscriptionConfig.OnError, Bus.MessageLock, _subscriptionConfig.MessageBackoffStrategy);
+            var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerializationRegister, Bus.Monitor, _loggerFactory, _subscriptionConfig.OnError, Bus.MessageLock, _subscriptionConfig.MessageBackoffStrategy);
             sqsSubscriptionListener.Subscribers.Add(new Subscriber(typeof(T)));
             Bus.AddNotificationSubscriber(region, sqsSubscriptionListener);
 

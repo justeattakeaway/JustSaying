@@ -3,7 +3,7 @@ using Amazon;
 using Amazon.SimpleNotificationService;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using Xunit;
@@ -34,7 +34,7 @@ namespace JustSaying.IntegrationTests.AwsTools
             CreatedTopic = new SnsTopicByName(
                 UniqueName,
                 Client,
-                new MessageSerialisationRegister(new NonGenericMessageSubjectProvider()),
+                new MessageSerializationRegister(new NonGenericMessageSubjectProvider()),
                 LoggerFactory,
                 new NonGenericMessageSubjectProvider());
 

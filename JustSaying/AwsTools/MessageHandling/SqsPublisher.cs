@@ -5,7 +5,7 @@ using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
 
@@ -14,16 +14,20 @@ namespace JustSaying.AwsTools.MessageHandling
     public class SqsPublisher : SqsQueueByName, IMessagePublisher
     {
         private readonly IAmazonSQS _client;
-        private readonly IMessageSerialisationRegister _serialisationRegister;
+        private readonly IMessageSerializationRegister _serializationRegister;
         public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
 
-        public SqsPublisher(RegionEndpoint region, string queueName, IAmazonSQS client,
-            int retryCountBeforeSendingToErrorQueue, IMessageSerialisationRegister serialisationRegister,
+        public SqsPublisher(
+            RegionEndpoint region,
+            string queueName,
+            IAmazonSQS client,
+            int retryCountBeforeSendingToErrorQueue,
+            IMessageSerializationRegister serializationRegister,
             ILoggerFactory loggerFactory)
             : base(region, queueName, client, retryCountBeforeSendingToErrorQueue, loggerFactory)
         {
             _client = client;
-            _serialisationRegister = serialisationRegister;
+            _serializationRegister = serializationRegister;
         }
 
         public async Task PublishAsync(PublishEnvelope envelope, CancellationToken cancellationToken)
@@ -61,6 +65,6 @@ namespace JustSaying.AwsTools.MessageHandling
             return request;
         }
 
-        public string GetMessageInContext(Message message) => _serialisationRegister.Serialise(message, serializeForSnsPublishing: false);
+        public string GetMessageInContext(Message message) => _serializationRegister.Serialize(message, serializeForSnsPublishing: false);
     }
 }

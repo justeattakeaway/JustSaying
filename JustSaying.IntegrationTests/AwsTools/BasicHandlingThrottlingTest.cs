@@ -7,7 +7,7 @@ using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using NSubstitute;
@@ -88,13 +88,13 @@ namespace JustSaying.IntegrationTests.AwsTools
             OutputHelper.WriteLine($"{DateTime.Now} - Done adding messages.");
 
             var handleCount = 0;
-            var serialisations = Substitute.For<IMessageSerialisationRegister>();
+            var serializations = Substitute.For<IMessageSerializationRegister>();
             var monitor = Substitute.For<IMessageMonitor>();
             var handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
             handler.Handle(null).ReturnsForAnyArgs(true).AndDoes(_ => Interlocked.Increment(ref handleCount));
 
-            serialisations.DeserializeMessage(string.Empty).ReturnsForAnyArgs(new SimpleMessage());
-            var listener = new SqsNotificationListener(queue, serialisations, monitor, fixture.LoggerFactory);
+            serializations.DeserializeMessage(string.Empty).ReturnsForAnyArgs(new SimpleMessage());
+            var listener = new SqsNotificationListener(queue, serializations, monitor, fixture.LoggerFactory);
             listener.AddMessageHandler(() => handler);
 
             // Act

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,7 +7,7 @@ using Amazon.SimpleNotificationService.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -20,20 +21,21 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         private const string Message = "the_message_in_json";
         private const string MessageAttributeKey = "StringAttribute";
         private const string MessageAttributeValue = "StringValue";
-        private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
+        private const string MessageAttributeDataType = "String";
+        private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
         private readonly IAmazonSimpleNotificationService _sns = Substitute.For<IAmazonSimpleNotificationService>();
         private const string TopicArn = "topicarn";
 
         protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
         {
-            var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister, Substitute.For<ILoggerFactory>(), new NonGenericMessageSubjectProvider());
+            var topic = new SnsTopicByName("TopicName", _sns, _serializationRegister, Substitute.For<ILoggerFactory>(), new NonGenericMessageSubjectProvider());
             await topic.ExistsAsync();
             return topic;
         }
 
         protected override Task Given()
         {
-            _serialisationRegister.Serialise(Arg.Any<Message>(), Arg.Is(true)).Returns(Message);
+            _serializationRegister.Serialize(Arg.Any<Message>(), Arg.Is(true)).Returns(Message);
 
             _sns.FindTopicAsync("TopicName")
                 .Returns(new Topic { TopicArn = TopicArn });
@@ -42,10 +44,10 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         protected override async Task When()
         {
-            var publishData = new PublishEnvelope(new SimpleMessage());
-            publishData.AddMessageAttribute(MessageAttributeKey, MessageAttributeValue);
+            var message = new PublishEnvelope(new SimpleMessage())
+                .AddMessageAttribute(MessageAttributeKey, MessageAttributeValue);
 
-            await SystemUnderTest.PublishAsync(publishData, CancellationToken.None);
+            await SystemUnderTest.PublishAsync(message, CancellationToken.None);
         }
 
         [Fact]
@@ -87,7 +89,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         [Fact]
         public void MessageAttributeDataTypeIsPublished()
         {
-            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.MessageAttributes.Single().Value.DataType == "String"));
+            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.MessageAttributes.Single().Value.DataType == MessageAttributeDataType));
         }
     }
 }

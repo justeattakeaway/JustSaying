@@ -1,12 +1,12 @@
 using JustBehave;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.UnitTests.Messaging.Serialisation.Newtonsoft
+namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft
 {
-    public class DealingWithPotentiallyMissingConversation : XBehaviourTest<NewtonsoftSerialiser>
+    public class DealingWithPotentiallyMissingConversation : XBehaviourTest<NewtonsoftSerializer>
     {
         private MessageWithEnum _messageOut;
         private MessageWithEnum _messageIn;
@@ -18,22 +18,21 @@ namespace JustSaying.UnitTests.Messaging.Serialisation.Newtonsoft
 
         protected override void When()
         {
-            _jsonMessage = SystemUnderTest.Serialise(_messageOut, false, _messageOut.GetType().Name);
+            _jsonMessage = SystemUnderTest.Serialize(_messageOut, false, _messageOut.GetType().Name);
 
             //add extra property to see what happens:
             _jsonMessage = _jsonMessage.Replace("{__", "{\"New\":\"Property\",__");
-            _messageIn = SystemUnderTest.Deserialise(_jsonMessage, typeof(MessageWithEnum)) as MessageWithEnum;
+            _messageIn = SystemUnderTest.Deserialize(_jsonMessage, typeof(MessageWithEnum)) as MessageWithEnum;
         }
 
         [Fact]
-        public void
-            ItDoesNotHaveConversationPropertySerialisedBecauseItIsNotSet_ThisIsForBackwardsCompatibilityWhenWeDeploy()
+        public void ItDoesNotHaveConversationPropertySerializedBecauseItIsNotSet_ThisIsForBackwardsCompatibilityWhenWeDeploy()
         {
             _jsonMessage.ShouldNotContain("Conversation");
         }
 
         [Fact]
-        public void DeserialisedMessageHasEmptyConversation_ThisIsForBackwardsCompatibilityWhenWeDeploy()
+        public void DeserializedMessageHasEmptyConversation_ThisIsForBackwardsCompatibilityWhenWeDeploy()
         {
             _messageIn.Conversation.ShouldBeNull();
         }

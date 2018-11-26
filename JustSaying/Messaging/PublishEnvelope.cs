@@ -17,7 +17,7 @@ namespace JustSaying.Messaging
 
         public IDictionary<string, MessageAttributeValue> MessageAttributes { get; set; }
 
-        public void AddMessageAttribute(string key, MessageAttributeValue value)
+        public PublishEnvelope AddMessageAttribute(string key, MessageAttributeValue value)
         {
             if (MessageAttributes == null)
             {
@@ -25,11 +25,13 @@ namespace JustSaying.Messaging
             }
 
             MessageAttributes.Add(key, value);
+
+            return this;
         }
 
-        public void AddMessageAttribute(string key, string value)
+        public PublishEnvelope AddMessageAttribute(string key, string value)
         {
-            AddMessageAttribute(key, new MessageAttributeValue
+            return AddMessageAttribute(key, new MessageAttributeValue
             {
                 StringValue = value,
                 DataType = "String"

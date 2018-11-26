@@ -7,32 +7,30 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
+using PublishEnvelope = JustSaying.Messaging.PublishEnvelope;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 {
     public class WhenPublishingDelayedMessageAsync : XAsyncBehaviourTest<SqsPublisher>
     {
-        private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
+        private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private const string Url = "https://blablabla/" + QueueName;
-
         private readonly PublishEnvelope _message = new PublishEnvelope(new SimpleMessage())
-        {
-            Delay = TimeSpan.FromSeconds(1)
-        };
-
+            {
+                Delay = TimeSpan.FromSeconds(1)
+            };
         private const string QueueName = "queuename";
 
         protected override async Task<SqsPublisher> CreateSystemUnderTestAsync()
         {
             var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, _sqs, 0,
-                _serialisationRegister, Substitute.For<ILoggerFactory>());
+                _serializationRegister, Substitute.For<ILoggerFactory>());
             await sqs.ExistsAsync();
             return sqs;
         }

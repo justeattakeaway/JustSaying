@@ -7,7 +7,7 @@ using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -19,13 +19,13 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 {
     public class WhenPublishingAsyncExceptionCanBeThrown : XAsyncBehaviourTest<SnsTopicByName>
     {
-        private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
+        private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
         private readonly IAmazonSimpleNotificationService _sns = Substitute.For<IAmazonSimpleNotificationService>();
         private const string TopicArn = "topicarn";
 
         protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
         {
-            var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister, Substitute.For<ILoggerFactory>(), new SnsWriteConfiguration
+            var topic = new SnsTopicByName("TopicName", _sns, _serializationRegister, Substitute.For<ILoggerFactory>(), new SnsWriteConfiguration
             {
                 HandleException = (ex, m) => false
             }, Substitute.For<IMessageSubjectProvider>());
