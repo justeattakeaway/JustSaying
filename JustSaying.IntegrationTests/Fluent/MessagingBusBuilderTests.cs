@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -36,7 +37,9 @@ namespace JustSaying.IntegrationTests
                                     (options) => options.WithRegions("eu-west-1", "eu-central-1")
                                                         .WithActiveRegion("eu-west-1"))
                                .Subscriptions(
-                                    (options) => options.WithSubscription<MyMessage>((p) => p.IntoQueue("foo")));
+                                    (options) => options.WithSubscription<MyMessage>((p) => p.IntoQueue("foo")))
+                               .Services(
+                                    (options) => options.WithMessageMonitoring(() => new MyMonitor()));
                     })
                 .AddJustSayingHandler<MyMessage, MyHandler>();
 
@@ -72,6 +75,37 @@ namespace JustSaying.IntegrationTests
             public Task<bool> Handle(MyMessage message)
             {
                 return Task.FromResult(true);
+            }
+        }
+
+        private sealed class MyMonitor : IMessageMonitor
+        {
+            public void HandleException(Type messageType)
+            {
+            }
+
+            public void HandleThrottlingTime(long handleTimeMs)
+            {
+            }
+
+            public void HandleTime(long handleTimeMs)
+            {
+            }
+
+            public void IncrementThrottlingStatistic()
+            {
+            }
+
+            public void IssuePublishingMessage()
+            {
+            }
+
+            public void PublishMessageTime(long handleTimeMs)
+            {
+            }
+
+            public void ReceiveMessageTime(long handleTimeMs, string queueName, string region)
+            {
             }
         }
     }
