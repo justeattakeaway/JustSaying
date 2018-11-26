@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 using JustSaying.Messaging;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using NSubstitute;
 using Xunit;
@@ -38,10 +38,10 @@ namespace JustSaying.IntegrationTests.WhenRegisteringAPublisher
         }
 
         [AwsFact]
-        public void SerialisationIsRegisteredForMessage()
+        public void SerializationIsRegisteredForMessage()
         {
-            NotificationStack.SerialisationRegister.Received()
-                .AddSerialiser<Message>(Arg.Any<IMessageSerialiser>());
+            NotificationStack.SerializationRegister.Received()
+                .AddSerializer<Message>(Arg.Any<IMessageSerializer>());
         }
 
         protected override Task PostAssertTeardownAsync()

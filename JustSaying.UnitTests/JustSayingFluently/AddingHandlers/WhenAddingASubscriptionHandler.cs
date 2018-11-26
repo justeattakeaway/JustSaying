@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using NSubstitute;
 using Shouldly;
@@ -32,8 +32,8 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         [Fact]
         public void TheTopicAndQueueIsCreatedInEachRegion()
         {
-            QueueVerifier.Received().EnsureTopicExistsWithQueueSubscribedAsync("defaultRegion", Bus.SerialisationRegister, Arg.Any<SqsReadConfiguration>(), Bus.Config.MessageSubjectProvider);
-            QueueVerifier.Received().EnsureTopicExistsWithQueueSubscribedAsync("failoverRegion", Bus.SerialisationRegister, Arg.Any<SqsReadConfiguration>(), Bus.Config.MessageSubjectProvider);
+            QueueVerifier.Received().EnsureTopicExistsWithQueueSubscribedAsync("defaultRegion", Bus.SerializationRegister, Arg.Any<SqsReadConfiguration>(), Bus.Config.MessageSubjectProvider);
+            QueueVerifier.Received().EnsureTopicExistsWithQueueSubscribedAsync("failoverRegion", Bus.SerializationRegister, Arg.Any<SqsReadConfiguration>(), Bus.Config.MessageSubjectProvider);
         }
 
         [Fact]
@@ -49,9 +49,9 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         }
 
         [Fact]
-        public void SerialisationIsRegisteredForMessage()
+        public void SerializationIsRegisteredForMessage()
         {
-            Bus.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser>());
+            Bus.SerializationRegister.Received().AddSerializer<Message>(Arg.Any<IMessageSerializer>());
         }
 
         [Fact]

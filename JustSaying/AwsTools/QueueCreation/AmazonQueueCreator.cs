@@ -4,7 +4,7 @@ using Amazon;
 using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.QueueCreation
@@ -23,7 +23,11 @@ namespace JustSaying.AwsTools.QueueCreation
             _loggerFactory = loggerFactory;
         }
 
-        public async Task<SqsQueueByName> EnsureTopicExistsWithQueueSubscribedAsync(string region, IMessageSerialisationRegister serialisationRegister, SqsReadConfiguration queueConfig, IMessageSubjectProvider messageSubjectProvider)
+        public async Task<SqsQueueByName> EnsureTopicExistsWithQueueSubscribedAsync(
+            string region,
+            IMessageSerializationRegister serializationRegister,
+            SqsReadConfiguration queueConfig,
+            IMessageSubjectProvider messageSubjectProvider)
         {
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);
             var sqsClient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
@@ -37,11 +41,10 @@ namespace JustSaying.AwsTools.QueueCreation
 
                 var topicArn = await arnProvider.GetArnAsync().ConfigureAwait(false);
                 await SubscribeQueueAndApplyFilterPolicyAsync(snsClient, topicArn, sqsClient, queue.Uri, queueConfig.FilterPolicy).ConfigureAwait(false);
-                
             }
             else
             {
-                var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsClient, serialisationRegister, _loggerFactory, messageSubjectProvider);
+                var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsClient, serializationRegister, _loggerFactory, messageSubjectProvider);
                 await eventTopic.CreateAsync().ConfigureAwait(false);
 
                 await SubscribeQueueAndApplyFilterPolicyAsync(snsClient, eventTopic.Arn, sqsClient, queue.Uri, queueConfig.FilterPolicy).ConfigureAwait(false);

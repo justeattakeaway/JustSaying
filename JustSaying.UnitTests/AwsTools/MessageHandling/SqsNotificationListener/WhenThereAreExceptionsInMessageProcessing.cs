@@ -7,7 +7,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -20,8 +20,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
     public class WhenThereAreExceptionsInMessageProcessing : XAsyncBehaviourTest<JustSaying.AwsTools.MessageHandling.SqsNotificationListener>
     {
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
-        private readonly IMessageSerialisationRegister _serialisationRegister =
-            Substitute.For<IMessageSerialisationRegister>();
+        private readonly IMessageSerializationRegister _serializationRegister =
+            Substitute.For<IMessageSerializationRegister>();
 
         private int _callCount;
 
@@ -29,14 +29,14 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         {
             return Task.FromResult(new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
                 new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri("http://foo.com"), _sqs),
-                _serialisationRegister,
+                _serializationRegister,
                 Substitute.For<IMessageMonitor>(),
                 Substitute.For<ILoggerFactory>()));
         }
 
         protected override Task Given()
         {
-            _serialisationRegister
+            _serializationRegister
                 .DeserializeMessage(Arg.Any<string>())
                 .Returns(x => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing"));
             _sqs.ReceiveMessageAsync(

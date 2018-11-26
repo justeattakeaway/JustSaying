@@ -76,7 +76,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         [Fact]
         public void MessageIsProcessed()
         {
-            SerialisationRegister.Received().DeserializeMessage(
+            SerializationRegister.Received().DeserializeMessage(
                 BodyOfMessageAfterStop);
         }
     }

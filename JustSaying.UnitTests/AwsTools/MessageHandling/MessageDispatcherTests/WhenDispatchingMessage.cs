@@ -8,7 +8,7 @@ using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -35,7 +35,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
     {
         private const string ExpectedQueueUrl = "http://testurl.com/queue";
 
-        private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
+        private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
         private readonly IMessageMonitor _messageMonitor = Substitute.For<IMessageMonitor>();
         private readonly Action<Exception, SQSMessage> _onError = Substitute.For<Action<Exception, SQSMessage>>();
         private readonly HandlerMap _handlerMap = new HandlerMap();
@@ -60,7 +60,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
             _loggerFactory.CreateLogger(Arg.Any<string>()).Returns(_logger);
             _queue = new DummySqsQueue(new Uri(ExpectedQueueUrl), _amazonSqsClient);
-            _serialisationRegister.DeserializeMessage(Arg.Any<string>()).Returns(_typedMessage);
+            _serializationRegister.DeserializeMessage(Arg.Any<string>()).Returns(_typedMessage);
             return Task.CompletedTask;
         }
 
@@ -68,7 +68,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
         protected override Task<MessageDispatcher> CreateSystemUnderTestAsync()
         {
-            return Task.FromResult(new MessageDispatcher(_queue, _serialisationRegister, _messageMonitor, _onError, _handlerMap, _loggerFactory, _messageBackoffStrategy));
+            return Task.FromResult(new MessageDispatcher(_queue, _serializationRegister, _messageMonitor, _onError, _handlerMap, _loggerFactory, _messageBackoffStrategy));
         }
 
         public class AndMessageProcessingSucceeds : WhenDispatchingMessage
@@ -82,7 +82,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             [Fact]
             public void ShouldDeserializeMessage()
             {
-                _serialisationRegister.Received(1).DeserializeMessage(Arg.Is<string>(x => x == _sqsMessage.Body));
+                _serializationRegister.Received(1).DeserializeMessage(Arg.Is<string>(x => x == _sqsMessage.Body));
             }
 
             [Fact]

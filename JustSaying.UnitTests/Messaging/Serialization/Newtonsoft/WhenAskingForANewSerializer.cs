@@ -1,14 +1,14 @@
 using JustBehave;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.UnitTests.Messaging.Serialisation.Newtonsoft
+namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft
 {
-    public class WhenAskingForANewSerialiser : XBehaviourTest<NewtonsoftSerialisationFactory>
+    public class WhenAskingForANewSerializer : XBehaviourTest<NewtonsoftSerializationFactory>
     {
-        private IMessageSerialiser _result;
+        private IMessageSerializer _result;
 
         protected override void Given()
         {
@@ -17,7 +17,7 @@ namespace JustSaying.UnitTests.Messaging.Serialisation.Newtonsoft
 
         protected override void When()
         {
-            _result = SystemUnderTest.GetSerialiser<SimpleMessage>();
+            _result = SystemUnderTest.GetSerializer<SimpleMessage>();
         }
 
         [Fact]

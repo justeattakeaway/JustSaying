@@ -1,4 +1,4 @@
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying

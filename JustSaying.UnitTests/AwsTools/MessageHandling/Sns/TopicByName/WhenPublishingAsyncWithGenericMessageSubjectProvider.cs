@@ -4,7 +4,7 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -21,20 +21,20 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         }
 
         private const string Message = "the_message_in_json";
-        private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
+        private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
         private readonly IAmazonSimpleNotificationService _sns = Substitute.For<IAmazonSimpleNotificationService>();
         private const string TopicArn = "topicarn";
 
         protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
         {
-            var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister, Substitute.For<ILoggerFactory>(), new GenericMessageSubjectProvider());
+            var topic = new SnsTopicByName("TopicName", _sns, _serializationRegister, Substitute.For<ILoggerFactory>(), new GenericMessageSubjectProvider());
             await topic.ExistsAsync();
             return topic;
         }
 
         protected override Task Given()
         {
-            _serialisationRegister.Serialise(Arg.Any<Message>(), Arg.Is(true)).Returns(Message);
+            _serializationRegister.Serialize(Arg.Any<Message>(), Arg.Is(true)).Returns(Message);
             _sns.FindTopicAsync("TopicName")
                 .Returns(new Topic { TopicArn = TopicArn });
 

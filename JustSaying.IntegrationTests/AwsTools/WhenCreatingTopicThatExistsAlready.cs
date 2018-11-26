@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using Shouldly;
 using Xunit;
 
@@ -17,7 +17,7 @@ namespace JustSaying.IntegrationTests.AwsTools
             _topic = new SnsTopicByName(
                 UniqueName,
                 Client,
-                new MessageSerialisationRegister(new NonGenericMessageSubjectProvider()),
+                new MessageSerializationRegister(new NonGenericMessageSubjectProvider()),
                 LoggerFactory,
                 new NonGenericMessageSubjectProvider());
 

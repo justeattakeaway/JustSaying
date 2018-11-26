@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -16,19 +16,27 @@ namespace JustSaying.AwsTools.MessageHandling
         public string TopicName { get; }
         private readonly ILogger _log;
 
-        public SnsTopicByName(string topicName, IAmazonSimpleNotificationService client, IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory, IMessageSubjectProvider messageSubjectProvider)
-            : base(serialisationRegister, loggerFactory, messageSubjectProvider)
+        public SnsTopicByName(
+            string topicName,
+            IAmazonSimpleNotificationService client,
+            IMessageSerializationRegister serializationRegister,
+            ILoggerFactory loggerFactory,
+            IMessageSubjectProvider messageSubjectProvider)
+            : base(serializationRegister, loggerFactory, messageSubjectProvider)
         {
             TopicName = topicName;
             Client = client;
             _log = loggerFactory.CreateLogger("JustSaying");
         }
 
-        public SnsTopicByName(string topicName, IAmazonSimpleNotificationService client,
-            IMessageSerialisationRegister serialisationRegister,
-            ILoggerFactory loggerFactory, SnsWriteConfiguration snsWriteConfiguration,
+        public SnsTopicByName(
+            string topicName,
+            IAmazonSimpleNotificationService client,
+            IMessageSerializationRegister serializationRegister,
+            ILoggerFactory loggerFactory,
+            SnsWriteConfiguration snsWriteConfiguration,
             IMessageSubjectProvider messageSubjectProvider)
-            : base(serialisationRegister, loggerFactory, snsWriteConfiguration, messageSubjectProvider)
+            : base(serializationRegister, loggerFactory, snsWriteConfiguration, messageSubjectProvider)
         {
             TopicName = topicName;
             Client = client;

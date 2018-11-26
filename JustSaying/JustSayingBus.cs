@@ -8,7 +8,7 @@ using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
@@ -27,7 +27,7 @@ namespace JustSaying
             get { return _monitor; }
             set { _monitor = value ?? new NullOpMessageMonitor(); }
         }
-        public IMessageSerialisationRegister SerialisationRegister { get; private set; }
+        public IMessageSerializationRegister SerializationRegister { get; private set; }
         public IMessageLockAsync MessageLock { get; set; }
 
         private ILogger _log;
@@ -36,7 +36,7 @@ namespace JustSaying
         private readonly ICollection<IPublisher> _publishers;
         private readonly ICollection<ISubscriber> _subscribers;
 
-        public JustSayingBus(IMessagingConfig config, IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory)
+        public JustSayingBus(IMessagingConfig config, IMessageSerializationRegister serializationRegister, ILoggerFactory loggerFactory)
         {
             _log = loggerFactory.CreateLogger("JustSaying");
 
@@ -45,7 +45,7 @@ namespace JustSaying
 
             _subscribersByRegionAndQueue = new Dictionary<string, Dictionary<string, INotificationSubscriber>>();
             _publishersByRegionAndTopic = new Dictionary<string, Dictionary<string, IMessagePublisher>>();
-            SerialisationRegister = serialisationRegister;
+            SerializationRegister = serializationRegister;
             _publishers = new HashSet<IPublisher>();
             _subscribers = new HashSet<ISubscriber>();
         }

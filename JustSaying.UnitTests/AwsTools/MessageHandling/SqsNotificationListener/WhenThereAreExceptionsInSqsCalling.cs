@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -22,13 +22,13 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         protected override Task Given()
         {
             Sqs = Substitute.For<IAmazonSQS>();
-            SerialisationRegister = Substitute.For<IMessageSerialisationRegister>();
+            SerializationRegister = Substitute.For<IMessageSerializationRegister>();
             Monitor = Substitute.For<IMessageMonitor>();
             Handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
             LoggerFactory = Substitute.For<ILoggerFactory>();
             GenerateResponseMessage(MessageTypeString, Guid.NewGuid());
 
-            DeserialisedMessage = new SimpleMessage { RaisingComponent = "Component" };
+            DeserializedMessage = new SimpleMessage { RaisingComponent = "Component" };
 
             Sqs.ReceiveMessageAsync(
                     Arg.Any<ReceiveMessageRequest>(),
