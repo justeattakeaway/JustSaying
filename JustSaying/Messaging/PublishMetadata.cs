@@ -13,10 +13,10 @@ namespace JustSaying.Messaging
         {
             if (MessageAttributes == null)
             {
-                MessageAttributes = new Dictionary<string, MessageAttributeValue>();
+                MessageAttributes = new Dictionary<string, MessageAttributeValue>(StringComparer.Ordinal);
             }
 
-            MessageAttributes.Add(key, value);
+            MessageAttributes[key] = value;
 
             return this;
         }
