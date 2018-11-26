@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Amazon;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 
 namespace JustSaying.Fluent
