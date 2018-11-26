@@ -6,11 +6,11 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Extensions;
+using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
-using JustSaying.Messaging.Interrogation;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying
@@ -232,6 +232,16 @@ namespace JustSaying
         /// <returns></returns>
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerAsync<T> handler) where T : Message
         {
+            if (handler == null)
+            {
+                throw new ArgumentNullException(nameof(handler));
+            }
+
+            if (_serialisationFactory == null)
+            {
+                throw new InvalidOperationException($"No {nameof(IMessageSerialisationFactory)} has been configured.");
+            }
+
             // TODO - Subscription listeners should be just added once per queue,
             // and not for each message handler
             var thing =  _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
@@ -250,6 +260,11 @@ namespace JustSaying
 
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message
         {
+            if (_serialisationFactory == null)
+            {
+                throw new InvalidOperationException($"No {nameof(IMessageSerialisationFactory)} has been configured.");
+            }
+
             var thing = _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
                 ? PointToPointHandler<T>()
                 : TopicHandler<T>();
