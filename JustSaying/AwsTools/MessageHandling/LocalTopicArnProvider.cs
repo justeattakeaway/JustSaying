@@ -7,14 +7,14 @@ namespace JustSaying.AwsTools.MessageHandling
     public class LocalTopicArnProvider : ITopicArnProvider
     {
         private readonly IAmazonSimpleNotificationService _client;
-        private readonly AsyncLazy<string> _lazyGetArn;
+        private readonly Lazy<Task<string>> _lazyGetArnAsync;
         private bool _exists;
 
         public LocalTopicArnProvider(IAmazonSimpleNotificationService client, string topicName)
         {
             _client = client;
 
-            _lazyGetArn = new AsyncLazy<string>(() => GetArnInternalAsync(topicName));
+            _lazyGetArnAsync = new Lazy<Task<string>>(() => GetArnInternalAsync(topicName));
         }
 
         private async Task<string> GetArnInternalAsync(string topicName)
@@ -35,13 +35,12 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public Task<string> GetArnAsync()
         {
-            return _lazyGetArn.Value;
+            return _lazyGetArnAsync.Value;
         }
 
         public async Task<bool> ArnExistsAsync()
         {
-            // ReSharper disable once UnusedVariable
-            var ignored = await _lazyGetArn.Value.ConfigureAwait(false);
+            _ = await _lazyGetArnAsync.Value.ConfigureAwait(false);
             return _exists;
         }
     }
