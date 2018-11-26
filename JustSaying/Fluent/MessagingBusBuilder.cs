@@ -38,9 +38,9 @@ namespace JustSaying.Fluent
         private Func<ILoggerFactory> LoggerFactory { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IMessageSerializationFactory"/> to use.
+        /// Gets or sets a delegate to a method to create the <see cref="IMessageSerializationFactory"/> to use.
         /// </summary>
-        private IMessageSerializationFactory MessageSerializationFactory { get; set; }
+        private Func<IMessageSerializationFactory> MessageSerializationFactory { get; set; }
 
         /// <summary>
         /// Gets or sets a delegate to a method to create the <see cref="INamingStrategy"/> to use.
@@ -159,16 +159,6 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Specifies the <see cref="INamingStrategy"/> to use.
         /// </summary>
-        /// <param name="strategy">The <see cref="INamingStrategy"/> to use.</param>
-        /// <returns>
-        /// The current <see cref="MessagingBusBuilder"/>.
-        /// </returns>
-        public MessagingBusBuilder WithNamingStrategy(INamingStrategy strategy)
-            => WithNamingStrategy(() => strategy);
-
-        /// <summary>
-        /// Specifies the <see cref="INamingStrategy"/> to use.
-        /// </summary>
         /// <param name="strategy">A delegate to a method to get the <see cref="INamingStrategy"/> to use.</param>
         /// <returns>
         /// The current <see cref="MessagingBusBuilder"/>.
@@ -182,14 +172,14 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Specifies the <see cref="IMessageSerializationFactory"/> to use.
         /// </summary>
-        /// <param name="factory">The <see cref="IMessageSerializationFactory"/> to use.</param>
+        /// <param name="factory">A delegate to a method to get the <see cref="IMessageSerializationFactory"/> to use.</param>
         /// <returns>
         /// The current <see cref="MessagingBusBuilder"/>.
         /// </returns>
         /// <exception cref="">
         /// <paramref name="factory"/> is <see langword="null"/>.
         /// </exception>
-        public MessagingBusBuilder WithMessageSerializationFactory(IMessageSerializationFactory factory)
+        public MessagingBusBuilder WithMessageSerializationFactory(Func<IMessageSerializationFactory> factory)
         {
             MessageSerializationFactory = factory ?? throw new ArgumentNullException(nameof(factory));
             return this;
@@ -265,7 +255,7 @@ namespace JustSaying.Fluent
 
         private IMessageSerializationFactory CreateMessageSerializationFactory()
         {
-            return MessageSerializationFactory ?? ServiceResolver?.ResolveService<IMessageSerializationFactory>() ?? new NewtonsoftSerializationFactory();
+            return MessageSerializationFactory?.Invoke() ?? ServiceResolver?.ResolveService<IMessageSerializationFactory>() ?? new NewtonsoftSerializationFactory();
         }
 
         private JustSayingFluently CreateFluent(JustSayingBus bus, ILoggerFactory loggerFactory)
