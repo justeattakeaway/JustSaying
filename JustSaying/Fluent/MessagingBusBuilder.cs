@@ -1,7 +1,6 @@
 using System;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
@@ -29,39 +28,14 @@ namespace JustSaying.Fluent
         private MessagingConfigurationBuilder MessagingConfig { get; set; }
 
         /// <summary>
+        /// Gets or sets the builder to use for services.
+        /// </summary>
+        private ServicesBuilder ServicesBuilder { get; set; }
+
+        /// <summary>
         /// Gets or sets the builder to use for subscriptions.
         /// </summary>
         private SubscriptionsBuilder SubscriptionBuilder { get; set; }
-
-        /// <summary>
-        /// Gets or sets a delegate to a method to create the <see cref="ILoggerFactory"/> to use.
-        /// </summary>
-        private Func<ILoggerFactory> LoggerFactory { get; set; }
-
-        /// <summary>
-        /// Gets or sets a delegate to a method to create the <see cref="IMessageMonitor"/> to use.
-        /// </summary>
-        private Func<IMessageMonitor> MessageMonitoring { get; set; }
-
-        /// <summary>
-        /// Gets or sets a delegate to a method to create the <see cref="IMessageLockAsync"/> to use.
-        /// </summary>
-        private Func<IMessageLockAsync> MessageLock { get; set; }
-
-        /// <summary>
-        /// Gets or sets a delegate to a method to create the <see cref="IMessageSerializationFactory"/> to use.
-        /// </summary>
-        private Func<IMessageSerializationFactory> MessageSerializationFactory { get; set; }
-
-        /// <summary>
-        /// Gets or sets a delegate to a method to create the <see cref="INamingStrategy"/> to use.
-        /// </summary>
-        private Func<INamingStrategy> NamingStrategy { get; set; }
-
-        /// <summary>
-        /// Gets or sets a delegate to a method to create the <see cref="IMessageSerializationRegister"/> to use.
-        /// </summary>
-        private Func<IMessageSerializationRegister> SerializationRegister { get; set; }
 
         /// <summary>
         /// Configures the factory for AWS clients.
@@ -118,6 +92,33 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
+        /// Configures the services.
+        /// </summary>
+        /// <param name="configure">A delegate to a method to use to configure JustSaying services.</param>
+        /// <returns>
+        /// The current <see cref="MessagingBusBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public MessagingBusBuilder Services(Action<ServicesBuilder> configure)
+        {
+            if (configure == null)
+            {
+                throw new ArgumentNullException(nameof(configure));
+            }
+
+            if (ServicesBuilder == null)
+            {
+                ServicesBuilder = new ServicesBuilder(this);
+            }
+
+            configure(ServicesBuilder);
+
+            return this;
+        }
+
+        /// <summary>
         /// Configures the subscriptions.
         /// </summary>
         /// <param name="configure">A delegate to a method to use to configure subscriptions.</param>
@@ -141,106 +142,6 @@ namespace JustSaying.Fluent
 
             configure(SubscriptionBuilder);
 
-            return this;
-        }
-
-        /// <summary>
-        /// Specifies the <see cref="ILoggerFactory"/> to use.
-        /// </summary>
-        /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to use.</param>
-        /// <returns>
-        /// The current <see cref="MessagingBusBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="loggerFactory"/> is <see langword="null"/>.
-        /// </exception>
-        public MessagingBusBuilder WithLoggerFactory(ILoggerFactory loggerFactory)
-        {
-            if (loggerFactory == null)
-            {
-                throw new ArgumentNullException(nameof(loggerFactory));
-            }
-
-            return WithLoggerFactory(() => loggerFactory);
-        }
-
-        /// <summary>
-        /// Specifies the <see cref="ILoggerFactory"/> to use.
-        /// </summary>
-        /// <param name="loggerFactory">A delegate to a method to get the <see cref="ILoggerFactory"/> to use.</param>
-        /// <returns>
-        /// The current <see cref="MessagingBusBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="loggerFactory"/> is <see langword="null"/>.
-        /// </exception>
-        public MessagingBusBuilder WithLoggerFactory(Func<ILoggerFactory> loggerFactory)
-        {
-            LoggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
-            return this;
-        }
-
-        /// <summary>
-        /// Specifies the <see cref="IMessageLockAsync"/> to use.
-        /// </summary>
-        /// <param name="messageLock">A delegate to a method to get the <see cref="IMessageLockAsync"/> to use.</param>
-        /// <returns>
-        /// The current <see cref="MessagingBusBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="messageLock"/> is <see langword="null"/>.
-        /// </exception>
-        public MessagingBusBuilder WithMessageLock(Func<IMessageLockAsync> messageLock)
-        {
-            MessageLock = messageLock ?? throw new ArgumentNullException(nameof(messageLock));
-            return this;
-        }
-
-        /// <summary>
-        /// Specifies the <see cref="IMessageMonitor"/> to use.
-        /// </summary>
-        /// <param name="monitoring">A delegate to a method to get the <see cref="IMessageMonitor"/> to use.</param>
-        /// <returns>
-        /// The current <see cref="MessagingBusBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="monitoring"/> is <see langword="null"/>.
-        /// </exception>
-        public MessagingBusBuilder WithMessageMonitoring(Func<IMessageMonitor> monitoring)
-        {
-            MessageMonitoring = monitoring ?? throw new ArgumentNullException(nameof(monitoring));
-            return this;
-        }
-
-        /// <summary>
-        /// Specifies the <see cref="INamingStrategy"/> to use.
-        /// </summary>
-        /// <param name="strategy">A delegate to a method to get the <see cref="INamingStrategy"/> to use.</param>
-        /// <returns>
-        /// The current <see cref="MessagingBusBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="strategy"/> is <see langword="null"/>.
-        /// </exception>
-        public MessagingBusBuilder WithNamingStrategy(Func<INamingStrategy> strategy)
-        {
-            NamingStrategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
-            return this;
-        }
-
-        /// <summary>
-        /// Specifies the <see cref="IMessageSerializationFactory"/> to use.
-        /// </summary>
-        /// <param name="factory">A delegate to a method to get the <see cref="IMessageSerializationFactory"/> to use.</param>
-        /// <returns>
-        /// The current <see cref="MessagingBusBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="factory"/> is <see langword="null"/>.
-        /// </exception>
-        public MessagingBusBuilder WithMessageSerializationFactory(Func<IMessageSerializationFactory> factory)
-        {
-            MessageSerializationFactory = factory ?? throw new ArgumentNullException(nameof(factory));
             return this;
         }
 
@@ -273,14 +174,14 @@ namespace JustSaying.Fluent
             config.Validate();
 
             ILoggerFactory loggerFactory =
-                LoggerFactory?.Invoke() ?? ServiceResolver.ResolveService<ILoggerFactory>();
+                ServicesBuilder?.LoggerFactory?.Invoke() ?? ServiceResolver.ResolveService<ILoggerFactory>();
 
             JustSayingBus bus = CreateBus(config, loggerFactory);
             JustSayingFluently fluent = CreateFluent(bus, loggerFactory);
 
-            if (NamingStrategy != null)
+            if (ServicesBuilder?.NamingStrategy != null)
             {
-                fluent.WithNamingStrategy(NamingStrategy);
+                fluent.WithNamingStrategy(ServicesBuilder.NamingStrategy);
             }
 
             // TODO Publishers
@@ -296,7 +197,7 @@ namespace JustSaying.Fluent
         private JustSayingBus CreateBus(IMessagingConfig config, ILoggerFactory loggerFactory)
         {
             IMessageSerializationRegister register =
-                SerializationRegister?.Invoke() ?? ServiceResolver.ResolveService<IMessageSerializationRegister>();
+                ServicesBuilder?.SerializationRegister?.Invoke() ?? ServiceResolver.ResolveService<IMessageSerializationRegister>();
 
             return new JustSayingBus(config, register, loggerFactory);
         }
@@ -317,12 +218,12 @@ namespace JustSaying.Fluent
 
         private IMessageMonitor CreateMessageMonitor()
         {
-            return MessageMonitoring?.Invoke() ?? ServiceResolver.ResolveService<IMessageMonitor>();
+            return ServicesBuilder?.MessageMonitoring?.Invoke() ?? ServiceResolver.ResolveService<IMessageMonitor>();
         }
 
         private IMessageSerializationFactory CreateMessageSerializationFactory()
         {
-            return MessageSerializationFactory?.Invoke() ?? ServiceResolver.ResolveService<IMessageSerializationFactory>();
+            return ServicesBuilder?.MessageSerializationFactory?.Invoke() ?? ServiceResolver.ResolveService<IMessageSerializationFactory>();
         }
 
         private JustSayingFluently CreateFluent(JustSayingBus bus, ILoggerFactory loggerFactory)
@@ -338,9 +239,9 @@ namespace JustSaying.Fluent
             fluent.WithSerializationFactory(serializationFactory)
                   .WithMonitoring(messageMonitor);
 
-            if (MessageLock != null)
+            if (ServicesBuilder?.MessageLock != null)
             {
-                fluent.WithMessageLockStoreOf(MessageLock());
+                fluent.WithMessageLockStoreOf(ServicesBuilder.MessageLock());
             }
 
             return fluent;
