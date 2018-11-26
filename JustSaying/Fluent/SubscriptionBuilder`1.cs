@@ -36,6 +36,18 @@ namespace JustSaying.Fluent
         private Action<SqsReadConfiguration> ConfigureReads { get; set; }
 
         /// <summary>
+        /// Configures that a point-to-point subscription is being used.
+        /// </summary>
+        /// <returns>
+        /// The current <see cref="SubscriptionBuilder{T}"/>.
+        /// </returns>
+        public SubscriptionBuilder<T> AsPointToPoint()
+        {
+            IsPointToPoint = true; // TODO Means SQS not SNS, factor this away better
+            return this;
+        }
+
+        /// <summary>
         /// Configures that the default queue name should be used.
         /// </summary>
         /// <returns>
