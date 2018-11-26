@@ -6,7 +6,7 @@ using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -19,7 +19,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 {
     public class WhenPublishingAsyncResultLoggerIsCalled : XAsyncBehaviourTest<SnsTopicByName>
     {
-        private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
+        private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
         private readonly IAmazonSimpleNotificationService _sns = Substitute.For<IAmazonSimpleNotificationService>();
         private const string TopicArn = "topicarn";
 
@@ -29,7 +29,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
         {
-            var topic = new SnsTopicByName("TopicName", _sns, _serialisationRegister, Substitute.For<ILoggerFactory>(), Substitute.For<SnsWriteConfiguration>(), Substitute.For<IMessageSubjectProvider>())
+            var topic = new SnsTopicByName("TopicName", _sns, _serializationRegister, Substitute.For<ILoggerFactory>(), Substitute.For<SnsWriteConfiguration>(), Substitute.For<IMessageSubjectProvider>())
             {
                 MessageResponseLogger = (r, m) =>
                 {

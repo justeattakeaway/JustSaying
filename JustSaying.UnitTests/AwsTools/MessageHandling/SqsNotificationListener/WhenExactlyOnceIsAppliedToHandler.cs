@@ -54,7 +54,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         [Fact]
         public async Task MessageIsLocked()
         {
-            var messageId = DeserialisedMessage.Id.ToString();
+            var messageId = DeserializedMessage.Id.ToString();
 
             await MessageLock.Received().TryAquireLockAsync(
                 Arg.Is<string>(a => a.Contains(messageId)),

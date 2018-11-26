@@ -8,7 +8,7 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
 using MessageAttributeValue = Amazon.SimpleNotificationService.Model.MessageAttributeValue;
@@ -17,7 +17,7 @@ namespace JustSaying.AwsTools.MessageHandling
 {
     public abstract class SnsTopicBase : IMessagePublisher
     {
-        private readonly IMessageSerialisationRegister _serialisationRegister; // ToDo: Grrr...why is this here even. GET OUT!
+        private readonly IMessageSerializationRegister _serializationRegister; // ToDo: Grrr...why is this here even. GET OUT!
         private readonly IMessageSubjectProvider _messageSubjectProvider;
         private readonly SnsWriteConfiguration _snsWriteConfiguration;
         public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
@@ -25,18 +25,23 @@ namespace JustSaying.AwsTools.MessageHandling
         protected IAmazonSimpleNotificationService Client { get; set; }
         private readonly ILogger _eventLog;
 
-        protected SnsTopicBase(IMessageSerialisationRegister serialisationRegister, ILoggerFactory loggerFactory, IMessageSubjectProvider messageSubjectProvider)
+        protected SnsTopicBase(
+            IMessageSerializationRegister serializationRegister,
+            ILoggerFactory loggerFactory,
+            IMessageSubjectProvider messageSubjectProvider)
         {
-            _serialisationRegister = serialisationRegister;
+            _serializationRegister = serializationRegister;
             _messageSubjectProvider = messageSubjectProvider;
             _eventLog = loggerFactory.CreateLogger("EventLog");
         }
 
-        protected SnsTopicBase(IMessageSerialisationRegister serialisationRegister,
-            ILoggerFactory loggerFactory, SnsWriteConfiguration snsWriteConfiguration,
+        protected SnsTopicBase(
+            IMessageSerializationRegister serializationRegister,
+            ILoggerFactory loggerFactory,
+            SnsWriteConfiguration snsWriteConfiguration,
             IMessageSubjectProvider messageSubjectProvider)
         {
-            _serialisationRegister = serialisationRegister;
+            _serializationRegister = serializationRegister;
             _eventLog = loggerFactory.CreateLogger("EventLog");
             _snsWriteConfiguration = snsWriteConfiguration;
             _messageSubjectProvider = messageSubjectProvider;
@@ -72,7 +77,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private PublishRequest BuildPublishRequest(Message message, PublishMetadata metadata)
         {
-            var messageToSend = _serialisationRegister.Serialise(message, serializeForSnsPublishing: true);
+            var messageToSend = _serializationRegister.Serialize(message, serializeForSnsPublishing: true);
             var messageType = _messageSubjectProvider.GetSubjectForType(message.GetType());
 
             return new PublishRequest
@@ -90,7 +95,6 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 return null;
             }
-
             return metadata.MessageAttributes.ToDictionary(
                 source => source.Key,
                 source => BuildMessageAttributeValue(source.Value));

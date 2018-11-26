@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using JustSaying.Extensions;
 
-namespace JustSaying.Messaging.MessageSerialisation
+namespace JustSaying.Messaging.MessageSerialization
 {
     /// <summary>
     /// This implementation is suitable for generic types,

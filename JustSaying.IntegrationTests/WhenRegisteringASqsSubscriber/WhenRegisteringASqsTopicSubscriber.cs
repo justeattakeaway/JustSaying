@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using NSubstitute;
@@ -50,9 +50,9 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         }
 
         [AwsFact]
-        public void SerialisationIsRegisteredForMessage()
+        public void SerializationIsRegisteredForMessage()
         {
-            NotificationStack.SerialisationRegister.Received().AddSerialiser<Message>(Arg.Any<IMessageSerialiser>());
+            NotificationStack.SerializationRegister.Received().AddSerializer<Message>(Arg.Any<IMessageSerializer>());
         }
 
         [AwsFact]

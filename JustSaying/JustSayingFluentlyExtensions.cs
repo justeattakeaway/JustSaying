@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 
@@ -43,8 +43,8 @@ namespace JustSaying
 
             config.Validate();
 
-            var messageSerialisationRegister = new MessageSerialisationRegister(config.MessageSubjectProvider);
-            var justSayingBus = new JustSayingBus(config, messageSerialisationRegister, dependencies.LoggerFactory);
+            var messageSerializationRegister = new MessageSerializationRegister(config.MessageSubjectProvider);
+            var justSayingBus = new JustSayingBus(config, messageSerializationRegister, dependencies.LoggerFactory);
 
             var awsClientFactoryProxy = new AwsClientFactoryProxy(() => CreateMeABus.DefaultClientFactory());
 
@@ -53,7 +53,7 @@ namespace JustSaying
 
             bus
                 .WithMonitoring(new NullOpMessageMonitor())
-                .WithSerialisationFactory(new NewtonsoftSerialisationFactory());
+                .WithSerializationFactory(new NewtonsoftSerializationFactory());
 
             return bus;
         }
@@ -66,9 +66,14 @@ namespace JustSaying
         public static IHaveFulfilledSubscriptionRequirements WithMessageHandlers<T>(
              this IFluentSubscription sub, params IHandlerAsync<T>[] handlers) where T : Message
         {
+            if (handlers == null)
+            {
+                throw new ArgumentNullException(nameof(handlers));
+            }
+
             if (handlers.Length == 0)
             {
-                throw new ArgumentException("No handlers in list");
+                throw new ArgumentException("No message handlers specified.", nameof(handlers));
             }
 
             if (handlers.Length == 1)

@@ -14,13 +14,15 @@
     <PackageReference Include="Text.Analyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
   </ItemGroup>
   <PropertyGroup>
-    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)justeat-oss.snk</AssemblyOriginatorKeyFile>
     <Authors>JUSTEAT_OSS</Authors>
     <Company>Just Eat</Company>
     <Copyright>Copyright (c) Just Eat 2015-$([System.DateTime]::Now.ToString(yyyy))</Copyright>
     <Description>A light-weight message bus on top of AWS SNS and SQS</Description>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <!-- disable sourcelink on mono, to workaround https://github.com/dotnet/sourcelink/issues/155 -->
+    <EnableSourceLink Condition=" '$(OS)' != 'Windows_NT' AND '$(MSBuildRuntimeType)' != 'Core' ">false</EnableSourceLink>
+    <EnableSourceControlManagerQueries>$(EnableSourceLink)</EnableSourceControlManagerQueries>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
     <PackageIconUrl>https://avatars3.githubusercontent.com/u/1516790?s=64</PackageIconUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
@@ -41,6 +43,6 @@
     <IsTestProject>$(MSBuildProjectName.Contains('Tests'))</IsTestProject>
     <DebugType>embedded</DebugType>
     <IsTestProject Condition=" '$(IsTestProject)' != 'true' ">$(MSBuildProjectName.Contains('Testing'))</IsTestProject>
-    <EmbedAllSources Condition=" '$(IsTestProject)' != 'true' AND '$(NCrunch)' == '' AND '$(SourceLinkEnabled)' != 'false' ">true</EmbedAllSources>
+    <EmbedAllSources Condition=" '$(IsTestProject)' != 'true' AND '$(NCrunch)' == '' ">true</EmbedAllSources>
   </PropertyGroup>
 </Project>

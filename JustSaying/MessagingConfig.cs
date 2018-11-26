@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 
 namespace JustSaying

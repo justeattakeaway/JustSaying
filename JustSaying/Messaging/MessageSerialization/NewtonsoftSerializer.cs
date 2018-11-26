@@ -3,30 +3,30 @@ using JustSaying.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace JustSaying.Messaging.MessageSerialisation
+namespace JustSaying.Messaging.MessageSerialization
 {
-    public class NewtonsoftSerialiser : IMessageSerialiser
+    public class NewtonsoftSerializer : IMessageSerializer
     {
         private readonly JsonSerializerSettings _settings;
 
-        public NewtonsoftSerialiser()
+        public NewtonsoftSerializer()
         {
             _settings = null;
         }
 
-        public NewtonsoftSerialiser(JsonSerializerSettings settings) : this()
+        public NewtonsoftSerializer(JsonSerializerSettings settings) : this()
         {
             _settings = settings;
         }
 
-        public Message Deserialise(string message, Type type)
+        public Message Deserialize(string message, Type type)
         {
             var jsqsMessage = JObject.Parse(message);
             var messageBody = jsqsMessage["Message"].ToString();
             return (Message)JsonConvert.DeserializeObject(messageBody, type, GetJsonSettings());
         }
 
-        public string Serialise(Message message, bool serializeForSnsPublishing, string subject)
+        public string Serialize(Message message, bool serializeForSnsPublishing, string subject)
         {
             var settings = GetJsonSettings();
 

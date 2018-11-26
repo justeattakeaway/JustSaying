@@ -4,16 +4,21 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 
 namespace JustSaying
 {
 
-    public interface IMayWantOptionalSettings : IMayWantMonitoring, IMayWantMessageLockStore, IMayWantCustomSerialisation,
-        IMayWantAFailoverRegion, IMayWantNamingStrategy, IMayWantAwsClientFactory
-    { }
+    public interface IMayWantOptionalSettings : IMayWantMonitoring,
+        IMayWantMessageLockStore,
+        IMayWantCustomSerialization,
+        IMayWantAFailoverRegion,
+        IMayWantNamingStrategy,
+        IMayWantAwsClientFactory
+    {
+    }
 
     public interface IMayWantAwsClientFactory
     {
@@ -45,9 +50,9 @@ namespace JustSaying
         IMayWantOptionalSettings WithMessageLockStoreOf(IMessageLock messageLock);
     }
 
-    public interface IMayWantCustomSerialisation : IAmJustSayingFluently
+    public interface IMayWantCustomSerialization : IAmJustSayingFluently
     {
-        IMayWantOptionalSettings WithSerialisationFactory(IMessageSerialisationFactory factory);
+        IMayWantOptionalSettings WithSerializationFactory(IMessageSerializationFactory factory);
     }
 
     public interface IAmJustSayingFluently : IMessagePublisher
@@ -64,7 +69,9 @@ namespace JustSaying
         /// topic name will be message type name</param>
         /// <returns></returns>
         ISubscriberIntoQueue WithSqsTopicSubscriber(string topicName = null);
+
         ISubscriberIntoQueue WithSqsPointToPointSubscriber();
+
         void StartListening(CancellationToken cancellationToken = default);
     }
 
@@ -73,6 +80,7 @@ namespace JustSaying
         IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerAsync<T> handler) where T : Message;
 
         IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message;
+
         IFluentSubscription ConfigureSubscriptionWith(Action<SqsReadConfiguration> config);
     }
 
