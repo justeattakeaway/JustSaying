@@ -29,16 +29,16 @@ namespace JustSaying.Fluent
         private IList<ISubscriptionBuilder<Message>> Subscriptions { get; } = new List<ISubscriptionBuilder<Message>>();
 
         /// <summary>
-        /// Configures a subscription.
+        /// Configures a queue subscription.
         /// </summary>
-        /// <param name="configure">A delegate to a method to use to configure a subscription.</param>
+        /// <param name="configure">A delegate to a method to use to configure a queue subscription.</param>
         /// <returns>
         /// The current <see cref="SubscriptionsBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
-        public SubscriptionsBuilder WithSubscription<T>(Action<SubscriptionBuilder<T>> configure)
+        public SubscriptionsBuilder ForQueue<T>(Action<QueueSubscriptionBuilder<T>> configure)
             where T : Message
         {
             if (configure == null)
@@ -46,7 +46,34 @@ namespace JustSaying.Fluent
                 throw new ArgumentNullException(nameof(configure));
             }
 
-            var builder = new SubscriptionBuilder<T>();
+            var builder = new QueueSubscriptionBuilder<T>();
+
+            configure(builder);
+
+            Subscriptions.Add(builder);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Configures a topic subscription.
+        /// </summary>
+        /// <param name="configure">A delegate to a method to use to configure a topic subscription.</param>
+        /// <returns>
+        /// The current <see cref="SubscriptionsBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public SubscriptionsBuilder ForTopic<T>(Action<TopicSubscriptionBuilder<T>> configure)
+            where T : Message
+        {
+            if (configure == null)
+            {
+                throw new ArgumentNullException(nameof(configure));
+            }
+
+            var builder = new TopicSubscriptionBuilder<T>();
 
             configure(builder);
 

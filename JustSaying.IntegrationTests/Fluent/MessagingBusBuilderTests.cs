@@ -44,8 +44,8 @@ namespace JustSaying.IntegrationTests
                                     (options) => options.WithQueue<Message1>()
                                                         .WithTopic<Message2>())
                                .Subscriptions(
-                                    (options) => options.WithSubscription<Message1>((p) => p.IntoQueue("foo"))
-                                                        .WithSubscription<Message2>((p) => p.IntoQueue("bar")))
+                                    (options) => options.ForQueue<Message1>((p) => p.WithName("foo"))
+                                                        .ForTopic<Message2>((p) => p.WithName("bar")))
                                .Services(
                                     (options) => options.WithMessageMonitoring(() => new MyMonitor()));
                     })

@@ -5,25 +5,20 @@ using JustSaying.Models;
 namespace JustSaying.Fluent
 {
     /// <summary>
-    /// A class representing a builder for a subscription. This class cannot be inherited.
+    /// A class representing a builder for a queue subscription. This class cannot be inherited.
     /// </summary>
     /// <typeparam name="T">
     /// The type of the message.
     /// </typeparam>
-    public sealed class SubscriptionBuilder<T> : ISubscriptionBuilder<T>
+    public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         where T : Message
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="SubscriptionBuilder{T}"/> class.
+        /// Initializes a new instance of the <see cref="QueueSubscriptionBuilder{T}"/> class.
         /// </summary>
-        internal SubscriptionBuilder()
+        internal QueueSubscriptionBuilder()
         {
         }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether to use a point-to-point subscription.
-        /// </summary>
-        private bool IsPointToPoint { get; set; }
 
         /// <summary>
         /// Gets or sets the queue name.
@@ -36,37 +31,25 @@ namespace JustSaying.Fluent
         private Action<SqsReadConfiguration> ConfigureReads { get; set; }
 
         /// <summary>
-        /// Configures that a point-to-point subscription is being used.
-        /// </summary>
-        /// <returns>
-        /// The current <see cref="SubscriptionBuilder{T}"/>.
-        /// </returns>
-        public SubscriptionBuilder<T> AsPointToPoint()
-        {
-            IsPointToPoint = true; // TODO Means SQS not SNS, factor this away better
-            return this;
-        }
-
-        /// <summary>
         /// Configures that the default queue name should be used.
         /// </summary>
         /// <returns>
-        /// The current <see cref="SubscriptionBuilder{T}"/>.
+        /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
         /// </returns>
-        public SubscriptionBuilder<T> IntoDefaultQueue()
-            => IntoQueue(string.Empty);
+        public QueueSubscriptionBuilder<T> WithDefaultQueue()
+            => WithName(string.Empty);
 
         /// <summary>
         /// Configures the name of the queue.
         /// </summary>
         /// <param name="name">The name of the queue to subscribe to.</param>
         /// <returns>
-        /// The current <see cref="SubscriptionBuilder{T}"/>.
+        /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
-        public SubscriptionBuilder<T> IntoQueue(string name)
+        public QueueSubscriptionBuilder<T> WithName(string name)
         {
             QueueName = name ?? throw new ArgumentNullException(nameof(name));
             return this;
@@ -77,12 +60,12 @@ namespace JustSaying.Fluent
         /// </summary>
         /// <param name="configure">A delegate to a method to use to configure SQS reads.</param>
         /// <returns>
-        /// The current <see cref="SubscriptionBuilder{T}"/>.
+        /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
-        public SubscriptionBuilder<T> WithReadConfiguration(Action<SqsReadConfigurationBuilder> configure)
+        public QueueSubscriptionBuilder<T> WithReadConfiguration(Action<SqsReadConfigurationBuilder> configure)
         {
             if (configure == null)
             {
@@ -102,12 +85,12 @@ namespace JustSaying.Fluent
         /// </summary>
         /// <param name="configure">A delegate to a method to use to configure SQS reads.</param>
         /// <returns>
-        /// The current <see cref="SubscriptionBuilder{T}"/>.
+        /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
-        public SubscriptionBuilder<T> WithReadConfiguration(Action<SqsReadConfiguration> configure)
+        public QueueSubscriptionBuilder<T> WithReadConfiguration(Action<SqsReadConfiguration> configure)
         {
             ConfigureReads = configure ?? throw new ArgumentNullException(nameof(configure));
             return this;
@@ -116,24 +99,13 @@ namespace JustSaying.Fluent
         /// <inheritdoc />
         void ISubscriptionBuilder<T>.Configure(JustSayingFluently bus, IHandlerResolver resolver)
         {
-            ISubscriberIntoQueue queue;
-
-            if (IsPointToPoint)
-            {
-                queue = bus.WithSqsPointToPointSubscriber();
-            }
-            else
-            {
-                queue = bus.WithSqsTopicSubscriber();
-            }
-
-            var configured = queue
-                .IntoQueue(QueueName)
-                .WithMessageHandler<T>(resolver);
+            var queue = bus.WithSqsPointToPointSubscriber()
+                           .IntoQueue(QueueName)
+                           .WithMessageHandler<T>(resolver);
 
             if (ConfigureReads != null)
             {
-                configured.ConfigureSubscriptionWith(ConfigureReads);
+                queue.ConfigureSubscriptionWith(ConfigureReads);
             }
         }
     }
