@@ -2,11 +2,13 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Fluent;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -22,9 +24,11 @@ namespace JustSaying.IntegrationTests
         private ITestOutputHelper OutputHelper { get; }
 
         [AwsFact]
-        public void Can_Create_Messaging_Bus_Fluently()
+        public async Task Can_Create_Messaging_Bus_Fluently()
         {
             // Arrange
+            var handler2 = new Handler2();
+
             var services = new ServiceCollection()
                 .AddLogging((p) => p.AddXUnit(OutputHelper))
                 .AddJustSaying(
@@ -37,20 +41,43 @@ namespace JustSaying.IntegrationTests
                                     (options) => options.WithRegions("eu-west-1", "eu-central-1")
                                                         .WithActiveRegion("eu-west-1"))
                                .Publications(
-                                    (options) => options.WithQueue<MyMessage>()
-                                                        .WithTopic<MyMessage>())
+                                    (options) => options.WithQueue<Message1>()
+                                                        .WithTopic<Message2>())
                                .Subscriptions(
-                                    (options) => options.WithSubscription<MyMessage>((p) => p.IntoQueue("foo")))
+                                    (options) => options.WithSubscription<Message1>((p) => p.IntoQueue("foo"))
+                                                        .WithSubscription<Message2>((p) => p.IntoQueue("bar")))
                                .Services(
                                     (options) => options.WithMessageMonitoring(() => new MyMonitor()));
                     })
-                .AddJustSayingHandler<MyMessage, MyHandler>();
+                .AddJustSayingHandler<Message1, Handler1>()
+                .AddSingleton<IHandlerAsync<Message2>>(handler2);
 
             IServiceProvider serviceProvider = services.BuildServiceProvider();
+            IMessagingBus bus = serviceProvider.GetRequiredService<IMessagingBus>();
 
-            // Assert
-            var bus = serviceProvider.GetRequiredService<IMessagingBus>();
-            bus.Start(new CancellationToken(canceled: true));
+            using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
+            {
+                // Act
+                bus.Start(source.Token);
+
+                IMessagePublisher publisher = bus as IMessagePublisher; // HACK For now before first-class support
+                publisher.ShouldNotBeNull();
+
+                var message1 = new Message1();
+                var message2 = new Message2();
+
+                await publisher.PublishAsync(message1);
+                await publisher.PublishAsync(message2);
+
+                // Assert
+                while (!source.IsCancellationRequested && handler2.Count == 0)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1), source.Token);
+                }
+
+                handler2.Count.ShouldBeGreaterThanOrEqualTo(1);
+                handler2.LastId.ShouldBe(message2.Id);
+            }
         }
 
         [Fact]
@@ -60,7 +87,7 @@ namespace JustSaying.IntegrationTests
             var services = new ServiceCollection()
                 .AddLogging((p) => p.AddXUnit(OutputHelper))
                 .AddJustSaying("eu-west-1")
-                .AddJustSayingHandler<MyMessage, MyHandler>();
+                .AddJustSayingHandler<Message1, Handler1>();
 
             IServiceProvider serviceProvider = services.BuildServiceProvider();
 
@@ -69,14 +96,33 @@ namespace JustSaying.IntegrationTests
             bus.Start(new CancellationToken(canceled: true));
         }
 
-        private sealed class MyMessage : Message
+        private sealed class Message1 : Message
         {
         }
 
-        private sealed class MyHandler : IHandlerAsync<MyMessage>
+        private sealed class Message2 : Message
         {
-            public Task<bool> Handle(MyMessage message)
+        }
+
+        private sealed class Handler1 : IHandlerAsync<Message1>
+        {
+            public Task<bool> Handle(Message1 message)
             {
+                return Task.FromResult(true);
+            }
+        }
+
+        private sealed class Handler2 : IHandlerAsync<Message2>
+        {
+            internal int Count { get; set; }
+
+            internal Guid LastId { get; set; }
+
+            public Task<bool> Handle(Message2 message)
+            {
+                Count++;
+                LastId = message.Id;
+
                 return Task.FromResult(true);
             }
         }
