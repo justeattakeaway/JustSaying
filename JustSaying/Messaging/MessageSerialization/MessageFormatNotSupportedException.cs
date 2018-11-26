@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace JustSaying.Messaging.MessageSerialisation
+namespace JustSaying.Messaging.MessageSerialization
 {
     [Serializable]
     public class MessageFormatNotSupportedException : Exception

@@ -1,8 +1,8 @@
 using JustSaying.Models;
 
-namespace JustSaying.Messaging.MessageSerialisation
+namespace JustSaying.Messaging.MessageSerialization
 {
-    public interface IMessageSerialisationRegister
+    public interface IMessageSerializationRegister
     {
         /// <summary>
         /// Deserializes a message.
@@ -21,8 +21,8 @@ namespace JustSaying.Messaging.MessageSerialisation
         /// AWS SNS service adds these automatically, so for publishing to topics don't add these properties
         /// </param>
         /// <returns></returns>
-        string Serialise(Message message, bool serializeForSnsPublishing);
+        string Serialize(Message message, bool serializeForSnsPublishing);
 
-        void AddSerialiser<T>(IMessageSerialiser serialiser) where T : Message;
+        void AddSerializer<T>(IMessageSerializer serializer) where T : Message;
     }
 }

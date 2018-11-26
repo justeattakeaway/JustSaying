@@ -1,6 +1,6 @@
 using System;
 
-namespace JustSaying.Messaging.MessageSerialisation
+namespace JustSaying.Messaging.MessageSerialization
 {
     public interface IMessageSubjectProvider
     {

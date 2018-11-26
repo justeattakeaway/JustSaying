@@ -1,6 +1,6 @@
 using System;
 
-namespace JustSaying.Messaging.MessageSerialisation
+namespace JustSaying.Messaging.MessageSerialization
 {
     /// <summary>
     /// This implementation is not suitable for generic types,

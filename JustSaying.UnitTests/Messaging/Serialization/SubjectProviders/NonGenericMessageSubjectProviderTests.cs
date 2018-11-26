@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.UnitTests.Messaging.Serialisation.SubjectProviders
+namespace JustSaying.UnitTests.Messaging.Serialization.SubjectProviders
 {
     public class NonGenericMessageSubjectProviderTests
     {

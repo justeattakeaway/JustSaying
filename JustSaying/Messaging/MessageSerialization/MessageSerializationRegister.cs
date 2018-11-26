@@ -3,26 +3,24 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using JustSaying.Models;
 
-namespace JustSaying.Messaging.MessageSerialisation
+namespace JustSaying.Messaging.MessageSerialization
 {
-    public class MessageSerialisationRegister : IMessageSerialisationRegister
+    public class MessageSerializationRegister : IMessageSerializationRegister
     {
-        // TODO Inconsistent use of American and British English for "serialize"/"serialise"
-
         private readonly IMessageSubjectProvider _messageSubjectProvider;
-        private readonly IDictionary<Type, TypeSerialiser> _map = new ConcurrentDictionary<Type, TypeSerialiser>();
+        private readonly IDictionary<Type, TypeSerializer> _map = new ConcurrentDictionary<Type, TypeSerializer>();
 
-        public MessageSerialisationRegister(IMessageSubjectProvider messageSubjectProvider)
+        public MessageSerializationRegister(IMessageSubjectProvider messageSubjectProvider)
         {
             _messageSubjectProvider = messageSubjectProvider ?? throw new ArgumentNullException(nameof(messageSubjectProvider));
         }
 
-        public void AddSerialiser<T>(IMessageSerialiser serialiser) where T : Message
+        public void AddSerializer<T>(IMessageSerializer serializer) where T : Message
         {
             var key = typeof(T);
-            if (!_map.TryGetValue(key, out TypeSerialiser serializer))
+            if (!_map.TryGetValue(key, out TypeSerializer typeSerializer))
             {
-                _map[key] = new TypeSerialiser(typeof(T), serialiser);
+                _map[key] = new TypeSerializer(typeof(T), serializer);
             }
         }
 
@@ -30,8 +28,8 @@ namespace JustSaying.Messaging.MessageSerialisation
         {
             foreach (var pair in _map)
             {
-                TypeSerialiser typeSerializer = pair.Value;
-                string messageSubject = typeSerializer.Serialiser.GetMessageSubject(body);
+                TypeSerializer typeSerializer = pair.Value;
+                string messageSubject = typeSerializer.Serializer.GetMessageSubject(body);
 
                 if (string.IsNullOrWhiteSpace(messageSubject))
                 {
@@ -45,8 +43,8 @@ namespace JustSaying.Messaging.MessageSerialisation
                     continue;
                 }
 
-                IMessageSerialiser messageSerializer = typeSerializer.Serialiser;
-                return messageSerializer.Deserialise(body, matchedType);
+                IMessageSerializer messageSerializer = typeSerializer.Serializer;
+                return messageSerializer.Deserialize(body, matchedType);
             }
 
             // TODO Maybe we should log the body separately (at debug/trace?), rather than include it in the exception message. Then they're easier to filter.
@@ -54,18 +52,18 @@ namespace JustSaying.Messaging.MessageSerialisation
                 $"Message can not be handled - type undetermined. Message body: '{body}'");
         }
 
-        public string Serialise(Message message, bool serializeForSnsPublishing)
+        public string Serialize(Message message, bool serializeForSnsPublishing)
         {
             var messageType = message.GetType();
 
-            if (!_map.TryGetValue(messageType, out TypeSerialiser typeSerializer))
+            if (!_map.TryGetValue(messageType, out TypeSerializer typeSerializer))
             {
                 // TODO Log out what *is* registered at debug?
                 throw new MessageFormatNotSupportedException($"Failed to serialize message of type {messageType} because it is not registered for serialization.");
             }
 
-            IMessageSerialiser messageSerializer = typeSerializer.Serialiser;
-            return messageSerializer.Serialise(message, serializeForSnsPublishing, _messageSubjectProvider.GetSubjectForType(messageType));
+            IMessageSerializer messageSerializer = typeSerializer.Serializer;
+            return messageSerializer.Serialize(message, serializeForSnsPublishing, _messageSubjectProvider.GetSubjectForType(messageType));
         }
     }
 }

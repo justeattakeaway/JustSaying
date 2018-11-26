@@ -6,7 +6,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -16,7 +16,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 {
     public class WhenPublishingAsync : XAsyncBehaviourTest<SqsPublisher>
     {
-        private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
+        private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private const string Url = "https://blablabla/" + QueueName;
         private readonly SimpleMessage _message = new SimpleMessage { Content = "Hello" };
@@ -24,7 +24,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 
         protected override async Task<SqsPublisher> CreateSystemUnderTestAsync()
         {
-            var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, _sqs, 0, _serialisationRegister, Substitute.For<ILoggerFactory>());
+            var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, _sqs, 0, _serializationRegister, Substitute.For<ILoggerFactory>());
             await sqs.ExistsAsync();
             return sqs;
         }
@@ -37,7 +37,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
             _sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>())
                 .Returns(new GetQueueAttributesResponse());
 
-            _serialisationRegister.Serialise(_message, false)
+            _serializationRegister.Serialize(_message, false)
                 .Returns("serialized_contents");
 
             return Task.CompletedTask;

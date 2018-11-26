@@ -15,15 +15,15 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         }
 
         [Fact]
-        public void MessagesGetDeserialisedByCorrectHandler()
+        public void MessagesGetDeserializedByCorrectHandler()
         {
-            SerialisationRegister.Received().DeserializeMessage(SqsMessageBody(MessageTypeString));
+            SerializationRegister.Received().DeserializeMessage(SqsMessageBody(MessageTypeString));
         }
 
         [Fact]
         public void ProcessingIsPassedToTheHandlerForCorrectMessage()
         {
-            Handler.Received().Handle(DeserialisedMessage);
+            Handler.Received().Handle(DeserializedMessage);
         }
 
         [Fact]

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 
@@ -43,8 +43,8 @@ namespace JustSaying
 
             config.Validate();
 
-            var messageSerialisationRegister = new MessageSerialisationRegister(config.MessageSubjectProvider);
-            var justSayingBus = new JustSayingBus(config, messageSerialisationRegister, dependencies.LoggerFactory);
+            var messageSerializationRegister = new MessageSerializationRegister(config.MessageSubjectProvider);
+            var justSayingBus = new JustSayingBus(config, messageSerializationRegister, dependencies.LoggerFactory);
 
             var awsClientFactoryProxy = new AwsClientFactoryProxy(() => CreateMeABus.DefaultClientFactory());
 
@@ -53,7 +53,7 @@ namespace JustSaying
 
             bus
                 .WithMonitoring(new NullOpMessageMonitor())
-                .WithSerialisationFactory(new NewtonsoftSerialisationFactory());
+                .WithSerializationFactory(new NewtonsoftSerializationFactory());
 
             return bus;
         }

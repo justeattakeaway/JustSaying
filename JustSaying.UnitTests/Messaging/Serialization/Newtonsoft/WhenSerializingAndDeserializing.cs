@@ -1,12 +1,12 @@
 using JustBehave;
-using JustSaying.Messaging.MessageSerialisation;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.UnitTests.Messaging.Serialisation.Newtonsoft
+namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft
 {
-    public class WhenSerialisingAndDeserialising : XBehaviourTest<NewtonsoftSerialiser>
+    public class WhenSerializingAndDeserializing : XBehaviourTest<NewtonsoftSerializer>
     {
         private MessageWithEnum _messageOut;
         private MessageWithEnum _messageIn;
@@ -18,8 +18,8 @@ namespace JustSaying.UnitTests.Messaging.Serialisation.Newtonsoft
 
         protected override void When()
         {
-            _jsonMessage = SystemUnderTest.Serialise(_messageOut, false, _messageOut.GetType().Name);
-            _messageIn = SystemUnderTest.Deserialise(_jsonMessage, typeof(MessageWithEnum)) as MessageWithEnum;
+            _jsonMessage = SystemUnderTest.Serialize(_messageOut, false, _messageOut.GetType().Name);
+            _messageIn = SystemUnderTest.Deserialize(_jsonMessage, typeof(MessageWithEnum)) as MessageWithEnum;
         }
 
         [Fact]
