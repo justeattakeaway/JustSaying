@@ -9,7 +9,6 @@ using JustSaying.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Shouldly;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests
@@ -23,7 +22,7 @@ namespace JustSaying.IntegrationTests
 
         private ITestOutputHelper OutputHelper { get; }
 
-        [Fact]
+        [AwsFact]
         public async Task Can_Create_Messaging_Bus_Fluently_For_A_Queue()
         {
             // Arrange
@@ -45,7 +44,7 @@ namespace JustSaying.IntegrationTests
             IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
             IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
-            using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
+            using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
             {
                 // Act
                 listener.Start(source.Token);
@@ -65,7 +64,7 @@ namespace JustSaying.IntegrationTests
             }
         }
 
-        [Fact]
+        [AwsFact]
         public async Task Can_Create_Messaging_Bus_Fluently_For_A_Topic()
         {
             // Arrange
@@ -86,7 +85,7 @@ namespace JustSaying.IntegrationTests
             IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
             IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
-            using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
+            using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
             {
                 // Act
                 listener.Start(source.Token);
@@ -106,7 +105,7 @@ namespace JustSaying.IntegrationTests
             }
         }
 
-        [Fact]
+        [AwsFact]
         public void Can_Create_Messaging_Bus()
         {
             // Arrange
@@ -117,28 +116,63 @@ namespace JustSaying.IntegrationTests
 
             IServiceProvider serviceProvider = services.BuildServiceProvider();
 
-            // Assert
-            var bus = serviceProvider.GetRequiredService<IMessagingBus>();
-            bus.Start(new CancellationToken(canceled: true));
+            IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+            IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
+
+            using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
+            {
+                // Act
+                listener.Start(source.Token);
+            }
         }
 
-        [Fact]
-        public void Can_Create_Messaging_Bus_With_Contributors()
+        [AwsFact]
+        public async Task Can_Create_Messaging_Bus_With_Contributors()
         {
             // Arrange
             var services = new ServiceCollection()
                 .AddLogging((p) => p.AddXUnit(OutputHelper))
                 .AddJustSaying()
+                .AddSingleton<IMessageBusConfigurationContributor, AwsContributor>()
                 .AddSingleton<IMessageBusConfigurationContributor, MessagingContributor>()
+                .AddSingleton<IMessageBusConfigurationContributor, QueueContributor>()
                 .AddSingleton<IMessageBusConfigurationContributor, RegionContributor>()
-                .AddSingleton<MyMonitor>()
-                .AddJustSayingHandler<QueueMessage, QueueHandler>();
+                .AddJustSayingHandler<QueueMessage, QueueHandler>()
+                .AddSingleton<MyMonitor>();
 
             IServiceProvider serviceProvider = services.BuildServiceProvider();
 
-            // Assert
-            var bus = serviceProvider.GetRequiredService<IMessagingBus>();
-            bus.Start(new CancellationToken(canceled: true));
+            IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+            IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
+
+            using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
+            {
+                // Act
+                listener.Start(source.Token);
+
+                var message = new QueueMessage();
+
+                await publisher.PublishAsync(message, source.Token);
+
+                // Assert
+                while (!source.IsCancellationRequested && QueueHandler.Count == 0)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1), source.Token);
+                }
+
+                QueueHandler.Count.ShouldBeGreaterThanOrEqualTo(1);
+                QueueHandler.LastId.ShouldBe(message.Id);
+            }
+        }
+
+        private sealed class AwsContributor : IMessageBusConfigurationContributor
+        {
+            public void Configure(MessagingBusBuilder builder)
+            {
+                builder.Client(
+                    (options) => options.WithSessionCredentials("accessKeyId", "secretKeyId", "token")
+                                        .WithServiceUrl("http://localhost:4100"));
+            }
         }
 
         private sealed class MessagingContributor : IMessageBusConfigurationContributor
@@ -153,6 +187,15 @@ namespace JustSaying.IntegrationTests
             public void Configure(MessagingBusBuilder builder)
             {
                 builder.Services((p) => p.WithMessageMonitoring(ServiceProvider.GetRequiredService<MyMonitor>));
+            }
+        }
+
+        private sealed class QueueContributor : IMessageBusConfigurationContributor
+        {
+            public void Configure(MessagingBusBuilder builder)
+            {
+                builder.Publications((p) => p.WithQueue<QueueMessage>())
+                       .Subscriptions((p) => p.ForQueue<QueueMessage>());
             }
         }
 
