@@ -327,7 +327,10 @@ namespace JustSaying.Fluent
             {
                 foreach (string region in Regions)
                 {
-                    config.Regions.Add(region);
+                    if (!config.Regions.Contains(region))
+                    {
+                        config.Regions.Add(region);
+                    }
                 }
             }
 
