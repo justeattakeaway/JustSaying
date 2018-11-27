@@ -1,11 +1,12 @@
 using System;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Fluent;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Fluent
+namespace JustSaying
 {
     /// <summary>
     /// A class representing a builder for an <see cref="IMessagingBus"/>.
