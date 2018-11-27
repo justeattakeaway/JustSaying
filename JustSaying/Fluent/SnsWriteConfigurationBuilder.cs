@@ -12,21 +12,21 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Gets or sets the error callback to use.
         /// </summary>
-        private Func<Exception, Message, bool> OnError { get; set; }
+        private Func<Exception, Message, bool> Handler { get; set; }
 
         /// <summary>
         /// Configures an error handler to use.
         /// </summary>
-        /// <param name="action">A delegate to a method to call when an error occurs.</param>
+        /// <param name="handler">A delegate to a method to call when an error occurs.</param>
         /// <returns>
         /// The current <see cref="SnsWriteConfigurationBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="action"/> is <see langword="null"/>.
+        /// <paramref name="handler"/> is <see langword="null"/>.
         /// </exception>
-        public SnsWriteConfigurationBuilder WithErrorHandler(Func<Exception, Message, bool> action)
+        public SnsWriteConfigurationBuilder WithErrorHandler(Func<Exception, Message, bool> handler)
         {
-            OnError = action ?? throw new ArgumentNullException(nameof(action));
+            Handler = handler ?? throw new ArgumentNullException(nameof(handler));
             return this;
         }
 
@@ -36,9 +36,9 @@ namespace JustSaying.Fluent
         /// <param name="config">The configuration to configure.</param>
         internal void Configure(SnsWriteConfiguration config)
         {
-            if (OnError != null)
+            if (Handler != null)
             {
-                config.HandleException = OnError;
+                config.HandleException = Handler;
             }
         }
     }
