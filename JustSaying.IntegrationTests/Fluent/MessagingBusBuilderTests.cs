@@ -6,6 +6,7 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
+using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Shouldly;
@@ -31,7 +32,7 @@ namespace JustSaying.IntegrationTests
                 .AddJustSaying(
                     (builder) =>
                     {
-                        builder.Client((options) => options.WithBasicCredentials("accessKey", "secretKey").WithServiceUrl("http://localhost:4100"))
+                        builder.Client((options) => options.WithBasicCredentials("accessKey", "secretKey").WithServiceUri(TestEnvironment.SimulatorUrl))
                                .Messaging((options) => options.WithRegions("eu-west-1"))
                                .Publications((options) => options.WithQueue<QueueMessage>())
                                .Subscriptions((options) => options.ForQueue<QueueMessage>())
@@ -73,7 +74,7 @@ namespace JustSaying.IntegrationTests
                 .AddJustSaying(
                     (builder) =>
                     {
-                        builder.Client((options) => options.WithBasicCredentials("accessKey", "secretKey").WithServiceUrl("http://localhost:4100"))
+                        builder.Client((options) => options.WithBasicCredentials("accessKey", "secretKey").WithServiceUri(TestEnvironment.SimulatorUrl))
                                .Messaging((options) => options.WithRegions("eu-west-1"))
                                .Publications((options) => options.WithTopic<TopicMessage>())
                                .Subscriptions((options) => options.ForTopic<TopicMessage>());
@@ -171,7 +172,7 @@ namespace JustSaying.IntegrationTests
             {
                 builder.Client(
                     (options) => options.WithSessionCredentials("accessKeyId", "secretKeyId", "token")
-                                        .WithServiceUrl("http://localhost:4100"));
+                                        .WithServiceUri(TestEnvironment.SimulatorUrl));
             }
         }
 
