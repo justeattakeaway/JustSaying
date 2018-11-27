@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace JustSaying.Messaging
 {
@@ -29,5 +30,15 @@ namespace JustSaying.Messaging
                 DataType = "String"
             });
         }
+
+        public PublishMetadata AddMessageAttribute(string key, double value)
+        {
+            return AddMessageAttribute(key, new MessageAttributeValue
+            {
+                StringValue = value.ToString(CultureInfo.InvariantCulture),
+                DataType = "Number"
+            });
+        }
+
     }
 }
