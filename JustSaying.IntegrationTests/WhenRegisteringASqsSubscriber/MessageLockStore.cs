@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 {
-    internal class MessageLockStore : IMessageLock
+    internal class MessageLockStore : IMessageLockAsync
     {
         private readonly Dictionary<string, int> _store = new Dictionary<string, int>();
 
-        public MessageLockResponse TryAquireLockPermanently(string key)
+        public Task<MessageLockResponse> TryAquireLockPermanentlyAsync(string key)
         {
             var canAquire = !_store.TryGetValue(key, out int value);
 
@@ -17,13 +18,18 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
                 _store.Add(key, 1);
             }
 
-            return new MessageLockResponse { DoIHaveExclusiveLock = canAquire };
+            var response = new MessageLockResponse { DoIHaveExclusiveLock = canAquire };
+
+            return Task.FromResult(response);
         }
 
-        public MessageLockResponse TryAquireLock(string key, TimeSpan howLong)
-            => TryAquireLockPermanently(key);
+        public Task<MessageLockResponse> TryAquireLockAsync(string key, TimeSpan howLong)
+            => TryAquireLockPermanentlyAsync(key);
 
-        public void ReleaseLock(string key)
-            => _store.Remove(key);
+        public Task ReleaseLockAsync(string key)
+        {
+            _store.Remove(key);
+            return Task.CompletedTask;
+        }
     }
 }
