@@ -21,6 +21,17 @@ namespace Microsoft.Extensions.DependencyInjection
         // TODO This is here for convenience while protyping, would probably live elsewhere
         // so we don't need to force the dependency on MS' DI types
 
+        /// <summary>
+        /// Adds JustSaying services to the service collection.
+        /// </summary>
+        /// <param name="services">The <see cref="IServiceCollection"/> to add JustSaying services to.</param>
+        /// <param name="regions">The AWS region(s) to configure.</param>
+        /// <returns>
+        /// The <see cref="IServiceCollection"/> specified by <paramref name="services"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="services"/> or <paramref name="regions"/> is <see langword="null"/>.
+        /// </exception>
         public static IServiceCollection AddJustSaying(this IServiceCollection services, params string[] regions)
         {
             if (services == null)
@@ -38,6 +49,17 @@ namespace Microsoft.Extensions.DependencyInjection
                     (options) => options.WithRegions(regions)));
         }
 
+        /// <summary>
+        /// Adds JustSaying services to the service collection.
+        /// </summary>
+        /// <param name="services">The <see cref="IServiceCollection"/> to add JustSaying services to.</param>
+        /// <param name="configure">A delegate to a method to use to configure JustSaying.</param>
+        /// <returns>
+        /// The <see cref="IServiceCollection"/> specified by <paramref name="services"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="services"/> or <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
         public static IServiceCollection AddJustSaying(this IServiceCollection services, Action<MessagingBusBuilder> configure)
         {
             if (services == null)
@@ -53,6 +75,17 @@ namespace Microsoft.Extensions.DependencyInjection
             return services.AddJustSaying((builder, _) => configure(builder));
         }
 
+        /// <summary>
+        /// Adds JustSaying services to the service collection.
+        /// </summary>
+        /// <param name="services">The <see cref="IServiceCollection"/> to add JustSaying services to.</param>
+        /// <param name="configure">A delegate to a method to use to configure JustSaying.</param>
+        /// <returns>
+        /// The <see cref="IServiceCollection"/> specified by <paramref name="services"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="services"/> or <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
         public static IServiceCollection AddJustSaying(this IServiceCollection services, Action<MessagingBusBuilder, IServiceProvider> configure)
         {
             if (services == null)
@@ -100,6 +133,18 @@ namespace Microsoft.Extensions.DependencyInjection
             return services;
         }
 
+        /// <summary>
+        /// Adds a JustSaying message handler to the service collection.
+        /// </summary>
+        /// <typeparam name="TMessage">The type of the message handled.</typeparam>
+        /// <typeparam name="THandler">The type of the message handler to register.</typeparam>
+        /// <param name="services">The <see cref="IServiceCollection"/> to add the message handler to.</param>
+        /// <returns>
+        /// The <see cref="IServiceCollection"/> specified by <paramref name="services"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="services"/> is <see langword="null"/>.
+        /// </exception>
         public static IServiceCollection AddJustSayingHandler<TMessage, THandler>(this IServiceCollection services)
             where TMessage : Message
             where THandler : class, IHandlerAsync<TMessage>
