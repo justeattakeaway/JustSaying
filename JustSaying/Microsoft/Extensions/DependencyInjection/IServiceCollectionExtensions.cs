@@ -1,15 +1,21 @@
 using System;
+using System.ComponentModel;
+using JustSaying;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace JustSaying.Fluent
+namespace Microsoft.Extensions.DependencyInjection
 {
+    /// <summary>
+    /// A class containing extension methods for the <see cref="IServiceCollection"/> interface. This class cannot be inherited.
+    /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static class IServiceCollectionExtensions
     {
         // TODO This is here for convenience while protyping, would probably live elsewhere
@@ -27,12 +33,9 @@ namespace JustSaying.Fluent
                 throw new ArgumentNullException(nameof(regions));
             }
 
-            return services
-                .AddJustSaying(
-                    (builder) =>
-                    {
-                        builder.Messaging((options) => options.WithRegions(regions));
-                    });
+            return services.AddJustSaying(
+                (builder) => builder.Messaging(
+                    (options) => options.WithRegions(regions)));
         }
 
         public static IServiceCollection AddJustSaying(this IServiceCollection services, Action<MessagingBusBuilder> configure)
