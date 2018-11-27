@@ -7,12 +7,10 @@ namespace JustSaying.Fluent
     /// <summary>
     /// A class representing a builder for configuring instances of <see cref="SqsReadConfiguration"/>. This class cannot be inherited.
     /// </summary>
-    public sealed class SqsReadConfigurationBuilder
+    public sealed class SqsReadConfigurationBuilder : SqsConfigurationBuilder<SqsReadConfiguration, SqsReadConfigurationBuilder>
     {
-        /// <summary>
-        /// Gets or sets a value indicating whether to opt-out of error queues.
-        /// </summary>
-        private bool? ErrorQueueOptOut { get; set; }
+        /// <inheritdoc />
+        protected override SqsReadConfigurationBuilder Self => this;
 
         /// <summary>
         /// Gets or sets the instance position value to use.
@@ -25,11 +23,6 @@ namespace JustSaying.Fluent
         private int? MaximumAllowedMessagesInflight { get; set; }
 
         /// <summary>
-        /// Gets or sets the message retention value to use.
-        /// </summary>
-        private TimeSpan? MessageRetention { get; set; }
-
-        /// <summary>
         /// Gets or sets the error callback to use.
         /// </summary>
         private Action<Exception, Message> OnError { get; set; }
@@ -38,11 +31,6 @@ namespace JustSaying.Fluent
         /// Gets or sets the topic source account Id to use.
         /// </summary>
         private string TopicSourceAccountId { get; set; }
-
-        /// <summary>
-        /// Gets or sets the visibility timeout value to use.
-        /// </summary>
-        private TimeSpan? VisibilityTimeout { get; set; }
 
         /// <summary>
         /// Configures an error handler to use.
@@ -82,37 +70,6 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Configures that an error queue should be used.
-        /// </summary>
-        /// <returns>
-        /// The current <see cref="SqsReadConfigurationBuilder"/>.
-        /// </returns>
-        public SqsReadConfigurationBuilder WithErrorQueue()
-            => WithErrorQueueOptOut(false);
-
-        /// <summary>
-        /// Configures that no error queue should be used.
-        /// </summary>
-        /// <returns>
-        /// The current <see cref="SqsReadConfigurationBuilder"/>.
-        /// </returns>
-        public SqsReadConfigurationBuilder WithNoErrorQueue()
-            => WithErrorQueueOptOut(true);
-
-        /// <summary>
-        /// Configures whether to opt-out of an error queue.
-        /// </summary>
-        /// <param name="value">Whether or not to opt-out of an error queue.</param>
-        /// <returns>
-        /// The current <see cref="SqsReadConfigurationBuilder"/>.
-        /// </returns>
-        public SqsReadConfigurationBuilder WithErrorQueueOptOut(bool value)
-        {
-            ErrorQueueOptOut = value;
-            return this;
-        }
-
-        /// <summary>
         /// Configures the instance position to use.
         /// </summary>
         /// <param name="value">The value to use for the instance position.</param>
@@ -139,19 +96,6 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Configures the message retention period to use.
-        /// </summary>
-        /// <param name="value">The value to use for the message retention.</param>
-        /// <returns>
-        /// The current <see cref="SqsReadConfigurationBuilder"/>.
-        /// </returns>
-        public SqsReadConfigurationBuilder WithMessageRetention(TimeSpan value)
-        {
-            MessageRetention = value;
-            return this;
-        }
-
-        /// <summary>
         /// Configures the account Id to use for the topic source.
         /// </summary>
         /// <param name="id">The Id of the AWS account which is the topic's source.</param>
@@ -165,23 +109,10 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Configures the visibility timeout to use.
-        /// </summary>
-        /// <param name="value">The value to use for the visibility timeout.</param>
-        /// <returns>
-        /// The current <see cref="SqsReadConfigurationBuilder"/>.
-        /// </returns>
-        public SqsReadConfigurationBuilder WithVisibilityTimeout(TimeSpan value)
-        {
-            VisibilityTimeout = value;
-            return this;
-        }
-
-        /// <summary>
         /// Configures the specified <see cref="SqsReadConfiguration"/>.
         /// </summary>
         /// <param name="config">The configuration to configure.</param>
-        internal void Configure(SqsReadConfiguration config)
+        internal override void Configure(SqsReadConfiguration config)
         {
             // TODO Which ones should be configurable? All, or just the important ones?
             // config.BaseQueueName = default;
@@ -197,10 +128,7 @@ namespace JustSaying.Fluent
             // config.ServerSideEncryption = default;
             // config.Topic = default;
 
-            if (ErrorQueueOptOut.HasValue)
-            {
-                config.ErrorQueueOptOut = ErrorQueueOptOut.Value;
-            }
+            base.Configure(config);
 
             if (InstancePosition.HasValue)
             {
@@ -212,11 +140,6 @@ namespace JustSaying.Fluent
                 config.MaxAllowedMessagesInFlight = MaximumAllowedMessagesInflight.Value;
             }
 
-            if (MessageRetention.HasValue)
-            {
-                config.MessageRetention = MessageRetention.Value;
-            }
-
             if (OnError != null)
             {
                 config.OnError = OnError;
@@ -225,11 +148,6 @@ namespace JustSaying.Fluent
             if (TopicSourceAccountId != null)
             {
                 config.TopicSourceAccount = TopicSourceAccountId;
-            }
-
-            if (VisibilityTimeout.HasValue)
-            {
-                config.VisibilityTimeout = VisibilityTimeout.Value;
             }
 
             config.Validate();

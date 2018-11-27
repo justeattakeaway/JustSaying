@@ -35,6 +35,31 @@ namespace JustSaying.Fluent
         /// <exception cref="ArgumentNullException">
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
+        public QueuePublicationBuilder<T> WithWriteConfiguration(Action<SqsWriteConfigurationBuilder> configure)
+        {
+            if (configure == null)
+            {
+                throw new ArgumentNullException(nameof(configure));
+            }
+
+            var builder = new SqsWriteConfigurationBuilder();
+
+            configure(builder);
+
+            ConfigureWrites = builder.Configure;
+            return this;
+        }
+
+        /// <summary>
+        /// Configures the SQS write configuration.
+        /// </summary>
+        /// <param name="configure">A delegate to a method to use to configure SQS writes.</param>
+        /// <returns>
+        /// The current <see cref="QueuePublicationBuilder{T}"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
         public QueuePublicationBuilder<T> WithWriteConfiguration(Action<SqsWriteConfiguration> configure)
         {
             ConfigureWrites = configure ?? throw new ArgumentNullException(nameof(configure));

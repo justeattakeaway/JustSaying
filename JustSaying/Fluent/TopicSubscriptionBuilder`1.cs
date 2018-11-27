@@ -26,7 +26,7 @@ namespace JustSaying.Fluent
         private string TopicName { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets a delegate to a method to use to configure SQS reads.
+        /// Gets or sets a delegate to a method to use to configure SNS reads.
         /// </summary>
         private Action<SqsReadConfiguration> ConfigureReads { get; set; }
 
@@ -56,9 +56,9 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Configures the SQS read configuration.
+        /// Configures the SNS read configuration.
         /// </summary>
-        /// <param name="configure">A delegate to a method to use to configure SQS reads.</param>
+        /// <param name="configure">A delegate to a method to use to configure SNS reads.</param>
         /// <returns>
         /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
         /// </returns>
@@ -81,9 +81,9 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Configures the SQS read configuration.
+        /// Configures the SNS read configuration.
         /// </summary>
-        /// <param name="configure">A delegate to a method to use to configure SQS reads.</param>
+        /// <param name="configure">A delegate to a method to use to configure SNS reads.</param>
         /// <returns>
         /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
         /// </returns>
