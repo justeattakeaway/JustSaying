@@ -25,6 +25,26 @@ namespace Microsoft.Extensions.DependencyInjection
         /// Adds JustSaying services to the service collection.
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection"/> to add JustSaying services to.</param>
+        /// <returns>
+        /// The <see cref="IServiceCollection"/> specified by <paramref name="services"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="services"/> is <see langword="null"/>.
+        /// </exception>
+        public static IServiceCollection AddJustSaying(this IServiceCollection services)
+        {
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
+            return services.AddJustSaying((_) => { });
+        }
+
+        /// <summary>
+        /// Adds JustSaying services to the service collection.
+        /// </summary>
+        /// <param name="services">The <see cref="IServiceCollection"/> to add JustSaying services to.</param>
         /// <param name="regions">The AWS region(s) to configure.</param>
         /// <returns>
         /// The <see cref="IServiceCollection"/> specified by <paramref name="services"/>.
@@ -124,6 +144,13 @@ namespace Microsoft.Extensions.DependencyInjection
                         .WithServiceResolver(new ServiceProviderResolver(serviceProvider));
 
                     configure(builder, serviceProvider);
+
+                    var contributors = serviceProvider.GetServices<IMessageBusConfigurationContributor>();
+
+                    foreach (var contributor in contributors)
+                    {
+                        contributor.Configure(builder);
+                    }
 
                     return builder;
                 });

@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using JustSaying.Fluent;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
@@ -92,6 +93,48 @@ namespace JustSaying.IntegrationTests
             // Assert
             var bus = serviceProvider.GetRequiredService<IMessagingBus>();
             bus.Start(new CancellationToken(canceled: true));
+        }
+
+        [Fact]
+        public void Can_Create_Messaging_Bus_With_Contributors()
+        {
+            // Arrange
+            var services = new ServiceCollection()
+                .AddLogging((p) => p.AddXUnit(OutputHelper))
+                .AddJustSaying()
+                .AddSingleton<IMessageBusConfigurationContributor, Configuration1>()
+                .AddSingleton<IMessageBusConfigurationContributor, Configuration2>()
+                .AddSingleton<MyMonitor>()
+                .AddJustSayingHandler<Message1, Handler1>();
+
+            IServiceProvider serviceProvider = services.BuildServiceProvider();
+
+            // Assert
+            var bus = serviceProvider.GetRequiredService<IMessagingBus>();
+            bus.Start(new CancellationToken(canceled: true));
+        }
+
+        private sealed class Configuration1 : IMessageBusConfigurationContributor
+        {
+            public Configuration1(IServiceProvider serviceProvider)
+            {
+                ServiceProvider = serviceProvider;
+            }
+
+            private IServiceProvider ServiceProvider { get; }
+
+            public void Configure(MessagingBusBuilder builder)
+            {
+                builder.Services((p) => p.WithMessageMonitoring(ServiceProvider.GetRequiredService<MyMonitor>));
+            }
+        }
+
+        private sealed class Configuration2 : IMessageBusConfigurationContributor
+        {
+            public void Configure(MessagingBusBuilder builder)
+            {
+                builder.Messaging((p) => p.WithRegion("eu-west-1"));
+            }
         }
 
         private sealed class Message1 : Message
