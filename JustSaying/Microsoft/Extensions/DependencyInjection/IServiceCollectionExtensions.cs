@@ -103,7 +103,6 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<IHandlerResolver>((p) => p.GetRequiredService<ServiceProviderResolver>());
             services.TryAddSingleton<IServiceResolver>((p) => p.GetRequiredService<ServiceProviderResolver>());
 
-            services.TryAddSingleton<MessagingBusBuilder>();
             services.TryAddSingleton<IAwsClientFactory, DefaultAwsClientFactory>();
             services.TryAddSingleton<IAwsClientFactoryProxy>((p) => new AwsClientFactoryProxy(p.GetRequiredService<IAwsClientFactory>));
             services.TryAddSingleton<IMessagingConfig, MessagingConfig>();
@@ -121,13 +120,26 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton(
                 (serviceProvider) =>
                 {
-                    var builder = serviceProvider
-                        .GetRequiredService<MessagingBusBuilder>()
+                    var builder = new MessagingBusBuilder()
                         .WithServiceResolver(new ServiceProviderResolver(serviceProvider));
 
                     configure(builder, serviceProvider);
 
-                    return builder.Build();
+                    return builder;
+                });
+
+            services.TryAddSingleton(
+                (serviceProvider) =>
+                {
+                    var builder = serviceProvider.GetRequiredService<MessagingBusBuilder>();
+                    return builder.BuildPublisher();
+                });
+
+            services.TryAddSingleton(
+                (serviceProvider) =>
+                {
+                    var builder = serviceProvider.GetRequiredService<MessagingBusBuilder>();
+                    return builder.BuildSubscribers();
                 });
 
             return services;

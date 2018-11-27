@@ -2,6 +2,7 @@ using System;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
@@ -9,9 +10,10 @@ using Microsoft.Extensions.Logging;
 namespace JustSaying
 {
     /// <summary>
-    /// A class representing a builder for an <see cref="IMessagingBus"/>.
+    /// A class representing a builder for instances of <see cref="IMessagingBus"/>
+    /// and <see cref="IMessagePublisher"/>. This class cannot be inherited.
     /// </summary>
-    public class MessagingBusBuilder
+    public sealed class MessagingBusBuilder
     {
         /// <summary>
         /// Gets the <see cref="IServiceResolver"/> to use.
@@ -195,12 +197,43 @@ namespace JustSaying
         }
 
         /// <summary>
+        /// Creates a new instance of <see cref="IMessagePublisher"/>.
+        /// </summary>
+        /// <returns>
+        /// The created instance of <see cref="IMessagePublisher"/>
+        /// </returns>
+        public IMessagePublisher BuildPublisher()
+        {
+            IMessagingConfig config = CreateConfig();
+
+            config.Validate();
+
+            ILoggerFactory loggerFactory =
+                ServicesBuilder?.LoggerFactory?.Invoke() ?? ServiceResolver.ResolveService<ILoggerFactory>();
+
+            JustSayingBus publisher = CreateBus(config, loggerFactory);
+            JustSayingFluently fluent = CreateFluent(publisher, loggerFactory);
+
+            if (ServicesBuilder?.NamingStrategy != null)
+            {
+                fluent.WithNamingStrategy(ServicesBuilder.NamingStrategy);
+            }
+
+            if (PublicationsBuilder != null)
+            {
+                PublicationsBuilder.Configure(fluent);
+            }
+
+            return publisher;
+        }
+
+        /// <summary>
         /// Creates a new instance of <see cref="IMessagingBus"/>.
         /// </summary>
         /// <returns>
         /// The created instance of <see cref="IMessagingBus"/>
         /// </returns>
-        public IMessagingBus Build()
+        public IMessagingBus BuildSubscribers()
         {
             IMessagingConfig config = CreateConfig();
 
@@ -215,11 +248,6 @@ namespace JustSaying
             if (ServicesBuilder?.NamingStrategy != null)
             {
                 fluent.WithNamingStrategy(ServicesBuilder.NamingStrategy);
-            }
-
-            if (PublicationsBuilder != null)
-            {
-                PublicationsBuilder.Configure(fluent);
             }
 
             if (SubscriptionBuilder != null)

@@ -52,15 +52,14 @@ namespace JustSaying.IntegrationTests
                 .AddSingleton<IHandlerAsync<Message2>>(handler2);
 
             IServiceProvider serviceProvider = services.BuildServiceProvider();
-            IMessagingBus bus = serviceProvider.GetRequiredService<IMessagingBus>();
+
+            IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+            IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
             using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
             {
                 // Act
-                bus.Start(source.Token);
-
-                IMessagePublisher publisher = bus as IMessagePublisher; // HACK For now before first-class support
-                publisher.ShouldNotBeNull();
+                listener.Start(source.Token);
 
                 var message1 = new Message1();
                 var message2 = new Message2();
