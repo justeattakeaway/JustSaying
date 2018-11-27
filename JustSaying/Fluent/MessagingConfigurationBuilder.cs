@@ -289,7 +289,11 @@ namespace JustSaying.Fluent
                 Regions = new List<string>();
             }
 
-            Regions.Add(region);
+            if (!Regions.Contains(region))
+            {
+                Regions.Add(region);
+            }
+
             return this;
         }
 
