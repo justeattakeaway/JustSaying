@@ -24,7 +24,7 @@ namespace JustSaying.Messaging.MessageHandling
         public Task ReleaseLockAsync(string key)
         {
             Inner.ReleaseLock(key);
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
         public Task<MessageLockResponse> TryAquireLockAsync(string key, TimeSpan howLong) => Task.FromResult(Inner.TryAquireLock(key, howLong));

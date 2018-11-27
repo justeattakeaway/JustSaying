@@ -23,7 +23,6 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
             _response = SystemUnderTest
                 .WithSqsTopicSubscriber()
                 .IntoDefaultQueue()
-                .ConfigureSubscriptionWith(cfg => { })
                 .WithMessageHandler(_handler);
 
             return Task.CompletedTask;
