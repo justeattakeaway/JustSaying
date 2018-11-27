@@ -29,6 +29,21 @@ namespace JustSaying.Fluent
         private IList<ISubscriptionBuilder<Message>> Subscriptions { get; } = new List<ISubscriptionBuilder<Message>>();
 
         /// <summary>
+        /// Configures a queue subscription for the default queue.
+        /// </summary>
+        /// <returns>
+        /// The current <see cref="SubscriptionsBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public SubscriptionsBuilder ForQueue<T>()
+            where T : Message
+        {
+            return ForQueue<T>((p) => p.WithDefaultQueue());
+        }
+
+        /// <summary>
         /// Configures a queue subscription.
         /// </summary>
         /// <param name="configure">A delegate to a method to use to configure a queue subscription.</param>
@@ -53,6 +68,18 @@ namespace JustSaying.Fluent
             Subscriptions.Add(builder);
 
             return this;
+        }
+
+        /// <summary>
+        /// Configures a topic subscription for the default topic name.
+        /// </summary>
+        /// <returns>
+        /// The current <see cref="SubscriptionsBuilder"/>.
+        /// </returns>
+        public SubscriptionsBuilder ForTopic<T>()
+            where T : Message
+        {
+            return ForTopic<T>((p) => p.IntoDefaultTopic());
         }
 
         /// <summary>
