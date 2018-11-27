@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Fluent;
@@ -55,13 +57,12 @@ namespace JustSaying.IntegrationTests
                 await publisher.PublishAsync(message, source.Token);
 
                 // Assert
-                while (!source.IsCancellationRequested && QueueHandler.Count == 0)
+                while (!source.IsCancellationRequested && !QueueHandler.MessageIds.Contains(message.Id))
                 {
                     await Task.Delay(TimeSpan.FromSeconds(1), source.Token);
                 }
 
-                QueueHandler.Count.ShouldBeGreaterThanOrEqualTo(1);
-                QueueHandler.LastId.ShouldBe(message.Id);
+                QueueHandler.MessageIds.ShouldContain(message.Id);
             }
         }
 
@@ -96,13 +97,12 @@ namespace JustSaying.IntegrationTests
                 await publisher.PublishAsync(message, source.Token);
 
                 // Assert
-                while (!source.IsCancellationRequested && TopicHandler.Count == 0)
+                while (!source.IsCancellationRequested && !TopicHandler.MessageIds.Contains(message.Id))
                 {
                     await Task.Delay(TimeSpan.FromSeconds(1), source.Token);
                 }
 
-                TopicHandler.Count.ShouldBeGreaterThanOrEqualTo(1);
-                TopicHandler.LastId.ShouldBe(message.Id);
+                TopicHandler.MessageIds.ShouldContain(message.Id);
             }
         }
 
@@ -156,13 +156,12 @@ namespace JustSaying.IntegrationTests
                 await publisher.PublishAsync(message, source.Token);
 
                 // Assert
-                while (!source.IsCancellationRequested && QueueHandler.Count == 0)
+                while (!source.IsCancellationRequested && !QueueHandler.MessageIds.Contains(message.Id))
                 {
                     await Task.Delay(TimeSpan.FromSeconds(1), source.Token);
                 }
 
-                QueueHandler.Count.ShouldBeGreaterThanOrEqualTo(1);
-                QueueHandler.LastId.ShouldBe(message.Id);
+                QueueHandler.MessageIds.ShouldContain(message.Id);
             }
         }
 
@@ -214,15 +213,11 @@ namespace JustSaying.IntegrationTests
 
         private sealed class QueueHandler : IHandlerAsync<QueueMessage>
         {
-            internal static int Count { get; set; }
-
-            internal static Guid LastId { get; set; }
+            internal static ConcurrentBag<Guid> MessageIds { get; } = new ConcurrentBag<Guid>();
 
             public Task<bool> Handle(QueueMessage message)
             {
-                Count++;
-                LastId = message.Id;
-
+                MessageIds.Add(message.Id);
                 return Task.FromResult(true);
             }
         }
@@ -233,15 +228,11 @@ namespace JustSaying.IntegrationTests
 
         private sealed class TopicHandler : IHandlerAsync<TopicMessage>
         {
-            internal static int Count { get; set; }
-
-            internal static Guid LastId { get; set; }
+            internal static ConcurrentBag<Guid> MessageIds { get; } = new ConcurrentBag<Guid>();
 
             public Task<bool> Handle(TopicMessage message)
             {
-                Count++;
-                LastId = message.Id;
-
+                MessageIds.Add(message.Id);
                 return Task.FromResult(true);
             }
         }
