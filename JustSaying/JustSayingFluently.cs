@@ -23,7 +23,13 @@ namespace JustSaying
     /// 3. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc // ToDo: Shouldn't be enforced in base! Is a JE concern.
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class JustSayingFluently : ISubscriberIntoQueue, IHaveFulfilledSubscriptionRequirements, IHaveFulfilledPublishRequirements, IMayWantOptionalSettings, IMayWantARegionPicker, IAmJustInterrogating
+    public class JustSayingFluently : ISubscriberIntoQueue,
+        IHaveFulfilledSubscriptionRequirements,
+        IHaveFulfilledPublishRequirements,
+        IMayWantOptionalSettings,
+        IMayWantARegionPicker,
+        IAmJustInterrogating,
+        IMayWantMessageLockStore
     {
         private readonly ILogger _log;
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
@@ -182,12 +188,6 @@ namespace JustSaying
         public IMayWantOptionalSettings WithSerializationFactory(IMessageSerializationFactory factory)
         {
             _serializationFactory = factory;
-            return this;
-        }
-
-        public IMayWantOptionalSettings WithMessageLockStoreOf(IMessageLock messageLock)
-        {
-            Bus.MessageLock = new BlockingMessageLock(messageLock);
             return this;
         }
 
