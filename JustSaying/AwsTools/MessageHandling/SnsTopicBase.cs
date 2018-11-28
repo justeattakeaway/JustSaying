@@ -61,13 +61,16 @@ namespace JustSaying.AwsTools.MessageHandling
                 var response = await Client.PublishAsync(request, cancellationToken).ConfigureAwait(false);
                 _eventLog.LogInformation($"Published message: '{request.Subject}' with content {request.Message}");
 
-                var responseData = new MessageResponse
+                if (MessageResponseLogger != null)
+                {
+                    var responseData = new MessageResponse
                     {
                         HttpStatusCode = response?.HttpStatusCode,
                         MessageId = response?.MessageId,
                         ResponseMetadata = response?.ResponseMetadata
                     };
-                MessageResponseLogger?.Invoke(responseData, message);
+                    MessageResponseLogger.Invoke(responseData, message);
+                }
             }
             catch (Exception ex)
             {
