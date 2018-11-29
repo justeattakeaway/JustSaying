@@ -47,7 +47,7 @@ namespace JustSaying
 
     public interface IMayWantMessageLockStore : IAmJustSayingFluently
     {
-        IMayWantOptionalSettings WithMessageLockStoreOf(IMessageLock messageLock);
+        IMayWantOptionalSettings WithMessageLockStoreOf(IMessageLockAsync messageLock);
     }
 
     public interface IMayWantCustomSerialization : IAmJustSayingFluently
