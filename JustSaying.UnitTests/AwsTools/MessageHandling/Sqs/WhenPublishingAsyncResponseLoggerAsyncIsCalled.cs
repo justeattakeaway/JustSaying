@@ -1,6 +1,7 @@
 using System.Net;
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustBehave;
@@ -24,7 +25,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         private readonly SimpleMessage _testMessage = new SimpleMessage { Content = "Hello" };
         private const string QueueName = "queuename";
 
-        private const string MessageId = "12345";
+        private const string MessageId = "TestMessage12345";
+        private const string RequestId = "TestRequesteId23456";
+
         private static MessageResponse _response;
         private static Message _message;
 
@@ -66,15 +69,21 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 
         private static Task<SendMessageResponse> PublishResult(CallInfo arg)
         {
-            return Task.FromResult(new SendMessageResponse
+            var response = new SendMessageResponse
             {
                 MessageId = MessageId,
-                HttpStatusCode = HttpStatusCode.OK
-            });
+                HttpStatusCode = HttpStatusCode.OK,
+                ResponseMetadata = new ResponseMetadata
+                {
+                    RequestId = RequestId
+                }
+            };
+
+            return Task.FromResult(response);
         }
 
         [Fact]
-        public void ResponseLoggerAsyncIsCalled()
+        public void ResponseLoggerIsCalled()
         {
             _response.ShouldNotBeNull();
         }
@@ -84,6 +93,14 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         {
             _response.MessageId.ShouldBe(MessageId);
             _response.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+
+        [Fact]
+        public void ResponseShouldContainMetadata()
+        {
+            _response.ResponseMetadata.ShouldNotBeNull();
+            _response.ResponseMetadata.RequestId.ShouldNotBeNull();
+            _response.ResponseMetadata.RequestId.ShouldBe(RequestId);
         }
 
         [Fact]

@@ -37,12 +37,17 @@ namespace JustSaying.AwsTools.MessageHandling
             var request = BuildSendMessageRequest(message);
             try
             {
-                var response = await _client.SendMessageAsync(request, cancellationToken).ConfigureAwait(false);
-                MessageResponseLogger?.Invoke(new MessageResponse
+                SendMessageResponse response = await _client.SendMessageAsync(request, cancellationToken).ConfigureAwait(false);
+                if (MessageResponseLogger != null)
                 {
-                    HttpStatusCode = response?.HttpStatusCode,
-                    MessageId = response?.MessageId
-                }, message);
+                    var responseData = new MessageResponse
+                    {
+                        HttpStatusCode = response?.HttpStatusCode,
+                        MessageId = response?.MessageId,
+                        ResponseMetadata = response?.ResponseMetadata
+                    };
+                    MessageResponseLogger.Invoke(responseData, message);
+                }
             }
             catch (Exception ex)
             {
