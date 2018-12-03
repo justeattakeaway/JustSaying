@@ -6,7 +6,7 @@
     <ProjectReference Include="..\JustSaying\JustSaying.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AutoFixture" Version="4.5.0" />
+    <PackageReference Include="AutoFixture" Version="4.5.1" />
     <PackageReference Include="JustBehave" Version="2.0.0-beta-62" />
     <PackageReference Include="JustBehave.xUnit" Version="2.0.0-beta-62" />
     <PackageReference Include="MartinCostello.Logging.XUnit" Version="0.1.0" />
