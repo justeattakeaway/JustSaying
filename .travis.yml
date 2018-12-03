@@ -10,6 +10,9 @@ env:
     - DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
     - NUGET_XMLDOC_MODE=skip
 
+git:
+  depth: false
+
 branches:
   only:
     - master
