@@ -1,5 +1,6 @@
 using System.Net;
 using System.Threading.Tasks;
+using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustBehave;
@@ -22,7 +23,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         private readonly IAmazonSimpleNotificationService _sns = Substitute.For<IAmazonSimpleNotificationService>();
         private const string TopicArn = "topicarn";
 
-        private const string MessageId = "12345";
+        private const string MessageId = "TestMessage12345";
+        private const string RequestId = "TestRequesteId23456";
+
         private static MessageResponse _response;
         private static Message _message;
 
@@ -58,11 +61,17 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         private static Task<PublishResponse> PublishResult(CallInfo arg)
         {
-            return Task.FromResult(new PublishResponse
+            var response = new PublishResponse
             {
                 MessageId = MessageId,
-                HttpStatusCode = HttpStatusCode.OK
-            });
+                HttpStatusCode = HttpStatusCode.OK,
+                ResponseMetadata = new ResponseMetadata
+                {
+                    RequestId = RequestId
+                }
+            };
+
+            return Task.FromResult(response);
         }
 
         [Fact]
@@ -76,6 +85,14 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         {
             _response.MessageId.ShouldBe(MessageId);
             _response.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+
+        [Fact]
+        public void ResponseShouldContainMetadata()
+        {
+            _response.ResponseMetadata.ShouldNotBeNull();
+            _response.ResponseMetadata.RequestId.ShouldNotBeNull();
+            _response.ResponseMetadata.RequestId.ShouldBe(RequestId);
         }
 
         [Fact]
