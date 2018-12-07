@@ -138,7 +138,8 @@ namespace JustSaying
         public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
             var publisher = GetActivePublisherForMessage(message);
-            await PublishAsync(publisher, message, metadata, cancellationToken: cancellationToken).ConfigureAwait(false);
+            await PublishAsync(publisher, message, metadata, 0, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         public IInterrogationResponse WhatDoIHave()
@@ -182,8 +183,8 @@ namespace JustSaying
             IMessagePublisher publisher,
             Message message,
             PublishMetadata metadata,
-            int attemptCount = 0,
-            CancellationToken cancellationToken = default)
+            int attemptCount,
+            CancellationToken cancellationToken)
         {
             attemptCount++;
             try
