@@ -15,6 +15,18 @@ namespace JustSaying.Messaging
         }
 
         public static async Task PublishAsync(this IMessagePublisher publisher,
+            Message message, PublishMetadata metadata)
+        {
+            if (publisher == null)
+            {
+                throw new ArgumentNullException(nameof(publisher));
+            }
+
+            await publisher.PublishAsync(message, metadata, CancellationToken.None)
+                .ConfigureAwait(false);
+        }
+
+        public static async Task PublishAsync(this IMessagePublisher publisher,
             Message message, CancellationToken cancellationToken)
         {
             if (publisher == null)
