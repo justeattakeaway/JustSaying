@@ -15,7 +15,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.Publishing
 
         protected override async Task When()
         {
-            await SystemUnderTest.PublishAsync(_message, CancellationToken.None);
+            await SystemUnderTest.PublishAsync(_message);
         }
 
         [Fact]

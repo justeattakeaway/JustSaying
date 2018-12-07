@@ -48,7 +48,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
             var metadata = new PublishMetadata()
                 .AddMessageAttribute(MessageAttributeKey, MessageAttributeValue);
 
-            await SystemUnderTest.PublishAsync(new SimpleMessage(), metadata, CancellationToken.None);
+            await SystemUnderTest.PublishAsync(new SimpleMessage(), metadata);
         }
 
         [Fact]

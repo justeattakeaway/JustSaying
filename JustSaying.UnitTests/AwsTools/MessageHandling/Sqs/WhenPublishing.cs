@@ -39,7 +39,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 
         protected override async Task When()
         {
-            await SystemUnderTest.PublishAsync(_message, CancellationToken.None);
+            await SystemUnderTest.PublishAsync(_message);
         }
 
         [Fact]
