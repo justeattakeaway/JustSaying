@@ -1,0 +1,8 @@
+<Project>
+    <Target Name="AppVeyorFileVersion" AfterTargets="MinVer">
+        <PropertyGroup>
+            <APPVEYOR_BUILD_NUMBER Condition="'$(APPVEYOR_BUILD_NUMBER)' == ''">0</APPVEYOR_BUILD_NUMBER>
+            <FileVersion>$(MinVerMajor).$(MinVerMinor).$(MinVerPatch).$(APPVEYOR_BUILD_NUMBER)</FileVersion>
+        </PropertyGroup>
+    </Target>
+</Project>
