@@ -6,6 +6,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Extensions;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
@@ -168,21 +169,16 @@ namespace JustSaying
         /// Publish a message to the stack, asynchronously.
         /// </summary>
         /// <param name="message"></param>
-        public virtual Task PublishAsync(Message message) => PublishAsync(message, CancellationToken.None);
-
-        /// <summary>
-        /// Publish a message to the stack, asynchronously.
-        /// </summary>
-        /// <param name="message"></param>
         /// <param name="cancellationToken"></param>
-        public virtual async Task PublishAsync(Message message, CancellationToken cancellationToken)
+        public virtual async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
             if (Bus == null)
             {
                 throw new InvalidOperationException("You must register for message publication before publishing a message");
             }
 
-            await Bus.PublishAsync(message, cancellationToken).ConfigureAwait(false);
+            await Bus.PublishAsync(message, metadata, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         public IMayWantOptionalSettings WithSerializationFactory(IMessageSerializationFactory factory)

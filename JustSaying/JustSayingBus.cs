@@ -135,12 +135,11 @@ namespace JustSaying
             }
         }
 
-        public Task PublishAsync(Message message) => PublishAsync(message, CancellationToken.None);
-
-        public async Task PublishAsync(Message message, CancellationToken cancellationToken)
+        public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
             var publisher = GetActivePublisherForMessage(message);
-            await PublishAsync(publisher, message, cancellationToken: cancellationToken).ConfigureAwait(false);
+            await PublishAsync(publisher, message, metadata, 0, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         public IInterrogationResponse WhatDoIHave()
@@ -180,14 +179,20 @@ namespace JustSaying
             return publishersByTopic[topic];
         }
 
-        private async Task PublishAsync(IMessagePublisher publisher, Message message, int attemptCount = 0, CancellationToken cancellationToken = default)
+        private async Task PublishAsync(
+            IMessagePublisher publisher,
+            Message message,
+            PublishMetadata metadata,
+            int attemptCount,
+            CancellationToken cancellationToken)
         {
             attemptCount++;
             try
             {
                 var watch = Stopwatch.StartNew();
 
-                await publisher.PublishAsync(message, cancellationToken).ConfigureAwait(false);
+                await publisher.PublishAsync(message, metadata, cancellationToken)
+                    .ConfigureAwait(false);
 
                 watch.Stop();
                 Monitor.PublishMessageTime(watch.ElapsedMilliseconds);
@@ -206,7 +211,7 @@ namespace JustSaying
                 var delayForAttempt = TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
                 await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);
 
-                await PublishAsync(publisher, message, attemptCount, cancellationToken).ConfigureAwait(false);
+                await PublishAsync(publisher, message, metadata, attemptCount, cancellationToken).ConfigureAwait(false);
             }
         }
     }

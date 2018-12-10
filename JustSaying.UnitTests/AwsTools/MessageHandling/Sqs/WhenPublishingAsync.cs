@@ -1,10 +1,10 @@
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustBehave;
+using JustSaying.Messaging;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
@@ -45,7 +45,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 
         protected override async Task When()
         {
-            await SystemUnderTest.PublishAsync(_message, CancellationToken.None);
+            await SystemUnderTest.PublishAsync(_message);
         }
 
         [Fact]

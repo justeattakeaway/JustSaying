@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -19,7 +21,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
         private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private const string Url = "https://blablabla/" + QueueName;
-        private readonly DelayedMessage _message = new DelayedMessage(delaySeconds: 1);
+        private readonly SimpleMessage _message = new SimpleMessage();
+        private readonly PublishMetadata _metadata = new PublishMetadata
+        {
+            Delay = TimeSpan.FromSeconds(1)
+        };
         private const string QueueName = "queuename";
 
         protected override async Task<SqsPublisher> CreateSystemUnderTestAsync()
@@ -39,7 +45,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 
         protected override async Task When()
         {
-            await SystemUnderTest.PublishAsync(_message);
+            await SystemUnderTest.PublishAsync(_message, _metadata);
         }
 
         [Fact]

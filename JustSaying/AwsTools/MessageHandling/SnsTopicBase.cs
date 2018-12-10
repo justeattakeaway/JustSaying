@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -10,6 +11,7 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
+using MessageAttributeValue = Amazon.SimpleNotificationService.Model.MessageAttributeValue;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -22,7 +24,6 @@ namespace JustSaying.AwsTools.MessageHandling
         public string Arn { get; protected set; }
         protected IAmazonSimpleNotificationService Client { get; set; }
         private readonly ILogger _eventLog;
-        private readonly ILogger _log;
 
         protected SnsTopicBase(
             IMessageSerializationRegister serializationRegister,
@@ -31,7 +32,6 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             _serializationRegister = serializationRegister;
             _messageSubjectProvider = messageSubjectProvider;
-            _log = loggerFactory.CreateLogger("JustSaying");
             _eventLog = loggerFactory.CreateLogger("EventLog");
         }
 
@@ -42,7 +42,6 @@ namespace JustSaying.AwsTools.MessageHandling
             IMessageSubjectProvider messageSubjectProvider)
         {
             _serializationRegister = serializationRegister;
-            _log = loggerFactory.CreateLogger("JustSaying");
             _eventLog = loggerFactory.CreateLogger("EventLog");
             _snsWriteConfiguration = snsWriteConfiguration;
             _messageSubjectProvider = messageSubjectProvider;
@@ -50,11 +49,9 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public abstract Task<bool> ExistsAsync();
         
-        public Task PublishAsync(Message message) => PublishAsync(message, CancellationToken.None);
-
-        public async Task PublishAsync(Message message, CancellationToken cancellationToken)
+        public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
-            var request = BuildPublishRequest(message);
+            var request = BuildPublishRequest(message, metadata);
 
             try
             {
@@ -83,38 +80,47 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private bool ClientExceptionHandler(Exception ex, Message message) => _snsWriteConfiguration?.HandleException?.Invoke(ex, message) ?? false;
 
-        private PublishRequest BuildPublishRequest(Message message)
+        private PublishRequest BuildPublishRequest(Message message, PublishMetadata metadata)
         {
             var messageToSend = _serializationRegister.Serialize(message, serializeForSnsPublishing: true);
             var messageType = _messageSubjectProvider.GetSubjectForType(message.GetType());
 
-            var messageAttributeValues = message.MessageAttributes?.ToDictionary(
-                source => source.Key,
-                source =>
-                {
-                    if (source.Value == null)
-                    {
-                        return null;
-                    }
-
-                    var binaryValueStream = source.Value.BinaryValue != null
-                        ? new MemoryStream(source.Value.BinaryValue.ToArray(), false)
-                        : null;
-
-                    return new MessageAttributeValue
-                    {
-                        StringValue = source.Value.StringValue,
-                        BinaryValue = binaryValueStream,
-                        DataType = source.Value.DataType
-                    };
-                });
-            
             return new PublishRequest
             {
                 TopicArn = Arn,
                 Subject = messageType,
                 Message = messageToSend,
-                MessageAttributes = messageAttributeValues
+                MessageAttributes = BuildMessageAttributes(metadata)
+            };
+        }
+
+        private static Dictionary<string, MessageAttributeValue> BuildMessageAttributes(PublishMetadata metadata)
+        {
+            if (metadata?.MessageAttributes == null || metadata.MessageAttributes.Count == 0)
+            {
+                return null;
+            }
+            return metadata.MessageAttributes.ToDictionary(
+                source => source.Key,
+                source => BuildMessageAttributeValue(source.Value));
+        }
+
+        private static MessageAttributeValue BuildMessageAttributeValue(Messaging.MessageAttributeValue value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+
+            var binaryValueStream = value.BinaryValue != null
+                ? new MemoryStream(value.BinaryValue.ToArray(), false)
+                : null;
+
+            return new MessageAttributeValue
+            {
+                StringValue = value.StringValue,
+                BinaryValue = binaryValueStream,
+                DataType = value.DataType
             };
         }
     }

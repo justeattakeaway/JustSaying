@@ -1,16 +1,19 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
+using MessageAttributeValue = Amazon.SimpleNotificationService.Model.MessageAttributeValue;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 {
@@ -42,19 +45,10 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         protected override async Task When()
         {
-            await SystemUnderTest.PublishAsync(new SimpleMessage
-            {
-                MessageAttributes = new Dictionary<string, Models.MessageAttributeValue>
-                {
-                    {
-                        MessageAttributeKey,
-                            new Models.MessageAttributeValue{
-                                StringValue = MessageAttributeValue,
-                                DataType = MessageAttributeDataType
-                            }
-                    }
-                }
-            });
+            var metadata = new PublishMetadata()
+                .AddMessageAttribute(MessageAttributeKey, MessageAttributeValue);
+
+            await SystemUnderTest.PublishAsync(new SimpleMessage(), metadata);
         }
 
         [Fact]

@@ -30,11 +30,9 @@ namespace JustSaying.AwsTools.MessageHandling
             _serializationRegister = serializationRegister;
         }
 
-        public Task PublishAsync(Message message) => PublishAsync(message, CancellationToken.None);
-
-        public async Task PublishAsync(Message message, CancellationToken cancellationToken)
+        public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
-            var request = BuildSendMessageRequest(message);
+            var request = BuildSendMessageRequest(message, metadata);
             try
             {
                 SendMessageResponse response = await _client.SendMessageAsync(request, cancellationToken).ConfigureAwait(false);
@@ -57,7 +55,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        private SendMessageRequest BuildSendMessageRequest(Message message)
+        private SendMessageRequest BuildSendMessageRequest(Message message, PublishMetadata metadata)
         {
             var request = new SendMessageRequest
             {
@@ -65,9 +63,9 @@ namespace JustSaying.AwsTools.MessageHandling
                 QueueUrl = Uri?.AbsoluteUri
             };
 
-            if (message.DelaySeconds.HasValue)
+            if (metadata?.Delay != null)
             {
-                request.DelaySeconds = message.DelaySeconds.Value;
+                request.DelaySeconds = (int)metadata.Delay.Value.TotalSeconds;
             }
             return request;
         }

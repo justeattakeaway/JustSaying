@@ -2,8 +2,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
-using JustSaying.TestingFramework;
 using JustSaying.Models;
+using JustSaying.TestingFramework;
 using NSubstitute;
 using Xunit;
 
@@ -22,7 +22,8 @@ namespace JustSaying.UnitTests.JustSayingBus
             Config.PublishFailureBackoff.Returns(TimeSpan.Zero);
             RecordAnyExceptionsThrown();
 
-            _publisher.When(x => x.PublishAsync(Arg.Any<Message>(), Arg.Any<CancellationToken>()))
+            _publisher.When(x => x.PublishAsync(Arg.Any<Message>(),
+                    Arg.Any<PublishMetadata>(), Arg.Any<CancellationToken>()))
                 .Do(x => { throw new TestException("Thrown by test WhenPublishingFails"); });
         }
 
@@ -38,7 +39,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             _publisher
                 .Received(PublishAttempts)
-                .PublishAsync(Arg.Any<SimpleMessage>(), CancellationToken.None);
+                .PublishAsync(Arg.Any<Message>(), Arg.Any<PublishMetadata>(), CancellationToken.None);
         }
     }
 }

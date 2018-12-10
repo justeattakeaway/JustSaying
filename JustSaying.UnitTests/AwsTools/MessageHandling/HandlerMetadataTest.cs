@@ -1,6 +1,4 @@
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.MessageHandling;
-using JustSaying.TestingFramework;
 using Shouldly;
 using Xunit;
 

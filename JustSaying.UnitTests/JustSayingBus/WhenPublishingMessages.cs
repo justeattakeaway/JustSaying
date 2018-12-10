@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
+using JustSaying.Models;
 using JustSaying.TestingFramework;
 using NSubstitute;
 using Xunit;
@@ -21,7 +22,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public void PublisherIsCalledToPublish()
         {
-            _publisher.Received().PublishAsync(Arg.Any<SimpleMessage>(), Arg.Any<CancellationToken>());
+            _publisher.Received().PublishAsync(Arg.Any<Message>(),
+                Arg.Any<PublishMetadata>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]

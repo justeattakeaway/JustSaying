@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.TestingFramework;
+using JustSaying.Messaging;
 using Shouldly;
 using Xunit;
 
