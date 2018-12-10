@@ -59,7 +59,7 @@ namespace JustSaying.IntegrationTests
                 // Assert
                 while (!source.IsCancellationRequested && !QueueHandler.MessageIds.Contains(message.Id))
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(1), source.Token);
+                    await Task.Delay(TimeSpan.FromSeconds(0.2), source.Token);
                 }
 
                 QueueHandler.MessageIds.ShouldContain(message.Id);
@@ -99,7 +99,7 @@ namespace JustSaying.IntegrationTests
                 // Assert
                 while (!source.IsCancellationRequested && !TopicHandler.MessageIds.Contains(message.Id))
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(1), source.Token);
+                    await Task.Delay(TimeSpan.FromSeconds(0.2), source.Token);
                 }
 
                 TopicHandler.MessageIds.ShouldContain(message.Id);
@@ -158,7 +158,7 @@ namespace JustSaying.IntegrationTests
                 // Assert
                 while (!source.IsCancellationRequested && !QueueHandler.MessageIds.Contains(message.Id))
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(1), source.Token);
+                    await Task.Delay(TimeSpan.FromSeconds(0.2), source.Token);
                 }
 
                 QueueHandler.MessageIds.ShouldContain(message.Id);
