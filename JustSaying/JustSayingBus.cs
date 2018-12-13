@@ -15,7 +15,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying
 {
-    public sealed class JustSayingBus : IAmJustSaying, IAmJustInterrogating
+    public sealed class JustSayingBus : IAmJustSaying, IAmJustInterrogating, IMessagingBus
     {
         private readonly Dictionary<string, Dictionary<string, INotificationSubscriber>> _subscribersByRegionAndQueue;
         private readonly Dictionary<string, Dictionary<string, IMessagePublisher>> _publishersByRegionAndTopic;

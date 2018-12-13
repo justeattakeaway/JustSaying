@@ -8,7 +8,7 @@ namespace JustSaying
     {
         IList<string> Regions { get; }
         Func<string> GetActiveRegion { get; set; }
-        IMessageSubjectProvider MessageSubjectProvider { get; }
+        IMessageSubjectProvider MessageSubjectProvider { get; set; }
 
         void Validate();
     }

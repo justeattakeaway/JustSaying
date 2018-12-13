@@ -21,6 +21,7 @@ namespace JustSaying.TestingFramework
             var credentials = new AnonymousAWSCredentials();
             var clientConfig = new AmazonSimpleNotificationServiceConfig
             {
+                RegionEndpoint = region,
                 ServiceURL = ServiceUrl.ToString()
             };
 
@@ -32,6 +33,7 @@ namespace JustSaying.TestingFramework
             var credentials = new AnonymousAWSCredentials();
             var clientConfig = new AmazonSQSConfig
             {
+                RegionEndpoint = region,
                 ServiceURL = ServiceUrl.ToString()
             };
 
