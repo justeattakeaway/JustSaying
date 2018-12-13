@@ -29,6 +29,8 @@ namespace JustSaying.IntegrationTests.Fluent
 
         protected virtual Uri ServiceUri => TestEnvironment.SimulatorUrl;
 
+        protected virtual TimeSpan Timeout => TimeSpan.FromSeconds(20);
+
         protected virtual string UniqueName { get; } = $"{DateTime.UtcNow.Ticks}-integration-tests";
 
         protected IServiceCollection Given(Action<MessagingBusBuilder> configure)

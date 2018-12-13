@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
@@ -21,9 +22,8 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
         public async Task A_Message_Can_Still_Be_Published_To_A_Queue()
         {
             // Arrange
-            var completion = new TaskCompletionSource<object>();
-
-            IHandlerAsync<SimpleMessage> handler = CreateHandler<SimpleMessage>(completion);
+            var completionSource = new TaskCompletionSource<object>();
+            var handler = CreateHandler<SimpleMessage>(completionSource);
 
             IServiceProvider serviceProvider = Given(
                 (builder) =>
@@ -34,32 +34,16 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                 .AddSingleton(handler)
                 .BuildServiceProvider();
 
-            IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
-            IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
-
-            using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
-            {
-                listener.Start(source.Token);
-
-                var message = new SimpleMessage();
-
-                // Act
-                await publisher.PublishAsync(message, source.Token);
-
-                // Assert
-                completion.Task.Wait(source.Token);
-
-                await handler.Received(1).Handle(Arg.Any<SimpleMessage>());
-            }
+            // Act and Assert
+            await AssertMessagePublishedAndReceivedAsync(serviceProvider, handler, completionSource);
         }
 
         [AwsFact]
         public async Task A_Message_Can_Still_Be_Published_To_A_Topic()
         {
             // Arrange
-            var completion = new TaskCompletionSource<object>();
-
-            IHandlerAsync<SimpleMessage> handler = CreateHandler<SimpleMessage>(completion);
+            var completionSource = new TaskCompletionSource<object>();
+            var handler = CreateHandler<SimpleMessage>(completionSource);
 
             IServiceProvider serviceProvider = Given(
                 (builder) =>
@@ -78,10 +62,20 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                 .AddSingleton(handler)
                 .BuildServiceProvider();
 
+            // Act and Assert
+            await AssertMessagePublishedAndReceivedAsync(serviceProvider, handler, completionSource);
+        }
+
+        private async Task AssertMessagePublishedAndReceivedAsync<T>(
+            IServiceProvider serviceProvider,
+            IHandlerAsync<T> handler,
+            TaskCompletionSource<object> completionSource)
+            where T : Message
+        {
             IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
             IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
-            using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
+            using (var source = new CancellationTokenSource(Timeout))
             {
                 listener.Start(source.Token);
 
@@ -91,9 +85,9 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                 await publisher.PublishAsync(message, source.Token);
 
                 // Assert
-                completion.Task.Wait(source.Token);
+                completionSource.Task.Wait(source.Token);
 
-                await handler.Received(1).Handle(Arg.Any<SimpleMessage>());
+                await handler.Received(1).Handle(Arg.Any<T>());
             }
         }
     }
