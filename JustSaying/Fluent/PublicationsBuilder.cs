@@ -31,6 +31,7 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Configures a publisher for a queue.
         /// </summary>
+        /// <typeparam name="T">The type of the message to publish.</typeparam>
         /// <returns>
         /// The current <see cref="PublicationsBuilder"/>.
         /// </returns>
@@ -47,6 +48,21 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Configures a publisher for a queue.
         /// </summary>
+        /// <typeparam name="T">The type of the message to publish.</typeparam>
+        /// <param name="name">The name to use for the queue.</param>
+        /// <returns>
+        /// The current <see cref="PublicationsBuilder"/>.
+        /// </returns>
+        public PublicationsBuilder WithQueue<T>(string name)
+            where T : Message
+        {
+            return WithQueue<T>((options) => options.WithWriteConfiguration((r) => r.WithQueueName(name)));
+        }
+
+        /// <summary>
+        /// Configures a publisher for a queue.
+        /// </summary>
+        /// <typeparam name="T">The type of the message to publish.</typeparam>
         /// <param name="configure">A delegate to a method to use to configure a queue.</param>
         /// <returns>
         /// The current <see cref="PublicationsBuilder"/>.
@@ -74,6 +90,7 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Configures a publisher for a topic.
         /// </summary>
+        /// <typeparam name="T">The type of the message to publish.</typeparam>
         /// <returns>
         /// The current <see cref="PublicationsBuilder"/>.
         /// </returns>
@@ -90,6 +107,7 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Configures a publisher for a topic.
         /// </summary>
+        /// <typeparam name="T">The type of the message to publish.</typeparam>
         /// <param name="configure">A delegate to a method to use to configure a topic.</param>
         /// <returns>
         /// The current <see cref="PublicationsBuilder"/>.

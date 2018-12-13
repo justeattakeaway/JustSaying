@@ -31,6 +31,7 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Configures a queue subscription for the default queue.
         /// </summary>
+        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
         /// <returns>
         /// The current <see cref="SubscriptionsBuilder"/>.
         /// </returns>
@@ -44,8 +45,26 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
+        /// Configures a queue subscription for the specified queue name.
+        /// </summary>
+        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+        /// <param name="name">The name of the queue to subscribe to.</param>
+        /// <returns>
+        /// The current <see cref="SubscriptionsBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public SubscriptionsBuilder ForQueue<T>(string name)
+            where T : Message
+        {
+            return ForQueue<T>((p) => p.WithName(name));
+        }
+
+        /// <summary>
         /// Configures a queue subscription.
         /// </summary>
+        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
         /// <param name="configure">A delegate to a method to use to configure a queue subscription.</param>
         /// <returns>
         /// The current <see cref="SubscriptionsBuilder"/>.
@@ -73,6 +92,7 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Configures a topic subscription for the default topic name.
         /// </summary>
+        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
         /// <returns>
         /// The current <see cref="SubscriptionsBuilder"/>.
         /// </returns>
@@ -83,8 +103,26 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
+        /// Configures a topic subscription for the specified topic name.
+        /// </summary>
+        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+        /// <param name="name">The name of the topic to subscribe to.</param>
+        /// <returns>
+        /// The current <see cref="SubscriptionsBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public SubscriptionsBuilder ForTopic<T>(string name)
+            where T : Message
+        {
+            return ForTopic<T>((p) => p.WithName(name));
+        }
+
+        /// <summary>
         /// Configures a topic subscription.
         /// </summary>
+        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
         /// <param name="configure">A delegate to a method to use to configure a topic subscription.</param>
         /// <returns>
         /// The current <see cref="SubscriptionsBuilder"/>.
