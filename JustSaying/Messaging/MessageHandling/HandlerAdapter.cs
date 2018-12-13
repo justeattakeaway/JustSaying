@@ -2,12 +2,7 @@ using System.Threading.Tasks;
 
 namespace JustSaying.Messaging.MessageHandling
 {
-    public interface IHandlerWithContext<in T>
-    {
-        Task<bool> HandleAsync(T message, MessageContext context);
-    }
-
-    internal sealed class HandlerAdapter<T> : IHandlerWithContext<T>
+    internal sealed class HandlerAdapter<T> : IHandlerWithMessageContext<T>
     {
         private readonly IHandlerAsync<T> _inner;
 
@@ -22,5 +17,4 @@ namespace JustSaying.Messaging.MessageHandling
                 .ConfigureAwait(false);
         }
     }
-
 }
