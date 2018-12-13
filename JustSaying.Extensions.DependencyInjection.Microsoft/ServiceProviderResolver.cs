@@ -1,8 +1,9 @@
 using System;
+using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace JustSaying.Fluent
+namespace JustSaying
 {
     /// <summary>
     /// A class that implements <see cref="IServiceResolver"/> and <see cref="IHandlerResolver"/>
@@ -13,7 +14,7 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Initializes a new instance of the <see cref="ServiceProviderResolver"/> class.
         /// </summary>
-        /// <param name="parent">The <see cref="IServiceProvider"/> to use.</param>
+        /// <param name="serviceProvider">The <see cref="IServiceProvider"/> to use.</param>
         internal ServiceProviderResolver(IServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
