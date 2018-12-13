@@ -19,7 +19,7 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Configures the queue name to use.
         /// </summary>
-        /// <param name="name">The value to use for the message retention.</param>
+        /// <param name="name">The value to use for the queue name.</param>
         /// <returns>
         /// The current <see cref="SqsWriteConfigurationBuilder"/>.
         /// </returns>
@@ -38,14 +38,12 @@ namespace JustSaying.Fluent
         /// <param name="config">The configuration to configure.</param>
         internal override void Configure(SqsWriteConfiguration config)
         {
-            base.Configure(config);
-
             if (QueueName != null)
             {
                 config.QueueName = QueueName;
             }
 
-            config.Validate();
+            base.Configure(config);
         }
     }
 }
