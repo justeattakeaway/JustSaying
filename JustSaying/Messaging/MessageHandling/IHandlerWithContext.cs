@@ -4,10 +4,10 @@ namespace JustSaying.Messaging.MessageHandling
 {
     public interface IHandlerWithContext<in T>
     {
-        Task<bool> Handle(T message, MessageContext context);
+        Task<bool> HandleAsync(T message, MessageContext context);
     }
 
-    public class HandlerAdapter<T> : IHandlerWithContext<T>
+    internal sealed class HandlerAdapter<T> : IHandlerWithContext<T>
     {
         private readonly IHandlerAsync<T> _inner;
 
@@ -16,9 +16,10 @@ namespace JustSaying.Messaging.MessageHandling
             _inner = inner;
         }
 
-        public Task<bool> Handle(T message, MessageContext context)
+        public async Task<bool> HandleAsync(T message, MessageContext context)
         {
-            return _inner.Handle(message);
+            return await _inner.Handle(message)
+                .ConfigureAwait(false);
         }
     }
 
