@@ -129,8 +129,6 @@ namespace JustSaying.Fluent
             {
                 config.VisibilityTimeout = VisibilityTimeout.Value;
             }
-
-            config.Validate();
         }
     }
 }
