@@ -1,5 +1,7 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
@@ -25,13 +27,16 @@ namespace JustSaying.IntegrationTests.Fluent
 
         protected ITestOutputHelper OutputHelper { get; }
 
-        protected virtual string Region => "eu-west-1";
+        protected virtual string Region => TestEnvironment.Region.SystemName;
 
         protected virtual Uri ServiceUri => TestEnvironment.SimulatorUrl;
 
         protected virtual TimeSpan Timeout => TimeSpan.FromSeconds(20);
 
         protected virtual string UniqueName { get; } = $"{DateTime.UtcNow.Ticks}-integration-tests";
+
+        protected IServiceCollection GivenJustSaying()
+            => Given((_) => { });
 
         protected IServiceCollection Given(Action<MessagingBusBuilder> configure)
             => Given((builder, _) => configure(builder));
@@ -64,6 +69,19 @@ namespace JustSaying.IntegrationTests.Fluent
                    .AndDoes((_) => completionSource.SetResult(null));
 
             return handler;
+        }
+
+        protected async Task WhenAsync(IServiceCollection services, Func<IMessagePublisher, IMessagingBus, CancellationToken, Task> action)
+        {
+            IServiceProvider serviceProvider = services.BuildServiceProvider();
+
+            IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+            IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
+
+            using (var source = new CancellationTokenSource(Timeout))
+            {
+                await Task.WhenAny(action(publisher, listener, source.Token), Task.Delay(Timeout, source.Token)).ConfigureAwait(false);
+            }
         }
     }
 }

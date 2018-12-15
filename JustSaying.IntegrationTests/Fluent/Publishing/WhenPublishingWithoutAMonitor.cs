@@ -25,17 +25,13 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
             var completionSource = new TaskCompletionSource<object>();
             var handler = CreateHandler<SimpleMessage>(completionSource);
 
-            IServiceProvider serviceProvider = Given(
-                (builder) =>
-                {
-                    builder.Publications((p) => p.WithQueue<SimpleMessage>(UniqueName))
-                           .Subscriptions((p) => p.ForQueue<SimpleMessage>(UniqueName));
-                })
-                .AddSingleton(handler)
-                .BuildServiceProvider();
+            IServiceCollection services = GivenJustSaying()
+                .ConfigureJustSaying((builder) => builder.Publications((publication) => publication.WithQueue<SimpleMessage>(UniqueName)))
+                .ConfigureJustSaying((builder) => builder.Subscriptions((subscription) => subscription.ForQueue<SimpleMessage>(UniqueName)))
+                .AddSingleton(handler);
 
             // Act and Assert
-            await AssertMessagePublishedAndReceivedAsync(serviceProvider, handler, completionSource);
+            await AssertMessagePublishedAndReceivedAsync(services, handler, completionSource);
         }
 
         [AwsFact]
@@ -45,7 +41,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
             var completionSource = new TaskCompletionSource<object>();
             var handler = CreateHandler<SimpleMessage>(completionSource);
 
-            IServiceProvider serviceProvider = Given(
+            IServiceCollection services = Given(
                 (builder) =>
                 {
                     builder.Publications((publication) => publication.WithTopic<SimpleMessage>());
@@ -59,19 +55,20 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                             (topic) => topic.WithName(UniqueName).WithReadConfiguration(
                                 (config) => config.WithInstancePosition(1))));
                 })
-                .AddSingleton(handler)
-                .BuildServiceProvider();
+                .AddSingleton(handler);
 
             // Act and Assert
-            await AssertMessagePublishedAndReceivedAsync(serviceProvider, handler, completionSource);
+            await AssertMessagePublishedAndReceivedAsync(services, handler, completionSource);
         }
 
         private async Task AssertMessagePublishedAndReceivedAsync<T>(
-            IServiceProvider serviceProvider,
+            IServiceCollection services,
             IHandlerAsync<T> handler,
             TaskCompletionSource<object> completionSource)
             where T : Message
         {
+            IServiceProvider serviceProvider = services.BuildServiceProvider();
+
             IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
             IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
