@@ -10,7 +10,7 @@ using NSubstitute;
 using Shouldly;
 using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.Publishing
+namespace JustSaying.IntegrationTests.Fluent.Subscribing
 {
     public class WhenAHandlerThrowsAnExceptionWithAMonitor : IntegrationTestBase
     {
