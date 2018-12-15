@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
@@ -11,9 +12,9 @@ using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing
 {
-    public class WhenAHandlerThrowsAnException : IntegrationTestBase
+    public class WhenAHandlerThrowsAnExceptionWithAMonitor : IntegrationTestBase
     {
-        public WhenAHandlerThrowsAnException(ITestOutputHelper outputHelper)
+        public WhenAHandlerThrowsAnExceptionWithAMonitor(ITestOutputHelper outputHelper)
             : base(outputHelper)
         {
         }
@@ -22,22 +23,13 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
         public async Task Then_The_Message_Is_Handled()
         {
             // Arrange
-            bool handledException = false;
-
-            void ErrorHandler(Exception exception)
-            {
-                handledException = true;
-            }
-
             var handler = new ThrowingHandler();
+            var monitoring = Substitute.For<IMessageMonitor>();
 
             var services = GivenJustSaying()
                 .ConfigureJustSaying((builder) => builder.Publications((options) => options.WithQueue<SimpleMessage>(UniqueName)))
-                .ConfigureJustSaying(
-                    (builder) => builder.Subscriptions(
-                        (options) => options.ForQueue<SimpleMessage>(
-                            (queue) => queue.WithName(UniqueName).WithReadConfiguration(
-                                (config) => config.WithErrorHandler(ErrorHandler)))))
+                .ConfigureJustSaying((builder) => builder.Subscriptions((options) => options.ForQueue<SimpleMessage>(UniqueName)))
+                .ConfigureJustSaying((builder) => builder.Services((options) => options.WithMessageMonitoring(() => monitoring)))
                 .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
             var message = new SimpleMessage();
@@ -55,7 +47,8 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                     // Assert
                     await handler.Received().Handle(Arg.Any<SimpleMessage>());
                     handler.MessageReceived.ShouldNotBeNull();
-                    handledException.ShouldBeTrue();
+
+                    monitoring.Received().HandleException(Arg.Any<Type>());
                 });
         }
     }
