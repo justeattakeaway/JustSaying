@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>JustSaying extensions for StructureMap.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageTags>aws,sns,sqs,structuremap</PackageTags>
+    <RootNamespace>StructureMap</RootNamespace>
+    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JustSaying\JustSaying.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="structuremap" Version="4.6.0" />
+  </ItemGroup>
+</Project>
