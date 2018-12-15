@@ -37,7 +37,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                     (builder) => builder.Subscriptions(
                         (options) => options.ForQueue<SimpleMessage>(
                             (queue) => queue.WithName(UniqueName).WithReadConfiguration(
-                                (config) => config.WithInstancePosition(1).WithErrorHandler(ErrorHandler)))))
+                                (config) => config.WithErrorHandler(ErrorHandler)))))
                 .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
             var message = new SimpleMessage();
@@ -50,10 +50,9 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
 
                     // Act
                     await publisher.PublishAsync(message, cancellationToken);
-
-                    // Assert
                     await handler.DoneSignal.Task;
 
+                    // Assert
                     await handler.Received().Handle(Arg.Any<SimpleMessage>());
                     handler.MessageReceived.ShouldNotBeNull();
                     handledException.ShouldBeTrue();
