@@ -14,7 +14,8 @@ $sdkFile = Join-Path $solutionPath "global.json"
 
 $libraryProjects = @(
     (Join-Path $solutionPath "JustSaying\JustSaying.csproj"),
-    (Join-Path $solutionPath "JustSaying.Models\JustSaying.Models.csproj")
+    (Join-Path $solutionPath "JustSaying.Models\JustSaying.Models.csproj"),
+    (Join-Path $solutionPath "JustSaying.Extensions.DependencyInjection.Microsoft\JustSaying.Extensions.DependencyInjection.Microsoft.csproj")
 )
 
 $testProjects = @(

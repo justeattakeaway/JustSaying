@@ -18,9 +18,6 @@ namespace Microsoft.Extensions.DependencyInjection
     [EditorBrowsable(EditorBrowsableState.Never)]
     public static class IServiceCollectionExtensions
     {
-        // TODO This is here for convenience while protyping, would probably live elsewhere
-        // so we don't need to force the dependency on MS' DI types
-
         /// <summary>
         /// Adds JustSaying services to the service collection.
         /// </summary>
