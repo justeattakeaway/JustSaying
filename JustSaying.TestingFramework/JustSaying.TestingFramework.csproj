@@ -5,6 +5,7 @@
   <ItemGroup>
     <ProjectReference Include="..\JustSaying\JustSaying.csproj" />
     <ProjectReference Include="..\JustSaying.Extensions.DependencyInjection.Microsoft\JustSaying.Extensions.DependencyInjection.Microsoft.csproj" />
+    <ProjectReference Include="..\JustSaying.Extensions.DependencyInjection.StructureMap\JustSaying.Extensions.DependencyInjection.StructureMap.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AutoFixture" Version="4.5.1" />

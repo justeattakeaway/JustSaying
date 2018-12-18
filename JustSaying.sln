@@ -48,7 +48,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ISSUE_TEMPLATE", "ISSUE_TEM
 		.github\ISSUE_TEMPLATE\feature_request.md = .github\ISSUE_TEMPLATE\feature_request.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.Extensions.DependencyInjection.Microsoft", "JustSaying.Extensions.DependencyInjection.Microsoft\JustSaying.Extensions.DependencyInjection.Microsoft.csproj", "{1B9BB1E2-E46B-4E2B-A172-61ABA8B35B62}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Extensions.DependencyInjection.Microsoft", "JustSaying.Extensions.DependencyInjection.Microsoft\JustSaying.Extensions.DependencyInjection.Microsoft.csproj", "{1B9BB1E2-E46B-4E2B-A172-61ABA8B35B62}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Extensions.DependencyInjection.StructureMap", "JustSaying.Extensions.DependencyInjection.StructureMap\JustSaying.Extensions.DependencyInjection.StructureMap.csproj", "{FC6E028F-01DA-47A5-895A-5C1DD27981D4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -84,6 +86,10 @@ Global
 		{1B9BB1E2-E46B-4E2B-A172-61ABA8B35B62}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B9BB1E2-E46B-4E2B-A172-61ABA8B35B62}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1B9BB1E2-E46B-4E2B-A172-61ABA8B35B62}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC6E028F-01DA-47A5-895A-5C1DD27981D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC6E028F-01DA-47A5-895A-5C1DD27981D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC6E028F-01DA-47A5-895A-5C1DD27981D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC6E028F-01DA-47A5-895A-5C1DD27981D4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
