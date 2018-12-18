@@ -149,6 +149,13 @@ namespace JustSaying
 
         private IMessagePublisher GetActivePublisherForMessage(Message message)
         {
+            if (_publishersByRegionAndTopic.Count == 0)
+            {
+                var errorMessage = "Error publishing message, no publishers registered.";
+                _log.LogError(errorMessage);
+                throw new InvalidOperationException(errorMessage);
+            }
+
             string activeRegion;
             if (Config.GetActiveRegion == null)
             {
@@ -162,7 +169,7 @@ namespace JustSaying
 
             if (!_publishersByRegionAndTopic.ContainsKey(activeRegion))
             {
-                var errorMessage = $"Error publishing message, no publishers registered for region {activeRegion}.";
+                var errorMessage = $"Error publishing message, no publishers registered for active region {activeRegion}.";
                 _log.LogError(errorMessage);
                 throw new InvalidOperationException(errorMessage);
             }

@@ -193,5 +193,44 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddTransient<IHandlerAsync<TMessage>, THandler>();
             return services;
         }
+
+        /// <summary>
+        /// Configures JustSaying using the specified service collection.
+        /// </summary>
+        /// <param name="services">The <see cref="IServiceCollection"/> to configure JustSaying with.</param>
+        /// <param name="configure">A delegate to a method to use to configure JustSaying.</param>
+        /// <returns>
+        /// The <see cref="IServiceCollection"/> specified by <paramref name="services"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="services"/> or <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public static IServiceCollection ConfigureJustSaying(this IServiceCollection services, Action<MessagingBusBuilder> configure)
+        {
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
+            if (configure == null)
+            {
+                throw new ArgumentNullException(nameof(configure));
+            }
+
+            return services.AddSingleton<IMessageBusConfigurationContributor>(new DelegatingConfigurationContributor(configure));
+        }
+
+        private sealed class DelegatingConfigurationContributor : IMessageBusConfigurationContributor
+        {
+            private readonly Action<MessagingBusBuilder> _configure;
+
+            internal DelegatingConfigurationContributor(Action<MessagingBusBuilder> configure)
+            {
+                _configure = configure;
+            }
+
+            public void Configure(MessagingBusBuilder builder)
+                => _configure(builder);
+        }
     }
 }

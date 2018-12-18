@@ -111,7 +111,6 @@ namespace JustSaying.Fluent
             // config.MessageBackoffStrategy = default;
             // config.MessageProcessingStrategy = default;
             // config.PublishEndpoint = default;
-            // config.QueueName = default;
             // config.RetryCountBeforeSendingToErrorQueue = default;
             // config.ServerSideEncryption = default;
             // config.Topic = default;
@@ -130,8 +129,6 @@ namespace JustSaying.Fluent
             {
                 config.VisibilityTimeout = VisibilityTimeout.Value;
             }
-
-            config.Validate();
         }
     }
 }

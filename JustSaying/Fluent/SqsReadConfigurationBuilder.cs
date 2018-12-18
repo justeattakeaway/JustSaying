@@ -149,8 +149,6 @@ namespace JustSaying.Fluent
             {
                 config.TopicSourceAccount = TopicSourceAccountId;
             }
-
-            config.Validate();
         }
     }
 }
