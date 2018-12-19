@@ -243,11 +243,11 @@ namespace JustSaying.IntegrationTests
             {
             }
 
-            public void HandleThrottlingTime(long handleTimeMs)
+            public void HandleThrottlingTime(TimeSpan handleTime)
             {
             }
 
-            public void HandleTime(long handleTimeMs)
+            public void HandleTime(TimeSpan handleTime)
             {
             }
 
@@ -259,11 +259,11 @@ namespace JustSaying.IntegrationTests
             {
             }
 
-            public void PublishMessageTime(long handleTimeMs)
+            public void PublishMessageTime(TimeSpan handleTime)
             {
             }
 
-            public void ReceiveMessageTime(long handleTimeMs, string queueName, string region)
+            public void ReceiveMessageTime(TimeSpan handleTime, string queueName, string region)
             {
             }
         }

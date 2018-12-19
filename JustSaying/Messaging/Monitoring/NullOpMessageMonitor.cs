@@ -6,16 +6,16 @@ namespace JustSaying.Messaging.Monitoring
     {
         public void HandleException(Type messageType) { }
 
-        public void HandleTime(long handleTimeMs) { }
+        public void HandleTime(TimeSpan handleTime) { }
 
         public void IssuePublishingMessage() { }
 
         public void IncrementThrottlingStatistic() { }
 
-        public void HandleThrottlingTime(long handleTimeMs) { }
+        public void HandleThrottlingTime(TimeSpan handleTime) { }
 
-        public void PublishMessageTime(long handleTimeMs) { }
+        public void PublishMessageTime(TimeSpan handleTime) { }
 
-        public void ReceiveMessageTime(long handleTimeMs, string queueName, string region) { }
+        public void ReceiveMessageTime(TimeSpan handleTime, string queueName, string region) { }
     }
 }

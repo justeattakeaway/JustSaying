@@ -123,7 +123,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             watch.Stop();
             _log.LogTrace($"Handled message - MessageType: {message.GetType()}");
-            _messagingMonitor.HandleTime(watch.ElapsedMilliseconds);
+            _messagingMonitor.HandleTime(watch.Elapsed);
 
             return handlerSucceeded;
         }

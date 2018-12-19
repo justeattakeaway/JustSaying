@@ -57,7 +57,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             await AsTask(_semaphore.AvailableWaitHandle).ConfigureAwait(false);
             watch.Stop();
 
-            _messageMonitor.HandleThrottlingTime(watch.ElapsedMilliseconds);
+            _messageMonitor.HandleThrottlingTime(watch.Elapsed);
         }
 
         private static Task AsTask(WaitHandle waitHandle)

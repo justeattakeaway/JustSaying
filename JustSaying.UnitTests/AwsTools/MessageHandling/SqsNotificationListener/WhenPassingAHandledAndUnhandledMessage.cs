@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
@@ -32,7 +33,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         [Fact]
         public void MonitoringToldMessageHandlingTime()
         {
-            Monitor.Received().HandleTime(Arg.Is<long>(x => x > 0));
+            Monitor.Received()
+                .HandleTime(Arg.Is<TimeSpan>(x => x > TimeSpan.Zero));
         }
 
         [Fact]
