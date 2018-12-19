@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
@@ -29,7 +30,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public void PublishMessageTimeStatsSent()
         {
-            Monitor.Received(1).PublishMessageTime(Arg.Any<long>());
+            Monitor.Received(1).PublishMessageTime(Arg.Any<TimeSpan>());
         }
     }
 }

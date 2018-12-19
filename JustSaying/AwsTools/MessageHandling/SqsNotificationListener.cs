@@ -194,7 +194,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 watch.Stop();
 
-                _messagingMonitor.ReceiveMessageTime(watch.ElapsedMilliseconds, queueName, region);
+                _messagingMonitor.ReceiveMessageTime(watch.Elapsed, queueName, region);
 
                 return sqsMessageResponse;
             }

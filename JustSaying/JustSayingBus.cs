@@ -202,7 +202,7 @@ namespace JustSaying
                     .ConfigureAwait(false);
 
                 watch.Stop();
-                Monitor.PublishMessageTime(watch.ElapsedMilliseconds);
+                Monitor.PublishMessageTime(watch.Elapsed);
             }
             catch (Exception ex)
             {
