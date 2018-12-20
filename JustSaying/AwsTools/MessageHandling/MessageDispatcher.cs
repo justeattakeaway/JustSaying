@@ -71,12 +71,13 @@ namespace JustSaying.AwsTools.MessageHandling
 
             var handlingSucceeded = false;
             Exception lastException = null;
+            IMessageContextAccessor ctxAx = new MessageContextAccessor();
 
             try
             {
                 if (typedMessage != null)
                 {
-                    MessageContextReader.Write(new MessageContext(message, _queue.Uri));
+                    ctxAx.MessageContext = new MessageContext(message, _queue.Uri);
 
                     typedMessage.ReceiptHandle = message.ReceiptHandle;
                     typedMessage.QueueUri = _queue.Uri;
@@ -110,7 +111,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage, lastException).ConfigureAwait(false);
                 }
 
-                MessageContextReader.Write(null);
+                ctxAx.MessageContext = null;
             }
         }
 
