@@ -11,7 +11,7 @@
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
     <PackageReference Include="Text.Analyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
-    <PackageReference Include="MinVer" Version="1.0.0-beta.1" PrivateAssets="All" />
+    <PackageReference Include="MinVer" Version="1.0.0-beta.2" PrivateAssets="All" />
   </ItemGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)justeat-oss.snk</AssemblyOriginatorKeyFile>
@@ -19,7 +19,7 @@
     <Company>Just Eat</Company>
     <Copyright>Copyright (c) Just Eat 2015-$([System.DateTime]::Now.ToString(yyyy))</Copyright>
     <Description>A light-weight message bus on top of AWS SNS and SQS</Description>
-    <MinVerMajorMinor>7.0</MinVerMajorMinor>
+    <MinVerMinimumMajorMinor>7.0</MinVerMinimumMajorMinor>
     <MinVerTagPrefix>v</MinVerTagPrefix>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <!-- disable sourcelink on mono, to workaround https://github.com/dotnet/sourcelink/issues/155 -->
