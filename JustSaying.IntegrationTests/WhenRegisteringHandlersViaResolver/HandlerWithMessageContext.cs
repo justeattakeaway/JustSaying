@@ -2,17 +2,21 @@ using System;
 using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
+using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
-    class HandlerWithMessageContext : IHandlerAsync<OrderPlaced>
+    internal class HandlerWithMessageContext : IHandlerAsync<OrderPlaced>
     {
+        private readonly ITestOutputHelper _outputHelper;
         private readonly IMessageContextReader _contextReader;
 
         public HandlerWithMessageContext(
+            ITestOutputHelper outputHelper,
             Future<OrderPlaced> future,
             IMessageContextReader contextReader)
         {
+            _outputHelper = outputHelper;
             Future = future;
             _contextReader = contextReader;
         }
@@ -28,8 +32,8 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
                 throw new InvalidOperationException("Message context was not found");
             }
 
-            Console.WriteLine($"Message context found with queue {context.QueueUri}");
-            Console.WriteLine($"And message body {context.Message.Body}");
+            _outputHelper.WriteLine($"Message context found with queue uri {context.QueueUri}");
+            _outputHelper.WriteLine($"And message body {context.Message.Body}");
 
             await Future.Complete(message);
             return true;

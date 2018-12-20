@@ -1,6 +1,8 @@
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
+using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Shouldly;
 using StructureMap;
@@ -13,9 +15,13 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
     {
         private Future<OrderPlaced> _handlerFuture;
 
+        private readonly RecordingMessageContextAccessor _accessor =
+            new RecordingMessageContextAccessor(new MessageContextAccessor());
+
         protected override Task Given()
         {
-            var container = new Container(x => x.AddRegistry(new HandlerWithMessageContextRegistry()));
+            var container = new Container(
+                x => x.AddRegistry(new HandlerWithMessageContextRegistry(_accessor)));
             var resolutionContext = new HandlerResolutionContext("test");
 
             var handlerResolver = new StructureMapHandlerResolver(container);
@@ -42,6 +48,16 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
         public void ThenHandlerWillReceiveTheMessage()
         {
             _handlerFuture.ReceivedMessageCount.ShouldBeGreaterThan(0);
+        }
+
+        [AwsFact]
+        public void ThenAccessorWillWriteContext()
+        {
+            _accessor.ValuesWritten.Count.ShouldBeGreaterThan(0);
+
+            var ctx = _accessor.ValuesWritten.First();
+            ctx.Message.ShouldNotBeNull();
+            ctx.QueueUri.ShouldNotBeNull();
         }
     }
 }

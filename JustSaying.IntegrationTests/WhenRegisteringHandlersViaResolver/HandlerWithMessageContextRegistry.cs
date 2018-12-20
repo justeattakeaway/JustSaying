@@ -6,11 +6,13 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 {
     public class HandlerWithMessageContextRegistry : Registry
     {
-        public HandlerWithMessageContextRegistry()
+        public HandlerWithMessageContextRegistry(RecordingMessageContextAccessor accessor)
         {
             For<IHandlerAsync<OrderPlaced>>().Use<HandlerWithMessageContext>()
                 .Ctor<Future<OrderPlaced>>().Is(new Future<OrderPlaced>());
-            For<IMessageContextReader>().Use<MessageContextAccessor>();
+
+            For<IMessageContextAccessor>().Use(accessor);
+            For<IMessageContextReader>().Use(accessor);
         }
     }
 }
