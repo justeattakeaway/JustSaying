@@ -22,7 +22,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly Action<Exception, SQSMessage> _onError;
         private readonly HandlerMap _handlerMap;
         private readonly IMessageBackoffStrategy _messageBackoffStrategy;
-        private readonly IMessageContextAccessor _messageContextWriter;
+        private readonly IMessageContextAccessor _messageContextAccessor;
 
         private static ILogger _log;
 
@@ -34,7 +34,7 @@ namespace JustSaying.AwsTools.MessageHandling
             HandlerMap handlerMap,
             ILoggerFactory loggerFactory,
             IMessageBackoffStrategy messageBackoffStrategy,
-            IMessageContextAccessor messageContextWriter)
+            IMessageContextAccessor messageContextAccessor)
         {
             _queue = queue;
             _serializationRegister = serializationRegister;
@@ -43,7 +43,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _handlerMap = handlerMap;
             _log = loggerFactory.CreateLogger("JustSaying");
             _messageBackoffStrategy = messageBackoffStrategy;
-            _messageContextWriter = messageContextWriter;
+            _messageContextAccessor = messageContextAccessor;
         }
 
         public async Task DispatchMessage(SQSMessage message, CancellationToken cancellationToken)
@@ -79,7 +79,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 if (typedMessage != null)
                 {
-                    _messageContextWriter.MessageContext = new MessageContext(message, _queue.Uri);
+                    _messageContextAccessor.MessageContext = new MessageContext(message, _queue.Uri);
 
                     typedMessage.ReceiptHandle = message.ReceiptHandle;
                     typedMessage.QueueUri = _queue.Uri;
@@ -113,7 +113,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage, lastException).ConfigureAwait(false);
                 }
 
-                _messageContextWriter.MessageContext = null;
+                _messageContextAccessor.MessageContext = null;
             }
         }
 
