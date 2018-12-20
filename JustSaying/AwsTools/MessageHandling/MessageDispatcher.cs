@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
@@ -75,8 +76,11 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 if (typedMessage != null)
                 {
+                    MessageContextReader.Write(new MessageContext(message, _queue.Uri));
+
                     typedMessage.ReceiptHandle = message.ReceiptHandle;
                     typedMessage.QueueUri = _queue.Uri;
+
                     handlingSucceeded = await CallMessageHandler(typedMessage).ConfigureAwait(false);
                 }
 
@@ -105,6 +109,8 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage, lastException).ConfigureAwait(false);
                 }
+
+                MessageContextReader.Write(null);
             }
         }
 
