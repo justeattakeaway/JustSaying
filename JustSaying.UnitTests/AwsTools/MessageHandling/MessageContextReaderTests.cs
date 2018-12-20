@@ -51,8 +51,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             var data1 = MakeTestMessageContext();
             var data2 = MakeTestMessageContext();
 
-            var t1 = Task.Run(async () => await RunWithData(data1));
-            var t2 =  Task.Run(async () => await RunWithData(data2));
+            var t1 = Task.Run(async () => await ThreadLocalDataRemainsTheSame(data1));
+            var t2 =  Task.Run(async () => await ThreadLocalDataRemainsTheSame(data2));
 
             await Task.WhenAll(t1, t2);
         }
@@ -65,7 +65,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             for (int i = 0; i < 10; i++)
             {
                 var data = MakeTestMessageContext();
-                var task = Task.Run(async () => await RunWithData(data));
+                var task = Task.Run(async () => await ThreadLocalDataRemainsTheSame(data));
                 tasks.Add(task);
             }
 
@@ -77,7 +77,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         {
             var data1 = MakeTestMessageContext();
 
-            var t1 = Task.Run(async () => await RunWithData(data1));
+            var t1 = Task.Run(async () => await ThreadLocalDataRemainsTheSame(data1));
 
             var reader = new MessageContextReader();
             var localData = reader.Read();
@@ -90,7 +90,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
 
         }
 
-        private static async Task RunWithData(MessageContext data)
+        private static async Task ThreadLocalDataRemainsTheSame(MessageContext data)
         {
             MessageContextReader.Write(data);
             var reader = new MessageContextReader();
@@ -102,6 +102,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
 
                 var readData = reader.Read();
                 AssertSame(data, readData);
+                MessageContextReader.Write(data);
             }
         }
 
