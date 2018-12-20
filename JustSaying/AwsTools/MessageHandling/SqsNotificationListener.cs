@@ -47,7 +47,11 @@ namespace JustSaying.AwsTools.MessageHandling
 
             _messageProcessingStrategy = new DefaultThrottledThroughput(_messagingMonitor);
             _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor);
-            _messageDispatcher = new MessageDispatcher(queue, serializationRegister, messagingMonitor, onError, _handlerMap, loggerFactory, messageBackoffStrategy);
+            _messageDispatcher = new MessageDispatcher(
+                queue, serializationRegister, messagingMonitor,
+                onError, _handlerMap, loggerFactory,
+                messageBackoffStrategy,
+                new MessageContextAccessor());
 
             Subscribers = new Collection<ISubscriber>();
 

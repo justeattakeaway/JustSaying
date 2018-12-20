@@ -22,6 +22,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly Action<Exception, SQSMessage> _onError;
         private readonly HandlerMap _handlerMap;
         private readonly IMessageBackoffStrategy _messageBackoffStrategy;
+        private readonly IMessageContextAccessor _messageContextWriter;
 
         private static ILogger _log;
 
@@ -32,7 +33,8 @@ namespace JustSaying.AwsTools.MessageHandling
             Action<Exception, SQSMessage> onError,
             HandlerMap handlerMap,
             ILoggerFactory loggerFactory,
-            IMessageBackoffStrategy messageBackoffStrategy)
+            IMessageBackoffStrategy messageBackoffStrategy,
+            IMessageContextAccessor messageContextWriter)
         {
             _queue = queue;
             _serializationRegister = serializationRegister;
@@ -41,6 +43,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _handlerMap = handlerMap;
             _log = loggerFactory.CreateLogger("JustSaying");
             _messageBackoffStrategy = messageBackoffStrategy;
+            _messageContextWriter = messageContextWriter;
         }
 
         public async Task DispatchMessage(SQSMessage message, CancellationToken cancellationToken)
@@ -71,13 +74,12 @@ namespace JustSaying.AwsTools.MessageHandling
 
             var handlingSucceeded = false;
             Exception lastException = null;
-            IMessageContextAccessor ctxAx = new MessageContextAccessor();
 
             try
             {
                 if (typedMessage != null)
                 {
-                    ctxAx.MessageContext = new MessageContext(message, _queue.Uri);
+                    _messageContextWriter.MessageContext = new MessageContext(message, _queue.Uri);
 
                     typedMessage.ReceiptHandle = message.ReceiptHandle;
                     typedMessage.QueueUri = _queue.Uri;
@@ -111,7 +113,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage, lastException).ConfigureAwait(false);
                 }
 
-                ctxAx.MessageContext = null;
+                _messageContextWriter.MessageContext = null;
             }
         }
 

@@ -7,6 +7,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
@@ -68,7 +69,14 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
         protected override Task<MessageDispatcher> CreateSystemUnderTestAsync()
         {
-            return Task.FromResult(new MessageDispatcher(_queue, _serializationRegister, _messageMonitor, _onError, _handlerMap, _loggerFactory, _messageBackoffStrategy));
+            var dispatcher = new MessageDispatcher(
+                _queue, _serializationRegister,
+                _messageMonitor, _onError,
+                _handlerMap, _loggerFactory,
+                _messageBackoffStrategy,
+                new MessageContextAccessor());
+
+            return Task.FromResult(dispatcher);
         }
 
         public class AndMessageProcessingSucceeds : WhenDispatchingMessage

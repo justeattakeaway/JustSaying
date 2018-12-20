@@ -12,7 +12,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         [Fact]
         public void ContextIsNullByDefault()
         {
-            var accessor = new MessageContextAccessor();
+            var accessor = MakeAccessor();
 
             Assert.Null(accessor.MessageContext);
         }
@@ -21,7 +21,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         public void CanStoreAndRetrieveContext()
         {
             var data = MakeUniqueMessageContext();
-            var accessor = new MessageContextAccessor();
+            var accessor = MakeAccessor();
             accessor.MessageContext = data;
 
             var readData = accessor.MessageContext;
@@ -32,8 +32,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         [Fact]
         public async Task CanStoreAndRetrieveAsync()
         {
-            var accessor = new MessageContextAccessor();
             var data = MakeUniqueMessageContext();
+            var accessor = MakeAccessor();
             accessor.MessageContext = data;
 
             await Task.Delay(250)
@@ -76,27 +76,27 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
 
             var t1 = Task.Run(async () => await ThreadLocalDataRemainsTheSame(data1));
 
-            var reader = new MessageContextAccessor();
-            Assert.Null(reader.MessageContext);
+            var accessor = MakeAccessor();
+            Assert.Null(accessor.MessageContext);
 
             await t1;
 
-            Assert.Null(reader.MessageContext);
+            Assert.Null(accessor.MessageContext);
         }
 
         private static async Task ThreadLocalDataRemainsTheSame(MessageContext data)
         {
-            var reader = new MessageContextAccessor();
-            reader.MessageContext = data;
+            var accessor = MakeAccessor();
+            accessor.MessageContext = data;
 
             for (int i = 0; i < 5; i++)
             {
                 await Task.Delay(100 + i)
                     .ConfigureAwait(false);
 
-                AssertSame(data, reader.MessageContext);
+                AssertSame(data, accessor.MessageContext);
 
-                reader.MessageContext = data;
+                accessor.MessageContext = data;
             }
         }
 
@@ -122,6 +122,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             };
 
             return new MessageContext(sqsMessage, queueUri);
+        }
+
+        private static IMessageContextAccessor MakeAccessor()
+        {
+            return new MessageContextAccessor();
         }
     }
 }
