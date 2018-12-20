@@ -94,7 +94,9 @@ namespace JustSaying.IntegrationTests.AwsTools
             handler.Handle(null).ReturnsForAnyArgs(true).AndDoes(_ => Interlocked.Increment(ref handleCount));
 
             serializations.DeserializeMessage(string.Empty).ReturnsForAnyArgs(new SimpleMessage());
-            var listener = new SqsNotificationListener(queue, serializations, monitor, fixture.LoggerFactory);
+            var listener = new SqsNotificationListener(
+                queue, serializations, monitor, fixture.LoggerFactory,
+                Substitute.For<IMessageContextAccessor>());
             listener.AddMessageHandler(() => handler);
 
             // Act

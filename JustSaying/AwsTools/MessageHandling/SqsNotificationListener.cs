@@ -36,6 +36,7 @@ namespace JustSaying.AwsTools.MessageHandling
             IMessageSerializationRegister serializationRegister,
             IMessageMonitor messagingMonitor,
             ILoggerFactory loggerFactory,
+            IMessageContextAccessor messageContextAccessor,
             Action<Exception, Amazon.SQS.Model.Message> onError = null,
             IMessageLockAsync messageLock = null,
             IMessageBackoffStrategy messageBackoffStrategy = null)
@@ -51,7 +52,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 queue, serializationRegister, messagingMonitor,
                 onError, _handlerMap, loggerFactory,
                 messageBackoffStrategy,
-                new MessageContextAccessor());
+                messageContextAccessor);
 
             Subscribers = new Collection<ISubscriber>();
 

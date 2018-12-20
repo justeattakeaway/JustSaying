@@ -315,7 +315,12 @@ namespace JustSaying
 
         private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue) where T : Message
         {
-            var sqsSubscriptionListener = new SqsNotificationListener(queue, Bus.SerializationRegister, Bus.Monitor, _loggerFactory, _subscriptionConfig.OnError, Bus.MessageLock, _subscriptionConfig.MessageBackoffStrategy);
+            var sqsSubscriptionListener = new SqsNotificationListener(
+                queue, Bus.SerializationRegister, Bus.Monitor, _loggerFactory,
+                new MessageContextAccessor(),
+                _subscriptionConfig.OnError, Bus.MessageLock,
+                _subscriptionConfig.MessageBackoffStrategy);
+
             sqsSubscriptionListener.Subscribers.Add(new Subscriber(typeof(T)));
             Bus.AddNotificationSubscriber(region, sqsSubscriptionListener);
 

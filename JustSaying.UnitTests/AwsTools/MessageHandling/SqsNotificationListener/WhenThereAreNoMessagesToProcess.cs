@@ -7,6 +7,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -22,11 +23,13 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 
         protected override Task<JustSaying.AwsTools.MessageHandling.SqsNotificationListener> CreateSystemUnderTestAsync()
         {
-            return Task.FromResult(new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
+            var listener = new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
                 new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri("http://foo.com"), _sqs),
                 null,
                 Substitute.For<IMessageMonitor>(),
-                Substitute.For<ILoggerFactory>()));
+                Substitute.For<ILoggerFactory>(),
+                Substitute.For<IMessageContextAccessor>());
+            return Task.FromResult(listener);
         }
 
         protected override Task Given()

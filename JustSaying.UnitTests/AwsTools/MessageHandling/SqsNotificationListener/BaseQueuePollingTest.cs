@@ -34,7 +34,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         protected override Task<JustSaying.AwsTools.MessageHandling.SqsNotificationListener> CreateSystemUnderTestAsync()
         {
             var queue = new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri(QueueUrl), Sqs);
-            return Task.FromResult(new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(queue, SerializationRegister, Monitor, LoggerFactory, null, MessageLock));
+            var listener = new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
+                queue, SerializationRegister, Monitor, LoggerFactory,
+                Substitute.For<IMessageContextAccessor>(),
+                null, MessageLock);
+            return Task.FromResult(listener);
         }
 
         protected override Task Given()
