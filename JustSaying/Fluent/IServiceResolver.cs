@@ -1,7 +1,7 @@
 namespace JustSaying.Fluent
 {
     /// <summary>
-    /// Defines a method for resolving instances of types from a depenency injection container.
+    /// Defines a method for resolving instances of types from a dependency injection container.
     /// </summary>
     public interface IServiceResolver
     {
