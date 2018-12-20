@@ -7,25 +7,24 @@ using Xunit;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling
 {
-    public class MessageContextReaderTests
+    public class MessageContextAccessorTests
     {
         [Fact]
-        public void NullByDefault()
+        public void ContextIsNullByDefault()
         {
-            var reader = new MessageContextReader();
-            var readData = reader.Read();
+            var accessor = new MessageContextAccessor();
 
-            Assert.Null(readData);
+            Assert.Null(accessor.MessageContext);
         }
 
         [Fact]
-        public void CanStoreAndRetrieve()
+        public void CanStoreAndRetrieveContext()
         {
-            var data = MakeTestMessageContext();
-            MessageContextReader.Write(data);
+            var data = MakeUniqueMessageContext();
+            var accessor = new MessageContextAccessor();
+            accessor.MessageContext = data;
 
-            var reader = new MessageContextReader();
-            var readData = reader.Read();
+            var readData = accessor.MessageContext;
 
             AssertSame(data, readData);
         }
@@ -33,23 +32,21 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         [Fact]
         public async Task CanStoreAndRetrieveAsync()
         {
-            var data = MakeTestMessageContext();
-            MessageContextReader.Write(data);
+            var accessor = new MessageContextAccessor();
+            var data = MakeUniqueMessageContext();
+            accessor.MessageContext = data;
 
             await Task.Delay(250)
                 .ConfigureAwait(false);
 
-            var reader = new MessageContextReader();
-            var readData = reader.Read();
-
-            AssertSame(data, readData);
+            AssertSame(data, accessor.MessageContext);
         }
 
         [Fact]
         public async Task DifferentThreadsHaveDifferentContexts()
         {
-            var data1 = MakeTestMessageContext();
-            var data2 = MakeTestMessageContext();
+            var data1 = MakeUniqueMessageContext();
+            var data2 = MakeUniqueMessageContext();
 
             var t1 = Task.Run(async () => await ThreadLocalDataRemainsTheSame(data1));
             var t2 =  Task.Run(async () => await ThreadLocalDataRemainsTheSame(data2));
@@ -64,7 +61,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
 
             for (int i = 0; i < 10; i++)
             {
-                var data = MakeTestMessageContext();
+                var data = MakeUniqueMessageContext();
                 var task = Task.Run(async () => await ThreadLocalDataRemainsTheSame(data));
                 tasks.Add(task);
             }
@@ -75,34 +72,31 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         [Fact]
         public async Task ThreadContextDoesNotEscape()
         {
-            var data1 = MakeTestMessageContext();
+            var data1 = MakeUniqueMessageContext();
 
             var t1 = Task.Run(async () => await ThreadLocalDataRemainsTheSame(data1));
 
-            var reader = new MessageContextReader();
-            var localData = reader.Read();
-            Assert.Null(localData);
+            var reader = new MessageContextAccessor();
+            Assert.Null(reader.MessageContext);
 
             await t1;
 
-            localData = reader.Read();
-            Assert.Null(localData);
-
+            Assert.Null(reader.MessageContext);
         }
 
         private static async Task ThreadLocalDataRemainsTheSame(MessageContext data)
         {
-            MessageContextReader.Write(data);
-            var reader = new MessageContextReader();
+            var reader = new MessageContextAccessor();
+            reader.MessageContext = data;
 
             for (int i = 0; i < 5; i++)
             {
                 await Task.Delay(100 + i)
                     .ConfigureAwait(false);
 
-                var readData = reader.Read();
-                AssertSame(data, readData);
-                MessageContextReader.Write(data);
+                AssertSame(data, reader.MessageContext);
+
+                reader.MessageContext = data;
             }
         }
 
@@ -117,7 +111,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             Assert.Equal(expected.QueueUri, actual.QueueUri);
         }
 
-        private static MessageContext MakeTestMessageContext()
+        private static MessageContext MakeUniqueMessageContext()
         {
             var uniqueness = Guid.NewGuid().ToString();
             var queueUri = new Uri("http://test.com/" + uniqueness);
