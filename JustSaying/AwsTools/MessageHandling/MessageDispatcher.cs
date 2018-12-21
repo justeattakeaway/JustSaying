@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
@@ -21,6 +22,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly Action<Exception, SQSMessage> _onError;
         private readonly HandlerMap _handlerMap;
         private readonly IMessageBackoffStrategy _messageBackoffStrategy;
+        private readonly IMessageContextAccessor _messageContextAccessor;
 
         private static ILogger _log;
 
@@ -31,7 +33,8 @@ namespace JustSaying.AwsTools.MessageHandling
             Action<Exception, SQSMessage> onError,
             HandlerMap handlerMap,
             ILoggerFactory loggerFactory,
-            IMessageBackoffStrategy messageBackoffStrategy)
+            IMessageBackoffStrategy messageBackoffStrategy,
+            IMessageContextAccessor messageContextAccessor)
         {
             _queue = queue;
             _serializationRegister = serializationRegister;
@@ -40,6 +43,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _handlerMap = handlerMap;
             _log = loggerFactory.CreateLogger("JustSaying");
             _messageBackoffStrategy = messageBackoffStrategy;
+            _messageContextAccessor = messageContextAccessor;
         }
 
         public async Task DispatchMessage(SQSMessage message, CancellationToken cancellationToken)
@@ -75,8 +79,11 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 if (typedMessage != null)
                 {
+                    _messageContextAccessor.MessageContext = new MessageContext(message, _queue.Uri);
+
                     typedMessage.ReceiptHandle = message.ReceiptHandle;
                     typedMessage.QueueUri = _queue.Uri;
+
                     handlingSucceeded = await CallMessageHandler(typedMessage).ConfigureAwait(false);
                 }
 
@@ -105,6 +112,8 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage, lastException).ConfigureAwait(false);
                 }
+
+                _messageContextAccessor.MessageContext = null;
             }
         }
 

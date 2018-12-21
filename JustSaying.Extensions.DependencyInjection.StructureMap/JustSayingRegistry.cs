@@ -1,6 +1,7 @@
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
+using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using StructureMap;
@@ -29,6 +30,10 @@ namespace JustSaying
             For<IMessageSerializationFactory>().Use<NewtonsoftSerializationFactory>().Singleton();
             For<IMessageSubjectProvider>().Use<GenericMessageSubjectProvider>().Singleton();
             For<IVerifyAmazonQueues>().Use<AmazonQueueCreator>().Singleton();
+
+            For<MessageContextAccessor>().Use<MessageContextAccessor>().Singleton();
+            For<IMessageContextAccessor>().Use(context => context.GetInstance<MessageContextAccessor>());
+            For<IMessageContextReader>().Use(context => context.GetInstance<MessageContextAccessor>());
 
             For<IMessageSerializationRegister>()
                 .Use(

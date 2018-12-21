@@ -26,5 +26,7 @@ namespace JustSaying
         IMessageSerializationRegister SerializationRegister { get; }
 
         IMessageLockAsync MessageLock { get; set; }
+
+        IMessageContextAccessor MessageContextAccessor { get; set; }
     }
 }

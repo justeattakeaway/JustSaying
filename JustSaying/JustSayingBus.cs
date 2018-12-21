@@ -29,6 +29,7 @@ namespace JustSaying
         }
         public IMessageSerializationRegister SerializationRegister { get; private set; }
         public IMessageLockAsync MessageLock { get; set; }
+        public IMessageContextAccessor MessageContextAccessor { get; set; }
 
         private ILogger _log;
 
@@ -42,6 +43,7 @@ namespace JustSaying
 
             Config = config;
             Monitor = new NullOpMessageMonitor();
+            MessageContextAccessor = new MessageContextAccessor();
 
             _subscribersByRegionAndQueue = new Dictionary<string, Dictionary<string, INotificationSubscriber>>();
             _publishersByRegionAndTopic = new Dictionary<string, Dictionary<string, IMessagePublisher>>();
