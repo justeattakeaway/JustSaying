@@ -9,17 +9,17 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 {
     internal class HandlerWithMessageContext : IHandlerAsync<SimpleMessage>
     {
-        private readonly ILogger<HandlerWithMessageContext> _outputHelper;
+        private readonly ILogger<HandlerWithMessageContext> _logger;
         private readonly IMessageContextReader _messageContextReader;
 
         public HandlerWithMessageContext(
             IMessageContextReader messageContextReader,
             Future<SimpleMessage> future,
-            ILogger<HandlerWithMessageContext> outputHelper)
+            ILogger<HandlerWithMessageContext> logger)
         {
             _messageContextReader = messageContextReader;
             Future = future;
-            _outputHelper = outputHelper;
+            _logger = logger;
         }
 
         public Future<SimpleMessage> Future { get; }
@@ -30,11 +30,11 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
             if (messageContext == null)
             {
-                throw new InvalidOperationException("Message context was not ");
+                throw new InvalidOperationException("Message context was not found");
             }
 
-            _outputHelper.LogInformation($"Message context found with queue uri {messageContext.QueueUri}");
-            _outputHelper.LogInformation($"And message body {messageContext.Message.Body}");
+            _logger.LogInformation($"Message context found with queue uri {messageContext.QueueUri}");
+            _logger.LogInformation($"And message body {messageContext.Message.Body}");
 
             await Future.Complete(message);
             return true;

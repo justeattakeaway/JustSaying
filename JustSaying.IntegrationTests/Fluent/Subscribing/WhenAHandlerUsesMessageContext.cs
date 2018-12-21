@@ -10,7 +10,7 @@ using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing
 {
-    public class WhenAHandlerUsesMessageContext: IntegrationTestBase
+    public class WhenAHandlerUsesMessageContext : IntegrationTestBase
     {
         public WhenAHandlerUsesMessageContext(ITestOutputHelper outputHelper) :
             base(outputHelper)
@@ -56,6 +56,5 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     accessor.ValuesWritten.Count.ShouldBeGreaterThan(0);
                 });
         }
-
     }
 }
