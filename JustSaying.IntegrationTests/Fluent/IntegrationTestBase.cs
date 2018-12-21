@@ -89,7 +89,7 @@ namespace JustSaying.IntegrationTests.Fluent
 
                 if (actionTask.IsFaulted)
                 {
-                    throw actionTask.Exception ?? new Exception("The action is faulted, but did not have an exception");
+                    await actionTask;
                 }
             }
         }
