@@ -31,9 +31,9 @@ namespace JustSaying
             For<IMessageSubjectProvider>().Use<GenericMessageSubjectProvider>().Singleton();
             For<IVerifyAmazonQueues>().Use<AmazonQueueCreator>().Singleton();
 
-            var messageContextAccessor = new MessageContextAccessor();
-            For<IMessageContextAccessor>().Use(messageContextAccessor);
-            For<IMessageContextReader>().Use(messageContextAccessor);
+            For<MessageContextAccessor>().Use<MessageContextAccessor>().Singleton();
+            For<IMessageContextAccessor>().Use(context => context.GetInstance<MessageContextAccessor>());
+            For<IMessageContextReader>().Use(context => context.GetInstance<MessageContextAccessor>());
 
             For<IMessageSerializationRegister>()
                 .Use(

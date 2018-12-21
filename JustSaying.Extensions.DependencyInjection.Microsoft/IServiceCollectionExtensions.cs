@@ -125,9 +125,9 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<IMessagingConfig, MessagingConfig>();
             services.TryAddSingleton<IMessageMonitor, NullOpMessageMonitor>();
 
-            var messageContextAccessor = new MessageContextAccessor();
-            services.TryAddSingleton<IMessageContextAccessor>(messageContextAccessor);
-            services.TryAddSingleton<IMessageContextReader>(messageContextAccessor);
+            services.AddSingleton<MessageContextAccessor>();
+            services.TryAddSingleton<IMessageContextAccessor>(serviceProvider => serviceProvider.GetRequiredService<MessageContextAccessor>());
+            services.TryAddSingleton<IMessageContextReader>(serviceProvider => serviceProvider.GetRequiredService<MessageContextAccessor>());
 
             services.TryAddSingleton<IMessageSerializationFactory, NewtonsoftSerializationFactory>();
             services.TryAddSingleton<IMessageSubjectProvider, GenericMessageSubjectProvider>();
