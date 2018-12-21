@@ -3,6 +3,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
 using JustSaying.Messaging;
+using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
@@ -250,6 +251,11 @@ namespace JustSaying
                 fluent.WithNamingStrategy(ServicesBuilder.NamingStrategy);
             }
 
+            if (ServicesBuilder?.MessageContextAccessor != null)
+            {
+                fluent.WithMessageContextAccessor(ServicesBuilder.MessageContextAccessor());
+            }
+
             if (SubscriptionBuilder != null)
             {
                 SubscriptionBuilder.Configure(fluent);
@@ -285,6 +291,11 @@ namespace JustSaying
             return ServicesBuilder?.MessageMonitoring?.Invoke() ?? ServiceResolver.ResolveService<IMessageMonitor>();
         }
 
+        private IMessageContextAccessor CreateMessageContextAccessor()
+        {
+            return ServicesBuilder?.MessageContextAccessor?.Invoke() ?? ServiceResolver.ResolveService<IMessageContextAccessor>();
+        }
+
         private IMessageSerializationFactory CreateMessageSerializationFactory()
         {
             return ServicesBuilder?.MessageSerializationFactory?.Invoke() ?? ServiceResolver.ResolveService<IMessageSerializationFactory>();
@@ -299,9 +310,11 @@ namespace JustSaying
 
             IMessageSerializationFactory serializationFactory = CreateMessageSerializationFactory();
             IMessageMonitor messageMonitor = CreateMessageMonitor();
+            IMessageContextAccessor messageContextAccessor = CreateMessageContextAccessor();
 
             fluent.WithSerializationFactory(serializationFactory)
-                  .WithMonitoring(messageMonitor);
+                .WithMonitoring(messageMonitor)
+                .WithMessageContextAccessor(messageContextAccessor);
 
             if (ServicesBuilder?.MessageLock != null)
             {

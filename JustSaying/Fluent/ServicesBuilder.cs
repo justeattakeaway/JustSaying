@@ -54,6 +54,11 @@ namespace JustSaying.Fluent
         internal Func<IMessageSerializationRegister> SerializationRegister { get; private set; }
 
         /// <summary>
+        /// Gets or sets a delegate to a method to create the <see cref="MessageContextAccessor"/> to use.
+        /// </summary>
+        internal Func<IMessageContextAccessor> MessageContextAccessor { get; private set; }
+
+        /// <summary>
         /// Specifies the <see cref="ILoggerFactory"/> to use.
         /// </summary>
         /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to use.</param>
@@ -150,6 +155,12 @@ namespace JustSaying.Fluent
         public ServicesBuilder WithMessageSerializationFactory(Func<IMessageSerializationFactory> factory)
         {
             MessageSerializationFactory = factory ?? throw new ArgumentNullException(nameof(factory));
+            return this;
+        }
+
+        public ServicesBuilder WithMessageContextAccessor(Func<IMessageContextAccessor> messageContextAccessor)
+        {
+            MessageContextAccessor = messageContextAccessor ?? throw new ArgumentNullException(nameof(messageContextAccessor));
             return this;
         }
     }

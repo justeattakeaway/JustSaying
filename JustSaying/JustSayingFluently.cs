@@ -193,6 +193,13 @@ namespace JustSaying
             return this;
         }
 
+        public IMayWantOptionalSettings WithMessageContextAccessor(IMessageContextAccessor messageContextAccessor)
+        {
+            Bus.MessageContextAccessor = messageContextAccessor;
+            return this;
+        }
+
+
         public IFluentSubscription ConfigureSubscriptionWith(Action<SqsReadConfiguration> configBuilder)
         {
             configBuilder(_subscriptionConfig);
@@ -317,7 +324,7 @@ namespace JustSaying
         {
             var sqsSubscriptionListener = new SqsNotificationListener(
                 queue, Bus.SerializationRegister, Bus.Monitor, _loggerFactory,
-                new MessageContextAccessor(),
+                Bus.MessageContextAccessor,
                 _subscriptionConfig.OnError, Bus.MessageLock,
                 _subscriptionConfig.MessageBackoffStrategy);
 

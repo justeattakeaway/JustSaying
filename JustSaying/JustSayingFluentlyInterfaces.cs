@@ -16,7 +16,8 @@ namespace JustSaying
         IMayWantCustomSerialization,
         IMayWantAFailoverRegion,
         IMayWantNamingStrategy,
-        IMayWantAwsClientFactory
+        IMayWantAwsClientFactory,
+        IMayWantMessageContextAccessor
     {
     }
 
@@ -53,6 +54,11 @@ namespace JustSaying
     public interface IMayWantCustomSerialization : IAmJustSayingFluently
     {
         IMayWantOptionalSettings WithSerializationFactory(IMessageSerializationFactory factory);
+    }
+
+    public interface IMayWantMessageContextAccessor : IAmJustSayingFluently
+    {
+        IMayWantOptionalSettings WithMessageContextAccessor(IMessageContextAccessor messageContextAccessor);
     }
 
     public interface IAmJustSayingFluently : IMessagePublisher

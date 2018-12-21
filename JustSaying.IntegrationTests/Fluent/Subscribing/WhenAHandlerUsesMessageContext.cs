@@ -29,9 +29,11 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     builder.Publications((options) => options.WithQueue<SimpleMessage>(UniqueName)))
                 .ConfigureJustSaying((builder) =>
                     builder.Subscriptions((options) => options.ForQueue<SimpleMessage>(UniqueName)))
+                .ConfigureJustSaying((builder) =>
+                    builder.Services((options) => options.WithMessageContextAccessor(() => accessor)))
 
                 .AddSingleton(future)
-                .AddSingleton(accessor)
+                .AddSingleton<IMessageContextAccessor>(accessor)
                 .AddJustSayingHandler<SimpleMessage, HandlerWithMessageContext>();
 
             string content = Guid.NewGuid().ToString();
@@ -53,7 +55,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     // Assert
                     await future.DoneSignal;
 
-                    accessor.ValuesWritten.Count.ShouldBeGreaterThan(0);
+                    accessor.ValuesWritten.Count.ShouldBeGreaterThan(1);
                 });
         }
     }
