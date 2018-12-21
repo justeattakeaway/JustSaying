@@ -89,6 +89,8 @@ namespace JustSaying.IntegrationTests.Fluent
                 {
                     throw actionTask.Exception ?? new Exception("The action failed");
                 }
+
+                source.Token.ThrowIfCancellationRequested();
             }
         }
     }
