@@ -161,8 +161,10 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Specifies the <see cref="IMessageContextAccessor"/> to use.
         /// </summary>
-        /// <param name="contextAccessor"></param>
-        /// <returns>A delegate to a method to get the <see cref="IMessageContextAccessor"/> to use.</returns>
+        /// <param name="contextAccessor">A delegate to a method to get the <see cref="IMessageContextAccessor"/> to use.</param>
+        /// <returns>
+        /// The current <see cref="ServicesBuilder"/>.
+        /// </returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="contextAccessor"/> is <see langword="null"/>.
         /// </exception>
