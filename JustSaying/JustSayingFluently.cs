@@ -199,7 +199,6 @@ namespace JustSaying
             return this;
         }
 
-
         public IFluentSubscription ConfigureSubscriptionWith(Action<SqsReadConfiguration> configBuilder)
         {
             configBuilder(_subscriptionConfig);

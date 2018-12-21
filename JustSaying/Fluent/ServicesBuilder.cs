@@ -158,9 +158,17 @@ namespace JustSaying.Fluent
             return this;
         }
 
-        public ServicesBuilder WithMessageContextAccessor(Func<IMessageContextAccessor> messageContextAccessor)
+        /// <summary>
+        /// Specifies the <see cref="IMessageContextAccessor"/> to use.
+        /// </summary>
+        /// <param name="contextAccessor"></param>
+        /// <returns>A delegate to a method to get the <see cref="IMessageContextAccessor"/> to use.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="contextAccessor"/> is <see langword="null"/>.
+        /// </exception>
+        public ServicesBuilder WithMessageContextAccessor(Func<IMessageContextAccessor> contextAccessor)
         {
-            MessageContextAccessor = messageContextAccessor ?? throw new ArgumentNullException(nameof(messageContextAccessor));
+            MessageContextAccessor = contextAccessor ?? throw new ArgumentNullException(nameof(contextAccessor));
             return this;
         }
     }
