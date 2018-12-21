@@ -80,7 +80,17 @@ namespace JustSaying.IntegrationTests.Fluent
 
             using (var source = new CancellationTokenSource(Timeout))
             {
-                await Task.WhenAny(action(publisher, listener, source.Token), Task.Delay(Timeout, source.Token)).ConfigureAwait(false);
+                var delayTask = Task.Delay(Timeout, source.Token);
+                var actionTask = action(publisher, listener, source.Token);
+
+                await Task.WhenAny(actionTask, delayTask).ConfigureAwait(false);
+
+                source.Token.ThrowIfCancellationRequested();
+
+                if (actionTask.IsFaulted)
+                {
+                    await actionTask;
+                }
             }
         }
     }
