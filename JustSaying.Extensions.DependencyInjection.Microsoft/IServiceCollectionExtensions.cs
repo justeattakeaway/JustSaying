@@ -124,6 +124,8 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<IAwsClientFactoryProxy>((p) => new AwsClientFactoryProxy(p.GetRequiredService<IAwsClientFactory>));
             services.TryAddSingleton<IMessagingConfig, MessagingConfig>();
             services.TryAddSingleton<IMessageMonitor, NullOpMessageMonitor>();
+            services.TryAddSingleton<IMessageContextAccessor, MessageContextAccessor>();
+            services.TryAddSingleton<IMessageContextReader, MessageContextAccessor>();
             services.TryAddSingleton<IMessageSerializationFactory, NewtonsoftSerializationFactory>();
             services.TryAddSingleton<IMessageSubjectProvider, GenericMessageSubjectProvider>();
             services.TryAddSingleton<IVerifyAmazonQueues, AmazonQueueCreator>();

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using JustSaying.Messaging.MessageHandling;
 
-namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
+namespace JustSaying.IntegrationTests.Fluent.Subscribing
 {
     public class RecordingMessageContextAccessor : IMessageContextAccessor, IMessageContextReader
     {
@@ -17,10 +17,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
 
         public MessageContext MessageContext
         {
-            get
-            {
-                return _inner.MessageContext;
-            }
+            get => _inner.MessageContext;
             set
             {
                 _valuesWritten.Add(value);
