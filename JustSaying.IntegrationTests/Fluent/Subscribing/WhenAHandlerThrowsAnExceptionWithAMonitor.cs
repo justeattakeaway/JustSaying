@@ -45,7 +45,6 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     await handler.DoneSignal.Task;
 
                     // Assert
-                    await handler.Received().Handle(Arg.Any<SimpleMessage>());
                     handler.MessageReceived.ShouldNotBeNull();
 
                     monitoring.Received().HandleException(Arg.Any<Type>());
