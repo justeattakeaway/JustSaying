@@ -87,9 +87,9 @@ namespace JustSaying.IntegrationTests.Fluent
 
                 source.Token.ThrowIfCancellationRequested();
 
-                if (!actionTask.IsCompletedSuccessfully)
+                if (actionTask.IsFaulted)
                 {
-                    throw actionTask.Exception ?? new Exception("The action failed but did not have an exception");
+                    throw actionTask.Exception ?? new Exception("The action is faulted, but did not have an exception");
                 }
             }
         }
