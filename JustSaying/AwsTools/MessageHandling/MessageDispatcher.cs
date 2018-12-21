@@ -81,9 +81,6 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     _messageContextAccessor.MessageContext = new MessageContext(message, _queue.Uri);
 
-                    typedMessage.ReceiptHandle = message.ReceiptHandle;
-                    typedMessage.QueueUri = _queue.Uri;
-
                     handlingSucceeded = await CallMessageHandler(typedMessage).ConfigureAwait(false);
                 }
 
