@@ -1,6 +1,8 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.Runtime;
+using JustSaying.AwsTools;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
@@ -61,6 +63,12 @@ namespace JustSaying.IntegrationTests.Fluent
 
                         configure(builder, serviceProvider);
                     });
+        }
+
+        protected virtual IAwsClientFactory CreateClientFactory()
+        {
+            var credentials = new SessionAWSCredentials(AccessKeyId, SecretAccessKey, SessionToken);
+            return new DefaultAwsClientFactory(credentials) { ServiceUri = ServiceUri };
         }
 
         protected IHandlerAsync<T> CreateHandler<T>(TaskCompletionSource<object> completionSource)

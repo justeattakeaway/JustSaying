@@ -10,6 +10,7 @@ using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
@@ -32,12 +33,8 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
         public async Task Messages_Are_Throttled_But_Still_Delivered(int throttleMessageCount)
         {
             // Arrange
-            var loggerFactory = OutputHelper.ToLoggerFactory();
-
-            var clientFactory = new DefaultAwsClientFactory(new Amazon.Runtime.SessionAWSCredentials(AccessKeyId, SecretAccessKey, SessionToken))
-            {
-                ServiceUri = ServiceUri
-            };
+            ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
+            IAwsClientFactory clientFactory = CreateClientFactory();
 
             int retryCountBeforeSendingToErrorQueue = 1;
             var client = clientFactory.GetSqsClient(Region);
