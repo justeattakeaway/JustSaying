@@ -23,8 +23,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
             var handler = CreateHandler<SimpleMessage>(completionSource);
 
             var services = GivenJustSaying()
-                .ConfigureJustSaying((builder) => builder.Publications((options) => options.WithQueue<SimpleMessage>(UniqueName)))
-                .ConfigureJustSaying((builder) => builder.Subscriptions((options) => options.ForQueue<SimpleMessage>(UniqueName)))
+                .ConfigureJustSaying((builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
                 .AddSingleton(handler);
 
             string content = Guid.NewGuid().ToString();
