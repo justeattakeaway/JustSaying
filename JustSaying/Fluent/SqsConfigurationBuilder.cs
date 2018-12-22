@@ -25,6 +25,11 @@ namespace JustSaying.Fluent
         protected abstract TBuilder Self { get; }
 
         /// <summary>
+        /// Gets or sets the server-side encryption to use, if any.
+        /// </summary>
+        private ServerSideEncryption Encryption { get; set; }
+
+        /// <summary>
         /// Gets or sets a value indicating whether to opt-out of error queues.
         /// </summary>
         private bool? ErrorQueueOptOut { get; set; }
@@ -38,6 +43,45 @@ namespace JustSaying.Fluent
         /// Gets or sets the visibility timeout value to use.
         /// </summary>
         private TimeSpan? VisibilityTimeout { get; set; }
+
+        /// <summary>
+        /// Configures that server-side encryption should be used.
+        /// </summary>
+        /// <param name="masterKeyId">The Id of the KMS master key to use.</param>
+        /// <returns>
+        /// The current <typeparamref name="TBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="masterKeyId"/> is <see langword="null"/>.
+        /// </exception>
+        public TBuilder WithEncryption(string masterKeyId)
+        {
+            if (masterKeyId == null)
+            {
+                throw new ArgumentNullException(nameof(masterKeyId));
+            }
+
+            if (Encryption == null)
+            {
+                Encryption = new ServerSideEncryption();
+            }
+
+            Encryption.KmsMasterKeyId = masterKeyId;
+            return Self;
+        }
+
+        /// <summary>
+        /// Configures that server-side encryption should be used.
+        /// </summary>
+        /// <param name="encryption">The server-side encryption configuration to use.</param>
+        /// <returns>
+        /// The current <typeparamref name="TBuilder"/>.
+        /// </returns>
+        public TBuilder WithEncryption(ServerSideEncryption encryption)
+        {
+            Encryption = encryption;
+            return Self;
+        }
 
         /// <summary>
         /// Configures that an error queue should be used.
@@ -112,8 +156,12 @@ namespace JustSaying.Fluent
             // config.MessageProcessingStrategy = default;
             // config.PublishEndpoint = default;
             // config.RetryCountBeforeSendingToErrorQueue = default;
-            // config.ServerSideEncryption = default;
             // config.Topic = default;
+
+            if (Encryption != null)
+            {
+                config.ServerSideEncryption = Encryption;
+            }
 
             if (ErrorQueueOptOut.HasValue)
             {
