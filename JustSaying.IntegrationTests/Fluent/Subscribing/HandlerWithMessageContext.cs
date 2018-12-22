@@ -33,8 +33,10 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 throw new InvalidOperationException("Message context was not found");
             }
 
-            _logger.LogInformation($"Message context found with queue uri {messageContext.QueueUri}");
-            _logger.LogInformation($"And message body {messageContext.Message.Body}");
+            _logger.LogInformation(
+                "Message context found with queue URI {QueueUri} and message body {MessageBody}.",
+                messageContext.QueueUri,
+                messageContext.Message.Body);
 
             await Future.Complete(message);
             return true;
