@@ -113,12 +113,12 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
             // Act
             await WhenAsync(
                 services,
-                async (publisher, listener2, cancellationToken) =>
+                async (publisher, listener, cancellationToken) =>
                 {
                     var stopwatch = Stopwatch.StartNew();
                     var delay = IsSimulator ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(5);
 
-                    listener2.Start(cancellationToken);
+                    listener.Start(cancellationToken);
 
                     do
                     {
