@@ -90,26 +90,23 @@ namespace JustSaying.IntegrationTests.Fluent
             IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
             IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
-            using (var source = new CancellationTokenSource(Timeout))
+            using (var cts = new CancellationTokenSource())
             {
-                try
+                var delayTask = Task.Delay(Timeout, cts.Token);
+                var actionTask = action(publisher, listener, cts.Token);
+
+                var resultTask = await Task.WhenAny(actionTask, delayTask).ConfigureAwait(false);
+
+                if (resultTask == delayTask)
                 {
-                    var delayTask = Task.Delay(Timeout, source.Token);
-                    var actionTask = action(publisher, listener, source.Token);
-
-                    await Task.WhenAny(actionTask, delayTask).ConfigureAwait(false);
-
-                    source.Token.ThrowIfCancellationRequested();
-
-                    if (actionTask.IsFaulted)
-                    {
-                        await actionTask;
-                    }
+                    throw new OperationCanceledException();
                 }
-                finally
+                else
                 {
-                    source.Cancel();
+                    cts.Cancel();
                 }
+                
+                await actionTask;
             }
         }
     }
