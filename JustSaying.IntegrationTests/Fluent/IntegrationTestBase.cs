@@ -99,7 +99,7 @@ namespace JustSaying.IntegrationTests.Fluent
 
                 if (resultTask == delayTask)
                 {
-                    throw new OperationCanceledException();
+                    throw new TimeoutException($"The bus related action took longer to execute than the timeout of {Timeout.TotalSeconds} seconds");
                 }
                 else
                 {
