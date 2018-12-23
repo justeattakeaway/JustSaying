@@ -8,9 +8,9 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
+using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
 using SQSMessage = Amazon.SQS.Model.Message;
-using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {

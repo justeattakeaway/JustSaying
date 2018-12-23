@@ -6,11 +6,11 @@ using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.Publishing
+namespace JustSaying.IntegrationTests.Fluent.AwsTools
 {
-    public class WhenAMessageIsPublishedToAQueue : IntegrationTestBase
+    public class WhenUsingServerSideEncryption : IntegrationTestBase
     {
-        public WhenAMessageIsPublishedToAQueue(ITestOutputHelper outputHelper)
+        public WhenUsingServerSideEncryption(ITestOutputHelper outputHelper)
             : base(outputHelper)
         {
         }
@@ -22,8 +22,17 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
             var completionSource = new TaskCompletionSource<object>();
             var handler = CreateHandler<SimpleMessage>(completionSource);
 
+            string masterKeyId = "alias/aws/sqs";
+
             var services = GivenJustSaying()
-                .ConfigureJustSaying((builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
+                .ConfigureJustSaying(
+                    (builder) => builder.Publications((options) => options.WithQueue<SimpleMessage>(
+                        (queue) => queue.WithWriteConfiguration(
+                            (config) => config.WithQueueName(UniqueName).WithEncryption(masterKeyId)))))
+                .ConfigureJustSaying(
+                    (builder) => builder.Subscriptions((options) => options.ForQueue<SimpleMessage>(
+                        (queue) => queue.WithName(UniqueName).WithReadConfiguration(
+                            (config) => config.WithEncryption(masterKeyId)))))
                 .AddSingleton(handler);
 
             string content = Guid.NewGuid().ToString();

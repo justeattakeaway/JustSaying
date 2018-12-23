@@ -26,8 +26,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
             var handler = CreateHandler<SimpleMessage>(completionSource);
 
             IServiceCollection services = GivenJustSaying()
-                .ConfigureJustSaying((builder) => builder.Publications((publication) => publication.WithQueue<SimpleMessage>(UniqueName)))
-                .ConfigureJustSaying((builder) => builder.Subscriptions((subscription) => subscription.ForQueue<SimpleMessage>(UniqueName)))
+                .ConfigureJustSaying((builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
                 .AddSingleton(handler);
 
             // Act and Assert

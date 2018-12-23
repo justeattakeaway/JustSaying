@@ -132,10 +132,12 @@ namespace JustSaying
             foreach (var region in Bus.Config.Regions)
             {
                 var regionEndpoint = RegionEndpoint.GetBySystemName(region);
+                var sqsClient = _awsClientFactoryProxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
+
                 var eventPublisher = new SqsPublisher(
                     regionEndpoint,
                     queueName,
-                    _awsClientFactoryProxy.GetAwsClientFactory().GetSqsClient(regionEndpoint),
+                    sqsClient,
                     config.RetryCountBeforeSendingToErrorQueue,
                     Bus.SerializationRegister,
                     _loggerFactory)

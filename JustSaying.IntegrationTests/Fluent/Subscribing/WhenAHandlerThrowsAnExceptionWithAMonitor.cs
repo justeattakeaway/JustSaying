@@ -27,8 +27,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
             var monitoring = Substitute.For<IMessageMonitor>();
 
             var services = GivenJustSaying()
-                .ConfigureJustSaying((builder) => builder.Publications((options) => options.WithQueue<SimpleMessage>(UniqueName)))
-                .ConfigureJustSaying((builder) => builder.Subscriptions((options) => options.ForQueue<SimpleMessage>(UniqueName)))
+                .ConfigureJustSaying((builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
                 .ConfigureJustSaying((builder) => builder.Services((options) => options.WithMessageMonitoring(() => monitoring)))
                 .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 

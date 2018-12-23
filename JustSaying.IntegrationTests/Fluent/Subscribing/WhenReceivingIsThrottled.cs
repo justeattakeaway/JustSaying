@@ -72,7 +72,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     await publisher.PublishAsync(_messages[100]);
 
                     // Wait for a reasonble time before asserting whether the last message has been scheduled.
-                    await Task.Delay(baseSleep * 10);
+                    await Task.Delay(baseSleep * 50);
 
                     Received.InOrder(() => _handler.Handle(Arg.Is<SimpleMessage>((p) => p.Id == _ids[100])));
                 });

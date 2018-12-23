@@ -43,14 +43,19 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             _queue = queue;
             _messagingMonitor = messagingMonitor;
-            onError = onError ?? ((ex, message) => { });
+            onError = onError ?? DefaultErrorHandler;
             _log = loggerFactory.CreateLogger("JustSaying");
 
             _messageProcessingStrategy = new DefaultThrottledThroughput(_messagingMonitor);
             _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor);
+
             _messageDispatcher = new MessageDispatcher(
-                queue, serializationRegister, messagingMonitor,
-                onError, _handlerMap, loggerFactory,
+                _queue,
+                serializationRegister,
+                messagingMonitor,
+                onError,
+                _handlerMap,
+                loggerFactory,
                 messageBackoffStrategy,
                 messageContextAccessor);
 
@@ -231,5 +236,10 @@ namespace JustSaying.AwsTools.MessageHandling
         }
 
         public ICollection<ISubscriber> Subscribers { get; set; }
+
+        private static void DefaultErrorHandler(Exception exception, Amazon.SQS.Model.Message message)
+        {
+            // No-op
+        }
     }
 }

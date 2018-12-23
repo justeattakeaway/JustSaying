@@ -1,6 +1,8 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.Runtime;
+using JustSaying.AwsTools;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
@@ -27,9 +29,13 @@ namespace JustSaying.IntegrationTests.Fluent
 
         protected ITestOutputHelper OutputHelper { get; }
 
-        protected virtual string Region => TestEnvironment.Region.SystemName;
+        protected virtual string RegionName => Region.SystemName;
+
+        protected virtual Amazon.RegionEndpoint Region => TestEnvironment.Region;
 
         protected virtual Uri ServiceUri => TestEnvironment.SimulatorUrl;
+
+        protected virtual bool IsSimulator => TestEnvironment.IsSimulatorConfigured;
 
         protected virtual TimeSpan Timeout => TimeSpan.FromSeconds(20);
 
@@ -48,7 +54,7 @@ namespace JustSaying.IntegrationTests.Fluent
                 .AddJustSaying(
                     (builder, serviceProvider) =>
                     {
-                        builder.Messaging((options) => options.WithRegion(Region))
+                        builder.Messaging((options) => options.WithRegion(RegionName))
                                .Client((options) =>
                                 {
                                     options.WithSessionCredentials(AccessKeyId, SecretAccessKey, SessionToken)
@@ -57,6 +63,12 @@ namespace JustSaying.IntegrationTests.Fluent
 
                         configure(builder, serviceProvider);
                     });
+        }
+
+        protected virtual IAwsClientFactory CreateClientFactory()
+        {
+            var credentials = new SessionAWSCredentials(AccessKeyId, SecretAccessKey, SessionToken);
+            return new DefaultAwsClientFactory(credentials) { ServiceUri = ServiceUri };
         }
 
         protected IHandlerAsync<T> CreateHandler<T>(TaskCompletionSource<object> completionSource)
@@ -80,16 +92,23 @@ namespace JustSaying.IntegrationTests.Fluent
 
             using (var source = new CancellationTokenSource(Timeout))
             {
-                var delayTask = Task.Delay(Timeout, source.Token);
-                var actionTask = action(publisher, listener, source.Token);
-
-                await Task.WhenAny(actionTask, delayTask).ConfigureAwait(false);
-
-                source.Token.ThrowIfCancellationRequested();
-
-                if (actionTask.IsFaulted)
+                try
                 {
-                    await actionTask;
+                    var delayTask = Task.Delay(Timeout, source.Token);
+                    var actionTask = action(publisher, listener, source.Token);
+
+                    await Task.WhenAny(actionTask, delayTask).ConfigureAwait(false);
+
+                    source.Token.ThrowIfCancellationRequested();
+
+                    if (actionTask.IsFaulted)
+                    {
+                        await actionTask;
+                    }
+                }
+                finally
+                {
+                    source.Cancel();
                 }
             }
         }

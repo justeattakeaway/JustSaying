@@ -17,7 +17,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         {
         }
 
-        [AwsFact(Skip = "WithErrorHandler on SqsReadConfigurationBuilder not working yet")]
+        [AwsFact]
         public async Task Then_The_Message_Is_Handled()
         {
             // Arrange
