@@ -98,9 +98,8 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public void Listen(CancellationToken cancellationToken)
         {
-            var queue = _queue.QueueName;
+            var queueName = _queue.QueueName;
             var region = _queue.Region.SystemName;
-            var queueInfo = $"Queue: {queue}, Region: {region}";
 
             // Run task in background
             // ListenLoop will cancel gracefully, so no need to pass cancellation token to Task.Run
@@ -108,11 +107,11 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 await ListenLoop(cancellationToken).ConfigureAwait(false);
                 IsListening = false;
-                _log.LogInformation($"Stopped Listening - {queueInfo}");
+                _log.LogInformation("Stopped Listening on {queueName}, {region}", queueName, region);
             });
 
             IsListening = true;
-            _log.LogInformation($"Starting Listening - {queueInfo}");
+            _log.LogInformation("Starting Listening on {queueName}, {region}", queueName, region);
         }
 
         internal async Task ListenLoop(CancellationToken ct)
@@ -128,21 +127,22 @@ namespace JustSaying.AwsTools.MessageHandling
                     sqsMessageResponse = await GetMessagesFromSqsQueue(queueName, region, ct).ConfigureAwait(false);
                     var messageCount = sqsMessageResponse.Messages.Count;
 
-                    _log.LogTrace(
-                        $"Polled for messages - Queue: {queueName}, Region: {region}, MessageCount: {messageCount}");
+                    _log.LogTrace("Polled for messages - {queueName}, {region}, {messageCount}",
+                        queueName, region, messageCount);
                 }
                 catch (InvalidOperationException ex)
                 {
-                    _log.LogTrace(
-                        $"Could not determine number of messages to read from [{queueName}], region: [{region}]. Ex: {ex}");
+                    _log.LogTrace(ex, "Could not determine number of messages to read from {queueName}, {region}",
+                          queueName, region);
                 }
                 catch (OperationCanceledException ex)
                 {
-                    _log.LogTrace($"Suspected no message in queue [{queueName}], region: [{region}]. Ex: {ex}");
+                    _log.LogTrace(ex, "Suspected no message in {queueName}, {region}",
+                        queueName, region);
                 }
                 catch (Exception ex)
                 {
-                    _log.LogError(0, ex, $"Issue receiving messages for queue {queueName}, region {region}");
+                    _log.LogError(0, ex, "Issue receiving messages for queue {queueName}, region {region}", queueName, region);
                 }
 
                 try
@@ -161,9 +161,8 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
                 catch (Exception ex)
                 {
-                    _log.LogError(0, ex, $"Issue in message handling loop for queue {queueName}, region {region}");
+                    _log.LogError(0, ex, "Issue in message handling loop for {queueName}, {region}", queueName, region);
                 }
-
             }
         }
 
@@ -198,7 +197,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     if (receiveTimeout.Token.IsCancellationRequested)
                     {
-                        _log.LogInformation($"Receiving messages from queue {queueName}, region {region}, timed out");
+                        _log.LogInformation("Receiving messages from {queueName}, {region}, timed out", queueName, region);
                     }
                 }
 

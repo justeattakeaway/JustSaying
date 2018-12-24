@@ -6,7 +6,6 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialization;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
@@ -59,7 +58,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 return true;
             }
 
-            _log.LogInformation($"Checking if topic '{TopicName}' exists");
+            _log.LogInformation("Checking if topic {TopicName} exists", TopicName);
             var topic = await Client.FindTopicAsync(TopicName).ConfigureAwait(false);
 
             if (topic != null)
@@ -80,14 +79,14 @@ namespace JustSaying.AwsTools.MessageHandling
                 if (!string.IsNullOrEmpty(response.TopicArn))
                 {
                     Arn = response.TopicArn;
-                    _log.LogInformation($"Created Topic: {TopicName} on Arn: {Arn}");
+                    _log.LogInformation("Created Topic: {TopicName} on Arn: {Arn}", TopicName, Arn);
                     return true;
                 }
-                _log.LogInformation($"Failed to create Topic: {TopicName}");
+                _log.LogInformation("Failed to create Topic {TopicName}", TopicName);
             }
             catch (AuthorizationErrorException ex)
             {
-                _log.LogWarning(0, ex, $"Not authorized to create topic: {TopicName}");
+                _log.LogWarning(0, ex, "Not authorized to create topic {TopicName}", TopicName);
                 if (!await ExistsAsync().ConfigureAwait(false))
                 {
                     throw new InvalidOperationException("Topic does not exist and no permission to create it!");

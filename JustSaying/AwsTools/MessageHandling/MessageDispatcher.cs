@@ -24,7 +24,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly IMessageBackoffStrategy _messageBackoffStrategy;
         private readonly IMessageContextAccessor _messageContextAccessor;
 
-        private static ILogger _log;
+        private static ILogger _logger;
 
         public MessageDispatcher(
             SqsQueueBase queue,
@@ -41,7 +41,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _messagingMonitor = messagingMonitor;
             _onError = onError;
             _handlerMap = handlerMap;
-            _log = loggerFactory.CreateLogger("JustSaying");
+            _logger = loggerFactory.CreateLogger("JustSaying");
             _messageBackoffStrategy = messageBackoffStrategy;
             _messageContextAccessor = messageContextAccessor;
         }
@@ -60,14 +60,15 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (MessageFormatNotSupportedException ex)
             {
-                _log.LogTrace($"Didn't handle message [{message.Body ?? string.Empty}]. No serializer setup");
+                _logger.LogTrace("Could not handle SQS message {MessageId} {MessageBody}. No serializer found",
+                    message.MessageId, message.Body ?? string.Empty);
                 await DeleteMessageFromQueue(message.ReceiptHandle).ConfigureAwait(false);
                 _onError(ex, message);
                 return;
             }
             catch (Exception ex)
             {
-                _log.LogError(0, ex, "Error deserializing message");
+                _logger.LogError(0, ex, "Error deserializing message {MessageId}", message.MessageId);
                 _onError(ex, message);
                 return;
             }
@@ -91,8 +92,8 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (Exception ex)
             {
-                var errorText = $"Error handling message [{message.Body}]";
-                _log.LogError(0, ex, errorText);
+                _logger.LogError(0, ex,
+                    "Error handling message {MessageId} {MessageBody}", message.MessageId, message.Body);
 
                 if (typedMessage != null)
                 {
@@ -128,7 +129,7 @@ namespace JustSaying.AwsTools.MessageHandling
             var handlerSucceeded = await handler(message).ConfigureAwait(false);
 
             watch.Stop();
-            _log.LogTrace($"Handled message - MessageType: {message.GetType()}");
+            _logger.LogTrace("Handled message {MessageType}", message.GetType().ToString());
             _messagingMonitor.HandleTime(watch.Elapsed);
 
             return handlerSucceeded;
@@ -164,7 +165,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
                 catch (Exception ex)
                 {
-                    _log.LogError(0, ex, $"Failed to update message visibility timeout by {visibilityTimeoutSeconds} seconds");
+                    _logger.LogError(0, ex, "Failed to update message visibility timeout by {visibilityTimeoutSeconds} seconds", visibilityTimeoutSeconds);
                     _onError(ex, message);
                 }
             }
