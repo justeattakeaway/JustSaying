@@ -90,23 +90,28 @@ namespace JustSaying.IntegrationTests.Fluent
             IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
             IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
+            await RunActionWithTimeout(async ctx =>
+                await action(publisher, listener, ctx)
+                    .ConfigureAwait(false));
+        }
+
+        protected async Task RunActionWithTimeout(Func<CancellationToken, Task> action)
+        {
             using (var cts = new CancellationTokenSource())
             {
                 var delayTask = Task.Delay(Timeout, cts.Token);
-                var actionTask = action(publisher, listener, cts.Token);
+                var actionTask = action(cts.Token);
 
-                var resultTask = await Task.WhenAny(actionTask, delayTask).ConfigureAwait(false);
+                var resultTask = await Task.WhenAny(actionTask, delayTask)
+                    .ConfigureAwait(false);
 
                 if (resultTask == delayTask)
                 {
                     throw new TimeoutException($"The bus related action took longer to execute than the timeout of {Timeout.TotalSeconds} seconds");
                 }
-                else
-                {
-                    cts.Cancel();
-                }
-                
+
                 await actionTask;
+                cts.Cancel();
             }
         }
     }
