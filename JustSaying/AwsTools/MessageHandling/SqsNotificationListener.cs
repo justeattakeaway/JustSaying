@@ -132,12 +132,12 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
                 catch (InvalidOperationException ex)
                 {
-                    _log.LogTrace(ex, "Could not determine number of messages to read from {queueName}, {region}",
+                    _log.LogTrace(0, ex, "Could not determine number of messages to read from {queueName}, {region}",
                           queueName, region);
                 }
                 catch (OperationCanceledException ex)
                 {
-                    _log.LogTrace(ex, "Suspected no message in {queueName}, {region}",
+                    _log.LogTrace(0, ex, "Suspected no message in {queueName}, {region}",
                         queueName, region);
                 }
                 catch (Exception ex)
