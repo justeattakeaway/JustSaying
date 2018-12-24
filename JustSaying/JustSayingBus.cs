@@ -167,22 +167,21 @@ namespace JustSaying
             {
                 activeRegion = Config.GetActiveRegion();
             }
-            _log.LogInformation($"Active region has been evaluated to {activeRegion}");
+            _log.LogInformation("Active region has been evaluated to {activeRegion}", activeRegion);
 
             if (!_publishersByRegionAndTopic.ContainsKey(activeRegion))
             {
-                var errorMessage = $"Error publishing message, no publishers registered for active region {activeRegion}.";
-                _log.LogError(errorMessage);
-                throw new InvalidOperationException(errorMessage);
+                _log.LogError("Error publishing message. No publishers registered for active region {activeRegion}.", activeRegion);
+                throw new InvalidOperationException($"Error publishing message. No publishers registered for active region {activeRegion}.");
             }
 
             var topic = message.GetType().ToTopicName();
             var publishersByTopic = _publishersByRegionAndTopic[activeRegion];
             if (!publishersByTopic.ContainsKey(topic))
             {
-                var errorMessage = $"Error publishing message, no publishers registered for message type {message} in {activeRegion}.";
-                _log.LogError(errorMessage);
-                throw new InvalidOperationException(errorMessage);
+                _log.LogError("Error publishing message. No publishers registered for {MessageType} in {activeRegion}.",
+                    message.GetType().ToString(), activeRegion);
+                throw new InvalidOperationException($"Error publishing message, no publishers registered for message type {message.GetType()} in {activeRegion}.");
             }
 
             return publishersByTopic[topic];
@@ -211,11 +210,13 @@ namespace JustSaying
                 if (attemptCount >= Config.PublishFailureReAttempts)
                 {
                     Monitor.IssuePublishingMessage();
-                    _log.LogError(0, ex, $"Failed to publish message {message.GetType()}. Halting after attempt {attemptCount}");
+                    _log.LogError(0, ex, "Failed to publish message {MessageType}. Halting after attempt {attemptCount}",
+                        message.GetType().ToString(), attemptCount);
                     throw;
                 }
 
-                _log.LogWarning(0, ex, $"Failed to publish message {message.GetType()}. Retrying after attempt {attemptCount} of {Config.PublishFailureReAttempts}");
+                _log.LogWarning(0, ex, "Failed to publish message {MessageType}. Retrying after attempt {attemptCount} of {PublishFailureReAttempts}",
+                    message.GetType().ToString(), attemptCount, Config.PublishFailureReAttempts);
 
                 var delayForAttempt = TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
                 await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);
