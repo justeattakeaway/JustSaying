@@ -165,7 +165,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(0, ex, "Failed to update message visibility timeout by {visibilityTimeoutSeconds} seconds", visibilityTimeoutSeconds);
+                    _logger.LogError(0, ex, "Failed to update message visibility timeout by {VisibilityTimeout} seconds", visibilityTimeoutSeconds);
                     _onError(ex, message);
                 }
             }
