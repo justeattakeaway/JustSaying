@@ -108,7 +108,7 @@ namespace JustSaying
                 Bus.AddMessagePublisher<T>(eventPublisher, region);
             }
 
-            _log.LogInformation($"Created SNS topic publisher - Topic: {_subscriptionConfig.Topic}");
+            _log.LogInformation("Created SNS topic publisher on {TopicName}",_subscriptionConfig.Topic);
 
             return this;
         }
@@ -153,7 +153,7 @@ namespace JustSaying
                 Bus.AddMessagePublisher<T>(eventPublisher, region);
             }
 
-            _log.LogInformation($"Created SQS publisher - MessageType: {typeof(T)}, QueueName: {queueName}");
+            _log.LogInformation("Created SQS publisher - {MessageType}, {QueueName}", typeof(T).ToString(), queueName);
 
             return this;
         }
@@ -257,7 +257,8 @@ namespace JustSaying
             {
                 Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handler);
             }
-            _log.LogInformation($"Added a message handler - MessageType: {typeof(T)}, QueueName: {_subscriptionConfig.QueueName}, HandlerType: {handler.GetType()}");
+            _log.LogInformation("Added a message handler - {MessageType}, {QueueName}, {HandlerType}",
+                typeof(T).ToString(), _subscriptionConfig.QueueName, handler.GetType().ToString());
 
             return thing;
         }
@@ -288,7 +289,8 @@ namespace JustSaying
                 Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handlerResolver.ResolveHandler<T>(resolutionContext));
             }
 
-            _log.LogInformation($"Added a message handler - Topic: {_subscriptionConfig.Topic}, QueueName: {_subscriptionConfig.QueueName}, HandlerName: IHandler<{typeof(T)}>");
+            _log.LogInformation("Added a message handler {TopicName} {QueueName} for {MessageType}",
+                _subscriptionConfig.Topic, _subscriptionConfig.QueueName, typeof(T).ToString());
 
             return thing;
         }
@@ -301,7 +303,8 @@ namespace JustSaying
             {
                 var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribedAsync(region, Bus.SerializationRegister, _subscriptionConfig, Bus.Config.MessageSubjectProvider).GetAwaiter().GetResult();
                 CreateSubscriptionListener<T>(region, queue);
-                _log.LogInformation($"Created SQS topic subscription - Topic: {_subscriptionConfig.Topic}, QueueName: {_subscriptionConfig.QueueName}");
+                _log.LogInformation("Created SQS topic subscription {TopicName} {QueueName}",
+                    _subscriptionConfig.Topic, _subscriptionConfig.QueueName);
             }
 
             return this;
@@ -315,7 +318,8 @@ namespace JustSaying
             {
                 var queue = _amazonQueueCreator.EnsureQueueExistsAsync(region, _subscriptionConfig).GetAwaiter().GetResult();
                 CreateSubscriptionListener<T>(region, queue);
-                _log.LogInformation($"Created SQS subscriber - MessageType: {typeof(T)}, QueueName: {_subscriptionConfig.QueueName}");
+                _log.LogInformation("Created SQS subscriber. - {MessageType}, {QueueName}",
+                    typeof(T).ToString(), _subscriptionConfig.QueueName);
             }
 
             return this;
