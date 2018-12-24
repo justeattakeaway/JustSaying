@@ -6,7 +6,7 @@ using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent
 {
-    public class ActionRunnerTest: IntegrationTestBase
+    public class ActionRunnerTest : IntegrationTestBase
     {
         public ActionRunnerTest(ITestOutputHelper outputHelper) : base(outputHelper)
         {
