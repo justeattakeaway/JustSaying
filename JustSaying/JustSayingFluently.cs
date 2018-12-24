@@ -153,7 +153,7 @@ namespace JustSaying
                 Bus.AddMessagePublisher<T>(eventPublisher, region);
             }
 
-            _log.LogInformation("Created SQS publisher - {MessageType}, {QueueName}", typeof(T).ToString(), queueName);
+            _log.LogInformation("Created SQS publisher - {MessageType}, {QueueName}", typeof(T), queueName);
 
             return this;
         }
@@ -258,7 +258,7 @@ namespace JustSaying
                 Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handler);
             }
             _log.LogInformation("Added a message handler - {MessageType}, {QueueName}, {HandlerType}",
-                typeof(T).ToString(), _subscriptionConfig.QueueName, handler.GetType().ToString());
+                typeof(T), _subscriptionConfig.QueueName, handler.GetType().ToString());
 
             return thing;
         }
@@ -290,7 +290,7 @@ namespace JustSaying
             }
 
             _log.LogInformation("Added a message handler {TopicName} {QueueName} for {MessageType}",
-                _subscriptionConfig.Topic, _subscriptionConfig.QueueName, typeof(T).ToString());
+                _subscriptionConfig.Topic, _subscriptionConfig.QueueName, typeof(T));
 
             return thing;
         }
@@ -319,7 +319,7 @@ namespace JustSaying
                 var queue = _amazonQueueCreator.EnsureQueueExistsAsync(region, _subscriptionConfig).GetAwaiter().GetResult();
                 CreateSubscriptionListener<T>(region, queue);
                 _log.LogInformation("Created SQS subscriber. - {MessageType}, {QueueName}",
-                    typeof(T).ToString(), _subscriptionConfig.QueueName);
+                    typeof(T), _subscriptionConfig.QueueName);
             }
 
             return this;

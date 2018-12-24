@@ -129,7 +129,7 @@ namespace JustSaying.AwsTools.MessageHandling
             var handlerSucceeded = await handler(message).ConfigureAwait(false);
 
             watch.Stop();
-            _logger.LogTrace("Handled message {MessageType}", message.GetType().ToString());
+            _logger.LogTrace("Handled message {MessageType}", message.GetType());
             _messagingMonitor.HandleTime(watch.Elapsed);
 
             return handlerSucceeded;

@@ -180,7 +180,7 @@ namespace JustSaying
             if (!publishersByTopic.ContainsKey(topic))
             {
                 _log.LogError("Error publishing message. No publishers registered for {MessageType} in {activeRegion}.",
-                    message.GetType().ToString(), activeRegion);
+                    message.GetType(), activeRegion);
                 throw new InvalidOperationException($"Error publishing message, no publishers registered for message type {message.GetType()} in {activeRegion}.");
             }
 
@@ -211,12 +211,12 @@ namespace JustSaying
                 {
                     Monitor.IssuePublishingMessage();
                     _log.LogError(0, ex, "Failed to publish message {MessageType}. Halting after attempt {attemptCount}",
-                        message.GetType().ToString(), attemptCount);
+                        message.GetType(), attemptCount);
                     throw;
                 }
 
                 _log.LogWarning(0, ex, "Failed to publish message {MessageType}. Retrying after attempt {attemptCount} of {PublishFailureReAttempts}",
-                    message.GetType().ToString(), attemptCount, Config.PublishFailureReAttempts);
+                    message.GetType(), attemptCount, Config.PublishFailureReAttempts);
 
                 var delayForAttempt = TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
                 await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);
