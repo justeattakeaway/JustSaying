@@ -96,7 +96,7 @@ namespace JustSaying
 
     public interface ISubscriberIntoQueue
     {
-        IFluentSubscription IntoQueue(string queuename);
+        IFluentSubscription IntoQueue(string queueName);
     }
 
     public interface IHaveFulfilledPublishRequirements : IAmJustSayingFluently
