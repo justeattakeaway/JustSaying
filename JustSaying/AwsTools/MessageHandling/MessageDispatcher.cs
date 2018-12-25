@@ -60,15 +60,16 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (MessageFormatNotSupportedException ex)
             {
-                _logger.LogTrace("Could not handle SQS message {MessageId} {MessageBody}. No serializer found",
-                    message.MessageId, message.Body ?? string.Empty);
+                _logger.LogTrace("Could not handle message with Id '{MessageId}' because a deserialiser for the content is not configured. Message body: '{MessageBody}'.",
+                    message.MessageId, message.Body);
                 await DeleteMessageFromQueue(message.ReceiptHandle).ConfigureAwait(false);
                 _onError(ex, message);
                 return;
             }
             catch (Exception ex)
             {
-                _logger.LogError(0, ex, "Error deserializing message {MessageId}", message.MessageId);
+                _logger.LogError(0, ex, "Error deserializing message with Id '{MessageId}' and body '{MessageBody}'.",
+                    message.MessageId, message.Body);
                 _onError(ex, message);
                 return;
             }
@@ -92,8 +93,8 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (Exception ex)
             {
-                _logger.LogError(0, ex,
-                    "Error handling message {MessageId} {MessageBody}", message.MessageId, message.Body);
+                _logger.LogError(0, ex, "Error handling message with Id '{MessageId}' and body '{MessageBody}'.",
+                    message.MessageId, message.Body);
 
                 if (typedMessage != null)
                 {
@@ -129,7 +130,7 @@ namespace JustSaying.AwsTools.MessageHandling
             var handlerSucceeded = await handler(message).ConfigureAwait(false);
 
             watch.Stop();
-            _logger.LogTrace("Handled message of type {MessageType} in {TimeToHandle}. ",
+            _logger.LogTrace("Handled message of type {MessageType} in {TimeToHandle}.",
                 message.GetType(), watch.Elapsed);
             _messagingMonitor.HandleTime(watch.Elapsed);
 
@@ -151,7 +152,8 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             if (TryGetApproxReceiveCount(message.Attributes, out int approxReceiveCount))
             {
-                var visibilityTimeoutSeconds = (int)_messageBackoffStrategy.GetBackoffDuration(typedMessage, approxReceiveCount, lastException).TotalSeconds;
+                var visibilityTimeout = _messageBackoffStrategy.GetBackoffDuration(typedMessage, approxReceiveCount, lastException);
+                var visibilityTimeoutSeconds = (int)visibilityTimeout.TotalSeconds;
 
                 try
                 {
@@ -166,7 +168,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(0, ex, "Failed to update message visibility timeout by {VisibilityTimeout} seconds", visibilityTimeoutSeconds);
+                    _logger.LogError(0, ex, "Failed to update message visibility timeout by {VisibilityTimeout} seconds.", visibilityTimeoutSeconds);
                     _onError(ex, message);
                 }
             }
