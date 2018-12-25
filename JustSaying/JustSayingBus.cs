@@ -167,11 +167,11 @@ namespace JustSaying
             {
                 activeRegion = Config.GetActiveRegion();
             }
-            _log.LogInformation("Active region has been evaluated to '{ActiveRegion}'.", activeRegion);
+            _log.LogInformation("Active region has been evaluated to '{Region}'.", activeRegion);
 
             if (!_publishersByRegionAndTopic.ContainsKey(activeRegion))
             {
-                _log.LogError("Error publishing message. No publishers registered for active region '{ActiveRegion}'.", activeRegion);
+                _log.LogError("Error publishing message. No publishers registered for active region '{Region}'.", activeRegion);
                 throw new InvalidOperationException($"Error publishing message. No publishers registered for active region '{activeRegion}'.");
             }
 
@@ -179,7 +179,7 @@ namespace JustSaying
             var publishersByTopic = _publishersByRegionAndTopic[activeRegion];
             if (!publishersByTopic.ContainsKey(topic))
             {
-                _log.LogError("Error publishing message. No publishers registered for message type '{MessageType}' in active region '{ActiveRegion}'.",
+                _log.LogError("Error publishing message. No publishers registered for message type '{MessageType}' in active region '{Region}'.",
                     message.GetType(), activeRegion);
                 throw new InvalidOperationException($"Error publishing message, no publishers registered for message type {message.GetType()} in {activeRegion}.");
             }
