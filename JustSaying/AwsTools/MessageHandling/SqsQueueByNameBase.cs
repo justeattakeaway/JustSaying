@@ -95,7 +95,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
             }
 
-            _log.LogInformation("Failed to create queue {QueueName}.", QueueName);
+            _log.LogInformation("Failed to create queue '{QueueName}'.", QueueName);
             return false;
         }
 
