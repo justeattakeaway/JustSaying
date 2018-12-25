@@ -107,11 +107,11 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 await ListenLoop(cancellationToken).ConfigureAwait(false);
                 IsListening = false;
-                _log.LogInformation("Stopped listening on queue '{QueueName}', in region '{Region}'.", queueName, region);
+                _log.LogInformation("Stopped listening on queue '{QueueName}' in region '{Region}'.", queueName, region);
             });
 
             IsListening = true;
-            _log.LogInformation("Starting listening on queue '{QueueName}', in region '{Region}'.", queueName, region);
+            _log.LogInformation("Starting listening on queue '{QueueName}' in region '{Region}'.", queueName, region);
         }
 
         internal async Task ListenLoop(CancellationToken ct)
