@@ -107,11 +107,11 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 await ListenLoop(cancellationToken).ConfigureAwait(false);
                 IsListening = false;
-                _log.LogInformation("Stopped Listening on {queueName}, {region}", queueName, region);
+                _log.LogInformation("Stopped listening on queue '{QueueName}', in region '{Region}'.", queueName, region);
             });
 
             IsListening = true;
-            _log.LogInformation("Starting Listening on {queueName}, {region}", queueName, region);
+            _log.LogInformation("Starting listening on queue '{QueueName}', in region '{Region}'.", queueName, region);
         }
 
         internal async Task ListenLoop(CancellationToken ct)
@@ -127,22 +127,23 @@ namespace JustSaying.AwsTools.MessageHandling
                     sqsMessageResponse = await GetMessagesFromSqsQueue(queueName, region, ct).ConfigureAwait(false);
                     var messageCount = sqsMessageResponse.Messages.Count;
 
-                    _log.LogTrace("Polled for messages - {queueName}, {region}, {messageCount}",
+                    _log.LogTrace("Polled for messages on queue '{QueueName}' in region '{Region}', and got {MessageCount} messages.",
                         queueName, region, messageCount);
                 }
                 catch (InvalidOperationException ex)
                 {
-                    _log.LogTrace(0, ex, "Could not determine number of messages to read from {queueName}, {region}",
+                    _log.LogTrace(0, ex, "Could not determine number of messages to read from queue '{QueueName}', in '{Region}'.",
                           queueName, region);
                 }
                 catch (OperationCanceledException ex)
                 {
-                    _log.LogTrace(0, ex, "Suspected no message in {queueName}, {region}",
+                    _log.LogTrace(0, ex, "Suspected no message on queue '{QueueName}', in region '{Region}'.",
                         queueName, region);
                 }
                 catch (Exception ex)
                 {
-                    _log.LogError(0, ex, "Issue receiving messages for queue {queueName}, region {region}", queueName, region);
+                    _log.LogError(0, ex, "Error receiving messages on queue '{QueueName}' in region '{Region}'.",
+                        queueName, region);
                 }
 
                 try
@@ -161,7 +162,8 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
                 catch (Exception ex)
                 {
-                    _log.LogError(0, ex, "Issue in message handling loop for {queueName}, {region}", queueName, region);
+                    _log.LogError(0, ex, "Error in message handling loop for queue '{QueueName}' in region '{Region}'.",
+                        queueName, region);
                 }
             }
         }
@@ -197,7 +199,8 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     if (receiveTimeout.Token.IsCancellationRequested)
                     {
-                        _log.LogInformation("Receiving messages from {queueName}, {region}, timed out", queueName, region);
+                        _log.LogInformation("Timed out while receiving messages from queue '{QueueName}' in region '{Region}'.",
+                            queueName, region);
                     }
                 }
 
