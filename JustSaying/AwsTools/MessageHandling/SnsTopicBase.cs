@@ -56,7 +56,7 @@ namespace JustSaying.AwsTools.MessageHandling
             try
             {
                 var response = await Client.PublishAsync(request, cancellationToken).ConfigureAwait(false);
-                _eventLog.LogInformation("Published message with subject '{MessageSubject}' and content '{MessageBody}'",
+                _eventLog.LogInformation("Published message with subject '{MessageSubject}' and content '{MessageBody}'.",
                     request.Subject, request.Message);
 
                 if (MessageResponseLogger != null)
