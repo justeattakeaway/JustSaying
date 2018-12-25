@@ -181,7 +181,7 @@ namespace JustSaying
             {
                 _log.LogError("Error publishing message. No publishers registered for message type '{MessageType}' in active region '{Region}'.",
                     message.GetType(), activeRegion);
-                throw new InvalidOperationException($"Error publishing message, no publishers registered for message type {message.GetType()} in {activeRegion}.");
+                throw new InvalidOperationException($"Error publishing message, no publishers registered for message type '{message.GetType()}' in active region '{activeRegion}'.");
             }
 
             return publishersByTopic[topic];
