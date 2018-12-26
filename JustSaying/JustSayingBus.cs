@@ -169,22 +169,24 @@ namespace JustSaying
             }
             _log.LogInformation("Active region has been evaluated to '{Region}'.", activeRegion);
 
-            if (!_publishersByRegionAndTopic.ContainsKey(activeRegion))
+            var publishersForRegionFound = _publishersByRegionAndTopic.TryGetValue(activeRegion, out var publishersForRegion);
+            if (!publishersForRegionFound)
             {
                 _log.LogError("Error publishing message. No publishers registered for active region '{Region}'.", activeRegion);
                 throw new InvalidOperationException($"Error publishing message. No publishers registered for active region '{activeRegion}'.");
             }
 
             var topic = message.GetType().ToTopicName();
-            var publishersByTopic = _publishersByRegionAndTopic[activeRegion];
-            if (!publishersByTopic.ContainsKey(topic))
+            var publisherFound = publishersForRegion.TryGetValue(topic, out var publisher);
+
+            if (!publisherFound)
             {
                 _log.LogError("Error publishing message. No publishers registered for message type '{MessageType}' in active region '{Region}'.",
                     message.GetType(), activeRegion);
                 throw new InvalidOperationException($"Error publishing message, no publishers registered for message type '{message.GetType()}' in active region '{activeRegion}'.");
             }
 
-            return publishersByTopic[topic];
+            return publisher;
         }
 
         private async Task PublishAsync(
