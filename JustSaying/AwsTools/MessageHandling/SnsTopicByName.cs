@@ -80,10 +80,10 @@ namespace JustSaying.AwsTools.MessageHandling
                 if (!string.IsNullOrEmpty(response.TopicArn))
                 {
                     Arn = response.TopicArn;
-                    _log.LogInformation("Created topic '{TopicName}' on Arn '{Arn}'.", TopicName, Arn);
+                    _log.LogInformation("Created topic '{TopicName}' on ARN '{Arn}'.", TopicName, Arn);
                     return true;
                 }
-                _log.LogInformation("Failed to create topic '{TopicName}'.", TopicName);
+                _log.LogWarning("Failed to create topic '{TopicName}'.", TopicName);
             }
             catch (AuthorizationErrorException ex)
             {

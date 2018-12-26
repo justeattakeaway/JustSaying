@@ -117,33 +117,33 @@ namespace JustSaying.AwsTools.MessageHandling
         internal async Task ListenLoop(CancellationToken ct)
         {
             var queueName = _queue.QueueName;
-            var region = _queue.Region.SystemName;
+            var regionName = _queue.Region.SystemName;
             ReceiveMessageResponse sqsMessageResponse = null;
 
             while (!ct.IsCancellationRequested)
             {
                 try
                 {
-                    sqsMessageResponse = await GetMessagesFromSqsQueue(queueName, region, ct).ConfigureAwait(false);
+                    sqsMessageResponse = await GetMessagesFromSqsQueue(queueName, regionName, ct).ConfigureAwait(false);
                     var messageCount = sqsMessageResponse.Messages.Count;
 
-                    _log.LogTrace("Polled for messages on queue '{QueueName}' in region '{Region}', and got {MessageCount} messages.",
-                        queueName, region, messageCount);
+                    _log.LogTrace("Polled for messages on queue '{QueueName}' in region '{Region}', and received {MessageCount} messages.",
+                        queueName, regionName, messageCount);
                 }
                 catch (InvalidOperationException ex)
                 {
-                    _log.LogTrace(0, ex, "Could not determine number of messages to read from queue '{QueueName}', in '{Region}'.",
-                          queueName, region);
+                    _log.LogTrace(0, ex, "Could not determine number of messages to read from queue '{QueueName}' in '{Region}'.",
+                        queueName, regionName);
                 }
                 catch (OperationCanceledException ex)
                 {
                     _log.LogTrace(0, ex, "Suspected no message on queue '{QueueName}', in region '{Region}'.",
-                        queueName, region);
+                        queueName, regionName);
                 }
                 catch (Exception ex)
                 {
                     _log.LogError(0, ex, "Error receiving messages on queue '{QueueName}' in region '{Region}'.",
-                        queueName, region);
+                        queueName, regionName);
                 }
 
                 try
@@ -163,7 +163,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 catch (Exception ex)
                 {
                     _log.LogError(0, ex, "Error in message handling loop for queue '{QueueName}' in region '{Region}'.",
-                        queueName, region);
+                        queueName, regionName);
                 }
             }
         }

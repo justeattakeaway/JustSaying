@@ -53,6 +53,8 @@ namespace JustSaying.AwsTools.MessageHandling
             => queueUrl.Substring(queueUrl.LastIndexOf("/", StringComparison.Ordinal) + 1)
                 .Equals(queueName, StringComparison.OrdinalIgnoreCase);
 
+        private static TimeSpan CreateRetryDelay = TimeSpan.FromMinutes(1);
+
         public virtual async Task<bool> CreateAsync(SqsBasicConfiguration queueConfig, int attempt = 0)
         {
             try
@@ -65,7 +67,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     await Client.SetQueueAttributesAsync(queueResponse.QueueUrl, GetCreateQueueAttributes(queueConfig)).ConfigureAwait(false);
                     await SetQueuePropertiesAsync().ConfigureAwait(false);
 
-                    _log.LogInformation("Created queue '{QueueName}' on arn '{Arn}'.", QueueName, Arn);
+                    _log.LogInformation("Created queue '{QueueName}' with ARN '{Arn}'.", QueueName, Arn);
                     return true;
                 }
             }
@@ -74,10 +76,10 @@ namespace JustSaying.AwsTools.MessageHandling
                 if (ex.ErrorCode == "AWS.SimpleQueueService.QueueDeletedRecently")
                 {
                     // Ensure we wait for queue delete timeout to expire.
-                    _log.LogInformation("Waiting to create queue '{QueueName}', due to AWS time restriction. Attempt number {attemptCount}.",
-                        QueueName, attempt + 1);
+                    _log.LogInformation("Waiting to create queue '{QueueName}' for {Delay}, due to AWS time restriction. Attempt number {attemptCount}.",
+                        QueueName, CreateRetryDelay, attempt + 1);
 
-                    await Task.Delay(60000).ConfigureAwait(false);
+                    await Task.Delay(CreateRetryDelay).ConfigureAwait(false);
                     await CreateAsync(queueConfig, attempt + 1).ConfigureAwait(false);
                 }
                 else
@@ -90,12 +92,13 @@ namespace JustSaying.AwsTools.MessageHandling
                 // If we're on a delete timeout, throw after 2 attempts.
                 if (attempt >= 2)
                 {
-                    _log.LogError(0, ex, "Error trying to create queue '{QueueName}'. Maximum retries exceeded for delay.", QueueName);
+                    _log.LogError(0, ex, "Error trying to create queue '{QueueName}'. Maximum retries exceeded for delay {Delay}.",
+                        QueueName, CreateRetryDelay);
                     throw;
                 }
             }
 
-            _log.LogInformation("Failed to create queue '{QueueName}'.", QueueName);
+            _log.LogWarning("Failed to create queue '{QueueName}'.", QueueName);
             return false;
         }
 

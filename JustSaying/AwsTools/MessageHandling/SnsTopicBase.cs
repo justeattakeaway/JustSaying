@@ -75,7 +75,8 @@ namespace JustSaying.AwsTools.MessageHandling
                 if (!ClientExceptionHandler(ex, message))
                 {
                     throw new PublishException(
-                        $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}", ex);
+                        $"Failed to publish message to SNS. Topic ARN: '{request.TopicArn}', Subject: '{request.Subject}', Message: '{request.Message}'.",
+                        ex);
                 }
             }
         }
