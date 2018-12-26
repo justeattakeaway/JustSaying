@@ -210,12 +210,12 @@ namespace JustSaying
                 if (attemptCount >= Config.PublishFailureReAttempts)
                 {
                     Monitor.IssuePublishingMessage();
-                    _log.LogError(0, ex, "Failed to publish a message of type '{MessageType}'. Halting after attempt number {AttemptCount}.",
+                    _log.LogError(0, ex, "Failed to publish a message of type '{MessageType}'. Halting after attempt number {PublishAttemptCount}.",
                         message.GetType(), attemptCount);
                     throw;
                 }
 
-                _log.LogWarning(0, ex, "Failed to publish a message of type '{MessageType}'. Retrying after attempt number {AttemptCount} of {PublishFailureReAttempts}.",
+                _log.LogWarning(0, ex, "Failed to publish a message of type '{MessageType}'. Retrying after attempt number {PublishAttemptCount} of {PublishFailureReattempts}.",
                     message.GetType(), attemptCount, Config.PublishFailureReAttempts);
 
                 var delayForAttempt = TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
