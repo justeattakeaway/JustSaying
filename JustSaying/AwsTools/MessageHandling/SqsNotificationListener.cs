@@ -137,7 +137,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
                 catch (OperationCanceledException ex)
                 {
-                    _log.LogTrace(0, ex, "Suspected no message on queue '{QueueName}', in region '{Region}'.",
+                    _log.LogTrace(0, ex, "Suspected no message on queue '{QueueName}' in region '{Region}'.",
                         queueName, regionName);
                 }
                 catch (Exception ex)
