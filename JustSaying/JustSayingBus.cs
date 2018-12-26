@@ -19,6 +19,9 @@ namespace JustSaying
     {
         private readonly Dictionary<string, Dictionary<string, INotificationSubscriber>> _subscribersByRegionAndQueue;
         private readonly Dictionary<string, Dictionary<string, IMessagePublisher>> _publishersByRegionAndTopic;
+
+        private string _previousRegion;
+
         public IMessagingConfig Config { get; private set; }
 
         private IMessageMonitor _monitor;
@@ -158,16 +161,13 @@ namespace JustSaying
                 throw new InvalidOperationException(errorMessage);
             }
 
-            string activeRegion;
-            if (Config.GetActiveRegion == null)
+            var activeRegion = GetActiveRegion();
+            if (!string.Equals(_previousRegion, activeRegion, StringComparison.Ordinal))
             {
-                activeRegion = Config.Regions.First();
+                _log.LogInformation("Active region for publishing has been set to '{Region}', was '{PreviousRegion}'.",
+                    activeRegion, _previousRegion);
+                _previousRegion = activeRegion;
             }
-            else
-            {
-                activeRegion = Config.GetActiveRegion();
-            }
-            _log.LogInformation("Active region has been evaluated to '{Region}'.", activeRegion);
 
             var publishersForRegionFound = _publishersByRegionAndTopic.TryGetValue(activeRegion, out var publishersForRegion);
             if (!publishersForRegionFound)
@@ -187,6 +187,16 @@ namespace JustSaying
             }
 
             return publisher;
+        }
+
+        private string GetActiveRegion()
+        {
+            if (Config.GetActiveRegion == null)
+            {
+                return Config.Regions.First();
+            }
+
+            return Config.GetActiveRegion();
         }
 
         private async Task PublishAsync(
