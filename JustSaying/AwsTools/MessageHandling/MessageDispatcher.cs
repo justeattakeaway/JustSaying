@@ -60,7 +60,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (MessageFormatNotSupportedException ex)
             {
-                _logger.LogTrace("Could not handle message with Id '{MessageId}' because a deserialiser for the content is not configured. Message body: '{MessageBody}'.",
+                _logger.LogTrace("Could not handle message with Id '{MessageId}' because a deserializer for the content is not configured. Message body: '{MessageBody}'.",
                     message.MessageId, message.Body);
                 await DeleteMessageFromQueue(message.ReceiptHandle).ConfigureAwait(false);
                 _onError(ex, message);
