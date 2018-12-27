@@ -56,7 +56,8 @@ namespace JustSaying.AwsTools.MessageHandling
             try
             {
                 var response = await Client.PublishAsync(request, cancellationToken).ConfigureAwait(false);
-                _eventLog.LogInformation($"Published message: '{request.Subject}' with content {request.Message}");
+                _eventLog.LogInformation("Published message with subject '{MessageSubject}' and content '{MessageBody}'.",
+                    request.Subject, request.Message);
 
                 if (MessageResponseLogger != null)
                 {
@@ -72,9 +73,11 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (Exception ex)
             {
                 if (!ClientExceptionHandler(ex, message))
+                {
                     throw new PublishException(
-                        $"Failed to publish message to SNS. TopicArn: {request.TopicArn} Subject: {request.Subject} Message: {request.Message}",
+                        $"Failed to publish message to SNS. Topic ARN: '{request.TopicArn}', Subject: '{request.Subject}', Message: '{request.Message}'.",
                         ex);
+                }
             }
         }
 

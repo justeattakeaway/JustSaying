@@ -19,6 +19,9 @@ namespace JustSaying
     {
         private readonly Dictionary<string, Dictionary<string, INotificationSubscriber>> _subscribersByRegionAndQueue;
         private readonly Dictionary<string, Dictionary<string, IMessagePublisher>> _publishersByRegionAndTopic;
+
+        private string _previousActiveRegion;
+
         public IMessagingConfig Config { get; private set; }
 
         private IMessageMonitor _monitor;
@@ -98,7 +101,7 @@ namespace JustSaying
         {
             if (Config.PublishFailureReAttempts == 0)
             {
-                _log.LogWarning("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages!");
+                _log.LogWarning("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages.");
             }
 
             if (!_publishersByRegionAndTopic.TryGetValue(region, out var publishersByTopic))
@@ -158,34 +161,59 @@ namespace JustSaying
                 throw new InvalidOperationException(errorMessage);
             }
 
-            string activeRegion;
-            if (Config.GetActiveRegion == null)
-            {
-                activeRegion = Config.Regions.First();
-            }
-            else
-            {
-                activeRegion = Config.GetActiveRegion();
-            }
-            _log.LogInformation($"Active region has been evaluated to {activeRegion}");
+            string activeRegion = GetActiveRegionWithChangeLog();
 
-            if (!_publishersByRegionAndTopic.ContainsKey(activeRegion))
+            var publishersForRegionFound = _publishersByRegionAndTopic.TryGetValue(activeRegion, out var publishersForRegion);
+            if (!publishersForRegionFound)
             {
-                var errorMessage = $"Error publishing message, no publishers registered for active region {activeRegion}.";
-                _log.LogError(errorMessage);
-                throw new InvalidOperationException(errorMessage);
+                _log.LogError("Error publishing message. No publishers registered for active region '{Region}'.", activeRegion);
+                throw new InvalidOperationException($"Error publishing message. No publishers registered for active region '{activeRegion}'.");
             }
 
             var topic = message.GetType().ToTopicName();
-            var publishersByTopic = _publishersByRegionAndTopic[activeRegion];
-            if (!publishersByTopic.ContainsKey(topic))
+            var publisherFound = publishersForRegion.TryGetValue(topic, out var publisher);
+
+            if (!publisherFound)
             {
-                var errorMessage = $"Error publishing message, no publishers registered for message type {message} in {activeRegion}.";
-                _log.LogError(errorMessage);
-                throw new InvalidOperationException(errorMessage);
+                _log.LogError("Error publishing message. No publishers registered for message type '{MessageType}' in active region '{Region}'.",
+                    message.GetType(), activeRegion);
+                throw new InvalidOperationException($"Error publishing message, no publishers registered for message type '{message.GetType()}' in active region '{activeRegion}'.");
             }
 
-            return publishersByTopic[topic];
+            return publisher;
+        }
+
+        private string GetActiveRegionWithChangeLog()
+        {
+            string currentActiveRegion = GetActiveRegion();
+
+            if (!string.Equals(_previousActiveRegion, currentActiveRegion, StringComparison.Ordinal))
+            {
+                if (_previousActiveRegion == null)
+                {
+                    _log.LogInformation("Active region for publishing has been initialized to '{Region}'.",
+                        currentActiveRegion);
+                }
+                else
+                {
+                    _log.LogInformation("Active region for publishing has been changed to '{Region}', was '{PreviousRegion}'.",
+                        currentActiveRegion, _previousActiveRegion);
+                }
+
+                _previousActiveRegion = currentActiveRegion;
+            }
+
+            return currentActiveRegion;
+        }
+
+        private string GetActiveRegion()
+        {
+            if (Config.GetActiveRegion != null)
+            {
+                return Config.GetActiveRegion();
+            }
+
+            return Config.Regions.First();
         }
 
         private async Task PublishAsync(
@@ -211,11 +239,13 @@ namespace JustSaying
                 if (attemptCount >= Config.PublishFailureReAttempts)
                 {
                     Monitor.IssuePublishingMessage();
-                    _log.LogError(0, ex, $"Failed to publish message {message.GetType()}. Halting after attempt {attemptCount}");
+                    _log.LogError(0, ex, "Failed to publish a message of type '{MessageType}'. Halting after attempt number {PublishAttemptCount}.",
+                        message.GetType(), attemptCount);
                     throw;
                 }
 
-                _log.LogWarning(0, ex, $"Failed to publish message {message.GetType()}. Retrying after attempt {attemptCount} of {Config.PublishFailureReAttempts}");
+                _log.LogWarning(0, ex, "Failed to publish a message of type '{MessageType}'. Retrying after attempt number {PublishAttemptCount} of {PublishFailureReattempts}.",
+                    message.GetType(), attemptCount, Config.PublishFailureReAttempts);
 
                 var delayForAttempt = TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
                 await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);
