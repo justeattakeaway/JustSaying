@@ -53,7 +53,7 @@ namespace JustSaying.AwsTools.MessageHandling
             => queueUrl.Substring(queueUrl.LastIndexOf("/", StringComparison.Ordinal) + 1)
                 .Equals(queueName, StringComparison.OrdinalIgnoreCase);
 
-        private static TimeSpan CreateRetryDelay = TimeSpan.FromMinutes(1);
+        private static readonly TimeSpan CreateRetryDelay = TimeSpan.FromMinutes(1);
 
         public virtual async Task<bool> CreateAsync(SqsBasicConfiguration queueConfig, int attempt = 0)
         {

@@ -20,7 +20,7 @@ namespace JustSaying
         private readonly Dictionary<string, Dictionary<string, INotificationSubscriber>> _subscribersByRegionAndQueue;
         private readonly Dictionary<string, Dictionary<string, IMessagePublisher>> _publishersByRegionAndTopic;
 
-        private string _previousRegion;
+        private string _previousActiveRegion;
 
         public IMessagingConfig Config { get; private set; }
 
@@ -161,13 +161,7 @@ namespace JustSaying
                 throw new InvalidOperationException(errorMessage);
             }
 
-            var activeRegion = GetActiveRegion();
-            if (!string.Equals(_previousRegion, activeRegion, StringComparison.Ordinal))
-            {
-                _log.LogInformation("Active region for publishing has been set to '{Region}', was '{PreviousRegion}'.",
-                    activeRegion, _previousRegion);
-                _previousRegion = activeRegion;
-            }
+            string activeRegion = GetActiveRegionWithChangeLog();
 
             var publishersForRegionFound = _publishersByRegionAndTopic.TryGetValue(activeRegion, out var publishersForRegion);
             if (!publishersForRegionFound)
@@ -189,14 +183,37 @@ namespace JustSaying
             return publisher;
         }
 
-        private string GetActiveRegion()
+        private string GetActiveRegionWithChangeLog()
         {
-            if (Config.GetActiveRegion == null)
+            string currentActiveRegion = GetActiveRegion();
+
+            if (!string.Equals(_previousActiveRegion, currentActiveRegion, StringComparison.Ordinal))
             {
-                return Config.Regions.First();
+                if (_previousActiveRegion == null)
+                {
+                    _log.LogInformation("Active region for publishing has been initialized to '{Region}'.",
+                        currentActiveRegion);
+                }
+                else
+                {
+                    _log.LogInformation("Active region for publishing has been changed to '{Region}', was '{PreviousRegion}'.",
+                        currentActiveRegion, _previousActiveRegion);
+                }
+
+                _previousActiveRegion = currentActiveRegion;
             }
 
-            return Config.GetActiveRegion();
+            return currentActiveRegion;
+        }
+
+        private string GetActiveRegion()
+        {
+            if (Config.GetActiveRegion != null)
+            {
+                return Config.GetActiveRegion();
+            }
+
+            return Config.Regions.First();
         }
 
         private async Task PublishAsync(
