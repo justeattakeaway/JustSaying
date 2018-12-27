@@ -49,14 +49,13 @@ namespace JustSaying.AwsTools.MessageHandling
             return true;
         }
 
-        private static bool Matches(string queueUrl, string queueName)
-            => queueUrl.Substring(queueUrl.LastIndexOf("/", StringComparison.Ordinal) + 1)
-                .Equals(queueName, StringComparison.OrdinalIgnoreCase);
-
         private static readonly TimeSpan CreateRetryDelay = TimeSpan.FromMinutes(1);
 
         public virtual async Task<bool> CreateAsync(SqsBasicConfiguration queueConfig, int attempt = 0)
         {
+            // If we're on a delete timeout, throw after 3 attempts.
+            const int maxAttempts = 3;
+
             try
             {
                 var queueResponse = await Client.CreateQueueAsync(QueueName).ConfigureAwait(false);
@@ -75,9 +74,16 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 if (ex.ErrorCode == "AWS.SimpleQueueService.QueueDeletedRecently")
                 {
+                    if (attempt >= (maxAttempts - 1))
+                    {
+                        _log.LogError(0, ex, "Error trying to create queue '{QueueName}'. Maximum retries of {MaxAttempts} exceeded for delay {Delay}.",
+                            QueueName, maxAttempts, CreateRetryDelay);
+                        throw;
+                    }
+
                     // Ensure we wait for queue delete timeout to expire.
-                    _log.LogInformation("Waiting to create queue '{QueueName}' for {Delay}, due to AWS time restriction. Attempt number {attemptCount}.",
-                        QueueName, CreateRetryDelay, attempt + 1);
+                    _log.LogInformation("Waiting to create queue '{QueueName}' for {Delay}, due to AWS time restriction. Attempt number {AttemptCount} of {MaxAttempts}.",
+                        QueueName, CreateRetryDelay, attempt + 1, maxAttempts);
 
                     await Task.Delay(CreateRetryDelay).ConfigureAwait(false);
                     await CreateAsync(queueConfig, attempt + 1).ConfigureAwait(false);
@@ -86,14 +92,6 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     // Throw all errors which are not delete timeout related.
                     _log.LogError(0, ex, "Error trying to create queue '{QueueName}'.", QueueName);
-                    throw;
-                }
-
-                // If we're on a delete timeout, throw after 2 attempts.
-                if (attempt >= 2)
-                {
-                    _log.LogError(0, ex, "Error trying to create queue '{QueueName}'. Maximum retries exceeded for delay {Delay}.",
-                        QueueName, CreateRetryDelay);
                     throw;
                 }
             }
