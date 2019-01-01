@@ -15,8 +15,8 @@ if [ "$dotnet_version" != "$CLI_VERSION" ]; then
 fi
 
 if [ "$CI" != "" -a "$TRAVIS_OS_NAME" == "linux" ]; then
-    docker pull pafortin/goaws@sha256:84c8879550c78aff7d2ec2ef6922273f98f15e1d20d27377c2b1164d1cb91ccf
-    docker run -d --name goaws -p 4100:4100 pafortin/goaws
+    docker pull pafortin/goaws:1.0.3
+    docker run -d --name goaws -p 4100:4100 pafortin/goaws:1.0.3
     export AWS_SERVICE_URL="http://localhost:4100"
 fi
 
