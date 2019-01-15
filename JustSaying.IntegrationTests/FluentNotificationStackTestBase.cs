@@ -11,6 +11,7 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests
 {
+#pragma warning disable CA1054
     public abstract class FluentNotificationStackTestBase : XAsyncBehaviourTest<JustSaying.JustSayingFluently>
     {
         protected RegionEndpoint Region => TestFixture.Region;
@@ -201,7 +202,8 @@ namespace JustSaying.IntegrationTests
             int pos = topic.TopicArn.LastIndexOf(':');
             string wildcardedSubscription = topic.TopicArn.Substring(0, pos + 1) + "*";
 
-            return policy.Contains(topic.TopicArn) || policy.Contains(wildcardedSubscription);
+            return policy.Contains(topic.TopicArn, StringComparison.OrdinalIgnoreCase) ||
+                   policy.Contains(wildcardedSubscription, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

@@ -5,6 +5,8 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 {
+#pragma warning disable CA1052
+#pragma warning disable CA1034
     public class WhenRegisteringLongNameMessageTypeTopicSubscriber
     {
         public class LongLongLongLongLonggLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLonggLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongMessage : Message

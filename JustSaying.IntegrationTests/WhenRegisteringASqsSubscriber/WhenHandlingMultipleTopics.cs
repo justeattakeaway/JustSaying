@@ -34,13 +34,13 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 
             policyJson.Statement.Count.ShouldBe(1,  $"Expecting 1 statement in Sqs policy but found {policyJson.Statement.Count}");
         }
+    }
 
-        public class TopicA : Message
-        {
-        }
+    public class TopicA : Message
+    {
+    }
 
-        public class TopicB : Message
-        {
-        }
+    public class TopicB : Message
+    {
     }
 }

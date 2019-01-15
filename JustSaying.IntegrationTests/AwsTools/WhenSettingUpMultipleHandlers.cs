@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -63,7 +64,9 @@ namespace JustSaying.IntegrationTests.AwsTools
         [AwsFact]
         public void GetQueueAttributesCalledOnce()
         {
-            _proxyAwsClientFactory.Counters["GetQueueAttributes"].First(x => x.Key.EndsWith(_queueName)).Value.Count
+            _proxyAwsClientFactory.Counters["GetQueueAttributes"].First(
+                    x => x.Key.EndsWith(_queueName, StringComparison.OrdinalIgnoreCase))
+                .Value.Count
                 .ShouldBe(1);
         }
 
