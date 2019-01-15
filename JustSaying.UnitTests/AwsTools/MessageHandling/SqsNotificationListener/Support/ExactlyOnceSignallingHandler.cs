@@ -17,7 +17,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.
         public Task<bool> Handle(SimpleMessage message)
         {
             HandleWasCalled = true;
-            Tasks.DelaySendDone(_doneSignal);
+            TaskHelpers.DelaySendDone(_doneSignal);
             return Task.FromResult(true);
         }
 

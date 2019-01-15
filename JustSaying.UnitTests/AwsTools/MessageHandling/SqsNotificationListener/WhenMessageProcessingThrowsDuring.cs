@@ -29,7 +29,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             var cts = new CancellationTokenSource();
             SystemUnderTest.Listen(cts.Token);
 
-            await Tasks.WaitWithTimeoutAsync(doneSignal.Task);
+            await TaskHelpers.WaitWithTimeoutAsync(doneSignal.Task);
 
             cts.Cancel();
         }

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace JustSaying.TestingFramework
 {
-    public static class Tasks
+    public static class TaskHelpers
     {
         private const int DefaultTimeoutMillis = 10000;
         private const int DelaySendMillis = 200;

@@ -40,7 +40,7 @@ namespace JustSaying.IntegrationTests.TestHandlers
             {
                 if (ReceivedMessageCount >= ExpectedMessageCount)
                 {
-                    Tasks.DelaySendDone(_doneSignal);
+                    TaskHelpers.DelaySendDone(_doneSignal);
                 }
             }
         }

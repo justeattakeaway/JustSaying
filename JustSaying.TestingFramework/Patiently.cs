@@ -56,7 +56,7 @@ namespace JustSaying.TestingFramework
         }
     }
 
-    public static class Extensions
+    public static class TimeExtensions
     {
         public static TimeSpan Seconds(this int n) => TimeSpan.FromSeconds(n);
 

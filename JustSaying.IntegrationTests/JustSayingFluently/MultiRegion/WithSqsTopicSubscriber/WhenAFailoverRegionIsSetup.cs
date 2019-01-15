@@ -124,7 +124,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
 
         private async Task ThenTheMessageIsReceivedInThatRegion(Future<SimpleMessage> handler, string regionName)
         {
-            var done = await Tasks.WaitWithTimeoutAsync(handler.DoneSignal);
+            var done = await TaskHelpers.WaitWithTimeoutAsync(handler.DoneSignal);
             done.ShouldBeTrue($"Handler did not complete in region {regionName}.");
 
             handler.ReceivedMessageCount.ShouldBeGreaterThanOrEqualTo(1, $"Received message count was incorrect in region {regionName}.");
