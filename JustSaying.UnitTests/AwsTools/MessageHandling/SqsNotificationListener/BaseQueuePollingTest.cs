@@ -74,7 +74,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             SystemUnderTest.Listen(cts.Token);
 
             // wait until it's done
-            var doneOk = await Tasks.WaitWithTimeoutAsync(doneSignal.Task);
+            var doneOk = await TaskHelpers.WaitWithTimeoutAsync(doneSignal.Task);
 
             cts.Cancel();
 

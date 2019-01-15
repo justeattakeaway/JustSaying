@@ -105,7 +105,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsPoin
 
         private async Task ThenTheSubscriberReceivesBothMessages()
         {
-            var done = await Tasks.WaitWithTimeoutAsync(_handler.DoneSignal);
+            var done = await TaskHelpers.WaitWithTimeoutAsync(_handler.DoneSignal);
             done.ShouldBeTrue();
 
             _handler.ReceivedMessageCount.ShouldBeGreaterThanOrEqualTo(2);

@@ -48,7 +48,7 @@ namespace JustSaying.IntegrationTests.WhenRegisteringHandlersViaResolver
                 return;
             }
 
-            var done = await Tasks.WaitWithTimeoutAsync(DoneSignal);
+            var done = await TaskHelpers.WaitWithTimeoutAsync(DoneSignal);
             done.ShouldBe(true, "Done task timed out");
         }
 

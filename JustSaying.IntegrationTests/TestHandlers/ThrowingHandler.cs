@@ -20,7 +20,7 @@ namespace JustSaying.IntegrationTests.TestHandlers
             MessageReceived = message;
 
             await Task.Delay(0);
-            Tasks.DelaySendDone(DoneSignal);
+            TaskHelpers.DelaySendDone(DoneSignal);
 
             throw new TestException("ThrowingHandler has thrown");
         }

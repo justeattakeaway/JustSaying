@@ -47,7 +47,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             }
             if (_sqsCallCounter == 2)
             {
-                Tasks.DelaySendDone(_tcs);
+                TaskHelpers.DelaySendDone(_tcs);
             }
 
             return Task.FromResult(new ReceiveMessageResponse());
@@ -60,7 +60,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             SystemUnderTest.Listen(cts.Token);
 
             // wait until it's done
-            await Tasks.WaitWithTimeoutAsync(_tcs.Task);
+            await TaskHelpers.WaitWithTimeoutAsync(_tcs.Task);
             cts.Cancel();
         }
 

@@ -23,7 +23,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.
             }
             finally 
             {
-                Tasks.DelaySendDone(_doneSignal);
+                TaskHelpers.DelaySendDone(_doneSignal);
             }
         }
     }

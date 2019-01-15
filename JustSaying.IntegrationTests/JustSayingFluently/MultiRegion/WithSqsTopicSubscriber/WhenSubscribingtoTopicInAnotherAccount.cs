@@ -65,7 +65,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             await publishingBus.PublishAsync(_message);
 
             // Assert
-            var done = await Tasks.WaitWithTimeoutAsync(_signal.DoneSignal, TimeSpan.FromMinutes(1));
+            var done = await TaskHelpers.WaitWithTimeoutAsync(_signal.DoneSignal, TimeSpan.FromMinutes(1));
             _signal.HasReceived(_message).ShouldBeTrue();
         }
 

@@ -48,7 +48,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.
 
         private void Fail()
         {
-            Tasks.DelaySendDone(_doneSignal);
+            TaskHelpers.DelaySendDone(_doneSignal);
             throw new TestException("Thrown by test ProcessMessage");
         }
 
