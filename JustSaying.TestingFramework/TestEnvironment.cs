@@ -46,8 +46,7 @@ namespace JustSaying.TestingFramework
         {
             get
             {
-                //var awsEnv = Environment.GetEnvironmentVariable("AWS_SERVICE_URL");
-                var awsEnv = "http://localhost:4100/";
+                var awsEnv = Environment.GetEnvironmentVariable("AWS_SERVICE_URL");
                 if (string.IsNullOrWhiteSpace(awsEnv))
                 {
                     return null;
