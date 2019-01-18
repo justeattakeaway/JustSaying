@@ -1,7 +1,7 @@
 <Project>
   <Import Project="version.props" />
   <PropertyGroup>
-    <AnalyzersPackageVersion>2.6.2</AnalyzersPackageVersion>
+    <AnalyzersPackageVersion>2.6.3</AnalyzersPackageVersion>
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)CodeAnalysisRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>

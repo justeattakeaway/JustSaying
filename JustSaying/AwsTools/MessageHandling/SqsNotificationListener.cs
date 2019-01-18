@@ -237,7 +237,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return _messageProcessingStrategy.StartWorker(action, ct);
         }
 
-        public ICollection<ISubscriber> Subscribers { get; set; }
+        public ICollection<ISubscriber> Subscribers { get; }
 
         private static void DefaultErrorHandler(Exception exception, Amazon.SQS.Model.Message message)
         {
