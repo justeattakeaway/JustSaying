@@ -11,7 +11,6 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests
 {
-#pragma warning disable CA1054
     public abstract class FluentNotificationStackTestBase : XAsyncBehaviourTest<JustSaying.JustSayingFluently>
     {
         protected RegionEndpoint Region => TestFixture.Region;
@@ -173,6 +172,8 @@ namespace JustSaying.IntegrationTests
             return (false, null);
         }
 
+// disable warning about "queueUrl" typed as string
+#pragma warning disable CA1054
         protected async Task<bool> IsQueueSubscribedToTopic(Topic topic, string queueUrl)
         {
             var request = new GetQueueAttributesRequest
@@ -205,5 +206,6 @@ namespace JustSaying.IntegrationTests
             return policy.Contains(topic.TopicArn, StringComparison.OrdinalIgnoreCase) ||
                    policy.Contains(wildcardedSubscription, StringComparison.OrdinalIgnoreCase);
         }
+#pragma warning restore CA1054
     }
 }

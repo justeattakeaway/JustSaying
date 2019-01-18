@@ -5,6 +5,7 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 {
+// disable warning about the pathological class names and class nesting in this test
 #pragma warning disable CA1052
 #pragma warning disable CA1034
     public class WhenRegisteringLongNameMessageTypeTopicSubscriber
