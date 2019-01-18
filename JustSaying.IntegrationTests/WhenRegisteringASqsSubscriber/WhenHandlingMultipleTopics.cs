@@ -35,8 +35,6 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
             policyJson.Statement.Count.ShouldBe(1,  $"Expecting 1 statement in Sqs policy but found {policyJson.Statement.Count}");
         }
 
-// disable warning about public nested classes
-#pragma warning disable CA1034
         public class TopicA : Message
         {
         }
@@ -44,6 +42,5 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         public class TopicB : Message
         {
         }
-#pragma warning restore CA1034
     }
 }

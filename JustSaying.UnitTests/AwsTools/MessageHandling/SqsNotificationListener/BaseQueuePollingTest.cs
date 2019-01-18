@@ -18,7 +18,11 @@ using Shouldly;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
+    // this class should be disposable because it owns a ILoggerFactory and IAmazonSQS,
+    // but that's not important for tests.
+#pragma warning disable CA1001
     public abstract class BaseQueuePollingTest : XAsyncBehaviourTest<JustSaying.AwsTools.MessageHandling.SqsNotificationListener>
+#pragma warning restore CA1001
     {
         protected const string QueueUrl = "http://testurl.com/queue";
         protected IAmazonSQS Sqs;

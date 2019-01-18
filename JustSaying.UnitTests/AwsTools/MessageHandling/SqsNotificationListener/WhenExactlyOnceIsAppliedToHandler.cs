@@ -57,7 +57,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             var messageId = DeserializedMessage.Id.ToString();
 
             await MessageLock.Received().TryAquireLockAsync(
-                Arg.Is<string>(a => a.Contains(messageId)),
+                Arg.Is<string>(a => a.Contains(messageId, StringComparison.OrdinalIgnoreCase)),
                 TimeSpan.FromSeconds(_expectedtimeout));
         }
     }

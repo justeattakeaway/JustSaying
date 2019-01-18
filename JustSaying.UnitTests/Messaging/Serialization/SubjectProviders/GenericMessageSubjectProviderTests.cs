@@ -6,9 +6,12 @@ namespace JustSaying.UnitTests.Messaging.Serialization.SubjectProviders
 {
     public class GenericMessageSubjectProviderTests
     {
+// these classes are never instantiated, but the types are used in tests
+#pragma warning disable CA1812
         class Foo { }
 
         class Bar<T> { }
+#pragma warning restore CA1812
 
         [Fact]
         public void GetSubjectForType_NonGenericType_ReturnsTypeNameWithNamespace_NonWordCharactersReplaced() =>
