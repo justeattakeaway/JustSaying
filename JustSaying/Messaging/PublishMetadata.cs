@@ -8,7 +8,7 @@ namespace JustSaying.Messaging
     {
         public TimeSpan? Delay { get; set; }
 
-        public IDictionary<string, MessageAttributeValue> MessageAttributes { get; set; }
+        public IDictionary<string, MessageAttributeValue> MessageAttributes { get; private set; }
 
         public PublishMetadata AddMessageAttribute(string key, MessageAttributeValue value)
         {

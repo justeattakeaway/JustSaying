@@ -4,6 +4,6 @@ namespace JustSaying.Messaging.Interrogation
 {
     public interface INotificationSubscriberInterrogation
     {
-        ICollection<ISubscriber> Subscribers { get; set; }
+        ICollection<ISubscriber> Subscribers { get; }
     }
 }
