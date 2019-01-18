@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -59,7 +60,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         private static bool B(PublishRequest x)
         {
-            return x.Message.Equals(Message);
+            return x.Message.Equals(Message, StringComparison.OrdinalIgnoreCase);
         }
 
 

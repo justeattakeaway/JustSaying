@@ -7,7 +7,6 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 {
 // disable warning about the pathological class names and class nesting in this test
 #pragma warning disable CA1052
-#pragma warning disable CA1034
     public class WhenRegisteringLongNameMessageTypeTopicSubscriber
 #pragma warning restore CA1052
     {
@@ -16,7 +15,6 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
         }
 
         public class WhenRegisteringASqsGenericMessageTopicSubscriber : WhenRegisteringASqsTopicSubscriber
-#pragma warning restore CA1034
         {
             protected override Task When()
             {

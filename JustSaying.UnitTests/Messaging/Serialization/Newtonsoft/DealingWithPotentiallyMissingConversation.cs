@@ -1,3 +1,4 @@
+using System;
 using JustBehave;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
@@ -21,7 +22,7 @@ namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft
             _jsonMessage = SystemUnderTest.Serialize(_messageOut, false, _messageOut.GetType().Name);
 
             //add extra property to see what happens:
-            _jsonMessage = _jsonMessage.Replace("{__", "{\"New\":\"Property\",__");
+            _jsonMessage = _jsonMessage.Replace("{__", "{\"New\":\"Property\",__", StringComparison.OrdinalIgnoreCase);
             _messageIn = SystemUnderTest.Deserialize(_jsonMessage, typeof(MessageWithEnum)) as MessageWithEnum;
         }
 
