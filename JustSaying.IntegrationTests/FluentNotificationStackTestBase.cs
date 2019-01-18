@@ -175,6 +175,7 @@ namespace JustSaying.IntegrationTests
 // disable warning about "queueUrl" typed as string
 #pragma warning disable CA1054
         protected async Task<bool> IsQueueSubscribedToTopic(Topic topic, string queueUrl)
+#pragma warning restore CA1054
         {
             var request = new GetQueueAttributesRequest
             {
@@ -194,7 +195,10 @@ namespace JustSaying.IntegrationTests
             return subscriptions.Any(x => !string.IsNullOrEmpty(x.SubscriptionArn) && x.Endpoint == queueArn);
         }
 
+        // disable warning about "queueUrl" typed as string
+#pragma warning disable CA1054
         protected async Task<bool> QueueHasPolicyForTopic(Topic topic, string queueUrl)
+#pragma warning restore CA1054
         {
             var client = TestFixture.CreateSqsClient();
 
@@ -206,6 +210,5 @@ namespace JustSaying.IntegrationTests
             return policy.Contains(topic.TopicArn, StringComparison.OrdinalIgnoreCase) ||
                    policy.Contains(wildcardedSubscription, StringComparison.OrdinalIgnoreCase);
         }
-#pragma warning restore CA1054
     }
 }

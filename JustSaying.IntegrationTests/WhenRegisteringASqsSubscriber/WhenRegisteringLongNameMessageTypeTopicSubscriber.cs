@@ -9,12 +9,14 @@ namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
 #pragma warning disable CA1052
 #pragma warning disable CA1034
     public class WhenRegisteringLongNameMessageTypeTopicSubscriber
+#pragma warning restore CA1052
     {
         public class LongLongLongLongLonggLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLonggLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongMessage : Message
         {
         }
 
         public class WhenRegisteringASqsGenericMessageTopicSubscriber : WhenRegisteringASqsTopicSubscriber
+#pragma warning restore CA1034
         {
             protected override Task When()
             {
