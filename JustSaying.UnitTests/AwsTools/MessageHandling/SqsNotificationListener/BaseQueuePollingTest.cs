@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
@@ -15,13 +14,15 @@ using JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.Supp
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
+using Xunit;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
     // this class should be disposable because it owns a ILoggerFactory and IAmazonSQS,
     // but that's not important for tests.
+    // it's handled by IAsyncLifetime
 #pragma warning disable CA1001
-    public abstract class BaseQueuePollingTest : XAsyncBehaviourTest<JustSaying.AwsTools.MessageHandling.SqsNotificationListener>
+    public abstract class BaseQueuePollingTest : IAsyncLifetime
 #pragma warning restore CA1001
     {
         protected const string QueueUrl = "http://testurl.com/queue";
@@ -35,7 +36,35 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         protected IMessageLockAsync MessageLock;
         protected readonly string MessageTypeString = typeof(SimpleMessage).ToString();
 
-        protected override Task<JustSaying.AwsTools.MessageHandling.SqsNotificationListener> CreateSystemUnderTestAsync()
+        protected JustSaying.AwsTools.MessageHandling.SqsNotificationListener SystemUnderTest { get; private set; }
+
+        public virtual async Task InitializeAsync()
+        {
+            await Given().ConfigureAwait(false);
+
+            SystemUnderTest = await CreateSystemUnderTestAsync().ConfigureAwait(false);
+
+            await When().ConfigureAwait(false);
+        }
+
+        public virtual Task DisposeAsync()
+        {
+            if (LoggerFactory != null)
+            {
+                LoggerFactory.Dispose();
+                LoggerFactory = null;
+            }
+
+            if (Sqs != null)
+            {
+                Sqs.Dispose();
+                Sqs = null;
+            }
+
+            return Task.CompletedTask;
+        }
+
+        protected virtual Task<JustSaying.AwsTools.MessageHandling.SqsNotificationListener> CreateSystemUnderTestAsync()
         {
             var queue = new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri(QueueUrl), Sqs);
             var listener = new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
@@ -45,7 +74,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             return Task.FromResult(listener);
         }
 
-        protected override Task Given()
+        protected virtual Task Given()
         {
             LoggerFactory = new LoggerFactory();
             Sqs = Substitute.For<IAmazonSQS>();
@@ -68,7 +97,10 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             return Task.CompletedTask;
         }
 
-        protected override async Task When()
+#pragma warning disable CA1716
+        protected virtual async Task When()
+#pragma warning restore CA1716
+
         {
             var doneSignal = new TaskCompletionSource<object>();
             var signallingHandler = new SignallingHandler<SimpleMessage>(doneSignal, Handler);
