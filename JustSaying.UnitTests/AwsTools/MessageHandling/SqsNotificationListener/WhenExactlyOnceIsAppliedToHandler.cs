@@ -12,14 +12,14 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
     public class WhenExactlyOnceIsAppliedToHandler : BaseQueuePollingTest
     {
-        private int _expectedtimeout;
+        private int _expectedTimeout;
         private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
         private ExplicitExactlyOnceSignallingHandler _handler;
 
         protected override async Task Given()
         {
             await base.Given();
-            _expectedtimeout = 5;
+            _expectedTimeout = 5;
 
             var messageLockResponse = new MessageLockResponse
                 {
@@ -58,7 +58,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 
             await MessageLock.Received().TryAquireLockAsync(
                 Arg.Is<string>(a => a.Contains(messageId, StringComparison.OrdinalIgnoreCase)),
-                TimeSpan.FromSeconds(_expectedtimeout));
+                TimeSpan.FromSeconds(_expectedTimeout));
         }
     }
 }
