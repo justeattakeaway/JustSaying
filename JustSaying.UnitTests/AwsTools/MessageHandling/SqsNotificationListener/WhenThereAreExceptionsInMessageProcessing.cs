@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
@@ -18,15 +17,37 @@ using Xunit;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
-    public class WhenThereAreExceptionsInMessageProcessing : XAsyncBehaviourTest<JustSaying.AwsTools.MessageHandling.SqsNotificationListener>
+    public class WhenThereAreExceptionsInMessageProcessing : IAsyncLifetime
     {
-        private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
+        private IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private readonly IMessageSerializationRegister _serializationRegister =
             Substitute.For<IMessageSerializationRegister>();
 
+        private JustSaying.AwsTools.MessageHandling.SqsNotificationListener SystemUnderTest;
+
         private int _callCount;
 
-        protected override Task<JustSaying.AwsTools.MessageHandling.SqsNotificationListener> CreateSystemUnderTestAsync()
+        public async Task InitializeAsync()
+        {
+            Given();
+
+            SystemUnderTest = CreateSystemUnderTest();
+
+            await When().ConfigureAwait(false);
+        }
+
+        public Task DisposeAsync()
+        {
+            if (_sqs != null)
+            {
+                _sqs.Dispose();
+                _sqs = null;
+            }
+
+            return Task.CompletedTask;
+        }
+
+        protected JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
             var listener = new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
                 new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri("http://foo.com"), _sqs),
@@ -35,10 +56,10 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
                 Substitute.For<ILoggerFactory>(),
                 Substitute.For<IMessageContextAccessor>());
 
-            return Task.FromResult(listener);
+            return listener;
         }
 
-        protected override Task Given()
+        protected void Given()
         {
             _serializationRegister
                 .DeserializeMessage(Arg.Any<string>())
@@ -52,10 +73,12 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
                     Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>()))
                 .Do(x => _callCount++);
-            return Task.CompletedTask;
         }
 
-        protected override async Task When()
+
+#pragma warning disable CA1716
+        protected async Task When()
+#pragma warning restore CA1716
         {
             var cts = new CancellationTokenSource();
             SystemUnderTest.Listen(cts.Token);
