@@ -9,9 +9,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
     public class WhenPassingAHandledAndUnhandledMessage : BaseQueuePollingTest
     {
-        protected override async Task Given()
+        protected override void Given()
         {
-            await base.Given();
+            base.Given();
             Handler.Handle(null)
                 .ReturnsForAnyArgs(info => true)
                 .AndDoes(x => Thread.Sleep(1)); // Ensure at least one ms wait on processing

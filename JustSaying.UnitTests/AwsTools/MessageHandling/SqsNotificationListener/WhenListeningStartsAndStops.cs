@@ -16,9 +16,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 
         private int _expectedMaxMessageCount;
 
-        protected override async Task Given()
+        protected override void Given()
         {
-            await base.Given();
+            base.Given();
 
             // we expect to get max 10 messages per batch
             // except on single-core machines when we top out at ParallelHandlerExecutionPerCore=8

@@ -11,9 +11,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
     {
         private bool _firstTime = true;
 
-        protected override async Task Given()
+        protected override void Given()
         {
-            await base.Given();
+            base.Given();
             Handler.Handle(Arg.Any<SimpleMessage>()).Returns(
                 _ => ExceptionOnFirstCall());
         }
