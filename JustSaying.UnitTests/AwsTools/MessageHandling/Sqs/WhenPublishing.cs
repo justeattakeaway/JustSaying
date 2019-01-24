@@ -1,12 +1,10 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using JustBehave;
-using JustSaying.Messaging;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -15,32 +13,58 @@ using Xunit;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 {
-    public class WhenPublishing : XAsyncBehaviourTest<SqsPublisher>
+    public class WhenPublishing : IAsyncLifetime
     {
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
-        private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
+        private IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private const string Url = "https://blablabla/" + QueueName;
         private readonly SimpleMessage _message = new SimpleMessage { Content = "Hello" };
         private const string QueueName = "queuename";
 
-        protected override async Task<SqsPublisher> CreateSystemUnderTestAsync()
+        private SqsPublisher _systemUnderTest;
+
+        public virtual async Task InitializeAsync()
+        {
+            Given();
+
+            _systemUnderTest = await CreateSystemUnderTestAsync();
+
+            await When().ConfigureAwait(false);
+        }
+
+        public virtual Task DisposeAsync()
+        {
+            if (_sqs != null)
+            {
+                _sqs.Dispose();
+                _sqs = null;
+            }
+
+            return Task.CompletedTask;
+        }
+
+        private async Task<SqsPublisher> CreateSystemUnderTestAsync()
         {
             var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, _sqs, 0, _serializationRegister, Substitute.For<ILoggerFactory>());
             await sqs.ExistsAsync();
             return sqs;
         }
 
-        protected override Task Given()
+        private void Given()
         {
-            _sqs.GetQueueUrlAsync(Arg.Any<string>()).Returns(new GetQueueUrlResponse {QueueUrl = Url});
-            _sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>()).Returns(new GetQueueAttributesResponse());
-            _serializationRegister.Serialize(_message, false).Returns("serialized_contents");
-            return Task.CompletedTask;
+            _sqs.GetQueueUrlAsync(Arg.Any<string>())
+                .Returns(new GetQueueUrlResponse {QueueUrl = Url});
+
+            _sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>())
+                .Returns(new GetQueueAttributesResponse());
+
+            _serializationRegister.Serialize(_message, false)
+                .Returns("serialized_contents");
         }
 
-        protected override async Task When()
+        private async Task When()
         {
-            await SystemUnderTest.PublishAsync(_message);
+            await _systemUnderTest.PublishAsync(_message);
         }
 
         [Fact]

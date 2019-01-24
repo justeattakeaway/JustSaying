@@ -17,7 +17,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         private readonly ILoggerFactory _log;
         private const int RetryCount = 3;
 
-
         public WhenFetchingQueueByName()
         {
             _client = Substitute.For<IAmazonSQS>();
