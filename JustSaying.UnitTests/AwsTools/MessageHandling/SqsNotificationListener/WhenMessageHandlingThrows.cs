@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.TestingFramework;
 using NSubstitute;
