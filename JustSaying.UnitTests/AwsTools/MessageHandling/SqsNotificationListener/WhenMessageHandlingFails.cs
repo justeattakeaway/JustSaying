@@ -9,9 +9,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 {
     public class WhenMessageHandlingFails : BaseQueuePollingTest
     {
-        protected override async Task Given()
+        protected override void Given()
         {
-            await base.Given();
+            base.Given();
             Handler.Handle(Arg.Any<SimpleMessage>()).ReturnsForAnyArgs(false);
         }
 

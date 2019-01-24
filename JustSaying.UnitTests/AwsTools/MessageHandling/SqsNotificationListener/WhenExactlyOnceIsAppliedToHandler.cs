@@ -16,9 +16,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
         private ExplicitExactlyOnceSignallingHandler _handler;
 
-        protected override async Task Given()
+        protected override void Given()
         {
-            await base.Given();
+            base.Given();
             _expectedTimeout = 5;
 
             var messageLockResponse = new MessageLockResponse

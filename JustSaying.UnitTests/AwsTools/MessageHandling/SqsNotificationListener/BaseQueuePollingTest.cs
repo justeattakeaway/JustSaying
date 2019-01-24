@@ -40,9 +40,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 
         public virtual async Task InitializeAsync()
         {
-            await Given().ConfigureAwait(false);
+            Given();
 
-            SystemUnderTest = await CreateSystemUnderTestAsync().ConfigureAwait(false);
+            SystemUnderTest = CreateSystemUnderTest();
 
             await When().ConfigureAwait(false);
         }
@@ -64,17 +64,17 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             return Task.CompletedTask;
         }
 
-        protected virtual Task<JustSaying.AwsTools.MessageHandling.SqsNotificationListener> CreateSystemUnderTestAsync()
+        protected JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
             var queue = new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri(QueueUrl), Sqs);
             var listener = new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
                 queue, SerializationRegister, Monitor, LoggerFactory,
                 Substitute.For<IMessageContextAccessor>(),
                 null, MessageLock);
-            return Task.FromResult(listener);
+            return listener;
         }
 
-        protected virtual Task Given()
+        protected virtual void Given()
         {
             LoggerFactory = new LoggerFactory();
             Sqs = Substitute.For<IAmazonSQS>();
@@ -94,7 +94,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 
             DeserializedMessage = new SimpleMessage { RaisingComponent = "Component" };
             SerializationRegister.DeserializeMessage(Arg.Any<string>()).Returns(DeserializedMessage);
-            return Task.CompletedTask;
         }
 
 #pragma warning disable CA1716
