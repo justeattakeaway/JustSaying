@@ -14,13 +14,13 @@ namespace JustSaying.UnitTests.JustSayingBus
     {
         private IMessagePublisher _publisher;
 
-        protected override async Task Given()
+        protected override void Given()
         {
-            await base.Given();
+            base.Given();
             _publisher = Substitute.For<IMessagePublisher>();
         }
 
-        protected override async Task When()
+        protected override async Task WhenAction()
         {
             SystemUnderTest.AddMessagePublisher<OrderAccepted>(_publisher, string.Empty);
             SystemUnderTest.AddMessagePublisher<OrderRejected>(_publisher, string.Empty);

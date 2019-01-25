@@ -9,13 +9,13 @@ namespace JustSaying.UnitTests.JustSayingBus
 {
     public class WhenUsingMultipleRegions : GivenAServiceBus
     {
-        protected override async Task Given()
+        protected override void Given()
         {
-            await base.Given();
+            base.Given();
             Config.Regions.Returns(new List<string>{"region1", "region2"});
         }
 
-        protected override Task When()
+        protected override Task WhenAction()
         {
             return Task.CompletedTask;
         }

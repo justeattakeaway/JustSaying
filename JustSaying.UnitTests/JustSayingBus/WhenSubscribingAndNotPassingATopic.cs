@@ -7,13 +7,13 @@ namespace JustSaying.UnitTests.JustSayingBus
 {
     public class WhenSubscribingAndNotPassingATopic : GivenAServiceBus
     {
-        protected override async Task Given()
+        protected override void Given()
         {
-            await base.Given();
+            base.Given();
             RecordAnyExceptionsThrown();
         }
 
-        protected override Task When()
+        protected override Task WhenAction()
         {
             SystemUnderTest.AddNotificationSubscriber(" ", null);
             return Task.CompletedTask;

@@ -12,14 +12,14 @@ namespace JustSaying.UnitTests.JustSayingBus
     {
         private IMessagePublisher _publisher;
 
-        protected override async Task Given()
+        protected override void Given()
         {
-            await base.Given();
+            base.Given();
             _publisher = Substitute.For<IMessagePublisher>();
             RecordAnyExceptionsThrown();
         }
 
-        protected override Task When()
+        protected override Task WhenAction()
         {
             SystemUnderTest.AddMessagePublisher<Message>(_publisher, string.Empty);
             SystemUnderTest.AddMessagePublisher<Message>(_publisher, string.Empty);
