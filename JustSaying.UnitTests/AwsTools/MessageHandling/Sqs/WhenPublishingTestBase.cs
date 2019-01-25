@@ -8,8 +8,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 {
     public abstract class WhenPublishingTestBase : IAsyncLifetime
     {
-        protected SqsPublisher SystemUnderTest;
-        protected IAmazonSQS Sqs = Substitute.For<IAmazonSQS>();
+        public SqsPublisher SystemUnderTest { get; private set; }
+        public IAmazonSQS Sqs { get; private set; } = Substitute.For<IAmazonSQS>();
 
         public virtual async Task InitializeAsync()
         {
