@@ -2,9 +2,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.Runtime;
-using Amazon.SQS;
 using Amazon.SQS.Model;
-using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
@@ -18,10 +16,9 @@ using Message = JustSaying.Models.Message;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 {
-    public class WhenPublishingAsyncResponseLoggerAsyncIsCalled : XAsyncBehaviourTest<SqsPublisher>
+    public class WhenPublishingAsyncResponseLoggerAsyncIsCalled : WhenPublishingTestBase
     {
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
-        private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private const string Url = "https://blablabla/" + QueueName;
         private readonly SimpleMessage _testMessage = new SimpleMessage { Content = "Hello" };
         private const string QueueName = "queuename";
@@ -34,7 +31,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 
         protected override async Task<SqsPublisher> CreateSystemUnderTestAsync()
         {
-            var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, _sqs, 0, _serializationRegister, Substitute.For<ILoggerFactory>())
+            var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, Sqs, 0, _serializationRegister, Substitute.For<ILoggerFactory>())
             {
                 MessageResponseLogger = (r, m) =>
                 {
@@ -46,24 +43,22 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
             return sqs;
         }
 
-        protected override Task Given()
+        protected override void Given()
         {
-            _sqs.GetQueueUrlAsync(Arg.Any<string>())
+            Sqs.GetQueueUrlAsync(Arg.Any<string>())
                 .Returns(new GetQueueUrlResponse { QueueUrl = Url });
 
-            _sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>())
+            Sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>())
                 .Returns(new GetQueueAttributesResponse());
 
             _serializationRegister.Serialize(_testMessage, false)
                 .Returns("serialized_contents");
 
-            _sqs.SendMessageAsync(Arg.Any<SendMessageRequest>())
+            Sqs.SendMessageAsync(Arg.Any<SendMessageRequest>())
                 .Returns(PublishResult);
-
-            return Task.CompletedTask;
         }
 
-        protected override async Task When()
+        protected override async Task WhenAction()
         {
             await SystemUnderTest.PublishAsync(_testMessage);
         }

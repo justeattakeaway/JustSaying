@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon;
-using Amazon.SQS;
 using Amazon.SQS.Model;
-using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
@@ -15,10 +13,9 @@ using Xunit;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 {
-    public class WhenPublishingDelayedMessage : XAsyncBehaviourTest<SqsPublisher>
+    public class WhenPublishingDelayedMessage : WhenPublishingTestBase
     {
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
-        private readonly IAmazonSQS _sqs = Substitute.For<IAmazonSQS>();
         private const string Url = "https://testurl.com/" + QueueName;
 
         private readonly SimpleMessage _message = new SimpleMessage();
@@ -31,20 +28,19 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 
         protected override async Task<SqsPublisher> CreateSystemUnderTestAsync()
         {
-            var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, _sqs, 0,
+            var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, Sqs, 0,
                 _serializationRegister, Substitute.For<ILoggerFactory>());
             await sqs.ExistsAsync();
             return sqs;
         }
 
-        protected override Task Given()
+        protected override void Given()
         {
-            _sqs.ListQueuesAsync(Arg.Any<ListQueuesRequest>()).Returns(new ListQueuesResponse { QueueUrls = new List<string> { Url } });
-            _sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>()).Returns(new GetQueueAttributesResponse());
-            return Task.CompletedTask;
+            Sqs.ListQueuesAsync(Arg.Any<ListQueuesRequest>()).Returns(new ListQueuesResponse { QueueUrls = new List<string> { Url } });
+            Sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>()).Returns(new GetQueueAttributesResponse());
         }
 
-        protected override async Task When()
+        protected override async Task WhenAction()
         {
             await SystemUnderTest.PublishAsync(_message, _metadata);
         }
@@ -52,7 +48,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         [Fact]
         public void MessageIsPublishedWithDelaySecondsPropertySet()
         {
-            _sqs.Received().SendMessageAsync(Arg.Is<SendMessageRequest>(x => x.DelaySeconds.Equals(1)));
+            Sqs.Received().SendMessageAsync(Arg.Is<SendMessageRequest>(x => x.DelaySeconds.Equals(1)));
         }
     }
 }
