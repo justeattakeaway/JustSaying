@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;

@@ -11,9 +11,8 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         private readonly IHandlerAsync<Message> _handler = Substitute.For<IHandlerAsync<Message>>();
         private IFluentSubscription _bus;
 
-        protected override Task Given() => Task.CompletedTask;
 
-        protected override Task When()
+        protected override Task WhenAction()
         {
             _bus = SystemUnderTest
                 .WithSqsTopicSubscriber()

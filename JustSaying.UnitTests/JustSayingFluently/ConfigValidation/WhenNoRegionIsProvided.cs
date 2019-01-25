@@ -8,18 +8,17 @@ namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
 {
     public class WhenNoRegionIsProvided : JustSayingFluentlyTestBase
     {
-        protected override Task<JustSaying.JustSayingFluently> CreateSystemUnderTestAsync()
+        protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
-            return Task.FromResult<JustSaying.JustSayingFluently>(null);
+            return null;
         }
 
-        protected override Task Given()
+        protected override void Given()
         {
             RecordAnyExceptionsThrown();
-            return Task.CompletedTask;
         }
 
-        protected override Task When()
+        protected override Task WhenAction()
         {
             CreateMeABus
                 .WithLogging(new LoggerFactory())
