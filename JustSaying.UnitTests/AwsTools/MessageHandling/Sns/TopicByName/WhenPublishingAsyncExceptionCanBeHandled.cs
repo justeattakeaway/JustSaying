@@ -16,15 +16,14 @@ using Xunit;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 {
-    public class WhenPublishingAsyncExceptionCanBeHandled : XAsyncBehaviourTest<SnsTopicByName>
+    public class WhenPublishingAsyncExceptionCanBeHandled : WhenPublishingTestBase
     {
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
-        private readonly IAmazonSimpleNotificationService _sns = Substitute.For<IAmazonSimpleNotificationService>();
         private const string TopicArn = "topicarn";
 
         protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
         {
-            var topic = new SnsTopicByName("TopicName", _sns, _serializationRegister, Substitute.For<ILoggerFactory>(), new SnsWriteConfiguration
+            var topic = new SnsTopicByName("TopicName", Sns, _serializationRegister, Substitute.For<ILoggerFactory>(), new SnsWriteConfiguration
             {
                 HandleException = (ex, m) => true
             }, Substitute.For<IMessageSubjectProvider>());
@@ -33,16 +32,15 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
             return topic;
         }
 
-        protected override Task Given()
+        protected override void Given()
         {
-            _sns.FindTopicAsync("TopicName")
+            Sns.FindTopicAsync("TopicName")
                 .Returns(new Topic { TopicArn = TopicArn });
-            return Task.CompletedTask;
         }
 
-        protected override Task When()
+        protected override Task WhenAction()
         {
-            _sns.PublishAsync(Arg.Any<PublishRequest>()).Returns(ThrowsException);
+            Sns.PublishAsync(Arg.Any<PublishRequest>()).Returns(ThrowsException);
             return Task.CompletedTask;
         }
 

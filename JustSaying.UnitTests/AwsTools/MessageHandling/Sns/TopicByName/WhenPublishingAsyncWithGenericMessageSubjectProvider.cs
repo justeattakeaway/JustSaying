@@ -1,8 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
-using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
@@ -13,35 +11,31 @@ using Xunit;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 {
-    public class WhenPublishingAsyncWithGenericMessageSubjectProvider : XAsyncBehaviourTest<SnsTopicByName>
+    public class WhenPublishingAsyncWithGenericMessageSubjectProvider : WhenPublishingTestBase
     {
         public class MessageWithTypeParameters<T, U> : Message
         {
-
         }
 
         private const string Message = "the_message_in_json";
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
-        private readonly IAmazonSimpleNotificationService _sns = Substitute.For<IAmazonSimpleNotificationService>();
         private const string TopicArn = "topicarn";
 
         protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
         {
-            var topic = new SnsTopicByName("TopicName", _sns, _serializationRegister, Substitute.For<ILoggerFactory>(), new GenericMessageSubjectProvider());
+            var topic = new SnsTopicByName("TopicName", Sns, _serializationRegister, Substitute.For<ILoggerFactory>(), new GenericMessageSubjectProvider());
             await topic.ExistsAsync();
             return topic;
         }
 
-        protected override Task Given()
+        protected override void Given()
         {
             _serializationRegister.Serialize(Arg.Any<Message>(), Arg.Is(true)).Returns(Message);
-            _sns.FindTopicAsync("TopicName")
+            Sns.FindTopicAsync("TopicName")
                 .Returns(new Topic { TopicArn = TopicArn });
-
-            return Task.CompletedTask;
         }
 
-        protected override async Task When()
+        protected override async Task WhenAction()
         {
             await SystemUnderTest.PublishAsync(new MessageWithTypeParameters<int, string>());
         }
@@ -49,7 +43,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         [Fact]
         public void MessageIsPublishedToSnsTopic()
         {
-            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => B(x)));
+            Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => B(x)));
         }
 
         private static bool B(PublishRequest x)
@@ -60,13 +54,13 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         [Fact]
         public void MessageSubjectIsObjectType()
         {
-            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.Subject == new GenericMessageSubjectProvider().GetSubjectForType(typeof(MessageWithTypeParameters<int, string>))));
+            Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.Subject == new GenericMessageSubjectProvider().GetSubjectForType(typeof(MessageWithTypeParameters<int, string>))));
         }
 
         [Fact]
         public void MessageIsPublishedToCorrectLocation()
         {
-            _sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.TopicArn == TopicArn));
+            Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.TopicArn == TopicArn));
         }
     }
 }

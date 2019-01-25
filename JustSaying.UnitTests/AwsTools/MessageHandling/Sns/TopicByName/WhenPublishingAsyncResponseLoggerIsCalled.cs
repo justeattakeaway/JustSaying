@@ -1,9 +1,7 @@
 using System.Net;
 using System.Threading.Tasks;
 using Amazon.Runtime;
-using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
-using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
@@ -18,10 +16,9 @@ using Xunit;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 {
-    public class WhenPublishingAsyncResultLoggerIsCalled : XAsyncBehaviourTest<SnsTopicByName>
+    public class WhenPublishingAsyncResultLoggerIsCalled : WhenPublishingTestBase
     {
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
-        private readonly IAmazonSimpleNotificationService _sns = Substitute.For<IAmazonSimpleNotificationService>();
         private const string TopicArn = "topicarn";
 
         private const string MessageId = "TestMessage12345";
@@ -32,7 +29,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
         {
-            var topic = new SnsTopicByName("TopicName", _sns, _serializationRegister, Substitute.For<ILoggerFactory>(), Substitute.For<SnsWriteConfiguration>(), Substitute.For<IMessageSubjectProvider>())
+            var topic = new SnsTopicByName("TopicName", Sns, _serializationRegister, Substitute.For<ILoggerFactory>(), Substitute.For<SnsWriteConfiguration>(), Substitute.For<IMessageSubjectProvider>())
             {
                 MessageResponseLogger = (r, m) =>
                 {
@@ -45,17 +42,15 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
             return topic;
         }
 
-        protected override Task Given()
+        protected override void Given()
         {
-            _sns.FindTopicAsync("TopicName")
+            Sns.FindTopicAsync("TopicName")
                 .Returns(new Topic { TopicArn = TopicArn });
-            _sns.PublishAsync(Arg.Any<PublishRequest>())
+            Sns.PublishAsync(Arg.Any<PublishRequest>())
                 .Returns(PublishResult);
-
-            return Task.CompletedTask;
         }
 
-        protected override Task When()
+        protected override Task WhenAction()
         {
             return SystemUnderTest.PublishAsync(new SimpleMessage());
         }

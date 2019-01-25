@@ -1,9 +1,7 @@
 using System;
 using System.Net;
 using System.Threading.Tasks;
-using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
-using JustBehave;
 using JustSaying.Messaging;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
@@ -17,15 +15,14 @@ using Xunit;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 {
-    public class WhenPublishingAsyncExceptionCanBeThrown : XAsyncBehaviourTest<SnsTopicByName>
+    public class WhenPublishingAsyncExceptionCanBeThrown : WhenPublishingTestBase
     {
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
-        private readonly IAmazonSimpleNotificationService _sns = Substitute.For<IAmazonSimpleNotificationService>();
         private const string TopicArn = "topicarn";
 
         protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
         {
-            var topic = new SnsTopicByName("TopicName", _sns, _serializationRegister, Substitute.For<ILoggerFactory>(), new SnsWriteConfiguration
+            var topic = new SnsTopicByName("TopicName", Sns, _serializationRegister, Substitute.For<ILoggerFactory>(), new SnsWriteConfiguration
             {
                 HandleException = (ex, m) => false
             }, Substitute.For<IMessageSubjectProvider>());
@@ -34,17 +31,15 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
             return topic;
         }
 
-        protected override Task Given()
+        protected override void Given()
         {
-            _sns.FindTopicAsync("TopicName")
+            Sns.FindTopicAsync("TopicName")
                 .Returns(new Topic { TopicArn = TopicArn });
-
-            return Task.CompletedTask;
         }
 
-        protected override Task When()
+        protected override Task WhenAction()
         {
-            _sns.PublishAsync(Arg.Any<PublishRequest>()).Returns(ThrowsException);
+            Sns.PublishAsync(Arg.Any<PublishRequest>()).Returns(ThrowsException);
             return Task.CompletedTask;
         }
 
