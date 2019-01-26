@@ -1,4 +1,3 @@
-using JustBehave;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Shouldly;

@@ -1,7 +1,6 @@
 using System;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
-using JustBehave;
 using Shouldly;
 using Xunit;
 

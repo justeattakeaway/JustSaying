@@ -1,5 +1,4 @@
 using System;
-using JustBehave;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using NSubstitute;
