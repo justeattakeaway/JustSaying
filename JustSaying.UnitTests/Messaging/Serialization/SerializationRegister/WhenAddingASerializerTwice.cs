@@ -16,7 +16,7 @@ namespace JustSaying.UnitTests.Messaging.Serialization.SerializationRegister
             RecordAnyExceptionsThrown();
         }
 
-        protected override void When()
+        protected override void WhenAction()
         {
             SystemUnderTest.AddSerializer<Message>(Substitute.For<IMessageSerializer>());
             SystemUnderTest.AddSerializer<Message>(Substitute.For<IMessageSerializer>());

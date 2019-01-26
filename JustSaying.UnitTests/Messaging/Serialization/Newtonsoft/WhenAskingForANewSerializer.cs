@@ -14,7 +14,7 @@ namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft
             
         }
 
-        protected override void When()
+        protected override void WhenAction()
         {
             _result = SystemUnderTest.GetSerializer<SimpleMessage>();
         }

@@ -13,7 +13,7 @@ namespace JustSaying.UnitTests
             RecordAnyExceptionsThrown();
         }
 
-        protected override void When()
+        protected override void WhenAction()
         {
             SystemUnderTest.Validate();
         }

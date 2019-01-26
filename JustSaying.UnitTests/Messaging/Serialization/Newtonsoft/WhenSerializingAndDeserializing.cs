@@ -15,7 +15,7 @@ namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft
             _messageOut = new MessageWithEnum(Value.Two);
         }
 
-        protected override void When()
+        protected override void WhenAction()
         {
             _jsonMessage = SystemUnderTest.Serialize(_messageOut, false, _messageOut.GetType().Name);
             _messageIn = SystemUnderTest.Deserialize(_jsonMessage, typeof(MessageWithEnum)) as MessageWithEnum;

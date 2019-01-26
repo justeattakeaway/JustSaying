@@ -28,7 +28,7 @@ namespace JustSaying.UnitTests
             try
             {
                 SystemUnderTest = CreateSystemUnderTest();
-                When();
+                WhenAction();
             }
             catch (Exception ex)
             {
@@ -50,6 +50,6 @@ namespace JustSaying.UnitTests
             _recordExceptions = true;
         }
 
-        protected abstract void When();
+        protected abstract void WhenAction();
     }
 }

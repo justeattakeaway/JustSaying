@@ -25,7 +25,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
             _bus.Config.Returns(config);
         }
 
-        protected override void When()
+        protected override void WhenAction()
         {
         }
 

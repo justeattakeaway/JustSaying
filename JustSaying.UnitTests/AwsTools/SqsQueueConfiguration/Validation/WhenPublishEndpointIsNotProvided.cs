@@ -13,7 +13,7 @@ namespace JustSaying.UnitTests.AwsTools.SqsQueueConfiguration.Validation
             RecordAnyExceptionsThrown();
         }
 
-        protected override void When()
+        protected override void WhenAction()
         {
             SystemUnderTest.Validate();
         }
