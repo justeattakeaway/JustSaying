@@ -50,7 +50,7 @@ namespace JustSaying.IntegrationTests.Fluent
         protected IServiceCollection Given(Action<MessagingBusBuilder, IServiceProvider> configure)
         {
             return new ServiceCollection()
-                .AddLogging((p) => p.AddXUnit(OutputHelper))
+                .AddLogging((p) => p.AddXUnit(OutputHelper).SetMinimumLevel(LogLevel.Debug))
                 .AddJustSaying(
                     (builder, serviceProvider) =>
                     {

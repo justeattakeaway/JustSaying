@@ -24,6 +24,11 @@ namespace JustSaying.Fluent
         internal MessagingBusBuilder BusBuilder { get; }
 
         /// <summary>
+        /// Gets or sets a delegate to a method to create the <see cref="IHandlerResolver"/> to use.
+        /// </summary>
+        internal Func<IHandlerResolver> HandlerResolver { get; private set; }
+
+        /// <summary>
         /// Gets or sets a delegate to a method to create the <see cref="ILoggerFactory"/> to use.
         /// </summary>
         internal Func<ILoggerFactory> LoggerFactory { get; private set; }
@@ -57,6 +62,42 @@ namespace JustSaying.Fluent
         /// Gets or sets a delegate to a method to create the <see cref="MessageContextAccessor"/> to use.
         /// </summary>
         internal Func<IMessageContextAccessor> MessageContextAccessor { get; private set; }
+
+        /// <summary>
+        /// Specifies the <see cref="IHandlerResolver"/> to use.
+        /// </summary>
+        /// <param name="handlerResolver">The <see cref="IHandlerResolver"/> to use.</param>
+        /// <returns>
+        /// The current <see cref="ServicesBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="handlerResolver"/> is <see langword="null"/>.
+        /// </exception>
+        public ServicesBuilder WithHandlerResolver(IHandlerResolver handlerResolver)
+        {
+            if (handlerResolver == null)
+            {
+                throw new ArgumentNullException(nameof(handlerResolver));
+            }
+
+            return WithHandlerResolver(() => handlerResolver);
+        }
+
+        /// <summary>
+        /// Specifies the <see cref="IHandlerResolver"/> to use.
+        /// </summary>
+        /// <param name="handlerResolver">A delegate to a method to get the <see cref="IHandlerResolver"/> to use.</param>
+        /// <returns>
+        /// The current <see cref="ServicesBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="handlerResolver"/> is <see langword="null"/>.
+        /// </exception>
+        public ServicesBuilder WithHandlerResolver(Func<IHandlerResolver> handlerResolver)
+        {
+            HandlerResolver = handlerResolver ?? throw new ArgumentNullException(nameof(handlerResolver));
+            return this;
+        }
 
         /// <summary>
         /// Specifies the <see cref="ILoggerFactory"/> to use.
