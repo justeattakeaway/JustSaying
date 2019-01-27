@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Amazon;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
@@ -315,6 +316,40 @@ namespace JustSaying.Fluent
             }
 
             return WithRegion(region.SystemName);
+        }
+
+        /// <summary>
+        /// Specifies the AWS region(s) to use.
+        /// </summary>
+        /// <param name="regions">The AWS region(s) to use.</param>
+        /// <returns>
+        /// The current <see cref="MessagingConfigurationBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="regions"/> is <see cref="null"/>.
+        /// </exception>
+        public MessagingConfigurationBuilder WithRegions(params RegionEndpoint[] regions)
+            => WithRegions(regions as IEnumerable<RegionEndpoint>);
+
+        /// <summary>
+        /// Specifies the AWS region(s) to use.
+        /// </summary>
+        /// <param name="regions">The AWS region(s) to use.</param>
+        /// <returns>
+        /// The current <see cref="MessagingConfigurationBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="regions"/> is <see cref="null"/>.
+        /// </exception>
+        public MessagingConfigurationBuilder WithRegions(IEnumerable<RegionEndpoint> regions)
+        {
+            if (regions == null)
+            {
+                throw new ArgumentNullException(nameof(regions));
+            }
+
+            Regions = new List<string>(regions.Select((p) => p.SystemName).Distinct(StringComparer.Ordinal));
+            return this;
         }
 
         /// <summary>
