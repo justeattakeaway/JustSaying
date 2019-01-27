@@ -22,6 +22,11 @@ namespace JustSaying
         internal IServiceResolver ServiceResolver { get; private set; } = new DefaultServiceResolver();
 
         /// <summary>
+        /// Gets or sets the builder to use for services.
+        /// </summary>
+        internal ServicesBuilder ServicesBuilder { get; private set; }
+
+        /// <summary>
         /// Gets or sets the builder to use for creating an AWS client factory.
         /// </summary>
         private AwsClientFactoryBuilder ClientFactoryBuilder { get; set; }
@@ -35,11 +40,6 @@ namespace JustSaying
         /// Gets or sets the builder to use for publications.
         /// </summary>
         private PublicationsBuilder PublicationsBuilder { get; set; }
-
-        /// <summary>
-        /// Gets or sets the builder to use for services.
-        /// </summary>
-        private ServicesBuilder ServicesBuilder { get; set; }
 
         /// <summary>
         /// Gets or sets the builder to use for subscriptions.
