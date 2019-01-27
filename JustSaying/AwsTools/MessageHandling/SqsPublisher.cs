@@ -36,6 +36,12 @@ namespace JustSaying.AwsTools.MessageHandling
             try
             {
                 SendMessageResponse response = await _client.SendMessageAsync(request, cancellationToken).ConfigureAwait(false);
+
+                Logger.LogInformation(
+                    "Published message to queue '{QueueUrl}' with content '{MessageBody}'.",
+                    request.QueueUrl,
+                    request.MessageBody);
+
                 if (MessageResponseLogger != null)
                 {
                     var responseData = new MessageResponse
