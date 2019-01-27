@@ -23,7 +23,7 @@ namespace JustSaying.AwsTools.MessageHandling
         public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
         public string Arn { get; protected set; }
         protected IAmazonSimpleNotificationService Client { get; set; }
-        private readonly ILogger _eventLog;
+        private readonly ILogger _logger;
 
         protected SnsTopicBase(
             IMessageSerializationRegister serializationRegister,
@@ -32,7 +32,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             _serializationRegister = serializationRegister;
             _messageSubjectProvider = messageSubjectProvider;
-            _eventLog = loggerFactory.CreateLogger("EventLog");
+            _logger = loggerFactory.CreateLogger("JustSaying");
         }
 
         protected SnsTopicBase(
@@ -42,7 +42,7 @@ namespace JustSaying.AwsTools.MessageHandling
             IMessageSubjectProvider messageSubjectProvider)
         {
             _serializationRegister = serializationRegister;
-            _eventLog = loggerFactory.CreateLogger("EventLog");
+            _logger = loggerFactory.CreateLogger("JustSaying");
             _snsWriteConfiguration = snsWriteConfiguration;
             _messageSubjectProvider = messageSubjectProvider;
         }
@@ -56,8 +56,11 @@ namespace JustSaying.AwsTools.MessageHandling
             try
             {
                 var response = await Client.PublishAsync(request, cancellationToken).ConfigureAwait(false);
-                _eventLog.LogInformation("Published message with subject '{MessageSubject}' and content '{MessageBody}'.",
-                    request.Subject, request.Message);
+
+                _logger.LogInformation(
+                    "Published message with subject '{MessageSubject}' and content '{MessageBody}'.",
+                    request.Subject,
+                    request.Message);
 
                 if (MessageResponseLogger != null)
                 {
