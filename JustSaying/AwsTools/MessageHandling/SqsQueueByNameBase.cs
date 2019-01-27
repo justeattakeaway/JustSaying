@@ -11,23 +11,30 @@ namespace JustSaying.AwsTools.MessageHandling
 {
     public abstract class SqsQueueByNameBase : SqsQueueBase
     {
-        private readonly ILogger _log;
-
         protected SqsQueueByNameBase(RegionEndpoint region, string queueName, IAmazonSQS client, ILoggerFactory loggerFactory)
             : base(region, client)
         {
+            if (loggerFactory == null)
+            {
+                throw new ArgumentNullException(nameof(loggerFactory));
+            }
+
             QueueName = queueName;
-            _log = loggerFactory.CreateLogger("JustSaying");
+            Logger = loggerFactory.CreateLogger("JustSaying");
         }
+
+        protected ILogger Logger { get; }
 
         public override async Task<bool> ExistsAsync()
         {
-            GetQueueUrlResponse result;
-            _log.LogInformation("Checking if queue '{QueueName}' exists.", QueueName);
+            Logger.LogInformation("Checking if queue '{QueueName}' exists.", QueueName);
+
             if (string.IsNullOrWhiteSpace(QueueName))
             {
                 return false;
             }
+
+            GetQueueUrlResponse result;
 
             try
             {
@@ -66,7 +73,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     await Client.SetQueueAttributesAsync(queueResponse.QueueUrl, GetCreateQueueAttributes(queueConfig)).ConfigureAwait(false);
                     await SetQueuePropertiesAsync().ConfigureAwait(false);
 
-                    _log.LogInformation("Created queue '{QueueName}' with ARN '{Arn}'.", QueueName, Arn);
+                    Logger.LogInformation("Created queue '{QueueName}' with ARN '{Arn}'.", QueueName, Arn);
                     return true;
                 }
             }
@@ -76,14 +83,22 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     if (attempt >= (maxAttempts - 1))
                     {
-                        _log.LogError(0, ex, "Error trying to create queue '{QueueName}'. Maximum retries of {MaxAttempts} exceeded for delay {Delay}.",
-                            QueueName, maxAttempts, CreateRetryDelay);
+                        Logger.LogError(
+                            ex,
+                            "Error trying to create queue '{QueueName}'. Maximum retries of {MaxAttempts} exceeded for delay {Delay}.",
+                            QueueName, maxAttempts,
+                            CreateRetryDelay);
+
                         throw;
                     }
 
                     // Ensure we wait for queue delete timeout to expire.
-                    _log.LogInformation("Waiting to create queue '{QueueName}' for {Delay}, due to AWS time restriction. Attempt number {AttemptCount} of {MaxAttempts}.",
-                        QueueName, CreateRetryDelay, attempt + 1, maxAttempts);
+                    Logger.LogInformation(
+                        "Waiting to create queue '{QueueName}' for {Delay}, due to AWS time restriction. Attempt number {AttemptCount} of {MaxAttempts}.",
+                        QueueName,
+                        CreateRetryDelay,
+                        attempt + 1,
+                        maxAttempts);
 
                     await Task.Delay(CreateRetryDelay).ConfigureAwait(false);
                     await CreateAsync(queueConfig, attempt + 1).ConfigureAwait(false);
@@ -91,12 +106,12 @@ namespace JustSaying.AwsTools.MessageHandling
                 else
                 {
                     // Throw all errors which are not delete timeout related.
-                    _log.LogError(0, ex, "Error trying to create queue '{QueueName}'.", QueueName);
+                    Logger.LogError(ex, "Error trying to create queue '{QueueName}'.", QueueName);
                     throw;
                 }
             }
 
-            _log.LogWarning("Failed to create queue '{QueueName}'.", QueueName);
+            Logger.LogWarning("Failed to create queue '{QueueName}'.", QueueName);
             return false;
         }
 
