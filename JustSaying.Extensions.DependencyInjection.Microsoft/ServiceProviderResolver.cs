@@ -50,7 +50,7 @@ namespace JustSaying
 
             if (handlers.Length == 0)
             {
-                throw new NotSupportedException($"No handler for message type {typeof(T).FullName} is registered.");
+                throw new InvalidOperationException($"No handler for message type {typeof(T).FullName} is registered.");
             }
             else if (handlers.Length > 1)
             {
