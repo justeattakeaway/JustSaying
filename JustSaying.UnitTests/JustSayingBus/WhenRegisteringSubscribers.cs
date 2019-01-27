@@ -15,9 +15,9 @@ namespace JustSaying.UnitTests.JustSayingBus
         private INotificationSubscriber _subscriber1;
         private INotificationSubscriber _subscriber2;
 
-        protected override async Task Given()
+        protected override void Given()
         {
-            await base.Given();
+            base.Given();
             _subscriber1 = Substitute.For<INotificationSubscriber>();
             _subscriber1.Queue.Returns("queue1");
             _subscriber1.Subscribers.Returns(new Collection<ISubscriber>
@@ -30,7 +30,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             _subscriber2.Subscribers.Returns(new Collection<ISubscriber> {new Subscriber(typeof (SimpleMessage))});
         }
 
-        protected override Task When()
+        protected override Task WhenAction()
         {
             SystemUnderTest.AddNotificationSubscriber("region1", _subscriber1);
             SystemUnderTest.AddNotificationSubscriber("region1", _subscriber2);

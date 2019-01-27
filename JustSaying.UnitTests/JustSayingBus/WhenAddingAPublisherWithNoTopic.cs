@@ -9,13 +9,12 @@ namespace JustSaying.UnitTests.JustSayingBus
 {
     public class WhenAddingAPublisherWithNoTopic : GivenAServiceBus
     {
-        protected override Task Given()
+        protected override void Given()
         {
             RecordAnyExceptionsThrown();
-            return Task.CompletedTask;
         }
 
-        protected override Task When()
+        protected override Task WhenAction()
         {
             SystemUnderTest.AddMessagePublisher<SimpleMessage>(Substitute.For<IMessagePublisher>(), string.Empty);
 

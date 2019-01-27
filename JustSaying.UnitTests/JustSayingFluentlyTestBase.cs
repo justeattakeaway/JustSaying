@@ -1,19 +1,24 @@
+using System;
 using System.Reflection;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.QueueCreation;
-using JustBehave;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using Xunit;
 
 namespace JustSaying.UnitTests
 {
-    public abstract class JustSayingFluentlyTestBase : XAsyncBehaviourTest<JustSaying.JustSayingFluently>
+    public abstract class JustSayingFluentlyTestBase : IAsyncLifetime
     {
         protected IPublishConfiguration Configuration;
         protected IAmJustSaying Bus;
         protected readonly IVerifyAmazonQueues QueueVerifier = Substitute.For<IVerifyAmazonQueues>();
+        private bool _recordThrownExceptions;
+        protected Exception ThrownException { get; private set; }
 
-        protected override Task<JustSaying.JustSayingFluently> CreateSystemUnderTestAsync()
+        public JustSaying.JustSayingFluently SystemUnderTest { get; private set; }
+
+        protected virtual JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
             if (Configuration == null)
             {
@@ -35,7 +40,7 @@ namespace JustSaying.UnitTests
             ConfigureNotificationStackMock(fns);
             ConfigureAmazonQueueCreator(fns);
 
-            return Task.FromResult(fns);
+            return fns;
         }
 
         // ToDo: Must do better!!
@@ -53,6 +58,38 @@ namespace JustSaying.UnitTests
         {
             fns.GetType()
                 .GetField("_amazonQueueCreator", BindingFlags.Instance | BindingFlags.NonPublic)?.SetValue(fns, QueueVerifier);
+        }
+
+        public async Task InitializeAsync()
+        {
+            Given();
+
+            try
+            {
+                SystemUnderTest = CreateSystemUnderTest();
+                await WhenAction().ConfigureAwait(false);
+            }
+            catch (Exception ex) when (_recordThrownExceptions)
+            {
+                ThrownException = ex;
+            }
+        }
+
+        protected virtual void Given()
+        {
+
+        }
+
+        protected abstract Task WhenAction();
+
+        public Task DisposeAsync()
+        {
+            return Task.CompletedTask;
+        }
+
+        public void RecordAnyExceptionsThrown()
+        {
+            _recordThrownExceptions = true;
         }
     }
 }

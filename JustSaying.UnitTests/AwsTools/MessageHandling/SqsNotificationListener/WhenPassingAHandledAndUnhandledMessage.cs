@@ -1,6 +1,5 @@
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using NSubstitute;
 using Xunit;

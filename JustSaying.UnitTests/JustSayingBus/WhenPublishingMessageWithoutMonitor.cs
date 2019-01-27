@@ -12,7 +12,7 @@ namespace JustSaying.UnitTests.JustSayingBus
     {
         private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
         
-        protected override async Task When()
+        protected override async Task WhenAction()
         {
             SystemUnderTest.AddMessagePublisher<SimpleMessage>(_publisher, string.Empty);
             await SystemUnderTest.PublishAsync(new SimpleMessage());

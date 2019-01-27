@@ -10,13 +10,13 @@ namespace JustSaying.UnitTests.JustSayingBus
 {
     public class WhenPublishingWithoutRegistering : GivenAServiceBus
     {
-        protected override async Task Given()
+        protected override void Given()
         {
-            await base.Given();
+            base.Given();
             RecordAnyExceptionsThrown();
         }
 
-        protected override async Task When()
+        protected override async Task WhenAction()
         {
             await SystemUnderTest.PublishAsync(Substitute.For<Message>());
         }

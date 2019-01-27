@@ -1,7 +1,6 @@
 using System;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
-using JustBehave;
 using Shouldly;
 using Xunit;
 
@@ -14,7 +13,7 @@ namespace JustSaying.UnitTests
             RecordAnyExceptionsThrown();
         }
 
-        protected override void When()
+        protected override void WhenAction()
         {
             SystemUnderTest.Validate();
         }

@@ -1,4 +1,3 @@
-using JustBehave;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Shouldly;
@@ -15,7 +14,7 @@ namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft
             
         }
 
-        protected override void When()
+        protected override void WhenAction()
         {
             _result = SystemUnderTest.GetSerializer<SimpleMessage>();
         }

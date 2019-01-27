@@ -1,4 +1,3 @@
-using JustBehave;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Newtonsoft.Json;
@@ -28,7 +27,7 @@ namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft
             return JsonConvert.SerializeObject(context);
         }
 
-        protected override void When()
+        protected override void WhenAction()
         {
             _jsonMessage = GetMessageInContext(_messageOut);
         }

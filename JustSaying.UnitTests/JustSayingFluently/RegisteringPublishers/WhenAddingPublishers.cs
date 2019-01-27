@@ -1,4 +1,3 @@
-using JustBehave;
 using JustSaying.AwsTools;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -26,7 +25,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
             _bus.Config.Returns(config);
         }
 
-        protected override void When()
+        protected override void WhenAction()
         {
         }
 

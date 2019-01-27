@@ -1,25 +1,45 @@
 using System.Threading.Tasks;
-using JustBehave;
-using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
-    public abstract class GivenAServiceBusWithoutMonitoring : XAsyncBehaviourTest<JustSaying.JustSayingBus>
+    public abstract class GivenAServiceBusWithoutMonitoring : IAsyncLifetime
     {
         protected IMessagingConfig Config;
-        protected IMessageMonitor Monitor;
         protected ILoggerFactory LoggerFactory;
 
-        protected override Task Given()
+        protected JustSaying.JustSayingBus SystemUnderTest { get; private set; }
+
+        public virtual async Task InitializeAsync()
         {
-            Config = Substitute.For<IMessagingConfig>();
-            LoggerFactory = Substitute.For<ILoggerFactory>();
+            Given();
+
+            SystemUnderTest = CreateSystemUnderTest();
+            await WhenAction().ConfigureAwait(false);
+        }
+
+
+        public virtual Task DisposeAsync()
+        {
             return Task.CompletedTask;
         }
 
-        protected override Task<JustSaying.JustSayingBus> CreateSystemUnderTestAsync()
-            => Task.FromResult(new JustSaying.JustSayingBus(Config, null, LoggerFactory));
+        protected virtual void Given()
+        {
+            Config = Substitute.For<IMessagingConfig>();
+            LoggerFactory = Substitute.For<ILoggerFactory>();
+        }
+
+        protected abstract Task WhenAction();
+
+        private JustSaying.JustSayingBus CreateSystemUnderTest()
+        {
+            return new JustSaying.JustSayingBus(Config, null, LoggerFactory)
+            {
+                Monitor = null
+            };
+        }
     }
 }

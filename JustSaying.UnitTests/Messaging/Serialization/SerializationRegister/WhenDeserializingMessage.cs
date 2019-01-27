@@ -1,5 +1,4 @@
 using System;
-using JustBehave;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using NSubstitute;
@@ -23,7 +22,7 @@ namespace JustSaying.UnitTests.Messaging.Serialization.SerializationRegister
             RecordAnyExceptionsThrown();
         }
 
-        protected override void When()
+        protected override void WhenAction()
         {
             var messageSerializer = Substitute.For<IMessageSerializer>();
             messageSerializer.GetMessageSubject(messageBody).Returns(typeof(CustomMessage).Name);

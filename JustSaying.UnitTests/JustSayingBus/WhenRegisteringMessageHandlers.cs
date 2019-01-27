@@ -17,9 +17,9 @@ namespace JustSaying.UnitTests.JustSayingBus
         private Func<IHandlerAsync<Message>> _futureHandler1;
         private Func<IHandlerAsync<Message2>> _futureHandler2;
         
-        protected override async Task Given()
+        protected override void Given()
         {
-            await base.Given();
+            base.Given();
             _futureHandler1 = () => _handler1;
             _futureHandler2 = () => _handler2;
             _subscriber = Substitute.For<INotificationSubscriber>();
@@ -28,7 +28,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             _region = "west-1";
         }
 
-        protected override Task When()
+        protected override Task WhenAction()
         {
             SystemUnderTest.AddNotificationSubscriber(_region, _subscriber);
             SystemUnderTest.AddNotificationSubscriber(_region, _subscriber);
