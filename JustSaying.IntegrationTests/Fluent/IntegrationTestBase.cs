@@ -84,14 +84,17 @@ namespace JustSaying.IntegrationTests.Fluent
         }
 
         protected async Task WhenAsync(IServiceCollection services, Func<IMessagePublisher, IMessagingBus, CancellationToken, Task> action)
+            => await WhenAsync(services, async (p, b, _, c) => await action(p, b, c));
+
+        protected async Task WhenAsync(IServiceCollection services, Func<IMessagePublisher, IMessagingBus, IServiceProvider, CancellationToken, Task> action)
         {
             IServiceProvider serviceProvider = services.BuildServiceProvider();
 
             IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
             IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
-            await RunActionWithTimeout(async ctx =>
-                await action(publisher, listener, ctx)
+            await RunActionWithTimeout(async cancellationToken =>
+                await action(publisher, listener, serviceProvider, cancellationToken)
                     .ConfigureAwait(false));
         }
 
