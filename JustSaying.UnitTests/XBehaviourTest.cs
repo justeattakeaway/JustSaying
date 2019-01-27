@@ -5,7 +5,7 @@ namespace JustSaying.UnitTests
 {
     public abstract class XBehaviourTest<TSystemUnderTest>
     {
-        private bool _recordExceptions;
+        private bool _recordThrownExceptions;
 
         protected XBehaviourTest()
         {
@@ -30,16 +30,9 @@ namespace JustSaying.UnitTests
                 SystemUnderTest = CreateSystemUnderTest();
                 WhenAction();
             }
-            catch (Exception ex)
+            catch (Exception ex) when(_recordThrownExceptions)
             {
-                if (_recordExceptions)
-                {
-                    ThrownException = ex;
-                }
-                else
-                {
-                    throw;
-                }
+                ThrownException = ex;
             }
         }
 
@@ -47,7 +40,7 @@ namespace JustSaying.UnitTests
 
         protected void RecordAnyExceptionsThrown()
         {
-            _recordExceptions = true;
+            _recordThrownExceptions = true;
         }
 
         protected abstract void WhenAction();

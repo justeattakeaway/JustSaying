@@ -13,7 +13,7 @@ namespace JustSaying.UnitTests
         protected IPublishConfiguration Configuration;
         protected IAmJustSaying Bus;
         protected readonly IVerifyAmazonQueues QueueVerifier = Substitute.For<IVerifyAmazonQueues>();
-        private bool _exceptionRecording;
+        private bool _recordThrownExceptions;
         protected Exception ThrownException { get; private set; }
 
         public JustSaying.JustSayingFluently SystemUnderTest { get; private set; }
@@ -69,16 +69,9 @@ namespace JustSaying.UnitTests
                 SystemUnderTest = CreateSystemUnderTest();
                 await WhenAction().ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (_recordThrownExceptions)
             {
-                if (_exceptionRecording)
-                {
-                    ThrownException = ex;
-                }
-                else
-                {
-                    throw;
-                }
+                ThrownException = ex;
             }
         }
 
@@ -96,7 +89,7 @@ namespace JustSaying.UnitTests
 
         public void RecordAnyExceptionsThrown()
         {
-            _exceptionRecording = true;
+            _recordThrownExceptions = true;
         }
     }
 }

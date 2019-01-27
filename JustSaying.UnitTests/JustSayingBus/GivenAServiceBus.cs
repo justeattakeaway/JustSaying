@@ -12,7 +12,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         protected IMessagingConfig Config;
         protected IMessageMonitor Monitor;
         protected ILoggerFactory LoggerFactory;
-        private bool _exceptionRecording;
+        private bool _recordThrownExceptions;
 
         protected Exception ThrownException { get; private set; }
 
@@ -27,16 +27,9 @@ namespace JustSaying.UnitTests.JustSayingBus
                 SystemUnderTest = CreateSystemUnderTest();
                 await WhenAction().ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (_recordThrownExceptions)
             {
-                if (_exceptionRecording)
-                {
-                    ThrownException = ex;
-                }
-                else
-                {
-                    throw;
-                }
+                ThrownException = ex;
             }
         }
 
@@ -64,7 +57,7 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         public void RecordAnyExceptionsThrown()
         {
-            _exceptionRecording = true;
+            _recordThrownExceptions = true;
         }
     }
 }
