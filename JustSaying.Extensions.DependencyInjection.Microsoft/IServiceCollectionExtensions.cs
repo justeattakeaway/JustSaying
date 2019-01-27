@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using JustSaying;
 using JustSaying.AwsTools;
@@ -196,6 +197,53 @@ namespace Microsoft.Extensions.DependencyInjection
             }
 
             services.TryAddTransient<IHandlerAsync<TMessage>, THandler>();
+            return services;
+        }
+
+        /// <summary>
+        /// Adds a JustSaying message handler to the service collection that uses the specified handlers.
+        /// </summary>
+        /// <typeparam name="TMessage">The type of the message handled.</typeparam>
+        /// <param name="services">The <see cref="IServiceCollection"/> to add the message handler to.</param>
+        /// <param name="handlers">The message handlers to use.</param>
+        /// <returns>
+        /// The <see cref="IServiceCollection"/> specified by <paramref name="services"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="services"/> or <paramref name="handlers"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="handlers"/> contains no handlers.
+        /// </exception>
+        public static IServiceCollection AddJustSayingHandlers<TMessage>(
+            this IServiceCollection services,
+            IList<IHandlerAsync<TMessage>> handlers)
+            where TMessage : Message
+        {
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
+            if (handlers == null)
+            {
+                throw new ArgumentNullException(nameof(handlers));
+            }
+
+            if (handlers.Count < 1)
+            {
+                throw new ArgumentException("At least one message handler must be specified.", nameof(handlers));
+            }
+
+            if (handlers.Count == 1)
+            {
+                services.TryAddTransient((_) => handlers[0]);
+            }
+            else
+            {
+                services.TryAddTransient<IHandlerAsync<TMessage>>((_) => new ListHandler<TMessage>(handlers));
+            }
+
             return services;
         }
 
