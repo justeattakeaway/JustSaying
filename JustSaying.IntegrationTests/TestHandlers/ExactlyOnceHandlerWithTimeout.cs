@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 
-namespace JustSaying.IntegrationTests.WhenRegisteringASqsSubscriber
+namespace JustSaying.IntegrationTests.TestHandlers
 {
     [ExactlyOnce(TimeOut = 10)]
     public class ExactlyOnceHandlerWithTimeout : IHandlerAsync<SimpleMessage>

@@ -25,7 +25,7 @@ namespace JustSaying.IntegrationTests.Fluent.DependencyInjection.Microsoft
                 .BuildServiceProvider();
 
             // Act and Assert
-            var exception = Assert.Throws<NotSupportedException>(() => serviceProvider.GetService<IMessagingBus>());
+            var exception = Assert.Throws<InvalidOperationException>(() => serviceProvider.GetService<IMessagingBus>());
             exception.Message.ShouldBe("No handler for message type JustSaying.IntegrationTests.TestHandlers.OrderPlaced is registered.");
         }
     }

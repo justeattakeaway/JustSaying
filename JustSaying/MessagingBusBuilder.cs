@@ -198,6 +198,17 @@ namespace JustSaying
         }
 
         /// <summary>
+        /// Creates a new instance of <see cref="IAwsClientFactory"/>.
+        /// </summary>
+        /// <returns>
+        /// The created instance of <see cref="IAwsClientFactory"/>
+        /// </returns>
+        public IAwsClientFactory BuildClientFactory()
+        {
+            return ClientFactoryBuilder?.Build() ?? ServiceResolver.ResolveService<IAwsClientFactory>();
+        }
+
+        /// <summary>
         /// Creates a new instance of <see cref="IMessagePublisher"/>.
         /// </summary>
         /// <returns>
