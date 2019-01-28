@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using JustSaying;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
@@ -217,7 +218,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </exception>
         public static IServiceCollection AddJustSayingHandlers<TMessage>(
             this IServiceCollection services,
-            IList<IHandlerAsync<TMessage>> handlers)
+            IEnumerable<IHandlerAsync<TMessage>> handlers)
             where TMessage : Message
         {
             if (services == null)
@@ -230,18 +231,20 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(handlers));
             }
 
-            if (handlers.Count < 1)
+            var enumeratedHandlers = handlers.ToList();
+
+            if (enumeratedHandlers.Count < 1)
             {
                 throw new ArgumentException("At least one message handler must be specified.", nameof(handlers));
             }
 
-            if (handlers.Count == 1)
+            if (enumeratedHandlers.Count == 1)
             {
-                services.TryAddTransient((_) => handlers[0]);
+                services.TryAddTransient((_) => enumeratedHandlers[0]);
             }
             else
             {
-                services.TryAddTransient<IHandlerAsync<TMessage>>((_) => new ListHandler<TMessage>(handlers));
+                services.TryAddTransient<IHandlerAsync<TMessage>>((_) => new ListHandler<TMessage>(enumeratedHandlers));
             }
 
             return services;
