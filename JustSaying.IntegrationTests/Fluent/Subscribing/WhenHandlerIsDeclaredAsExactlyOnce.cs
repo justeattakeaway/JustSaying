@@ -19,7 +19,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         }
 
         [AwsFact]
-        public async Task Then_Both_Handlers_Receive_The_Message()
+        public async Task Then_The_Handler_Only_Receives_The_Message_Once()
         {
             // Arrange
             var handler = new ExactlyOnceHandlerWithTimeout();
