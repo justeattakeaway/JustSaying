@@ -70,7 +70,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             return Task.CompletedTask;
         }
 
-
         protected virtual void Given()
         {
             _typedMessage = new OrderAccepted();
