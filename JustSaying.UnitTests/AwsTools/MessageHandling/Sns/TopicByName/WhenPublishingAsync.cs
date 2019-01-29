@@ -37,7 +37,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
                 .Returns(new Topic { TopicArn = TopicArn });
         }
 
-        protected override async Task WhenAction()
+        protected override async Task WhenAsync()
         {
             var metadata = new PublishMetadata()
                 .AddMessageAttribute(MessageAttributeKey, MessageAttributeValue);

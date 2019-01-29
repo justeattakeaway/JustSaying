@@ -37,7 +37,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
                 .Returns(new Topic { TopicArn = TopicArn });
         }
 
-        protected override Task WhenAction()
+        protected override Task WhenAsync()
         {
             Sns.PublishAsync(Arg.Any<PublishRequest>()).Returns(ThrowsException);
             return Task.CompletedTask;

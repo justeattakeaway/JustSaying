@@ -30,7 +30,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             _subscriber2.Subscribers.Returns(new Collection<ISubscriber> {new Subscriber(typeof (SimpleMessage))});
         }
 
-        protected override Task WhenAction()
+        protected override Task WhenAsync()
         {
             SystemUnderTest.AddNotificationSubscriber("region1", _subscriber1);
             SystemUnderTest.AddNotificationSubscriber("region1", _subscriber2);

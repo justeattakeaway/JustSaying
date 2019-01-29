@@ -50,7 +50,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
                 .Returns(PublishResult);
         }
 
-        protected override Task WhenAction()
+        protected override Task WhenAsync()
         {
             return SystemUnderTest.PublishAsync(new SimpleMessage());
         }

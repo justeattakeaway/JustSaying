@@ -23,7 +23,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         private readonly IMessageSerializationRegister _serializationRegister =
             Substitute.For<IMessageSerializationRegister>();
 
-        private JustSaying.AwsTools.MessageHandling.SqsNotificationListener SystemUnderTest;
+        private JustSaying.AwsTools.MessageHandling.SqsNotificationListener _systemUnderTest;
 
         private int _callCount;
 
@@ -31,7 +31,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         {
             Given();
 
-            SystemUnderTest = CreateSystemUnderTest();
+            _systemUnderTest = CreateSystemUnderTest();
 
             await When().ConfigureAwait(false);
         }
@@ -47,7 +47,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             return Task.CompletedTask;
         }
 
-        protected JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
+        private JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
             var listener = new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
                 new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri("http://foo.com"), _sqs),
@@ -59,7 +59,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             return listener;
         }
 
-        protected void Given()
+        private void Given()
         {
             _serializationRegister
                 .DeserializeMessage(Arg.Any<string>())
@@ -76,12 +76,10 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         }
 
 
-#pragma warning disable CA1716
-        protected async Task When()
-#pragma warning restore CA1716
+        private async Task When()
         {
             var cts = new CancellationTokenSource();
-            SystemUnderTest.Listen(cts.Token);
+            _systemUnderTest.Listen(cts.Token);
             await Task.Delay(100);
             cts.Cancel();
         }

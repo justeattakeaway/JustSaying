@@ -18,7 +18,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
             SystemUnderTest = await CreateSystemUnderTestAsync();
 
-            await WhenAction().ConfigureAwait(false);
+            await WhenAsync().ConfigureAwait(false);
         }
 
         public virtual Task DisposeAsync()
@@ -35,6 +35,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         protected abstract void Given();
         protected abstract Task<SnsTopicByName> CreateSystemUnderTestAsync();
 
-       protected abstract Task WhenAction();
+       protected abstract Task WhenAsync();
     }
 }

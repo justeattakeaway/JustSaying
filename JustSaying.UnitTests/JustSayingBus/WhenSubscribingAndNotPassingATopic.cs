@@ -13,7 +13,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             RecordAnyExceptionsThrown();
         }
 
-        protected override Task WhenAction()
+        protected override Task WhenAsync()
         {
             SystemUnderTest.AddNotificationSubscriber(" ", null);
             return Task.CompletedTask;

@@ -58,7 +58,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
                 .Returns(PublishResult);
         }
 
-        protected override async Task WhenAction()
+        protected override async Task WhenAsync()
         {
             await SystemUnderTest.PublishAsync(_testMessage);
         }

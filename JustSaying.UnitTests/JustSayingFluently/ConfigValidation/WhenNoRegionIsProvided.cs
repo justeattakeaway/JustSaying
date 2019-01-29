@@ -18,7 +18,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
             RecordAnyExceptionsThrown();
         }
 
-        protected override Task WhenAction()
+        protected override Task WhenAsync()
         {
             CreateMeABus
                 .WithLogging(new LoggerFactory())

@@ -51,7 +51,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             return Task.FromResult(new ReceiveMessageResponse());
         }
 
-        protected override async Task When()
+        protected override async Task WhenAsync()
         {
             SystemUnderTest.AddMessageHandler(() => Handler);
             var cts = new CancellationTokenSource();

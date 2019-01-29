@@ -19,7 +19,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             RecordAnyExceptionsThrown();
         }
 
-        protected override Task WhenAction()
+        protected override Task WhenAsync()
         {
             SystemUnderTest.AddMessagePublisher<Message>(_publisher, string.Empty);
             SystemUnderTest.AddMessagePublisher<Message>(_publisher, string.Empty);

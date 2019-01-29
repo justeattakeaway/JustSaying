@@ -67,7 +67,7 @@ namespace JustSaying.UnitTests
             try
             {
                 SystemUnderTest = CreateSystemUnderTest();
-                await WhenAction().ConfigureAwait(false);
+                await WhenAsync().ConfigureAwait(false);
             }
             catch (Exception ex) when (_recordThrownExceptions)
             {
@@ -80,7 +80,7 @@ namespace JustSaying.UnitTests
 
         }
 
-        protected abstract Task WhenAction();
+        protected abstract Task WhenAsync();
 
         public Task DisposeAsync()
         {

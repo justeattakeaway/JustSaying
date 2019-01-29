@@ -16,7 +16,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             RecordAnyExceptionsThrown();
         }
 
-        protected override async Task WhenAction()
+        protected override async Task WhenAsync()
         {
             await SystemUnderTest.PublishAsync(Substitute.For<Message>());
         }

@@ -25,7 +25,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             try
             {
                 SystemUnderTest = CreateSystemUnderTest();
-                await WhenAction().ConfigureAwait(false);
+                await WhenAsync().ConfigureAwait(false);
             }
             catch (Exception ex) when (_recordThrownExceptions)
             {
@@ -45,7 +45,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             LoggerFactory = Substitute.For<ILoggerFactory>();
         }
 
-        protected abstract Task WhenAction();
+        protected abstract Task WhenAsync();
 
         private JustSaying.JustSayingBus CreateSystemUnderTest()
         {

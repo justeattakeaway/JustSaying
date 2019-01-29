@@ -10,7 +10,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingMonitoring
     {
         readonly IMessageMonitor _monitor = Substitute.For<IMessageMonitor>();
         private object _response;
-        protected override Task WhenAction()
+        protected override Task WhenAsync()
         {
             _response = SystemUnderTest.WithMonitoring(_monitor);
             return Task.CompletedTask;

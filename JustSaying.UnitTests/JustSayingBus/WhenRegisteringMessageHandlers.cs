@@ -28,7 +28,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             _region = "west-1";
         }
 
-        protected override Task WhenAction()
+        protected override Task WhenAsync()
         {
             SystemUnderTest.AddNotificationSubscriber(_region, _subscriber);
             SystemUnderTest.AddNotificationSubscriber(_region, _subscriber);

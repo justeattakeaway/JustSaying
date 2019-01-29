@@ -17,7 +17,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 
             SystemUnderTest = await CreateSystemUnderTestAsync();
 
-            await WhenAction().ConfigureAwait(false);
+            await WhenAsync().ConfigureAwait(false);
         }
 
         public virtual Task DisposeAsync()
@@ -34,6 +34,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         protected abstract void Given();
         protected abstract Task<SqsPublisher> CreateSystemUnderTestAsync();
 
-       protected abstract Task WhenAction();
+       protected abstract Task WhenAsync();
     }
 }
