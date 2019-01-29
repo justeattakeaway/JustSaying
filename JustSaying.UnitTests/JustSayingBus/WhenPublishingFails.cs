@@ -27,7 +27,7 @@ namespace JustSaying.UnitTests.JustSayingBus
                 .Do(x => { throw new TestException("Thrown by test WhenPublishingFails"); });
         }
 
-        protected override async Task WhenAction()
+        protected override async Task WhenAsync()
         {
             SystemUnderTest.AddMessagePublisher<SimpleMessage>(_publisher, string.Empty);
 

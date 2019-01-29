@@ -17,7 +17,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             Given();
 
             SystemUnderTest = CreateSystemUnderTest();
-            await WhenAction().ConfigureAwait(false);
+            await WhenAsync().ConfigureAwait(false);
         }
 
 
@@ -32,7 +32,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             LoggerFactory = Substitute.For<ILoggerFactory>();
         }
 
-        protected abstract Task WhenAction();
+        protected abstract Task WhenAsync();
 
         private JustSaying.JustSayingBus CreateSystemUnderTest()
         {

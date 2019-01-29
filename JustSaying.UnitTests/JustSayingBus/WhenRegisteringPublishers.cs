@@ -20,7 +20,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             _publisher = Substitute.For<IMessagePublisher>();
         }
 
-        protected override async Task WhenAction()
+        protected override async Task WhenAsync()
         {
             SystemUnderTest.AddMessagePublisher<OrderAccepted>(_publisher, string.Empty);
             SystemUnderTest.AddMessagePublisher<OrderRejected>(_publisher, string.Empty);

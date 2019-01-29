@@ -38,7 +38,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
                 .Returns("serialized_contents");
         }
 
-        protected override async Task WhenAction()
+        protected override async Task WhenAsync()
         {
             await SystemUnderTest.PublishAsync(_message);
         }

@@ -20,7 +20,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             Handler.Handle(null).ReturnsForAnyArgs(true);
         }
 
-        protected override async Task WhenAction()
+        protected override async Task WhenAsync()
         {
             var doneSignal = new TaskCompletionSource<object>();
             SystemUnderTest.WithMessageProcessingStrategy(new ThrowingBeforeMessageProcessingStrategy(doneSignal));

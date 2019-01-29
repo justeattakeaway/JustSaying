@@ -12,7 +12,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         private IFluentSubscription _bus;
 
 
-        protected override Task WhenAction()
+        protected override Task WhenAsync()
         {
             _bus = SystemUnderTest
                 .WithSqsTopicSubscriber()

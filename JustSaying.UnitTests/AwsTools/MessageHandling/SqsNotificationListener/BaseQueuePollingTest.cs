@@ -44,7 +44,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 
             SystemUnderTest = CreateSystemUnderTest();
 
-            await WhenAction().ConfigureAwait(false);
+            await WhenAsync().ConfigureAwait(false);
         }
 
         public virtual Task DisposeAsync()
@@ -96,7 +96,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             SerializationRegister.DeserializeMessage(Arg.Any<string>()).Returns(DeserializedMessage);
         }
 
-        protected virtual async Task WhenAction()
+        protected virtual async Task WhenAsync()
         {
             var doneSignal = new TaskCompletionSource<object>();
             var signallingHandler = new SignallingHandler<SimpleMessage>(doneSignal, Handler);

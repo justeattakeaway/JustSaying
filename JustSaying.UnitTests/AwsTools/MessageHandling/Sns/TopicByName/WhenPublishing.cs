@@ -32,7 +32,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
                 .Returns(new Topic { TopicArn = TopicArn });
         }
 
-        protected override async Task WhenAction()
+        protected override async Task WhenAsync()
         {
             await SystemUnderTest.PublishAsync(new SimpleMessage());
         }

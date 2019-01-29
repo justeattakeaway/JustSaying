@@ -11,7 +11,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.Publishing
     {
         private readonly SimpleMessage _message = new SimpleMessage();
 
-        protected override async Task WhenAction()
+        protected override async Task WhenAsync()
         {
             await SystemUnderTest.PublishAsync(_message);
         }

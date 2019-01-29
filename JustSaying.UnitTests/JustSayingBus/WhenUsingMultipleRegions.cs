@@ -15,7 +15,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             Config.Regions.Returns(new List<string>{"region1", "region2"});
         }
 
-        protected override Task WhenAction()
+        protected override Task WhenAsync()
         {
             return Task.CompletedTask;
         }

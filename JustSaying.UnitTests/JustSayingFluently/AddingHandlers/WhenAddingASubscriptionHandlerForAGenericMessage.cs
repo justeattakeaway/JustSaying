@@ -19,7 +19,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         private readonly IHandlerAsync<JustSayingMessage<MyMessage>> _handler = Substitute.For<IHandlerAsync<JustSayingMessage<MyMessage>>>();
         private object _response;
 
-        protected override Task WhenAction()
+        protected override Task WhenAsync()
         {
             _response = SystemUnderTest
                 .WithSqsTopicSubscriber()

@@ -40,7 +40,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
                 .Returns(new GetQueueAttributesResponse());
         }
 
-        protected override async Task WhenAction()
+        protected override async Task WhenAsync()
         {
             await SystemUnderTest.PublishAsync(_message, _metadata);
         }
