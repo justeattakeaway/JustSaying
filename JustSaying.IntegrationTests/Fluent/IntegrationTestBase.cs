@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Runtime;
@@ -37,7 +38,7 @@ namespace JustSaying.IntegrationTests.Fluent
 
         protected virtual bool IsSimulator => TestEnvironment.IsSimulatorConfigured;
 
-        protected virtual TimeSpan Timeout => TimeSpan.FromSeconds(20);
+        protected virtual TimeSpan Timeout => TimeSpan.FromSeconds(Debugger.IsAttached ? 60 : 20);
 
         protected virtual string UniqueName { get; } = $"{DateTime.UtcNow.Ticks}-integration-tests";
 
@@ -100,6 +101,7 @@ namespace JustSaying.IntegrationTests.Fluent
 
         protected async Task RunActionWithTimeout(Func<CancellationToken, Task> action)
         {
+            // See https://speakerdeck.com/davidfowl/scaling-asp-dot-net-core-applications?slide=28
             using (var cts = new CancellationTokenSource())
             {
                 var delayTask = Task.Delay(Timeout, cts.Token);
@@ -110,11 +112,14 @@ namespace JustSaying.IntegrationTests.Fluent
 
                 if (resultTask == delayTask)
                 {
-                    throw new TimeoutException($"The bus related action took longer to execute than the timeout of {Timeout.TotalSeconds} seconds");
+                    throw new TimeoutException($"The tested action took longer than the timeout of {Timeout} to complete.");
+                }
+                else
+                {
+                    cts.Cancel();
                 }
 
                 await actionTask;
-                cts.Cancel();
             }
         }
     }
