@@ -5,7 +5,7 @@ using JustSaying.Extensions;
 namespace JustSaying
 {
     /// <summary>
-    /// A default namign strategy for JustSaying bus.
+    /// A default naming strategy for JustSaying bus.
     /// Topic names are defaulted to message type name, lowercase (one topic per message type).
     /// Queue name is default to queue name.
     /// 
