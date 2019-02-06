@@ -23,7 +23,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
                 .IntoDefaultQueue()
                 .WithMessageHandler(_handler);
 
-            return Task.CompletedTask;
+            return SystemUnderTest.SetUpAws();
         }
 
         [Fact]

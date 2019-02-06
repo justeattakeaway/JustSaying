@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
@@ -24,7 +26,8 @@ namespace JustSaying
     /// 3. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc // ToDo: Shouldn't be enforced in base! Is a JE concern.
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class JustSayingFluently : ISubscriberIntoQueue,
+    public class JustSayingFluently :
+        ISubscriberIntoQueue,
         IHaveFulfilledSubscriptionRequirements,
         IHaveFulfilledPublishRequirements,
         IMayWantOptionalSettings,
@@ -40,6 +43,7 @@ namespace JustSaying
         private IMessageSerializationFactory _serializationFactory;
         private Func<INamingStrategy> _busNamingStrategyFunc;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly List<Func<Task>> _setupSteps = new List<Func<Task>>();
 
         protected internal JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator, IAwsClientFactoryProxy awsClientFactoryProxy, ILoggerFactory loggerFactory)
         {
@@ -77,8 +81,7 @@ namespace JustSaying
 
         private IHaveFulfilledPublishRequirements AddSnsMessagePublisher<T>(Action<SnsWriteConfiguration> configBuilder) where T : Message
         {
-            _log.LogInformation("Adding SNS publisher for message type '{MessageType}'.",
-                typeof(T));
+            _log.LogInformation("Adding SNS publisher for message type '{MessageType}'.", typeof(T));
 
             var snsWriteConfig = new SnsWriteConfiguration();
             configBuilder?.Invoke(snsWriteConfig);
@@ -250,21 +253,27 @@ namespace JustSaying
                 throw new InvalidOperationException($"No {nameof(IMessageSerializationFactory)} has been configured.");
             }
 
-            // TODO - Subscription listeners should be just added once per queue,
-            // and not for each message handler
-            var thing =  _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
-                ? PointToPointHandler<T>()
-                : TopicHandler<T>();
-
             Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
             foreach (var region in Bus.Config.Regions)
             {
                 Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handler);
             }
-            _log.LogInformation("Added a message handler of type '{HandlerType}' for message type '{MessageType}' on queue '{QueueName}'.",
-                handler.GetType(), typeof(T), _subscriptionConfig.QueueName);
 
-            return thing;
+            _setupSteps.Add(
+                async () =>
+                {
+                    // TODO - Subscription listeners should be just added once per queue,
+                    // and not for each message handler
+
+                    await (_subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
+                            ? SetUpPointToPointHandler<T>()
+                            : SetUpTopicHandler<T>());
+                   
+                    _log.LogInformation("Added a message handler of type '{HandlerType}' for message type '{MessageType}' on queue '{QueueName}'.",
+                        handler.GetType(), typeof(T), _subscriptionConfig.QueueName);
+                });
+
+            return this;
         }
 
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message
@@ -274,59 +283,71 @@ namespace JustSaying
                 throw new InvalidOperationException($"No {nameof(IMessageSerializationFactory)} has been configured.");
             }
 
-            var thing = _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
-                ? PointToPointHandler<T>()
-                : TopicHandler<T>();
-
-            Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
-
             var resolutionContext = new HandlerResolutionContext(_subscriptionConfig.QueueName);
             var proposedHandler = handlerResolver.ResolveHandler<T>(resolutionContext);
 
             if (proposedHandler == null)
             {
-                throw new HandlerNotRegisteredWithContainerException($"There is no handler for '{typeof(T)}' messages.");
+                throw new HandlerNotRegisteredWithContainerException(
+                    $"There is no handler for '{typeof(T)}' messages.");
             }
+
+            Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
 
             foreach (var region in Bus.Config.Regions)
             {
-                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handlerResolver.ResolveHandler<T>(resolutionContext));
+                Bus.AddMessageHandler(
+                    region,
+                    _subscriptionConfig.QueueName,
+                    () => handlerResolver.ResolveHandler<T>(resolutionContext));
             }
 
-            _log.LogInformation("Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",
-                typeof(T), _subscriptionConfig.Topic, _subscriptionConfig.QueueName);
+            _setupSteps.Add(
+                async () =>
+                {
+                    await (_subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
+                        ? SetUpPointToPointHandler<T>()
+                        : SetUpTopicHandler<T>());
 
-            return thing;
+                    _log.LogInformation(
+                        "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",
+                        typeof(T),
+                        _subscriptionConfig.Topic,
+                        _subscriptionConfig.QueueName);
+                });
+
+            return this;
         }
 
-        private IHaveFulfilledSubscriptionRequirements TopicHandler<T>() where T : Message
+        private async Task SetUpTopicHandler<T>() where T : Message
         {
             ConfigureSqsSubscriptionViaTopic<T>();
 
             foreach (var region in Bus.Config.Regions)
             {
-                var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribedAsync(region, Bus.SerializationRegister, _subscriptionConfig, Bus.Config.MessageSubjectProvider).GetAwaiter().GetResult();
+                var queue = await _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribedAsync(
+                    region, Bus.SerializationRegister, _subscriptionConfig, Bus.Config.MessageSubjectProvider)
+                    .ConfigureAwait(false);
+
                 CreateSubscriptionListener<T>(region, queue);
+
                 _log.LogInformation("Created SQS topic subscription on topic '{TopicName}' and queue '{QueueName}'.",
                     _subscriptionConfig.Topic, _subscriptionConfig.QueueName);
             }
-
-            return this;
         }
 
-        private IHaveFulfilledSubscriptionRequirements PointToPointHandler<T>() where T : Message
+        private async Task SetUpPointToPointHandler<T>() where T : Message
         {
             ConfigureSqsSubscription<T>();
 
             foreach (var region in Bus.Config.Regions)
             {
-                var queue = _amazonQueueCreator.EnsureQueueExistsAsync(region, _subscriptionConfig).GetAwaiter().GetResult();
+                var queue = await _amazonQueueCreator.EnsureQueueExistsAsync(region, _subscriptionConfig).ConfigureAwait(false);
                 CreateSubscriptionListener<T>(region, queue);
                 _log.LogInformation("Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",
                     typeof(T), _subscriptionConfig.QueueName);
             }
 
-            return this;
         }
 
         private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue) where T : Message
@@ -422,6 +443,16 @@ namespace JustSaying
         {
             _awsClientFactoryProxy.SetAwsClientFactory(awsClientFactory);
             return this;
+        }
+
+        public async Task SetUpAws()
+        {
+            var steps = _setupSteps.OrderBy(_ => Guid.NewGuid()).ToArray();
+            
+            foreach (var func in steps)
+            {
+                await func().ConfigureAwait(false);
+            }
         }
     }
 }
