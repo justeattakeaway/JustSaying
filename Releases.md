@@ -37,6 +37,6 @@ Here is what the versioning should typically look like, including what and when 
 - ...
 - 7.0.0 (tagged)
 - 7.0.1-alpha.0.1 (default pre-release identifiers)
-- 7.0.0-alpha.0.2
+- 7.0.1-alpha.0.2
 
 (credit to @adamralph)
