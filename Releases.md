@@ -17,7 +17,7 @@ Once the AppVeyor build has completed, you can deploy to nuget via the AppVeyor 
 
 ## Example Release Pattern
 
-Here is what the versioning should typically look like, including what and when to tag a realease as outlined above.
+Here is what the versioning should typically look like, including what and when to tag a release as outlined above.
 
 - 7.0.0-alpha.0.49 (49 commits above the last tag or root commit)
 - 7.0.0-alpha.0.50
