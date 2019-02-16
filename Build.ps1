@@ -130,9 +130,11 @@ function DotNetTest {
             -skipautoprops `
             `"-filter:+[JustSaying]* -[*Test*]*`"
 
-        & $dotnet $reportGeneratorPath `
+        & $dotnet `
+            $reportGeneratorPath `
             `"-reports:$coverageOutput`" `
             `"-targetdir:$reportOutput`" `
+            -reporttypes:HTML`;Cobertura `
             -verbosity:Warning
     }
 
