@@ -3,7 +3,7 @@ param(
     [Parameter(Mandatory = $false)][string] $VersionSuffix = "",
     [Parameter(Mandatory = $false)][string] $OutputPath = "",
     [Parameter(Mandatory = $false)][switch] $SkipTests,
-    [Parameter(Mandatory = $false)][switch] $EnableCodeCoverage,
+    [Parameter(Mandatory = $false)][switch] $DisableCodeCoverage,
     [Parameter(Mandatory = $false)][switch] $EnableIntegrationTests
 )
 
@@ -24,7 +24,7 @@ $testProjects = @(
 )
 
 if ($EnableIntegrationTests -eq $true) {
-  $testProjects += (Join-Path $solutionPath "JustSaying.IntegrationTests\JustSaying.IntegrationTests.csproj");
+    $testProjects += (Join-Path $solutionPath "JustSaying.IntegrationTests\JustSaying.IntegrationTests.csproj");
 }
 
 $dotnetVersion = (Get-Content $sdkFile | Out-String | ConvertFrom-Json).sdk.version
@@ -94,7 +94,7 @@ function DotNetPack {
 function DotNetTest {
     param([string]$Project)
 
-    if ($EnableCodeCoverage -eq $false) {
+    if ($DisableCodeCoverage -eq $true) {
         & $dotnet test $Project --output $OutputPath
     }
     else {
@@ -108,10 +108,10 @@ function DotNetTest {
 
         $nugetPath = Join-Path $env:USERPROFILE ".nuget\packages"
 
-        $openCoverVersion = "4.6.519"
+        $openCoverVersion = "4.7.922"
         $openCoverPath = Join-Path $nugetPath "OpenCover\$openCoverVersion\tools\OpenCover.Console.exe"
 
-        $reportGeneratorVersion = "4.0.4"
+        $reportGeneratorVersion = "4.0.11"
         $reportGeneratorPath = Join-Path $nugetPath "ReportGenerator\$reportGeneratorVersion\tools\netcoreapp2.0\ReportGenerator.dll"
 
         $coverageOutput = Join-Path $OutputPath "code-coverage.xml"
@@ -121,17 +121,20 @@ function DotNetTest {
             `"-target:$dotnetPath`" `
             `"-targetargs:test $Project --output $OutputPath`" `
             -output:$coverageOutput `
+            `"-excludebyattribute:System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage*`" `
             -hideskipped:All `
             -mergebyhash `
             -mergeoutput `
             -oldstyle `
             -register:user `
             -skipautoprops `
-            `"-filter:+[JustSaying]* -[JustSaying.Tests]*`"
+            `"-filter:+[JustSaying]* -[*Test*]*`"
 
-        & $dotnet $reportGeneratorPath `
+        & $dotnet `
+            $reportGeneratorPath `
             `"-reports:$coverageOutput`" `
             `"-targetdir:$reportOutput`" `
+            -reporttypes:HTML`;Cobertura `
             -verbosity:Warning
     }
 
@@ -149,7 +152,7 @@ ForEach ($libraryProject in $libraryProjects) {
 if (($null -ne $env:CI) -And ($EnableIntegrationTests -eq $true)) {
     & docker pull pafortin/goaws
     & docker run -d --name goaws -p 4100:4100 pafortin/goaws
-    $env:AWS_SERVICE_URL="http://localhost:4100"
+    $env:AWS_SERVICE_URL = "http://localhost:4100"
 }
 
 if ($SkipTests -eq $false) {
