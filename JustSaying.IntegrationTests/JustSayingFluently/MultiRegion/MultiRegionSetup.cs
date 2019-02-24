@@ -2,13 +2,13 @@ using System;
 using JustSaying.AwsTools;
 using JustSaying.TestingFramework;
 
-namespace JustSaying.IntegrationTests
+namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion
 {
-    public sealed class GlobalSetup : IDisposable
+    public sealed class MultiRegionSetup : IDisposable
     {
         public const string CollectionName = "Global Fixture Setup";
 
-        public GlobalSetup()
+        public MultiRegionSetup()
         {
             IAwsClientFactory clientFactory;
 

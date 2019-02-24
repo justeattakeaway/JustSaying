@@ -13,7 +13,7 @@ using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopicSubscriber
 {
-    [Collection(GlobalSetup.CollectionName)]
+    [Collection(MultiRegionSetup.CollectionName)]
     public class WhenAFailoverRegionIsSetup
     {
         private static string PrimaryRegion => TestEnvironment.Region.SystemName;
