@@ -26,7 +26,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
 
     public class MessageLoopTests
     {
-        private const int MinTaskDuration = 10;
+        private const int MinTaskDuration = 100;
         private const int TaskDurationVariance = 20;
 
         private const int ConcurrencyLevel = 20;
@@ -106,9 +106,9 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
         private static async Task ListenLoopExecuted(Queue<Func<Task>> actions,
             IMessageProcessingStrategy messageProcessingStrategy)
         {
-            var initalActionCount = actions.Count;
-            var timeoutSeconds = 10 + (initalActionCount / 100);
-            var timeout = new TimeSpan(0, 0, timeoutSeconds);
+            var initalActionCount = (double)actions.Count;
+            var timeoutSeconds = MinTaskDuration + (initalActionCount / 100);
+            var timeout = TimeSpan.FromSeconds(timeoutSeconds);
             var stopwatch = Stopwatch.StartNew();
 
             while (actions.Any())
