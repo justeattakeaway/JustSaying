@@ -151,6 +151,7 @@ ForEach ($libraryProject in $libraryProjects) {
 
 if (($null -ne $env:CI) -And ($EnableIntegrationTests -eq $true)) {
     $goaws_tag ="latest"
+    & $env:ProgramFiles\Docker\Docker\DockerCli.exe -SwitchLinuxEngine
     & docker pull pafortin/goaws:$goaws_tag
     & docker run -d --name goaws -p 4100:4100 pafortin/goaws:$goaws_tag
     $env:AWS_SERVICE_URL = "http://localhost:4100"
