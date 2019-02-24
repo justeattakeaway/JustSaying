@@ -13,6 +13,7 @@ install:
   - ps: .\SetAppVeyorBuildVersion.ps1
 
 build_script:
+  - ps: & $env:ProgramFiles\Docker\Docker\DockerCli.exe -SwitchLinuxEngine
   - ps: .\Build.ps1 -EnableIntegrationTests
 
 after_build:
