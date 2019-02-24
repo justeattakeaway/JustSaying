@@ -13,7 +13,7 @@ install:
   - ps: .\SetAppVeyorBuildVersion.ps1
 
 build_script:
-  - ps: .\Build.ps1
+  - ps: .\Build.ps1 -EnableIntegrationTests
 
 after_build:
     - "SET PATH=C:\\Python34;C:\\Python34\\Scripts;%PATH%"
