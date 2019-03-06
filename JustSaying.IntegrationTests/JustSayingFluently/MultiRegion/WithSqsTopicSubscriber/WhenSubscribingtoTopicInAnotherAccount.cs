@@ -17,7 +17,7 @@ using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopicSubscriber
 {
-    [Collection(GlobalSetup.CollectionName)]
+    [Collection(MultiRegionSetup.CollectionName)]
     public class WhenSubscribingToTopicInAnotherAccount
     {
         private readonly Future<SimpleMessage> _signal = new Future<SimpleMessage>();
