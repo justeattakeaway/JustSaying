@@ -16,7 +16,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
         }
 
         [AwsFact]
-        public async Task Then_The_Retention_Period_Stays_At_Maximum()
+        public async Task Then_The_Message_Retention_Period_Is_Updated()
         {
             // Arrange
             ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
