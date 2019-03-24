@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
   </PropertyGroup>
@@ -12,9 +12,9 @@
     <ProjectReference Include="..\JustSaying.TestingFramework\JustSaying.TestingFramework.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Core" Version="3.3.31.12" />
-    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.3.23" />
-    <PackageReference Include="AWSSDK.SQS" Version="3.3.3.59" />
+    <PackageReference Include="AWSSDK.Core" Version="3.3.100.1" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.100.1" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.3.100.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
