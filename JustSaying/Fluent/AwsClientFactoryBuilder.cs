@@ -92,6 +92,18 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
+        /// Specifies that anonymous access to AWS should be used.
+        /// </summary>
+        /// <returns>
+        /// The current <see cref="AwsClientFactoryBuilder"/>.
+        /// </returns>
+        public AwsClientFactoryBuilder WithAnonymousCredentials()
+        {
+            Credentials = new AnonymousAWSCredentials();
+            return this;
+        }
+
+        /// <summary>
         /// Specifies the basic AWS credentials to use.
         /// </summary>
         /// <param name="accessKey">The access key to use.</param>

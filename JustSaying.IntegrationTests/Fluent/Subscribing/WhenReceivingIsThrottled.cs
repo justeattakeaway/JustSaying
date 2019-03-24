@@ -38,6 +38,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         {
             // Arrange
             var services = GivenJustSaying()
+                .ConfigureJustSaying((builder) => builder.Client((client) => client.WithAnonymousCredentials()))
                 .ConfigureJustSaying((builder) => builder.Messaging((options) => options.WithPublishFailureBackoff(TimeSpan.FromMilliseconds(1))))
                 .ConfigureJustSaying((builder) => builder.Publications((options) => options.WithQueue<SimpleMessage>(UniqueName)))
                 .ConfigureJustSaying(
