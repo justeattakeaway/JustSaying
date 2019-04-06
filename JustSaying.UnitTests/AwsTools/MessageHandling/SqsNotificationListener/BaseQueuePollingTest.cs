@@ -113,7 +113,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             doneOk.ShouldBeTrue("Timeout occured before done signal");
         }
 
-        protected ReceiveMessageResponse GenerateResponseMessage(string messageType, Guid messageId)
+        protected static ReceiveMessageResponse GenerateResponseMessage(string messageType, Guid messageId)
         {
             return new ReceiveMessageResponse
             {

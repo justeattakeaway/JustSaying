@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
@@ -53,7 +54,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     MessageResponseLogger.Invoke(responseData, message);
                 }
             }
-            catch (Exception ex)
+            catch (AmazonServiceException ex)
             {
                 throw new PublishException(
                     $"Failed to publish message to SQS. {nameof(request.QueueUrl)}: {request.QueueUrl},{nameof(request.MessageBody)}: {request.MessageBody}",

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageHandling;
@@ -66,7 +67,9 @@ namespace JustSaying.AwsTools.MessageHandling
                 _onError(ex, message);
                 return;
             }
+#pragma warning disable CA1031
             catch (Exception ex)
+#pragma warning restore CA1031
             {
                 _logger.LogError(0, ex, "Error deserializing message with Id '{MessageId}' and body '{MessageBody}'.",
                     message.MessageId, message.Body);
@@ -91,7 +94,9 @@ namespace JustSaying.AwsTools.MessageHandling
                     await DeleteMessageFromQueue(message.ReceiptHandle).ConfigureAwait(false);
                 }
             }
+#pragma warning disable CA1031
             catch (Exception ex)
+#pragma warning restore CA1031
             {
                 _logger.LogError(0, ex, "Error handling message with Id '{MessageId}' and body '{MessageBody}'.",
                     message.MessageId, message.Body);
@@ -166,7 +171,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
                     await _queue.Client.ChangeMessageVisibilityAsync(visibilityRequest).ConfigureAwait(false);
                 }
-                catch (Exception ex)
+                catch (AmazonServiceException ex)
                 {
                     _logger.LogError(0, ex, "Failed to update message visibility timeout by {VisibilityTimeout} seconds.", visibilityTimeoutSeconds);
                     _onError(ex, message);

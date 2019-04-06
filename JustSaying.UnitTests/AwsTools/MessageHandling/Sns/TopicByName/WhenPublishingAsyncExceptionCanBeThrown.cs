@@ -12,6 +12,7 @@ using NSubstitute;
 using NSubstitute.Core;
 using Shouldly;
 using Xunit;
+using Amazon.Runtime;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 {
@@ -56,7 +57,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
             {
                 await SystemUnderTest.PublishAsync(new SimpleMessage());
             }
-            catch (Exception e)
+            catch (AmazonServiceException e)
             {
                 var exception = (WebException) e.InnerException;
                 exception.Status.ShouldBe(WebExceptionStatus.Timeout);

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.QueueCreation;
@@ -73,7 +74,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     MessageResponseLogger.Invoke(responseData, message);
                 }
             }
-            catch (Exception ex)
+            catch (AmazonServiceException ex)
             {
                 if (!ClientExceptionHandler(ex, message))
                 {

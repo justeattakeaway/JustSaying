@@ -140,7 +140,9 @@ namespace JustSaying.AwsTools.MessageHandling
                     _log.LogTrace(0, ex, "Suspected no message on queue '{QueueName}' in region '{Region}'.",
                         queueName, regionName);
                 }
+#pragma warning disable CA1031
                 catch (Exception ex)
+#pragma warning restore CA1031
                 {
                     _log.LogError(0, ex, "Error receiving messages on queue '{QueueName}' in region '{Region}'.",
                         queueName, regionName);
@@ -160,7 +162,9 @@ namespace JustSaying.AwsTools.MessageHandling
                         }
                     }
                 }
+#pragma warning disable CA1031
                 catch (Exception ex)
+#pragma warning restore CA1031
                 {
                     _log.LogError(0, ex, "Error in message handling loop for queue '{QueueName}' in region '{Region}'.",
                         queueName, regionName);

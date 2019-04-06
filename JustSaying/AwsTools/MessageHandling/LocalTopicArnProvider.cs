@@ -26,7 +26,9 @@ namespace JustSaying.AwsTools.MessageHandling
                 _exists = true;
                 return topic.TopicArn;
             }
+#pragma warning disable CA1031
             catch
+#pragma warning restore CA1031
             {
                 // ignored
             }
