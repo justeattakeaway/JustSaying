@@ -53,26 +53,10 @@ namespace JustSaying.AwsTools.MessageHandling
         public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
             var request = BuildPublishRequest(message, metadata);
-
+            PublishResponse response =null;
             try
             {
-                var response = await Client.PublishAsync(request, cancellationToken).ConfigureAwait(false);
-
-                _logger.LogInformation(
-                    "Published message with subject '{MessageSubject}' and content '{MessageBody}'.",
-                    request.Subject,
-                    request.Message);
-
-                if (MessageResponseLogger != null)
-                {
-                    var responseData = new MessageResponse
-                    {
-                        HttpStatusCode = response?.HttpStatusCode,
-                        MessageId = response?.MessageId,
-                        ResponseMetadata = response?.ResponseMetadata
-                    };
-                    MessageResponseLogger.Invoke(responseData, message);
-                }
+                response = await Client.PublishAsync(request, cancellationToken).ConfigureAwait(false);
             }
             catch (AmazonServiceException ex)
             {
@@ -83,6 +67,23 @@ namespace JustSaying.AwsTools.MessageHandling
                         ex);
                 }
             }
+
+            _logger.LogInformation(
+                "Published message with subject '{MessageSubject}' and content '{MessageBody}'.",
+                request.Subject,
+                request.Message);
+
+            if (MessageResponseLogger != null)
+            {
+                var responseData = new MessageResponse
+                {
+                    HttpStatusCode = response?.HttpStatusCode,
+                    MessageId = response?.MessageId,
+                    ResponseMetadata = response?.ResponseMetadata
+                };
+                MessageResponseLogger.Invoke(responseData, message);
+            }
+
         }
 
         private bool ClientExceptionHandler(Exception ex, Message message) => _snsWriteConfiguration?.HandleException?.Invoke(ex, message) ?? false;

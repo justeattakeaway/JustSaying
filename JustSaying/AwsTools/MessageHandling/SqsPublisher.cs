@@ -34,31 +34,32 @@ namespace JustSaying.AwsTools.MessageHandling
         public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
             var request = BuildSendMessageRequest(message, metadata);
+            SendMessageResponse response;
             try
             {
-                SendMessageResponse response = await _client.SendMessageAsync(request, cancellationToken).ConfigureAwait(false);
-
-                Logger.LogInformation(
-                    "Published message to queue '{QueueUrl}' with content '{MessageBody}'.",
-                    request.QueueUrl,
-                    request.MessageBody);
-
-                if (MessageResponseLogger != null)
-                {
-                    var responseData = new MessageResponse
-                    {
-                        HttpStatusCode = response?.HttpStatusCode,
-                        MessageId = response?.MessageId,
-                        ResponseMetadata = response?.ResponseMetadata
-                    };
-                    MessageResponseLogger.Invoke(responseData, message);
-                }
+                response = await _client.SendMessageAsync(request, cancellationToken).ConfigureAwait(false);
             }
             catch (AmazonServiceException ex)
             {
                 throw new PublishException(
                     $"Failed to publish message to SQS. {nameof(request.QueueUrl)}: {request.QueueUrl},{nameof(request.MessageBody)}: {request.MessageBody}",
                     ex);
+            }
+
+            Logger.LogInformation(
+                "Published message to queue '{QueueUrl}' with content '{MessageBody}'.",
+                request.QueueUrl,
+                request.MessageBody);
+
+            if (MessageResponseLogger != null)
+            {
+                var responseData = new MessageResponse
+                {
+                    HttpStatusCode = response?.HttpStatusCode,
+                    MessageId = response?.MessageId,
+                    ResponseMetadata = response?.ResponseMetadata
+                };
+                MessageResponseLogger.Invoke(responseData, message);
             }
         }
 

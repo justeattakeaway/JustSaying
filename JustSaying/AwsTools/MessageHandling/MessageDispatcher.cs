@@ -160,15 +160,15 @@ namespace JustSaying.AwsTools.MessageHandling
                 var visibilityTimeout = _messageBackoffStrategy.GetBackoffDuration(typedMessage, approxReceiveCount, lastException);
                 var visibilityTimeoutSeconds = (int)visibilityTimeout.TotalSeconds;
 
+                var visibilityRequest = new ChangeMessageVisibilityRequest
+                {
+                    QueueUrl = _queue.Uri.AbsoluteUri,
+                    ReceiptHandle = receiptHandle,
+                    VisibilityTimeout = visibilityTimeoutSeconds
+                };
+
                 try
                 {
-                    var visibilityRequest = new ChangeMessageVisibilityRequest
-                    {
-                        QueueUrl = _queue.Uri.AbsoluteUri,
-                        ReceiptHandle = receiptHandle,
-                        VisibilityTimeout = visibilityTimeoutSeconds
-                    };
-
                     await _queue.Client.ChangeMessageVisibilityAsync(visibilityRequest).ConfigureAwait(false);
                 }
                 catch (AmazonServiceException ex)
