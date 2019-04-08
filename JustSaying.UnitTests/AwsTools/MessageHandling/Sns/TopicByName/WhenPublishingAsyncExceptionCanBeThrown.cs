@@ -61,6 +61,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
             {
                 var inner = ex.InnerException as AmazonServiceException;
                 inner.ShouldNotBeNull();
+                inner.Message.ShouldBe("Operation timed out");
             }
         }
 
