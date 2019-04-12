@@ -159,7 +159,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return RedrivePolicy.ConvertFromString(queueAttributes[JustSayingConstants.AttributeRedrivePolicy]);
         }
 
-        private ServerSideEncryption ExtractServerSideEncryptionFromQueueAttributes(Dictionary<string, string> queueAttributes)
+        private static ServerSideEncryption ExtractServerSideEncryptionFromQueueAttributes(Dictionary<string, string> queueAttributes)
         {
             if (!queueAttributes.ContainsKey(JustSayingConstants.AttributeEncryptionKeyId))
             {

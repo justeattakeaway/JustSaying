@@ -52,7 +52,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         private static Task<PublishResponse> ThrowsException(CallInfo callInfo)
         {
-            throw new WebException("Operation timed out", WebExceptionStatus.Timeout);
+            throw new InternalErrorException("Operation timed out");
         }
     }
 }

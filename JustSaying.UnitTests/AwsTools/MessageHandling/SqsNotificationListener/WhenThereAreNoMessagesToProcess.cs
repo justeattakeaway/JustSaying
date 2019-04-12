@@ -79,7 +79,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             _callCount.ShouldBeGreaterThan(3);
         }
 
-        private ReceiveMessageResponse GenerateEmptyMessage()
+        private static ReceiveMessageResponse GenerateEmptyMessage()
         {
             return new ReceiveMessageResponse { Messages = new List<Message>() };
         }

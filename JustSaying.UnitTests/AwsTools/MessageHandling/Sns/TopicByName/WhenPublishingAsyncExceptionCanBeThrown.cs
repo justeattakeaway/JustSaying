@@ -12,6 +12,7 @@ using NSubstitute;
 using NSubstitute.Core;
 using Shouldly;
 using Xunit;
+using Amazon.Runtime;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 {
@@ -56,16 +57,17 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
             {
                 await SystemUnderTest.PublishAsync(new SimpleMessage());
             }
-            catch (Exception e)
+            catch (PublishException ex)
             {
-                var exception = (WebException) e.InnerException;
-                exception.Status.ShouldBe(WebExceptionStatus.Timeout);
+                var inner = ex.InnerException as AmazonServiceException;
+                inner.ShouldNotBeNull();
+                inner.Message.ShouldBe("Operation timed out");
             }
         }
 
         private static Task<PublishResponse> ThrowsException(CallInfo callInfo)
         {
-            throw new WebException("Operation timed out", WebExceptionStatus.Timeout);
+            throw new AmazonServiceException("Operation timed out");
         }
     }
 }

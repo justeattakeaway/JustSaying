@@ -13,7 +13,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 {
     public class WhenPublishingAsyncWithGenericMessageSubjectProvider : WhenPublishingTestBase
     {
-        public class MessageWithTypeParameters<T, U> : Message
+        public class MessageWithTypeParameters<TA, TB> : Message
         {
         }
 
