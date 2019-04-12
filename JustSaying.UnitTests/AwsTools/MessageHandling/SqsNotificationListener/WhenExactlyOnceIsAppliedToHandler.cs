@@ -22,9 +22,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             _expectedTimeout = 5;
 
             var messageLockResponse = new MessageLockResponse
-                {
-                    DoIHaveExclusiveLock = true
-                };
+            {
+                DoIHaveExclusiveLock = true
+            };
 
             MessageLock = Substitute.For<IMessageLockAsync>();
             MessageLock.TryAquireLockAsync(Arg.Any<string>(), Arg.Any<TimeSpan>())

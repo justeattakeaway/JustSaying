@@ -13,6 +13,6 @@ namespace JustSaying
             = () => new DefaultAwsClientFactory();
 
         public static JustSayingFluentlyDependencies WithLogging(ILoggerFactory loggerFactory) =>
-            new JustSayingFluentlyDependencies { LoggerFactory = loggerFactory};
+            new JustSayingFluentlyDependencies { LoggerFactory = loggerFactory };
     }
 }

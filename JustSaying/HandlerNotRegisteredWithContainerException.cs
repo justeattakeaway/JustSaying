@@ -4,9 +4,9 @@ using System.Runtime.Serialization;
 namespace JustSaying
 {
     [Serializable]
-    public class HandlerNotRegisteredWithContainerException: Exception
+    public class HandlerNotRegisteredWithContainerException : Exception
     {
-        public HandlerNotRegisteredWithContainerException(): base("Handler not registered with container")
+        public HandlerNotRegisteredWithContainerException() : base("Handler not registered with container")
         {
         }
 

@@ -34,6 +34,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         protected abstract void Given();
         protected abstract Task<SqsPublisher> CreateSystemUnderTestAsync();
 
-       protected abstract Task WhenAsync();
+        protected abstract Task WhenAsync();
     }
 }

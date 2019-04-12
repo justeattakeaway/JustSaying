@@ -21,7 +21,7 @@ namespace JustSaying.UnitTests.Messaging.Monitoring
 
             var result = await stopWatchHandler.Handle(new OrderAccepted());
             result.ShouldBeTrue();
-            
+
             await handler.Received(1).Handle(Arg.Any<OrderAccepted>());
         }
 
@@ -35,7 +35,7 @@ namespace JustSaying.UnitTests.Messaging.Monitoring
 
             await stopWatchHandler.Handle(new OrderAccepted());
 
-            monitoring.Received(1). HandlerExecutionTime(
+            monitoring.Received(1).HandlerExecutionTime(
                 Arg.Any<Type>(), Arg.Any<Type>(), Arg.Any<TimeSpan>());
         }
 
@@ -66,7 +66,7 @@ namespace JustSaying.UnitTests.Messaging.Monitoring
             await stopWatchHandler.Handle(new OrderAccepted());
 
             monitoring.Received(1).HandlerExecutionTime(
-                Arg.Any<Type>(), Arg.Any<Type>(), 
+                Arg.Any<Type>(), Arg.Any<Type>(),
                 Arg.Is<TimeSpan>(ts => ts > TimeSpan.Zero));
         }
 

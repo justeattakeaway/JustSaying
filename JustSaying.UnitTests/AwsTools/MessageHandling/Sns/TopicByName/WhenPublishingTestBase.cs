@@ -35,6 +35,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         protected abstract void Given();
         protected abstract Task<SnsTopicByName> CreateSystemUnderTestAsync();
 
-       protected abstract Task WhenAsync();
+        protected abstract Task WhenAsync();
     }
 }

@@ -30,10 +30,10 @@ namespace JustSaying.AwsTools.MessageHandling
                 if (!exisits)
                 {
                     await ErrorQueue.CreateAsync(new SqsBasicConfiguration
-                        {
-                            ErrorQueueRetentionPeriod = queueConfig.ErrorQueueRetentionPeriod,
-                            ErrorQueueOptOut = true
-                        }).ConfigureAwait(false);
+                    {
+                        ErrorQueueRetentionPeriod = queueConfig.ErrorQueueRetentionPeriod,
+                        ErrorQueueOptOut = true
+                    }).ConfigureAwait(false);
                 }
             }
 

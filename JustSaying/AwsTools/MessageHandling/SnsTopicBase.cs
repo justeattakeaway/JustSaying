@@ -49,7 +49,7 @@ namespace JustSaying.AwsTools.MessageHandling
         }
 
         public abstract Task<bool> ExistsAsync();
-        
+
         public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
             var request = BuildPublishRequest(message, metadata);

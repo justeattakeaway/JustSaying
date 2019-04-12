@@ -43,8 +43,8 @@ namespace JustSaying.AwsTools.MessageHandling
             if (exists)
             {
                 var request = new DeleteQueueRequest
-                    {
-                        QueueUrl = Uri.AbsoluteUri
+                {
+                    QueueUrl = Uri.AbsoluteUri
                 };
                 await Client.DeleteQueueAsync(request).ConfigureAwait(false);
 
@@ -79,10 +79,10 @@ namespace JustSaying.AwsTools.MessageHandling
         protected async Task<GetQueueAttributesResponse> GetAttrsAsync(IEnumerable<string> attrKeys)
         {
             var request = new GetQueueAttributesRequest
-                {
-                    QueueUrl = Uri.AbsoluteUri,
-                    AttributeNames = new List<string>(attrKeys)
-                };
+            {
+                QueueUrl = Uri.AbsoluteUri,
+                AttributeNames = new List<string>(attrKeys)
+            };
 
             return await Client.GetQueueAttributesAsync(request).ConfigureAwait(false);
         }

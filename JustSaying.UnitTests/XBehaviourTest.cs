@@ -14,7 +14,7 @@ namespace JustSaying.UnitTests
 
         protected TSystemUnderTest SystemUnderTest { get; private set; }
         protected Exception ThrownException { get; private set; }
- 
+
         protected virtual TSystemUnderTest CreateSystemUnderTest()
         {
             var fixture = new Fixture();
@@ -30,7 +30,7 @@ namespace JustSaying.UnitTests
                 SystemUnderTest = CreateSystemUnderTest();
                 WhenAction();
             }
-            catch (Exception ex) when(_recordThrownExceptions)
+            catch (Exception ex) when (_recordThrownExceptions)
             {
                 ThrownException = ex;
             }

@@ -16,7 +16,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         private string _region;
         private Func<IHandlerAsync<Message>> _futureHandler1;
         private Func<IHandlerAsync<Message2>> _futureHandler2;
-        
+
         protected override void Given()
         {
             base.Given();

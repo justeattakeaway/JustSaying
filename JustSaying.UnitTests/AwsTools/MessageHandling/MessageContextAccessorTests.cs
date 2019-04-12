@@ -49,7 +49,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             var data2 = MakeUniqueMessageContext();
 
             var t1 = Task.Run(async () => await ThreadLocalDataRemainsTheSame(data1));
-            var t2 =  Task.Run(async () => await ThreadLocalDataRemainsTheSame(data2));
+            var t2 = Task.Run(async () => await ThreadLocalDataRemainsTheSame(data2));
 
             await Task.WhenAll(t1, t2);
         }

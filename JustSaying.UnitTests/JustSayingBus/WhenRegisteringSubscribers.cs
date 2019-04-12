@@ -27,7 +27,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             });
             _subscriber2 = Substitute.For<INotificationSubscriber>();
             _subscriber2.Queue.Returns("queue2");
-            _subscriber2.Subscribers.Returns(new Collection<ISubscriber> {new Subscriber(typeof (SimpleMessage))});
+            _subscriber2.Subscribers.Returns(new Collection<ISubscriber> { new Subscriber(typeof(SimpleMessage)) });
         }
 
         protected override Task WhenAsync()

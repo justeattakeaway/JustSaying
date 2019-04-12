@@ -18,7 +18,7 @@ namespace JustSaying.AwsTools.QueueCreation
         {
         }
 
-        protected ConfigurationErrorsException(SerializationInfo info, StreamingContext context): base(info, context)
+        protected ConfigurationErrorsException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }
     }

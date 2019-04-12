@@ -11,7 +11,7 @@ namespace JustSaying.Messaging.Interrogation
             Publishers = publishers;
         }
 
-        public IEnumerable<string> Regions { get; set; } 
+        public IEnumerable<string> Regions { get; set; }
         public IEnumerable<ISubscriber> Subscribers { get; set; }
         public IEnumerable<IPublisher> Publishers { get; set; }
     }

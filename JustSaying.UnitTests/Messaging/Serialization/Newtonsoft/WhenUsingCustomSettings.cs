@@ -42,6 +42,7 @@ namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft
         public void EnumsAreNotRepresentedAsStrings()
         {
             _jsonMessage.ShouldContain("EnumVal");
-            _jsonMessage.ShouldNotContain("Two");        }
+            _jsonMessage.ShouldNotContain("Two");
+        }
     }
 }

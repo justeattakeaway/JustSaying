@@ -17,7 +17,7 @@ namespace JustSaying.AwsTools
         /// Default visibility timeout for message
         /// </summary>
         public static TimeSpan DefaultVisibilityTimeout => TimeSpan.FromSeconds(30);
-        
+
         /// <summary>
         /// Number of times a handler will retry a message until a message 
         /// is sent to error queue
@@ -49,7 +49,7 @@ namespace JustSaying.AwsTools
         /// Maximum message retention period on a queue.
         /// </summary>
         public static TimeSpan MaximumRetentionPeriod => TimeSpan.FromDays(14);
-        
+
         /// <summary>
         /// Minimum delay in message delivery for SQS. This is also the default.
         /// </summary>

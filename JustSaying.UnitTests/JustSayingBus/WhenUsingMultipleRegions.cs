@@ -12,7 +12,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         protected override void Given()
         {
             base.Given();
-            Config.Regions.Returns(new List<string>{"region1", "region2"});
+            Config.Regions.Returns(new List<string> { "region1", "region2" });
         }
 
         protected override Task WhenAsync()

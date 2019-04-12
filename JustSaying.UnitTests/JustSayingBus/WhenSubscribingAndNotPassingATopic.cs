@@ -22,7 +22,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public void ArgExceptionThrown()
         {
-            ((ArgumentException) ThrownException).ParamName.ShouldBe("region");
+            ((ArgumentException)ThrownException).ParamName.ShouldBe("region");
         }
     }
 }

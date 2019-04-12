@@ -29,7 +29,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         protected override void Given()
         {
             Sqs.GetQueueUrlAsync(Arg.Any<string>())
-                .Returns(new GetQueueUrlResponse {QueueUrl = Url});
+                .Returns(new GetQueueUrlResponse { QueueUrl = Url });
 
             Sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>())
                 .Returns(new GetQueueAttributesResponse());
