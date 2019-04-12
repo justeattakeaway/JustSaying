@@ -11,7 +11,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         public void SubscribedMessagesAreAddedToTheInterrogationDetails()
         {
             SystemUnderTest.Subscribers.Count.ShouldBe(1);
-            SystemUnderTest.Subscribers.First(x => x.MessageType == typeof (SimpleMessage)).ShouldNotBe(null);
+            SystemUnderTest.Subscribers.First(x => x.MessageType == typeof(SimpleMessage)).ShouldNotBe(null);
         }
     }
 }

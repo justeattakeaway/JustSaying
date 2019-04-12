@@ -6,7 +6,7 @@ namespace JustSaying.UnitTests.Messaging.Serialization.SubjectProviders
 {
     public class GenericMessageSubjectProviderTests
     {
-// these classes are never instantiated, but the types are used in tests
+        // these classes are never instantiated, but the types are used in tests
 #pragma warning disable CA1812
         class Foo { }
 

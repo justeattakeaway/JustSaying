@@ -22,7 +22,7 @@ namespace JustSaying.AwsTools
 
         public Uri ServiceUri { get; set; }
 
-        public IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region) 
+        public IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region)
             => new AmazonSimpleNotificationServiceClient(_credentials, CreateSNSConfig(region));
 
         public IAmazonSQS GetSqsClient(RegionEndpoint region)

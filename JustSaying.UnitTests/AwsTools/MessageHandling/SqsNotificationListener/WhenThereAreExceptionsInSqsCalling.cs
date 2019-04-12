@@ -33,7 +33,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             Sqs.ReceiveMessageAsync(
                     Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>())
-                .Returns(_ =>  ExceptionOnFirstCall());
+                .Returns(_ => ExceptionOnFirstCall());
         }
 
         private Task ExceptionOnFirstCall()

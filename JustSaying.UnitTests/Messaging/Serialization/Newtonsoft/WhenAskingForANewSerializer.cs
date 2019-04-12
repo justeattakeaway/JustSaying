@@ -11,7 +11,7 @@ namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft
 
         protected override void Given()
         {
-            
+
         }
 
         protected override void WhenAction()

@@ -6,7 +6,7 @@ namespace JustSaying.AwsTools.MessageHandling
     [Serializable]
     public class PublishException : Exception
     {
-        public PublishException(): base("Failed to publish message")
+        public PublishException() : base("Failed to publish message")
         {
         }
 

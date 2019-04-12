@@ -128,7 +128,7 @@ namespace JustSaying
             var config = new SqsWriteConfiguration();
             configBuilder?.Invoke(config);
 
-            var queueName = GetNamingStrategy().GetQueueName(new SqsReadConfiguration(SubscriptionType.PointToPoint){BaseQueueName = config.QueueName}, typeof(T));
+            var queueName = GetNamingStrategy().GetQueueName(new SqsReadConfiguration(SubscriptionType.PointToPoint) { BaseQueueName = config.QueueName }, typeof(T));
 
             Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
 
@@ -252,7 +252,7 @@ namespace JustSaying
 
             // TODO - Subscription listeners should be just added once per queue,
             // and not for each message handler
-            var thing =  _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
+            var thing = _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
                 ? PointToPointHandler<T>()
                 : TopicHandler<T>();
 

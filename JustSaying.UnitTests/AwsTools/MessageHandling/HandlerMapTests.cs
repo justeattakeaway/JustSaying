@@ -31,7 +31,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         public void HandlerIsReturnedForMatchingType()
         {
             var map = new HandlerMap();
-            map.Add(typeof(SimpleMessage), m => Task.FromResult(true) );
+            map.Add(typeof(SimpleMessage), m => Task.FromResult(true));
 
             var handler = map.Get(typeof(SimpleMessage));
 
@@ -72,7 +72,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             var handler1 = map.Get(typeof(SimpleMessage));
 
             handler1.ShouldBe(fn1);
-            
+
             var handler2 = map.Get(typeof(AnotherSimpleMessage));
 
             handler2.ShouldBe(fn2);

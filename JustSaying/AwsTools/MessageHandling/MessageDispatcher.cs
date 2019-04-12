@@ -152,7 +152,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             await _queue.Client.DeleteMessageAsync(deleteRequest).ConfigureAwait(false);
         }
-        
+
         private async Task UpdateMessageVisibilityTimeout(SQSMessage message, string receiptHandle, Message typedMessage, Exception lastException)
         {
             if (TryGetApproxReceiveCount(message.Attributes, out int approxReceiveCount))

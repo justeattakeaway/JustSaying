@@ -9,7 +9,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         [Fact]
         public void ObjectTypeDoesNotHaveExactlyOnce()
         {
-            var reader = new ExactlyOnceReader(typeof (object));
+            var reader = new ExactlyOnceReader(typeof(object));
 
             reader.Enabled.ShouldBeFalse();
         }
@@ -25,7 +25,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         [Fact]
         public void OnceTestHandlerAsyncType_HasExactlyOnce()
         {
-            var reader = new ExactlyOnceReader(typeof (OnceTestHandlerAsync));
+            var reader = new ExactlyOnceReader(typeof(OnceTestHandlerAsync));
 
             reader.Enabled.ShouldBeTrue();
         }

@@ -59,7 +59,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
                     Arg.Any<CancellationToken>())
                 .Returns(x => Task.FromResult(GenerateEmptyMessage()));
 
-            _sqs.When(x =>  x.ReceiveMessageAsync(
+            _sqs.When(x => x.ReceiveMessageAsync(
                     Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>()))
                 .Do(x => _callCount++);

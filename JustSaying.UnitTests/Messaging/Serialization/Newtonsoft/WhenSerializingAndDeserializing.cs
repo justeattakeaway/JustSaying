@@ -34,7 +34,7 @@ namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft
             _messageOut.RaisingComponent.ShouldBe(_messageIn.RaisingComponent);
             _messageOut.TimeStamp.ShouldBe(_messageIn.TimeStamp);
         }
-        
+
         [Fact]
         public void EnumsAreRepresentedAsStrings()
         {

@@ -4,7 +4,7 @@ using Xunit;
 
 namespace JustSaying.UnitTests.AwsTools.QueueCreation
 {
-    public class WhenSerializingRedrivePolicy 
+    public class WhenSerializingRedrivePolicy
     {
         [Fact]
         public void CanDeserializeIntoRedrivePolicy()

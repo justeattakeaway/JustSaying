@@ -47,10 +47,10 @@ namespace JustSaying.Messaging.MessageSerialization
         private JsonSerializerSettings GetJsonSettings()
         {
             return _settings ?? new JsonSerializerSettings
-                   {
-                       NullValueHandling = NullValueHandling.Ignore,
-                       Converters = new JsonConverter[] {new Newtonsoft.Json.Converters.StringEnumConverter()}
-                   };
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+                Converters = new JsonConverter[] { new Newtonsoft.Json.Converters.StringEnumConverter() }
+            };
         }
 
         public string GetMessageSubject(string sqsMessge)

@@ -33,7 +33,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             mockHandler.Handle(Arg.Any<SimpleMessage>()).Returns(true);
 
             // act
-             var wrapped = handlerWrapper.WrapMessageHandler(() => mockHandler);
+            var wrapped = handlerWrapper.WrapMessageHandler(() => mockHandler);
 
             var result = await wrapped(new SimpleMessage());
 

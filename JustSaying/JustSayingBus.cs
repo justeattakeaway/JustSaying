@@ -64,7 +64,7 @@ namespace JustSaying
 
             if (!_subscribersByRegionAndQueue.TryGetValue(region, out var subscribersForRegion))
             {
-                subscribersForRegion = new Dictionary<string,INotificationSubscriber>();
+                subscribersForRegion = new Dictionary<string, INotificationSubscriber>();
                 _subscribersByRegionAndQueue.Add(region, subscribersForRegion);
             }
 

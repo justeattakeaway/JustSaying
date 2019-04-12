@@ -86,7 +86,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             _serializationRegister.DeserializeMessage(Arg.Any<string>()).Returns(_typedMessage);
         }
 
-        private async Task When() =>  await SystemUnderTest.DispatchMessage(_sqsMessage, CancellationToken.None);
+        private async Task When() => await SystemUnderTest.DispatchMessage(_sqsMessage, CancellationToken.None);
 
         private MessageDispatcher CreateSystemUnderTestAsync()
         {
@@ -144,7 +144,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             [Fact]
             public void ShouldUpdateMessageVisibility()
             {
-                _amazonSqsClient.Received(1).ChangeMessageVisibilityAsync(Arg.Is<ChangeMessageVisibilityRequest>(x => x.QueueUrl == ExpectedQueueUrl && x.ReceiptHandle == _sqsMessage.ReceiptHandle && x.VisibilityTimeout == (int) _expectedBackoffTimeSpan.TotalSeconds));
+                _amazonSqsClient.Received(1).ChangeMessageVisibilityAsync(Arg.Is<ChangeMessageVisibilityRequest>(x => x.QueueUrl == ExpectedQueueUrl && x.ReceiptHandle == _sqsMessage.ReceiptHandle && x.VisibilityTimeout == (int)_expectedBackoffTimeSpan.TotalSeconds));
             }
         }
 

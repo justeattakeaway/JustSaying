@@ -9,11 +9,11 @@ namespace JustSaying.AwsTools.QueueCreation
             KmsMasterKeyId = JustSayingConstants.DefaultAttributeEncryptionKeyId;
             KmsDataKeyReusePeriodSeconds = JustSayingConstants.DefaultAttributeEncryptionKeyReusePeriodSecond;
         }
-            
+
         [JsonProperty(PropertyName = "kmsMasterKeyId")]
-        public string KmsMasterKeyId { get; set; } 
+        public string KmsMasterKeyId { get; set; }
 
         [JsonProperty(PropertyName = "kmsDataKeyReusePeriodSeconds")]
-        public string KmsDataKeyReusePeriodSeconds { get; set; } 
+        public string KmsDataKeyReusePeriodSeconds { get; set; }
     }
 }

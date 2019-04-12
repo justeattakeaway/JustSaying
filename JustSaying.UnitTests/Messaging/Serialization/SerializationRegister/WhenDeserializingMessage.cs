@@ -26,7 +26,7 @@ namespace JustSaying.UnitTests.Messaging.Serialization.SerializationRegister
         {
             var messageSerializer = Substitute.For<IMessageSerializer>();
             messageSerializer.GetMessageSubject(messageBody).Returns(typeof(CustomMessage).Name);
-            messageSerializer.Deserialize(messageBody, typeof (CustomMessage)).Returns(new CustomMessage());
+            messageSerializer.Deserialize(messageBody, typeof(CustomMessage)).Returns(new CustomMessage());
             SystemUnderTest.AddSerializer<CustomMessage>(messageSerializer);
         }
 

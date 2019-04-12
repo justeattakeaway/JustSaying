@@ -11,7 +11,7 @@ namespace JustSaying.UnitTests.JustSayingBus
     public class WhenPublishingMessageWithoutMonitor : GivenAServiceBusWithoutMonitoring
     {
         private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
-        
+
         protected override async Task WhenAsync()
         {
             SystemUnderTest.AddMessagePublisher<SimpleMessage>(_publisher, string.Empty);

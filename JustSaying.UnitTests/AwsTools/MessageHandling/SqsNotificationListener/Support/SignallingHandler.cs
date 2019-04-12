@@ -21,7 +21,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.
             {
                 return await _inner.Handle(message);
             }
-            finally 
+            finally
             {
                 TaskHelpers.DelaySendDone(_doneSignal);
             }

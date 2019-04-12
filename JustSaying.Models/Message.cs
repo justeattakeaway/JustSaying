@@ -13,7 +13,7 @@ namespace JustSaying.Models
         public Guid Id { get; set; }
         public DateTime TimeStamp { get; set; }
         public string RaisingComponent { get; set; }
-        public string Version{ get; private set; }
+        public string Version { get; private set; }
         public string SourceIp { get; private set; }
         public string Tenant { get; set; }
         public string Conversation { get; set; }

@@ -61,7 +61,7 @@ namespace JustSaying.IntegrationTests.JustSayingFluently.MultiRegion.WithSqsTopi
             handler.Handle(Arg.Any<SimpleMessage>()).Returns(true);
             handler
                 .When(x => x.Handle(Arg.Any<SimpleMessage>()))
-                .Do(async x => await _handler.Complete((SimpleMessage) x.Args()[0]));
+                .Do(async x => await _handler.Complete((SimpleMessage)x.Args()[0]));
 
             _subscriber = CreateMeABus
                 .WithLogging(LoggerFactory)
