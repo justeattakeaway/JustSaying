@@ -1,4 +1,4 @@
-@startuml component
+@startuml SinglePublisher_SingleSubscriber
 
 title PubSub - Single Publisher - Single Subscriber
 hide footbox

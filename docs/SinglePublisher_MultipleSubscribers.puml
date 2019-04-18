@@ -1,4 +1,4 @@
-@startuml component
+@startuml SinglePublisher_MultipleSubscribers
 
 title PubSub using JustSaying and AWS SNS/SQS
 hide footbox
