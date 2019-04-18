@@ -1,4 +1,4 @@
-# Configuring Just Saying
+# Configuring JustSaying
 
 ## The publish-subscribe pattern
 > In software architecture, publish–subscribe is a messaging pattern where senders of messages, called publishers, do not program the messages to be sent directly to specific receivers, called subscribers, but instead categorize published messages into classes without knowledge of which subscribers, if any, there may be. Similarly, subscribers express interest in one or more classes and only receive messages that are of interest, without knowledge of which publishers, if any, there are. [(Wikipedia)](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern)
@@ -14,12 +14,12 @@
 
 - In `Startup.cs` add the following
 ```cs
-    services.AddJustSaying(configureBus =>
+    services.AddJustSaying(bus =>
     {
-        configureBus.Publications(configurePublication =>
+        bus.Publications(publication =>
         {
             // Creates the SNS Topic
-            configurePublication.WithTopic<OrderPlacedEvent>();
+            publication.WithTopic<OrderPlacedEvent>();
         });
     }
 ```
@@ -28,13 +28,13 @@
 
 - In `Startup.cs` add the following
 ```cs
-    services.AddJustSaying(configureBus =>
+    services.AddJustSaying(bus =>
     {
-        configureBus.Subscriptions(configureSubscription =>
+        bus.Subscriptions(subscription =>
         {
             // Creates the SQS queue
             // Creates the SQS to SNS subscription
-            configureSubscription.ForTopic<OrderPlacedEvent>();
+            subscription.ForTopic<OrderPlacedEvent>();
         });
     }
     // Add a handler responsible for handling the event
@@ -64,12 +64,12 @@ In this configuration, each of the two subscribers will have a dedicated queue t
 
 - In `Startup.cs` add the following
 ```cs
-    services.AddJustSaying(configureBus =>
+    services.AddJustSaying(bus =>
     {
-        configureBus.Publications(configurePublication =>
+        bus.Publications(publication =>
         {
             // Creates the SNS Topic
-            configurePublication.WithTopic<OrderPlacedEvent>();
+            publication.WithTopic<OrderPlacedEvent>();
         });
     }
 ```
@@ -78,13 +78,13 @@ In this configuration, each of the two subscribers will have a dedicated queue t
 
 - In `Startup.cs` add the following
 ```cs
-    services.AddJustSaying(configureBus =>
+    services.AddJustSaying(bus =>
     {
-        configureBus.Subscriptions(configureSubscription =>
+        bus.Subscriptions(subscription =>
         {
             // Creates the SQS queue
             // Creates the SQS to SNS subscription
-            configureSubscription.ForTopic<OrderPlacedEvent>();
+            subscription.ForTopic<OrderPlacedEvent>();
         });
     }
     // Add a handler responsible for handling the event
@@ -99,13 +99,13 @@ In this configuration, each of the two subscribers will have a dedicated queue t
 
 - In `Startup.cs` add the following
 ```cs
-    services.AddJustSaying(configureBus =>
+    services.AddJustSaying(bus =>
     {
-        configureBus.Subscriptions(configureSubscription =>
+        bus.Subscriptions(subscription =>
         {
             // Creates the SQS queue
             // creates the SQS to SNS subscription
-            configureSubscription.ForTopic<OrderPlacedEvent>();
+            subscription.ForTopic<OrderPlacedEvent>();
         });
     }
     // Add a handler responsible for handling the event
