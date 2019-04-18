@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\JustSaying.Models\JustSaying.Models.csproj" />
+    <ProjectReference Include="..\..\..\JustSaying.Models\JustSaying.Models.csproj" />
   </ItemGroup>
 
 </Project>
