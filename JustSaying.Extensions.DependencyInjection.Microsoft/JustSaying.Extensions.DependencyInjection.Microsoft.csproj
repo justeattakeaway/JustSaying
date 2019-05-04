@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
- <Import Project="$(MSBuildThisFileDirectory)..\netfx.props" />
    <PropertyGroup>
     <Description>JustSaying extensions for Microsoft.Extensions.DependencyInjection.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
