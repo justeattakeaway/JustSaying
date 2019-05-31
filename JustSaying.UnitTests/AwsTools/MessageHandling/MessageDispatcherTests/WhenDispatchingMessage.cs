@@ -264,7 +264,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
         {
         }
 
-        public NonRetryableException()
+        public NonRetryableException() : base("msg")
         {
         }
     }

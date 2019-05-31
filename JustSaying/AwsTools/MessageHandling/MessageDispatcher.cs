@@ -101,8 +101,9 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 if (!handlingSucceeded && ex is INonRetryable)
                 {
-                    await MoveMessageToErrorQueue(message).ConfigureAwait(false);
+                    await MoveMessageToErrorQueueAsync(message).ConfigureAwait(false);
                 }
+
                 _logger.LogError(0, ex, "Error handling message with Id '{MessageId}' and body '{MessageBody}'.",
                     message.MessageId, message.Body);
 
@@ -146,7 +147,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             return handlerSucceeded;
         }
-        private async Task MoveMessageToErrorQueue(SQSMessage message)
+        private async Task MoveMessageToErrorQueueAsync(SQSMessage message)
         {
             SendMessageResponse sendMessageResponse = null;
             if (_queue.ErrorQueue != null)
@@ -203,5 +204,4 @@ namespace JustSaying.AwsTools.MessageHandling
             return attributes.TryGetValue(MessageSystemAttributeName.ApproximateReceiveCount, out string rawApproxReceiveCount) && int.TryParse(rawApproxReceiveCount, out approxReceiveCount);
         }
     }
-
 }
