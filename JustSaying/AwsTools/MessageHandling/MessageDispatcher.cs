@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Runtime;
@@ -98,6 +99,10 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (Exception ex)
 #pragma warning restore CA1031
             {
+                if (!handlingSucceeded && ex is INonRetryable)
+                {
+                    await MoveMessageToErrorQueue(message).ConfigureAwait(false);
+                }
                 _logger.LogError(0, ex, "Error handling message with Id '{MessageId}' and body '{MessageBody}'.",
                     message.MessageId, message.Body);
 
@@ -112,7 +117,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             finally
             {
-                if (!handlingSucceeded && _messageBackoffStrategy != null)
+                if (!handlingSucceeded && _messageBackoffStrategy != null && !(lastException is INonRetryable))
                 {
                     await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage, lastException).ConfigureAwait(false);
                 }
@@ -140,6 +145,18 @@ namespace JustSaying.AwsTools.MessageHandling
             _messagingMonitor.HandleTime(watch.Elapsed);
 
             return handlerSucceeded;
+        }
+        private async Task MoveMessageToErrorQueue(SQSMessage message)
+        {
+            SendMessageResponse sendMessageResponse = null;
+            if (_queue.ErrorQueue != null)
+            {
+                var sendMessageRequest = new SendMessageRequest(_queue.ErrorQueue.Uri.AbsoluteUri, message.Body);
+                sendMessageResponse = await _queue.Client.SendMessageAsync(sendMessageRequest).ConfigureAwait(false);
+            }
+
+            if (sendMessageResponse == null || sendMessageResponse.HttpStatusCode == HttpStatusCode.OK)
+                await DeleteMessageFromQueue(message.ReceiptHandle).ConfigureAwait(false);
         }
 
         private async Task DeleteMessageFromQueue(string receiptHandle)
@@ -186,4 +203,5 @@ namespace JustSaying.AwsTools.MessageHandling
             return attributes.TryGetValue(MessageSystemAttributeName.ApproximateReceiveCount, out string rawApproxReceiveCount) && int.TryParse(rawApproxReceiveCount, out approxReceiveCount);
         }
     }
+
 }

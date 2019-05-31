@@ -1,11 +1,13 @@
 using System;
 using System.Globalization;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
@@ -13,6 +15,7 @@ using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -24,9 +27,24 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 {
     public class DummySqsQueue : SqsQueueBase
     {
+        public class DummyErrorQueue : ErrorQueue
+        {
+            public DummyErrorQueue(RegionEndpoint region, string sourceQueueName, IAmazonSQS client, ILoggerFactory loggerFactory, Uri uri) : base(region, sourceQueueName, client, loggerFactory)
+            {
+                Uri = uri;
+            }
+            public override Task<bool> ExistsAsync() => Task.FromResult(true);
+        }
+
         public DummySqsQueue(Uri uri, IAmazonSQS client) : base(RegionEndpoint.EUWest1, client)
         {
             Uri = uri;
+        }
+
+        public void SetErrorQueue()
+        {
+            var errorQueue = new DummyErrorQueue(Region, QueueName, Client, new NullLoggerFactory(), new Uri(this.Uri, "error"));
+            ErrorQueue = errorQueue;
         }
 
         public override Task<bool> ExistsAsync() => Task.FromResult(true);
@@ -148,6 +166,74 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             }
         }
 
+        public class AndTheHandlerFailsWithANonRetryableError : WhenDispatchingMessage
+        {
+            protected override void Given()
+            {
+                base.Given();
+                _queue.SetErrorQueue();
+                _handlerMap.Add(typeof(OrderAccepted), m => throw new NonRetryableException());
+                _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, "1");
+                _amazonSqsClient
+                    .SendMessageAsync(Arg.Is<SendMessageRequest>(x => x.QueueUrl.Equals("http://testurl.com/error", StringComparison.InvariantCultureIgnoreCase))).Returns(Task.FromResult(new SendMessageResponse()
+                    { HttpStatusCode = HttpStatusCode.OK }));
+            }
+
+            [Fact]
+            public void ShouldLogException()
+            {
+                _logger.ReceivedWithAnyArgs().LogError(0, null, "msg");
+            }
+
+            [Fact]
+            public void ShouldMoveMessageToErrorQueue()
+            {
+                _amazonSqsClient.Received(1).SendMessageAsync(Arg.Is<SendMessageRequest>(x =>
+                    x.QueueUrl.Equals("http://testurl.com/error", StringComparison.InvariantCultureIgnoreCase)));
+            }
+
+            [Fact]
+            public void ShouldDeleteMessageFromDefaultQueue()
+            {
+                _amazonSqsClient.Received(1).DeleteMessageAsync(Arg.Is<DeleteMessageRequest>(x => x.QueueUrl == ExpectedQueueUrl && x.ReceiptHandle == _sqsMessage.ReceiptHandle));
+            }
+
+        }
+
+        public class AndTheHandlerFailsWithANonRetryableErrorAndTheMoveToErrorQueueFails : WhenDispatchingMessage
+        {
+            protected override void Given()
+            {
+                base.Given();
+                _queue.SetErrorQueue();
+                _handlerMap.Add(typeof(OrderAccepted), m => throw new NonRetryableException());
+                _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, "1");
+                _amazonSqsClient
+                    .SendMessageAsync(Arg.Is<SendMessageRequest>(x => x.QueueUrl.Equals("http://testurl.com/error", StringComparison.InvariantCultureIgnoreCase))).Returns(Task.FromResult(new SendMessageResponse()
+                    { HttpStatusCode = HttpStatusCode.InternalServerError }));
+            }
+
+            [Fact]
+            public void ShouldLogException()
+            {
+                _logger.ReceivedWithAnyArgs().LogError(0, null, "msg");
+            }
+
+            [Fact]
+            public void ShouldCallToMoveMessageToErrorQueue()
+            {
+                _amazonSqsClient.Received(1).SendMessageAsync(Arg.Is<SendMessageRequest>(x =>
+                    x.QueueUrl.Equals("http://testurl.com/error", StringComparison.InvariantCultureIgnoreCase)));
+            }
+
+            [Fact]
+            public void ShouldNotDeleteMessageFromDefaultQueue()
+            {
+                _amazonSqsClient.Received(0).DeleteMessageAsync(Arg.Is<DeleteMessageRequest>(x => x.QueueUrl == ExpectedQueueUrl && x.ReceiptHandle == _sqsMessage.ReceiptHandle));
+            }
+
+        }
+
         public class AndUpdatingMessageVisibilityErrors : WhenDispatchingMessage
         {
             protected override void Given()
@@ -165,6 +251,21 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             {
                 _logger.ReceivedWithAnyArgs().LogError(0, null, "msg");
             }
+        }
+    }
+
+    public class NonRetryableException : Exception, INonRetryable
+    {
+        public NonRetryableException(string message) : base(message)
+        {
+        }
+
+        public NonRetryableException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        public NonRetryableException()
+        {
         }
     }
 }
