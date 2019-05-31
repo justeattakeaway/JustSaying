@@ -152,7 +152,7 @@ namespace JustSaying.AwsTools.MessageHandling
             if (_queue.ErrorQueue != null)
             {
                 var sendMessageRequest = new SendMessageRequest(_queue.ErrorQueue.Uri.AbsoluteUri, message.Body);
-                sendMessageResponse = await _queue.Client.SendMessageAsync(sendMessageRequest).ConfigureAwait(false);
+                sendMessageResponse = await _queue.ErrorQueue.Client.SendMessageAsync(sendMessageRequest).ConfigureAwait(false);
             }
 
             if (sendMessageResponse == null || sendMessageResponse.HttpStatusCode == HttpStatusCode.OK)
