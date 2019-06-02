@@ -1,17 +1,17 @@
 <Project>
   <PropertyGroup>
-    <AnalyzersPackageVersion>2.9.1</AnalyzersPackageVersion>
+    <AnalyzersPackageVersion>2.9.2</AnalyzersPackageVersion>
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)CodeAnalysisRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-preview.1" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-18618-05" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-preview.2" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19270-01" PrivateAssets="All" />
     <PackageReference Include="OpenCover" Version="4.7.922" PrivateAssets="All" />
-    <PackageReference Include="ReportGenerator" Version="4.0.15" PrivateAssets="All" />
+    <PackageReference Include="ReportGenerator" Version="4.1.9" PrivateAssets="All" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
-    <PackageReference Include="MinVer" Version="1.0.0" PrivateAssets="All" />
+    <PackageReference Include="MinVer" Version="1.1.0" PrivateAssets="All" />
   </ItemGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)justeat-oss.snk</AssemblyOriginatorKeyFile>
@@ -22,7 +22,7 @@
     <MinVerMinimumMajorMinor>7.0</MinVerMinimumMajorMinor>
     <MinVerTagPrefix>v</MinVerTagPrefix>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <!-- disable sourcelink on mono, to workaround https://github.com/dotnet/sourcelink/issues/155 -->
+    <!-- Disable Source Link on Mono, to workaround https://github.com/dotnet/sourcelink/issues/155 -->
     <EnableSourceLink Condition=" '$(OS)' != 'Windows_NT' AND '$(MSBuildRuntimeType)' != 'Core' ">false</EnableSourceLink>
     <EnableSourceControlManagerQueries>$(EnableSourceLink)</EnableSourceControlManagerQueries>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>

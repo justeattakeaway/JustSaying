@@ -8,6 +8,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$ProgressPreference = "SilentlyContinue"
 
 $solutionPath = Split-Path $MyInvocation.MyCommand.Definition
 $sdkFile = Join-Path $solutionPath "global.json"
@@ -62,10 +63,14 @@ else {
 
 if ($installDotNetSdk -eq $true) {
     $env:DOTNET_INSTALL_DIR = Join-Path "$(Convert-Path "$PSScriptRoot")" ".dotnetcli"
+    $sdkPath = Join-Path $env:DOTNET_INSTALL_DIR "sdk\$dotnetVersion"
 
-    if (!(Test-Path $env:DOTNET_INSTALL_DIR)) {
-        mkdir $env:DOTNET_INSTALL_DIR | Out-Null
+    if (!(Test-Path $sdkPath)) {
+        if (!(Test-Path $env:DOTNET_INSTALL_DIR)) {
+            mkdir $env:DOTNET_INSTALL_DIR | Out-Null
+        }
         $installScript = Join-Path $env:DOTNET_INSTALL_DIR "install.ps1"
+        [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor "Tls12"
         Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile $installScript -UseBasicParsing
         & $installScript -Version "$dotnetVersion" -InstallDir "$env:DOTNET_INSTALL_DIR" -NoPath
     }
@@ -107,11 +112,12 @@ function DotNetTest {
         }
 
         $nugetPath = Join-Path $env:USERPROFILE ".nuget\packages"
+        $propsFile = Join-Path $solutionPath "Directory.Build.props"
 
-        $openCoverVersion = "4.7.922"
+        $openCoverVersion = (Select-Xml -Path $propsFile -XPath "//PackageReference[@Include='OpenCover']/@Version").Node.'#text'
         $openCoverPath = Join-Path $nugetPath "OpenCover\$openCoverVersion\tools\OpenCover.Console.exe"
 
-        $reportGeneratorVersion = "4.0.15"
+        $reportGeneratorVersion = (Select-Xml -Path $propsFile -XPath "//PackageReference[@Include='ReportGenerator']/@Version").Node.'#text'
         $reportGeneratorPath = Join-Path $nugetPath "ReportGenerator\$reportGeneratorVersion\tools\netcoreapp2.0\ReportGenerator.dll"
 
         $coverageOutput = Join-Path $OutputPath "code-coverage.xml"
