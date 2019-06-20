@@ -3,81 +3,157 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.Monitoring;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.MessageProcessingStrategies
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "Known issue")]
-    public class Throttled : IMessageProcessingStrategy
+    /// <summary>
+    /// A class representing an implementation of <see cref="IMessageProcessingStrategy"/>
+    /// that throttles the number of messages that can be processed concurrently.
+    /// </summary>
+    public class Throttled : IMessageProcessingStrategy, IDisposable
     {
+        private readonly ILogger _logger;
         private readonly IMessageMonitor _messageMonitor;
         private readonly SemaphoreSlim _semaphore;
 
-        public Throttled(int maxWorkers, IMessageMonitor messageMonitor)
+        private bool _disposed;
+
+        public Throttled(
+            int maxWorkers,
+            TimeSpan startTimeout,
+            IMessageMonitor messageMonitor,
+            ILogger logger)
         {
-            _messageMonitor = messageMonitor;
+            if (maxWorkers < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(maxWorkers), maxWorkers, "At least one worker must be specified.");
+            }
+
+            if (startTimeout <= TimeSpan.Zero && startTimeout != Timeout.InfiniteTimeSpan)
+            {
+                throw new ArgumentOutOfRangeException(nameof(startTimeout), startTimeout, "The start timeout must be a positive value.");
+            }
+
+            _messageMonitor = messageMonitor ?? throw new ArgumentNullException(nameof(messageMonitor));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
             MaxWorkers = maxWorkers;
-            _semaphore = new SemaphoreSlim(maxWorkers, maxWorkers);
+            StartTimeout = startTimeout;
+
+            _semaphore = new SemaphoreSlim(MaxWorkers, MaxWorkers);
         }
 
-        public async Task StartWorker(Func<Task> action, CancellationToken cancellationToken)
+        /// <summary>
+        /// Finalizes an instance of the <see cref="Throttled"/> class.
+        /// </summary>
+        ~Throttled()
+        {
+            Dispose(false);
+        }
+
+        /// <inheritdoc />
+        public int AvailableWorkers => _semaphore.CurrentCount;
+
+        /// <inheritdoc />
+        public int MaxWorkers { get; }
+
+        /// <summary>
+        /// Gets the timeout to use for starting a worker.
+        /// </summary>
+        public TimeSpan StartTimeout { get; }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <inheritdoc />
+        public virtual async Task<bool> StartWorkerAsync(Func<Task> action, CancellationToken cancellationToken)
         {
             try
             {
-                await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+                if (await _semaphore.WaitAsync(StartTimeout, cancellationToken).ConfigureAwait(false))
+                {
+                    try
+                    {
+                        _ = Task.Factory.StartNew(async (object semaphore) =>
+                        {
+                            try
+                            {
+                                await action().ConfigureAwait(false);
+                            }
+                            finally
+                            {
+                                ((SemaphoreSlim)semaphore).Release();
+                            }
+                        },
+                        _semaphore,
+                        CancellationToken.None,
+                        TaskCreationOptions.None,
+                        TaskScheduler.Default);
+                    }
+                    catch (Exception)
+                    {
+                        _semaphore.Release();
+                        throw;
+                    }
+
+                    return true;
+                }
+                else
+                {
+                    _messageMonitor.IncrementThrottlingStatistic();
+                    _messageMonitor.HandleThrottlingTime(StartTimeout);
+
+                    _logger.LogWarning("Message handling was throttled waiting for the semaphore for {StartTimeout}.", StartTimeout);
+
+                    return false;
+                }
             }
             catch (OperationCanceledException)
             {
-                return;
+                return false;
             }
-
-            _ = Task.Run(() => ReleaseOnCompleted(action));
         }
 
-        private async Task ReleaseOnCompleted(Func<Task> action)
+        /// <inheritdoc />
+        public async Task<int> WaitForAvailableWorkerAsync()
         {
-            try
+            if (_semaphore.CurrentCount == 0)
             {
-                await action().ConfigureAwait(false);
-            }
-            finally
-            {
+                _messageMonitor.IncrementThrottlingStatistic();
+
+                var stopwatch = Stopwatch.StartNew();
+
+                await _semaphore.WaitAsync().ConfigureAwait(false);
                 _semaphore.Release();
+
+                stopwatch.Stop();
+
+                _messageMonitor.HandleThrottlingTime(stopwatch.Elapsed);
             }
+
+            return _semaphore.CurrentCount;
         }
 
-
-        public async Task WaitForAvailableWorkers()
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <param name="disposing">Whether the instance is being disposed.</param>
+        protected virtual void Dispose(bool disposing)
         {
-            if (_semaphore.CurrentCount != 0)
-                return;
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    _semaphore?.Dispose();
+                }
 
-            _messageMonitor.IncrementThrottlingStatistic();
-
-            var watch = Stopwatch.StartNew();
-            await AsTask(_semaphore.AvailableWaitHandle).ConfigureAwait(false);
-            watch.Stop();
-
-            _messageMonitor.HandleThrottlingTime(watch.Elapsed);
-        }
-
-        private static Task AsTask(WaitHandle waitHandle)
-        {
-            var tcs = new TaskCompletionSource<object>();
-
-            ThreadPool.RegisterWaitForSingleObject(
-                waitObject: waitHandle,
-                callBack: (o, timeout) => { tcs.SetResult(null); },
-                state: null,
-                timeout: TimeSpan.FromMilliseconds(int.MaxValue),
-                executeOnlyOnce: true);
-
-            return tcs.Task;
-        }
-
-        public int MaxWorkers { get; }
-        public int AvailableWorkers
-        {
-            get { return _semaphore.CurrentCount; }
+                _disposed = true;
+            }
         }
     }
 }

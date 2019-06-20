@@ -46,7 +46,7 @@ namespace JustSaying.AwsTools.MessageHandling
             onError = onError ?? DefaultErrorHandler;
             _log = loggerFactory.CreateLogger("JustSaying");
 
-            _messageProcessingStrategy = new DefaultThrottledThroughput(_messagingMonitor);
+            _messageProcessingStrategy = new DefaultThrottledThroughput(_messagingMonitor, _log);
             _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor);
 
             _messageDispatcher = new MessageDispatcher(
@@ -70,9 +70,16 @@ namespace JustSaying.AwsTools.MessageHandling
         public string Queue => _queue.QueueName;
 
         // ToDo: This should not be here.
-        public SqsNotificationListener WithMaximumConcurrentLimitOnMessagesInFlightOf(int maximumAllowedMesagesInFlight)
+        public SqsNotificationListener WithMaximumConcurrentLimitOnMessagesInFlightOf(
+            int maximumAllowedMesagesInFlight,
+            TimeSpan? startTimeout = null)
         {
-            _messageProcessingStrategy = new Throttled(maximumAllowedMesagesInFlight, _messagingMonitor);
+            _messageProcessingStrategy = new Throttled(
+                maximumAllowedMesagesInFlight,
+                startTimeout ?? Timeout.InfiniteTimeSpan,
+                _messagingMonitor,
+                _log);
+
             return this;
         }
 
@@ -105,7 +112,7 @@ namespace JustSaying.AwsTools.MessageHandling
             // ListenLoop will cancel gracefully, so no need to pass cancellation token to Task.Run
             _ = Task.Run(async () =>
             {
-                await ListenLoop(cancellationToken).ConfigureAwait(false);
+                await ListenLoopAsync(cancellationToken).ConfigureAwait(false);
                 IsListening = false;
                 _log.LogInformation("Stopped listening on queue '{QueueName}' in region '{Region}'.", queueName, region);
             });
@@ -114,7 +121,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _log.LogInformation("Starting listening on queue '{QueueName}' in region '{Region}'.", queueName, region);
         }
 
-        internal async Task ListenLoop(CancellationToken ct)
+        internal async Task ListenLoopAsync(CancellationToken ct)
         {
             var queueName = _queue.QueueName;
             var regionName = _queue.Region.SystemName;
@@ -124,21 +131,29 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 try
                 {
-                    sqsMessageResponse = await GetMessagesFromSqsQueue(queueName, regionName, ct).ConfigureAwait(false);
+                    sqsMessageResponse = await GetMessagesFromSqsQueueAsync(queueName, regionName, ct).ConfigureAwait(false);
                     var messageCount = sqsMessageResponse.Messages.Count;
 
-                    _log.LogTrace("Polled for messages on queue '{QueueName}' in region '{Region}', and received {MessageCount} messages.",
-                        queueName, regionName, messageCount);
+                    _log.LogTrace(
+                        "Polled for messages on queue '{QueueName}' in region '{Region}', and received {MessageCount} messages.",
+                        queueName,
+                        regionName,
+                        messageCount);
                 }
                 catch (InvalidOperationException ex)
                 {
-                    _log.LogTrace(0, ex, "Could not determine number of messages to read from queue '{QueueName}' in '{Region}'.",
+                    _log.LogTrace(
+                        ex,
+                        "Could not determine number of messages to read from queue '{QueueName}' in '{Region}'.",
                         queueName, regionName);
                 }
                 catch (OperationCanceledException ex)
                 {
-                    _log.LogTrace(0, ex, "Suspected no message on queue '{QueueName}' in region '{Region}'.",
-                        queueName, regionName);
+                    _log.LogTrace(
+                        ex,
+                        "Suspected no message on queue '{QueueName}' in region '{Region}'.",
+                        queueName,
+                        regionName);
                 }
 #pragma warning disable CA1031
                 catch (Exception ex)
@@ -148,17 +163,28 @@ namespace JustSaying.AwsTools.MessageHandling
                         queueName, regionName);
                 }
 
+                if (sqsMessageResponse == null || sqsMessageResponse.Messages.Count < 1)
+                {
+                    continue;
+                }
+
                 try
                 {
-                    if (sqsMessageResponse != null)
+                    foreach (var message in sqsMessageResponse.Messages)
                     {
-                        foreach (var message in sqsMessageResponse.Messages)
+                        if (ct.IsCancellationRequested)
                         {
-                            if (ct.IsCancellationRequested)
-                            {
-                                return;
-                            }
-                            await HandleMessage(message, ct).ConfigureAwait(false);
+                            return;
+                        }
+
+                        if (!await TryHandleMessageAsync(message, ct).ConfigureAwait(false))
+                        {
+                            // No worker free to process any messages
+                            _log.LogWarning(
+                                "Unable to process message with Id {MessageId} for queue '{QueueName}' in region '{Region}' as no workers are available.",
+                                message.MessageId,
+                                queueName,
+                                regionName);
                         }
                     }
                 }
@@ -166,15 +192,18 @@ namespace JustSaying.AwsTools.MessageHandling
                 catch (Exception ex)
 #pragma warning restore CA1031
                 {
-                    _log.LogError(0, ex, "Error in message handling loop for queue '{QueueName}' in region '{Region}'.",
-                        queueName, regionName);
+                    _log.LogError(
+                        ex,
+                        "Error in message handling loop for queue '{QueueName}' in region '{Region}'.",
+                        queueName,
+                        regionName);
                 }
             }
         }
 
-        private async Task<ReceiveMessageResponse> GetMessagesFromSqsQueue(string queueName, string region, CancellationToken ct)
+        private async Task<ReceiveMessageResponse> GetMessagesFromSqsQueueAsync(string queueName, string region, CancellationToken ct)
         {
-            var numberOfMessagesToReadFromSqs = await GetNumberOfMessagesToReadFromSqs()
+            var numberOfMessagesToReadFromSqs = await GetNumberOfMessagesToReadFromSqsAsync()
                 .ConfigureAwait(false);
 
             var watch = System.Diagnostics.Stopwatch.StartNew();
@@ -216,29 +245,31 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        private async Task<int> GetNumberOfMessagesToReadFromSqs()
+        private async Task<int> GetNumberOfMessagesToReadFromSqsAsync()
         {
-            var numberOfMessagesToReadFromSqs = Math.Min(_messageProcessingStrategy.AvailableWorkers, MessageConstants.MaxAmazonMessageCap);
+            // TODO This needs reviewing as there can be available workers here now, yet by the time
+            // they're actually used, there could be none. This would then create a backlog of messages
+            // to process waiting on the message throttle because all the workers are busy.
+            int numberOfMessagesToReadFromSqs = Math.Min(_messageProcessingStrategy.AvailableWorkers, MessageConstants.MaxAmazonMessageCap);
 
             if (numberOfMessagesToReadFromSqs == 0)
             {
-                await _messageProcessingStrategy.WaitForAvailableWorkers().ConfigureAwait(false);
-
-                numberOfMessagesToReadFromSqs = Math.Min(_messageProcessingStrategy.AvailableWorkers, MessageConstants.MaxAmazonMessageCap);
+                int availableWorkers = await _messageProcessingStrategy.WaitForAvailableWorkerAsync().ConfigureAwait(false);
+                numberOfMessagesToReadFromSqs = Math.Min(availableWorkers, MessageConstants.MaxAmazonMessageCap);
             }
 
             if (numberOfMessagesToReadFromSqs == 0)
             {
-                throw new InvalidOperationException("Cannot determine numberOfMessagesToReadFromSqs");
+                throw new InvalidOperationException("");
             }
 
             return numberOfMessagesToReadFromSqs;
         }
 
-        private Task HandleMessage(Amazon.SQS.Model.Message message, CancellationToken ct)
+        private Task<bool> TryHandleMessageAsync(Amazon.SQS.Model.Message message, CancellationToken ct)
         {
             var action = new Func<Task>(() => _messageDispatcher.DispatchMessage(message, ct));
-            return _messageProcessingStrategy.StartWorker(action, ct);
+            return _messageProcessingStrategy.StartWorkerAsync(action, ct);
         }
 
         public ICollection<ISubscriber> Subscribers { get; }

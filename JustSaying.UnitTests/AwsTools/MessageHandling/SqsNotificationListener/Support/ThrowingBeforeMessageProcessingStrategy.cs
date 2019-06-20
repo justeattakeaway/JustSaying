@@ -31,19 +31,20 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.
             _doneSignal = doneSignal;
         }
 
-        public Task WaitForAvailableWorkers()
+        public Task<int> WaitForAvailableWorkerAsync()
         {
             if (_firstTime)
             {
                 _firstTime = false;
                 Fail();
             }
-            return Task.FromResult(true);
+
+            return Task.FromResult(1);
         }
 
-        public Task StartWorker(Func<Task> action, CancellationToken cancellationToken)
+        public Task<bool> StartWorkerAsync(Func<Task> action, CancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         }
 
         private void Fail()
@@ -51,6 +52,5 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.
             TaskHelpers.DelaySendDone(_doneSignal);
             throw new TestException("Thrown by test ProcessMessage");
         }
-
     }
 }

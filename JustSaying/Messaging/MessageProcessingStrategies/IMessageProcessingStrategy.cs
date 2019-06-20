@@ -1,39 +1,47 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace JustSaying.Messaging.MessageProcessingStrategies
 {
+    /// <summary>
+    /// Defines a strategy for processing messages asynchronously.
+    /// </summary>
     public interface IMessageProcessingStrategy
     {
         /// <summary>
-        /// The maximum number of worker tasks that will be used to run messages handlers at any one time
+        /// Gets the maximum number of workers that can be used to process messages concurrently.
         /// </summary>
         int MaxWorkers { get; }
 
         /// <summary>
-        /// The number of worker tasks that are free to run messages handlers right now,
-        /// Always in the range 0 to MaxWorkers
-        /// the number of currently running workers will be = (MaxWorkers - AvailableWorkers)
+        /// Gets the number of workers that are available to process messages.
         /// </summary>
         int AvailableWorkers { get; }
 
         /// <summary>
-        /// Launch a worker to start processing a message.
+        /// Starts a worker task to process a message as an asynchronous operation.
         /// </summary>
-        /// <param name="action"></param>
+        /// <param name="action">A delegate to a method that processes the message.</param>
         /// <param name="cancellationToken">The cancellation token</param>
         /// <returns>
-        /// A <see cref="Task"/> representing the asynchronous operation of queuing <paramref name="action"/>,
-        /// including waiting for a worker to become available.
+        /// A <see cref="Task{TResult}"/> representing the asynchronous operation of queueing <paramref name="action"/>,
+        /// including waiting for a worker to become available. If the task returns <see cref="false"/>
+        /// an available worker was not available and the action was not queued to be run.
         /// </returns>
-        Task StartWorker(Func<Task> action, CancellationToken cancellationToken);
+        Task<bool> StartWorkerAsync(Func<Task> action, CancellationToken cancellationToken);
 
         /// <summary>
-        /// After awaiting this, you should be in a position to start another worker
-        /// i.e. AvailableWorkers should be above 0
+        /// Attempts to wait for a available worker as an asynchronous operation.
         /// </summary>
-        /// <returns></returns>
-        Task WaitForAvailableWorkers();
+        /// <returns>
+        /// A <see cref="Task"/> representing the asynchronous operation to wait for an
+        /// available worker which returns the current number of available workers.
+        /// </returns>
+        /// <remarks>
+        /// The task returned by this method completing does not guarantee that a worker
+        /// will be available immediately when <see cref="StartWorkerAsync"/> is subsequently called.
+        /// </remarks>
+        Task<int> WaitForAvailableWorkerAsync();
     }
 }

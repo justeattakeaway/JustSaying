@@ -1,17 +1,18 @@
-﻿using System;
+using System;
+using System.Threading;
 using JustSaying.Messaging.Monitoring;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.MessageProcessingStrategies
 {
     public class DefaultThrottledThroughput : Throttled
     {
-        public DefaultThrottledThroughput(IMessageMonitor messageMonitor) :
-            base(MaxActiveHandlersForProcessors(), messageMonitor)
+        private static readonly int MaxActiveHandlersForProcessors =
+            Environment.ProcessorCount * MessageConstants.ParallelHandlerExecutionPerCore;
+
+        public DefaultThrottledThroughput(IMessageMonitor messageMonitor, ILogger logger)
+            : base(MaxActiveHandlersForProcessors, Timeout.InfiniteTimeSpan, messageMonitor, logger)
         {
-
         }
-
-        private static int MaxActiveHandlersForProcessors()
-            => Environment.ProcessorCount * MessageConstants.ParallelHandlerExecutionPerCore;
     }
 }
