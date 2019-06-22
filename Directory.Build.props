@@ -4,9 +4,9 @@
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)CodeAnalysisRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="coverlet.msbuild" Version="2.6.2" PrivateAssets="All" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-preview.2" PrivateAssets="All" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19324-01" PrivateAssets="All" />
-    <PackageReference Include="OpenCover" Version="4.7.922" PrivateAssets="All" />
     <PackageReference Include="ReportGenerator" Version="4.2.2" PrivateAssets="All" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
@@ -43,5 +43,13 @@
     <ComVisible>false</ComVisible>
     <DebugType>embedded</DebugType>
     <EmbedAllSources Condition=" '$(IsTestProject)' != 'true' AND '$(NCrunch)' == '' ">true</EmbedAllSources>
+  </PropertyGroup>
+  <PropertyGroup>
+    <CollectCoverage>true</CollectCoverage>
+    <CoverletOutput>$(OutputPath)\</CoverletOutput>
+    <CoverletOutputFormat>cobertura,json</CoverletOutputFormat>
+    <Exclude>[*.Benchmarks]*,[*Sample*]*,[*Test*]*,[xunit.*]*</Exclude>
+    <ExcludeByAttribute>System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
+    <MergeWith>$(CoverletOutput)coverage.json</MergeWith>
   </PropertyGroup>
 </Project>
