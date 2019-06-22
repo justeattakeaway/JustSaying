@@ -106,7 +106,7 @@ namespace JustSaying
                     MessageResponseLogger = Bus.Config.MessageResponseLogger
                 };
 
-                eventPublisher.CreateAsync().GetAwaiter().GetResult();
+                CreatePublisher<T>(eventPublisher, snsWriteConfig);
 
                 eventPublisher.EnsurePolicyIsUpdatedAsync(Bus.Config.AdditionalSubscriberAccounts).GetAwaiter().GetResult();
 
@@ -117,6 +117,18 @@ namespace JustSaying
                 _subscriptionConfig.Topic, typeof(T));
 
             return this;
+        }
+
+        private void CreatePublisher<T>(SnsTopicByName eventPublisher, SnsWriteConfiguration snsWriteConfig) where T : Message
+        {
+            if (snsWriteConfig.Encryption != null)
+            {
+                eventPublisher.CreateWithEncryptionAsync(snsWriteConfig.Encryption).GetAwaiter().GetResult();
+            }
+            else
+            {
+                eventPublisher.CreateAsync().GetAwaiter().GetResult();
+            }
         }
 
         /// <summary>
