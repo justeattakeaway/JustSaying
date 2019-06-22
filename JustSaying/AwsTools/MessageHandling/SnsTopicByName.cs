@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
@@ -95,6 +96,69 @@ namespace JustSaying.AwsTools.MessageHandling
             }
 
             return false;
+        }
+
+        public async Task<bool> CreateWithEncryptionAsync(SnsServerSideEncryption config)
+        {
+            var created = await CreateAsync().ConfigureAwait(false);
+
+            ServerSideEncryption = await ExtractServerSideEncryptionFromTopicAttributes().ConfigureAwait(false);
+
+            await EnsureServerSideEncryptionIsUpdatedAsync(config).ConfigureAwait(false);
+
+            return created;
+        }
+
+        private async Task<SnsServerSideEncryption> ExtractServerSideEncryptionFromTopicAttributes()
+        {
+            var attributesResponse = await Client.GetTopicAttributesAsync(Arn).ConfigureAwait(false);
+            if (!attributesResponse.Attributes.ContainsKey(JustSayingConstants.AttributeEncryptionKeyId))
+            {
+                return null;
+            }
+            return new SnsServerSideEncryption
+            {
+                KmsMasterKeyId = attributesResponse.Attributes[JustSayingConstants.AttributeEncryptionKeyId]
+            };
+        }
+
+        private async Task EnsureServerSideEncryptionIsUpdatedAsync(SnsServerSideEncryption config)
+        {
+            if (ServerSideEncryptionNeedsUpdating(config))
+            {
+                var request = new SetTopicAttributesRequest
+                {
+                    TopicArn = Arn,
+                    AttributeName = JustSayingConstants.AttributeEncryptionKeyId,
+                    AttributeValue = config != null
+                        ? config.KmsMasterKeyId
+                        : string.Empty
+                };
+
+                var response = await Client.SetTopicAttributesAsync(request).ConfigureAwait(false);
+
+                if (response.HttpStatusCode == HttpStatusCode.OK)
+                {
+                    ServerSideEncryption = string.IsNullOrEmpty(config?.KmsMasterKeyId)
+                        ? null
+                        : config;
+                }
+            }
+        }
+
+        private bool ServerSideEncryptionNeedsUpdating(SnsServerSideEncryption config)
+        {
+            if (ServerSideEncryption == config)
+            {
+                return false;
+            }
+
+            if (ServerSideEncryption != null && config != null)
+            {
+                return ServerSideEncryption.KmsMasterKeyId != config.KmsMasterKeyId;
+            }
+
+            return true;
         }
     }
 }

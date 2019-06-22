@@ -23,6 +23,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly SnsWriteConfiguration _snsWriteConfiguration;
         public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
         public string Arn { get; protected set; }
+        internal SnsServerSideEncryption ServerSideEncryption { get; set; }
         protected IAmazonSimpleNotificationService Client { get; set; }
         private readonly ILogger _logger;
 

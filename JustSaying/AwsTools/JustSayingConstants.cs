@@ -63,7 +63,12 @@ namespace JustSaying.AwsTools
         /// <summary>
         /// Default ID of an AWS-managed customer master key (CMK) for Amazon SQS
         /// </summary>
-        public static string DefaultAttributeEncryptionKeyId => "alias/aws/sqs";
+        public static string DefaultSqsAttributeEncryptionKeyId => "alias/aws/sqs";
+
+        /// <summary>
+        /// Default ID of an AWS-managed customer master key (CMK) for Amazon SNS
+        /// </summary>
+        public static string DefaultSnsAttributeEncryptionKeyId => "alias/aws/sns";
 
         /// <summary>
         /// Default length of time, in seconds, for which Amazon SQS can reuse a data key to encrypt/decrypt messages before calling AWS KMS again

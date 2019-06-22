@@ -6,7 +6,7 @@ namespace JustSaying.AwsTools.QueueCreation
     {
         public ServerSideEncryption()
         {
-            KmsMasterKeyId = JustSayingConstants.DefaultAttributeEncryptionKeyId;
+            KmsMasterKeyId = JustSayingConstants.DefaultSqsAttributeEncryptionKeyId;
             KmsDataKeyReusePeriodSeconds = JustSayingConstants.DefaultAttributeEncryptionKeyReusePeriodSecond;
         }
 
