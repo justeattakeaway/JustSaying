@@ -3,7 +3,7 @@
     <TargetFramework>netcoreapp2.2</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <NoWarn>$(NoWarn);CA1034;CA1051;CA1707;CA2007</NoWarn>
+    <NoWarn>$(NoWarn);CA1034;CA1051;CA1707;CA2007;CA1056;CA2227</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
@@ -15,6 +15,8 @@
     <PackageReference Include="AWSSDK.Core" Version="3.3.102" />
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.101.17" />
     <PackageReference Include="AWSSDK.SQS" Version="3.3.100.28" />
+    <PackageReference Include="JustEat.HttpClientInterception" Version="2.0.2-beta0267" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.1.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
