@@ -8,7 +8,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.
 {
     public class ThrowingDuringMessageProcessingStrategy : IMessageProcessingStrategy
     {
-        public int MaxWorkers => int.MaxValue;
+        public int MaxConcurrency => int.MaxValue;
 
         private readonly TaskCompletionSource<object> _doneSignal;
         private bool _firstTime = true;
@@ -20,7 +20,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.
 
         public Task<int> WaitForAvailableWorkerAsync()
         {
-            return Task.FromResult(MaxWorkers);
+            return Task.FromResult(MaxConcurrency);
         }
 
         public Task<bool> StartWorkerAsync(Func<Task> action, CancellationToken cancellationToken)

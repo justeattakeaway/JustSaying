@@ -12,40 +12,76 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
 {
     public class ThrottledTests
     {
-        private readonly IMessageMonitor _fakeMonitor;
+        private readonly IMessageMonitor _monitor;
         private readonly ILogger _logger;
 
         public ThrottledTests()
         {
-            _fakeMonitor = Substitute.For<IMessageMonitor>();
+            _monitor = Substitute.For<IMessageMonitor>();
             _logger = Substitute.For<ILogger>();
         }
 
         [Fact]
-        public void MaxWorkers_StartsAtCapacity()
+        public void MaxConcurrency_StartsAtMaxConcurrency()
         {
-            var messageProcessingStrategy = new Throttled(123, TimeSpan.FromSeconds(5), _fakeMonitor, _logger);
+            // Arrange
+            var options = new ThrottledOptions()
+            {
+                MaxConcurrency = 123,
+                Logger = _logger,
+                MessageMonitor = _monitor,
+                StartTimeout = TimeSpan.FromSeconds(5),
+                UseThreadPool = true,
+            };
 
-            messageProcessingStrategy.MaxWorkers.ShouldBe(123);
+            // Act
+            var messageProcessingStrategy = new Throttled(options);
+
+            // Assert
+            messageProcessingStrategy.MaxConcurrency.ShouldBe(123);
         }
 
         [Fact]
-        public void AvailableWorkers_StartsAtCapacity()
+        public void AvailableWorkers_StartsAtMaxConcurrency()
         {
-            var messageProcessingStrategy = new Throttled(123, TimeSpan.FromSeconds(5), _fakeMonitor, _logger);
+            // Arrange
+            var options = new ThrottledOptions()
+            {
+                MaxConcurrency = 123,
+                Logger = _logger,
+                MessageMonitor = _monitor,
+                StartTimeout = TimeSpan.FromSeconds(5),
+                UseThreadPool = true,
+            };
 
+            // Act
+            var messageProcessingStrategy = new Throttled(options);
+
+            // Assert
             messageProcessingStrategy.AvailableWorkers.ShouldBe(123);
         }
 
         [Fact]
-        public async Task WhenATasksIsAdded_MaxWorkersIsUnaffected()
+        public async Task WhenATasksIsAdded_MaxConcurrencyIsUnaffected()
         {
-            var messageProcessingStrategy = new Throttled(123, TimeSpan.FromSeconds(5), _fakeMonitor, _logger);
+            // Arrange
+            var options = new ThrottledOptions()
+            {
+                MaxConcurrency = 123,
+                Logger = _logger,
+                MessageMonitor = _monitor,
+                StartTimeout = TimeSpan.FromSeconds(5),
+                UseThreadPool = true,
+            };
+
+            var messageProcessingStrategy = new Throttled(options);
             var tcs = new TaskCompletionSource<object>();
 
+            // Act
             (await messageProcessingStrategy.StartWorkerAsync(() => tcs.Task, CancellationToken.None)).ShouldBeTrue();
 
-            messageProcessingStrategy.MaxWorkers.ShouldBe(123);
+            // Assert
+            messageProcessingStrategy.MaxConcurrency.ShouldBe(123);
 
             await AllowTasksToComplete(tcs);
         }
@@ -53,11 +89,23 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
         [Fact]
         public async Task WhenATasksIsAdded_AvailableWorkersIsDecremented()
         {
-            var messageProcessingStrategy = new Throttled(123, TimeSpan.FromSeconds(5), _fakeMonitor, _logger);
+            // Arrange
+            var options = new ThrottledOptions()
+            {
+                MaxConcurrency = 123,
+                Logger = _logger,
+                MessageMonitor = _monitor,
+                StartTimeout = TimeSpan.FromSeconds(5),
+                UseThreadPool = true,
+            };
+
+            var messageProcessingStrategy = new Throttled(options);
             var tcs = new TaskCompletionSource<object>();
 
+            // Act
             (await messageProcessingStrategy.StartWorkerAsync(() => tcs.Task, CancellationToken.None)).ShouldBeTrue();
 
+            // Assert
             messageProcessingStrategy.AvailableWorkers.ShouldBe(122);
             await AllowTasksToComplete(tcs);
         }
@@ -65,32 +113,56 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
         [Fact]
         public async Task WhenATaskCompletes_AvailableWorkersIsIncremented()
         {
-            var messageProcessingStrategy = new Throttled(3, TimeSpan.FromSeconds(5), _fakeMonitor, _logger);
+            // Arrange
+            var options = new ThrottledOptions()
+            {
+                MaxConcurrency = 3,
+                Logger = _logger,
+                MessageMonitor = _monitor,
+                StartTimeout = TimeSpan.FromSeconds(5),
+                UseThreadPool = true,
+            };
+
+            var messageProcessingStrategy = new Throttled(options);
             var tcs = new TaskCompletionSource<object>();
 
+            // Act
             (await messageProcessingStrategy.StartWorkerAsync(() => tcs.Task, CancellationToken.None)).ShouldBeTrue();
 
+            // Assert
             messageProcessingStrategy.AvailableWorkers.ShouldBe(2);
 
             await AllowTasksToComplete(tcs);
 
-            messageProcessingStrategy.MaxWorkers.ShouldBe(3);
+            messageProcessingStrategy.MaxConcurrency.ShouldBe(3);
             messageProcessingStrategy.AvailableWorkers.ShouldBe(3);
         }
 
         [Fact]
         public async Task AvailableWorkers_CanReachZero()
         {
+            // Arrange
+            var options = new ThrottledOptions()
+            {
+                MaxConcurrency = 10,
+                Logger = _logger,
+                MessageMonitor = _monitor,
+                StartTimeout = TimeSpan.FromSeconds(5),
+                UseThreadPool = true,
+            };
+
             const int capacity = 10;
-            var messageProcessingStrategy = new Throttled(capacity, TimeSpan.FromSeconds(5), _fakeMonitor, _logger);
+            var messageProcessingStrategy = new Throttled(options);
             var tcs = new TaskCompletionSource<object>();
 
+            // Act
             for (int i = 0; i < capacity; i++)
             {
                 (await messageProcessingStrategy.StartWorkerAsync(() => tcs.Task, CancellationToken.None)).ShouldBeTrue();
             }
 
-            messageProcessingStrategy.MaxWorkers.ShouldBe(capacity);
+            // Assert
+            messageProcessingStrategy.MaxConcurrency.ShouldBe(capacity);
             messageProcessingStrategy.AvailableWorkers.ShouldBe(0);
             await AllowTasksToComplete(tcs);
         }
@@ -98,15 +170,27 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
         [Fact]
         public async Task AvailableWorkers_CanGoToZeroAndBackToFull()
         {
+            // Arrange
+            var options = new ThrottledOptions()
+            {
+                MaxConcurrency = 10,
+                Logger = _logger,
+                MessageMonitor = _monitor,
+                StartTimeout = TimeSpan.FromSeconds(5),
+                UseThreadPool = true,
+            };
+
             const int capacity = 10;
-            var messageProcessingStrategy = new Throttled(capacity, TimeSpan.FromSeconds(5), _fakeMonitor, _logger);
+            var messageProcessingStrategy = new Throttled(options);
             var tcs = new TaskCompletionSource<object>();
 
+            // Act
             for (int i = 0; i < capacity; i++)
             {
                 (await messageProcessingStrategy.StartWorkerAsync(() => tcs.Task, CancellationToken.None)).ShouldBeTrue();
             }
 
+            // Assert
             messageProcessingStrategy.AvailableWorkers.ShouldBe(0);
 
             await AllowTasksToComplete(tcs);
@@ -117,17 +201,28 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
         [Fact]
         public async Task AvailableWorkers_IsNeverNegative()
         {
+            // Arrange
+            var options = new ThrottledOptions()
+            {
+                MaxConcurrency = 10,
+                Logger = _logger,
+                MessageMonitor = _monitor,
+                StartTimeout = TimeSpan.FromSeconds(5),
+                UseThreadPool = true,
+            };
+
             const int capacity = 10;
-            var messageProcessingStrategy = new Throttled(capacity, TimeSpan.FromMilliseconds(1), _fakeMonitor, _logger);
+            var messageProcessingStrategy = new Throttled(options);
             var tcs = new TaskCompletionSource<object>();
 
-
+            // Act
             for (int i = 0; i < capacity; i++)
             {
                 (await messageProcessingStrategy.StartWorkerAsync(() => tcs.Task, CancellationToken.None)).ShouldBeTrue();
                 messageProcessingStrategy.AvailableWorkers.ShouldBeGreaterThanOrEqualTo(0);
             }
 
+            // Assert
             (await messageProcessingStrategy.StartWorkerAsync(() => tcs.Task, CancellationToken.None)).ShouldBeFalse();
             messageProcessingStrategy.AvailableWorkers.ShouldBe(0);
 

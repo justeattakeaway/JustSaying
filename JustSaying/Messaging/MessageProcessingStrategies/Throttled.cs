@@ -16,32 +16,52 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         private readonly ILogger _logger;
         private readonly IMessageMonitor _messageMonitor;
         private readonly SemaphoreSlim _semaphore;
+        private readonly bool _useThreadpool;
 
         private bool _disposed;
 
-        public Throttled(
-            int maxWorkers,
-            TimeSpan startTimeout,
-            IMessageMonitor messageMonitor,
-            ILogger logger)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Throttled"/> class.
+        /// </summary>
+        /// <param name="options">The <see cref="ThrottledOptions"/> to use.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="options"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="options"/> does not specify an <see cref="ILogger"/> or <see cref="IMessageMonitor"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// The concurrency specified by <paramref name="options"/> is less than one,
+        /// or the start timeout specified by <paramref name="options"/> is zero or negative.
+        /// </exception>
+        public Throttled(ThrottledOptions options)
         {
-            if (maxWorkers < 1)
+            if (options == null)
             {
-                throw new ArgumentOutOfRangeException(nameof(maxWorkers), maxWorkers, "At least one worker must be specified.");
+                throw new ArgumentNullException(nameof(options));
             }
 
-            if (startTimeout <= TimeSpan.Zero && startTimeout != Timeout.InfiniteTimeSpan)
+            if (options.MaxConcurrency < 1)
             {
-                throw new ArgumentOutOfRangeException(nameof(startTimeout), startTimeout, "The start timeout must be a positive value.");
+                throw new ArgumentOutOfRangeException(nameof(options), options.MaxConcurrency, "The maximum concurrency value must be a positive integer.");
             }
 
-            _messageMonitor = messageMonitor ?? throw new ArgumentNullException(nameof(messageMonitor));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            if (options.StartTimeout <= TimeSpan.Zero && options.StartTimeout != Timeout.InfiniteTimeSpan)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(options),
+                    options.StartTimeout,
+                    "The start timeout must be a positive value or Timeout.InfiniteTimeSpan.");
+            }
 
-            MaxWorkers = maxWorkers;
-            StartTimeout = startTimeout;
+            _messageMonitor = options.MessageMonitor ?? throw new ArgumentException($"A value for {nameof(ThrottledOptions.MessageMonitor)} must be specified.", nameof(options));
+            _logger = options.Logger ?? throw new ArgumentException($"A value for {nameof(ThrottledOptions.Logger)} must be specified.", nameof(options));
 
-            _semaphore = new SemaphoreSlim(MaxWorkers, MaxWorkers);
+            MaxConcurrency = options.MaxConcurrency;
+            StartTimeout = options.StartTimeout;
+
+            _useThreadpool = options.UseThreadPool;
+            _semaphore = new SemaphoreSlim(MaxConcurrency, MaxConcurrency);
         }
 
         /// <summary>
@@ -52,11 +72,13 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             Dispose(false);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the available number of workers.
+        /// </summary>
         public int AvailableWorkers => _semaphore.CurrentCount;
 
         /// <inheritdoc />
-        public int MaxWorkers { get; }
+        public int MaxConcurrency { get; }
 
         /// <summary>
         /// Gets the timeout to use for starting a worker.
@@ -77,28 +99,13 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             {
                 if (await _semaphore.WaitAsync(StartTimeout, cancellationToken).ConfigureAwait(false))
                 {
-                    try
+                    if (_useThreadpool)
                     {
-                        _ = Task.Factory.StartNew(async (object semaphore) =>
-                        {
-                            try
-                            {
-                                await action().ConfigureAwait(false);
-                            }
-                            finally
-                            {
-                                ((SemaphoreSlim)semaphore).Release();
-                            }
-                        },
-                        _semaphore,
-                        CancellationToken.None,
-                        TaskCreationOptions.None,
-                        TaskScheduler.Default);
+                        EnqueueAction(action);
                     }
-                    catch (Exception)
+                    else
                     {
-                        _semaphore.Release();
-                        throw;
+                        await RunActionAsync(action).ConfigureAwait(false);
                     }
 
                     return true;
@@ -153,6 +160,45 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
                 }
 
                 _disposed = true;
+            }
+        }
+
+        private void EnqueueAction(Func<Task> action)
+        {
+            try
+            {
+                _ = Task.Factory.StartNew(async (object semaphore) =>
+                {
+                    try
+                    {
+                        await action().ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        ((SemaphoreSlim)semaphore).Release();
+                    }
+                },
+                _semaphore,
+                CancellationToken.None,
+                TaskCreationOptions.None,
+                TaskScheduler.Default);
+            }
+            catch (Exception)
+            {
+                _semaphore.Release();
+                throw;
+            }
+        }
+
+        private async Task RunActionAsync(Func<Task> action)
+        {
+            try
+            {
+                await action().ConfigureAwait(false);
+            }
+            finally
+            {
+                _semaphore.Release();
             }
         }
     }

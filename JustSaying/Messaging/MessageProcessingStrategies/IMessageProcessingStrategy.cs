@@ -10,9 +10,9 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
     public interface IMessageProcessingStrategy
     {
         /// <summary>
-        /// Gets the maximum number of workers that can be used to process messages concurrently.
+        /// Gets the maximum number of messages that can be processed concurrently.
         /// </summary>
-        int MaxWorkers { get; }
+        int MaxConcurrency { get; }
 
         /// <summary>
         /// Starts a worker task to process a message as an asynchronous operation.
