@@ -74,11 +74,16 @@ namespace JustSaying.AwsTools.MessageHandling
             int maximumAllowedMesagesInFlight,
             TimeSpan? startTimeout = null)
         {
-            _messageProcessingStrategy = new Throttled(
-                maximumAllowedMesagesInFlight,
-                startTimeout ?? Timeout.InfiniteTimeSpan,
-                _messagingMonitor,
-                _log);
+            var options = new ThrottledOptions()
+            {
+                MaxConcurrency = maximumAllowedMesagesInFlight,
+                StartTimeout = startTimeout ?? Timeout.InfiniteTimeSpan,
+                Logger = _log,
+                MessageMonitor = _messagingMonitor,
+                UseThreadPool = true,
+            };
+
+            _messageProcessingStrategy = new Throttled(options);
 
             return this;
         }
@@ -254,7 +259,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private async Task<int> GetDesiredNumberOfMessagesToRequestFromSqsAsync()
         {
             int maximumMessagesFromAws = MessageConstants.MaxAmazonMessageCap;
-            int maximumWorkers = _messageProcessingStrategy.MaxWorkers;
+            int maximumWorkers = _messageProcessingStrategy.MaxConcurrency;
 
             int messagesToRequest = Math.Min(maximumWorkers, maximumMessagesFromAws);
 
