@@ -132,7 +132,8 @@ namespace JustSaying.AwsTools.MessageHandling
                 try
                 {
                     sqsMessageResponse = await GetMessagesFromSqsQueueAsync(queueName, regionName, ct).ConfigureAwait(false);
-                    var messageCount = sqsMessageResponse.Messages.Count;
+
+                    int messageCount = sqsMessageResponse?.Messages?.Count ?? 0;
 
                     _log.LogTrace(
                         "Polled for messages on queue '{QueueName}' in region '{Region}', and received {MessageCount} messages.",
@@ -207,15 +208,18 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private async Task<ReceiveMessageResponse> GetMessagesFromSqsQueueAsync(string queueName, string region, CancellationToken ct)
         {
-            var numberOfMessagesToReadFromSqs = await GetNumberOfMessagesToReadFromSqsAsync()
+            int maxNumberOfMessages = await GetDesiredNumberOfMessagesToRequestFromSqsAsync()
                 .ConfigureAwait(false);
 
-            var watch = System.Diagnostics.Stopwatch.StartNew();
+            if (maxNumberOfMessages < 1)
+            {
+                return null;
+            }
 
             var request = new ReceiveMessageRequest
             {
                 QueueUrl = _queue.Uri.AbsoluteUri,
-                MaxNumberOfMessages = numberOfMessagesToReadFromSqs,
+                MaxNumberOfMessages = maxNumberOfMessages,
                 WaitTimeSeconds = 20,
                 AttributeNames = _requestMessageAttributeNames
             };
@@ -223,6 +227,8 @@ namespace JustSaying.AwsTools.MessageHandling
             using (var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300)))
             {
                 ReceiveMessageResponse sqsMessageResponse;
+
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
                 try
                 {
@@ -241,33 +247,36 @@ namespace JustSaying.AwsTools.MessageHandling
                     }
                 }
 
-                watch.Stop();
+                stopwatch.Stop();
 
-                _messagingMonitor.ReceiveMessageTime(watch.Elapsed, queueName, region);
+                _messagingMonitor.ReceiveMessageTime(stopwatch.Elapsed, queueName, region);
 
                 return sqsMessageResponse;
             }
         }
 
-        private async Task<int> GetNumberOfMessagesToReadFromSqsAsync()
+        private async Task<int> GetDesiredNumberOfMessagesToRequestFromSqsAsync()
         {
-            // TODO This needs reviewing as there can be available workers here now, yet by the time
-            // they're actually used, there could be none. This would then create a backlog of messages
-            // to process waiting on the message throttle because all the workers are busy.
-            int numberOfMessagesToReadFromSqs = Math.Min(_messageProcessingStrategy.AvailableWorkers, MessageConstants.MaxAmazonMessageCap);
+            int maximumMessagesFromAws = MessageConstants.MaxAmazonMessageCap;
+            int maximumWorkers = _messageProcessingStrategy.MaxWorkers;
 
-            if (numberOfMessagesToReadFromSqs == 0)
+            int messagesToRequest = Math.Min(maximumWorkers, maximumMessagesFromAws);
+
+            if (messagesToRequest < 1)
             {
+                // Wait for the strategy to have at least one worker available
                 int availableWorkers = await _messageProcessingStrategy.WaitForAvailableWorkerAsync().ConfigureAwait(false);
-                numberOfMessagesToReadFromSqs = Math.Min(availableWorkers, MessageConstants.MaxAmazonMessageCap);
+
+                messagesToRequest = Math.Min(availableWorkers, maximumMessagesFromAws);
             }
 
-            if (numberOfMessagesToReadFromSqs == 0)
+            if (messagesToRequest < 1)
             {
-                throw new InvalidOperationException("");
+                _log.LogWarning("No workers are available to process SQS messages.");
+                messagesToRequest = 0;
             }
 
-            return numberOfMessagesToReadFromSqs;
+            return messagesToRequest;
         }
 
         private Task<bool> TryHandleMessageAsync(Amazon.SQS.Model.Message message, CancellationToken ct)

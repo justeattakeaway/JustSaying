@@ -15,11 +15,6 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         int MaxWorkers { get; }
 
         /// <summary>
-        /// Gets the number of workers that are available to process messages.
-        /// </summary>
-        int AvailableWorkers { get; }
-
-        /// <summary>
         /// Starts a worker task to process a message as an asynchronous operation.
         /// </summary>
         /// <param name="action">A delegate to a method that processes the message.</param>

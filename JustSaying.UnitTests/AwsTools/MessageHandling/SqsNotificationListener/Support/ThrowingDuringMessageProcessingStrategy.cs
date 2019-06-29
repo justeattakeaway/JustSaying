@@ -10,8 +10,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.
     {
         public int MaxWorkers => int.MaxValue;
 
-        public int AvailableWorkers => int.MaxValue;
-
         private readonly TaskCompletionSource<object> _doneSignal;
         private bool _firstTime = true;
 
@@ -22,7 +20,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.
 
         public Task<int> WaitForAvailableWorkerAsync()
         {
-            return Task.FromResult(AvailableWorkers);
+            return Task.FromResult(MaxWorkers);
         }
 
         public Task<bool> StartWorkerAsync(Func<Task> action, CancellationToken cancellationToken)

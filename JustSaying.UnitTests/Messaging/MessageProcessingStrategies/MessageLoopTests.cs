@@ -146,7 +146,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
 
             while (actions.Any())
             {
-                var batch = GetFromFakeSnsQueue(actions, messageProcessingStrategy.AvailableWorkers);
+                var batch = GetFromFakeSnsQueue(actions, messageProcessingStrategy.MaxWorkers);
 
                 if (batch.Count < 1)
                 {
@@ -158,10 +158,10 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
                     (await messageProcessingStrategy.StartWorkerAsync(action, CancellationToken.None)).ShouldBeTrue();
                 }
 
-                messageProcessingStrategy.AvailableWorkers.ShouldBeGreaterThanOrEqualTo(0);
+                messageProcessingStrategy.MaxWorkers.ShouldBeGreaterThanOrEqualTo(0);
 
                 (await messageProcessingStrategy.WaitForAvailableWorkerAsync()).ShouldBeGreaterThan(0);
-                messageProcessingStrategy.AvailableWorkers.ShouldBeGreaterThan(0);
+                messageProcessingStrategy.MaxWorkers.ShouldBeGreaterThan(0);
 
                 stopwatch.Elapsed.ShouldBeLessThanOrEqualTo((timeout * 3),
                     $"ListenLoopExecuted took longer than timeout of {timeout}, with {actions.Count} of {initalActionCount} messages remaining.");
