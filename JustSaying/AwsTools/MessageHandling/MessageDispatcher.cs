@@ -123,12 +123,17 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             finally
             {
-                if (!handlingSucceeded && _messageBackoffStrategy != null)
+                try
                 {
-                    await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage, lastException).ConfigureAwait(false);
+                    if (!handlingSucceeded && _messageBackoffStrategy != null)
+                    {
+                        await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage, lastException).ConfigureAwait(false);
+                    }
                 }
-
-                _messageContextAccessor.MessageContext = null;
+                finally
+                {
+                    _messageContextAccessor.MessageContext = null;
+                }
             }
         }
 
@@ -206,7 +211,8 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             approxReceiveCount = 0;
 
-            return attributes.TryGetValue(MessageSystemAttributeName.ApproximateReceiveCount, out string rawApproxReceiveCount) && int.TryParse(rawApproxReceiveCount, out approxReceiveCount);
+            return attributes.TryGetValue(MessageSystemAttributeName.ApproximateReceiveCount, out string rawApproxReceiveCount) &&
+                   int.TryParse(rawApproxReceiveCount, out approxReceiveCount);
         }
     }
 }
