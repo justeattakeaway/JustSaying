@@ -132,20 +132,29 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
                 catch (InvalidOperationException ex)
                 {
-                    _log.LogTrace(0, ex, "Could not determine number of messages to read from queue '{QueueName}' in '{Region}'.",
-                        queueName, regionName);
+                    _log.LogTrace(
+                        ex,
+                        "Could not determine number of messages to read from queue '{QueueName}' in '{Region}'.",
+                        queueName,
+                        regionName);
                 }
                 catch (OperationCanceledException ex)
                 {
-                    _log.LogTrace(0, ex, "Suspected no message on queue '{QueueName}' in region '{Region}'.",
-                        queueName, regionName);
+                    _log.LogTrace(
+                        ex,
+                        "Suspected no message on queue '{QueueName}' in region '{Region}'.",
+                        queueName,
+                        regionName);
                 }
 #pragma warning disable CA1031
                 catch (Exception ex)
 #pragma warning restore CA1031
                 {
-                    _log.LogError(0, ex, "Error receiving messages on queue '{QueueName}' in region '{Region}'.",
-                        queueName, regionName);
+                    _log.LogError(
+                        ex,
+                        "Error receiving messages on queue '{QueueName}' in region '{Region}'.",
+                        queueName,
+                        regionName);
                 }
 
                 try
@@ -166,8 +175,11 @@ namespace JustSaying.AwsTools.MessageHandling
                 catch (Exception ex)
 #pragma warning restore CA1031
                 {
-                    _log.LogError(0, ex, "Error in message handling loop for queue '{QueueName}' in region '{Region}'.",
-                        queueName, regionName);
+                    _log.LogError(
+                        ex,
+                        "Error in message handling loop for queue '{QueueName}' in region '{Region}'.",
+                        queueName,
+                        regionName);
                 }
             }
         }

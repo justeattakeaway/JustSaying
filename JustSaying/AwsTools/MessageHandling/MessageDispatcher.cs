@@ -61,18 +61,26 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (MessageFormatNotSupportedException ex)
             {
-                _logger.LogTrace("Could not handle message with Id '{MessageId}' because a deserializer for the content is not configured. Message body: '{MessageBody}'.",
-                    message.MessageId, message.Body);
+                _logger.LogTrace(
+                    "Could not handle message with Id '{MessageId}' because a deserializer for the content is not configured. Message body: '{MessageBody}'.",
+                    message.MessageId,
+                    message.Body);
+
                 await DeleteMessageFromQueue(message.ReceiptHandle).ConfigureAwait(false);
                 _onError(ex, message);
+
                 return;
             }
 #pragma warning disable CA1031
             catch (Exception ex)
 #pragma warning restore CA1031
             {
-                _logger.LogError(0, ex, "Error deserializing message with Id '{MessageId}' and body '{MessageBody}'.",
-                    message.MessageId, message.Body);
+                _logger.LogError(
+                    ex,
+                    "Error deserializing message with Id '{MessageId}' and body '{MessageBody}'.",
+                    message.MessageId,
+                    message.Body);
+
                 _onError(ex, message);
                 return;
             }
@@ -98,8 +106,11 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (Exception ex)
 #pragma warning restore CA1031
             {
-                _logger.LogError(0, ex, "Error handling message with Id '{MessageId}' and body '{MessageBody}'.",
-                    message.MessageId, message.Body);
+                _logger.LogError(
+                    ex,
+                    "Error handling message with Id '{MessageId}' and body '{MessageBody}'.",
+                    message.MessageId,
+                    message.Body);
 
                 if (typedMessage != null)
                 {
@@ -123,7 +134,9 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private async Task<bool> CallMessageHandler(Message message)
         {
-            var handler = _handlerMap.Get(message.GetType());
+            var messageType = message.GetType();
+
+            var handler = _handlerMap.Get(messageType);
 
             if (handler == null)
             {
@@ -135,8 +148,13 @@ namespace JustSaying.AwsTools.MessageHandling
             var handlerSucceeded = await handler(message).ConfigureAwait(false);
 
             watch.Stop();
-            _logger.LogTrace("Handled message of type {MessageType} in {TimeToHandle}.",
-                message.GetType(), watch.Elapsed);
+
+            _logger.LogTrace(
+                "Handled message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}.",
+                message.Id,
+                messageType,
+                watch.Elapsed);
+
             _messagingMonitor.HandleTime(watch.Elapsed);
 
             return handlerSucceeded;
@@ -173,7 +191,12 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
                 catch (AmazonServiceException ex)
                 {
-                    _logger.LogError(0, ex, "Failed to update message visibility timeout by {VisibilityTimeout} seconds.", visibilityTimeoutSeconds);
+                    _logger.LogError(
+                        ex,
+                        "Failed to update message visibility timeout by {VisibilityTimeout} seconds for message with receipt handle '{ReceiptHandle}'.",
+                        visibilityTimeoutSeconds,
+                        receiptHandle);
+
                     _onError(ex, message);
                 }
             }
