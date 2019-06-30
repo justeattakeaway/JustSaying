@@ -38,7 +38,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
         [InlineData(2, 20)]
         [InlineData(10, 20)]
         [InlineData(20, 20)]
-        public async Task SimulatedListenLoop_ProcessedAllMessages_With_Thread_Pool(
+        public async Task SimulatedListenLoop_ProcessedAllMessages_In_Parallel(
             int numberOfMessagesToProcess,
             int concurrency)
         {
@@ -48,7 +48,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
                 Logger = Substitute.For<ILogger>(),
                 MessageMonitor = Substitute.For<IMessageMonitor>(),
                 StartTimeout = StartTimeout,
-                UseThreadPool = true,
+                ProcessMessagesSequentially = false,
             };
 
             var messageProcessingStrategy = new Throttled(options);
@@ -71,7 +71,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
         [InlineData(2, 20)]
         [InlineData(10, 20)]
         [InlineData(20, 20)]
-        public async Task SimulatedListenLoop_ProcessedAllMessages_Without_Thread_Pool(
+        public async Task SimulatedListenLoop_ProcessedAllMessages_Sequentially(
             int numberOfMessagesToProcess,
             int concurrency)
         {
@@ -81,7 +81,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
                 Logger = Substitute.For<ILogger>(),
                 MessageMonitor = Substitute.For<IMessageMonitor>(),
                 StartTimeout = StartTimeout,
-                UseThreadPool = false,
+                ProcessMessagesSequentially = true,
             };
 
             var messageProcessingStrategy = new Throttled(options);
@@ -119,7 +119,6 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
                 Logger = Substitute.For<ILogger>(),
                 MessageMonitor = fakeMonitor,
                 StartTimeout = TimeSpan.FromTicks(1),
-                UseThreadPool = true,
             };
 
             var messageProcessingStrategy = new Throttled(options);
@@ -169,7 +168,6 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
                 Logger = Substitute.For<ILogger>(),
                 MessageMonitor = fakeMonitor,
                 StartTimeout = Timeout.InfiniteTimeSpan,
-                UseThreadPool = true,
             };
 
             var messageProcessingStrategy = new Throttled(options);
@@ -196,7 +194,6 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
                 Logger = Substitute.For<ILogger>(),
                 MessageMonitor = fakeMonitor,
                 StartTimeout = Timeout.InfiniteTimeSpan,
-                UseThreadPool = true,
             };
 
             var messageProcessingStrategy = new Throttled(options);

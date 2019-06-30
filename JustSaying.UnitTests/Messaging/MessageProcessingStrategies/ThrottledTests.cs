@@ -31,7 +31,6 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
                 Logger = _logger,
                 MessageMonitor = _monitor,
                 StartTimeout = TimeSpan.FromSeconds(5),
-                UseThreadPool = true,
             };
 
             // Act
@@ -51,7 +50,6 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
                 Logger = _logger,
                 MessageMonitor = _monitor,
                 StartTimeout = TimeSpan.FromSeconds(5),
-                UseThreadPool = true,
             };
 
             // Act
@@ -71,7 +69,6 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
                 Logger = _logger,
                 MessageMonitor = _monitor,
                 StartTimeout = TimeSpan.FromSeconds(5),
-                UseThreadPool = true,
             };
 
             var messageProcessingStrategy = new Throttled(options);
@@ -96,7 +93,6 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
                 Logger = _logger,
                 MessageMonitor = _monitor,
                 StartTimeout = TimeSpan.FromSeconds(5),
-                UseThreadPool = true,
             };
 
             var messageProcessingStrategy = new Throttled(options);
@@ -120,7 +116,6 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
                 Logger = _logger,
                 MessageMonitor = _monitor,
                 StartTimeout = TimeSpan.FromSeconds(5),
-                UseThreadPool = true,
             };
 
             var messageProcessingStrategy = new Throttled(options);
@@ -148,7 +143,6 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
                 Logger = _logger,
                 MessageMonitor = _monitor,
                 StartTimeout = TimeSpan.FromSeconds(5),
-                UseThreadPool = true,
             };
 
             const int capacity = 10;
@@ -177,7 +171,6 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
                 Logger = _logger,
                 MessageMonitor = _monitor,
                 StartTimeout = TimeSpan.FromSeconds(5),
-                UseThreadPool = true,
             };
 
             const int capacity = 10;
@@ -208,7 +201,6 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
                 Logger = _logger,
                 MessageMonitor = _monitor,
                 StartTimeout = TimeSpan.FromSeconds(5),
-                UseThreadPool = true,
             };
 
             const int capacity = 10;

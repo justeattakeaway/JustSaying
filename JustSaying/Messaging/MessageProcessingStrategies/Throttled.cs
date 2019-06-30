@@ -16,7 +16,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         private readonly ILogger _logger;
         private readonly IMessageMonitor _messageMonitor;
         private readonly SemaphoreSlim _semaphore;
-        private readonly bool _useThreadpool;
+        private readonly bool _processSequentially;
 
         private bool _disposed;
 
@@ -60,7 +60,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             MaxConcurrency = options.MaxConcurrency;
             StartTimeout = options.StartTimeout;
 
-            _useThreadpool = options.UseThreadPool;
+            _processSequentially = options.ProcessMessagesSequentially;
             _semaphore = new SemaphoreSlim(MaxConcurrency, MaxConcurrency);
         }
 
@@ -99,13 +99,13 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             {
                 if (await _semaphore.WaitAsync(StartTimeout, cancellationToken).ConfigureAwait(false))
                 {
-                    if (_useThreadpool)
+                    if (_processSequentially)
                     {
-                        EnqueueAction(action);
+                        await RunActionAsync(action).ConfigureAwait(false);
                     }
                     else
                     {
-                        await RunActionAsync(action).ConfigureAwait(false);
+                        EnqueueAction(action);
                     }
 
                     return true;

@@ -15,10 +15,13 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         public int MaxConcurrency { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether to process messages by dispatching
-        /// them to the thread pool or whether to process messages before returning.
+        /// Gets or sets a value indicating whether to process messages sequentially
+        /// instead of dispatching them to the thread pool to process in parallel.
         /// </summary>
-        public bool UseThreadPool { get; set; }
+        /// <remarks>
+        /// By default, batches of received messages are processed in parallel.
+        /// </remarks>
+        public bool ProcessMessagesSequentially { get; set; }
 
         /// <summary>
         /// Gets or sets the timeout for starting to process a message.

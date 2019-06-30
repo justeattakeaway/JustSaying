@@ -37,7 +37,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
                 Logger = logger,
                 MessageMonitor = messageMonitor,
                 StartTimeout = Timeout.InfiniteTimeSpan,
-                UseThreadPool = true,
+                ProcessMessagesSequentially = false,
             };
         }
     }

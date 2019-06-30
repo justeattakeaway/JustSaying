@@ -80,7 +80,6 @@ namespace JustSaying.AwsTools.MessageHandling
                 StartTimeout = startTimeout ?? Timeout.InfiniteTimeSpan,
                 Logger = _log,
                 MessageMonitor = _messagingMonitor,
-                UseThreadPool = true,
             };
 
             _messageProcessingStrategy = new Throttled(options);
