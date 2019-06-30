@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageProcessingStrategies;
@@ -219,6 +221,97 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
             messageProcessingStrategy.AvailableWorkers.ShouldBe(0);
 
             await AllowTasksToComplete(tcs);
+        }
+
+        [Fact]
+        public async Task ProcessMessagesSequentially_True_Processes_Messages_One_By_One()
+        {
+            // Arrange
+            var options = new ThrottledOptions()
+            {
+                MaxConcurrency = 1,
+                Logger = _logger,
+                MessageMonitor = _monitor,
+                StartTimeout = TimeSpan.FromSeconds(5),
+                ProcessMessagesSequentially = true,
+            };
+
+            var strategy = new Throttled(options);
+
+            int count = 0;
+            object syncRoot = new object();
+
+            Task DoWork()
+            {
+                if (Monitor.TryEnter(syncRoot))
+                {
+                    Interlocked.Increment(ref count);
+                    Monitor.Exit(syncRoot);
+                }
+                else
+                {
+                    throw new InvalidOperationException("Failed to acquire lock as the thread was different.");
+                }
+
+                return Task.CompletedTask;
+            }
+
+            // Act
+            int loopCount = 100_000;
+
+            Monitor.Enter(syncRoot);
+
+            for (int i = 0; i < loopCount; i++)
+            {
+                await strategy.StartWorkerAsync(DoWork, CancellationToken.None);
+            }
+
+            Monitor.Exit(syncRoot);
+
+            // Assert
+            count.ShouldBe(loopCount);
+        }
+
+        [Fact]
+        public async Task ProcessMessagesSequentially_False_Processes_Messages_In_Parallel()
+        {
+            // Arrange
+            var options = new ThrottledOptions()
+            {
+                MaxConcurrency = 100,
+                Logger = _logger,
+                MessageMonitor = _monitor,
+                StartTimeout = Timeout.InfiniteTimeSpan,
+                ProcessMessagesSequentially = false,
+            };
+
+            var strategy = new Throttled(options);
+
+            long count = 0;
+            var threadsSeen = new ConcurrentBag<int>();
+
+            Task DoWork()
+            {
+                threadsSeen.Add(Thread.CurrentThread.ManagedThreadId);
+                Interlocked.Increment(ref count);
+
+                return Task.CompletedTask;
+            }
+
+            int loopCount = 1_000;
+
+            // Act
+            for (int i = 0; i < loopCount; i++)
+            {
+                await strategy.StartWorkerAsync(DoWork, CancellationToken.None);
+            }
+
+            bool allWorkDone = SpinWait.SpinUntil(() => Interlocked.Read(ref count) >= 1000, TimeSpan.FromSeconds(10));
+
+            // Assert
+            allWorkDone.ShouldBeTrue();
+            count.ShouldBe(loopCount);
+            threadsSeen.Distinct().Count().ShouldBeGreaterThan(1);
         }
 
         private static async Task AllowTasksToComplete(TaskCompletionSource<object> doneSignal)
