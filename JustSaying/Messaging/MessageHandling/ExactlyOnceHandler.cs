@@ -1,22 +1,34 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageHandling
 {
-    public class ExactlyOnceHandler<T> : IHandlerAsync<T> where T : Message
+    public class ExactlyOnceHandler<T> : IHandlerAsync<T>, ICancellableHandlerAsync<T>
+        where T : Message
     {
-        private readonly IHandlerAsync<T> _inner;
+        private static readonly string MessageTypeKey = typeof(T).ToString().ToLowerInvariant();
+
+        private readonly Func<T, CancellationToken, Task<bool>> _inner;
         private readonly IMessageLockAsync _messageLock;
-        private readonly int _timeOut;
+        private readonly TimeSpan _timeout;
         private readonly string _handlerName;
 
-        public ExactlyOnceHandler(IHandlerAsync<T> inner, IMessageLockAsync messageLock, int timeOut, string handlerName)
+        public ExactlyOnceHandler(IHandlerAsync<T> inner, IMessageLockAsync messageLock, int timeoutSeconds, string handlerName)
         {
-            _inner = inner;
             _messageLock = messageLock;
-            _timeOut = timeOut;
+            _timeout = TimeSpan.FromSeconds(timeoutSeconds);
             _handlerName = handlerName;
+
+            if (inner is ICancellableHandlerAsync<T> cancellable)
+            {
+                _inner = cancellable.HandleAsync;
+            }
+            else
+            {
+                _inner = async (message, _) => await inner.Handle(message).ConfigureAwait(false);
+            }
         }
 
         private const bool RemoveTheMessageFromTheQueue = true;
@@ -24,8 +36,15 @@ namespace JustSaying.Messaging.MessageHandling
 
         public async Task<bool> Handle(T message)
         {
-            var lockKey = $"{message.UniqueKey()}-{typeof(T).ToString().ToLowerInvariant()}-{_handlerName}";
-            var lockResponse = await _messageLock.TryAquireLockAsync(lockKey, TimeSpan.FromSeconds(_timeOut)).ConfigureAwait(false);
+            return await HandleAsync(message, CancellationToken.None).ConfigureAwait(false);
+        }
+
+        public async Task<bool> HandleAsync(T message, CancellationToken cancellationToken)
+        {
+            string lockKey = $"{message.UniqueKey()}-{MessageTypeKey}-{_handlerName}";
+
+            MessageLockResponse lockResponse = await _messageLock.TryAquireLockAsync(lockKey, _timeout).ConfigureAwait(false);
+
             if (!lockResponse.DoIHaveExclusiveLock)
             {
                 if (lockResponse.IsMessagePermanentlyLocked)
@@ -38,11 +57,13 @@ namespace JustSaying.Messaging.MessageHandling
 
             try
             {
-                var successfullyHandled = await _inner.Handle(message).ConfigureAwait(false);
+                bool successfullyHandled = await _inner(message, cancellationToken).ConfigureAwait(false);
+
                 if (successfullyHandled)
                 {
                     await _messageLock.TryAquireLockPermanentlyAsync(lockKey).ConfigureAwait(false);
                 }
+
                 return successfullyHandled;
             }
             catch

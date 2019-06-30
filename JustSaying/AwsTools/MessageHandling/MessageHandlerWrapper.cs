@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
@@ -17,21 +18,36 @@ namespace JustSaying.AwsTools.MessageHandling
             _messagingMonitor = messagingMonitor;
         }
 
-        public Func<Message, Task<bool>> WrapMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler) where T : Message
+        public Func<Message, CancellationToken, Task<bool>> WrapMessageHandler<T>(Func<ICancellableHandlerAsync<T>> futureHandler) where T : Message
         {
-            return async message =>
+            return async (message, cancellationToken) =>
             {
-                var handler = futureHandler();
-                handler = MaybeWrapWithExactlyOnce(handler);
+                ICancellableHandlerAsync<T> rootHandler = futureHandler();
+                ICancellableHandlerAsync<T> handler = rootHandler;
+
+                handler = MaybeWrapWithExactlyOnce(handler, rootHandler.GetType());
                 handler = MaybeWrapWithStopwatch(handler);
 
-                return await handler.Handle((T)message).ConfigureAwait(false);
+                return await handler.HandleAsync((T)message, cancellationToken).ConfigureAwait(false);
             };
         }
 
-        private IHandlerAsync<T> MaybeWrapWithExactlyOnce<T>(IHandlerAsync<T> handler) where T : Message
+        public Func<Message, CancellationToken, Task<bool>> WrapMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler) where T : Message
         {
-            var handlerType = handler.GetType();
+            return async (message, cancellationToken) =>
+            {
+                IHandlerAsync<T> rootHandler = futureHandler();
+                ICancellableHandlerAsync<T> handler = new CancellableHandlerAdapter<T>(rootHandler);
+
+                handler = MaybeWrapWithExactlyOnce(handler, rootHandler.GetType());
+                handler = MaybeWrapWithStopwatch(handler);
+
+                return await handler.HandleAsync((T)message, CancellationToken.None).ConfigureAwait(false);
+            };
+        }
+
+        private ICancellableHandlerAsync<T> MaybeWrapWithExactlyOnce<T>(ICancellableHandlerAsync<T> handler, Type handlerType) where T : Message
+        {
             var exactlyOnceMetadata = new ExactlyOnceReader(handlerType);
             if (!exactlyOnceMetadata.Enabled)
             {
@@ -47,7 +63,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return new ExactlyOnceHandler<T>(handler, _messageLock, exactlyOnceMetadata.GetTimeOut(), handlerName);
         }
 
-        private IHandlerAsync<T> MaybeWrapWithStopwatch<T>(IHandlerAsync<T> handler) where T : Message
+        private ICancellableHandlerAsync<T> MaybeWrapWithStopwatch<T>(ICancellableHandlerAsync<T> handler) where T : Message
         {
             if (!(_messagingMonitor is IMeasureHandlerExecutionTime executionTimeMonitoring))
             {
@@ -55,6 +71,26 @@ namespace JustSaying.AwsTools.MessageHandling
             }
 
             return new StopwatchHandler<T>(handler, executionTimeMonitoring);
+        }
+
+        private sealed class CancellableHandlerAdapter<T> : ICancellableHandlerAsync<T>
+        {
+            private readonly IHandlerAsync<T> _inner;
+
+            internal CancellableHandlerAdapter(IHandlerAsync<T> inner)
+            {
+                _inner = inner;
+            }
+
+            public async Task<bool> Handle(T message)
+            {
+                return await _inner.Handle(message).ConfigureAwait(false);
+            }
+
+            public async Task<bool> HandleAsync(T message, CancellationToken cancellationToken)
+            {
+                return await _inner.Handle(message).ConfigureAwait(false);
+            }
         }
     }
 }

@@ -105,7 +105,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             protected override void Given()
             {
                 base.Given();
-                _handlerMap.Add(typeof(OrderAccepted), m => Task.FromResult(true));
+                _handlerMap.Add(typeof(OrderAccepted), (m, ct) => Task.FromResult(true));
             }
 
             [Fact]
@@ -131,7 +131,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             {
                 base.Given();
                 _messageBackoffStrategy.GetBackoffDuration(_typedMessage, 1, _expectedException).Returns(_expectedBackoffTimeSpan);
-                _handlerMap.Add(typeof(OrderAccepted), m => throw _expectedException);
+                _handlerMap.Add(typeof(OrderAccepted), (m, ct) => throw _expectedException);
                 _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString(CultureInfo.InvariantCulture));
             }
 
@@ -156,7 +156,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
                 _messageBackoffStrategy.GetBackoffDuration(_typedMessage, Arg.Any<int>()).Returns(TimeSpan.FromMinutes(4));
                 _amazonSqsClient.ChangeMessageVisibilityAsync(Arg.Any<ChangeMessageVisibilityRequest>()).Throws(new AmazonServiceException("Something gone wrong"));
 
-                _handlerMap.Add(typeof(OrderAccepted), m => Task.FromResult(false));
+                _handlerMap.Add(typeof(OrderAccepted), (m, ct) => Task.FromResult(false));
                 _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, "1");
             }
 

@@ -174,6 +174,9 @@ namespace JustSaying.AwsTools.MessageHandling
                     continue;
                 }
 
+                // TODO Make injectable for testing
+                DateTimeOffset receivedAt = DateTimeOffset.UtcNow;
+
                 try
                 {
                     foreach (var message in sqsMessageResponse.Messages)
@@ -183,7 +186,7 @@ namespace JustSaying.AwsTools.MessageHandling
                             return;
                         }
 
-                        if (!await TryHandleMessageAsync(message, ct).ConfigureAwait(false))
+                        if (!await TryHandleMessageAsync(message, receivedAt, ct).ConfigureAwait(false))
                         {
                             // No worker free to process any messages
                             _log.LogWarning(
@@ -280,10 +283,25 @@ namespace JustSaying.AwsTools.MessageHandling
             return messagesToRequest;
         }
 
-        private Task<bool> TryHandleMessageAsync(Amazon.SQS.Model.Message message, CancellationToken ct)
+        private Task<bool> TryHandleMessageAsync(Amazon.SQS.Model.Message message, DateTimeOffset receivedAt, CancellationToken ct)
         {
-            var action = new Func<Task>(() => _messageDispatcher.DispatchMessage(message, ct));
-            return _messageProcessingStrategy.StartWorkerAsync(action, ct);
+            TimeSpan timeUntilMessageExpiry = DateTimeOffset.UtcNow - receivedAt;
+
+            async Task DispatchAsync()
+            {
+                using (var timeoutSource = new CancellationTokenSource(timeUntilMessageExpiry))
+                using (var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutSource.Token))
+                {
+                    if (linkedSource.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    await _messageDispatcher.DispatchMessage(message, linkedSource.Token);
+                }
+            }
+
+            return _messageProcessingStrategy.StartWorkerAsync(DispatchAsync, ct);
         }
 
         public ICollection<ISubscriber> Subscribers { get; }

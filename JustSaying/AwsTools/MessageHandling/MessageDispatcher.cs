@@ -71,8 +71,12 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (Exception ex)
 #pragma warning restore CA1031
             {
-                _logger.LogError(0, ex, "Error deserializing message with Id '{MessageId}' and body '{MessageBody}'.",
-                    message.MessageId, message.Body);
+                _logger.LogError(
+                    ex,
+                    "Error deserializing message with Id '{MessageId}' and body '{MessageBody}'.",
+                    message.MessageId,
+                    message.Body);
+
                 _onError(ex, message);
                 return;
             }
@@ -86,7 +90,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     _messageContextAccessor.MessageContext = new MessageContext(message, _queue.Uri);
 
-                    handlingSucceeded = await CallMessageHandler(typedMessage).ConfigureAwait(false);
+                    handlingSucceeded = await CallMessageHandler(typedMessage, cancellationToken).ConfigureAwait(false);
                 }
 
                 if (handlingSucceeded)
@@ -98,8 +102,11 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (Exception ex)
 #pragma warning restore CA1031
             {
-                _logger.LogError(0, ex, "Error handling message with Id '{MessageId}' and body '{MessageBody}'.",
-                    message.MessageId, message.Body);
+                _logger.LogError(
+                    ex,
+                    "Error handling message with Id '{MessageId}' and body '{MessageBody}'.",
+                    message.MessageId,
+                    message.Body);
 
                 if (typedMessage != null)
                 {
@@ -112,16 +119,21 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             finally
             {
-                if (!handlingSucceeded && _messageBackoffStrategy != null)
+                try
                 {
-                    await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage, lastException).ConfigureAwait(false);
+                    if (!handlingSucceeded && _messageBackoffStrategy != null)
+                    {
+                        await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage, lastException).ConfigureAwait(false);
+                    }
                 }
-
-                _messageContextAccessor.MessageContext = null;
+                finally
+                {
+                    _messageContextAccessor.MessageContext = null;
+                }
             }
         }
 
-        private async Task<bool> CallMessageHandler(Message message)
+        private async Task<bool> CallMessageHandler(Message message, CancellationToken cancellationToken)
         {
             var handler = _handlerMap.Get(message.GetType());
 
@@ -130,13 +142,33 @@ namespace JustSaying.AwsTools.MessageHandling
                 return true;
             }
 
+            bool handlerSucceeded;
+
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
-            var handlerSucceeded = await handler(message).ConfigureAwait(false);
+            try
+            {
+                handlerSucceeded = await handler(message, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
+            {
+                _logger.LogWarning(
+                    "Message with Id {MessageId} of type {MessageType} was not handled as the operation was cancelled. The message visibility timeout may have expired.",
+                    message.Id,
+                    message.GetType(),
+                    watch.Elapsed);
+
+                handlerSucceeded = false;
+            }
 
             watch.Stop();
-            _logger.LogTrace("Handled message of type {MessageType} in {TimeToHandle}.",
-                message.GetType(), watch.Elapsed);
+
+            _logger.LogTrace(
+                "Handled message with Id {MessageId} of type {MessageType} in {TimeToHandle}.",
+                message.Id,
+                message.GetType(),
+                watch.Elapsed);
+
             _messagingMonitor.HandleTime(watch.Elapsed);
 
             return handlerSucceeded;
@@ -173,7 +205,12 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
                 catch (AmazonServiceException ex)
                 {
-                    _logger.LogError(0, ex, "Failed to update message visibility timeout by {VisibilityTimeout} seconds.", visibilityTimeoutSeconds);
+                    _logger.LogError(
+                        ex,
+                        "Failed to update message visibility timeout by {VisibilityTimeout} seconds for message with receipt handle {ReceiptHandle}.",
+                        visibilityTimeoutSeconds,
+                        receiptHandle);
+
                     _onError(ex, message);
                 }
             }
