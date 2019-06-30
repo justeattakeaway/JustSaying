@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
@@ -9,21 +10,25 @@ namespace JustSaying.Messaging.Monitoring
     {
         private readonly IHandlerAsync<T> _inner;
         private readonly IMeasureHandlerExecutionTime _monitoring;
+        private readonly Type _handlerType;
 
         public StopwatchHandler(IHandlerAsync<T> inner, IMeasureHandlerExecutionTime monitoring)
         {
             _inner = inner;
             _monitoring = monitoring;
+            _handlerType = _inner.GetType();
         }
 
         public async Task<bool> Handle(T message)
         {
-            var watch = Stopwatch.StartNew();
-            var result = await _inner.Handle(message).ConfigureAwait(false);
+            var stopwatch = Stopwatch.StartNew();
 
-            watch.Stop();
+            bool result = await _inner.Handle(message).ConfigureAwait(false);
 
-            _monitoring.HandlerExecutionTime(_inner.GetType(), message.GetType(), watch.Elapsed);
+            stopwatch.Stop();
+
+            _monitoring.HandlerExecutionTime(_handlerType, message.GetType(), stopwatch.Elapsed);
+
             return result;
         }
     }
