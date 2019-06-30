@@ -34,7 +34,7 @@ namespace JustSaying
         public IMessageLockAsync MessageLock { get; set; }
         public IMessageContextAccessor MessageContextAccessor { get; set; }
 
-        private ILogger _log;
+        private readonly ILogger _log;
 
         private readonly object _syncRoot = new object();
         private readonly ICollection<IPublisher> _publishers;
