@@ -237,8 +237,12 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private Task HandleMessage(Amazon.SQS.Model.Message message, CancellationToken ct)
         {
-            var action = new Func<Task>(() => _messageDispatcher.DispatchMessage(message, ct));
-            return _messageProcessingStrategy.StartWorker(action, ct);
+            async Task DispatchAsync()
+            {
+                await _messageDispatcher.DispatchMessage(message, ct);
+            }
+
+            return _messageProcessingStrategy.StartWorker(DispatchAsync, ct);
         }
 
         public ICollection<ISubscriber> Subscribers { get; }
