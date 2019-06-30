@@ -314,6 +314,54 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
             threadsSeen.Distinct().Count().ShouldBeGreaterThan(1);
         }
 
+        [Fact]
+        public async Task Parallel_Processing_Does_Not_Exceed_Concurrency()
+        {
+            // Arrange
+            int maxConcurrency = 10;
+
+            var options = new ThrottledOptions()
+            {
+                MaxConcurrency = maxConcurrency,
+                Logger = _logger,
+                MessageMonitor = _monitor,
+                StartTimeout = Timeout.InfiniteTimeSpan,
+                ProcessMessagesSequentially = false,
+            };
+
+            var strategy = new Throttled(options);
+
+            long workDone = 0;
+            int loopCount = 1_000;
+            bool allWorkDone;
+
+            using (var semaphore = new SemaphoreSlim(maxConcurrency, maxConcurrency))
+            {
+                async Task DoWork()
+                {
+                    if (!(await semaphore.WaitAsync(0)))
+                    {
+                        throw new InvalidOperationException("More workers are doing work than expected.");
+                    }
+
+                    Interlocked.Increment(ref workDone);
+                    semaphore.Release();
+                }
+
+                // Act
+                for (int i = 0; i < loopCount; i++)
+                {
+                    await strategy.StartWorkerAsync(DoWork, CancellationToken.None);
+                }
+
+                allWorkDone = SpinWait.SpinUntil(() => Interlocked.Read(ref workDone) >= 1000, TimeSpan.FromSeconds(10));
+            }
+
+            // Assert
+            allWorkDone.ShouldBeTrue();
+            workDone.ShouldBe(loopCount);
+        }
+
         private static async Task AllowTasksToComplete(TaskCompletionSource<object> doneSignal)
         {
             doneSignal.SetResult(null);
