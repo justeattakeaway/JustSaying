@@ -290,7 +290,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 await _messageDispatcher.DispatchMessage(message, ct);
             }
 
-            return _messageProcessingStrategy.StartWorker(DispatchAsync, ct);
+            return _messageProcessingStrategy.StartWorkerAsync(DispatchAsync, ct);
         }
 
         public ICollection<ISubscriber> Subscribers { get; }
