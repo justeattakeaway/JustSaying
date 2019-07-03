@@ -8,9 +8,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.
 {
     public class ThrowingDuringMessageProcessingStrategy : IMessageProcessingStrategy
     {
-        public int MaxWorkers => int.MaxValue;
-
-        public int AvailableWorkers => int.MaxValue;
+        public int MaxConcurrency => int.MaxValue;
 
         private readonly TaskCompletionSource<object> _doneSignal;
         private bool _firstTime = true;
@@ -20,12 +18,12 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.
             _doneSignal = doneSignal;
         }
 
-        public Task WaitForAvailableWorkers()
+        public Task<int> WaitForAvailableWorkerAsync()
         {
-            return Task.CompletedTask;
+            return Task.FromResult(MaxConcurrency);
         }
 
-        public Task StartWorker(Func<Task> action, CancellationToken cancellationToken)
+        public Task<bool> StartWorkerAsync(Func<Task> action, CancellationToken cancellationToken)
         {
             if (_firstTime)
             {
@@ -33,14 +31,13 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.
                 return Fail();
             }
 
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         }
 
-        private Task Fail()
+        private Task<bool> Fail()
         {
             TaskHelpers.DelaySendDone(_doneSignal);
             throw new TestException("Thrown by test ProcessMessage");
         }
-
     }
 }
