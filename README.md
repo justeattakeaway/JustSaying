@@ -315,4 +315,4 @@ Please read the [contributing guide](./.github/CONTRIBUTING.md "Contributing to 
 
 ### The End.....
 
-...*Happy Messaging!...*
+...*Share and Enjoy!...*
