@@ -44,7 +44,9 @@ namespace JustSaying.AwsTools.MessageHandling
             }
 
             var handlerName = handlerType.FullName.ToLowerInvariant();
-            return new ExactlyOnceHandler<T>(handler, _messageLock, exactlyOnceMetadata.GetTimeOut(), handlerName);
+            var timeout = TimeSpan.FromSeconds(exactlyOnceMetadata.GetTimeOut());
+
+            return new ExactlyOnceHandler<T>(handler, _messageLock, timeout, handlerName);
         }
 
         private IHandlerAsync<T> MaybeWrapWithStopwatch<T>(IHandlerAsync<T> handler) where T : Message

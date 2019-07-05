@@ -15,7 +15,7 @@ namespace JustSaying.UnitTests.Messaging.MessageHandling
         {
             var messageLock = Substitute.For<IMessageLockAsync>();
             messageLock.TryAquireLockAsync(Arg.Any<string>(), Arg.Any<TimeSpan>()).Returns(new MessageLockResponse { DoIHaveExclusiveLock = false });
-            var sut = new ExactlyOnceHandler<OrderAccepted>(Substitute.For<IHandlerAsync<OrderAccepted>>(), messageLock, 1, "handlerName");
+            var sut = new ExactlyOnceHandler<OrderAccepted>(Substitute.For<IHandlerAsync<OrderAccepted>>(), messageLock, TimeSpan.FromSeconds(1), "handlerName");
 
             var result = await sut.Handle(new OrderAccepted());
 

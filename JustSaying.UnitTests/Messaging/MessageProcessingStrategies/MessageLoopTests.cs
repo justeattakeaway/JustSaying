@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Monitoring;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -26,25 +27,67 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
 
     public class MessageLoopTests
     {
-        private const int MinTaskDuration = 100;
+        private static readonly TimeSpan MinTaskDuration = TimeSpan.FromMilliseconds(100);
         private const int TaskDurationVariance = 20;
 
-        private const int ConcurrencyLevel = 20;
         private const int MaxAmazonBatchSize = 10;
+        private static readonly TimeSpan StartTimeout = Timeout.InfiniteTimeSpan;
 
         [Theory]
-        [InlineData(1)]
-        [InlineData(2)]
-        [InlineData(10)]
-        [InlineData(20)]
-        public async Task SimulatedListenLoop_ProcessedAllMessages(int numberOfMessagesToProcess)
+        [InlineData(1, 20)]
+        [InlineData(2, 20)]
+        [InlineData(10, 20)]
+        [InlineData(20, 20)]
+        public async Task SimulatedListenLoop_ProcessedAllMessages_In_Parallel(
+            int numberOfMessagesToProcess,
+            int concurrency)
         {
-            var fakeMonitor = Substitute.For<IMessageMonitor>();
-            var messageProcessingStrategy = new Throttled(ConcurrencyLevel, fakeMonitor);
+            var options = new ThrottledOptions()
+            {
+                MaxConcurrency = concurrency,
+                Logger = Substitute.For<ILogger>(),
+                MessageMonitor = Substitute.For<IMessageMonitor>(),
+                StartTimeout = StartTimeout,
+                ProcessMessagesSequentially = false,
+            };
+
+            var messageProcessingStrategy = new Throttled(options);
             var counter = new ThreadSafeCounter();
 
-            var watch = new Stopwatch();
-            watch.Start();
+            var stopwatch = Stopwatch.StartNew();
+
+            var actions = BuildFakeIncomingMessages(numberOfMessagesToProcess, counter);
+            await ListenLoopExecuted(actions, messageProcessingStrategy);
+
+            stopwatch.Stop();
+
+            await Task.Delay(2000);
+
+            counter.Count.ShouldBe(numberOfMessagesToProcess);
+        }
+
+        [Theory]
+        [InlineData(1, 20)]
+        [InlineData(2, 20)]
+        [InlineData(10, 20)]
+        [InlineData(20, 20)]
+        public async Task SimulatedListenLoop_ProcessedAllMessages_Sequentially(
+            int numberOfMessagesToProcess,
+            int concurrency)
+        {
+            var options = new ThrottledOptions()
+            {
+                MaxConcurrency = concurrency,
+                Logger = Substitute.For<ILogger>(),
+                MessageMonitor = Substitute.For<IMessageMonitor>(),
+                StartTimeout = StartTimeout,
+                ProcessMessagesSequentially = true,
+            };
+
+            var messageProcessingStrategy = new Throttled(options);
+            var counter = new ThreadSafeCounter();
+
+            var watch = Stopwatch.StartNew();
 
             var actions = BuildFakeIncomingMessages(numberOfMessagesToProcess, counter);
             await ListenLoopExecuted(actions, messageProcessingStrategy);
@@ -64,36 +107,70 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
         [InlineData(100, 90)]
         [InlineData(30, 20)]
         [InlineData(1000, 900)]
-        public async Task SimulatedListenLoop_WhenThrottlingOccurs_CallsMessageMonitor(int messageCount, int capacity)
+        public async Task SimulatedListenLoop_WhenThrottlingOccurs_CallsMessageMonitor(int messageCount, int concurrency)
         {
-            messageCount.ShouldBeGreaterThan(capacity, "To cause throttling, message count must be over capacity");
+            messageCount.ShouldBeGreaterThan(concurrency, "To cause throttling, message count must be greater than concurrency.");
 
             var fakeMonitor = Substitute.For<IMessageMonitor>();
-            var messageProcessingStrategy = new Throttled(capacity, fakeMonitor);
+
+            var options = new ThrottledOptions()
+            {
+                MaxConcurrency = concurrency,
+                Logger = Substitute.For<ILogger>(),
+                MessageMonitor = fakeMonitor,
+                StartTimeout = TimeSpan.FromTicks(1),
+            };
+
+            var messageProcessingStrategy = new Throttled(options);
             var counter = new ThreadSafeCounter();
+            var tcs = new TaskCompletionSource<bool>();
 
-            var actions = BuildFakeIncomingMessages(messageCount, counter);
+            for (int i = 0; i < concurrency; i++)
+            {
+                (await messageProcessingStrategy.StartWorkerAsync(
+                    async () => await tcs.Task,
+                    CancellationToken.None)).ShouldBeTrue();
+            }
 
-            await ListenLoopExecuted(actions, messageProcessingStrategy);
+            messageProcessingStrategy.AvailableWorkers.ShouldBe(0);
+
+            for (int i = 0; i < messageCount - concurrency; i++)
+            {
+                (await messageProcessingStrategy.StartWorkerAsync(() => Task.CompletedTask, CancellationToken.None)).ShouldBeFalse();
+            }
+
+            messageProcessingStrategy.AvailableWorkers.ShouldBe(0);
+
+            tcs.SetResult(true);
+
+            (await messageProcessingStrategy.WaitForAvailableWorkerAsync()).ShouldBeGreaterThan(0);
 
             fakeMonitor.Received().IncrementThrottlingStatistic();
             fakeMonitor.Received().HandleThrottlingTime(Arg.Any<TimeSpan>());
         }
 
         [Theory]
-        [InlineData(1, 1)]
         [InlineData(1, 2)]
-        [InlineData(2, 2)]
         [InlineData(5, 10)]
+        [InlineData(9, 10)]
         [InlineData(10, 50)]
-        [InlineData(50, 50)]
-        public async Task SimulatedListenLoop_WhenThrottlingDoesNotOccur_DoNotCallMessageMonitor(int messageCount, int capacity)
+        [InlineData(49, 50)]
+        public async Task SimulatedListenLoop_WhenThrottlingDoesNotOccur_DoNotCallMessageMonitor(int messageCount, int concurrency)
         {
-            messageCount.ShouldBeLessThanOrEqualTo(capacity,
-                "To avoid throttling, message count must be not be over capacity");
+            messageCount.ShouldBeLessThanOrEqualTo(concurrency,
+                "To avoid throttling, message count must be not be greater than capacity.");
 
             var fakeMonitor = Substitute.For<IMessageMonitor>();
-            var messageProcessingStrategy = new Throttled(capacity, fakeMonitor);
+
+            var options = new ThrottledOptions()
+            {
+                MaxConcurrency = concurrency,
+                Logger = Substitute.For<ILogger>(),
+                MessageMonitor = fakeMonitor,
+                StartTimeout = Timeout.InfiniteTimeSpan,
+            };
+
+            var messageProcessingStrategy = new Throttled(options);
             var counter = new ThreadSafeCounter();
 
             var actions = BuildFakeIncomingMessages(messageCount, counter);
@@ -103,34 +180,58 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
             fakeMonitor.DidNotReceive().IncrementThrottlingStatistic();
         }
 
-        private static async Task ListenLoopExecuted(Queue<Func<Task>> actions,
+        [Theory]
+        [InlineData(2, 2)]
+        [InlineData(10, 10)]
+        [InlineData(50, 50)]
+        public async Task SimulatedListenLoop_WhenThrottlingDoesNotOccur_CallsMessageMonitor_Once(int messageCount, int concurrency)
+        {
+            var fakeMonitor = Substitute.For<IMessageMonitor>();
+
+            var options = new ThrottledOptions()
+            {
+                MaxConcurrency = concurrency,
+                Logger = Substitute.For<ILogger>(),
+                MessageMonitor = fakeMonitor,
+                StartTimeout = Timeout.InfiniteTimeSpan,
+            };
+
+            var messageProcessingStrategy = new Throttled(options);
+            var counter = new ThreadSafeCounter();
+
+            var actions = BuildFakeIncomingMessages(messageCount, counter);
+
+            await ListenLoopExecuted(actions, messageProcessingStrategy);
+
+            fakeMonitor.Received(1).IncrementThrottlingStatistic();
+        }
+
+        private static async Task ListenLoopExecuted(
+            Queue<Func<Task>> actions,
             IMessageProcessingStrategy messageProcessingStrategy)
         {
             var initalActionCount = (double)actions.Count;
-            var timeoutSeconds = MinTaskDuration + (initalActionCount / 100);
-            var timeout = TimeSpan.FromSeconds(timeoutSeconds);
+            var timeout = MinTaskDuration + TimeSpan.FromMilliseconds(initalActionCount / 100);
             var stopwatch = Stopwatch.StartNew();
 
             while (actions.Any())
             {
-                var batch = GetFromFakeSnsQueue(actions, messageProcessingStrategy.AvailableWorkers);
+                var batch = GetFromFakeSnsQueue(actions, messageProcessingStrategy.MaxConcurrency);
 
-                foreach (var action in batch)
-                {
-                    await messageProcessingStrategy.StartWorker(action, CancellationToken.None);
-                }
-
-                if (!actions.Any())
+                if (batch.Count < 1)
                 {
                     break;
                 }
 
-                messageProcessingStrategy.AvailableWorkers.ShouldBeGreaterThanOrEqualTo(0);
-                await messageProcessingStrategy.WaitForAvailableWorkers();
-                messageProcessingStrategy.AvailableWorkers.ShouldBeGreaterThan(0);
+                foreach (var action in batch)
+                {
+                    (await messageProcessingStrategy.StartWorkerAsync(action, CancellationToken.None)).ShouldBeTrue();
+                }
 
-                stopwatch.Elapsed.ShouldBeLessThanOrEqualTo(timeout,
-                    $"ListenLoopExecuted took longer than timeout of {timeoutSeconds}s, with {actions.Count} of {initalActionCount} messages remaining");
+                messageProcessingStrategy.MaxConcurrency.ShouldBeGreaterThanOrEqualTo(0);
+
+                (await messageProcessingStrategy.WaitForAvailableWorkerAsync()).ShouldBeGreaterThan(0);
+                messageProcessingStrategy.MaxConcurrency.ShouldBeGreaterThan(0);
             }
         }
 
@@ -154,7 +255,7 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
             var actions = new Queue<Func<Task>>();
             for (var i = 0; i != numberOfMessagesToCreate; i++)
             {
-                var duration = MinTaskDuration + random.Next(TaskDurationVariance);
+                var duration = MinTaskDuration + TimeSpan.FromMilliseconds(random.Next(TaskDurationVariance));
 
                 var action = new Func<Task>(async () =>
                     {

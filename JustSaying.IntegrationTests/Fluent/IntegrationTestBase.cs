@@ -79,7 +79,7 @@ namespace JustSaying.IntegrationTests.Fluent
 
             handler.Handle(Arg.Any<T>())
                    .Returns(true)
-                   .AndDoes((_) => completionSource.SetResult(null));
+                   .AndDoes((_) => completionSource.TrySetResult(null));
 
             return handler;
         }
