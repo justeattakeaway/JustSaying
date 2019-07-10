@@ -112,13 +112,15 @@ namespace JustSaying.AwsTools.MessageHandling
         private async Task<SnsServerSideEncryption> ExtractServerSideEncryptionFromTopicAttributes()
         {
             var attributesResponse = await Client.GetTopicAttributesAsync(Arn).ConfigureAwait(false);
-            if (!attributesResponse.Attributes.ContainsKey(JustSayingConstants.AttributeEncryptionKeyId))
+            
+            if (!attributesResponse.Attributes.TryGetValue(JustSayingConstants.AttributeEncryptionKeyId, out var encryptionKeyId))
             {
                 return null;
             }
+
             return new SnsServerSideEncryption
             {
-                KmsMasterKeyId = attributesResponse.Attributes[JustSayingConstants.AttributeEncryptionKeyId]
+                KmsMasterKeyId = encryptionKeyId
             };
         }
 
@@ -130,9 +132,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     TopicArn = Arn,
                     AttributeName = JustSayingConstants.AttributeEncryptionKeyId,
-                    AttributeValue = config != null
-                        ? config.KmsMasterKeyId
-                        : string.Empty
+                    AttributeValue = config?.KmsMasterKeyId ?? string.Empty
                 };
 
                 var response = await Client.SetTopicAttributesAsync(request).ConfigureAwait(false);
