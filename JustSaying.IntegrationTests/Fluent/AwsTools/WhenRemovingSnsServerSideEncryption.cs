@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.QueueCreation;
 using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit.Abstractions;
@@ -31,10 +32,10 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                 loggerFactory,
                 null);
 
-            await topic.CreateWithEncryptionAsync(new SnsServerSideEncryption { KmsMasterKeyId = JustSayingConstants.DefaultSnsAttributeEncryptionKeyId });
+            await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = JustSayingConstants.DefaultSnsAttributeEncryptionKeyId });
 
             // Act
-            await topic.CreateWithEncryptionAsync(new SnsServerSideEncryption { KmsMasterKeyId = String.Empty });
+            await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = String.Empty });
 
             // Assert
             topic.ServerSideEncryption.ShouldBeNull();

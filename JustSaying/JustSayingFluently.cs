@@ -102,7 +102,7 @@ namespace JustSaying
                     MessageResponseLogger = Bus.Config.MessageResponseLogger
                 };
 
-                CreatePublisher<T>(eventPublisher, snsWriteConfig);
+                CreatePublisher(eventPublisher, snsWriteConfig);
 
                 eventPublisher.EnsurePolicyIsUpdatedAsync(Bus.Config.AdditionalSubscriberAccounts).GetAwaiter().GetResult();
 
@@ -115,7 +115,7 @@ namespace JustSaying
             return this;
         }
 
-        private void CreatePublisher<T>(SnsTopicByName eventPublisher, SnsWriteConfiguration snsWriteConfig) where T : Message
+        private static void CreatePublisher(SnsTopicByName eventPublisher, SnsWriteConfiguration snsWriteConfig)
         {
             if (snsWriteConfig.Encryption != null)
             {
