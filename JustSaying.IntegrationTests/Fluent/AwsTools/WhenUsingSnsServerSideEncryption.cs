@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using JustSaying.AwsTools;
-using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,7 +31,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                     (builder) => builder.Publications((options) => options.WithQueue<SimpleMessage>(
                         (queue) => queue.WithWriteConfiguration(
                             (config) => config.WithQueueName(UniqueName)))
-                        .WithTopic<SimpleMessage>(topic => topic.WithWriteConfiguration(writeConfig => writeConfig.Encryption = new SnsServerSideEncryption { KmsMasterKeyId = masterSnsKeyId }))))
+                        .WithTopic<SimpleMessage>(topic => topic.WithWriteConfiguration(writeConfig => writeConfig.Encryption = new ServerSideEncryption { KmsMasterKeyId = masterSnsKeyId }))))
                 .ConfigureJustSaying(
                     (builder) => builder.Subscriptions((options) => options.ForTopic<SimpleMessage>(topic => topic.WithName(UniqueName))))
                 .AddSingleton(handler);

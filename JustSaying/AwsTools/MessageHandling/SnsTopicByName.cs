@@ -98,7 +98,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return false;
         }
 
-        public async Task<bool> CreateWithEncryptionAsync(SnsServerSideEncryption config)
+        public async Task<bool> CreateWithEncryptionAsync(ServerSideEncryption config)
         {
             var created = await CreateAsync().ConfigureAwait(false);
 
@@ -109,7 +109,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return created;
         }
 
-        private async Task<SnsServerSideEncryption> ExtractServerSideEncryptionFromTopicAttributes()
+        private async Task<ServerSideEncryption> ExtractServerSideEncryptionFromTopicAttributes()
         {
             var attributesResponse = await Client.GetTopicAttributesAsync(Arn).ConfigureAwait(false);
             
@@ -118,13 +118,13 @@ namespace JustSaying.AwsTools.MessageHandling
                 return null;
             }
 
-            return new SnsServerSideEncryption
+            return new ServerSideEncryption
             {
                 KmsMasterKeyId = encryptionKeyId
             };
         }
 
-        private async Task EnsureServerSideEncryptionIsUpdatedAsync(SnsServerSideEncryption config)
+        private async Task EnsureServerSideEncryptionIsUpdatedAsync(ServerSideEncryption config)
         {
             if (ServerSideEncryptionNeedsUpdating(config))
             {
@@ -146,7 +146,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        private bool ServerSideEncryptionNeedsUpdating(SnsServerSideEncryption config)
+        private bool ServerSideEncryptionNeedsUpdating(ServerSideEncryption config)
         {
             if (ServerSideEncryption == config)
             {
