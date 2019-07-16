@@ -15,7 +15,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
         {
         }
 
-        [AwsFact]
+        [NotSimulatorFact]
         public async Task Can_Create_Topic_With_Encryption()
         {
             // Arrange
@@ -38,7 +38,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
             topic.ServerSideEncryption.KmsMasterKeyId.ShouldBe(JustSayingConstants.DefaultSnsAttributeEncryptionKeyId);
         }
 
-        [AwsFact]
+        [NotSimulatorFact]
         public async Task Can_Add_Encryption_To_Existing_Topic()
         {
             // Arrange
@@ -63,7 +63,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
             topic.ServerSideEncryption.KmsMasterKeyId.ShouldBe(JustSayingConstants.DefaultSnsAttributeEncryptionKeyId);
         }
 
-        [AwsFact]
+        [NotSimulatorFact]
         public async Task Can_Update_Encryption_For_Existing_Topic()
         {
             // Arrange

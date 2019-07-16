@@ -16,7 +16,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
         {
         }
 
-        [AwsFact]
+        [NotSimulatorFact]
         public async Task Can_Remove_Encryption()
         {
             // Arrange

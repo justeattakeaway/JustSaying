@@ -17,7 +17,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
         {
         }
 
-        [AwsFact]
+        [NotSimulatorFact]
         public async Task Then_The_Message_Is_Published()
         {
             // Arrange
