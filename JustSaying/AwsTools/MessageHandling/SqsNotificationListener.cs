@@ -112,14 +112,17 @@ namespace JustSaying.AwsTools.MessageHandling
             var queueName = _queue.QueueName;
             var region = _queue.Region.SystemName;
 
-            // Run task in background
-            // ListenLoop will cancel gracefully, so no need to pass cancellation token to Task.Run
-            _ = Task.Run(async () =>
-            {
-                await ListenLoopAsync(cancellationToken).ConfigureAwait(false);
-                IsListening = false;
-                _log.LogInformation("Stopped listening on queue '{QueueName}' in region '{Region}'.", queueName, region);
-            });
+            // Run listen loop in the background
+            _ = Task.Factory.StartNew(
+                async () =>
+                {
+                    await ListenLoopAsync(cancellationToken).ConfigureAwait(false);
+                    IsListening = false;
+                    _log.LogInformation("Stopped listening on queue '{QueueName}' in region '{Region}'.", queueName, region);
+                },
+                cancellationToken,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default);
 
             IsListening = true;
             _log.LogInformation("Starting listening on queue '{QueueName}' in region '{Region}'.", queueName, region);
