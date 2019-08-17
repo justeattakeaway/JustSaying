@@ -41,7 +41,11 @@ namespace JustSaying
         private Func<INamingStrategy> _busNamingStrategyFunc;
         private readonly ILoggerFactory _loggerFactory;
 
-        protected internal JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator, IAwsClientFactoryProxy awsClientFactoryProxy, ILoggerFactory loggerFactory)
+        protected internal JustSayingFluently(
+            IAmJustSaying bus,
+            IVerifyAmazonQueues queueCreator,
+            IAwsClientFactoryProxy awsClientFactoryProxy,
+            ILoggerFactory loggerFactory)
         {
             _loggerFactory = loggerFactory;
             _log = _loggerFactory.CreateLogger("JustSaying");
@@ -156,8 +160,10 @@ namespace JustSaying
                 Bus.AddMessagePublisher<T>(eventPublisher, region);
             }
 
-            _log.LogInformation("Created SQS publisher for message type '{MessageType}' on queue '{QueueName}'.",
-                typeof(T), queueName);
+            _log.LogInformation(
+                "Created SQS publisher for message type '{MessageType}' on queue '{QueueName}'.",
+                typeof(T),
+                queueName);
 
             return this;
         }
@@ -257,12 +263,17 @@ namespace JustSaying
                 : TopicHandler<T>();
 
             Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
+
             foreach (var region in Bus.Config.Regions)
             {
                 Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handler);
             }
-            _log.LogInformation("Added a message handler of type '{HandlerType}' for message type '{MessageType}' on queue '{QueueName}'.",
-                handler.GetType(), typeof(T), _subscriptionConfig.QueueName);
+
+            _log.LogInformation(
+                "Added a message handler of type '{HandlerType}' for message type '{MessageType}' on queue '{QueueName}'.",
+                handler.GetType(),
+                typeof(T),
+                _subscriptionConfig.QueueName);
 
             return thing;
         }
@@ -293,8 +304,11 @@ namespace JustSaying
                 Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handlerResolver.ResolveHandler<T>(resolutionContext));
             }
 
-            _log.LogInformation("Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",
-                typeof(T), _subscriptionConfig.Topic, _subscriptionConfig.QueueName);
+            _log.LogInformation(
+                "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",
+                typeof(T),
+                _subscriptionConfig.Topic,
+                _subscriptionConfig.QueueName);
 
             return thing;
         }
@@ -303,12 +317,20 @@ namespace JustSaying
         {
             ConfigureSqsSubscriptionViaTopic<T>();
 
-            foreach (var region in Bus.Config.Regions)
+            foreach (string region in Bus.Config.Regions)
             {
-                var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribedAsync(region, Bus.SerializationRegister, _subscriptionConfig, Bus.Config.MessageSubjectProvider).GetAwaiter().GetResult();
+                // TODO Make this async and remove GetAwaiter().GetResult() call
+                var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribedAsync(
+                    region, Bus.SerializationRegister,
+                    _subscriptionConfig,
+                    Bus.Config.MessageSubjectProvider).GetAwaiter().GetResult();
+
                 CreateSubscriptionListener<T>(region, queue);
-                _log.LogInformation("Created SQS topic subscription on topic '{TopicName}' and queue '{QueueName}'.",
-                    _subscriptionConfig.Topic, _subscriptionConfig.QueueName);
+
+                _log.LogInformation(
+                    "Created SQS topic subscription on topic '{TopicName}' and queue '{QueueName}'.",
+                    _subscriptionConfig.Topic,
+                    _subscriptionConfig.QueueName);
             }
 
             return this;
@@ -320,43 +342,66 @@ namespace JustSaying
 
             foreach (var region in Bus.Config.Regions)
             {
+                // TODO Make this async and remove GetAwaiter().GetResult() call
                 var queue = _amazonQueueCreator.EnsureQueueExistsAsync(region, _subscriptionConfig).GetAwaiter().GetResult();
+
                 CreateSubscriptionListener<T>(region, queue);
-                _log.LogInformation("Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",
-                    typeof(T), _subscriptionConfig.QueueName);
+
+                _log.LogInformation(
+                    "Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",
+                    typeof(T),
+                    _subscriptionConfig.QueueName);
             }
 
             return this;
         }
 
-        private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue) where T : Message
+        protected INotificationSubscriber CreateSubscriber(SqsQueueBase queue)
         {
-            var sqsSubscriptionListener = new SqsNotificationListener(
-                queue, Bus.SerializationRegister, Bus.Monitor, _loggerFactory,
+            return new SqsNotificationListener(
+                queue,
+                Bus.SerializationRegister,
+                Bus.Monitor,
+                _loggerFactory,
                 Bus.MessageContextAccessor,
-                _subscriptionConfig.OnError, Bus.MessageLock,
+                _subscriptionConfig.OnError,
+                Bus.MessageLock,
                 _subscriptionConfig.MessageBackoffStrategy);
+        }
 
-            sqsSubscriptionListener.Subscribers.Add(new Subscriber(typeof(T)));
-            Bus.AddNotificationSubscriber(region, sqsSubscriptionListener);
+        private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue)
+            where T : Message
+        {
+            INotificationSubscriber subscriber = CreateSubscriber(queue);
 
-            if (_subscriptionConfig.MaxAllowedMessagesInFlight.HasValue)
+            subscriber.Subscribers.Add(new Subscriber(typeof(T)));
+
+            Bus.AddNotificationSubscriber(region, subscriber);
+
+            // TODO Concrete type check for backwards compatibility for now.
+            // Refactor the interface for v7 to allow this to be done against the interface.
+            if (subscriber is SqsNotificationListener sqsSubscriptionListener)
             {
-                sqsSubscriptionListener.WithMaximumConcurrentLimitOnMessagesInFlightOf(_subscriptionConfig.MaxAllowedMessagesInFlight.Value);
-            }
+                if (_subscriptionConfig.MaxAllowedMessagesInFlight.HasValue)
+                {
+                    sqsSubscriptionListener.WithMaximumConcurrentLimitOnMessagesInFlightOf(_subscriptionConfig.MaxAllowedMessagesInFlight.Value);
+                }
 
-            if (_subscriptionConfig.MessageProcessingStrategy != null)
-            {
-                sqsSubscriptionListener.WithMessageProcessingStrategy(_subscriptionConfig.MessageProcessingStrategy);
+                if (_subscriptionConfig.MessageProcessingStrategy != null)
+                {
+                    sqsSubscriptionListener.WithMessageProcessingStrategy(_subscriptionConfig.MessageProcessingStrategy);
+                }
             }
         }
 
         private void ConfigureSqsSubscriptionViaTopic<T>() where T : Message
         {
             var namingStrategy = GetNamingStrategy();
+
             _subscriptionConfig.PublishEndpoint = namingStrategy.GetTopicName(_subscriptionConfig.BaseTopicName, typeof(T));
             _subscriptionConfig.Topic = namingStrategy.GetTopicName(_subscriptionConfig.BaseTopicName, typeof(T));
             _subscriptionConfig.QueueName = namingStrategy.GetQueueName(_subscriptionConfig, typeof(T));
+
             _subscriptionConfig.Validate();
         }
 
