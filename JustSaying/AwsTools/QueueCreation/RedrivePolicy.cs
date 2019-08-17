@@ -1,13 +1,16 @@
+using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 
 namespace JustSaying.AwsTools.QueueCreation
 {
     public class RedrivePolicy
     {
-        [JsonProperty(PropertyName = "maxReceiveCount")]
+        [JsonProperty("maxReceiveCount")]
+        [JsonPropertyName("maxReceiveCount")]
         public int MaximumReceives { get; set; }
 
-        [JsonProperty(PropertyName = "deadLetterTargetArn")]
+        [JsonProperty("deadLetterTargetArn")]
+        [JsonPropertyName("deadLetterTargetArn")]
         public string DeadLetterQueue { get; set; }
 
         public RedrivePolicy(int maximumReceives, string deadLetterQueue)
@@ -16,10 +19,14 @@ namespace JustSaying.AwsTools.QueueCreation
             DeadLetterQueue = deadLetterQueue;
         }
 
-        protected RedrivePolicy() { }
+        protected RedrivePolicy()
+        {
+        }
+
+        // Cannot use System.Text.Json below as no public parameterless constructor. Change for v7?
 
         public override string ToString()
-            => "{\"maxReceiveCount\":\"" + MaximumReceives + "\", \"deadLetterTargetArn\":\"" + DeadLetterQueue + "\"}";
+            => JsonConvert.SerializeObject(this);
 
         public static RedrivePolicy ConvertFromString(string policy)
             => JsonConvert.DeserializeObject<RedrivePolicy>(policy);
