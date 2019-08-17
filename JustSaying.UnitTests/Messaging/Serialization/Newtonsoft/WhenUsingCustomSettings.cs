@@ -18,7 +18,7 @@ namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft
 
         protected override void Given()
         {
-            _messageOut = new MessageWithEnum(Value.Two);
+            _messageOut = new MessageWithEnum() { EnumVal = Value.Two };
         }
 
         public string GetMessageInContext(MessageWithEnum message)

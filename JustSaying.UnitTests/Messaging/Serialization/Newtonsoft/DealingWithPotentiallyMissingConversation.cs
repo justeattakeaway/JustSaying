@@ -13,7 +13,7 @@ namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft
         private string _jsonMessage;
         protected override void Given()
         {
-            _messageOut = new MessageWithEnum(Value.Two);
+            _messageOut = new MessageWithEnum() { EnumVal = Value.Two };
         }
 
         protected override void WhenAction()
