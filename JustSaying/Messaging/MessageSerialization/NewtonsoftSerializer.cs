@@ -31,7 +31,7 @@ namespace JustSaying.Messaging.MessageSerialization
         public Message Deserialize(string message, Type type)
         {
             var document = JObject.Parse(message);
-            string json = document.Value<string>("Message");
+            string json = document["Message"].ToString();
 
             return (Message)JsonConvert.DeserializeObject(json, type, _settings);
         }
