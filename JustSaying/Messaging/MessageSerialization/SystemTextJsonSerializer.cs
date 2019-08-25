@@ -59,7 +59,9 @@ namespace JustSaying.Messaging.MessageSerialization
         {
             using (var document = JsonDocument.Parse(message))
             {
-                string json = document.RootElement.GetProperty("Message").GetString();
+                JsonElement element = document.RootElement.GetProperty("Message");
+                string json = element.ToString();
+
                 return (Message)JsonSerializer.Deserialize(json, type, _options);
             }
         }
