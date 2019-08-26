@@ -45,7 +45,7 @@
     <EmbedAllSources Condition=" '$(IsTestProject)' != 'true' AND '$(NCrunch)' == '' ">true</EmbedAllSources>
   </PropertyGroup>
   <PropertyGroup>
-    <CollectCoverage>true</CollectCoverage>
+    <CollectCoverage Condition=" '$(CollectCoverage)' == '' ">true</CollectCoverage>
     <CoverletOutput Condition=" '$(OutputPath)' != '' ">$(OutputPath)\</CoverletOutput>
     <CoverletOutputFormat>cobertura,json</CoverletOutputFormat>
     <Exclude>[*.Benchmarks]*,[*Sample*]*,[*Test*]*,[xunit.*]*</Exclude>

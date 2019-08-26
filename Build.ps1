@@ -99,39 +99,32 @@ function DotNetPack {
 function DotNetTest {
     param([string]$Project)
 
-    if ($DisableCodeCoverage -eq $true) {
-        & $dotnet test $Project --output $OutputPath
+    if (($DisableCodeCoverage -eq $true) -Or ($EnableIntegrationTests -eq $true)) {
+        $env:CollectCoverage="false"
     }
-    else {
 
-        if ($installDotNetSdk -eq $true) {
-            $dotnetPath = $dotnet
-        }
-        else {
-            $dotnetPath = (Get-Command "dotnet.exe").Source
-        }
+    $nugetPath = Join-Path $env:USERPROFILE ".nuget\packages"
+    $propsFile = Join-Path $solutionPath "Directory.Build.props"
 
-        $nugetPath = Join-Path $env:USERPROFILE ".nuget\packages"
-        $propsFile = Join-Path $solutionPath "Directory.Build.props"
+    $reportGeneratorVersion = (Select-Xml -Path $propsFile -XPath "//PackageReference[@Include='ReportGenerator']/@Version").Node.'#text'
+    $reportGeneratorPath = Join-Path $nugetPath "ReportGenerator\$reportGeneratorVersion\tools\netcoreapp2.0\ReportGenerator.dll"
 
-        $reportGeneratorVersion = (Select-Xml -Path $propsFile -XPath "//PackageReference[@Include='ReportGenerator']/@Version").Node.'#text'
-        $reportGeneratorPath = Join-Path $nugetPath "ReportGenerator\$reportGeneratorVersion\tools\netcoreapp2.0\ReportGenerator.dll"
+    $coverageOutput = Join-Path $OutputPath "coverage.cobertura.xml"
+    $reportOutput = Join-Path $OutputPath "coverage"
 
-        $coverageOutput = Join-Path $OutputPath "coverage.cobertura.xml"
-        $reportOutput = Join-Path $OutputPath "coverage"
-
-        & $dotnetPath test $Project --output $OutputPath
-
-        & $dotnet `
-            $reportGeneratorPath `
-            `"-reports:$coverageOutput`" `
-            `"-targetdir:$reportOutput`" `
-            -reporttypes:HTML `
-            -verbosity:Warning
-    }
+    & $dotnet test $Project --output $OutputPath
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet test failed with exit code $LASTEXITCODE"
+    }
+
+    if ((Test-Path $coverageOutput)) {
+      & $dotnet `
+          $reportGeneratorPath `
+          `"-reports:$coverageOutput`" `
+          `"-targetdir:$reportOutput`" `
+          -reporttypes:HTML `
+          -verbosity:Warning
     }
 }
 

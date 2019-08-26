@@ -19,6 +19,7 @@ if [ "$CI" != "" -a "$TRAVIS_OS_NAME" == "linux" ]; then
     docker pull pafortin/goaws:$goaws_tag
     docker run -d --name goaws -p 4100:4100 pafortin/goaws:$goaws_tag
     export AWS_SERVICE_URL="http://localhost:4100"
+    export CollectCoverage="false"
 fi
 
 dotnet build JustSaying/JustSaying.csproj --output $artifacts --configuration $configuration --framework "netstandard2.0" || exit 1
