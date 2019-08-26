@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging;
@@ -40,7 +40,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     // Act
                     await publisher.PublishAsync(message, cancellationToken);
                     await publisher.PublishAsync(message, cancellationToken);
-                    await Task.Delay(5.Seconds());
+                    await Task.Delay(10.Seconds());
 
                     // Assert
                     handler.NumberOfTimesIHaveBeenCalled().ShouldBe(1);
@@ -49,15 +49,15 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
         private sealed class MessageLockStore : IMessageLockAsync
         {
-            private readonly Dictionary<string, int> _store = new Dictionary<string, int>();
+            private readonly ConcurrentDictionary<string, int> _store = new ConcurrentDictionary<string, int>();
 
             public Task<MessageLockResponse> TryAquireLockPermanentlyAsync(string key)
             {
-                var canAquire = !_store.TryGetValue(key, out int value);
+                var canAquire = !_store.TryGetValue(key, out int _);
 
                 if (canAquire)
                 {
-                    _store.Add(key, 1);
+                    _store.AddOrUpdate(key, 1, (_, i) => i + 1);
                 }
 
                 var response = new MessageLockResponse { DoIHaveExclusiveLock = canAquire };
@@ -70,7 +70,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
             public Task ReleaseLockAsync(string key)
             {
-                _store.Remove(key);
+                _store.TryRemove(key, out int _);
                 return Task.CompletedTask;
             }
         }

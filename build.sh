@@ -25,5 +25,5 @@ dotnet build JustSaying/JustSaying.csproj --output $artifacts --configuration $c
 dotnet build JustSaying.Extensions.DependencyInjection.Microsoft/JustSaying.Extensions.DependencyInjection.Microsoft.csproj --output $artifacts --configuration $configuration --framework "netstandard2.0" || exit 1
 dotnet build JustSaying.Extensions.DependencyInjection.StructureMap/JustSaying.Extensions.DependencyInjection.StructureMap.csproj --output $artifacts --configuration $configuration --framework "netstandard2.0" || exit 1
 
-dotnet test ./JustSaying.UnitTests/JustSaying.UnitTests.csproj --output $artifacts '--logger:Console;verbosity=quiet' || exit 1
-dotnet test ./JustSaying.IntegrationTests/JustSaying.IntegrationTests.csproj --output $artifacts '--logger:Console;verbosity=quiet' || exit 1
+dotnet test ./JustSaying.UnitTests/JustSaying.UnitTests.csproj --output $artifacts || exit 1
+dotnet test ./JustSaying.IntegrationTests/JustSaying.IntegrationTests.csproj --output $artifacts || exit 1
