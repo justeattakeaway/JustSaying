@@ -1,4 +1,5 @@
 *.cache
+*.coverage
 *.idea
 *.log
 *.orig
@@ -13,6 +14,7 @@ _ReSharper*
 .DS_Store
 artifacts
 bin
+coverage.*
 lint.db
 obj
 out
