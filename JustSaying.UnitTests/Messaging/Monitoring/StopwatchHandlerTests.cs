@@ -43,8 +43,6 @@ namespace JustSaying.UnitTests.Messaging.Monitoring
         public async Task WhenHandlerIsWrappedinStopWatch_MonitoringIsCalledWithCorrectTypes()
         {
             var handler = MockHandler();
-            var innnerHandlerName = handler.GetType().Name.ToLowerInvariant();
-
             var monitoring = Substitute.For<IMeasureHandlerExecutionTime>();
 
             var stopWatchHandler = new StopwatchHandler<OrderAccepted>(handler, monitoring);
@@ -73,8 +71,10 @@ namespace JustSaying.UnitTests.Messaging.Monitoring
         private static IHandlerAsync<OrderAccepted> MockHandler()
         {
             var handler = Substitute.For<IHandlerAsync<OrderAccepted>>();
+
             handler.Handle(Arg.Any<OrderAccepted>())
-                .Returns(true);
+                   .Returns(true);
+
             return handler;
         }
     }

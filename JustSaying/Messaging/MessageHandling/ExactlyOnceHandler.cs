@@ -1,22 +1,34 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageHandling
 {
-    public class ExactlyOnceHandler<T> : IHandlerAsync<T> where T : Message
+    public class ExactlyOnceHandler<T> : IHandlerAsync<T>, ICancellableHandlerAsync<T>
+        where T : Message
     {
-        private readonly IHandlerAsync<T> _inner;
+        private static readonly string MessageTypeKey = typeof(T).ToString().ToLowerInvariant();
+
+        private readonly Func<T, CancellationToken, Task<bool>> _inner;
         private readonly IMessageLockAsync _messageLock;
         private readonly TimeSpan _timeout;
         private readonly string _lockSuffixKeyForHandler;
 
         public ExactlyOnceHandler(IHandlerAsync<T> inner, IMessageLockAsync messageLock, TimeSpan timeout, string handlerName)
         {
-            _inner = inner;
             _messageLock = messageLock;
             _timeout = timeout;
-            _lockSuffixKeyForHandler = $"{typeof(T).ToString().ToLowerInvariant()}-{handlerName}";
+            _lockSuffixKeyForHandler = $"{MessageTypeKey}-{handlerName}";
+
+            if (inner is ICancellableHandlerAsync<T> cancellable)
+            {
+                _inner = cancellable.HandleAsync;
+            }
+            else
+            {
+                _inner = async (message, _) => await inner.Handle(message).ConfigureAwait(false);
+            }
         }
 
         private const bool RemoveTheMessageFromTheQueue = true;
@@ -24,7 +36,13 @@ namespace JustSaying.Messaging.MessageHandling
 
         public async Task<bool> Handle(T message)
         {
+            return await HandleAsync(message, CancellationToken.None).ConfigureAwait(false);
+        }
+
+        public async Task<bool> HandleAsync(T message, CancellationToken cancellationToken)
+        {
             string lockKey = $"{message.UniqueKey()}-{_lockSuffixKeyForHandler}";
+
             MessageLockResponse lockResponse = await _messageLock.TryAquireLockAsync(lockKey, _timeout).ConfigureAwait(false);
 
             if (!lockResponse.DoIHaveExclusiveLock)
@@ -39,7 +57,7 @@ namespace JustSaying.Messaging.MessageHandling
 
             try
             {
-                bool successfullyHandled = await _inner.Handle(message).ConfigureAwait(false);
+                bool successfullyHandled = await _inner(message, cancellationToken).ConfigureAwait(false);
 
                 if (successfullyHandled)
                 {

@@ -67,6 +67,8 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
+        public Func<DateTimeOffset> Clock { get; set; } = () => DateTimeOffset.UtcNow;
+
         public string Queue => _queue.QueueName;
 
         // ToDo: This should not be here.
@@ -177,6 +179,13 @@ namespace JustSaying.AwsTools.MessageHandling
                     continue;
                 }
 
+                if (sqsMessageResponse == null || sqsMessageResponse.Messages.Count < 1)
+                {
+                    continue;
+                }
+
+                DateTimeOffset receivedAt = Clock();
+
                 try
                 {
                     foreach (var message in sqsMessageResponse.Messages)
@@ -186,7 +195,7 @@ namespace JustSaying.AwsTools.MessageHandling
                             return;
                         }
 
-                        if (!await TryHandleMessageAsync(message, ct).ConfigureAwait(false))
+                        if (!await TryHandleMessageAsync(message, receivedAt, ct).ConfigureAwait(false))
                         {
                             // No worker free to process any messages
                             _log.LogWarning(
@@ -283,11 +292,62 @@ namespace JustSaying.AwsTools.MessageHandling
             return messagesToRequest;
         }
 
-        private Task<bool> TryHandleMessageAsync(Amazon.SQS.Model.Message message, CancellationToken ct)
+        private Task<bool> TryHandleMessageAsync(Amazon.SQS.Model.Message message, DateTimeOffset receivedAt, CancellationToken ct)
         {
+            DateTimeOffset utcNow = Clock();
+            TimeSpan timeUntilMessageExpiry = utcNow - receivedAt;
+
+            if (timeUntilMessageExpiry < TimeSpan.Zero)
+            {
+                _log.LogWarning(
+                    "Message with Id {MessageId} was not handled because the message visibility timeout expired.",
+                    message.MessageId);
+
+                return Task.FromResult(false);
+            }
+
             async Task DispatchAsync()
             {
-                await _messageDispatcher.DispatchMessage(message, ct);
+                utcNow = Clock();
+                timeUntilMessageExpiry = utcNow - receivedAt;
+
+                if (timeUntilMessageExpiry <= TimeSpan.Zero)
+                {
+                    _log.LogWarning(
+                        "Message with Id {MessageId} was not handled because the message visibility timeout expired while waiting to dispatch it.",
+                        message.MessageId);
+
+                    return;
+                }
+
+                using (var timeoutSource = new CancellationTokenSource(timeUntilMessageExpiry))
+                using (var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutSource.Token))
+                {
+                    if (linkedSource.IsCancellationRequested)
+                    {
+                        // Either the message has become stale or the message loop has been stopped
+                        return;
+                    }
+
+                    try
+                    {
+                        await _messageDispatcher.DispatchMessage(message, linkedSource.Token);
+                    }
+                    catch (OperationCanceledException ex) when (ex.CancellationToken == ct)
+                    {
+                        _log.LogWarning(
+                            ex,
+                            "Handling of message with Id {MessageId} was canceled because the message loop was canceled.",
+                            message.MessageId);
+                    }
+                    catch (OperationCanceledException ex) when (ex.CancellationToken == timeoutSource.Token)
+                    {
+                        _log.LogWarning(
+                            ex,
+                            "Handling of message with Id {MessageId} was canceled because the message visibility timeout expired.",
+                            message.MessageId);
+                    }
+                }
             }
 
             return _messageProcessingStrategy.StartWorkerAsync(DispatchAsync, ct);

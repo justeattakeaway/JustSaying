@@ -94,7 +94,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     _messageContextAccessor.MessageContext = new MessageContext(message, _queue.Uri);
 
-                    handlingSucceeded = await CallMessageHandler(typedMessage).ConfigureAwait(false);
+                    handlingSucceeded = await CallMessageHandler(typedMessage, cancellationToken).ConfigureAwait(false);
                 }
 
                 if (handlingSucceeded)
@@ -137,7 +137,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        private async Task<bool> CallMessageHandler(Message message)
+        private async Task<bool> CallMessageHandler(Message message, CancellationToken cancellationToken)
         {
             var messageType = message.GetType();
 
@@ -148,14 +148,29 @@ namespace JustSaying.AwsTools.MessageHandling
                 return true;
             }
 
+            bool handlerSucceeded;
+
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
-            var handlerSucceeded = await handler(message).ConfigureAwait(false);
+            try
+            {
+                handlerSucceeded = await handler(message, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
+            {
+                _logger.LogWarning(
+                    "Message with Id {MessageId} of type {MessageType} was not handled as the operation was cancelled. The message visibility timeout may have expired.",
+                    message.Id,
+                    message.GetType(),
+                    watch.Elapsed);
+
+                handlerSucceeded = false;
+            }
 
             watch.Stop();
 
             _logger.LogTrace(
-                "Handled message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}.",
+                "Handled message with Id {MessageId} of type {MessageType} in {TimeToHandle}.",
                 message.Id,
                 messageType,
                 watch.Elapsed);
@@ -198,7 +213,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     _logger.LogError(
                         ex,
-                        "Failed to update message visibility timeout by {VisibilityTimeout} seconds for message with receipt handle '{ReceiptHandle}'.",
+                        "Failed to update message visibility timeout by {VisibilityTimeout} seconds for message with receipt handle {ReceiptHandle}.",
                         visibilityTimeoutSeconds,
                         receiptHandle);
 

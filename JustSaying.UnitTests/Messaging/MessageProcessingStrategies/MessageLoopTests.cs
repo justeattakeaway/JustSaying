@@ -51,19 +51,21 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
                 ProcessMessagesSequentially = false,
             };
 
-            var messageProcessingStrategy = new Throttled(options);
-            var counter = new ThreadSafeCounter();
+            using (var messageProcessingStrategy = new Throttled(options))
+            {
+                var counter = new ThreadSafeCounter();
 
-            var stopwatch = Stopwatch.StartNew();
+                var stopwatch = Stopwatch.StartNew();
 
-            var actions = BuildFakeIncomingMessages(numberOfMessagesToProcess, counter);
-            await ListenLoopExecuted(actions, messageProcessingStrategy);
+                var actions = BuildFakeIncomingMessages(numberOfMessagesToProcess, counter);
+                await ListenLoopExecuted(actions, messageProcessingStrategy);
 
-            stopwatch.Stop();
+                stopwatch.Stop();
 
-            await Task.Delay(2000);
+                await Task.Delay(2000);
 
-            counter.Count.ShouldBe(numberOfMessagesToProcess);
+                counter.Count.ShouldBe(numberOfMessagesToProcess);
+            }
         }
 
         [Theory]
@@ -84,19 +86,21 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
                 ProcessMessagesSequentially = true,
             };
 
-            var messageProcessingStrategy = new Throttled(options);
-            var counter = new ThreadSafeCounter();
+            using (var messageProcessingStrategy = new Throttled(options))
+            {
+                var counter = new ThreadSafeCounter();
 
-            var watch = Stopwatch.StartNew();
+                var watch = Stopwatch.StartNew();
 
-            var actions = BuildFakeIncomingMessages(numberOfMessagesToProcess, counter);
-            await ListenLoopExecuted(actions, messageProcessingStrategy);
+                var actions = BuildFakeIncomingMessages(numberOfMessagesToProcess, counter);
+                await ListenLoopExecuted(actions, messageProcessingStrategy);
 
-            watch.Stop();
+                watch.Stop();
 
-            await Task.Delay(2000);
+                await Task.Delay(2000);
 
-            counter.Count.ShouldBe(numberOfMessagesToProcess);
+                counter.Count.ShouldBe(numberOfMessagesToProcess);
+            }
         }
 
         [Theory]
@@ -121,32 +125,34 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
                 StartTimeout = TimeSpan.FromTicks(1),
             };
 
-            var messageProcessingStrategy = new Throttled(options);
-            var counter = new ThreadSafeCounter();
-            var tcs = new TaskCompletionSource<bool>();
-
-            for (int i = 0; i < concurrency; i++)
+            using (var messageProcessingStrategy = new Throttled(options))
             {
-                (await messageProcessingStrategy.StartWorkerAsync(
-                    async () => await tcs.Task,
-                    CancellationToken.None)).ShouldBeTrue();
+                var counter = new ThreadSafeCounter();
+                var tcs = new TaskCompletionSource<bool>();
+
+                for (int i = 0; i < concurrency; i++)
+                {
+                    (await messageProcessingStrategy.StartWorkerAsync(
+                        async () => await tcs.Task,
+                        CancellationToken.None)).ShouldBeTrue();
+                }
+
+                messageProcessingStrategy.AvailableWorkers.ShouldBe(0);
+
+                for (int i = 0; i < messageCount - concurrency; i++)
+                {
+                    (await messageProcessingStrategy.StartWorkerAsync(() => Task.CompletedTask, CancellationToken.None)).ShouldBeFalse();
+                }
+
+                messageProcessingStrategy.AvailableWorkers.ShouldBe(0);
+
+                tcs.SetResult(true);
+
+                (await messageProcessingStrategy.WaitForAvailableWorkerAsync()).ShouldBeGreaterThan(0);
+
+                fakeMonitor.Received().IncrementThrottlingStatistic();
+                fakeMonitor.Received().HandleThrottlingTime(Arg.Any<TimeSpan>());
             }
-
-            messageProcessingStrategy.AvailableWorkers.ShouldBe(0);
-
-            for (int i = 0; i < messageCount - concurrency; i++)
-            {
-                (await messageProcessingStrategy.StartWorkerAsync(() => Task.CompletedTask, CancellationToken.None)).ShouldBeFalse();
-            }
-
-            messageProcessingStrategy.AvailableWorkers.ShouldBe(0);
-
-            tcs.SetResult(true);
-
-            (await messageProcessingStrategy.WaitForAvailableWorkerAsync()).ShouldBeGreaterThan(0);
-
-            fakeMonitor.Received().IncrementThrottlingStatistic();
-            fakeMonitor.Received().HandleThrottlingTime(Arg.Any<TimeSpan>());
         }
 
         [Theory]
@@ -170,14 +176,16 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
                 StartTimeout = Timeout.InfiniteTimeSpan,
             };
 
-            var messageProcessingStrategy = new Throttled(options);
-            var counter = new ThreadSafeCounter();
+            using (var messageProcessingStrategy = new Throttled(options))
+            {
+                var counter = new ThreadSafeCounter();
 
-            var actions = BuildFakeIncomingMessages(messageCount, counter);
+                var actions = BuildFakeIncomingMessages(messageCount, counter);
 
-            await ListenLoopExecuted(actions, messageProcessingStrategy);
+                await ListenLoopExecuted(actions, messageProcessingStrategy);
 
-            fakeMonitor.DidNotReceive().IncrementThrottlingStatistic();
+                fakeMonitor.DidNotReceive().IncrementThrottlingStatistic();
+            }
         }
 
         [Theory]
@@ -196,14 +204,16 @@ namespace JustSaying.UnitTests.Messaging.MessageProcessingStrategies
                 StartTimeout = Timeout.InfiniteTimeSpan,
             };
 
-            var messageProcessingStrategy = new Throttled(options);
-            var counter = new ThreadSafeCounter();
+            using (var messageProcessingStrategy = new Throttled(options))
+            {
+                var counter = new ThreadSafeCounter();
 
-            var actions = BuildFakeIncomingMessages(messageCount, counter);
+                var actions = BuildFakeIncomingMessages(messageCount, counter);
 
-            await ListenLoopExecuted(actions, messageProcessingStrategy);
+                await ListenLoopExecuted(actions, messageProcessingStrategy);
 
-            fakeMonitor.Received(1).IncrementThrottlingStatistic();
+                fakeMonitor.Received(1).IncrementThrottlingStatistic();
+            }
         }
 
         private static async Task ListenLoopExecuted(

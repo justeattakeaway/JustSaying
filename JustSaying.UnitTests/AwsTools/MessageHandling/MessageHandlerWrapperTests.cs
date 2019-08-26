@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
@@ -35,7 +36,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             // act
             var wrapped = handlerWrapper.WrapMessageHandler(() => mockHandler);
 
-            var result = await wrapped(new SimpleMessage());
+            var result = await wrapped(new SimpleMessage(), CancellationToken.None);
 
             result.ShouldBeTrue();
         }
@@ -55,7 +56,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             // act
             var wrapped = handlerWrapper.WrapMessageHandler(() => mockHandler);
 
-            await wrapped(testMessage);
+            await wrapped(testMessage, CancellationToken.None);
 
             await mockHandler.Received().Handle(testMessage);
         }

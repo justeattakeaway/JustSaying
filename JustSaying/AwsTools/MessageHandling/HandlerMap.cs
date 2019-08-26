@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using HandlerFunc = System.Func<JustSaying.Models.Message, System.Threading.Tasks.Task<bool>>;
+using HandlerFunc = System.Func<JustSaying.Models.Message, System.Threading.CancellationToken, System.Threading.Tasks.Task<bool>>;
 
 namespace JustSaying.AwsTools.MessageHandling
 {

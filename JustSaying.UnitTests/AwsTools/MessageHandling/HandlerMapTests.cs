@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Models;
@@ -31,7 +32,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         public void HandlerIsReturnedForMatchingType()
         {
             var map = new HandlerMap();
-            map.Add(typeof(SimpleMessage), m => Task.FromResult(true));
+            map.Add(typeof(SimpleMessage), (m, ct) => Task.FromResult(true));
 
             var handler = map.Get(typeof(SimpleMessage));
 
@@ -42,7 +43,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         public void HandlerContainsKeyForMatchingTypeOnly()
         {
             var map = new HandlerMap();
-            map.Add(typeof(SimpleMessage), m => Task.FromResult(true));
+            map.Add(typeof(SimpleMessage), (m, ct) => Task.FromResult(true));
 
             map.ContainsKey(typeof(SimpleMessage)).ShouldBeTrue();
             map.ContainsKey(typeof(AnotherSimpleMessage)).ShouldBeFalse();
@@ -52,7 +53,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         public void HandlerIsNotReturnedForNonMatchingType()
         {
             var map = new HandlerMap();
-            map.Add(typeof(SimpleMessage), m => Task.FromResult(true));
+            map.Add(typeof(SimpleMessage), (m, ct) => Task.FromResult(true));
 
             var handler = map.Get(typeof(AnotherSimpleMessage));
 
@@ -62,8 +63,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         [Fact]
         public void CorrectHandlerIsReturnedForType()
         {
-            Func<Message, Task<bool>> fn1 = m => Task.FromResult(true);
-            Func<Message, Task<bool>> fn2 = m => Task.FromResult(true);
+            Func<Message, CancellationToken, Task<bool>> fn1 = SuccessfulHandler;
+            Func<Message, CancellationToken, Task<bool>> fn2 = SuccessfulHandler;
 
             var map = new HandlerMap();
             map.Add(typeof(SimpleMessage), fn1);
@@ -81,8 +82,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         [Fact]
         public void MultipleHandlersForATypeAreNotSupported()
         {
-            Func<Message, Task<bool>> fn1 = m => Task.FromResult(true);
-            Func<Message, Task<bool>> fn2 = m => Task.FromResult(true);
+            Func<Message, CancellationToken, Task<bool>> fn1 = SuccessfulHandler;
+            Func<Message, CancellationToken, Task<bool>> fn2 = SuccessfulHandler;
 
             var map = new HandlerMap();
 
@@ -93,14 +94,24 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         [Fact]
         public void MultipleHandlersForATypeWithOtherHandlersAreNotSupported()
         {
-            Func<Message, Task<bool>> fn1 = m => Task.FromResult(true);
-            Func<Message, Task<bool>> fn2 = m => Task.FromResult(false);
-            Func<Message, Task<bool>> fn3 = m => Task.FromResult(true);
+            Task<bool> FailedHandler(Message message, CancellationToken cancellationToken)
+            {
+                return Task.FromResult(false);
+            }
+
+            Func<Message, CancellationToken, Task<bool>> fn1 = SuccessfulHandler;
+            Func<Message, CancellationToken, Task<bool>> fn2 = FailedHandler;
+            Func<Message, CancellationToken, Task<bool>> fn3 = SuccessfulHandler;
 
             var map = new HandlerMap();
             map.Add(typeof(SimpleMessage), fn1);
             map.Add(typeof(AnotherSimpleMessage), fn3);
             new Action(() => map.Add(typeof(SimpleMessage), fn2)).ShouldThrow<ArgumentException>();
+        }
+
+        private static Task<bool> SuccessfulHandler(Message message, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(true);
         }
     }
 }

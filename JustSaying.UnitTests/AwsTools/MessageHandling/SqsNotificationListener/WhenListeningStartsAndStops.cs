@@ -43,10 +43,12 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         {
             await base.WhenAsync();
 
-            var cts = new CancellationTokenSource();
-            SystemUnderTest.Listen(cts.Token);
+            using (var cts = new CancellationTokenSource())
+            {
+                SystemUnderTest.Listen(cts.Token);
 
-            cts.Cancel();
+                cts.Cancel();
+            }
         }
 
         [Fact]
