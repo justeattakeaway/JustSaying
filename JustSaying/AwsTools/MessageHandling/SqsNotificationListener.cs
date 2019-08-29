@@ -184,7 +184,7 @@ namespace JustSaying.AwsTools.MessageHandling
                         sqsMessageResponse.Messages
                             .Select(m => new KeyValuePair<string, string>(m.MessageId, m.ReceiptHandle)));
 
-                    StartBatchHeartbeat(batchInflightTracker);
+                    StartBatchHeartbeat(batchInflightTracker, ct);
 
                     foreach (var message in sqsMessageResponse.Messages)
                     {
@@ -221,14 +221,15 @@ namespace JustSaying.AwsTools.MessageHandling
         /// Creates a task that extends the message visibility of the batch on a cadence of half the timeout duration, until all of the messages have been processed.
         /// </summary>
         /// <param name="inflightTracker"></param>
-        private void StartBatchHeartbeat(MessageBatchInflightTracker inflightTracker)
+        /// <param name="cancellationToken"></param>
+        private void StartBatchHeartbeat(MessageBatchInflightTracker inflightTracker, CancellationToken cancellationToken)
         {
             _ = Task.Run(async () =>
             {
                 // TODO overall timeout, or max renews? Could renew forever.
-                while (true)
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    await Task.Delay(TimeSpan.FromTicks(_queue.VisibilityTimeout.Ticks / 2));
+                    await Task.Delay(TimeSpan.FromTicks(_queue.VisibilityTimeout.Ticks / 2), cancellationToken);
 
                     var inflightMessages = inflightTracker.InflightMessages.ToList();
                     if (inflightMessages.Count == 0) return;
@@ -243,7 +244,7 @@ namespace JustSaying.AwsTools.MessageHandling
                                 ReceiptHandle = m.receiptHandle,
                                 VisibilityTimeout = (int) _queue.VisibilityTimeout.TotalSeconds
                             }).ToList()
-                    }).ConfigureAwait(false);
+                    }, cancellationToken).ConfigureAwait(false);
                 }
             });
         }
