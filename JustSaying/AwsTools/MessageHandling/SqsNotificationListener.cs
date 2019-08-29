@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS;
@@ -71,12 +72,12 @@ namespace JustSaying.AwsTools.MessageHandling
 
         // ToDo: This should not be here.
         public SqsNotificationListener WithMaximumConcurrentLimitOnMessagesInFlightOf(
-            int maximumAllowedMesagesInFlight,
+            int maximumAllowedMessagesInFlight,
             TimeSpan? startTimeout = null)
         {
             var options = new ThrottledOptions()
             {
-                MaxConcurrency = maximumAllowedMesagesInFlight,
+                MaxConcurrency = maximumAllowedMessagesInFlight,
                 StartTimeout = startTimeout ?? Timeout.InfiniteTimeSpan,
                 Logger = _log,
                 MessageMonitor = _messagingMonitor,
@@ -179,6 +180,12 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 try
                 {
+                    var batchInflightTracker = new MessageBatchInflightTracker(
+                        sqsMessageResponse.Messages
+                            .Select(m => new KeyValuePair<string, string>(m.MessageId, m.ReceiptHandle)));
+
+                    StartBatchHeartbeat(batchInflightTracker);
+
                     foreach (var message in sqsMessageResponse.Messages)
                     {
                         if (ct.IsCancellationRequested)
@@ -186,7 +193,7 @@ namespace JustSaying.AwsTools.MessageHandling
                             return;
                         }
 
-                        if (!await TryHandleMessageAsync(message, ct).ConfigureAwait(false))
+                        if (!await TryHandleMessageAsync(message, batchInflightTracker, ct).ConfigureAwait(false))
                         {
                             // No worker free to process any messages
                             _log.LogWarning(
@@ -208,6 +215,37 @@ namespace JustSaying.AwsTools.MessageHandling
                         regionName);
                 }
             }
+        }
+
+        /// <summary>
+        /// Creates a task that extends the message visibility of the batch on a cadence of half the timeout duration, until all of the messages have been processed.
+        /// </summary>
+        /// <param name="inflightTracker"></param>
+        private void StartBatchHeartbeat(MessageBatchInflightTracker inflightTracker)
+        {
+            _ = Task.Run(async () =>
+            {
+                // TODO overall timeout, or max renews? Could renew forever.
+                while (true)
+                {
+                    await Task.Delay(TimeSpan.FromTicks(_queue.VisibilityTimeout.Ticks / 2));
+
+                    var inflightMessages = inflightTracker.InflightMessages.ToList();
+                    if (inflightMessages.Count == 0) return;
+
+                    await _queue.Client.ChangeMessageVisibilityBatchAsync(new ChangeMessageVisibilityBatchRequest
+                    {
+                        QueueUrl = _queue.Uri.AbsoluteUri,
+                        Entries = inflightTracker.InflightMessages.Select(m =>
+                            new ChangeMessageVisibilityBatchRequestEntry
+                            {
+                                Id = m.messageId,
+                                ReceiptHandle = m.receiptHandle,
+                                VisibilityTimeout = (int) _queue.VisibilityTimeout.TotalSeconds
+                            }).ToList()
+                    }).ConfigureAwait(false);
+                }
+            });
         }
 
         private async Task<ReceiveMessageResponse> GetMessagesFromSqsQueueAsync(string queueName, string region, CancellationToken ct)
@@ -283,11 +321,11 @@ namespace JustSaying.AwsTools.MessageHandling
             return messagesToRequest;
         }
 
-        private Task<bool> TryHandleMessageAsync(Amazon.SQS.Model.Message message, CancellationToken ct)
+        private Task<bool> TryHandleMessageAsync(Amazon.SQS.Model.Message message, MessageBatchInflightTracker inflightTracker, CancellationToken ct)
         {
             async Task DispatchAsync()
             {
-                await _messageDispatcher.DispatchMessage(message, ct);
+                await _messageDispatcher.DispatchMessage(message, inflightTracker, ct);
             }
 
             return _messageProcessingStrategy.StartWorkerAsync(DispatchAsync, ct);

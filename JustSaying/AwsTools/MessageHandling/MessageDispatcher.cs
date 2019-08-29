@@ -47,7 +47,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _messageContextAccessor = messageContextAccessor;
         }
 
-        public async Task DispatchMessage(SQSMessage message, CancellationToken cancellationToken)
+        public async Task DispatchMessage(SQSMessage message, MessageBatchInflightTracker inflightTracker, CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested)
             {
@@ -125,6 +125,8 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 try
                 {
+                    inflightTracker.Complete(message.MessageId);
+
                     if (!handlingSucceeded)
                     {
                         await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage, lastException).ConfigureAwait(false);

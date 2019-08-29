@@ -83,7 +83,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             Handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
             LoggerFactory = Substitute.For<ILoggerFactory>();
 
-            var response = GenerateResponseMessage(MessageTypeString, Guid.NewGuid());
+            var response = GenerateResponseMessage(MessageTypeString);
 
             Sqs.ReceiveMessageAsync(
                     Arg.Any<ReceiveMessageRequest>(),
@@ -113,7 +113,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             doneOk.ShouldBeTrue("Timeout occured before done signal");
         }
 
-        protected static ReceiveMessageResponse GenerateResponseMessage(string messageType, Guid messageId)
+        protected static ReceiveMessageResponse GenerateResponseMessage(string messageType)
         {
             return new ReceiveMessageResponse
             {
@@ -121,12 +121,12 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
                 {
                     new Message
                     {
-                        MessageId = messageId.ToString(),
+                        MessageId = Guid.NewGuid().ToString(),
                         Body = SqsMessageBody(messageType)
                     },
                     new Message
                     {
-                        MessageId = messageId.ToString(),
+                        MessageId = Guid.NewGuid().ToString(),
                         Body = "{\"Subject\":\"SOME_UNKNOWN_MESSAGE\"," + "\"Message\":\"SOME_RANDOM_MESSAGE\"}"
                     }
                 }

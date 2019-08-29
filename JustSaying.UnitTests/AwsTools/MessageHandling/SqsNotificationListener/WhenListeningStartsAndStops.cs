@@ -25,7 +25,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             _expectedMaxMessageCount = Math.Min(MessageConstants.MaxAmazonMessageCap,
                 Environment.ProcessorCount * MessageConstants.ParallelHandlerExecutionPerCore);
 
-            var response1 = GenerateResponseMessage(SubjectOfMessageAfterStop, Guid.NewGuid());
+            var response1 = GenerateResponseMessage(SubjectOfMessageAfterStop);
             var response2 = new ReceiveMessageResponse
             {
                 Messages = new List<Message>()

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -48,6 +49,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
         private DummySqsQueue _queue;
         private SQSMessage _sqsMessage;
         private Message _typedMessage;
+        private MessageBatchInflightTracker _inflightTracker;
 
         protected MessageDispatcher SystemUnderTest { get; private set; }
 
@@ -77,16 +79,19 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
             _sqsMessage = new SQSMessage
             {
+                MessageId = "i_am_message_id",
                 Body = JsonConvert.SerializeObject(_typedMessage),
                 ReceiptHandle = "i_am_receipt_handle"
             };
+
+            _inflightTracker = new MessageBatchInflightTracker(new List<KeyValuePair<string, string>>{new KeyValuePair<string, string>(_sqsMessage.MessageId, _sqsMessage.ReceiptHandle)});
 
             _loggerFactory.CreateLogger(Arg.Any<string>()).Returns(_logger);
             _queue = new DummySqsQueue(new Uri(ExpectedQueueUrl), _amazonSqsClient);
             _serializationRegister.DeserializeMessage(Arg.Any<string>()).Returns(_typedMessage);
         }
 
-        private async Task When() => await SystemUnderTest.DispatchMessage(_sqsMessage, CancellationToken.None);
+        private async Task When() => await SystemUnderTest.DispatchMessage(_sqsMessage, _inflightTracker, CancellationToken.None);
 
         private MessageDispatcher CreateSystemUnderTestAsync()
         {
