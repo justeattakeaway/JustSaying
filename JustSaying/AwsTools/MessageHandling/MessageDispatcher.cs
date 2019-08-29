@@ -125,7 +125,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 try
                 {
-                    inflightTracker.Complete(message.MessageId);
+                    inflightTracker.Complete(message);
 
                     if (!handlingSucceeded)
                     {

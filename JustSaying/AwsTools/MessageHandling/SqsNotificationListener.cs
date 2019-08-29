@@ -180,9 +180,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 try
                 {
-                    var batchInflightTracker = new MessageBatchInflightTracker(
-                        sqsMessageResponse.Messages
-                            .Select(m => new KeyValuePair<string, string>(m.MessageId, m.ReceiptHandle)));
+                    var batchInflightTracker = new MessageBatchInflightTracker(sqsMessageResponse.Messages);
 
                     StartBatchHeartbeat(batchInflightTracker, ct);
 
@@ -240,8 +238,8 @@ namespace JustSaying.AwsTools.MessageHandling
                         Entries = inflightTracker.InflightMessages.Select(m =>
                             new ChangeMessageVisibilityBatchRequestEntry
                             {
-                                Id = m.messageId,
-                                ReceiptHandle = m.receiptHandle,
+                                Id = m.MessageId,
+                                ReceiptHandle = m.ReceiptHandle,
                                 VisibilityTimeout = (int) _queue.VisibilityTimeout.TotalSeconds
                             }).ToList()
                     }, cancellationToken).ConfigureAwait(false);

@@ -84,7 +84,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
                 ReceiptHandle = "i_am_receipt_handle"
             };
 
-            _inflightTracker = new MessageBatchInflightTracker(new List<KeyValuePair<string, string>>{new KeyValuePair<string, string>(_sqsMessage.MessageId, _sqsMessage.ReceiptHandle)});
+            _inflightTracker = new MessageBatchInflightTracker(new[] {_sqsMessage});
 
             _loggerFactory.CreateLogger(Arg.Any<string>()).Returns(_logger);
             _queue = new DummySqsQueue(new Uri(ExpectedQueueUrl), _amazonSqsClient);

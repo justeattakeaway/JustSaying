@@ -2,20 +2,25 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Amazon.SQS.Model;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public class MessageBatchInflightTracker
+    /// <summary>
+    /// Keeps track of a batch of messages that are inflight, as messages are signalled complete they are removed.
+    /// </summary>
+    public sealed class MessageBatchInflightTracker
     {
-        readonly ConcurrentDictionary<string, string> _messages;
+        readonly ConcurrentDictionary<string, Message> _messages;
 
-        public MessageBatchInflightTracker(IEnumerable<KeyValuePair<string, string>> messages)
+        public MessageBatchInflightTracker(IEnumerable<Message> messages)
         {
-            _messages = new ConcurrentDictionary<string, string>(messages, StringComparer.Ordinal);
+            _messages = new ConcurrentDictionary<string, Message>(
+                messages.Select(m => new KeyValuePair<string, Message>(m.MessageId, m)), StringComparer.Ordinal);
         }
 
-        public void Complete(string messageId) => _messages.TryRemove(messageId, out _);
+        public void Complete(Message message) => _messages.TryRemove(message.MessageId, out _);
 
-        public IEnumerable<(string messageId, string receiptHandle)> InflightMessages => _messages.Select(m => (m.Key, m.Value));
+        public IEnumerable<Message> InflightMessages => _messages.Values;
     }
 }
