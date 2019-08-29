@@ -125,7 +125,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 try
                 {
-                    if (!handlingSucceeded && _messageBackoffStrategy != null)
+                    if (!handlingSucceeded)
                     {
                         await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage, lastException).ConfigureAwait(false);
                     }
@@ -180,7 +180,9 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             if (TryGetApproxReceiveCount(message.Attributes, out int approxReceiveCount))
             {
-                var visibilityTimeout = _messageBackoffStrategy.GetBackoffDuration(typedMessage, approxReceiveCount, lastException);
+                var visibilityTimeout =
+                    _messageBackoffStrategy?.GetBackoffDuration(typedMessage, approxReceiveCount, lastException) ?? TimeSpan.Zero;
+
                 var visibilityTimeoutSeconds = (int)visibilityTimeout.TotalSeconds;
 
                 var visibilityRequest = new ChangeMessageVisibilityRequest
