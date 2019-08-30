@@ -51,7 +51,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
         private Message _typedMessage;
         private MessageBatchInflightTracker _inflightTracker;
 
-        protected MessageDispatcher SystemUnderTest { get; private set; }
+        private protected MessageDispatcher SystemUnderTest { get; set; }
 
         public virtual async Task InitializeAsync()
         {

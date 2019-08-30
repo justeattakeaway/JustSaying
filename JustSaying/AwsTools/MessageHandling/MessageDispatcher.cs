@@ -15,7 +15,7 @@ using SQSMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public class MessageDispatcher
+    internal class MessageDispatcher
     {
         private readonly SqsQueueBase _queue;
         private readonly IMessageSerializationRegister _serializationRegister;
@@ -27,7 +27,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private static ILogger _logger;
 
-        public MessageDispatcher(
+        internal MessageDispatcher(
             SqsQueueBase queue,
             IMessageSerializationRegister serializationRegister,
             IMessageMonitor messagingMonitor,
