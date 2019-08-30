@@ -9,14 +9,14 @@ namespace JustSaying.AwsTools.MessageHandling
     /// <summary>
     /// Keeps track of a batch of messages that are inflight, as messages are signalled complete they are removed.
     /// </summary>
-    public sealed class MessageBatchInflightTracker
+    internal sealed class MessageBatchInflightTracker
     {
-        readonly ConcurrentDictionary<string, Message> _messages;
+        private readonly ConcurrentDictionary<string, Message> _messages;
 
         public MessageBatchInflightTracker(IEnumerable<Message> messages)
         {
             _messages = new ConcurrentDictionary<string, Message>(
-                messages.Select(m => new KeyValuePair<string, Message>(m.MessageId, m)), StringComparer.Ordinal);
+                messages.ToDictionary(x => x.MessageId), StringComparer.Ordinal);
         }
 
         public void Complete(Message message) => _messages.TryRemove(message.MessageId, out _);

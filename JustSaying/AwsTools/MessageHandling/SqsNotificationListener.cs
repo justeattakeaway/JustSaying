@@ -227,15 +227,18 @@ namespace JustSaying.AwsTools.MessageHandling
                 // TODO overall timeout, or max renews? Could renew forever.
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    await Task.Delay(TimeSpan.FromTicks(_queue.VisibilityTimeout.Ticks / 2), cancellationToken);
+                    await Task.Delay(TimeSpan.FromTicks(_queue.VisibilityTimeout.Ticks / 2), cancellationToken).ConfigureAwait(false);
 
                     var inflightMessages = inflightTracker.InflightMessages.ToList();
-                    if (inflightMessages.Count == 0) return;
+                    if (inflightMessages.Count == 0)
+                    {
+                        return;
+                    }
 
                     await _queue.Client.ChangeMessageVisibilityBatchAsync(new ChangeMessageVisibilityBatchRequest
                     {
                         QueueUrl = _queue.Uri.AbsoluteUri,
-                        Entries = inflightTracker.InflightMessages.Select(m =>
+                        Entries = inflightMessages.Select(m =>
                             new ChangeMessageVisibilityBatchRequestEntry
                             {
                                 Id = m.MessageId,

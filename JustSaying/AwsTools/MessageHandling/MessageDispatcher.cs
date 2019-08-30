@@ -47,7 +47,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _messageContextAccessor = messageContextAccessor;
         }
 
-        public async Task DispatchMessage(SQSMessage message, MessageBatchInflightTracker inflightTracker, CancellationToken cancellationToken)
+        internal async Task DispatchMessage(SQSMessage message, MessageBatchInflightTracker inflightTracker, CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested)
             {
