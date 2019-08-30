@@ -72,12 +72,12 @@ namespace JustSaying.AwsTools.MessageHandling
 
         // ToDo: This should not be here.
         public SqsNotificationListener WithMaximumConcurrentLimitOnMessagesInFlightOf(
-            int maximumAllowedMessagesInFlight,
+            int maximumAllowedMessagesInflight,
             TimeSpan? startTimeout = null)
         {
             var options = new ThrottledOptions()
             {
-                MaxConcurrency = maximumAllowedMessagesInFlight,
+                MaxConcurrency = maximumAllowedMessagesInflight,
                 StartTimeout = startTimeout ?? Timeout.InfiniteTimeSpan,
                 Logger = _log,
                 MessageMonitor = _messagingMonitor,
