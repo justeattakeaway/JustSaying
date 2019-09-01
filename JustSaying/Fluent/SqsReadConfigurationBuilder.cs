@@ -23,6 +23,11 @@ namespace JustSaying.Fluent
         private int? MaximumAllowedMessagesInflight { get; set; }
 
         /// <summary>
+        /// Gets or set the maximum number of visibility timeout renewals for messages if processing is exceeding the visibility timeout.
+        /// </summary>
+        private int MaxVisibilityTimeoutRenewals { get; set; } = 120;
+
+        /// <summary>
         /// Gets or sets the error callback to use.
         /// </summary>
         private Action<Exception, Message> OnError { get; set; }
@@ -96,6 +101,19 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
+        /// Configures the maximum number of visibility timeout renewals for messages if processing is exceeding the visibility timeout.
+        /// </summary>
+        /// <param name="value">The value to use for the maximum number of visibility timeout renewals</param>
+        /// <returns>
+        /// The current <see cref="SqsReadConfigurationBuilder"/>.
+        /// </returns>
+        public SqsReadConfigurationBuilder WithMaxVisibilityTimeoutRenewals(int value)
+        {
+            MaxVisibilityTimeoutRenewals = value;
+            return this;
+        }
+
+        /// <summary>
         /// Configures the account Id to use for the topic source.
         /// </summary>
         /// <param name="id">The Id of the AWS account which is the topic's source.</param>
@@ -139,6 +157,8 @@ namespace JustSaying.Fluent
             {
                 config.MaxAllowedMessagesInFlight = MaximumAllowedMessagesInflight.Value;
             }
+
+            config.MaxVisibilityTimeoutRenewals = MaxVisibilityTimeoutRenewals;
 
             if (OnError != null)
             {

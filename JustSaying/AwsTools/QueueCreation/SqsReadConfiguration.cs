@@ -27,6 +27,7 @@ namespace JustSaying.AwsTools.QueueCreation
 
         public int? InstancePosition { get; set; }
         public int? MaxAllowedMessagesInFlight { get; set; }
+        public int MaxVisibilityTimeoutRenewals { get; set; }
         public IMessageProcessingStrategy MessageProcessingStrategy { get; set; }
         public Action<Exception, Amazon.SQS.Model.Message> OnError { get; set; }
         public string TopicSourceAccount { get; set; }
@@ -46,6 +47,11 @@ namespace JustSaying.AwsTools.QueueCreation
             if (MaxAllowedMessagesInFlight.HasValue && MessageProcessingStrategy != null)
             {
                 throw new ConfigurationErrorsException("You have provided both 'maxAllowedMessagesInFlight' and 'messageProcessingStrategy' - these settings are mutually exclusive.");
+            }
+
+            if (MaxVisibilityTimeoutRenewals < 0)
+            {
+                throw new ConfigurationErrorsException("'maxVisibilityTimeoutRenewals' must be equal to or greater than 0");
             }
         }
 

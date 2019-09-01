@@ -29,6 +29,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly HandlerMap _handlerMap = new HandlerMap();
 
         private readonly ILogger _log;
+        private int _maxVisibilityTimeoutRenewals;
 
         public bool IsListening { get; private set; }
 
@@ -88,6 +89,12 @@ namespace JustSaying.AwsTools.MessageHandling
             return this;
         }
 
+        public SqsNotificationListener WithMaxVisibilityTimeoutRenewals(int maxVisibilityTimeoutRenewals)
+        {
+            _maxVisibilityTimeoutRenewals = maxVisibilityTimeoutRenewals;
+            return this;
+        }
+
         public SqsNotificationListener WithMessageProcessingStrategy(IMessageProcessingStrategy messageProcessingStrategy)
         {
             _messageProcessingStrategy = messageProcessingStrategy;
@@ -126,7 +133,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _log.LogInformation("Starting listening on queue '{QueueName}' in region '{Region}'.", queueName, region);
         }
 
-        internal async Task ListenLoopAsync(CancellationToken ct)
+        async Task ListenLoopAsync(CancellationToken ct)
         {
             var queueName = _queue.QueueName;
             var regionName = _queue.Region.SystemName;
@@ -222,30 +229,43 @@ namespace JustSaying.AwsTools.MessageHandling
         /// <param name="cancellationToken"></param>
         private void StartBatchHeartbeat(MessageBatchInflightTracker inflightTracker, CancellationToken cancellationToken)
         {
+            if (_maxVisibilityTimeoutRenewals == 0)
+            {
+                return;
+            }
             _ = Task.Run(async () =>
             {
-                // TODO overall timeout, or max renews? Could renew forever.
-                while (!cancellationToken.IsCancellationRequested)
+                int timeoutRenewalsCount = 0;
+                while (!cancellationToken.IsCancellationRequested && timeoutRenewalsCount < _maxVisibilityTimeoutRenewals)
                 {
-                    await Task.Delay(TimeSpan.FromTicks(_queue.VisibilityTimeout.Ticks / 2), cancellationToken).ConfigureAwait(false);
-
-                    var inflightMessages = inflightTracker.InflightMessages.ToList();
-                    if (inflightMessages.Count == 0)
+                    timeoutRenewalsCount++;
+                    try
                     {
-                        return;
+                        await Task.Delay(TimeSpan.FromTicks(_queue.VisibilityTimeout.Ticks / 2), cancellationToken)
+                            .ConfigureAwait(false);
+
+                        var inflightMessages = inflightTracker.InflightMessages.ToList();
+                        if (inflightMessages.Count == 0)
+                        {
+                            return;
+                        }
+
+                        await _queue.Client.ChangeMessageVisibilityBatchAsync(new ChangeMessageVisibilityBatchRequest
+                        {
+                            QueueUrl = _queue.Uri.AbsoluteUri,
+                            Entries = inflightMessages.Select(m =>
+                                new ChangeMessageVisibilityBatchRequestEntry
+                                {
+                                    Id = m.MessageId,
+                                    ReceiptHandle = m.ReceiptHandle,
+                                    VisibilityTimeout = (int) _queue.VisibilityTimeout.TotalSeconds
+                                }).ToList()
+                        }, cancellationToken).ConfigureAwait(false);
                     }
-
-                    await _queue.Client.ChangeMessageVisibilityBatchAsync(new ChangeMessageVisibilityBatchRequest
+                    catch (Exception)
                     {
-                        QueueUrl = _queue.Uri.AbsoluteUri,
-                        Entries = inflightMessages.Select(m =>
-                            new ChangeMessageVisibilityBatchRequestEntry
-                            {
-                                Id = m.MessageId,
-                                ReceiptHandle = m.ReceiptHandle,
-                                VisibilityTimeout = (int) _queue.VisibilityTimeout.TotalSeconds
-                            }).ToList()
-                    }, cancellationToken).ConfigureAwait(false);
+                        // Heartbeat should continue until cancellated
+                    }
                 }
             });
         }

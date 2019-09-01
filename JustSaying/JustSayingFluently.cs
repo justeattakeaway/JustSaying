@@ -387,6 +387,8 @@ namespace JustSaying
                     sqsSubscriptionListener.WithMaximumConcurrentLimitOnMessagesInFlightOf(_subscriptionConfig.MaxAllowedMessagesInFlight.Value);
                 }
 
+                sqsSubscriptionListener.WithMaxVisibilityTimeoutRenewals(_subscriptionConfig.MaxVisibilityTimeoutRenewals);
+
                 if (_subscriptionConfig.MessageProcessingStrategy != null)
                 {
                     sqsSubscriptionListener.WithMessageProcessingStrategy(_subscriptionConfig.MessageProcessingStrategy);
