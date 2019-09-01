@@ -262,7 +262,9 @@ namespace JustSaying.AwsTools.MessageHandling
                                 }).ToList()
                         }, cancellationToken).ConfigureAwait(false);
                     }
+#pragma warning disable CA1031
                     catch (Exception)
+#pragma warning restore CA1031
                     {
                         // Heartbeat should continue until cancellated
                     }
