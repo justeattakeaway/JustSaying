@@ -29,7 +29,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly HandlerMap _handlerMap = new HandlerMap();
 
         private readonly ILogger _log;
-        private int _maxVisibilityTimeoutRenewals;
+        int _maxVisibilityTimeoutRenewals;
 
         public bool IsListening { get; private set; }
 
@@ -133,7 +133,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _log.LogInformation("Starting listening on queue '{QueueName}' in region '{Region}'.", queueName, region);
         }
 
-        async Task ListenLoopAsync(CancellationToken ct)
+        private async Task ListenLoopAsync(CancellationToken ct)
         {
             var queueName = _queue.QueueName;
             var regionName = _queue.Region.SystemName;
