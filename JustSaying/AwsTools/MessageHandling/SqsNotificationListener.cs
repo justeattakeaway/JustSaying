@@ -266,7 +266,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     catch (Exception)
 #pragma warning restore CA1031
                     {
-                        // Heartbeat should continue until cancellated
+                        // Heartbeat should continue until cancelled
                     }
                 }
             });

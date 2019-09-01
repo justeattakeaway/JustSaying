@@ -45,7 +45,8 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     (builder) => builder.Subscriptions(
                         (options) => options.ForQueue<SimpleMessage>(
                             (queue) => queue.WithName(UniqueName).WithReadConfiguration(
-                                (config) => config.WithMaximumMessagesInflight(25)))))
+                                (config) => config.WithMaximumMessagesInflight(25)
+                                    .WithMaxVisibilityTimeoutRenewals(0)))))
                 .AddSingleton(_handler);
 
             var baseSleep = TestEnvironment.IsSimulatorConfigured ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(2);
