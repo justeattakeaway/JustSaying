@@ -143,6 +143,10 @@ namespace JustSaying.AwsTools.MessageHandling
                         ? null
                         : config;
                 }
+                else
+                {
+                    _log.LogWarning($"Request to set topic attribute {request.AttributeName} to {request.AttributeValue} failed with status code {response.HttpStatusCode}.");
+                }
             }
         }
 
