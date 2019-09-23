@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 
 namespace JustSaying.AwsTools.QueueCreation
@@ -10,10 +11,12 @@ namespace JustSaying.AwsTools.QueueCreation
             KmsDataKeyReusePeriodSeconds = JustSayingConstants.DefaultAttributeEncryptionKeyReusePeriodSecond;
         }
 
-        [JsonProperty(PropertyName = "kmsMasterKeyId")]
+        [JsonProperty("kmsMasterKeyId")]
+        [JsonPropertyName("kmsMasterKeyId")]
         public string KmsMasterKeyId { get; set; }
 
-        [JsonProperty(PropertyName = "kmsDataKeyReusePeriodSeconds")]
+        [JsonProperty("kmsDataKeyReusePeriodSeconds")]
+        [JsonPropertyName("kmsDataKeyReusePeriodSeconds")]
         public string KmsDataKeyReusePeriodSeconds { get; set; }
     }
 }

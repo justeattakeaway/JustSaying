@@ -26,12 +26,11 @@ namespace JustSaying.TestingFramework
 
     public class MessageWithEnum : Message
     {
-        public MessageWithEnum(Value enumVal)
+        public MessageWithEnum()
         {
-            EnumVal = enumVal;
         }
 
-        public Value EnumVal { get; private set; }
+        public Value EnumVal { get; set; }
     }
 
     public enum Value

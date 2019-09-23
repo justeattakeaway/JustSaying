@@ -1,16 +1,16 @@
-using System;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft
+namespace JustSaying.UnitTests.Messaging.Serialization.SystemTextJson
 {
-    public class DealingWithPotentiallyMissingConversation : XBehaviourTest<NewtonsoftSerializer>
+    public class WhenSerializingAndDeserializing : XBehaviourTest<SystemTextJsonSerializer>
     {
         private MessageWithEnum _messageOut;
         private MessageWithEnum _messageIn;
         private string _jsonMessage;
+
         protected override void Given()
         {
             _messageOut = new MessageWithEnum() { EnumVal = Value.Two };
@@ -19,22 +19,28 @@ namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft
         protected override void WhenAction()
         {
             _jsonMessage = SystemUnderTest.Serialize(_messageOut, false, _messageOut.GetType().Name);
-
-            //add extra property to see what happens:
-            _jsonMessage = _jsonMessage.Replace("{__", "{\"New\":\"Property\",__", StringComparison.OrdinalIgnoreCase);
             _messageIn = SystemUnderTest.Deserialize(_jsonMessage, typeof(MessageWithEnum)) as MessageWithEnum;
         }
 
         [Fact]
-        public void ItDoesNotHaveConversationPropertySerializedBecauseItIsNotSet_ThisIsForBackwardsCompatibilityWhenWeDeploy()
+        public void MessageHasBeenCreated()
         {
-            _jsonMessage.ShouldNotContain("Conversation");
+            _messageOut.ShouldNotBeNull();
         }
 
         [Fact]
-        public void DeserializedMessageHasEmptyConversation_ThisIsForBackwardsCompatibilityWhenWeDeploy()
+        public void MessagesContainSameDetails()
         {
-            _messageIn.Conversation.ShouldBeNull();
+            _messageOut.EnumVal.ShouldBe(_messageIn.EnumVal);
+            _messageOut.RaisingComponent.ShouldBe(_messageIn.RaisingComponent);
+            _messageOut.TimeStamp.ShouldBe(_messageIn.TimeStamp);
+        }
+
+        [Fact]
+        public void EnumsAreRepresentedAsStrings()
+        {
+            _jsonMessage.ShouldContain("EnumVal");
+            _jsonMessage.ShouldContain("Two");
         }
     }
 }

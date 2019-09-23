@@ -10,55 +10,52 @@ namespace JustSaying.Messaging.MessageSerialization
         private readonly JsonSerializerSettings _settings;
 
         public NewtonsoftSerializer()
+            : this(null)
         {
-            _settings = null;
         }
 
-        public NewtonsoftSerializer(JsonSerializerSettings settings) : this()
+        public NewtonsoftSerializer(JsonSerializerSettings settings)
         {
+            if (settings == null)
+            {
+                settings = new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore,
+                    Converters = new JsonConverter[] { new Newtonsoft.Json.Converters.StringEnumConverter() }
+                };
+            }
+
             _settings = settings;
         }
 
         public Message Deserialize(string message, Type type)
         {
-            var jsqsMessage = JObject.Parse(message);
-            var messageBody = jsqsMessage["Message"].ToString();
-            return (Message)JsonConvert.DeserializeObject(messageBody, type, GetJsonSettings());
+            var document = JObject.Parse(message);
+            string json = document["Message"].ToString();
+
+            return (Message)JsonConvert.DeserializeObject(json, type, _settings);
         }
 
         public string Serialize(Message message, bool serializeForSnsPublishing, string subject)
         {
-            var settings = GetJsonSettings();
-
-            var msg = JsonConvert.SerializeObject(message, settings);
+            var json = JsonConvert.SerializeObject(message, _settings);
 
             // AWS SNS service will add Subject and Message properties automatically, 
             // so just return plain message
             if (serializeForSnsPublishing)
             {
-                return msg;
+                return json;
             }
 
-            // for direct publishing to SQS, add Subject and Message properties manually
-            var context = new { Subject = subject, Message = msg };
-            return JsonConvert.SerializeObject(context);
-        }
-
-        private JsonSerializerSettings GetJsonSettings()
-        {
-            return _settings ?? new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore,
-                Converters = new JsonConverter[] { new Newtonsoft.Json.Converters.StringEnumConverter() }
-            };
+            // For direct publishing to SQS, add Subject and Message properties manually
+            var context = new { Subject = subject, Message = json };
+            return JsonConvert.SerializeObject(context, _settings);
         }
 
         public string GetMessageSubject(string sqsMessge)
         {
             var body = JObject.Parse(sqsMessge);
-
-            var type = body["Subject"] ?? string.Empty;
-            return type.ToString();
+            return body.Value<string>("Subject") ?? string.Empty;
         }
     }
 }

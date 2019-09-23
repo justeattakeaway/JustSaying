@@ -1,19 +1,20 @@
+using System.Text.Json;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Newtonsoft.Json;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft
+namespace JustSaying.UnitTests.Messaging.Serialization.SystemTextJson
 {
-    public class WhenUsingCustomSettings : XBehaviourTest<NewtonsoftSerializer>
+    public class WhenUsingCustomSettings : XBehaviourTest<SystemTextJsonSerializer>
     {
         private MessageWithEnum _messageOut;
         private string _jsonMessage;
 
-        protected override NewtonsoftSerializer CreateSystemUnderTest()
+        protected override SystemTextJsonSerializer CreateSystemUnderTest()
         {
-            return new NewtonsoftSerializer(new JsonSerializerSettings());
+            return new SystemTextJsonSerializer(new JsonSerializerOptions());
         }
 
         protected override void Given()
