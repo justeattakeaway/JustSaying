@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit.Abstractions;
