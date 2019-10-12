@@ -29,7 +29,7 @@ namespace JustSaying.Tools.Commands
         public async Task<bool> ExecuteAsync()
         {
             Console.WriteLine($"Moving {Count} messages from {SourceQueueName} to {DestinationQueueName} in {Region}.");
-            var loggerFactory = new LoggerFactory();
+            using var loggerFactory = new LoggerFactory();
 
             var config = new AmazonSQSConfig { RegionEndpoint = RegionEndpoint.GetBySystemName(Region) };
             var client = new DefaultAwsClientFactory().GetSqsClient(config.RegionEndpoint);
