@@ -11,9 +11,9 @@
     <AwsSdkSqsVersion>3.3.102.16</AwsSdkSqsVersion>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="coverlet.msbuild" Version="2.7.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-preview.2" PrivateAssets="All" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19367-01" PrivateAssets="All" />
-    <PackageReference Include="OpenCover" Version="4.7.922" PrivateAssets="All" />
     <PackageReference Include="ReportGenerator" Version="4.3.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
@@ -55,5 +55,13 @@
     <EmbedAllSources Condition=" '$(IsTestProject)' != 'true' AND '$(NCrunch)' == '' ">true</EmbedAllSources>
     <!-- HACK Workaround flaky build in CI for Linux -->
     <BuildInParallel Condition=" '$(OS)' != 'Windows_NT' and '$(CI)' != '' ">false</BuildInParallel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <CollectCoverage Condition=" '$(CollectCoverage)' == '' ">true</CollectCoverage>
+    <CoverletOutput Condition=" '$(OutputPath)' != '' ">$(OutputPath)\</CoverletOutput>
+    <CoverletOutputFormat>cobertura,json</CoverletOutputFormat>
+    <Exclude>[*.Benchmarks]*,[*Sample*]*,[*Test*]*,[xunit.*]*</Exclude>
+    <ExcludeByAttribute>System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
+    <MergeWith>$(CoverletOutput)coverage.json</MergeWith>
   </PropertyGroup>
 </Project>
