@@ -1,6 +1,6 @@
 using System;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Sample.Restaurant.OrderingApi
@@ -11,14 +11,14 @@ namespace JustSaying.Sample.Restaurant.OrderingApi
         {
             Console.Title = "OrderingApi";
 
-            CreateWebHostBuilder(args).Build().Run();
+            CreateHostBuilder(args).Build().Run();
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args)
+        public static IHostBuilder CreateHostBuilder(string[] args)
         {
-            return WebHost.CreateDefaultBuilder(args)
+            return Host.CreateDefaultBuilder(args)
                 .ConfigureLogging((loggingBuilder) => loggingBuilder.AddConsole())
-                .UseStartup<Startup>();
+                .ConfigureWebHostDefaults((builder) => builder.UseStartup<Startup>());
         }
     }
 }

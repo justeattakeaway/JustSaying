@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Swashbuckle.AspNetCore.Swagger;
+using Microsoft.OpenApi.Models;
 
 namespace JustSaying.Sample.Restaurant.OrderingApi
 {
@@ -19,7 +19,8 @@ namespace JustSaying.Sample.Restaurant.OrderingApi
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddControllers()
+                    .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
 
             services.AddJustSaying(config =>
             {
@@ -70,20 +71,23 @@ namespace JustSaying.Sample.Restaurant.OrderingApi
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new Info { Title = "Restaurant Ordering API", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Restaurant Ordering API", Version = "v1" });
             });
         }
 
         public static void Configure(IApplicationBuilder app)
         {
+            app.UseDeveloperExceptionPage();
+
+            app.UseRouting();
+            app.UseEndpoints((endpoints) => endpoints.MapDefaultControllerRoute());
+
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Restaurant Ordering API");
                 c.RoutePrefix = string.Empty;
             });
-            app.UseDeveloperExceptionPage();
-            app.UseMvc();
         }
     }
 }
