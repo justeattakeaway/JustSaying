@@ -4,12 +4,13 @@ using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using StructureMap;
 using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.DependencyInjection.StructureMap
+namespace JustSaying
 {
     public class WhenUsingStructureMap
     {

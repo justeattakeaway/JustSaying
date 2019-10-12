@@ -1,13 +1,12 @@
 using System;
-using JustSaying.TestingFramework;
 using Xunit;
 
-namespace JustSaying.IntegrationTests
+namespace JustSaying.TestingFramework
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public sealed class AwsFactAttribute : FactAttribute
+    public sealed class AwsTheoryAttribute : TheoryAttribute
     {
-        public AwsFactAttribute()
+        public AwsTheoryAttribute()
             : base()
         {
             if (!TestEnvironment.IsSimulatorConfigured && !TestEnvironment.HasCredentials)

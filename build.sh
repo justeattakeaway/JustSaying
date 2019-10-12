@@ -26,4 +26,5 @@ dotnet build ./src/JustSaying.Extensions.DependencyInjection.Microsoft/JustSayin
 dotnet build ./src/JustSaying.Extensions.DependencyInjection.StructureMap/JustSaying.Extensions.DependencyInjection.StructureMap.csproj --output $artifacts --configuration $configuration --framework "netstandard2.0" || exit 1
 
 dotnet test ./tests/JustSaying.UnitTests/JustSaying.UnitTests.csproj
+dotnet test ./tests/JustSaying.Extensions.DependencyInjection.StructureMap.Tests/JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj
 dotnet test ./tests/JustSaying.IntegrationTests/JustSaying.IntegrationTests.csproj

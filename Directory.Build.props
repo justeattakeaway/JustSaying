@@ -1,7 +1,14 @@
 <Project>
   <PropertyGroup>
     <AnalyzersPackageVersion>2.9.2</AnalyzersPackageVersion>
-    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)CodeAnalysisRules.ruleset</CodeAnalysisRuleSet>
+    <DotNetTestSdkVersion>16.2.0</DotNetTestSdkVersion>
+    <MicrosoftExtensionsDependencyInjectionVersion>2.2.0</MicrosoftExtensionsDependencyInjectionVersion>
+    <NewtonsoftJsonVersion>12.0.2</NewtonsoftJsonVersion>
+    <XUnitVersion>2.4.1</XUnitVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AwsSdkSnsVersion>3.3.101.30</AwsSdkSnsVersion>
+    <AwsSdkSqsVersion>3.3.100.41</AwsSdkSqsVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-preview.2" PrivateAssets="All" />
@@ -16,6 +23,7 @@
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)justeat-oss.snk</AssemblyOriginatorKeyFile>
     <Authors>JUSTEAT_OSS</Authors>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)CodeAnalysisRules.ruleset</CodeAnalysisRuleSet>
     <Company>Just Eat</Company>
     <Copyright>Copyright (c) Just Eat 2015-$([System.DateTime]::Now.ToString(yyyy))</Copyright>
     <Description>A light-weight message bus on top of AWS SNS and SQS</Description>
