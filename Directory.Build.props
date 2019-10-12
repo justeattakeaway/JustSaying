@@ -7,8 +7,8 @@
     <XUnitVersion>2.4.1</XUnitVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <AwsSdkSnsVersion>3.3.101.30</AwsSdkSnsVersion>
-    <AwsSdkSqsVersion>3.3.100.41</AwsSdkSqsVersion>
+    <AwsSdkSnsVersion>3.3.101.73</AwsSdkSnsVersion>
+    <AwsSdkSqsVersion>3.3.102.16</AwsSdkSqsVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-preview.2" PrivateAssets="All" />
