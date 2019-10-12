@@ -1,10 +1,12 @@
-﻿using System;
+using System;
 using JustSaying.Models;
 
 namespace JustSaying.AwsTools.QueueCreation
 {
     public class SnsWriteConfiguration
     {
+        public ServerSideEncryption Encryption { get; set; }
+
         /// <summary>
         /// Extension point enabling custom error handling on a per notification basis, including ability handle raised exceptions.
         /// </summary>

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
@@ -95,6 +96,73 @@ namespace JustSaying.AwsTools.MessageHandling
             }
 
             return false;
+        }
+
+        public async Task<bool> CreateWithEncryptionAsync(ServerSideEncryption config)
+        {
+            var created = await CreateAsync().ConfigureAwait(false);
+
+            ServerSideEncryption = await ExtractServerSideEncryptionFromTopicAttributes().ConfigureAwait(false);
+
+            await EnsureServerSideEncryptionIsUpdatedAsync(config).ConfigureAwait(false);
+
+            return created;
+        }
+
+        private async Task<ServerSideEncryption> ExtractServerSideEncryptionFromTopicAttributes()
+        {
+            var attributesResponse = await Client.GetTopicAttributesAsync(Arn).ConfigureAwait(false);
+            
+            if (!attributesResponse.Attributes.TryGetValue(JustSayingConstants.AttributeEncryptionKeyId, out var encryptionKeyId))
+            {
+                return null;
+            }
+
+            return new ServerSideEncryption
+            {
+                KmsMasterKeyId = encryptionKeyId
+            };
+        }
+
+        private async Task EnsureServerSideEncryptionIsUpdatedAsync(ServerSideEncryption config)
+        {
+            if (ServerSideEncryptionNeedsUpdating(config))
+            {
+                var request = new SetTopicAttributesRequest
+                {
+                    TopicArn = Arn,
+                    AttributeName = JustSayingConstants.AttributeEncryptionKeyId,
+                    AttributeValue = config?.KmsMasterKeyId ?? string.Empty
+                };
+
+                var response = await Client.SetTopicAttributesAsync(request).ConfigureAwait(false);
+
+                if (response.HttpStatusCode == HttpStatusCode.OK)
+                {
+                    ServerSideEncryption = string.IsNullOrEmpty(config?.KmsMasterKeyId)
+                        ? null
+                        : config;
+                }
+                else
+                {
+                    _log.LogWarning("Request to set topic attribute '{TopicAttributeName}' to '{TopicAttributeValue}' failed with status code '{HttpStatusCode}'.", request.AttributeName, request.AttributeValue, response.HttpStatusCode);
+                }
+            }
+        }
+
+        private bool ServerSideEncryptionNeedsUpdating(ServerSideEncryption config)
+        {
+            if (ServerSideEncryption == config)
+            {
+                return false;
+            }
+
+            if (ServerSideEncryption != null && config != null)
+            {
+                return ServerSideEncryption.KmsMasterKeyId != config.KmsMasterKeyId;
+            }
+
+            return true;
         }
     }
 }
