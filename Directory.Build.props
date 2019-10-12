@@ -53,5 +53,7 @@
     <ComVisible>false</ComVisible>
     <DebugType>embedded</DebugType>
     <EmbedAllSources Condition=" '$(IsTestProject)' != 'true' AND '$(NCrunch)' == '' ">true</EmbedAllSources>
+    <!-- HACK Workaround flaky build in CI for Linux -->
+    <BuildInParallel Condition=" '$(OS)' != 'Windows_NT' and '$(CI)' != '' ">false</BuildInParallel>
   </PropertyGroup>
 </Project>
