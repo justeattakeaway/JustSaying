@@ -11,6 +11,8 @@ export PATH="$DOTNET_INSTALL_DIR:$PATH"
 dotnet_version=$(dotnet --version)
 
 if [ "$dotnet_version" != "$CLI_VERSION" ]; then
+    # Install 2.2 until https://github.com/adamralph/minver/pull/287 is released
+    curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version "2.2.402" --install-dir "$DOTNET_INSTALL_DIR"
     curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version "$CLI_VERSION" --install-dir "$DOTNET_INSTALL_DIR"
 fi
 
@@ -21,10 +23,8 @@ if [ "$CI" != "" -a "$TRAVIS_OS_NAME" == "linux" ]; then
     export AWS_SERVICE_URL="http://localhost:4100"
 fi
 
-dotnet build ./src/JustSaying/JustSaying.csproj --output $artifacts --configuration $configuration --framework "netstandard2.0" || exit 1
-dotnet build ./src/JustSaying.Extensions.DependencyInjection.Microsoft/JustSaying.Extensions.DependencyInjection.Microsoft.csproj --output $artifacts --configuration $configuration --framework "netstandard2.0" || exit 1
-dotnet build ./src/JustSaying.Extensions.DependencyInjection.StructureMap/JustSaying.Extensions.DependencyInjection.StructureMap.csproj --output $artifacts --configuration $configuration --framework "netstandard2.0" || exit 1
+dotnet build ./JustSaying.sln --output $artifacts --configuration $configuration || exit 1
 
-dotnet test ./tests/JustSaying.UnitTests/JustSaying.UnitTests.csproj
-dotnet test ./tests/JustSaying.Extensions.DependencyInjection.StructureMap.Tests/JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj
-dotnet test ./tests/JustSaying.IntegrationTests/JustSaying.IntegrationTests.csproj
+dotnet test ./tests/JustSaying.UnitTests/JustSaying.UnitTests.csproj --output $artifacts --configuration $configuration '--logger:Console;noprogress=true' || exit 1
+dotnet test ./tests/JustSaying.Extensions.DependencyInjection.StructureMap.Tests/JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj --output $artifacts --configuration $configuration '--logger:Console;noprogress=true' || exit 1
+dotnet test ./tests/JustSaying.IntegrationTests/JustSaying.IntegrationTests.csproj --output $artifacts --configuration $configuration '--logger:Console;noprogress=true' || exit 1

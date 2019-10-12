@@ -1,24 +1,27 @@
 <Project>
   <PropertyGroup>
-    <AnalyzersPackageVersion>2.9.2</AnalyzersPackageVersion>
-    <DotNetTestSdkVersion>16.2.0</DotNetTestSdkVersion>
-    <MicrosoftExtensionsDependencyInjectionVersion>2.2.0</MicrosoftExtensionsDependencyInjectionVersion>
+    <AnalyzersPackageVersion>2.9.6</AnalyzersPackageVersion>
+    <DotNetTestSdkVersion>16.3.0</DotNetTestSdkVersion>
+    <MicrosoftExtensionsDependencyInjectionVersion>3.0.0</MicrosoftExtensionsDependencyInjectionVersion>
     <NewtonsoftJsonVersion>12.0.2</NewtonsoftJsonVersion>
     <XUnitVersion>2.4.1</XUnitVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <AwsSdkSnsVersion>3.3.101.30</AwsSdkSnsVersion>
-    <AwsSdkSqsVersion>3.3.100.41</AwsSdkSqsVersion>
+    <AwsSdkSnsVersion>3.3.101.73</AwsSdkSnsVersion>
+    <AwsSdkSqsVersion>3.3.102.16</AwsSdkSqsVersion>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="coverlet.msbuild" Version="2.7.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-preview.2" PrivateAssets="All" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19367-01" PrivateAssets="All" />
-    <PackageReference Include="OpenCover" Version="4.7.922" PrivateAssets="All" />
-    <PackageReference Include="ReportGenerator" Version="4.2.2" PrivateAssets="All" />
+    <PackageReference Include="ReportGenerator" Version="4.3.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
-    <PackageReference Include="MinVer" Version="1.1.0" PrivateAssets="All" />
+    <PackageReference Include="MinVer" Version="1.2.0" PrivateAssets="All" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)package-icon.png" Pack="True" PackagePath="" />
   </ItemGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)justeat-oss.snk</AssemblyOriginatorKeyFile>
@@ -31,7 +34,8 @@
     <MinVerTagPrefix>v</MinVerTagPrefix>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <EnableSourceControlManagerQueries>$(EnableSourceLink)</EnableSourceControlManagerQueries>
-    <PackageIconUrl>https://avatars3.githubusercontent.com/u/1516790?s=64</PackageIconUrl>
+    <NoWarn>$(NoWarn);CA1062;CA1303</NoWarn>
+    <PackageIcon>package-icon.png</PackageIcon>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/justeat/JustSaying</PackageProjectUrl>
     <PackageReleaseNotes>$(PackageProjectUrl)/releases</PackageReleaseNotes>
@@ -43,10 +47,21 @@
     <LangVersion>latest</LangVersion>
     <RepositoryUrl>$(PackageProjectUrl).git</RepositoryUrl>
     <SignAssembly>true</SignAssembly>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CLSCompliant>true</CLSCompliant>
     <ComVisible>false</ComVisible>
     <DebugType>embedded</DebugType>
     <EmbedAllSources Condition=" '$(IsTestProject)' != 'true' AND '$(NCrunch)' == '' ">true</EmbedAllSources>
+    <!-- HACK Workaround flaky build in CI for Linux -->
+    <BuildInParallel Condition=" '$(OS)' != 'Windows_NT' and '$(CI)' != '' ">false</BuildInParallel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <CollectCoverage Condition=" '$(CollectCoverage)' == '' ">true</CollectCoverage>
+    <CoverletOutput Condition=" '$(OutputPath)' != '' ">$(OutputPath)\</CoverletOutput>
+    <CoverletOutputFormat>cobertura,json</CoverletOutputFormat>
+    <Exclude>[*.Benchmarks]*,[*Sample*]*,[*Test*]*,[xunit.*]*</Exclude>
+    <ExcludeByAttribute>System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
+    <MergeWith>$(CoverletOutput)coverage.json</MergeWith>
   </PropertyGroup>
 </Project>

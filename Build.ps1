@@ -3,7 +3,6 @@ param(
     [Parameter(Mandatory = $false)][string] $VersionSuffix = "",
     [Parameter(Mandatory = $false)][string] $OutputPath = "",
     [Parameter(Mandatory = $false)][switch] $SkipTests,
-    [Parameter(Mandatory = $false)][switch] $DisableCodeCoverage,
     [Parameter(Mandatory = $false)][switch] $EnableIntegrationTests
 )
 
@@ -75,12 +74,15 @@ if ($installDotNetSdk -eq $true) {
         Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile $installScript -UseBasicParsing
         & $installScript -Version "$dotnetVersion" -InstallDir "$env:DOTNET_INSTALL_DIR" -NoPath
     }
-
-    $env:PATH = "$env:DOTNET_INSTALL_DIR;$env:PATH"
-    $dotnet = Join-Path "$env:DOTNET_INSTALL_DIR" "dotnet.exe"
 }
 else {
-    $dotnet = "dotnet"
+    $env:DOTNET_INSTALL_DIR = Split-Path -Path (Get-Command dotnet.exe).Path
+}
+
+$dotnet = Join-Path "$env:DOTNET_INSTALL_DIR" "dotnet.exe"
+
+if (($installDotNetSdk -eq $true) -And ($null -eq $env:TF_BUILD)) {
+    $env:PATH = "$env:DOTNET_INSTALL_DIR;$env:PATH"
 }
 
 function DotNetPack {
@@ -100,53 +102,28 @@ function DotNetPack {
 function DotNetTest {
     param([string]$Project)
 
-    if ($DisableCodeCoverage -eq $true) {
-        & $dotnet test $Project --output $OutputPath
-    }
-    else {
+    $nugetPath = Join-Path $env:USERPROFILE ".nuget\packages"
+    $propsFile = Join-Path $solutionPath "Directory.Build.props"
 
-        if ($installDotNetSdk -eq $true) {
-            $dotnetPath = $dotnet
-        }
-        else {
-            $dotnetPath = (Get-Command "dotnet.exe").Source
-        }
+    $reportGeneratorVersion = (Select-Xml -Path $propsFile -XPath "//PackageReference[@Include='ReportGenerator']/@Version").Node.'#text'
+    $reportGeneratorPath = Join-Path $nugetPath "ReportGenerator\$reportGeneratorVersion\tools\netcoreapp2.0\ReportGenerator.dll"
 
-        $nugetPath = Join-Path $env:USERPROFILE ".nuget\packages"
-        $propsFile = Join-Path $solutionPath "Directory.Build.props"
+    $coverageOutput = Join-Path $OutputPath "coverage.cobertura.xml"
+    $reportOutput = Join-Path $OutputPath "coverage"
 
-        $openCoverVersion = (Select-Xml -Path $propsFile -XPath "//PackageReference[@Include='OpenCover']/@Version").Node.'#text'
-        $openCoverPath = Join-Path $nugetPath "OpenCover\$openCoverVersion\tools\OpenCover.Console.exe"
-
-        $reportGeneratorVersion = (Select-Xml -Path $propsFile -XPath "//PackageReference[@Include='ReportGenerator']/@Version").Node.'#text'
-        $reportGeneratorPath = Join-Path $nugetPath "ReportGenerator\$reportGeneratorVersion\tools\netcoreapp2.0\ReportGenerator.dll"
-
-        $coverageOutput = Join-Path $OutputPath "code-coverage.xml"
-        $reportOutput = Join-Path $OutputPath "coverage"
-
-        & $openCoverPath `
-            `"-target:$dotnetPath`" `
-            `"-targetargs:test $Project --output $OutputPath`" `
-            -output:$coverageOutput `
-            `"-excludebyattribute:System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage*`" `
-            -hideskipped:All `
-            -mergebyhash `
-            -mergeoutput `
-            -oldstyle `
-            -register:user `
-            -skipautoprops `
-            `"-filter:+[JustSaying]* -[*Test*]*`"
-
-        & $dotnet `
-            $reportGeneratorPath `
-            `"-reports:$coverageOutput`" `
-            `"-targetdir:$reportOutput`" `
-            -reporttypes:HTML`;Cobertura `
-            -verbosity:Warning
-    }
+    & $dotnet test $Project --output $OutputPath --configuration $Configuration
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet test failed with exit code $LASTEXITCODE"
+    }
+
+    if ((Test-Path $coverageOutput)) {
+      & $dotnet `
+          $reportGeneratorPath `
+          `"-reports:$coverageOutput`" `
+          `"-targetdir:$reportOutput`" `
+          -reporttypes:HTML `
+          -verbosity:Warning
     }
 }
 
@@ -164,6 +141,7 @@ if (($null -ne $env:CI) -And ($EnableIntegrationTests -eq $true)) {
 
 if ($SkipTests -eq $false) {
     Write-Host "Running tests..." -ForegroundColor Green
+    Remove-Item -Path (Join-Path $OutputPath "coverage.json") -Force -ErrorAction SilentlyContinue | Out-Null
     ForEach ($testProject in $testProjects) {
         DotNetTest $testProject
     }

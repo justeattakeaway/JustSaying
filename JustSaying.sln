@@ -16,6 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		global.json = global.json
 		LICENSE.md = LICENSE.md
 		README.md = README.md
+		Releases.md = Releases.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Models", "src\JustSaying.Models\JustSaying.Models.csproj", "{C94866D0-29A6-43F2-B3BC-DFBC51A665C4}"
@@ -68,7 +69,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Sample.Restauran
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Sample.Restaurant.OrderingApi", "samples\src\JustSaying.Sample.Restaurant.OrderingApi\JustSaying.Sample.Restaurant.OrderingApi.csproj", "{A4D0E032-3AF1-437F-AF6B-4B602B8D4C49}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.Extensions.DependencyInjection.StructureMap.Tests", "tests\JustSaying.Extensions.DependencyInjection.StructureMap.Tests\JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj", "{6AF4E086-6784-489C-9AB1-36F637A30094}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Extensions.DependencyInjection.StructureMap.Tests", "tests\JustSaying.Extensions.DependencyInjection.StructureMap.Tests\JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj", "{6AF4E086-6784-489C-9AB1-36F637A30094}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

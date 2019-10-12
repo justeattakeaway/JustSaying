@@ -287,7 +287,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             async Task DispatchAsync()
             {
-                await _messageDispatcher.DispatchMessage(message, ct);
+                await _messageDispatcher.DispatchMessage(message, ct).ConfigureAwait(false);
             }
 
             return _messageProcessingStrategy.StartWorkerAsync(DispatchAsync, ct);

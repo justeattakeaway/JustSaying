@@ -33,7 +33,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
             await AssertMessagePublishedAndReceivedAsync(services, handler, completionSource);
         }
 
-        [AwsFact]
+        [AwsFact(Skip = "Test is flaky")]
         public async Task A_Message_Can_Still_Be_Published_To_A_Topic()
         {
             // Arrange

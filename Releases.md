@@ -11,9 +11,9 @@ The tag should be in the format:
 
 `v{MAJOR}.{MINOR}.{PATCH}`
 
-For example `v6.0.1`.
+For example `v7.0.0`.
 
-Once the AppVeyor build has completed, you can deploy to nuget via the AppVeyor UI.
+Once the AppVeyor build has completed, you can deploy to NuGet via the AppVeyor UI.
 
 ## Example Release Pattern
 
@@ -39,4 +39,4 @@ Here is what the versioning should typically look like, including what and when 
 - 7.0.1-alpha.0.1 (default pre-release identifiers)
 - 7.0.1-alpha.0.2
 
-(credit to @adamralph)
+(Credit to @adamralph)

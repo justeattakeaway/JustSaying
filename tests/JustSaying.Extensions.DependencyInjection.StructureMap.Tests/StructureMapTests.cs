@@ -32,7 +32,7 @@ namespace JustSaying
                    .Returns(true)
                    .AndDoes((_) => completionSource.SetResult(null));
 
-            var container = new Container(
+            using var container = new Container(
                 (registry) =>
                 {
                     registry.For<ILoggerFactory>()
@@ -57,17 +57,15 @@ namespace JustSaying
 
             var message = new SimpleMessage();
 
-            using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
-            {
-                listener.Start(source.Token);
+            using var source = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+            listener.Start(source.Token);
 
-                // Act
-                await publisher.PublishAsync(message, source.Token);
-                completionSource.Task.Wait(source.Token);
+            // Act
+            await publisher.PublishAsync(message, source.Token);
+            completionSource.Task.Wait(source.Token);
 
-                // Assert
-                await handler.Received().Handle(Arg.Any<SimpleMessage>());
-            }
+            // Assert
+            await handler.Received().Handle(Arg.Any<SimpleMessage>());
         }
     }
 }
