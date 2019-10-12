@@ -1,11 +1,18 @@
 <Project>
   <PropertyGroup>
     <AnalyzersPackageVersion>2.9.2</AnalyzersPackageVersion>
-    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)CodeAnalysisRules.ruleset</CodeAnalysisRuleSet>
+    <DotNetTestSdkVersion>16.2.0</DotNetTestSdkVersion>
+    <MicrosoftExtensionsDependencyInjectionVersion>2.2.0</MicrosoftExtensionsDependencyInjectionVersion>
+    <NewtonsoftJsonVersion>12.0.2</NewtonsoftJsonVersion>
+    <XUnitVersion>2.4.1</XUnitVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AwsSdkSnsVersion>3.3.101.30</AwsSdkSnsVersion>
+    <AwsSdkSqsVersion>3.3.100.41</AwsSdkSqsVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-preview.2" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19324-01" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19367-01" PrivateAssets="All" />
     <PackageReference Include="OpenCover" Version="4.7.922" PrivateAssets="All" />
     <PackageReference Include="ReportGenerator" Version="4.2.2" PrivateAssets="All" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
@@ -16,14 +23,13 @@
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)justeat-oss.snk</AssemblyOriginatorKeyFile>
     <Authors>JUSTEAT_OSS</Authors>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)CodeAnalysisRules.ruleset</CodeAnalysisRuleSet>
     <Company>Just Eat</Company>
     <Copyright>Copyright (c) Just Eat 2015-$([System.DateTime]::Now.ToString(yyyy))</Copyright>
     <Description>A light-weight message bus on top of AWS SNS and SQS</Description>
     <MinVerMinimumMajorMinor>7.0</MinVerMinimumMajorMinor>
     <MinVerTagPrefix>v</MinVerTagPrefix>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <!-- Disable Source Link on Mono, to workaround https://github.com/dotnet/sourcelink/issues/155 -->
-    <EnableSourceLink Condition=" '$(OS)' != 'Windows_NT' AND '$(MSBuildRuntimeType)' != 'Core' ">false</EnableSourceLink>
     <EnableSourceControlManagerQueries>$(EnableSourceLink)</EnableSourceControlManagerQueries>
     <PackageIconUrl>https://avatars3.githubusercontent.com/u/1516790?s=64</PackageIconUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
@@ -36,8 +42,7 @@
     <RepositoryType>git</RepositoryType>
     <LangVersion>latest</LangVersion>
     <RepositoryUrl>$(PackageProjectUrl).git</RepositoryUrl>
-    <SignAssembly>false</SignAssembly>
-    <DefineConstants Condition=" '$(SignAssembly)' == 'true' ">$(DefineConstants);STRONG_NAME</DefineConstants>
+    <SignAssembly>true</SignAssembly>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CLSCompliant>true</CLSCompliant>
     <ComVisible>false</ComVisible>

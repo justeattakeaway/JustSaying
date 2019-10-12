@@ -26,6 +26,7 @@ $testProjects = @(
 
 if ($EnableIntegrationTests -eq $true) {
     $testProjects += (Join-Path $solutionPath "tests\JustSaying.IntegrationTests\JustSaying.IntegrationTests.csproj");
+    $testProjects += (Join-Path $solutionPath "tests\JustSaying.Extensions.DependencyInjection.StructureMap.Tests\JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj");
 }
 
 $dotnetVersion = (Get-Content $sdkFile | Out-String | ConvertFrom-Json).sdk.version

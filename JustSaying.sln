@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26228.10
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29318.209
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4B4A4A0C-31C2-482B-A7D8-094C60C4D0B5}"
 	ProjectSection(SolutionItems) = preProject
@@ -16,9 +16,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		global.json = global.json
 		LICENSE.md = LICENSE.md
 		README.md = README.md
-		release.ps1 = release.ps1
-		SetAppVeyorBuildVersion.ps1 = SetAppVeyorBuildVersion.ps1
-		version.props = version.props
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Models", "src\JustSaying.Models\JustSaying.Models.csproj", "{C94866D0-29A6-43F2-B3BC-DFBC51A665C4}"
@@ -71,6 +68,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Sample.Restauran
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Sample.Restaurant.OrderingApi", "samples\src\JustSaying.Sample.Restaurant.OrderingApi\JustSaying.Sample.Restaurant.OrderingApi.csproj", "{A4D0E032-3AF1-437F-AF6B-4B602B8D4C49}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.Extensions.DependencyInjection.StructureMap.Tests", "tests\JustSaying.Extensions.DependencyInjection.StructureMap.Tests\JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj", "{6AF4E086-6784-489C-9AB1-36F637A30094}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -121,6 +120,10 @@ Global
 		{A4D0E032-3AF1-437F-AF6B-4B602B8D4C49}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A4D0E032-3AF1-437F-AF6B-4B602B8D4C49}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A4D0E032-3AF1-437F-AF6B-4B602B8D4C49}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6AF4E086-6784-489C-9AB1-36F637A30094}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6AF4E086-6784-489C-9AB1-36F637A30094}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6AF4E086-6784-489C-9AB1-36F637A30094}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6AF4E086-6784-489C-9AB1-36F637A30094}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -141,6 +144,7 @@ Global
 		{08CC5D22-2C3A-4B17-841E-55C4CCA40253} = {77C93C37-DE5B-448F-9A23-6C9D0C8465CA}
 		{B42B2446-00F6-407E-8C62-E3831B61C8B6} = {77C93C37-DE5B-448F-9A23-6C9D0C8465CA}
 		{A4D0E032-3AF1-437F-AF6B-4B602B8D4C49} = {77C93C37-DE5B-448F-9A23-6C9D0C8465CA}
+		{6AF4E086-6784-489C-9AB1-36F637A30094} = {E22A50F2-9952-4483-8AD1-09BE354FB3E4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {18FBDF85-C124-4444-9F03-D0D4F2B3A612}
