@@ -18,7 +18,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         {
         }
 
-        [AwsFact]
+        [AwsFact(Skip = "Test is flaky")]
         public async Task Then_The_Handler_Only_Receives_The_Message_Once()
         {
             // Arrange
