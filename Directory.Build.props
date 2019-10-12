@@ -1,8 +1,8 @@
 <Project>
   <PropertyGroup>
-    <AnalyzersPackageVersion>2.9.2</AnalyzersPackageVersion>
+    <AnalyzersPackageVersion>2.9.6</AnalyzersPackageVersion>
     <DotNetTestSdkVersion>16.3.0</DotNetTestSdkVersion>
-    <MicrosoftExtensionsDependencyInjectionVersion>2.2.0</MicrosoftExtensionsDependencyInjectionVersion>
+    <MicrosoftExtensionsDependencyInjectionVersion>3.0.0</MicrosoftExtensionsDependencyInjectionVersion>
     <NewtonsoftJsonVersion>12.0.2</NewtonsoftJsonVersion>
     <XUnitVersion>2.4.1</XUnitVersion>
   </PropertyGroup>
@@ -14,11 +14,11 @@
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-preview.2" PrivateAssets="All" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19367-01" PrivateAssets="All" />
     <PackageReference Include="OpenCover" Version="4.7.922" PrivateAssets="All" />
-    <PackageReference Include="ReportGenerator" Version="4.2.2" PrivateAssets="All" />
+    <PackageReference Include="ReportGenerator" Version="4.3.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
-    <PackageReference Include="MinVer" Version="1.1.0" PrivateAssets="All" />
+    <PackageReference Include="MinVer" Version="1.2.0" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)package-icon.png" Pack="True" PackagePath="" />
@@ -34,6 +34,7 @@
     <MinVerTagPrefix>v</MinVerTagPrefix>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <EnableSourceControlManagerQueries>$(EnableSourceLink)</EnableSourceControlManagerQueries>
+    <NoWarn>$(NoWarn);CA1062;CA1303</NoWarn>
     <PackageIcon>package-icon.png</PackageIcon>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/justeat/JustSaying</PackageProjectUrl>
