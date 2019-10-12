@@ -22,7 +22,7 @@ nuget:
   disable_publish_on_pr: true
 
 artifacts:
-  - path: '**\$(APPVEYOR_PROJECT_NAME)*.s?nupkg'
+  - path: '**\$(APPVEYOR_PROJECT_NAME)*.*nupkg'
     name: NuGet
 
 pull_requests:
