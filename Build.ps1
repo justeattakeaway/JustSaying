@@ -14,18 +14,18 @@ $solutionPath = Split-Path $MyInvocation.MyCommand.Definition
 $sdkFile = Join-Path $solutionPath "global.json"
 
 $libraryProjects = @(
-    (Join-Path $solutionPath "JustSaying\JustSaying.csproj"),
-    (Join-Path $solutionPath "JustSaying.Models\JustSaying.Models.csproj"),
-    (Join-Path $solutionPath "JustSaying.Extensions.DependencyInjection.Microsoft\JustSaying.Extensions.DependencyInjection.Microsoft.csproj"),
-    (Join-Path $solutionPath "JustSaying.Extensions.DependencyInjection.StructureMap\JustSaying.Extensions.DependencyInjection.StructureMap.csproj")
+    (Join-Path $solutionPath "src\JustSaying\JustSaying.csproj"),
+    (Join-Path $solutionPath "src\JustSaying.Models\JustSaying.Models.csproj"),
+    (Join-Path $solutionPath "src\JustSaying.Extensions.DependencyInjection.Microsoft\JustSaying.Extensions.DependencyInjection.Microsoft.csproj"),
+    (Join-Path $solutionPath "src\JustSaying.Extensions.DependencyInjection.StructureMap\JustSaying.Extensions.DependencyInjection.StructureMap.csproj")
 )
 
 $testProjects = @(
-    (Join-Path $solutionPath "JustSaying.UnitTests\JustSaying.UnitTests.csproj")
+    (Join-Path $solutionPath "tests\JustSaying.UnitTests\JustSaying.UnitTests.csproj")
 )
 
 if ($EnableIntegrationTests -eq $true) {
-    $testProjects += (Join-Path $solutionPath "JustSaying.IntegrationTests\JustSaying.IntegrationTests.csproj");
+    $testProjects += (Join-Path $solutionPath "tests\JustSaying.IntegrationTests\JustSaying.IntegrationTests.csproj");
 }
 
 $dotnetVersion = (Get-Content $sdkFile | Out-String | ConvertFrom-Json).sdk.version

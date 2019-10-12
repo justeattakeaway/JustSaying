@@ -21,17 +21,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		version.props = version.props
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Models", "JustSaying.Models\JustSaying.Models.csproj", "{C94866D0-29A6-43F2-B3BC-DFBC51A665C4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Models", "src\JustSaying.Models\JustSaying.Models.csproj", "{C94866D0-29A6-43F2-B3BC-DFBC51A665C4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying", "JustSaying\JustSaying.csproj", "{150EC9AA-90CB-48E8-BF45-CAE32C1E993D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying", "src\JustSaying\JustSaying.csproj", "{150EC9AA-90CB-48E8-BF45-CAE32C1E993D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.TestingFramework", "JustSaying.TestingFramework\JustSaying.TestingFramework.csproj", "{BDE31352-56B7-4564-8494-D25BA24E55DC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.TestingFramework", "tests\JustSaying.TestingFramework\JustSaying.TestingFramework.csproj", "{BDE31352-56B7-4564-8494-D25BA24E55DC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.UnitTests", "JustSaying.UnitTests\JustSaying.UnitTests.csproj", "{E87E73DE-A963-4024-83DC-F0D5336E9B17}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.UnitTests", "tests\JustSaying.UnitTests\JustSaying.UnitTests.csproj", "{E87E73DE-A963-4024-83DC-F0D5336E9B17}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.IntegrationTests", "JustSaying.IntegrationTests\JustSaying.IntegrationTests.csproj", "{D6150EE0-13F7-413D-9920-9A31FA647331}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.IntegrationTests", "tests\JustSaying.IntegrationTests\JustSaying.IntegrationTests.csproj", "{D6150EE0-13F7-413D-9920-9A31FA647331}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Tools", "JustSaying.Tools\JustSaying.Tools.csproj", "{F7B166C4-B4B8-4B99-9038-63E964D2CABB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Tools", "src\JustSaying.Tools\JustSaying.Tools.csproj", "{F7B166C4-B4B8-4B99-9038-63E964D2CABB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{F0BCBE5F-2132-422D-B17B-23B7FCC4A8A8}"
 	ProjectSection(SolutionItems) = preProject
@@ -48,9 +48,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ISSUE_TEMPLATE", "ISSUE_TEM
 		.github\ISSUE_TEMPLATE\feature_request.md = .github\ISSUE_TEMPLATE\feature_request.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Extensions.DependencyInjection.Microsoft", "JustSaying.Extensions.DependencyInjection.Microsoft\JustSaying.Extensions.DependencyInjection.Microsoft.csproj", "{1B9BB1E2-E46B-4E2B-A172-61ABA8B35B62}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Extensions.DependencyInjection.Microsoft", "src\JustSaying.Extensions.DependencyInjection.Microsoft\JustSaying.Extensions.DependencyInjection.Microsoft.csproj", "{1B9BB1E2-E46B-4E2B-A172-61ABA8B35B62}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Extensions.DependencyInjection.StructureMap", "JustSaying.Extensions.DependencyInjection.StructureMap\JustSaying.Extensions.DependencyInjection.StructureMap.csproj", "{FC6E028F-01DA-47A5-895A-5C1DD27981D4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Extensions.DependencyInjection.StructureMap", "src\JustSaying.Extensions.DependencyInjection.StructureMap\JustSaying.Extensions.DependencyInjection.StructureMap.csproj", "{FC6E028F-01DA-47A5-895A-5C1DD27981D4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A94633F2-29F2-48C6-840A-C5370B300AE2}"
 EndProject
