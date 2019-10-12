@@ -44,8 +44,7 @@
     <RepositoryType>git</RepositoryType>
     <LangVersion>latest</LangVersion>
     <RepositoryUrl>$(PackageProjectUrl).git</RepositoryUrl>
-    <SignAssembly>false</SignAssembly>
-    <DefineConstants Condition=" '$(SignAssembly)' == 'true' ">$(DefineConstants);STRONG_NAME</DefineConstants>
+    <SignAssembly>true</SignAssembly>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CLSCompliant>true</CLSCompliant>
     <ComVisible>false</ComVisible>
