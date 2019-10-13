@@ -37,7 +37,10 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 {
                     listener.Start(cancellationToken);
 
-                    var message = new SimpleMessage();
+                    var message = new SimpleMessage()
+                    {
+                        Id = new Guid("4f598bf3-67a1-49a3-9d45-630fe1f9dab5")
+                    };
 
                     // Act
                     await publisher.PublishAsync(message, cancellationToken);
