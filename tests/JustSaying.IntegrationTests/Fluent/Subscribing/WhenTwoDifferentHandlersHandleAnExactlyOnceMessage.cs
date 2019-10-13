@@ -32,13 +32,15 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 {
                     listener.Start(cancellationToken);
 
+                    var message = new SimpleMessage();
+
                     // Act
-                    await publisher.PublishAsync(new SimpleMessage(), cancellationToken);
+                    await publisher.PublishAsync(message, cancellationToken);
                     await Task.Delay(5.Seconds());
 
                     // Assert
-                    handler1.NumberOfTimesIHaveBeenCalled().ShouldBe(1);
-                    handler2.NumberOfTimesIHaveBeenCalled().ShouldBe(1);
+                    handler1.NumberOfTimesIHaveBeenCalledForMessage(message.UniqueKey()).ShouldBe(1);
+                    handler2.NumberOfTimesIHaveBeenCalledForMessage(message.UniqueKey()).ShouldBe(1);
                 });
         }
     }

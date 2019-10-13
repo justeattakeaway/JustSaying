@@ -37,10 +37,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 {
                     listener.Start(cancellationToken);
 
-                    var message = new SimpleMessage()
-                    {
-                        Id = new Guid("4f598bf3-67a1-49a3-9d45-630fe1f9dab5")
-                    };
+                    var message = new SimpleMessage();
 
                     // Act
                     await publisher.PublishAsync(message, cancellationToken);
@@ -48,7 +45,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     await Task.Delay(5.Seconds());
 
                     // Assert
-                    handler.NumberOfTimesIHaveBeenCalled().ShouldBe(1);
+                    handler.NumberOfTimesIHaveBeenCalledForMessage(message.UniqueKey()).ShouldBe(1);
                 });
         }
 
