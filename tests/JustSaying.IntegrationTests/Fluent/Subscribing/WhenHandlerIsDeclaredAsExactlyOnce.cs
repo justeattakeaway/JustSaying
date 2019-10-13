@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
@@ -18,7 +19,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         {
         }
 
-        [AwsFact(Skip = "Test is flaky")]
+        [AwsFact]
         public async Task Then_The_Handler_Only_Receives_The_Message_Once()
         {
             // Arrange
@@ -49,16 +50,13 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
         private sealed class MessageLockStore : IMessageLockAsync
         {
-            private readonly Dictionary<string, int> _store = new Dictionary<string, int>();
+            private readonly ConcurrentDictionary<string, int> _store = new ConcurrentDictionary<string, int>();
 
             public Task<MessageLockResponse> TryAquireLockPermanentlyAsync(string key)
             {
-                var canAquire = !_store.TryGetValue(key, out int value);
-
-                if (canAquire)
-                {
-                    _store.Add(key, 1);
-                }
+                // Only the first attempt to access the value for the key can acquire the lock
+                int newValue = _store.AddOrUpdate(key, (_) => 0, (_, i) => i + 1);
+                bool canAquire = newValue == 0;
 
                 var response = new MessageLockResponse { DoIHaveExclusiveLock = canAquire };
 
@@ -70,7 +68,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
             public Task ReleaseLockAsync(string key)
             {
-                _store.Remove(key);
+                _store.Remove(key, out var _);
                 return Task.CompletedTask;
             }
         }
