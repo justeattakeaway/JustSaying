@@ -43,11 +43,11 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             _queue = queue;
             _messagingMonitor = messagingMonitor;
-            onError = onError ?? DefaultErrorHandler;
+            onError ??= DefaultErrorHandler;
             _log = loggerFactory.CreateLogger("JustSaying");
 
             _messageProcessingStrategy = new DefaultThrottledThroughput(_messagingMonitor, _log);
-            _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor);
+            _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor, loggerFactory);
 
             _messageDispatcher = new MessageDispatcher(
                 _queue,
@@ -228,35 +228,31 @@ namespace JustSaying.AwsTools.MessageHandling
                 AttributeNames = _requestMessageAttributeNames
             };
 
-            using (var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300)))
+            using var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));
+            ReceiveMessageResponse sqsMessageResponse;
+
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+            try
             {
-                ReceiveMessageResponse sqsMessageResponse;
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, receiveTimeout.Token);
 
-                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-
-                try
-                {
-                    using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, receiveTimeout.Token))
-                    {
-                        sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCts.Token)
-                            .ConfigureAwait(false);
-                    }
-                }
-                finally
-                {
-                    if (receiveTimeout.Token.IsCancellationRequested)
-                    {
-                        _log.LogInformation("Timed out while receiving messages from queue '{QueueName}' in region '{Region}'.",
-                            queueName, region);
-                    }
-                }
-
-                stopwatch.Stop();
-
-                _messagingMonitor.ReceiveMessageTime(stopwatch.Elapsed, queueName, region);
-
-                return sqsMessageResponse;
+                sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCts.Token).ConfigureAwait(false);
             }
+            finally
+            {
+                if (receiveTimeout.Token.IsCancellationRequested)
+                {
+                    _log.LogInformation("Timed out while receiving messages from queue '{QueueName}' in region '{Region}'.",
+                        queueName, region);
+                }
+            }
+
+            stopwatch.Stop();
+
+            _messagingMonitor.ReceiveMessageTime(stopwatch.Elapsed, queueName, region);
+
+            return sqsMessageResponse;
         }
 
         private async Task<int> GetDesiredNumberOfMessagesToRequestFromSqsAsync()

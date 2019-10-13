@@ -3,18 +3,24 @@ using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public class MessageHandlerWrapper
+    internal sealed class MessageHandlerWrapper
     {
         private readonly IMessageMonitor _messagingMonitor;
         private readonly IMessageLockAsync _messageLock;
+        private readonly ILoggerFactory _loggerFactory;
 
-        public MessageHandlerWrapper(IMessageLockAsync messageLock, IMessageMonitor messagingMonitor)
+        public MessageHandlerWrapper(
+            IMessageLockAsync messageLock,
+            IMessageMonitor messagingMonitor,
+            ILoggerFactory loggerFactory)
         {
             _messageLock = messageLock;
             _messagingMonitor = messagingMonitor;
+            _loggerFactory = loggerFactory;
         }
 
         public Func<Message, Task<bool>> WrapMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler) where T : Message
@@ -45,8 +51,9 @@ namespace JustSaying.AwsTools.MessageHandling
 
             var handlerName = handlerType.FullName.ToLowerInvariant();
             var timeout = TimeSpan.FromSeconds(exactlyOnceMetadata.GetTimeOut());
+            var logger = _loggerFactory.CreateLogger<ExactlyOnceHandler<T>>();
 
-            return new ExactlyOnceHandler<T>(handler, _messageLock, timeout, handlerName);
+            return new ExactlyOnceHandler<T>(handler, _messageLock, timeout, handlerName, logger);
         }
 
         private IHandlerAsync<T> MaybeWrapWithStopwatch<T>(IHandlerAsync<T> handler) where T : Message
