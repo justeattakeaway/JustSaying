@@ -23,7 +23,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         public async Task Then_The_Handler_Only_Receives_The_Message_Once()
         {
             // Arrange
-            var handler = new ExactlyOnceHandlerWithTimeout();
+            var handler = new ExactlyOnceHandlerNoTimeout();
 
             var services = GivenJustSaying()
                 .ConfigureJustSaying((builder) => builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
