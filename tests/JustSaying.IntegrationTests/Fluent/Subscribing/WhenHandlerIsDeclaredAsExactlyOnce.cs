@@ -23,11 +23,12 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         public async Task Then_The_Handler_Only_Receives_The_Message_Once()
         {
             // Arrange
+            var messageLock = new MessageLockStore();
             var handler = new ExactlyOnceHandlerNoTimeout();
 
             var services = GivenJustSaying()
                 .ConfigureJustSaying((builder) => builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
-                .ConfigureJustSaying((builder) => builder.Services((config) => config.WithMessageLock(() => new MessageLockStore())))
+                .ConfigureJustSaying((builder) => builder.Services((config) => config.WithMessageLock(() => messageLock)))
                 .AddJustSayingHandlers(new[] { handler });
 
             await WhenAsync(
@@ -52,19 +53,32 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         {
             private readonly ConcurrentDictionary<string, int> _store = new ConcurrentDictionary<string, int>();
 
-            public Task<MessageLockResponse> TryAquireLockPermanentlyAsync(string key)
+            public Task<MessageLockResponse> TryAquireLockAsync(string key, TimeSpan howLong)
             {
                 // Only the first attempt to access the value for the key can acquire the lock
                 int newValue = _store.AddOrUpdate(key, (_) => 0, (_, i) => i + 1);
-                bool canAquire = newValue == 0;
 
-                var response = new MessageLockResponse { DoIHaveExclusiveLock = canAquire };
+                var response = new MessageLockResponse
+                {
+                    DoIHaveExclusiveLock = newValue == 0,
+                    IsMessagePermanentlyLocked = newValue == int.MinValue,
+                };
 
                 return Task.FromResult(response);
             }
 
-            public Task<MessageLockResponse> TryAquireLockAsync(string key, TimeSpan howLong)
-                => TryAquireLockPermanentlyAsync(key);
+            public Task<MessageLockResponse> TryAquireLockPermanentlyAsync(string key)
+            {
+                _store.AddOrUpdate(key, (_) => int.MinValue, (_, i) => int.MinValue);
+
+                var response = new MessageLockResponse
+                {
+                    DoIHaveExclusiveLock = true,
+                    IsMessagePermanentlyLocked = true,
+                };
+
+                return Task.FromResult(response);
+            }
 
             public Task ReleaseLockAsync(string key)
             {
