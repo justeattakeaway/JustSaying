@@ -15,11 +15,11 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         {
         }
 
-        [AwsFact(Skip = "Test is flaky")]
+        [AwsFact]
         public async Task Then_Both_Handlers_Receive_The_Message()
         {
             // Arrange
-            var handler1 = new ExactlyOnceHandlerWithTimeout();
+            var handler1 = new ExactlyOnceHandlerNoTimeout();
             var handler2 = new ExactlyOnceHandlerNoTimeout();
 
             var services = GivenJustSaying()
