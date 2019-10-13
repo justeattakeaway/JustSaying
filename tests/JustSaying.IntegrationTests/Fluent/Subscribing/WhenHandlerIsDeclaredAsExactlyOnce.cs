@@ -56,7 +56,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
             public Task<MessageLockResponse> TryAquireLockAsync(string key, TimeSpan howLong)
             {
                 // Only the first attempt to access the value for the key can acquire the lock
-                int newValue = _store.AddOrUpdate(key, (_) => 0, (_, i) => i + 1);
+                int newValue = _store.AddOrUpdate(key, 0, (_, i) => i + 1);
 
                 var response = new MessageLockResponse
                 {
@@ -69,7 +69,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
             public Task<MessageLockResponse> TryAquireLockPermanentlyAsync(string key)
             {
-                _store.AddOrUpdate(key, (_) => int.MinValue, (_, i) => int.MinValue);
+                _store.AddOrUpdate(key, int.MinValue, (_, i) => int.MinValue);
 
                 var response = new MessageLockResponse
                 {
