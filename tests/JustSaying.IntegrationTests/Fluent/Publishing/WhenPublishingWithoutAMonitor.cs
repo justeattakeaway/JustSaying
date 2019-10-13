@@ -33,7 +33,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
             await AssertMessagePublishedAndReceivedAsync(services, handler, completionSource);
         }
 
-        [AwsFact(Skip = "Test is flaky")]
+        [AwsFact]
         public async Task A_Message_Can_Still_Be_Published_To_A_Topic()
         {
             // Arrange
@@ -64,27 +64,25 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
             IServiceCollection services,
             IHandlerAsync<T> handler,
             TaskCompletionSource<object> completionSource)
-            where T : Message
+            where T : Message, new()
         {
             IServiceProvider serviceProvider = services.BuildServiceProvider();
 
             IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
             IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
-            using (var source = new CancellationTokenSource(Timeout))
-            {
-                listener.Start(source.Token);
+            using var source = new CancellationTokenSource(Timeout);
+            listener.Start(source.Token);
 
-                var message = new SimpleMessage();
+            var message = new T();
 
-                // Act
-                await publisher.PublishAsync(message, source.Token);
+            // Act
+            await publisher.PublishAsync(message, source.Token);
 
-                // Assert
-                completionSource.Task.Wait(source.Token);
+            // Assert
+            completionSource.Task.Wait(source.Token);
 
-                await handler.Received(1).Handle(Arg.Any<T>());
-            }
+            await handler.Received(1).Handle(Arg.Is<T>((p) => p.UniqueKey() == message.UniqueKey()));
         }
     }
 }
