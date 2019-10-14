@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
@@ -18,15 +19,16 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         {
         }
 
-        [AwsFact(Skip = "Test is flaky")]
+        [AwsFact]
         public async Task Then_The_Handler_Only_Receives_The_Message_Once()
         {
             // Arrange
-            var handler = new ExactlyOnceHandlerWithTimeout();
+            var messageLock = new MessageLockStore();
+            var handler = new ExactlyOnceHandlerNoTimeout();
 
             var services = GivenJustSaying()
                 .ConfigureJustSaying((builder) => builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
-                .ConfigureJustSaying((builder) => builder.Services((config) => config.WithMessageLock(() => new MessageLockStore())))
+                .ConfigureJustSaying((builder) => builder.Services((config) => config.WithMessageLock(() => messageLock)))
                 .AddJustSayingHandlers(new[] { handler });
 
             await WhenAsync(
@@ -43,34 +45,44 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     await Task.Delay(5.Seconds());
 
                     // Assert
-                    handler.NumberOfTimesIHaveBeenCalled().ShouldBe(1);
+                    handler.NumberOfTimesIHaveBeenCalledForMessage(message.UniqueKey()).ShouldBe(1);
                 });
         }
 
         private sealed class MessageLockStore : IMessageLockAsync
         {
-            private readonly Dictionary<string, int> _store = new Dictionary<string, int>();
+            private readonly ConcurrentDictionary<string, int> _store = new ConcurrentDictionary<string, int>();
 
-            public Task<MessageLockResponse> TryAquireLockPermanentlyAsync(string key)
+            public Task<MessageLockResponse> TryAquireLockAsync(string key, TimeSpan howLong)
             {
-                var canAquire = !_store.TryGetValue(key, out int value);
+                // Only the first attempt to access the value for the key can acquire the lock
+                int newValue = _store.AddOrUpdate(key, 0, (_, i) => i + 1);
 
-                if (canAquire)
+                var response = new MessageLockResponse
                 {
-                    _store.Add(key, 1);
-                }
-
-                var response = new MessageLockResponse { DoIHaveExclusiveLock = canAquire };
+                    DoIHaveExclusiveLock = newValue == 0,
+                    IsMessagePermanentlyLocked = newValue == int.MinValue,
+                };
 
                 return Task.FromResult(response);
             }
 
-            public Task<MessageLockResponse> TryAquireLockAsync(string key, TimeSpan howLong)
-                => TryAquireLockPermanentlyAsync(key);
+            public Task<MessageLockResponse> TryAquireLockPermanentlyAsync(string key)
+            {
+                _store.AddOrUpdate(key, int.MinValue, (_, i) => int.MinValue);
+
+                var response = new MessageLockResponse
+                {
+                    DoIHaveExclusiveLock = true,
+                    IsMessagePermanentlyLocked = true,
+                };
+
+                return Task.FromResult(response);
+            }
 
             public Task ReleaseLockAsync(string key)
             {
-                _store.Remove(key);
+                _store.Remove(key, out var _);
                 return Task.CompletedTask;
             }
         }

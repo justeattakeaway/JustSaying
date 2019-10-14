@@ -1,4 +1,4 @@
-using System.Threading;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
@@ -8,17 +8,22 @@ namespace JustSaying.IntegrationTests.TestHandlers
     [ExactlyOnce(TimeOut = 10)]
     public class ExactlyOnceHandlerWithTimeout : IHandlerAsync<SimpleMessage>
     {
-        private int _count;
+        private readonly ConcurrentDictionary<string, int> _counts = new ConcurrentDictionary<string, int>();
 
         public Task<bool> Handle(SimpleMessage message)
         {
-            Interlocked.Increment(ref _count);
+            _counts.AddOrUpdate(message.UniqueKey(), 1, (_, i) => i + 1);
             return Task.FromResult(true);
         }
 
-        public int NumberOfTimesIHaveBeenCalled()
+        public int NumberOfTimesIHaveBeenCalledForMessage(string id)
         {
-            return _count;
+            if (!_counts.TryGetValue(id, out int count))
+            {
+                count = 0;
+            }
+
+            return count;
         }
     }
 }

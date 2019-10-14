@@ -15,11 +15,11 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         {
         }
 
-        [AwsFact(Skip = "Test is flaky")]
+        [AwsFact]
         public async Task Then_Both_Handlers_Receive_The_Message()
         {
             // Arrange
-            var handler1 = new ExactlyOnceHandlerWithTimeout();
+            var handler1 = new ExactlyOnceHandlerNoTimeout();
             var handler2 = new ExactlyOnceHandlerNoTimeout();
 
             var services = GivenJustSaying()
@@ -32,13 +32,15 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 {
                     listener.Start(cancellationToken);
 
+                    var message = new SimpleMessage();
+
                     // Act
-                    await publisher.PublishAsync(new SimpleMessage(), cancellationToken);
+                    await publisher.PublishAsync(message, cancellationToken);
                     await Task.Delay(5.Seconds());
 
                     // Assert
-                    handler1.NumberOfTimesIHaveBeenCalled().ShouldBe(1);
-                    handler2.NumberOfTimesIHaveBeenCalled().ShouldBe(1);
+                    handler1.NumberOfTimesIHaveBeenCalledForMessage(message.UniqueKey()).ShouldBe(1);
+                    handler2.NumberOfTimesIHaveBeenCalledForMessage(message.UniqueKey()).ShouldBe(1);
                 });
         }
     }
