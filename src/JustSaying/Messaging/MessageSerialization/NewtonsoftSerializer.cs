@@ -40,7 +40,7 @@ namespace JustSaying.Messaging.MessageSerialization
         {
             var json = JsonConvert.SerializeObject(message, _settings);
 
-            // AWS SNS service will add Subject and Message properties automatically, 
+            // AWS SNS service will add Subject and Message properties automatically,
             // so just return plain message
             if (serializeForSnsPublishing)
             {
@@ -52,9 +52,9 @@ namespace JustSaying.Messaging.MessageSerialization
             return JsonConvert.SerializeObject(context, _settings);
         }
 
-        public string GetMessageSubject(string sqsMessge)
+        public string GetMessageSubject(string sqsMessage)
         {
-            var body = JObject.Parse(sqsMessge);
+            var body = JObject.Parse(sqsMessage);
             return body.Value<string>("Subject") ?? string.Empty;
         }
     }
