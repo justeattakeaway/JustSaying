@@ -39,9 +39,9 @@ namespace JustSaying.Messaging.MessageSerialization
         }
 
         /// <inheritdoc />
-        public string GetMessageSubject(string sqsMessge)
+        public string GetMessageSubject(string sqsMessage)
         {
-            using (var body = JsonDocument.Parse(sqsMessge))
+            using (var body = JsonDocument.Parse(sqsMessage))
             {
                 string subject = string.Empty;
 
@@ -71,7 +71,7 @@ namespace JustSaying.Messaging.MessageSerialization
         {
             string json = JsonSerializer.Serialize(message, message.GetType(), _options);
 
-            // AWS SNS service will add Subject and Message properties automatically, 
+            // AWS SNS service will add Subject and Message properties automatically,
             // so just return plain message
             if (serializeForSnsPublishing)
             {
