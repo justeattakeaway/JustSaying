@@ -12,6 +12,6 @@
     <ProjectReference Include="..\JustSaying\JustSaying.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="structuremap" Version="4.6.0" />
+    <PackageReference Include="structuremap" Version="4.7.1" />
   </ItemGroup>
 </Project>
