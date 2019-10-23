@@ -7,7 +7,7 @@
     <XUnitVersion>2.4.1</XUnitVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <AwsSdkSnsVersion>3.3.101.73</AwsSdkSnsVersion>
+    <AwsSdkSnsVersion>3.3.101.77</AwsSdkSnsVersion>
     <AwsSdkSqsVersion>3.3.102.16</AwsSdkSqsVersion>
   </PropertyGroup>
   <ItemGroup>

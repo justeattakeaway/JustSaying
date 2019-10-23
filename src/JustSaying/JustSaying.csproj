@@ -6,7 +6,7 @@
     <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.100.1" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.101.77" />
     <PackageReference Include="AWSSDK.SQS" Version="3.3.100.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
