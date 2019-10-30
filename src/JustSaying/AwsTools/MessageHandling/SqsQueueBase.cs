@@ -10,7 +10,7 @@ using JustSaying.Extensions;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public abstract class SqsQueueBase
+    public abstract class SqsQueueBase : ISqsQueue
     {
         public string Arn { get; protected set; }
         public Uri Uri { get; protected set; }

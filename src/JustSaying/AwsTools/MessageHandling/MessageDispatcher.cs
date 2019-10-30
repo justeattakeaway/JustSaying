@@ -17,7 +17,7 @@ namespace JustSaying.AwsTools.MessageHandling
 {
     public class MessageDispatcher
     {
-        private readonly SqsQueueBase _queue;
+        private readonly ISqsQueue _queue;
         private readonly IMessageSerializationRegister _serializationRegister;
         private readonly IMessageMonitor _messagingMonitor;
         private readonly Action<Exception, SQSMessage> _onError;
@@ -28,7 +28,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private static ILogger _logger;
 
         public MessageDispatcher(
-            SqsQueueBase queue,
+            ISqsQueue queue,
             IMessageSerializationRegister serializationRegister,
             IMessageMonitor messagingMonitor,
             Action<Exception, SQSMessage> onError,

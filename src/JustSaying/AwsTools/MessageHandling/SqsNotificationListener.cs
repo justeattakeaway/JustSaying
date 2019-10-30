@@ -18,7 +18,7 @@ namespace JustSaying.AwsTools.MessageHandling
 {
     public class SqsNotificationListener : INotificationSubscriber
     {
-        private readonly SqsQueueBase _queue;
+        private readonly ISqsQueue _queue;
         private readonly IMessageMonitor _messagingMonitor;
         private readonly List<string> _requestMessageAttributeNames = new List<string>();
 
@@ -32,7 +32,7 @@ namespace JustSaying.AwsTools.MessageHandling
         public bool IsListening { get; private set; }
 
         public SqsNotificationListener(
-            SqsQueueBase queue,
+            ISqsQueue queue,
             IMessageSerializationRegister serializationRegister,
             IMessageMonitor messagingMonitor,
             ILoggerFactory loggerFactory,
@@ -135,7 +135,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 try
                 {
-                    sqsMessageResponse = await GetMessagesFromSqsQueueAsync(queueName, regionName, ct).ConfigureAwait(false);
+                  sqsMessageResponse = await GetMessagesFromSqsQueueAsync(queueName, regionName, ct).ConfigureAwait(false);
 
                     int messageCount = sqsMessageResponse?.Messages?.Count ?? 0;
 
