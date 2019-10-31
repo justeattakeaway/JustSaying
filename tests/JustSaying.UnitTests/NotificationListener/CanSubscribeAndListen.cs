@@ -159,6 +159,7 @@ namespace JustSaying.UnitTests.NotificationListener
             await sqsClient.Received()
                  .ReceiveMessageAsync(Arg.Any<Amazon.SQS.Model.ReceiveMessageRequest>(), Arg.Any<CancellationToken>());
             sqsClient.ClearReceivedCalls();
+            await Task.Delay(500);
             await sqsClient.Received()
                  .ReceiveMessageAsync(Arg.Any<Amazon.SQS.Model.ReceiveMessageRequest>(), Arg.Any<CancellationToken>());
 
@@ -183,6 +184,7 @@ namespace JustSaying.UnitTests.NotificationListener
         // allow debounce
         // allow circuit break?
         // allow batched processing?
+        // allow buffering if sqs throws exceptions
 
         private static INotificationSubscriber CreateListener(
             ILoggerFactory loggerFactory,
