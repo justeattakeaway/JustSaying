@@ -36,30 +36,28 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public async Task ListenAsync(CancellationToken cancellationToken)
         {
-            await ListenLoopAsync(cancellationToken).ConfigureAwait(false);
-        }
-
-        public async Task ListenLoopAsync(CancellationToken ct)
-        {
-            while (!ct.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                ReceiveMessageResponse sqsMessageResponse = await GetMessagesFromSqsQueueAsync(ct).ConfigureAwait(false);
+                ReceiveMessageResponse sqsMessageResponse = await GetMessagesFromSqsQueueAsync(cancellationToken).ConfigureAwait(false);
 
                 if (sqsMessageResponse == null || sqsMessageResponse.Messages.Count < 1)
                 {
+                    await _messageProcessingStrategy.ReportMessageReceived(success: false).ConfigureAwait(false);
                     continue;
                 }
+
+                await _messageProcessingStrategy.ReportMessageReceived(success: true).ConfigureAwait(false);
 
                 try
                 {
                     foreach (var message in sqsMessageResponse.Messages)
                     {
-                        if (ct.IsCancellationRequested)
+                        if (cancellationToken.IsCancellationRequested)
                         {
                             return;
                         }
 
-                        if (!await TryHandleMessageAsync(message, ct).ConfigureAwait(false))
+                        if (!await TryHandleMessageAsync(message, cancellationToken).ConfigureAwait(false))
                         {
                             // No worker free to process any messages
                             _log.LogWarning(

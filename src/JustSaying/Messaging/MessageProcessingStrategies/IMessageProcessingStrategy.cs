@@ -38,5 +38,10 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         /// will be available immediately when <see cref="StartWorkerAsync"/> is subsequently called.
         /// </remarks>
         Task<int> WaitForAvailableWorkerAsync();
+
+        /// <summary>
+        /// Notifies of a successful message received, waits for any debounce/circuit break logic.
+        /// </summary>
+        Task ReportMessageReceived(bool success);
     }
 }

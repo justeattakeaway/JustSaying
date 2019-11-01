@@ -102,17 +102,51 @@ namespace JustSaying.UnitTests.NotificationListener.MessageCoordination
                  .DispatchMessage(Arg.Any<Amazon.SQS.Model.Message>(), Arg.Any<CancellationToken>());
         }
 
+        [Fact]
+        public async Task ProcessingStrategyBlocks_LoopStopsRequestingMessages()
+        {
+            // Arrange
+            var messageReceiver = Substitute.For<IMessageReceiver>();
+            var completionSource = new TaskCompletionSource<bool>();
+            var messageProcessingStrategy = Substitute.For<IMessageProcessingStrategy>();
+            messageProcessingStrategy.WaitForAvailableWorkerAsync()
+                .Returns(1);
+            messageProcessingStrategy.ReportMessageReceived(Arg.Any<bool>())
+                .Returns(ci => completionSource.Task);
+            var coordinator = CreateMessageCoordinator(
+                _outputHelper.ToLoggerFactory(),
+                messageReceiver,
+                messageProcessingStrategy: messageProcessingStrategy);
+
+            // Act
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            _ = Task.Run(() => coordinator.ListenAsync(cts.Token));
+
+            await Task.Delay(500);
+
+            // Assert
+            await messageReceiver.Received(1)
+                 .GetMessagesAsync(Arg.Any<int>(), Arg.Any<CancellationToken>());
+
+            messageReceiver.ClearReceivedCalls();
+            completionSource.SetResult(true);
+
+            await messageReceiver.Received()
+                 .GetMessagesAsync(Arg.Any<int>(), Arg.Any<CancellationToken>());
+        }
+
         private static IMessageCoordinator CreateMessageCoordinator(
             ILoggerFactory loggerFactory,
             IMessageReceiver messageReceiver = null,
-            IMessageDispatcher messageDispatcher = null)
+            IMessageDispatcher messageDispatcher = null,
+            IMessageProcessingStrategy messageProcessingStrategy = null)
         {
             var logger = loggerFactory.CreateLogger("test-logger");
             messageReceiver ??= Substitute.For<IMessageReceiver>();
             messageDispatcher ??= Substitute.For<IMessageDispatcher>();
 
             var messageMonitor = Substitute.For<IMessageMonitor>();
-            var messageProcessingStrategy = new DefaultThrottledThroughput(messageMonitor, logger);
+            messageProcessingStrategy ??= new DefaultThrottledThroughput(messageMonitor, logger);
 
             return new MessageCoordinator(
                 logger,

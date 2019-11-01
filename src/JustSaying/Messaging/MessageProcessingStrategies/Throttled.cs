@@ -146,6 +146,11 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             return _semaphore.CurrentCount;
         }
 
+        public Task ReportMessageReceived(bool success)
+        {
+            return Task.CompletedTask;
+        }
+
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
