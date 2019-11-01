@@ -7,6 +7,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
@@ -68,9 +69,14 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         {
             var queue = new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri(QueueUrl), Sqs);
             var listener = new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
-                queue, SerializationRegister, Monitor, LoggerFactory,
+                queue,
+                SerializationRegister,
+                Monitor,
+                LoggerFactory,
                 Substitute.For<IMessageContextAccessor>(),
-                null, MessageLock);
+                new DefaultThrottledThroughput(Monitor, LoggerFactory.CreateLogger("test")),
+                onError: null,
+                messageLock: MessageLock);
             return listener;
         }
 

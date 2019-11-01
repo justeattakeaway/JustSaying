@@ -16,10 +16,7 @@ namespace JustSaying.AwsTools.MessageHandling
 {
     public class SqsNotificationListener : INotificationSubscriber
     {
-        private readonly IMessageMonitor _messagingMonitor;
-
-        private readonly MessageHandlerWrapper _messageHandlerWrapper;
-        private readonly HandlerMap _handlerMap = new HandlerMap();
+        private readonly MessageDispatcher _messageDispatcher;
         private readonly IMessageCoordinator _listener;
 
         private readonly ILogger _log;
@@ -32,63 +29,38 @@ namespace JustSaying.AwsTools.MessageHandling
             IMessageMonitor messagingMonitor,
             ILoggerFactory loggerFactory,
             IMessageContextAccessor messageContextAccessor,
+            IMessageProcessingStrategy messageProcessingStrategy,
             Action<Exception, Amazon.SQS.Model.Message> onError = null,
             IMessageLockAsync messageLock = null,
             IMessageBackoffStrategy messageBackoffStrategy = null)
         {
-            _messagingMonitor = messagingMonitor;
             onError ??= DefaultErrorHandler;
             _log = loggerFactory.CreateLogger("JustSaying");
 
-            // todo: strategy factory?
-#pragma warning disable CA2000 // Dispose objects before losing scope
-            var messageProcessingStrategy = new DefaultThrottledThroughput(_messagingMonitor, _log);
-#pragma warning restore CA2000 // Dispose objects before losing scope
-            _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor, loggerFactory);
-
-            var messageDispatcher = new MessageDispatcher(
+            _messageDispatcher = new MessageDispatcher(
                 queue,
                 serializationRegister,
                 messagingMonitor,
                 onError,
-                _handlerMap,
                 loggerFactory,
                 messageBackoffStrategy,
-                messageContextAccessor);
+                messageContextAccessor,
+                messageLock);
 
-            var messageRequester = new MessageRequester(
+            var messageReceiver = new MessageReceiver(
                 queue,
                 messagingMonitor,
-                loggerFactory.CreateLogger<MessageRequester>(),
+                loggerFactory.CreateLogger<MessageReceiver>(),
                 messageBackoffStrategy);
 
-            _listener = new MessageCoordinator(_log, messageRequester, messageDispatcher, messageProcessingStrategy);
+            _listener = new MessageCoordinator(_log, messageReceiver, _messageDispatcher, messageProcessingStrategy);
 
             Subscribers = new Collection<ISubscriber>();
         }
 
         public string Queue => _listener.QueueName;
 
-        // ToDo: This should not be here.
-        public SqsNotificationListener WithMaximumConcurrentLimitOnMessagesInFlightOf(
-            int maximumAllowedMesagesInFlight,
-            TimeSpan? startTimeout = null)
-        {
-            var options = new ThrottledOptions()
-            {
-                MaxConcurrency = maximumAllowedMesagesInFlight,
-                StartTimeout = startTimeout ?? Timeout.InfiniteTimeSpan,
-                Logger = _log,
-                MessageMonitor = _messagingMonitor,
-            };
-
-#pragma warning disable CA2000 // Dispose objects before losing scope
-            _listener.WithMessageProcessingStrategy(new Throttled(options));
-#pragma warning restore CA2000 // Dispose objects before losing scope
-
-            return this;
-        }
-
+        // todo: remove?
         public SqsNotificationListener WithMessageProcessingStrategy(IMessageProcessingStrategy messageProcessingStrategy)
         {
             _listener.WithMessageProcessingStrategy(messageProcessingStrategy);
@@ -97,16 +69,10 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public void AddMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler) where T : Message
         {
-            if (_handlerMap.ContainsKey(typeof(T)))
+            if (_messageDispatcher.AddMessageHandler(futureHandler))
             {
-                throw new NotSupportedException(
-                    $"The handler for '{typeof(T)}' messages on this queue has already been registered.");
+                Subscribers.Add(new Subscriber(typeof(T)));
             }
-
-            Subscribers.Add(new Subscriber(typeof(T)));
-
-            var handlerFunc = _messageHandlerWrapper.WrapMessageHandler(futureHandler);
-            _handlerMap.Add(typeof(T), handlerFunc);
         }
 
         public void Listen(CancellationToken cancellationToken)

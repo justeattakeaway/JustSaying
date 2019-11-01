@@ -7,6 +7,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
@@ -54,7 +55,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
                 _serializationRegister,
                 Substitute.For<IMessageMonitor>(),
                 Substitute.For<ILoggerFactory>(),
-                Substitute.For<IMessageContextAccessor>());
+                Substitute.For<IMessageContextAccessor>(),
+                new TestMessageProcessingStrategy());
 
             return listener;
         }

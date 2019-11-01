@@ -4,7 +4,7 @@ using JustSaying.Messaging.MessageProcessingStrategies;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public interface IMessageCoordinator
+    internal interface IMessageCoordinator
     {
         Task ListenAsync(CancellationToken cancellationToken);
         void WithMessageProcessingStrategy(IMessageProcessingStrategy messageProcessingStrategy);

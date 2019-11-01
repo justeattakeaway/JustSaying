@@ -10,6 +10,7 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
@@ -207,6 +208,7 @@ namespace JustSaying.UnitTests.NotificationListener
                 Substitute.For<IMessageMonitor>(),
                 Substitute.For<ILoggerFactory>(),
                 Substitute.For<IMessageContextAccessor>(),
+                new TestMessageProcessingStrategy(),
                 Substitute.For<Action<Exception, Amazon.SQS.Model.Message>>(),
                 Substitute.For<IMessageLockAsync>(),
                 Substitute.For<IMessageBackoffStrategy>());

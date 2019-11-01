@@ -39,7 +39,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
         private readonly IMessageMonitor _messageMonitor = Substitute.For<IMessageMonitor>();
         private readonly Action<Exception, SQSMessage> _onError = Substitute.For<Action<Exception, SQSMessage>>();
-        private readonly HandlerMap _handlerMap = new HandlerMap();
         private readonly ILoggerFactory _loggerFactory = Substitute.For<ILoggerFactory>();
         private readonly ILogger _logger = Substitute.For<ILogger>();
         private readonly IMessageBackoffStrategy _messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
@@ -56,6 +55,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             Given();
 
             SystemUnderTest = CreateSystemUnderTestAsync();
+            AddHandler();
 
             await When().ConfigureAwait(false);
         }
@@ -91,22 +91,36 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
         private MessageDispatcher CreateSystemUnderTestAsync()
         {
             var dispatcher = new MessageDispatcher(
-                _queue, _serializationRegister,
-                _messageMonitor, _onError,
-                _handlerMap, _loggerFactory,
+                _queue,
+                _serializationRegister,
+                _messageMonitor,
+                _onError,
+                _loggerFactory,
                 _messageBackoffStrategy,
-                new MessageContextAccessor());
+                new MessageContextAccessor(),
+                Substitute.For<IMessageLockAsync>());
 
             return dispatcher;
         }
+
+        private void AddHandler()
+        {
+            var handler = Substitute.For<IHandlerAsync<OrderAccepted>>();
+            handler.Handle(Arg.Any<OrderAccepted>()).Returns(_ => HandleOrderAcceptedMessage());
+
+            SystemUnderTest.AddMessageHandler<OrderAccepted>(() => handler);
+        }
+
+        protected virtual bool HandleOrderAcceptedMessage() => true;
 
         public class AndMessageProcessingSucceeds : WhenDispatchingMessage
         {
             protected override void Given()
             {
                 base.Given();
-                _handlerMap.Add(typeof(OrderAccepted), m => Task.FromResult(true));
             }
+
+            protected override bool HandleOrderAcceptedMessage() => true;
 
             [Fact]
             public void ShouldDeserializeMessage()
@@ -131,9 +145,10 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             {
                 base.Given();
                 _messageBackoffStrategy.GetBackoffDuration(_typedMessage, 1, _expectedException).Returns(_expectedBackoffTimeSpan);
-                _handlerMap.Add(typeof(OrderAccepted), m => throw _expectedException);
                 _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString(CultureInfo.InvariantCulture));
             }
+
+            protected override bool HandleOrderAcceptedMessage() => throw _expectedException;
 
             [Fact]
             public void ShouldInvokeMessageBackoffStrategyWithNumberOfReceives()
@@ -156,9 +171,10 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
                 _messageBackoffStrategy.GetBackoffDuration(_typedMessage, Arg.Any<int>()).Returns(TimeSpan.FromMinutes(4));
                 _amazonSqsClient.ChangeMessageVisibilityAsync(Arg.Any<ChangeMessageVisibilityRequest>()).Throws(new AmazonServiceException("Something gone wrong"));
 
-                _handlerMap.Add(typeof(OrderAccepted), m => Task.FromResult(false));
                 _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, "1");
             }
+
+            protected override bool HandleOrderAcceptedMessage() => false;
 
             [Fact]
             public void ShouldLogException()

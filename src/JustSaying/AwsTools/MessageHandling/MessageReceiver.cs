@@ -10,18 +10,17 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    // todo: internal?
-    public class MessageRequester : IMessageRequester
+    internal class MessageReceiver : IMessageReceiver
     {
         private readonly ISqsQueue _queue;
         private readonly IMessageMonitor _messagingMonitor;
-        private readonly ILogger<MessageRequester> _logger;
+        private readonly ILogger _logger;
         private readonly List<string> _requestMessageAttributeNames = new List<string>();
 
-        public MessageRequester(
+        public MessageReceiver(
             ISqsQueue queue,
             IMessageMonitor messagingMonitor,
-            ILogger<MessageRequester> logger,
+            ILogger<MessageReceiver> logger,
             IMessageBackoffStrategy messageBackoffStrategy)
         {
             _queue = queue;

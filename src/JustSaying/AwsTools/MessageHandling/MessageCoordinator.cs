@@ -7,27 +7,27 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public class MessageCoordinator : IMessageCoordinator
+    internal class MessageCoordinator : IMessageCoordinator
     {
         private readonly ILogger _log;
-        private readonly IMessageRequester _messageRequester;
+        private readonly IMessageReceiver _messageReceiver;
         private readonly IMessageDispatcher _messageDispatcher;
         private IMessageProcessingStrategy _messageProcessingStrategy;
 
         public MessageCoordinator(
             ILogger log,
-            IMessageRequester messageRequester,
+            IMessageReceiver messageReceiver,
             IMessageDispatcher messageDispatcher,
             IMessageProcessingStrategy messageProcessingStrategy)
         {
             _log = log;
-            _messageRequester = messageRequester;
+            _messageReceiver = messageReceiver;
             _messageDispatcher = messageDispatcher;
             _messageProcessingStrategy = messageProcessingStrategy;
         }
 
-        public string QueueName => _messageRequester.QueueName;
-        public string Region => _messageRequester.Region;
+        public string QueueName => _messageReceiver.QueueName;
+        public string Region => _messageReceiver.Region;
 
         public void WithMessageProcessingStrategy(IMessageProcessingStrategy messageProcessingStrategy)
         {
@@ -53,8 +53,8 @@ namespace JustSaying.AwsTools.MessageHandling
 
                     _log.LogTrace(
                         "Polled for messages on queue '{QueueName}' in region '{Region}', and received {MessageCount} messages.",
-                        _messageRequester.QueueName,
-                        _messageRequester.Region,
+                        _messageReceiver.QueueName,
+                        _messageReceiver.Region,
                         messageCount);
                 }
                 catch (InvalidOperationException ex)
@@ -62,16 +62,16 @@ namespace JustSaying.AwsTools.MessageHandling
                     _log.LogTrace(
                         ex,
                         "Could not determine number of messages to read from queue '{QueueName}' in '{Region}'.",
-                        _messageRequester.QueueName,
-                        _messageRequester.Region);
+                        _messageReceiver.QueueName,
+                        _messageReceiver.Region);
                 }
                 catch (OperationCanceledException ex)
                 {
                     _log.LogTrace(
                         ex,
                         "Suspected no message on queue '{QueueName}' in region '{Region}'.",
-                        _messageRequester.QueueName,
-                        _messageRequester.Region);
+                        _messageReceiver.QueueName,
+                        _messageReceiver.Region);
                 }
 #pragma warning disable CA1031
                 catch (Exception ex)
@@ -80,8 +80,8 @@ namespace JustSaying.AwsTools.MessageHandling
                     _log.LogError(
                         ex,
                         "Error receiving messages on queue '{QueueName}' in region '{Region}'.",
-                        _messageRequester.QueueName,
-                        _messageRequester.Region);
+                        _messageReceiver.QueueName,
+                        _messageReceiver.Region);
                 }
 
                 if (sqsMessageResponse == null || sqsMessageResponse.Messages.Count < 1)
@@ -104,8 +104,8 @@ namespace JustSaying.AwsTools.MessageHandling
                             _log.LogWarning(
                                 "Unable to process message with Id {MessageId} for queue '{QueueName}' in region '{Region}' as no workers are available.",
                                 message.MessageId,
-                                _messageRequester.QueueName,
-                        _messageRequester.Region);
+                                _messageReceiver.QueueName,
+                        _messageReceiver.Region);
                         }
                     }
                 }
@@ -116,8 +116,8 @@ namespace JustSaying.AwsTools.MessageHandling
                     _log.LogError(
                         ex,
                         "Error in message handling loop for queue '{QueueName}' in region '{Region}'.",
-                        _messageRequester.QueueName,
-                        _messageRequester.Region);
+                        _messageReceiver.QueueName,
+                        _messageReceiver.Region);
                 }
             }
         }
@@ -132,7 +132,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 return null;
             }
 
-            var sqsMessageResponse = await _messageRequester.GetMessages(maxNumberOfMessages, ct).ConfigureAwait(false);
+            var sqsMessageResponse = await _messageReceiver.GetMessages(maxNumberOfMessages, ct).ConfigureAwait(false);
 
             return sqsMessageResponse;
         }

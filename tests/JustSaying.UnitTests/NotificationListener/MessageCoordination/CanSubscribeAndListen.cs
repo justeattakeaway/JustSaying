@@ -47,8 +47,8 @@ namespace JustSaying.UnitTests.NotificationListener.MessageCoordination
             // Arrange
             var receiptHandle = "ReceiptHandle";
             var messageBody = "Body";
-            var messageRequester = Substitute.For<IMessageRequester>();
-            messageRequester.GetMessages(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            var messageReceiver = Substitute.For<IMessageReceiver>();
+            messageReceiver.GetMessages(Arg.Any<int>(), Arg.Any<CancellationToken>())
                 .Returns(new Amazon.SQS.Model.ReceiveMessageResponse
                 {
                     Messages = new List<Amazon.SQS.Model.Message>
@@ -58,7 +58,7 @@ namespace JustSaying.UnitTests.NotificationListener.MessageCoordination
                 });
             var messageDispatcher = Substitute.For<IMessageDispatcher>();
 
-            var coordinator = CreateMessageCoordinator(_outputHelper.ToLoggerFactory(), messageRequester, messageDispatcher);
+            var coordinator = CreateMessageCoordinator(_outputHelper.ToLoggerFactory(), messageReceiver, messageDispatcher);
 
             // Act
             var cts = new CancellationTokenSource(1000);
@@ -79,10 +79,10 @@ namespace JustSaying.UnitTests.NotificationListener.MessageCoordination
         {
             // Arrange
             var messageDispatcher = Substitute.For<IMessageDispatcher>();
-            var messageRequester = Substitute.For<IMessageRequester>();
-            messageRequester.GetMessages(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            var messageReceiver = Substitute.For<IMessageReceiver>();
+            messageReceiver.GetMessages(Arg.Any<int>(), Arg.Any<CancellationToken>())
                 .Returns<Task<Amazon.SQS.Model.ReceiveMessageResponse>>(_ => throw new Exception("Cannot retrieve messages!"));
-            var coordinator = CreateMessageCoordinator(_outputHelper.ToLoggerFactory(), messageRequester, messageDispatcher);
+            var coordinator = CreateMessageCoordinator(_outputHelper.ToLoggerFactory(), messageReceiver, messageDispatcher);
 
             // Act
             var cts = new CancellationTokenSource();
@@ -92,11 +92,11 @@ namespace JustSaying.UnitTests.NotificationListener.MessageCoordination
             await Task.Delay(500);
 
             // Assert
-            await messageRequester.Received()
+            await messageReceiver.Received()
                  .GetMessages(Arg.Any<int>(), Arg.Any<CancellationToken>());
-            messageRequester.ClearReceivedCalls();
+            messageReceiver.ClearReceivedCalls();
             await Task.Delay(500);
-            await messageRequester.Received()
+            await messageReceiver.Received()
                  .GetMessages(Arg.Any<int>(), Arg.Any<CancellationToken>());
 
             await messageDispatcher.DidNotReceive()
@@ -105,11 +105,11 @@ namespace JustSaying.UnitTests.NotificationListener.MessageCoordination
 
         private static IMessageCoordinator CreateMessageCoordinator(
             ILoggerFactory loggerFactory,
-            IMessageRequester messageRequester = null,
+            IMessageReceiver messageReceiver = null,
             IMessageDispatcher messageDispatcher = null)
         {
             var logger = loggerFactory.CreateLogger("test-logger");
-            messageRequester ??= Substitute.For<IMessageRequester>();
+            messageReceiver ??= Substitute.For<IMessageReceiver>();
             messageDispatcher ??= Substitute.For<IMessageDispatcher>();
 
             var messageMonitor = Substitute.For<IMessageMonitor>();
@@ -117,7 +117,7 @@ namespace JustSaying.UnitTests.NotificationListener.MessageCoordination
 
             return new MessageCoordinator(
                 logger,
-                messageRequester,
+                messageReceiver,
                 messageDispatcher,
                 messageProcessingStrategy);
         }

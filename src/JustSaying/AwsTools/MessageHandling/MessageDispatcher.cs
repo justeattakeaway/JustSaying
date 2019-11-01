@@ -21,30 +21,48 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly IMessageSerializationRegister _serializationRegister;
         private readonly IMessageMonitor _messagingMonitor;
         private readonly Action<Exception, SQSMessage> _onError;
-        private readonly HandlerMap _handlerMap;
         private readonly IMessageBackoffStrategy _messageBackoffStrategy;
         private readonly IMessageContextAccessor _messageContextAccessor;
+        private readonly MessageHandlerWrapper _messageHandlerWrapper;
 
         private static ILogger _logger;
+
+        private readonly HandlerMap _handlerMap = new HandlerMap();
 
         public MessageDispatcher(
             ISqsQueue queue,
             IMessageSerializationRegister serializationRegister,
             IMessageMonitor messagingMonitor,
             Action<Exception, SQSMessage> onError,
-            HandlerMap handlerMap,
             ILoggerFactory loggerFactory,
             IMessageBackoffStrategy messageBackoffStrategy,
-            IMessageContextAccessor messageContextAccessor)
+            IMessageContextAccessor messageContextAccessor,
+            IMessageLockAsync messageLock)
         {
             _queue = queue;
             _serializationRegister = serializationRegister;
             _messagingMonitor = messagingMonitor;
             _onError = onError;
-            _handlerMap = handlerMap;
             _logger = loggerFactory.CreateLogger("JustSaying");
             _messageBackoffStrategy = messageBackoffStrategy;
             _messageContextAccessor = messageContextAccessor;
+
+            _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor, loggerFactory);
+        }
+
+        public bool AddMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler) where T : Message
+        {
+            if (_handlerMap.ContainsKey(typeof(T)))
+            {
+                // todo: return false?
+                throw new NotSupportedException(
+                    $"The handler for '{typeof(T)}' messages on this queue has already been registered.");
+            }
+
+            var handlerFunc = _messageHandlerWrapper.WrapMessageHandler(futureHandler);
+            _handlerMap.Add(typeof(T), handlerFunc);
+
+            return true;
         }
 
         public async Task DispatchMessage(SQSMessage message, CancellationToken cancellationToken)

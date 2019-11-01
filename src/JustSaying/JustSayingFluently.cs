@@ -9,6 +9,7 @@ using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
@@ -368,7 +369,7 @@ namespace JustSaying
             return this;
         }
 
-        protected INotificationSubscriber CreateSubscriber(SqsQueueBase queue)
+        protected INotificationSubscriber CreateSubscriber(SqsQueueBase queue, IMessageProcessingStrategy messageProcessingStrategy)
         {
             return new SqsNotificationListener(
                 queue,
@@ -376,6 +377,7 @@ namespace JustSaying
                 Bus.Monitor,
                 _loggerFactory,
                 Bus.MessageContextAccessor,
+                messageProcessingStrategy,
                 _subscriptionConfig.OnError,
                 Bus.MessageLock,
                 _subscriptionConfig.MessageBackoffStrategy);
@@ -384,26 +386,39 @@ namespace JustSaying
         private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue)
             where T : Message
         {
-            INotificationSubscriber subscriber = CreateSubscriber(queue);
+            IMessageProcessingStrategy strategy = CreateMessageProcessingStrategy(Bus.Monitor);
+            INotificationSubscriber subscriber = CreateSubscriber(queue, strategy);
 
             subscriber.Subscribers.Add(new Subscriber(typeof(T)));
 
             Bus.AddNotificationSubscriber(region, subscriber);
-
-            // TODO Concrete type check for backwards compatibility for now.
-            // Refactor the interface for v7 to allow this to be done against the interface.
-            if (subscriber is SqsNotificationListener sqsSubscriptionListener)
+        }
+            
+        public IMessageProcessingStrategy CreateMessageProcessingStrategy(
+            IMessageMonitor messageMonitor,
+            TimeSpan? startTimeout = null)
+        {
+            if (_subscriptionConfig.MessageProcessingStrategy != null)
             {
-                if (_subscriptionConfig.MaxAllowedMessagesInFlight.HasValue)
-                {
-                    sqsSubscriptionListener.WithMaximumConcurrentLimitOnMessagesInFlightOf(_subscriptionConfig.MaxAllowedMessagesInFlight.Value);
-                }
-
-                if (_subscriptionConfig.MessageProcessingStrategy != null)
-                {
-                    sqsSubscriptionListener.WithMessageProcessingStrategy(_subscriptionConfig.MessageProcessingStrategy);
-                }
+                return _subscriptionConfig.MessageProcessingStrategy;
             }
+
+            if (_subscriptionConfig.MaxAllowedMessagesInFlight.HasValue)
+            {
+                int maximumAllowedMesagesInFlight = _subscriptionConfig.MaxAllowedMessagesInFlight.Value;
+
+                var options = new ThrottledOptions()
+                {
+                    MaxConcurrency = maximumAllowedMesagesInFlight,
+                    StartTimeout = startTimeout ?? Timeout.InfiniteTimeSpan,
+                    Logger = _log,
+                    MessageMonitor = messageMonitor,
+                };
+
+                return new Throttled(options);
+            }
+
+            return new DefaultThrottledThroughput(Bus.Monitor, _log);
         }
 
         private void ConfigureSqsSubscriptionViaTopic<T>() where T : Message
