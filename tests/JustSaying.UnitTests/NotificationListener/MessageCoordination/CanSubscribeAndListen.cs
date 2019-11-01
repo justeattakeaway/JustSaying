@@ -48,7 +48,7 @@ namespace JustSaying.UnitTests.NotificationListener.MessageCoordination
             var receiptHandle = "ReceiptHandle";
             var messageBody = "Body";
             var messageReceiver = Substitute.For<IMessageReceiver>();
-            messageReceiver.GetMessages(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            messageReceiver.GetMessagesAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
                 .Returns(new Amazon.SQS.Model.ReceiveMessageResponse
                 {
                     Messages = new List<Amazon.SQS.Model.Message>
@@ -75,13 +75,13 @@ namespace JustSaying.UnitTests.NotificationListener.MessageCoordination
         }
 
         [Fact]
-        public async Task SqsRequestThrowsException_ContinuesToRequestMessages()
+        public async Task MessageResponseNull_ContinuesToRequestMessages()
         {
             // Arrange
             var messageDispatcher = Substitute.For<IMessageDispatcher>();
             var messageReceiver = Substitute.For<IMessageReceiver>();
-            messageReceiver.GetMessages(Arg.Any<int>(), Arg.Any<CancellationToken>())
-                .Returns<Task<Amazon.SQS.Model.ReceiveMessageResponse>>(_ => throw new Exception("Cannot retrieve messages!"));
+            messageReceiver.GetMessagesAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+                .Returns(_ => default(Amazon.SQS.Model.ReceiveMessageResponse));
             var coordinator = CreateMessageCoordinator(_outputHelper.ToLoggerFactory(), messageReceiver, messageDispatcher);
 
             // Act
@@ -92,11 +92,11 @@ namespace JustSaying.UnitTests.NotificationListener.MessageCoordination
 
             // Assert
             await messageReceiver.Received()
-                 .GetMessages(Arg.Any<int>(), Arg.Any<CancellationToken>());
+                 .GetMessagesAsync(Arg.Any<int>(), Arg.Any<CancellationToken>());
             messageReceiver.ClearReceivedCalls();
             await Task.Delay(500);
             await messageReceiver.Received()
-                 .GetMessages(Arg.Any<int>(), Arg.Any<CancellationToken>());
+                 .GetMessagesAsync(Arg.Any<int>(), Arg.Any<CancellationToken>());
 
             await messageDispatcher.DidNotReceive()
                  .DispatchMessage(Arg.Any<Amazon.SQS.Model.Message>(), Arg.Any<CancellationToken>());

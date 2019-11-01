@@ -41,48 +41,9 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public async Task ListenLoopAsync(CancellationToken ct)
         {
-            ReceiveMessageResponse sqsMessageResponse = null;
-
             while (!ct.IsCancellationRequested)
             {
-                try
-                {
-                    sqsMessageResponse = await GetMessagesFromSqsQueueAsync(ct).ConfigureAwait(false);
-
-                    int messageCount = sqsMessageResponse?.Messages?.Count ?? 0;
-
-                    _log.LogTrace(
-                        "Polled for messages on queue '{QueueName}' in region '{Region}', and received {MessageCount} messages.",
-                        _messageReceiver.QueueName,
-                        _messageReceiver.Region,
-                        messageCount);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    _log.LogTrace(
-                        ex,
-                        "Could not determine number of messages to read from queue '{QueueName}' in '{Region}'.",
-                        _messageReceiver.QueueName,
-                        _messageReceiver.Region);
-                }
-                catch (OperationCanceledException ex)
-                {
-                    _log.LogTrace(
-                        ex,
-                        "Suspected no message on queue '{QueueName}' in region '{Region}'.",
-                        _messageReceiver.QueueName,
-                        _messageReceiver.Region);
-                }
-#pragma warning disable CA1031
-                catch (Exception ex)
-#pragma warning restore CA1031
-                {
-                    _log.LogError(
-                        ex,
-                        "Error receiving messages on queue '{QueueName}' in region '{Region}'.",
-                        _messageReceiver.QueueName,
-                        _messageReceiver.Region);
-                }
+                ReceiveMessageResponse sqsMessageResponse = await GetMessagesFromSqsQueueAsync(ct).ConfigureAwait(false);
 
                 if (sqsMessageResponse == null || sqsMessageResponse.Messages.Count < 1)
                 {
@@ -105,7 +66,7 @@ namespace JustSaying.AwsTools.MessageHandling
                                 "Unable to process message with Id {MessageId} for queue '{QueueName}' in region '{Region}' as no workers are available.",
                                 message.MessageId,
                                 _messageReceiver.QueueName,
-                        _messageReceiver.Region);
+                                _messageReceiver.Region);
                         }
                     }
                 }
@@ -132,7 +93,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 return null;
             }
 
-            var sqsMessageResponse = await _messageReceiver.GetMessages(maxNumberOfMessages, ct).ConfigureAwait(false);
+            var sqsMessageResponse = await _messageReceiver.GetMessagesAsync(maxNumberOfMessages, ct).ConfigureAwait(false);
 
             return sqsMessageResponse;
         }

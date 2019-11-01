@@ -36,7 +36,7 @@ namespace JustSaying.AwsTools.MessageHandling
         public string QueueName => _queue?.QueueName;
         public string Region => _queue?.Region?.SystemName;
 
-        public async Task<ReceiveMessageResponse> GetMessages(int maxNumberOfMessages, CancellationToken ct)
+        public async Task<ReceiveMessageResponse> GetMessagesAsync(int maxNumberOfMessages, CancellationToken ct)
         {
             // todo: configurable wait time?
             var request = new ReceiveMessageRequest
@@ -47,16 +47,64 @@ namespace JustSaying.AwsTools.MessageHandling
                 AttributeNames = _requestMessageAttributeNames
             };
 
-            using var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));
             ReceiveMessageResponse sqsMessageResponse;
 
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+            sqsMessageResponse = await TryGetMessages(request, ct).ConfigureAwait(false);
+
+            stopwatch.Stop();
+
+            _messagingMonitor.ReceiveMessageTime(stopwatch.Elapsed, QueueName, Region);
+
+            return sqsMessageResponse;
+        }
+
+        private async Task<ReceiveMessageResponse> TryGetMessages(ReceiveMessageRequest request, CancellationToken ct)
+        {
+            ReceiveMessageResponse sqsMessageResponse = null;
+
+            using var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));
 
             try
             {
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, receiveTimeout.Token);
 
                 sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCts.Token).ConfigureAwait(false);
+
+                int messageCount = sqsMessageResponse?.Messages?.Count ?? 0;
+
+                _logger.LogTrace(
+                    "Polled for messages on queue '{QueueName}' in region '{Region}', and received {MessageCount} messages.",
+                    QueueName,
+                    Region,
+                    messageCount);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogTrace(
+                    ex,
+                    "Could not determine number of messages to read from queue '{QueueName}' in '{Region}'.",
+                    QueueName,
+                    Region);
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogTrace(
+                    ex,
+                    "Suspected no message on queue '{QueueName}' in region '{Region}'.",
+                    QueueName,
+                    Region);
+            }
+#pragma warning disable CA1031
+            catch (Exception ex)
+#pragma warning restore CA1031
+            {
+                _logger.LogError(
+                    ex,
+                    "Error receiving messages on queue '{QueueName}' in region '{Region}'.",
+                    QueueName,
+                    Region);
             }
             finally
             {
@@ -66,10 +114,6 @@ namespace JustSaying.AwsTools.MessageHandling
                         QueueName, Region);
                 }
             }
-
-            stopwatch.Stop();
-
-            _messagingMonitor.ReceiveMessageTime(stopwatch.Elapsed, QueueName, Region);
 
             return sqsMessageResponse;
         }

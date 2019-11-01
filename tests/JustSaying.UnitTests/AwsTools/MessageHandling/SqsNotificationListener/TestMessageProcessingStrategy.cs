@@ -17,7 +17,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 
         public Task<int> WaitForAvailableWorkerAsync()
         {
-            return Task.FromResult(1);
+            return Task.FromResult(MaxConcurrency);
         }
     }
 }
