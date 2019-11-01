@@ -20,7 +20,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             return Task.FromResult(MaxConcurrency);
         }
 
-        public Task ReportMessageReceived(bool success)
+        public Task WaitForThrottlingAsync(bool anyMessagesRetrieved)
         {
             return Task.CompletedTask;
         }

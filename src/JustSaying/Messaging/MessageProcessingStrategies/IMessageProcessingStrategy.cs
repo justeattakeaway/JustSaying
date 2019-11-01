@@ -42,6 +42,8 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
         /// <summary>
         /// Notifies of a successful message received, waits for any debounce/circuit break logic.
         /// </summary>
-        Task ReportMessageReceived(bool success);
+        /// <param name="wasMessageRetrieved">Indicates whether the last request to SQS was successful.</param>
+        /// <returns>The caller waits for the returned task to complete before requesting the next messages.</returns>
+        Task WaitForThrottlingAsync(bool anyMessagesRetrieved);
     }
 }

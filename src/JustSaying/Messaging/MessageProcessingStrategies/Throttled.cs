@@ -146,7 +146,7 @@ namespace JustSaying.Messaging.MessageProcessingStrategies
             return _semaphore.CurrentCount;
         }
 
-        public Task ReportMessageReceived(bool success)
+        public Task WaitForThrottlingAsync(bool anyMessagesRetrieved)
         {
             return Task.CompletedTask;
         }

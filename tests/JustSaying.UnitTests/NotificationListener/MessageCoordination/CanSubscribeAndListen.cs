@@ -111,7 +111,7 @@ namespace JustSaying.UnitTests.NotificationListener.MessageCoordination
             var messageProcessingStrategy = Substitute.For<IMessageProcessingStrategy>();
             messageProcessingStrategy.WaitForAvailableWorkerAsync()
                 .Returns(1);
-            messageProcessingStrategy.ReportMessageReceived(Arg.Any<bool>())
+            messageProcessingStrategy.WaitForThrottlingAsync(Arg.Any<bool>())
                 .Returns(ci => completionSource.Task);
             var coordinator = CreateMessageCoordinator(
                 _outputHelper.ToLoggerFactory(),

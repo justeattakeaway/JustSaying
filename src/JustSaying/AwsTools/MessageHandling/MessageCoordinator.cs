@@ -40,44 +40,14 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 ReceiveMessageResponse sqsMessageResponse = await GetMessagesFromSqsQueueAsync(cancellationToken).ConfigureAwait(false);
 
-                if (sqsMessageResponse == null || sqsMessageResponse.Messages.Count < 1)
+                var anyMessages = sqsMessageResponse?.Messages?.Count >= 1;
+                if (anyMessages)
                 {
-                    await _messageProcessingStrategy.ReportMessageReceived(success: false).ConfigureAwait(false);
+                    await HandleMessagesAsync(sqsMessageResponse, cancellationToken).ConfigureAwait(false);
                     continue;
                 }
 
-                await _messageProcessingStrategy.ReportMessageReceived(success: true).ConfigureAwait(false);
-
-                try
-                {
-                    foreach (var message in sqsMessageResponse.Messages)
-                    {
-                        if (cancellationToken.IsCancellationRequested)
-                        {
-                            return;
-                        }
-
-                        if (!await TryHandleMessageAsync(message, cancellationToken).ConfigureAwait(false))
-                        {
-                            // No worker free to process any messages
-                            _log.LogWarning(
-                                "Unable to process message with Id {MessageId} for queue '{QueueName}' in region '{Region}' as no workers are available.",
-                                message.MessageId,
-                                _messageReceiver.QueueName,
-                                _messageReceiver.Region);
-                        }
-                    }
-                }
-#pragma warning disable CA1031
-                catch (Exception ex)
-#pragma warning restore CA1031
-                {
-                    _log.LogError(
-                        ex,
-                        "Error in message handling loop for queue '{QueueName}' in region '{Region}'.",
-                        _messageReceiver.QueueName,
-                        _messageReceiver.Region);
-                }
+                await _messageProcessingStrategy.WaitForThrottlingAsync(anyMessages).ConfigureAwait(false);
             }
         }
 
@@ -118,6 +88,40 @@ namespace JustSaying.AwsTools.MessageHandling
             }
 
             return messagesToRequest;
+        }
+
+        private async Task HandleMessagesAsync(Amazon.SQS.Model.ReceiveMessageResponse sqsMessageResponse, CancellationToken cancellationToken)
+        {
+            try
+            {
+                foreach (var message in sqsMessageResponse.Messages)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    if (!await TryHandleMessageAsync(message, cancellationToken).ConfigureAwait(false))
+                    {
+                        // No worker free to process any messages
+                        _log.LogWarning(
+                            "Unable to process message with Id {MessageId} for queue '{QueueName}' in region '{Region}' as no workers are available.",
+                            message.MessageId,
+                            _messageReceiver.QueueName,
+                            _messageReceiver.Region);
+                    }
+                }
+            }
+#pragma warning disable CA1031
+            catch (Exception ex)
+#pragma warning restore CA1031
+            {
+                _log.LogError(
+                    ex,
+                    "Error in message handling loop for queue '{QueueName}' in region '{Region}'.",
+                    _messageReceiver.QueueName,
+                    _messageReceiver.Region);
+            }
         }
 
         private Task<bool> TryHandleMessageAsync(Amazon.SQS.Model.Message message, CancellationToken ct)
