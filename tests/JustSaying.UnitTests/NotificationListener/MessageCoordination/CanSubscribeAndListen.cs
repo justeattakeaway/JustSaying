@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
@@ -47,15 +48,7 @@ namespace JustSaying.UnitTests.NotificationListener.MessageCoordination
             // Arrange
             var receiptHandle = "ReceiptHandle";
             var messageBody = "Body";
-            var messageReceiver = Substitute.For<IMessageReceiver>();
-            messageReceiver.GetMessagesAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
-                .Returns(new Amazon.SQS.Model.ReceiveMessageResponse
-                {
-                    Messages = new List<Amazon.SQS.Model.Message>
-                    {
-                        new Amazon.SQS.Model.Message { ReceiptHandle = receiptHandle, Body = messageBody },
-                    }
-                });
+            var messageReceiver = CreateMessageReceiver(receiptHandle, messageBody);
             var messageDispatcher = Substitute.For<IMessageDispatcher>();
 
             var coordinator = CreateMessageCoordinator(_outputHelper.ToLoggerFactory(), messageReceiver, messageDispatcher);
@@ -108,11 +101,7 @@ namespace JustSaying.UnitTests.NotificationListener.MessageCoordination
             // Arrange
             var messageReceiver = Substitute.For<IMessageReceiver>();
             var completionSource = new TaskCompletionSource<bool>();
-            var messageProcessingStrategy = Substitute.For<IMessageProcessingStrategy>();
-            messageProcessingStrategy.WaitForAvailableWorkerAsync()
-                .Returns(1);
-            messageProcessingStrategy.WaitForThrottlingAsync(Arg.Any<bool>())
-                .Returns(ci => completionSource.Task);
+            var messageProcessingStrategy = CreateMessageProcessingStrategy(() => completionSource.Task);
             var coordinator = CreateMessageCoordinator(
                 _outputHelper.ToLoggerFactory(),
                 messageReceiver,
@@ -135,6 +124,44 @@ namespace JustSaying.UnitTests.NotificationListener.MessageCoordination
                  .GetMessagesAsync(Arg.Any<int>(), Arg.Any<CancellationToken>());
         }
 
+        [Fact]
+        public async Task MessageDispatcherBlocks_LoopStopsRequestingMessages()
+        {
+            // Arrange
+            var completionSource = new TaskCompletionSource<bool>();
+            var messageReceiver = CreateMessageReceiver("receiptHandle", "messageBody");
+            var messageDispatcher = Substitute.For<IMessageDispatcher>();
+            messageDispatcher.DispatchMessage(Arg.Any<Amazon.SQS.Model.Message>(), Arg.Any<CancellationToken>())
+                .Returns(_ => completionSource.Task);
+            var messageProcessingStrategy = new TestMessageProcessingStrategy();
+
+            var coordinator = CreateMessageCoordinator(
+                _outputHelper.ToLoggerFactory(),
+                messageReceiver,
+                messageDispatcher,
+                messageProcessingStrategy);
+
+            // Act
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            _ = Task.Run(() => coordinator.ListenAsync(cts.Token));
+
+            await Task.Delay(500);
+
+            // Assert
+            await messageReceiver.Received(1)
+                 .GetMessagesAsync(Arg.Any<int>(), Arg.Any<CancellationToken>());
+            await messageDispatcher.Received(1)
+                 .DispatchMessage(Arg.Any<Amazon.SQS.Model.Message>(), Arg.Any<CancellationToken>());
+
+            messageReceiver.ClearReceivedCalls();
+            completionSource.SetResult(true);
+
+            await messageReceiver.Received()
+                 .GetMessagesAsync(Arg.Any<int>(), Arg.Any<CancellationToken>());
+            await messageDispatcher.Received()
+                .DispatchMessage(Arg.Any<Amazon.SQS.Model.Message>(), Arg.Any<CancellationToken>());
+        }
+
         private static IMessageCoordinator CreateMessageCoordinator(
             ILoggerFactory loggerFactory,
             IMessageReceiver messageReceiver = null,
@@ -153,6 +180,33 @@ namespace JustSaying.UnitTests.NotificationListener.MessageCoordination
                 messageReceiver,
                 messageDispatcher,
                 messageProcessingStrategy);
+        }
+
+        private static IMessageReceiver CreateMessageReceiver(string receiptHandle, string messageBody)
+        {
+            var messageReceiver = Substitute.For<IMessageReceiver>();
+            messageReceiver.GetMessagesAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+                .Returns(new Amazon.SQS.Model.ReceiveMessageResponse
+                {
+                    Messages = new List<Amazon.SQS.Model.Message>
+                    {
+                        new Amazon.SQS.Model.Message { ReceiptHandle = receiptHandle, Body = messageBody },
+                    }
+                });
+
+            return messageReceiver;
+        }
+
+        private static IMessageProcessingStrategy CreateMessageProcessingStrategy(
+            Func<Task> waitForThrottlingAsync)
+        {
+            var messageProcessingStrategy = Substitute.For<IMessageProcessingStrategy>();
+            messageProcessingStrategy.WaitForAvailableWorkerAsync()
+                .Returns(1);
+            messageProcessingStrategy.WaitForThrottlingAsync(Arg.Any<bool>())
+                .Returns(ci => waitForThrottlingAsync());
+
+            return messageProcessingStrategy;
         }
     }
 }
