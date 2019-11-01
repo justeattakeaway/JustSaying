@@ -38,6 +38,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public async Task<ReceiveMessageResponse> GetMessages(int maxNumberOfMessages, CancellationToken ct)
         {
+            // todo: configurable wait time?
             var request = new ReceiveMessageRequest
             {
                 QueueUrl = _queue.Uri.AbsoluteUri,

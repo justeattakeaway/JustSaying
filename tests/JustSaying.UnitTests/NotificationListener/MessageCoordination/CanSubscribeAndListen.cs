@@ -25,7 +25,7 @@ namespace JustSaying.UnitTests.NotificationListener.MessageCoordination
         public async Task CanListen_StopsListeningWhenTokenCancelled()
         {
             var coordinator = CreateMessageCoordinator(_outputHelper.ToLoggerFactory());
-            var cts = new CancellationTokenSource(1000);
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
             var listening = false;
             _ = Task.Run(async () =>
             {
@@ -61,7 +61,7 @@ namespace JustSaying.UnitTests.NotificationListener.MessageCoordination
             var coordinator = CreateMessageCoordinator(_outputHelper.ToLoggerFactory(), messageReceiver, messageDispatcher);
 
             // Act
-            var cts = new CancellationTokenSource(1000);
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
             _ = coordinator.ListenAsync(cts.Token);
 
             await Task.Delay(500);
@@ -85,8 +85,7 @@ namespace JustSaying.UnitTests.NotificationListener.MessageCoordination
             var coordinator = CreateMessageCoordinator(_outputHelper.ToLoggerFactory(), messageReceiver, messageDispatcher);
 
             // Act
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(1000);
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
             _ = Task.Run(() => coordinator.ListenAsync(cts.Token));
 
             await Task.Delay(500);

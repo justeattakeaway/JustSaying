@@ -41,7 +41,7 @@ namespace JustSaying.UnitTests.NotificationListener.MessageProcessing
             dispatcher.AddMessageHandler<TestMessage>(() => handler);
 
             // Act
-            var cts = new CancellationTokenSource(1000);
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
             await dispatcher.DispatchMessage(sqsmessage, cts.Token);
 
             await Task.Delay(500);
@@ -64,7 +64,7 @@ namespace JustSaying.UnitTests.NotificationListener.MessageProcessing
             var dispatcher = CreateMessageDispatcher(_outputHelper.ToLoggerFactory(), sqsClient, serializationRegister);
 
             // Act
-            var cts = new CancellationTokenSource(1000);
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
             await dispatcher.DispatchMessage(message, cts.Token);
 
             await Task.Delay(500);

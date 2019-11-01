@@ -4,7 +4,7 @@ using Amazon.SQS.Model;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    internal interface IMessageReceiver
+    public interface IMessageReceiver
     {
         Task<ReceiveMessageResponse> GetMessages(int maxNumberOfMessages, CancellationToken ct);
         string QueueName { get; }

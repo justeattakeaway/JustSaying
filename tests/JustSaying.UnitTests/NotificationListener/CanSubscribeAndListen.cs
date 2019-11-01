@@ -30,13 +30,16 @@ namespace JustSaying.UnitTests.NotificationListener
         [Fact]
         public async Task CanListen_StopsListeningWhenTokenCancelled()
         {
+            // Arrange
             var listener = CreateListener(_outputHelper.ToLoggerFactory());
-            var cts = new CancellationTokenSource(500);
+
+            // Act
+            var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
             listener.Listen(cts.Token);
+
+            // Assert
             Assert.True(listener.IsListening);
-
             await Task.Delay(1000);
-
             Assert.False(listener.IsListening);
         }
 
@@ -49,7 +52,7 @@ namespace JustSaying.UnitTests.NotificationListener
             var listener = CreateListener(_outputHelper.ToLoggerFactory(), sqsClient, serializationRegister);
 
             // Act
-            var cts = new CancellationTokenSource(1000);
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
             listener.Listen(cts.Token);
 
             await Task.Delay(500);
@@ -73,7 +76,7 @@ namespace JustSaying.UnitTests.NotificationListener
             listener.AddMessageHandler<TestMessage>(() => handler);
 
             // Act
-            var cts = new CancellationTokenSource(1000);
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
             listener.Listen(cts.Token);
 
             await Task.Delay(500);
@@ -100,7 +103,7 @@ namespace JustSaying.UnitTests.NotificationListener
             listener.AddMessageHandler<TestMessage>(() => handler);
 
             // Act
-            var cts = new CancellationTokenSource(1000);
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
             listener.Listen(cts.Token);
 
             await Task.Delay(500);
@@ -127,7 +130,7 @@ namespace JustSaying.UnitTests.NotificationListener
             listener.AddMessageHandler<TestMessage>(() => handler);
 
             // Act
-            var cts = new CancellationTokenSource(1000);
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
             listener.Listen(cts.Token);
 
             await Task.Delay(500);
@@ -151,7 +154,7 @@ namespace JustSaying.UnitTests.NotificationListener
             var listener = CreateListener(_outputHelper.ToLoggerFactory(), sqsClient, serializationRegister);
 
             // Act
-            var cts = new CancellationTokenSource(1000);
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
             listener.Listen(cts.Token);
 
             await Task.Delay(500);
