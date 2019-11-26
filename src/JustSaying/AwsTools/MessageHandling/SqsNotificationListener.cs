@@ -17,7 +17,7 @@ namespace JustSaying.AwsTools.MessageHandling
     public class SqsNotificationListener : INotificationSubscriber
     {
         private readonly MessageDispatcher _messageDispatcher;
-        private readonly IMessageCoordinator _listener;
+        private readonly IMessageCoordinator _coordinator;
 
         private readonly ILogger _log;
 
@@ -53,17 +53,17 @@ namespace JustSaying.AwsTools.MessageHandling
                 loggerFactory.CreateLogger<MessageReceiver>(),
                 messageBackoffStrategy);
 
-            _listener = new MessageCoordinator(_log, messageReceiver, _messageDispatcher, messageProcessingStrategy);
+            _coordinator = new MessageCoordinator(_log, messageReceiver, _messageDispatcher, messageProcessingStrategy);
 
             Subscribers = new Collection<ISubscriber>();
         }
 
-        public string Queue => _listener.QueueName;
+        public string Queue => _coordinator.QueueName;
 
         // todo: remove?
         public SqsNotificationListener WithMessageProcessingStrategy(IMessageProcessingStrategy messageProcessingStrategy)
         {
-            _listener.WithMessageProcessingStrategy(messageProcessingStrategy);
+            _coordinator.WithMessageProcessingStrategy(messageProcessingStrategy);
             return this;
         }
 
@@ -77,14 +77,14 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public void Listen(CancellationToken cancellationToken)
         {
-            var queueName = _listener.QueueName;
-            var region = _listener.Region;
+            var queueName = _coordinator.QueueName;
+            var region = _coordinator.Region;
 
             // Run task in background
             // ListenLoop will cancel gracefully, so no need to pass cancellation token to Task.Run
             _ = Task.Run(async () =>
             {
-                await _listener.ListenAsync(cancellationToken).ConfigureAwait(false);
+                await _coordinator.ListenAsync(cancellationToken).ConfigureAwait(false);
                 IsListening = false;
                 _log.LogInformation("Stopped listening on queue '{QueueName}' in region '{Region}'.", queueName, region);
             });

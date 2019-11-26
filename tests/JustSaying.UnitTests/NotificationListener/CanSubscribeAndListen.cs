@@ -34,12 +34,13 @@ namespace JustSaying.UnitTests.NotificationListener
             var listener = CreateListener(_outputHelper.ToLoggerFactory());
 
             // Act
-            var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+            var cts = new CancellationTokenSource();
             listener.Listen(cts.Token);
 
             // Assert
             Assert.True(listener.IsListening);
-            await Task.Delay(1000);
+            cts.Cancel();
+            await Task.Delay(500);
             Assert.False(listener.IsListening);
         }
 
@@ -209,7 +210,7 @@ namespace JustSaying.UnitTests.NotificationListener
                 queue,
                 serializationRegister,
                 Substitute.For<IMessageMonitor>(),
-                Substitute.For<ILoggerFactory>(),
+                loggerFactory,
                 Substitute.For<IMessageContextAccessor>(),
                 new TestMessageProcessingStrategy(),
                 Substitute.For<Action<Exception, Amazon.SQS.Model.Message>>(),
