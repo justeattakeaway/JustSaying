@@ -2,13 +2,13 @@
   <PropertyGroup>
     <AnalyzersPackageVersion>2.9.8</AnalyzersPackageVersion>
     <DotNetTestSdkVersion>16.4.0</DotNetTestSdkVersion>
-    <MicrosoftExtensionsDependencyInjectionVersion>3.0.1</MicrosoftExtensionsDependencyInjectionVersion>
-    <NewtonsoftJsonVersion>12.0.2</NewtonsoftJsonVersion>
+    <MicrosoftExtensionsDependencyInjectionVersion>3.1.0</MicrosoftExtensionsDependencyInjectionVersion>
+    <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
     <XUnitVersion>2.4.1</XUnitVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <AwsSdkSnsVersion>3.3.101.73</AwsSdkSnsVersion>
-    <AwsSdkSqsVersion>3.3.102.16</AwsSdkSqsVersion>
+    <AwsSdkSnsVersion>3.3.101.96</AwsSdkSnsVersion>
+    <AwsSdkSqsVersion>3.3.102.39</AwsSdkSqsVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.msbuild" Version="2.7.0" PrivateAssets="All" />
