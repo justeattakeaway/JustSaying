@@ -25,7 +25,6 @@ namespace JustSaying.AwsTools.QueueCreation
         public string Topic { get; set; }
         public string PublishEndpoint { get; set; }
 
-        public int? InstancePosition { get; set; }
         public int? MaxAllowedMessagesInFlight { get; set; }
         public IMessageProcessingStrategy MessageProcessingStrategy { get; set; }
         public Action<Exception, Amazon.SQS.Model.Message> OnError { get; set; }
