@@ -13,11 +13,6 @@ namespace JustSaying.Fluent
         protected override SqsReadConfigurationBuilder Self => this;
 
         /// <summary>
-        /// Gets or sets the instance position value to use.
-        /// </summary>
-        private int? InstancePosition { get; set; }
-
-        /// <summary>
         /// Gets or sets the maximum number of messages that can be inflight.
         /// </summary>
         private int? MaximumAllowedMessagesInflight { get; set; }
@@ -70,19 +65,6 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Configures the instance position to use.
-        /// </summary>
-        /// <param name="value">The value to use for the instance position.</param>
-        /// <returns>
-        /// The current <see cref="SqsReadConfigurationBuilder"/>.
-        /// </returns>
-        public SqsReadConfigurationBuilder WithInstancePosition(int value)
-        {
-            InstancePosition = value;
-            return this;
-        }
-
-        /// <summary>
         /// Configures the maximum number of messages that can be inflight at any time.
         /// </summary>
         /// <param name="value">The value to use for maximum number of inflight messages.</param>
@@ -129,11 +111,6 @@ namespace JustSaying.Fluent
             // config.Topic = default;
 
             base.Configure(config);
-
-            if (InstancePosition.HasValue)
-            {
-                config.InstancePosition = InstancePosition.Value;
-            }
 
             if (MaximumAllowedMessagesInflight.HasValue)
             {
