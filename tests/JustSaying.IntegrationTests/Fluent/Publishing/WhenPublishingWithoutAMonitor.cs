@@ -48,8 +48,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                     builder.Messaging(
                         (config) => config.WithPublishFailureBackoff(TimeSpan.FromMilliseconds(1))
                                           .WithPublishFailureReattempts(1));
-
-                    ;
+                    
                     builder.Subscriptions(
                         (subscription) => subscription.ForTopic<SimpleMessage>(
                             (topic) => topic.WithName(UniqueName)));
