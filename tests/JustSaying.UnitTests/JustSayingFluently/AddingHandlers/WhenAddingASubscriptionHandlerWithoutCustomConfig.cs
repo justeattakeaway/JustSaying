@@ -11,7 +11,6 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         private readonly IHandlerAsync<Message> _handler = Substitute.For<IHandlerAsync<Message>>();
         private IFluentSubscription _bus;
 
-
         protected override Task WhenAsync()
         {
             _bus = SystemUnderTest
@@ -27,12 +26,6 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
             // Tested by the fact that handlers can be added
             _bus.WithMessageHandler(_handler)
                 .WithMessageHandler(_handler);
-        }
-
-        [Fact]
-        public void ConfigurationCanBeProvided()
-        {
-            _bus.ConfigureSubscriptionWith(conf => conf.InstancePosition = 1);
         }
     }
 }

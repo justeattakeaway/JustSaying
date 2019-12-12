@@ -49,10 +49,10 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                         (config) => config.WithPublishFailureBackoff(TimeSpan.FromMilliseconds(1))
                                           .WithPublishFailureReattempts(1));
 
+                    ;
                     builder.Subscriptions(
                         (subscription) => subscription.ForTopic<SimpleMessage>(
-                            (topic) => topic.WithName(UniqueName).WithReadConfiguration(
-                                (config) => config.WithInstancePosition(1))));
+                            (topic) => topic.WithName(UniqueName)));
                 })
                 .AddSingleton(handler);
 
