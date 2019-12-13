@@ -15,7 +15,6 @@ namespace JustSaying
         IMayWantMessageLockStore,
         IMayWantCustomSerialization,
         IMayWantAFailoverRegion,
-        IMayWantNamingStrategy,
         IMayWantAwsClientFactory,
         IMayWantMessageContextAccessor
     {
@@ -24,11 +23,6 @@ namespace JustSaying
     public interface IMayWantAwsClientFactory
     {
         IMayWantOptionalSettings WithAwsClientFactory(Func<IAwsClientFactory> awsClientFactory);
-    }
-
-    public interface IMayWantNamingStrategy
-    {
-        IMayWantOptionalSettings WithNamingStrategy(Func<INamingStrategy> busNamingStrategy);
     }
 
     public interface IMayWantAFailoverRegion

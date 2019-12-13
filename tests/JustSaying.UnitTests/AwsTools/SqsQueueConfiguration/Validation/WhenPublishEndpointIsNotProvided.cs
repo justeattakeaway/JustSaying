@@ -29,7 +29,7 @@ namespace JustSaying.UnitTests.AwsTools.SqsQueueConfiguration.Validation
             return new SqsReadConfiguration(SubscriptionType.ToTopic)
             {
                 MessageRetention = JustSayingConstants.MinimumRetentionPeriod.Add(TimeSpan.FromSeconds(1)),
-                Topic = "ATopic",
+                TopicName = "ATopic",
                 PublishEndpoint = null
             };
         }

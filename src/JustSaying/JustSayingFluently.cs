@@ -38,7 +38,6 @@ namespace JustSaying
         protected internal IAmJustSaying Bus { get; set; }
         private SqsReadConfiguration _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic);
         private IMessageSerializationFactory _serializationFactory;
-        private Func<INamingStrategy> _busNamingStrategyFunc;
         private readonly ILoggerFactory _loggerFactory;
 
         protected internal JustSayingFluently(
@@ -53,11 +52,6 @@ namespace JustSaying
             _amazonQueueCreator = queueCreator;
             _awsClientFactoryProxy = awsClientFactoryProxy;
         }
-
-        public virtual INamingStrategy GetNamingStrategy()
-            => _busNamingStrategyFunc != null
-                ? _busNamingStrategyFunc()
-                : new DefaultNamingStrategy();
 
         /// <summary>
         /// Register for publishing messages to SNS
@@ -87,17 +81,15 @@ namespace JustSaying
             var snsWriteConfig = new SnsWriteConfiguration();
             configBuilder?.Invoke(snsWriteConfig);
 
-            _subscriptionConfig.Topic = typeof(T).ToTopicName();
-            var namingStrategy = GetNamingStrategy();
+            _subscriptionConfig.TopicName = typeof(T).ToTopicName();
 
             Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
 
-            var topicName = namingStrategy.GetTopicName(_subscriptionConfig.BaseTopicName, typeof(T));
             foreach (var region in Bus.Config.Regions)
             {
                 // TODO pass region down into topic creation for when we have foreign topics so we can generate the arn
                 var eventPublisher = new SnsTopicByName(
-                    topicName,
+                    _subscriptionConfig.TopicName,
                     _awsClientFactoryProxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
                     Bus.SerializationRegister,
                     _loggerFactory, snsWriteConfig,
@@ -114,7 +106,7 @@ namespace JustSaying
             }
 
             _log.LogInformation("Created SNS topic publisher on topic '{TopicName}' for message type '{MessageType}'.",
-                _subscriptionConfig.Topic, typeof(T));
+                _subscriptionConfig.TopicName, typeof(T));
 
             return this;
         }
@@ -144,8 +136,6 @@ namespace JustSaying
             var config = new SqsWriteConfiguration();
             configBuilder?.Invoke(config);
 
-            var queueName = GetNamingStrategy().GetQueueName(new SqsReadConfiguration(SubscriptionType.PointToPoint) { BaseQueueName = config.QueueName }, typeof(T));
-
             Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
 
             foreach (var region in Bus.Config.Regions)
@@ -155,7 +145,7 @@ namespace JustSaying
 
                 var eventPublisher = new SqsPublisher(
                     regionEndpoint,
-                    queueName,
+                    config.QueueName,
                     sqsClient,
                     config.RetryCountBeforeSendingToErrorQueue,
                     Bus.SerializationRegister,
@@ -175,7 +165,7 @@ namespace JustSaying
             _log.LogInformation(
                 "Created SQS publisher for message type '{MessageType}' on queue '{QueueName}'.",
                 typeof(T),
-                queueName);
+                config.QueueName);
 
             return this;
         }
@@ -233,7 +223,7 @@ namespace JustSaying
         {
             _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic)
             {
-                BaseTopicName = (topicName ?? string.Empty).ToLowerInvariant()
+                TopicName = (topicName ?? string.Empty).ToLowerInvariant()
             };
             return this;
         }
@@ -246,7 +236,7 @@ namespace JustSaying
 
         public IFluentSubscription IntoQueue(string queueName)
         {
-            _subscriptionConfig.BaseQueueName = queueName;
+            _subscriptionConfig.QueueName = queueName;
             return this;
         }
 
@@ -267,6 +257,9 @@ namespace JustSaying
             {
                 throw new InvalidOperationException($"No {nameof(IMessageSerializationFactory)} has been configured.");
             }
+
+            _subscriptionConfig.TopicName = GetOrUseDefaultTopicName<T>(_subscriptionConfig.TopicName);
+            _subscriptionConfig.QueueName = GetOrUseDefaultQueueName<T>(_subscriptionConfig.QueueName);
 
             // TODO - Subscription listeners should be just added once per queue,
             // and not for each message handler
@@ -297,6 +290,8 @@ namespace JustSaying
                 throw new InvalidOperationException($"No {nameof(IMessageSerializationFactory)} has been configured.");
             }
 
+            _subscriptionConfig.TopicName = GetOrUseDefaultTopicName<T>(_subscriptionConfig.TopicName);
+
             var thing = _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
                 ? PointToPointHandler<T>()
                 : TopicHandler<T>();
@@ -319,7 +314,7 @@ namespace JustSaying
             _log.LogInformation(
                 "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",
                 typeof(T),
-                _subscriptionConfig.Topic,
+                _subscriptionConfig.TopicName,
                 _subscriptionConfig.QueueName);
 
             return thing;
@@ -341,7 +336,7 @@ namespace JustSaying
 
                 _log.LogInformation(
                     "Created SQS topic subscription on topic '{TopicName}' and queue '{QueueName}'.",
-                    _subscriptionConfig.Topic,
+                    _subscriptionConfig.TopicName,
                     _subscriptionConfig.QueueName);
             }
 
@@ -408,11 +403,9 @@ namespace JustSaying
 
         private void ConfigureSqsSubscriptionViaTopic<T>() where T : Message
         {
-            var namingStrategy = GetNamingStrategy();
-
-            _subscriptionConfig.PublishEndpoint = namingStrategy.GetTopicName(_subscriptionConfig.BaseTopicName, typeof(T));
-            _subscriptionConfig.Topic = namingStrategy.GetTopicName(_subscriptionConfig.BaseTopicName, typeof(T));
-            _subscriptionConfig.QueueName = namingStrategy.GetQueueName(_subscriptionConfig, typeof(T));
+            _subscriptionConfig.PublishEndpoint = _subscriptionConfig.TopicName;
+            _subscriptionConfig.TopicName = _subscriptionConfig.TopicName;
+            _subscriptionConfig.QueueName = _subscriptionConfig.QueueName;
 
             _subscriptionConfig.Validate();
         }
@@ -420,7 +413,7 @@ namespace JustSaying
         private void ConfigureSqsSubscription<T>() where T : Message
         {
             _subscriptionConfig.ValidateSqsConfiguration();
-            _subscriptionConfig.QueueName = GetNamingStrategy().GetQueueName(_subscriptionConfig, typeof(T));
+            _subscriptionConfig.QueueName = _subscriptionConfig.QueueName;
         }
 
         /// <summary>
@@ -469,16 +462,20 @@ namespace JustSaying
             return (Bus as IAmJustInterrogating)?.WhatDoIHave();
         }
 
-        public IMayWantOptionalSettings WithNamingStrategy(Func<INamingStrategy> busNamingStrategy)
-        {
-            _busNamingStrategyFunc = busNamingStrategy;
-            return this;
-        }
-
         public IMayWantOptionalSettings WithAwsClientFactory(Func<IAwsClientFactory> awsClientFactory)
         {
             _awsClientFactoryProxy.SetAwsClientFactory(awsClientFactory);
             return this;
+        }
+
+        private static string GetOrUseDefaultTopicName<T>(string topicName)
+        {
+            return string.IsNullOrWhiteSpace(topicName) ? typeof(T).ToTopicName() : topicName;
+        }
+
+        private static string GetOrUseDefaultQueueName<T>(string queueName)
+        {
+            return string.IsNullOrWhiteSpace(queueName) ? typeof(T).ToTopicName() : queueName;
         }
     }
 }

@@ -226,11 +226,6 @@ namespace JustSaying
             JustSayingBus publisher = CreateBus(config, loggerFactory);
             JustSayingFluently fluent = CreateFluent(publisher, loggerFactory);
 
-            if (ServicesBuilder?.NamingStrategy != null)
-            {
-                fluent.WithNamingStrategy(ServicesBuilder.NamingStrategy);
-            }
-
             if (PublicationsBuilder != null)
             {
                 PublicationsBuilder.Configure(fluent);
@@ -256,11 +251,6 @@ namespace JustSaying
 
             JustSayingBus bus = CreateBus(config, loggerFactory);
             JustSayingFluently fluent = CreateFluent(bus, loggerFactory);
-
-            if (ServicesBuilder?.NamingStrategy != null)
-            {
-                fluent.WithNamingStrategy(ServicesBuilder.NamingStrategy);
-            }
 
             if (ServicesBuilder?.MessageContextAccessor != null)
             {

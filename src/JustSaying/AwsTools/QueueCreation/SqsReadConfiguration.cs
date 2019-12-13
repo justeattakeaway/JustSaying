@@ -18,11 +18,8 @@ namespace JustSaying.AwsTools.QueueCreation
 
         public SubscriptionType SubscriptionType { get; private set; }
 
-        public string BaseQueueName { get; set; }
         public string QueueName { get; set; }
-
-        public string BaseTopicName { get; set; }
-        public string Topic { get; set; }
+        public string TopicName { get; set; }
         public string PublishEndpoint { get; set; }
 
         public int? MaxAllowedMessagesInFlight { get; set; }
@@ -50,9 +47,9 @@ namespace JustSaying.AwsTools.QueueCreation
 
         private void ValidateSnsConfiguration()
         {
-            if (string.IsNullOrWhiteSpace(Topic))
+            if (string.IsNullOrWhiteSpace(TopicName))
             {
-                throw new ConfigurationErrorsException("Invalid configuration. Topic must be provided.");
+                throw new ConfigurationErrorsException("Invalid configuration. Topic name must be provided.");
             }
 
             if (PublishEndpoint == null)
