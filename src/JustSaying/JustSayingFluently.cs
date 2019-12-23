@@ -81,7 +81,7 @@ namespace JustSaying
             var snsWriteConfig = new SnsWriteConfiguration();
             configBuilder?.Invoke(snsWriteConfig);
 
-            _subscriptionConfig.TopicName = typeof(T).ToTopicName();
+            _subscriptionConfig.TopicName = GetOrUseDefaultTopicName<T>(_subscriptionConfig.TopicName);
 
             Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
 
@@ -137,6 +137,8 @@ namespace JustSaying
             configBuilder?.Invoke(config);
 
             Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
+
+            config.QueueName = GetOrUseDefaultQueueName<T>(config.QueueName);
 
             foreach (var region in Bus.Config.Regions)
             {
