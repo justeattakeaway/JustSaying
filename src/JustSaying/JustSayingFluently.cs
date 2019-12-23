@@ -293,6 +293,7 @@ namespace JustSaying
             }
 
             _subscriptionConfig.TopicName = GetOrUseDefaultTopicName<T>(_subscriptionConfig.TopicName);
+            _subscriptionConfig.QueueName = GetOrUseDefaultQueueName<T>(_subscriptionConfig.QueueName);
 
             var thing = _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
                 ? PointToPointHandler<T>()
