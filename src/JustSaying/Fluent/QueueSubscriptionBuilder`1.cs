@@ -1,5 +1,6 @@
 using System;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Extensions;
 using JustSaying.Models;
 
 namespace JustSaying.Fluent
@@ -99,6 +100,11 @@ namespace JustSaying.Fluent
         /// <inheritdoc />
         void ISubscriptionBuilder<T>.Configure(JustSayingFluently bus, IHandlerResolver resolver)
         {
+            if (string.IsNullOrWhiteSpace(QueueName))
+            {
+                QueueName = typeof(T).ToTopicName().ToLowerInvariant();
+            }
+
             var queue = bus.WithSqsPointToPointSubscriber()
                            .IntoQueue(QueueName);
 
