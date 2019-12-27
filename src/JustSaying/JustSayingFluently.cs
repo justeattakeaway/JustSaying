@@ -478,7 +478,7 @@ namespace JustSaying
 
         private static string GetOrUseDefaultQueueName<T>(string queueName)
         {
-            return string.IsNullOrWhiteSpace(queueName) ? typeof(T).ToTopicName() : queueName;
+            return string.IsNullOrWhiteSpace(queueName) ? typeof(T).ToQueueName() : queueName;
         }
     }
 }

@@ -1,5 +1,7 @@
-using System.Text.RegularExpressions;
+using System;
+using System.Collections.Generic;
 using JustSaying.Extensions;
+using JustSaying.TestingFramework;
 using Shouldly;
 using Xunit;
 
@@ -7,27 +9,74 @@ namespace JustSaying.UnitTests
 {
     public class TypeExtensionTests
     {
-        public class Foo { }
-
-        public class Bar<T> { }
-
         [Fact]
-        public void ToTopicName_NonGenericType_GivesLowercaseName() =>
-            typeof(Foo).ToTopicName()
-                .ShouldBe("foo");
-
-        [Fact]
-        public void ToTopicName_GenericType_GivesLowercaseFullNameWithNonWordCharactersReplaced()
+        public void WhenGeneratingTopicName_ForNonGenericType_ThenTheCorrectNameShouldBeReturned()
         {
-            //Don't hardcode this, otherwise test will fail on assembly version upgrade
-            var assemblyNamePart = Regex.Replace(typeof(Bar<>).Assembly.FullName.ToLowerInvariant(), @"\W", "_");
-            typeof(Bar<Foo>).ToTopicName()
-                .ShouldBe($"justsaying_unittests_typeextensiontests_bar_1__justsaying_unittests_typeextensiontests_foo__{assemblyNamePart}__");
+            // Arrange + Act
+            var result = typeof(SimpleMessage).ToTopicName();
+
+            // Assert
+            result.ShouldBe("simplemessage");
         }
 
         [Fact]
-        public void ToTopicName_LongGenericType_TruncatesToMaxAllowedSnsTopicLength() =>
-            typeof(Bar<Bar<Bar<Foo>>>).ToTopicName().Length
-                .ShouldBe(256);
+        public void WhenGeneratingTopicName_ForGenericType_ThenTheCorrectNameShouldBeReturned()
+        {
+            // Arrange + Act
+            var result = typeof(List<List<string>>).ToTopicName();
+
+            // Assert
+            result.ShouldBe("listliststring");
+        }
+
+        [Fact]
+        public void WhenGeneratingTopicName_ForTypeWithLongName_ThenTheLengthShouldBe256()
+        {
+            // Arrange + Act
+            var result =
+                typeof(Tuple<TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName
+                        , TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName,
+                        TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName>)
+                    .ToTopicName();
+
+            // Arrange
+            result.Length.ShouldBe(256);
+        }
+
+        [Fact]
+        public void WhenGeneratingQueueName_ForNonGenericType_ThenTheCorrectNameShouldBeReturned()
+        {
+            // Arrange + Act
+            var result = typeof(SimpleMessage).ToQueueName();
+
+            // Assert
+            result.ShouldBe("simplemessage");
+        }
+
+        [Fact]
+        public void WhenGeneratingQueueName_ForGenericType_ThenTheCorrectNameShouldBeReturned()
+        {
+            // Arrange + Act
+            var result = typeof(List<string>).ToQueueName();
+
+            // Assert
+            result.ShouldBe("liststring");
+        }
+
+        [Fact]
+        public void WhenGeneratingQueueName_ForTypeWithLongName_ThenTheLengthShouldBe80()
+        {
+            // Arrange + Act
+            var result =
+                typeof(TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName)
+                    .ToQueueName();
+
+            // Assert
+            result.Length.ShouldBe(80);
+        }
+
+        public class TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName
+        {
+        }
     }
 }
