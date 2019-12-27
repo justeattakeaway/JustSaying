@@ -3,6 +3,7 @@ using JustSaying.AwsTools;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace JustSaying.Fluent
 {
@@ -19,7 +20,7 @@ namespace JustSaying.Fluent
         {
             if (desiredType == typeof(ILoggerFactory))
             {
-                return new NullLoggerFactory();
+                return NullLoggerFactory.Instance;
             }
             else if (desiredType == typeof(IAwsClientFactoryProxy))
             {
@@ -51,39 +52,6 @@ namespace JustSaying.Fluent
             }
 
             throw new NotSupportedException($"Resolving a service of type {desiredType.Name} is not supported.");
-        }
-
-        private sealed class NullLoggerFactory : ILoggerFactory
-        {
-            public void AddProvider(ILoggerProvider provider)
-            {
-            }
-
-            public ILogger CreateLogger(string categoryName)
-            {
-                return new NullLogger();
-            }
-
-            public void Dispose()
-            {
-            }
-
-            private sealed class NullLogger : ILogger
-            {
-                public IDisposable BeginScope<TState>(TState state)
-                {
-                    return null;
-                }
-
-                public bool IsEnabled(LogLevel logLevel)
-                {
-                    return false;
-                }
-
-                public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
-                {
-                }
-            }
         }
     }
 }
