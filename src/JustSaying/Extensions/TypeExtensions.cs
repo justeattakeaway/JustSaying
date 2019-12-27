@@ -31,9 +31,9 @@ namespace JustSaying.Extensions
             {typeof(void), "void"}
         };
 
-        public static string ToTopicName(this Type type) => CreateResourceName(type, MaxTopicNameLength);
+        public static string ToDefaultTopicName(this Type type) => CreateResourceName(type, MaxTopicNameLength);
 
-        public static string ToQueueName(this Type type) => CreateResourceName(type, MaxQueueNameLength);
+        public static string ToDefaultQueueName(this Type type) => CreateResourceName(type, MaxQueueNameLength);
 
         private static string CreateResourceName(Type type, int maximumLength)
         {

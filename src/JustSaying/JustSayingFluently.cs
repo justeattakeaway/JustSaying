@@ -473,12 +473,12 @@ namespace JustSaying
 
         private static string GetOrUseDefaultTopicName<T>(string topicName)
         {
-            return string.IsNullOrWhiteSpace(topicName) ? typeof(T).ToTopicName() : topicName;
+            return string.IsNullOrWhiteSpace(topicName) ? typeof(T).ToDefaultTopicName() : topicName;
         }
 
         private static string GetOrUseDefaultQueueName<T>(string queueName)
         {
-            return string.IsNullOrWhiteSpace(queueName) ? typeof(T).ToQueueName() : queueName;
+            return string.IsNullOrWhiteSpace(queueName) ? typeof(T).ToDefaultQueueName() : queueName;
         }
     }
 }

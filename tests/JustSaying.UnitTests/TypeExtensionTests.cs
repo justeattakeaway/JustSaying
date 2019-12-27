@@ -13,7 +13,7 @@ namespace JustSaying.UnitTests
         public void WhenGeneratingTopicName_ForNonGenericType_ThenTheCorrectNameShouldBeReturned()
         {
             // Arrange + Act
-            var result = typeof(SimpleMessage).ToTopicName();
+            var result = typeof(SimpleMessage).ToDefaultTopicName();
 
             // Assert
             result.ShouldBe("simplemessage");
@@ -23,7 +23,7 @@ namespace JustSaying.UnitTests
         public void WhenGeneratingTopicName_ForGenericType_ThenTheCorrectNameShouldBeReturned()
         {
             // Arrange + Act
-            var result = typeof(List<List<string>>).ToTopicName();
+            var result = typeof(List<List<string>>).ToDefaultTopicName();
 
             // Assert
             result.ShouldBe("listliststring");
@@ -37,7 +37,7 @@ namespace JustSaying.UnitTests
                 typeof(Tuple<TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName
                         , TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName,
                         TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName>)
-                    .ToTopicName();
+                    .ToDefaultTopicName();
 
             // Arrange
             result.Length.ShouldBe(256);
@@ -47,7 +47,7 @@ namespace JustSaying.UnitTests
         public void WhenGeneratingQueueName_ForNonGenericType_ThenTheCorrectNameShouldBeReturned()
         {
             // Arrange + Act
-            var result = typeof(SimpleMessage).ToQueueName();
+            var result = typeof(SimpleMessage).ToDefaultQueueName();
 
             // Assert
             result.ShouldBe("simplemessage");
@@ -57,7 +57,7 @@ namespace JustSaying.UnitTests
         public void WhenGeneratingQueueName_ForGenericType_ThenTheCorrectNameShouldBeReturned()
         {
             // Arrange + Act
-            var result = typeof(List<string>).ToQueueName();
+            var result = typeof(List<string>).ToDefaultQueueName();
 
             // Assert
             result.ShouldBe("liststring");
@@ -69,7 +69,7 @@ namespace JustSaying.UnitTests
             // Arrange + Act
             var result =
                 typeof(TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName)
-                    .ToQueueName();
+                    .ToDefaultQueueName();
 
             // Assert
             result.Length.ShouldBe(80);
