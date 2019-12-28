@@ -18,13 +18,13 @@ namespace JustSaying.UnitTests.Fluent
         }
 
         [Fact]
-        public void ShouldResolveILoggerFactory()
+        public void ShouldResolveILoggerFactoryToNullLoggerFactory()
         {
             _sut.ResolveService<ILoggerFactory>().ShouldBeOfType<NullLoggerFactory>();
         }
 
         [Fact]
-        public void ShouldResolveIAwsClientFactoryProxy()
+        public void ShouldResolveIAwsClientFactoryProxyToAwsClientFactoryProxy()
         {
             _sut.ResolveService<IAwsClientFactoryProxy>().ShouldBeOfType<AwsClientFactoryProxy>();
         }
@@ -36,25 +36,25 @@ namespace JustSaying.UnitTests.Fluent
         }
 
         [Fact]
-        public void ShouldResolveIMessagingConfig()
+        public void ShouldResolveIMessagingConfigToMessagingConfig()
         {
             _sut.ResolveService<IMessagingConfig>().ShouldBeOfType<MessagingConfig>();
         }
 
         [Fact]
-        public void ShouldResolveIMessageSerializationFactory()
+        public void ShouldResolveIMessageSerializationFactoryToNewtonsoftSerializationFactory()
         {
             _sut.ResolveService<IMessageSerializationFactory>().ShouldBeOfType<NewtonsoftSerializationFactory>();
         }
 
         [Fact]
-        public void ShouldResolveIMessageSerializationRegister()
+        public void ShouldResolveIMessageSerializationRegisterToMessageSerializationRegister()
         {
             _sut.ResolveService<IMessageSerializationRegister>().ShouldBeOfType<MessageSerializationRegister>();
         }
 
         [Fact]
-        public void ShouldResolveIMessageSubjectProvider()
+        public void ShouldResolveIMessageSubjectProviderToNonGenericMessageSubjectProvider()
         {
             _sut.ResolveService<IMessageSubjectProvider>().ShouldBeOfType<NonGenericMessageSubjectProvider>();
         }
