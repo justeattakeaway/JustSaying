@@ -22,7 +22,7 @@ namespace JustSaying.Fluent
         public MessagingBusBuilder BusBuilder { get; }
 
         /// <summary>
-        /// Gets or sets a delegate to use to create the <see cref="IAwsClientFactory"/> to use.
+        /// Gets or sets a delegate to a method to create the <see cref="IAwsClientFactory"/> to use.
         /// </summary>
         private Func<IAwsClientFactory> ClientFactory { get; set; }
 
