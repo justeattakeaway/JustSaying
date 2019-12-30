@@ -16,12 +16,17 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         private readonly IHandlerAsync<Message> _handler = Substitute.For<IHandlerAsync<Message>>();
         private object _response;
 
+        protected override void Given()
+        {
+            HandlerResolver.ResolveHandler<Message>(new HandlerResolutionContext("queue-name")).Returns(_handler);
+        }
+
         protected override Task WhenAsync()
         {
             _response = SystemUnderTest
                 .WithSqsTopicSubscriber()
                 .IntoDefaultQueue()
-                .WithMessageHandler(_handler);
+                .WithMessageHandler<Message>(HandlerResolver);
 
             return Task.CompletedTask;
         }

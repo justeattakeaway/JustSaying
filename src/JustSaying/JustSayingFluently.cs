@@ -250,46 +250,6 @@ namespace JustSaying
             return this;
         }
 
-        /// <summary>
-        /// Set message handlers for the given topic
-        /// </summary>
-        /// <typeparam name="T">Message type to be handled</typeparam>
-        /// <param name="handler">Handler for the message type</param>
-        /// <returns></returns>
-        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerAsync<T> handler) where T : Message
-        {
-            if (handler == null)
-            {
-                throw new ArgumentNullException(nameof(handler));
-            }
-
-            if (_serializationFactory == null)
-            {
-                throw new InvalidOperationException($"No {nameof(IMessageSerializationFactory)} has been configured.");
-            }
-
-            // TODO - Subscription listeners should be just added once per queue,
-            // and not for each message handler
-            var thing = _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
-                ? PointToPointHandler<T>()
-                : TopicHandler<T>();
-
-            Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
-
-            foreach (var region in Bus.Config.Regions)
-            {
-                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handler);
-            }
-
-            _log.LogInformation(
-                "Added a message handler of type '{HandlerType}' for message type '{MessageType}' on queue '{QueueName}'.",
-                handler.GetType(),
-                typeof(T),
-                _subscriptionConfig.QueueName);
-
-            return thing;
-        }
-
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message
         {
             if (_serializationFactory == null)
