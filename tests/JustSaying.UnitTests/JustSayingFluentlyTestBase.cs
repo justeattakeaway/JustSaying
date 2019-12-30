@@ -10,9 +10,9 @@ namespace JustSaying.UnitTests
 {
     public abstract class JustSayingFluentlyTestBase : IAsyncLifetime
     {
-        protected IHandlerResolver HandlerResolver { get; } = Substitute.For<IHandlerResolver>();
         protected IPublishConfiguration Configuration;
         protected IAmJustSaying Bus;
+        protected readonly IHandlerResolver HandlerResolver = Substitute.For<IHandlerResolver>();
         protected readonly IVerifyAmazonQueues QueueVerifier = Substitute.For<IVerifyAmazonQueues>();
         private bool _recordThrownExceptions;
         protected Exception ThrownException { get; private set; }
