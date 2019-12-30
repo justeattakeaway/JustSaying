@@ -98,7 +98,7 @@ namespace JustSaying.Fluent
         /// Configures JustSaying to use <see cref="System.Text.Json.JsonSerializer"/> for serialization.
         /// </summary>
         /// <param name="builder">The <see cref="ServicesBuilder"/> to configure.</param>
-        /// <param name="settings">The JSON serialization options to use.</param>
+        /// <param name="options">The JSON serialization options to use.</param>
         /// <returns>
         /// The <see cref="ServicesBuilder"/> passed as the value of <paramref name="builder"/>.
         /// </returns>

@@ -31,7 +31,7 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Configures the specified <see cref="SqsWriteConfiguration"/>.
+        /// Configures the specified <see cref="SnsWriteConfiguration"/>.
         /// </summary>
         /// <param name="config">The configuration to configure.</param>
         internal void Configure(SnsWriteConfiguration config)

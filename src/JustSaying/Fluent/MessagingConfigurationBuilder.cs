@@ -83,7 +83,7 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Specifies the active AWS region to use.
         /// </summary>
-        /// <param name="accountId">The active AWS region to use.</param>
+        /// <param name="region">The active AWS region to use.</param>
         /// <returns>
         /// The current <see cref="MessagingConfigurationBuilder"/>.
         /// </returns>
@@ -101,7 +101,7 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Specifies a delgate which evaluates the current active AWS region to use.
+        /// Specifies a delegate which evaluates the current active AWS region to use.
         /// </summary>
         /// <param name="evaluator">A delegate to a method with evaluates the active AWS region to use.</param>
         /// <returns>
@@ -271,12 +271,12 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Specifies an AWS region to use.
         /// </summary>
-        /// <param name="accountId">The AWS region to use.</param>
+        /// <param name="region">The AWS region to use.</param>
         /// <returns>
         /// The current <see cref="MessagingConfigurationBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="accountId"/> is <see cref="null"/>.
+        /// <paramref name="region"/> is <see cref="null"/>.
         /// </exception>
         public MessagingConfigurationBuilder WithRegion(string region)
         {
