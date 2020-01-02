@@ -70,7 +70,7 @@ namespace JustSaying
 
             if (subscribersForRegion.ContainsKey(subscriber.Queue))
             {
-                // TODO - no, we don't need to create a new notification subsrciber per queue
+                // TODO - no, we don't need to create a new notification subscriber per queue
                 // JustSaying is creating subscribers per-topic per-region, but
                 // we want to have that per-queue per-region, not
                 // per-topic per-region.
@@ -110,7 +110,7 @@ namespace JustSaying
                 _publishersByRegionAndTopic.Add(region, publishersByTopic);
             }
 
-            var topic = typeof(T).ToTopicName();
+            var topic = typeof(T).ToDefaultTopicName();
             _publishers.Add(new Publisher(typeof(T)));
 
             publishersByTopic[topic] = messagePublisher;
@@ -171,7 +171,7 @@ namespace JustSaying
             }
 
             var messageType = message.GetType();
-            var topic = messageType.ToTopicName();
+            var topic = messageType.ToDefaultTopicName();
             var publisherFound = publishersForRegion.TryGetValue(topic, out var publisher);
 
             if (!publisherFound)

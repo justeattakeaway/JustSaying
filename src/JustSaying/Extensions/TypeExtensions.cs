@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
@@ -6,15 +8,70 @@ namespace JustSaying.Extensions
 {
     public static class TypeExtensions
     {
-        private const int MAX_TOPIC_NAME_LENGTH = 256;
+        private const int MaxTopicNameLength = 256;
+        private const int MaxQueueNameLength = 80;
 
-        public static string ToTopicName(this Type type)
+        private static readonly HashSet<Type> TypesToMapAutomatically = new HashSet<Type>
         {
-            var name = type.GetTypeInfo().IsGenericType
-                ? Regex.Replace(type.FullName, "\\W", "_").ToLowerInvariant()
-                : type.Name.ToLowerInvariant();
+            typeof(string),
+            typeof(object),
+            typeof(bool),
+            typeof(byte),
+            typeof(char),
+            typeof(decimal),
+            typeof(double),
+            typeof(short),
+            typeof(int),
+            typeof(long),
+            typeof(sbyte),
+            typeof(float),
+            typeof(ushort),
+            typeof(uint),
+            typeof(ulong),
+            typeof(void),
+            typeof(TimeSpan),
+            typeof(DateTime),
+            typeof(DateTimeOffset)
+        };
 
-            return name.TruncateTo(MAX_TOPIC_NAME_LENGTH);
+        public static string ToDefaultTopicName(this Type type) => CreateResourceName(type, MaxTopicNameLength);
+
+        public static string ToDefaultQueueName(this Type type) => CreateResourceName(type, MaxQueueNameLength);
+
+        private static string CreateResourceName(Type type, int maximumLength)
+        {
+            var name = Regex.Replace(type.ToTypeFriendlyName(), "[^a-zA-Z0-9_-]", string.Empty);
+
+            return name.Length <= maximumLength ? name.ToLowerInvariant() : name.Substring(0, maximumLength);
+        }
+
+        private static string ToTypeFriendlyName(this Type type)
+        {
+            var friendlyName = type.Name.ToLowerInvariant();
+
+            if (TypesToMapAutomatically.Contains(type))
+            {
+                return friendlyName;
+            }
+
+            if (type.GetTypeInfo().IsGenericType)
+            {
+                var indexOfBacktick = friendlyName.IndexOf('`');
+
+                if (indexOfBacktick > 0)
+                {
+                    friendlyName = friendlyName.Remove(indexOfBacktick);
+                }
+
+                friendlyName += string.Join("_", type.GenericTypeArguments.Select(ToTypeFriendlyName));
+            }
+
+            if (type.IsArray)
+            {
+                return type.GetElementType().ToTypeFriendlyName() + "_";
+            }
+
+            return friendlyName;
         }
     }
 }

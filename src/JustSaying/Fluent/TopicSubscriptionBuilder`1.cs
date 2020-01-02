@@ -1,5 +1,6 @@
 using System;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Extensions;
 using JustSaying.Models;
 
 namespace JustSaying.Fluent
@@ -37,7 +38,7 @@ namespace JustSaying.Fluent
         /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
         /// </returns>
         public TopicSubscriptionBuilder<T> IntoDefaultTopic()
-            => WithName(string.Empty);
+            => WithName(typeof(T).ToDefaultTopicName());
 
         /// <summary>
         /// Configures the name of the topic.
