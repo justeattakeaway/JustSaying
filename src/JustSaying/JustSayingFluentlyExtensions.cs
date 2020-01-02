@@ -1,11 +1,8 @@
-using System;
 using System.Collections.Generic;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.Models;
 
 namespace JustSaying
 {
@@ -61,28 +58,6 @@ namespace JustSaying
         public static IFluentSubscription IntoDefaultQueue(this ISubscriberIntoQueue subscriber)
         {
             return subscriber.IntoQueue(string.Empty);
-        }
-
-        public static IHaveFulfilledSubscriptionRequirements WithMessageHandlers<T>(
-             this IFluentSubscription sub, params IHandlerAsync<T>[] handlers) where T : Message
-        {
-            if (handlers == null)
-            {
-                throw new ArgumentNullException(nameof(handlers));
-            }
-
-            if (handlers.Length == 0)
-            {
-                throw new ArgumentException("No message handlers specified.", nameof(handlers));
-            }
-
-            if (handlers.Length == 1)
-            {
-                sub.WithMessageHandler(handlers[0]);
-            }
-
-            var listHandler = new ListHandler<T>(handlers);
-            return sub.WithMessageHandler(listHandler);
         }
     }
 }
