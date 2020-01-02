@@ -77,8 +77,6 @@ namespace JustSaying
 
     public interface IFluentSubscription
     {
-        IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerAsync<T> handler) where T : Message;
-
         IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message;
 
         IFluentSubscription ConfigureSubscriptionWith(Action<SqsReadConfiguration> config);
