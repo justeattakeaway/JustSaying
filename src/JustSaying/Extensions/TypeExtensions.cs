@@ -11,24 +11,27 @@ namespace JustSaying.Extensions
         private const int MaxTopicNameLength = 256;
         private const int MaxQueueNameLength = 80;
 
-        private static readonly Dictionary<Type, string> TypeToFriendlyName = new Dictionary<Type, string>
+        private static readonly HashSet<Type> TypesToMapAutomatically = new HashSet<Type>
         {
-            {typeof(string), "string"},
-            {typeof(object), "object"},
-            {typeof(bool), "bool"},
-            {typeof(byte), "byte"},
-            {typeof(char), "char"},
-            {typeof(decimal), "decimal"},
-            {typeof(double), "double"},
-            {typeof(short), "short"},
-            {typeof(int), "int"},
-            {typeof(long), "long"},
-            {typeof(sbyte), "sbyte"},
-            {typeof(float), "float"},
-            {typeof(ushort), "ushort"},
-            {typeof(uint), "uint"},
-            {typeof(ulong), "ulong"},
-            {typeof(void), "void"}
+            typeof(string),
+            typeof(object),
+            typeof(bool),
+            typeof(byte),
+            typeof(char),
+            typeof(decimal),
+            typeof(double),
+            typeof(short),
+            typeof(int),
+            typeof(long),
+            typeof(sbyte),
+            typeof(float),
+            typeof(ushort),
+            typeof(uint),
+            typeof(ulong),
+            typeof(void),
+            typeof(TimeSpan),
+            typeof(DateTime),
+            typeof(DateTimeOffset)
         };
 
         public static string ToDefaultTopicName(this Type type) => CreateResourceName(type, MaxTopicNameLength);
@@ -44,20 +47,20 @@ namespace JustSaying.Extensions
 
         private static string ToTypeFriendlyName(this Type type)
         {
-            if (TypeToFriendlyName.TryGetValue(type, out string friendlyName))
+            var friendlyName = type.Name.ToLowerInvariant();
+
+            if (TypesToMapAutomatically.Contains(type))
             {
                 return friendlyName;
             }
 
-            friendlyName = type.Name;
-
             if (type.GetTypeInfo().IsGenericType)
             {
-                var backtick = friendlyName.IndexOf('`');
+                var indexOfBacktick = friendlyName.IndexOf('`');
 
-                if (backtick > 0)
+                if (indexOfBacktick > 0)
                 {
-                    friendlyName = friendlyName.Remove(backtick);
+                    friendlyName = friendlyName.Remove(indexOfBacktick);
                 }
 
                 friendlyName += string.Join("_", type.GenericTypeArguments.Select(ToTypeFriendlyName));
