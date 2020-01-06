@@ -3,7 +3,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.Naming;
+using JustSaying.Models;
 
 namespace JustSaying
 {
