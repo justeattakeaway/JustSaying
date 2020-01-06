@@ -1,19 +1,21 @@
 using System;
 using System.Collections.Generic;
-using JustSaying.Extensions;
+using JustSaying.Naming;
 using JustSaying.TestingFramework;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.UnitTests
+namespace JustSaying.UnitTests.Naming
 {
-    public class TypeExtensionTests
+    public class DefaultNamingConventionsTests
     {
+        private readonly DefaultNamingConventions Sut = new DefaultNamingConventions();
+
         [Fact]
         public void WhenGeneratingTopicName_ForNonGenericType_ThenTheCorrectNameShouldBeReturned()
         {
             // Arrange + Act
-            var result = typeof(SimpleMessage).ToDefaultTopicName();
+            var result = Sut.TopicName<SimpleMessage>();
 
             // Assert
             result.ShouldBe("simplemessage");
@@ -23,7 +25,7 @@ namespace JustSaying.UnitTests
         public void WhenGeneratingTopicName_ForGenericType_ThenTheCorrectNameShouldBeReturned()
         {
             // Arrange + Act
-            var result = typeof(List<List<string>>).ToDefaultTopicName();
+            var result = Sut.TopicName<List<List<string>>>();
 
             // Assert
             result.ShouldBe("listliststring");
@@ -33,11 +35,11 @@ namespace JustSaying.UnitTests
         public void WhenGeneratingTopicName_ForTypeWithLongName_ThenTheLengthShouldBe256()
         {
             // Arrange + Act
-            var result =
-                typeof(Tuple<TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName
-                        , TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName,
-                        TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName>)
-                    .ToDefaultTopicName();
+            var result = Sut
+                .TopicName<Tuple<
+                    TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName
+                    , TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName,
+                    TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName>>();
 
             // Arrange
             result.Length.ShouldBe(256);
@@ -47,7 +49,7 @@ namespace JustSaying.UnitTests
         public void WhenGeneratingQueueName_ForNonGenericType_ThenTheCorrectNameShouldBeReturned()
         {
             // Arrange + Act
-            var result = typeof(SimpleMessage).ToDefaultQueueName();
+            var result = Sut.QueueName<SimpleMessage>();
 
             // Assert
             result.ShouldBe("simplemessage");
@@ -57,7 +59,7 @@ namespace JustSaying.UnitTests
         public void WhenGeneratingQueueName_ForGenericType_ThenTheCorrectNameShouldBeReturned()
         {
             // Arrange + Act
-            var result = typeof(List<string>).ToDefaultQueueName();
+            var result = Sut.QueueName<List<string>>();
 
             // Assert
             result.ShouldBe("liststring");
@@ -68,8 +70,8 @@ namespace JustSaying.UnitTests
         {
             // Arrange + Act
             var result =
-                typeof(TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName)
-                    .ToDefaultQueueName();
+                Sut.QueueName<
+                    TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName>();
 
             // Assert
             result.Length.ShouldBe(80);
