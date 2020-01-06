@@ -5,13 +5,13 @@ using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
+using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying
@@ -29,8 +29,7 @@ namespace JustSaying
         IHaveFulfilledPublishRequirements,
         IMayWantOptionalSettings,
         IMayWantARegionPicker,
-        IAmJustInterrogating,
-        IMayWantMessageLockStore
+        IAmJustInterrogating
     {
         private readonly ILogger _log;
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
@@ -282,7 +281,7 @@ namespace JustSaying
 
         private IHaveFulfilledSubscriptionRequirements TopicHandler<T>() where T : Message
         {
-            ConfigureSqsSubscriptionViaTopic<T>();
+            ConfigureSqsSubscriptionViaTopic();
 
             foreach (string region in Bus.Config.Regions)
             {
@@ -361,7 +360,7 @@ namespace JustSaying
             }
         }
 
-        private void ConfigureSqsSubscriptionViaTopic<T>() where T : Message
+        private void ConfigureSqsSubscriptionViaTopic()
         {
             _subscriptionConfig.PublishEndpoint = _subscriptionConfig.TopicName;
             _subscriptionConfig.TopicName = _subscriptionConfig.TopicName;
@@ -428,14 +427,14 @@ namespace JustSaying
             return this;
         }
 
-        private static string GetOrUseDefaultTopicName<T>(string topicName)
+        private  string GetOrUseDefaultTopicName<T>(string topicName)
         {
-            return string.IsNullOrWhiteSpace(topicName) ? typeof(T).ToDefaultTopicName() : topicName;
+            return string.IsNullOrWhiteSpace(topicName) ? Bus.Config.DefaultTopicNamingConvention.TopicName<T>() : topicName;
         }
 
-        private static string GetOrUseDefaultQueueName<T>(string queueName)
+        private string GetOrUseDefaultQueueName<T>(string queueName)
         {
-            return string.IsNullOrWhiteSpace(queueName) ? typeof(T).ToDefaultQueueName() : queueName;
+            return string.IsNullOrWhiteSpace(queueName) ? Bus.Config.DefaultQueueNamingConvention.QueueName<T>() : queueName;
         }
     }
 }

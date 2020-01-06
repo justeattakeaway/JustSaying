@@ -6,6 +6,7 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying

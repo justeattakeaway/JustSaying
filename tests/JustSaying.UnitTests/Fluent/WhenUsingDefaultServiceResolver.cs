@@ -1,6 +1,7 @@
 using JustSaying.AwsTools;
 using JustSaying.Fluent;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
@@ -57,6 +58,18 @@ namespace JustSaying.UnitTests.Fluent
         public void ShouldResolveIMessageSubjectProviderToNonGenericMessageSubjectProvider()
         {
             _sut.ResolveService<IMessageSubjectProvider>().ShouldBeOfType<NonGenericMessageSubjectProvider>();
+        }
+
+        [Fact]
+        public void ShouldResolveIDefaultTopicNamingConventionToDefaultNamingConvention()
+        {
+            _sut.ResolveService<IDefaultTopicNamingConvention>().ShouldBeOfType<DefaultNamingConventions>();
+        }
+
+        [Fact]
+        public void ShouldResolveIDefaultQueueNamingConventionToDefaultNamingConvention()
+        {
+            _sut.ResolveService<IDefaultQueueNamingConvention>().ShouldBeOfType<DefaultNamingConventions>();
         }
     }
 }

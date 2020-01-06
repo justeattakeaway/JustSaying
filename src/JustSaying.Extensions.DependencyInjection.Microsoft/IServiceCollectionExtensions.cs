@@ -10,6 +10,7 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
+using JustSaying.Naming;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Microsoft.Extensions.DependencyInjection
@@ -172,6 +173,10 @@ namespace Microsoft.Extensions.DependencyInjection
                     var builder = serviceProvider.GetRequiredService<MessagingBusBuilder>();
                     return builder.BuildSubscribers();
                 });
+
+            services.AddSingleton<DefaultNamingConventions>();
+            services.TryAddSingleton<IDefaultTopicNamingConvention>((s) => s.GetRequiredService<DefaultNamingConventions>());
+            services.TryAddSingleton<IDefaultQueueNamingConvention>((s) => s.GetRequiredService<DefaultNamingConventions>());
 
             return services;
         }

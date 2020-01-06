@@ -38,7 +38,7 @@ namespace JustSaying.Fluent
         /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
         /// </returns>
         public QueueSubscriptionBuilder<T> WithDefaultQueue()
-            => WithName(typeof(T).ToDefaultQueueName());
+            => WithName(string.Empty);
 
         /// <summary>
         /// Configures the name of the queue.

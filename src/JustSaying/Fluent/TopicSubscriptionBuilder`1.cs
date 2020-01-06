@@ -38,7 +38,7 @@ namespace JustSaying.Fluent
         /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
         /// </returns>
         public TopicSubscriptionBuilder<T> IntoDefaultTopic()
-            => WithName(typeof(T).ToDefaultTopicName());
+            => WithName(string.Empty);
 
         /// <summary>
         /// Configures the name of the topic.

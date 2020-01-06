@@ -3,6 +3,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.Naming;
 
 namespace JustSaying
 {
@@ -12,6 +13,22 @@ namespace JustSaying
             IMessageSubjectProvider messageSubjectProvider)
         {
             dependencies.MessageSubjectProvider = messageSubjectProvider;
+            return dependencies;
+        }
+
+        public static JustSayingFluentlyDependencies UsingDefaultTopicNameConvention(
+            this JustSayingFluentlyDependencies dependencies,
+            IDefaultTopicNamingConvention defaultTopicNamingConvention)
+        {
+            dependencies.TopicNamingConvention = defaultTopicNamingConvention;
+            return dependencies;
+        }
+
+        public static JustSayingFluentlyDependencies UsingDefaultQueueNameConvention(
+            this JustSayingFluentlyDependencies dependencies,
+            IDefaultQueueNamingConvention defaultQueueNamingConvention)
+        {
+            dependencies.QueueNamingConvention = defaultQueueNamingConvention;
             return dependencies;
         }
 
@@ -32,6 +49,12 @@ namespace JustSaying
             if (dependencies.MessageSubjectProvider != null)
                 config.MessageSubjectProvider = dependencies.MessageSubjectProvider;
 
+            if (dependencies.TopicNamingConvention != null)
+                config.DefaultTopicNamingConvention = dependencies.TopicNamingConvention;
+
+            if (dependencies.QueueNamingConvention != null)
+                config.DefaultQueueNamingConvention = dependencies.QueueNamingConvention;
+
             if (regions != null)
                 foreach (var region in regions)
                 {
@@ -46,6 +69,7 @@ namespace JustSaying
             var awsClientFactoryProxy = new AwsClientFactoryProxy(() => CreateMeABus.DefaultClientFactory());
 
             var amazonQueueCreator = new AmazonQueueCreator(awsClientFactoryProxy, dependencies.LoggerFactory);
+
             var bus = new JustSayingFluently(justSayingBus, amazonQueueCreator, awsClientFactoryProxy, dependencies.LoggerFactory);
 
             bus

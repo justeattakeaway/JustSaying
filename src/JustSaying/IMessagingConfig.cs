@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Naming;
 
 namespace JustSaying
 {
@@ -9,7 +10,8 @@ namespace JustSaying
         IList<string> Regions { get; }
         Func<string> GetActiveRegion { get; set; }
         IMessageSubjectProvider MessageSubjectProvider { get; set; }
-
+        IDefaultTopicNamingConvention DefaultTopicNamingConvention { get; set; }
+        IDefaultQueueNamingConvention DefaultQueueNamingConvention { get; set; }
         void Validate();
     }
 }

@@ -2,6 +2,7 @@ using System;
 using JustSaying.AwsTools;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -49,6 +50,10 @@ namespace JustSaying.Fluent
             else if (desiredType == typeof(IMessageSubjectProvider))
             {
                 return new NonGenericMessageSubjectProvider();
+            }
+            else if (desiredType == typeof(IDefaultQueueNamingConvention) || desiredType == typeof(IDefaultTopicNamingConvention))
+            {
+                return new DefaultNamingConventions();
             }
 
             throw new NotSupportedException($"Resolving a service of type {desiredType.Name} is not supported.");
