@@ -97,7 +97,7 @@ namespace StructureMap
                 throw new ArgumentNullException(nameof(configure));
             }
 
-            registry.AddRegistry(new JustSayingRegistry());
+            registry.AddRegistry<JustSayingRegistry>();
 
             registry
                 .For<MessagingBusBuilder>()

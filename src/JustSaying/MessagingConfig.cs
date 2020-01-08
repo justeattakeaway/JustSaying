@@ -5,6 +5,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
+using JustSaying.Naming;
 
 namespace JustSaying
 {
@@ -17,6 +18,8 @@ namespace JustSaying
             AdditionalSubscriberAccounts = new List<string>();
             Regions = new List<string>();
             MessageSubjectProvider = new NonGenericMessageSubjectProvider();
+            TopicNamingConvention = new DefaultNamingConventions();
+            QueueNamingConvention = new DefaultNamingConventions();
         }
 
         public int PublishFailureReAttempts { get; set; }
@@ -26,6 +29,8 @@ namespace JustSaying
         public IList<string> Regions { get; }
         public Func<string> GetActiveRegion { get; set; }
         public IMessageSubjectProvider MessageSubjectProvider { get; set; }
+        public ITopicNamingConvention TopicNamingConvention { get; set; }
+        public IQueueNamingConvention QueueNamingConvention { get; set; }
 
         public virtual void Validate()
         {

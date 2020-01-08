@@ -6,6 +6,7 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying
@@ -226,11 +227,6 @@ namespace JustSaying
             JustSayingBus publisher = CreateBus(config, loggerFactory);
             JustSayingFluently fluent = CreateFluent(publisher, loggerFactory);
 
-            if (ServicesBuilder?.NamingStrategy != null)
-            {
-                fluent.WithNamingStrategy(ServicesBuilder.NamingStrategy);
-            }
-
             if (PublicationsBuilder != null)
             {
                 PublicationsBuilder.Configure(fluent);
@@ -256,11 +252,6 @@ namespace JustSaying
 
             JustSayingBus bus = CreateBus(config, loggerFactory);
             JustSayingFluently fluent = CreateFluent(bus, loggerFactory);
-
-            if (ServicesBuilder?.NamingStrategy != null)
-            {
-                fluent.WithNamingStrategy(ServicesBuilder.NamingStrategy);
-            }
 
             if (ServicesBuilder?.MessageContextAccessor != null)
             {

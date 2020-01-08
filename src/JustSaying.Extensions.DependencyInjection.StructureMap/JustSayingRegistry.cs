@@ -4,6 +4,7 @@ using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.Naming;
 using StructureMap;
 
 namespace JustSaying
@@ -44,6 +45,10 @@ namespace JustSaying
                         return new MessageSerializationRegister(config.MessageSubjectProvider);
                     })
                 .Singleton();
+
+            For<DefaultNamingConventions>().Singleton();
+            For<ITopicNamingConvention>().Use(context => context.GetInstance<DefaultNamingConventions>());
+            For<IQueueNamingConvention>().Use(context => context.GetInstance<DefaultNamingConventions>());
         }
     }
 }

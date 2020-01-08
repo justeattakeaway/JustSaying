@@ -5,6 +5,7 @@ using Amazon;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
+using JustSaying.Naming;
 
 namespace JustSaying.Fluent
 {
@@ -59,6 +60,16 @@ namespace JustSaying.Fluent
         /// Gets or sets the optional value to use for <see cref="IMessagingConfig.MessageSubjectProvider"/>
         /// </summary>
         private IMessageSubjectProvider MessageSubjectProvider { get; set; }
+
+        /// <summary>
+        /// Gets or sets the optional value to use for <see cref="IMessagingConfig.TopicNamingConvention"/>
+        /// </summary>
+        private ITopicNamingConvention TopicNamingConvention { get; set; }
+
+        /// <summary>
+        /// Gets or sets the optional value to use for <see cref="IMessagingConfig.QueueNamingConvention"/>
+        /// </summary>
+        private IQueueNamingConvention QueueNamingConvention { get; set; }
 
         /// <summary>
         /// Specifies the active AWS region to use.
@@ -353,6 +364,68 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
+        /// Specifies the <see cref="ITopicNamingConvention"/> to use.
+        /// </summary>
+        /// <param name="namingConvention">The <see cref="ITopicNamingConvention"/> to use.</param>
+        /// <returns>
+        /// The current <see cref="MessagingConfigurationBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="namingConvention"/> is <see cref="null"/>.
+        /// </exception>
+        public MessagingConfigurationBuilder WithTopicNamingConvention(ITopicNamingConvention namingConvention)
+        {
+            TopicNamingConvention = namingConvention ?? throw new ArgumentNullException(nameof(namingConvention));
+            return this;
+        }
+
+        /// <summary>
+        /// Specifies the <see cref="ITopicNamingConvention"/> to use.
+        /// </summary>
+        /// <typeparam name="T">The <see cref="ITopicNamingConvention"> to use which will be resolved from the <see cref="IServiceResolver"/></typeparam>
+        /// <returns>
+        /// The current <see cref="MessagingConfigurationBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="T"/> is resolved to <see cref="null"/>.
+        /// </exception>
+        public MessagingConfigurationBuilder WithTopicNamingConvention<T>() where T : class, ITopicNamingConvention
+        {
+            return WithTopicNamingConvention(BusBuilder.ServiceResolver.ResolveService<T>());
+        }
+
+        /// <summary>
+        /// Specifies the <see cref="IQueueNamingConvention"/> to use.
+        /// </summary>
+        /// <param name="namingConvention">The <see cref="IQueueNamingConvention"/> to use.</param>
+        /// <returns>
+        /// The current <see cref="MessagingConfigurationBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="namingConvention"/> is <see cref="null"/>.
+        /// </exception>
+        public MessagingConfigurationBuilder WithQueueNamingConvention(IQueueNamingConvention namingConvention)
+        {
+            QueueNamingConvention = namingConvention ?? throw new ArgumentNullException(nameof(namingConvention));
+            return this;
+        }
+
+        /// <summary>
+        /// Specifies the <see cref="IQueueNamingConvention"/> to use.
+        /// </summary>
+        /// <typeparam name="T">The <see cref="IQueueNamingConvention"> to use which will be resolved from the <see cref="IServiceResolver"/></typeparam>
+        /// <returns>
+        /// The current <see cref="MessagingConfigurationBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="T"/> is resolved to <see cref="null"/>.
+        /// </exception>
+        public MessagingConfigurationBuilder WithQueueNamingConvention<T>() where T : class, IQueueNamingConvention
+        {
+            return WithQueueNamingConvention(BusBuilder.ServiceResolver.ResolveService<T>());
+        }
+
+        /// <summary>
         /// Creates a new instance of <see cref="IMessagingConfig"/>.
         /// </summary>
         /// <returns>
@@ -391,6 +464,16 @@ namespace JustSaying.Fluent
             if (MessageSubjectProvider != null)
             {
                 config.MessageSubjectProvider = MessageSubjectProvider;
+            }
+
+            if (TopicNamingConvention != null)
+            {
+                config.TopicNamingConvention = TopicNamingConvention;
+            }
+
+            if (QueueNamingConvention != null)
+            {
+                config.QueueNamingConvention = QueueNamingConvention;
             }
 
             if (PublishFailureBackoff.HasValue)

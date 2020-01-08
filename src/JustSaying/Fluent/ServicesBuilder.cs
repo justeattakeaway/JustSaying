@@ -49,11 +49,6 @@ namespace JustSaying.Fluent
         internal Func<IMessageSerializationFactory> MessageSerializationFactory { get; private set; }
 
         /// <summary>
-        /// Gets or sets a delegate to a method to create the <see cref="INamingStrategy"/> to use.
-        /// </summary>
-        internal Func<INamingStrategy> NamingStrategy { get; private set; }
-
-        /// <summary>
         /// Gets or sets a delegate to a method to create the <see cref="IMessageSerializationRegister"/> to use.
         /// </summary>
         internal Func<IMessageSerializationRegister> SerializationRegister { get; private set; }
@@ -164,22 +159,6 @@ namespace JustSaying.Fluent
         public ServicesBuilder WithMessageMonitoring(Func<IMessageMonitor> monitoring)
         {
             MessageMonitoring = monitoring ?? throw new ArgumentNullException(nameof(monitoring));
-            return this;
-        }
-
-        /// <summary>
-        /// Specifies the <see cref="INamingStrategy"/> to use.
-        /// </summary>
-        /// <param name="strategy">A delegate to a method to get the <see cref="INamingStrategy"/> to use.</param>
-        /// <returns>
-        /// The current <see cref="ServicesBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="strategy"/> is <see langword="null"/>.
-        /// </exception>
-        public ServicesBuilder WithNamingStrategy(Func<INamingStrategy> strategy)
-        {
-            NamingStrategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
             return this;
         }
 

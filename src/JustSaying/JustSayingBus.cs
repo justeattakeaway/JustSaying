@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
@@ -18,7 +17,7 @@ namespace JustSaying
     public sealed class JustSayingBus : IAmJustSaying, IAmJustInterrogating, IMessagingBus
     {
         private readonly Dictionary<string, Dictionary<string, INotificationSubscriber>> _subscribersByRegionAndQueue;
-        private readonly Dictionary<string, Dictionary<string, IMessagePublisher>> _publishersByRegionAndTopic;
+        private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _publishersByRegionAndType;
 
         private string _previousActiveRegion;
 
@@ -49,7 +48,7 @@ namespace JustSaying
             MessageContextAccessor = new MessageContextAccessor();
 
             _subscribersByRegionAndQueue = new Dictionary<string, Dictionary<string, INotificationSubscriber>>();
-            _publishersByRegionAndTopic = new Dictionary<string, Dictionary<string, IMessagePublisher>>();
+            _publishersByRegionAndType = new Dictionary<string, Dictionary<Type, IMessagePublisher>>();
             SerializationRegister = serializationRegister;
             _publishers = new HashSet<IPublisher>();
             _subscribers = new HashSet<ISubscriber>();
@@ -70,7 +69,7 @@ namespace JustSaying
 
             if (subscribersForRegion.ContainsKey(subscriber.Queue))
             {
-                // TODO - no, we don't need to create a new notification subsrciber per queue
+                // TODO - no, we don't need to create a new notification subscriber per queue
                 // JustSaying is creating subscribers per-topic per-region, but
                 // we want to have that per-queue per-region, not
                 // per-topic per-region.
@@ -104,16 +103,16 @@ namespace JustSaying
                 _log.LogWarning("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages.");
             }
 
-            if (!_publishersByRegionAndTopic.TryGetValue(region, out var publishersByTopic))
+            if (!_publishersByRegionAndType.TryGetValue(region, out var publishersByType))
             {
-                publishersByTopic = new Dictionary<string, IMessagePublisher>();
-                _publishersByRegionAndTopic.Add(region, publishersByTopic);
+                publishersByType = new Dictionary<Type, IMessagePublisher>();
+                _publishersByRegionAndType.Add(region, publishersByType);
             }
 
-            var topic = typeof(T).ToTopicName();
-            _publishers.Add(new Publisher(typeof(T)));
+            var topicType = typeof(T);
+            _publishers.Add(new Publisher(topicType));
 
-            publishersByTopic[topic] = messagePublisher;
+            publishersByType[topicType] = messagePublisher;
         }
 
         public void Start(CancellationToken cancellationToken = default)
@@ -154,7 +153,7 @@ namespace JustSaying
 
         private IMessagePublisher GetActivePublisherForMessage(Message message)
         {
-            if (_publishersByRegionAndTopic.Count == 0)
+            if (_publishersByRegionAndType.Count == 0)
             {
                 var errorMessage = "Error publishing message, no publishers registered.";
                 _log.LogError(errorMessage);
@@ -163,7 +162,7 @@ namespace JustSaying
 
             string activeRegion = GetActiveRegionWithChangeLog();
 
-            var publishersForRegionFound = _publishersByRegionAndTopic.TryGetValue(activeRegion, out var publishersForRegion);
+            var publishersForRegionFound = _publishersByRegionAndType.TryGetValue(activeRegion, out var publishersForRegion);
             if (!publishersForRegionFound)
             {
                 _log.LogError("Error publishing message. No publishers registered for active region '{Region}'.", activeRegion);
@@ -171,8 +170,7 @@ namespace JustSaying
             }
 
             var messageType = message.GetType();
-            var topic = messageType.ToTopicName();
-            var publisherFound = publishersForRegion.TryGetValue(topic, out var publisher);
+            var publisherFound = publishersForRegion.TryGetValue(messageType, out var publisher);
 
             if (!publisherFound)
             {

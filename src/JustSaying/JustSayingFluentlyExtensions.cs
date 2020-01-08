@@ -3,6 +3,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.Naming;
 
 namespace JustSaying
 {
@@ -12,6 +13,22 @@ namespace JustSaying
             IMessageSubjectProvider messageSubjectProvider)
         {
             dependencies.MessageSubjectProvider = messageSubjectProvider;
+            return dependencies;
+        }
+
+        public static JustSayingFluentlyDependencies UsingTopicNameConvention(
+            this JustSayingFluentlyDependencies dependencies,
+            ITopicNamingConvention topicNamingConvention)
+        {
+            dependencies.TopicNamingConvention = topicNamingConvention;
+            return dependencies;
+        }
+
+        public static JustSayingFluentlyDependencies UsingQueueNameConvention(
+            this JustSayingFluentlyDependencies dependencies,
+            IQueueNamingConvention queueNamingConvention)
+        {
+            dependencies.QueueNamingConvention = queueNamingConvention;
             return dependencies;
         }
 
@@ -32,6 +49,12 @@ namespace JustSaying
             if (dependencies.MessageSubjectProvider != null)
                 config.MessageSubjectProvider = dependencies.MessageSubjectProvider;
 
+            if (dependencies.TopicNamingConvention != null)
+                config.TopicNamingConvention = dependencies.TopicNamingConvention;
+
+            if (dependencies.QueueNamingConvention != null)
+                config.QueueNamingConvention = dependencies.QueueNamingConvention;
+
             if (regions != null)
                 foreach (var region in regions)
                 {
@@ -46,6 +69,7 @@ namespace JustSaying
             var awsClientFactoryProxy = new AwsClientFactoryProxy(() => CreateMeABus.DefaultClientFactory());
 
             var amazonQueueCreator = new AmazonQueueCreator(awsClientFactoryProxy, dependencies.LoggerFactory);
+
             var bus = new JustSayingFluently(justSayingBus, amazonQueueCreator, awsClientFactoryProxy, dependencies.LoggerFactory);
 
             bus

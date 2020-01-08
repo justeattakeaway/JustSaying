@@ -1,5 +1,6 @@
 using System;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Extensions;
 using JustSaying.Models;
 
 namespace JustSaying.Fluent
@@ -31,7 +32,7 @@ namespace JustSaying.Fluent
         private Action<SqsReadConfiguration> ConfigureReads { get; set; }
 
         /// <summary>
-        /// Configures that the default queue name should be used.
+        /// Configures that the <see cref="IQueueNamingConvention"/> will create the queue name that should be used.
         /// </summary>
         /// <returns>
         /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
