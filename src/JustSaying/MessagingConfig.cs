@@ -18,8 +18,8 @@ namespace JustSaying
             AdditionalSubscriberAccounts = new List<string>();
             Regions = new List<string>();
             MessageSubjectProvider = new NonGenericMessageSubjectProvider();
-            DefaultTopicNamingConvention = new DefaultNamingConventions();
-            DefaultQueueNamingConvention = new DefaultNamingConventions();
+            TopicNamingConvention = new DefaultNamingConventions();
+            QueueNamingConvention = new DefaultNamingConventions();
         }
 
         public int PublishFailureReAttempts { get; set; }
@@ -29,8 +29,8 @@ namespace JustSaying
         public IList<string> Regions { get; }
         public Func<string> GetActiveRegion { get; set; }
         public IMessageSubjectProvider MessageSubjectProvider { get; set; }
-        public IDefaultTopicNamingConvention DefaultTopicNamingConvention { get; set; }
-        public IDefaultQueueNamingConvention DefaultQueueNamingConvention { get; set; }
+        public ITopicNamingConvention TopicNamingConvention { get; set; }
+        public IQueueNamingConvention QueueNamingConvention { get; set; }
 
         public virtual void Validate()
         {

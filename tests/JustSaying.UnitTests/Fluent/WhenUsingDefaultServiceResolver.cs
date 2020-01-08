@@ -61,15 +61,15 @@ namespace JustSaying.UnitTests.Fluent
         }
 
         [Fact]
-        public void ShouldResolveIDefaultTopicNamingConventionToDefaultNamingConvention()
+        public void ShouldResolveITopicNamingConventionToDefaultNamingConvention()
         {
-            _sut.ResolveService<IDefaultTopicNamingConvention>().ShouldBeOfType<DefaultNamingConventions>();
+            _sut.ResolveService<ITopicNamingConvention>().ShouldBeOfType<DefaultNamingConventions>();
         }
 
         [Fact]
-        public void ShouldResolveIDefaultQueueNamingConventionToDefaultNamingConvention()
+        public void ShouldResolveIQueueNamingConventionToDefaultNamingConvention()
         {
-            _sut.ResolveService<IDefaultQueueNamingConvention>().ShouldBeOfType<DefaultNamingConventions>();
+            _sut.ResolveService<IQueueNamingConvention>().ShouldBeOfType<DefaultNamingConventions>();
         }
     }
 }

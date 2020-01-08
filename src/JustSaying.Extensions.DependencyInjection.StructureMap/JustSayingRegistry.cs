@@ -47,8 +47,8 @@ namespace JustSaying
                 .Singleton();
 
             For<DefaultNamingConventions>().Singleton();
-            For<IDefaultTopicNamingConvention>().Use(context => context.GetInstance<DefaultNamingConventions>());
-            For<IDefaultQueueNamingConvention>().Use(context => context.GetInstance<DefaultNamingConventions>());
+            For<ITopicNamingConvention>().Use(context => context.GetInstance<DefaultNamingConventions>());
+            For<IQueueNamingConvention>().Use(context => context.GetInstance<DefaultNamingConventions>());
         }
     }
 }

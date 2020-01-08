@@ -175,8 +175,8 @@ namespace Microsoft.Extensions.DependencyInjection
                 });
 
             services.AddSingleton<DefaultNamingConventions>();
-            services.TryAddSingleton<IDefaultTopicNamingConvention>((s) => s.GetRequiredService<DefaultNamingConventions>());
-            services.TryAddSingleton<IDefaultQueueNamingConvention>((s) => s.GetRequiredService<DefaultNamingConventions>());
+            services.TryAddSingleton<ITopicNamingConvention>((s) => s.GetRequiredService<DefaultNamingConventions>());
+            services.TryAddSingleton<IQueueNamingConvention>((s) => s.GetRequiredService<DefaultNamingConventions>());
 
             return services;
         }

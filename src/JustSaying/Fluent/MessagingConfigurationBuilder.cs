@@ -62,14 +62,14 @@ namespace JustSaying.Fluent
         private IMessageSubjectProvider MessageSubjectProvider { get; set; }
 
         /// <summary>
-        /// Gets or sets the optional value to use for <see cref="IMessagingConfig.DefaultTopicNamingConvention"/>
+        /// Gets or sets the optional value to use for <see cref="IMessagingConfig.TopicNamingConvention"/>
         /// </summary>
-        private IDefaultTopicNamingConvention DefaultTopicNamingConvention { get; set; }
+        private ITopicNamingConvention DefaultTopicNamingConvention { get; set; }
 
         /// <summary>
-        /// Gets or sets the optional value to use for <see cref="IMessagingConfig.DefaultQueueNamingConvention"/>
+        /// Gets or sets the optional value to use for <see cref="IMessagingConfig.QueueNamingConvention"/>
         /// </summary>
-        private IDefaultQueueNamingConvention DefaultQueueNamingConvention { get; set; }
+        private IQueueNamingConvention DefaultQueueNamingConvention { get; set; }
 
         /// <summary>
         /// Specifies the active AWS region to use.
@@ -364,63 +364,63 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Specifies the <see cref="IDefaultTopicNamingConvention"/> to use.
+        /// Specifies the <see cref="ITopicNamingConvention"/> to use.
         /// </summary>
-        /// <param name="namingConvention">The <see cref="IDefaultTopicNamingConvention"/> to use.</param>
+        /// <param name="namingConvention">The <see cref="ITopicNamingConvention"/> to use.</param>
         /// <returns>
         /// The current <see cref="MessagingConfigurationBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="namingConvention"/> is <see cref="null"/>.
         /// </exception>
-        public MessagingConfigurationBuilder WithDefaultTopicNamingConvention(IDefaultTopicNamingConvention namingConvention)
+        public MessagingConfigurationBuilder WithDefaultTopicNamingConvention(ITopicNamingConvention namingConvention)
         {
             DefaultTopicNamingConvention = namingConvention ?? throw new ArgumentNullException(nameof(namingConvention));
             return this;
         }
 
         /// <summary>
-        /// Specifies the <see cref="IDefaultTopicNamingConvention"/> to use.
+        /// Specifies the <see cref="ITopicNamingConvention"/> to use.
         /// </summary>
-        /// <typeparam name="T">The <see cref="IDefaultTopicNamingConvention"> to use which will be resolved from the <see cref="IServiceResolver"/></typeparam>
+        /// <typeparam name="T">The <see cref="ITopicNamingConvention"> to use which will be resolved from the <see cref="IServiceResolver"/></typeparam>
         /// <returns>
         /// The current <see cref="MessagingConfigurationBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="T"/> is resolved to <see cref="null"/>.
         /// </exception>
-        public MessagingConfigurationBuilder WithDefaultTopicNamingConvention<T>() where T : class, IDefaultTopicNamingConvention
+        public MessagingConfigurationBuilder WithDefaultTopicNamingConvention<T>() where T : class, ITopicNamingConvention
         {
             return WithDefaultTopicNamingConvention(BusBuilder.ServiceResolver.ResolveService<T>());
         }
 
         /// <summary>
-        /// Specifies the <see cref="IDefaultQueueNamingConvention"/> to use.
+        /// Specifies the <see cref="IQueueNamingConvention"/> to use.
         /// </summary>
-        /// <param name="namingConvention">The <see cref="IDefaultQueueNamingConvention"/> to use.</param>
+        /// <param name="namingConvention">The <see cref="IQueueNamingConvention"/> to use.</param>
         /// <returns>
         /// The current <see cref="MessagingConfigurationBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="namingConvention"/> is <see cref="null"/>.
         /// </exception>
-        public MessagingConfigurationBuilder WithDefaultQueueNamingConvention(IDefaultQueueNamingConvention namingConvention)
+        public MessagingConfigurationBuilder WithDefaultQueueNamingConvention(IQueueNamingConvention namingConvention)
         {
             DefaultQueueNamingConvention = namingConvention ?? throw new ArgumentNullException(nameof(namingConvention));
             return this;
         }
 
         /// <summary>
-        /// Specifies the <see cref="IDefaultQueueNamingConvention"/> to use.
+        /// Specifies the <see cref="IQueueNamingConvention"/> to use.
         /// </summary>
-        /// <typeparam name="T">The <see cref="IDefaultQueueNamingConvention"> to use which will be resolved from the <see cref="IServiceResolver"/></typeparam>
+        /// <typeparam name="T">The <see cref="IQueueNamingConvention"> to use which will be resolved from the <see cref="IServiceResolver"/></typeparam>
         /// <returns>
         /// The current <see cref="MessagingConfigurationBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="T"/> is resolved to <see cref="null"/>.
         /// </exception>
-        public MessagingConfigurationBuilder WithDefaultQueueNamingConvention<T>() where T : class, IDefaultQueueNamingConvention
+        public MessagingConfigurationBuilder WithDefaultQueueNamingConvention<T>() where T : class, IQueueNamingConvention
         {
             return WithDefaultQueueNamingConvention(BusBuilder.ServiceResolver.ResolveService<T>());
         }
@@ -468,12 +468,12 @@ namespace JustSaying.Fluent
 
             if (DefaultTopicNamingConvention != null)
             {
-                config.DefaultTopicNamingConvention = DefaultTopicNamingConvention;
+                config.TopicNamingConvention = DefaultTopicNamingConvention;
             }
 
             if (DefaultQueueNamingConvention != null)
             {
-                config.DefaultQueueNamingConvention = DefaultQueueNamingConvention;
+                config.QueueNamingConvention = DefaultQueueNamingConvention;
             }
 
             if (PublishFailureBackoff.HasValue)

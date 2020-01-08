@@ -10,8 +10,8 @@ namespace JustSaying
         IList<string> Regions { get; }
         Func<string> GetActiveRegion { get; set; }
         IMessageSubjectProvider MessageSubjectProvider { get; set; }
-        IDefaultTopicNamingConvention DefaultTopicNamingConvention { get; set; }
-        IDefaultQueueNamingConvention DefaultQueueNamingConvention { get; set; }
+        ITopicNamingConvention TopicNamingConvention { get; set; }
+        IQueueNamingConvention QueueNamingConvention { get; set; }
         void Validate();
     }
 }

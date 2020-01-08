@@ -8,7 +8,7 @@ namespace JustSaying
     {
         public ILoggerFactory LoggerFactory { get; set; }
         public IMessageSubjectProvider MessageSubjectProvider { get; set; }
-        public IDefaultQueueNamingConvention QueueNamingConvention { get; set; }
-        public IDefaultTopicNamingConvention TopicNamingConvention { get; set; }
+        public IQueueNamingConvention QueueNamingConvention { get; set; }
+        public ITopicNamingConvention TopicNamingConvention { get; set; }
     }
 }

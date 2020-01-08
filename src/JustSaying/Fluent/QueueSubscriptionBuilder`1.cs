@@ -32,7 +32,7 @@ namespace JustSaying.Fluent
         private Action<SqsReadConfiguration> ConfigureReads { get; set; }
 
         /// <summary>
-        /// Configures that the <see cref="IDefaultQueueNamingConvention"/> will create the queue name that should be used.
+        /// Configures that the <see cref="IQueueNamingConvention"/> will create the queue name that should be used.
         /// </summary>
         /// <returns>
         /// The current <see cref="QueueSubscriptionBuilder{T}"/>.

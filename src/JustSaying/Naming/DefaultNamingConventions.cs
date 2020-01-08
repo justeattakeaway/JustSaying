@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace JustSaying.Naming
 {
-    public class DefaultNamingConventions : IDefaultTopicNamingConvention, IDefaultQueueNamingConvention
+    public class DefaultNamingConventions : ITopicNamingConvention, IQueueNamingConvention
     {
         private const int MaxTopicNameLength = 256;
         private const int MaxQueueNameLength = 80;

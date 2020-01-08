@@ -51,7 +51,7 @@ namespace JustSaying.Fluent
             {
                 return new NonGenericMessageSubjectProvider();
             }
-            else if (desiredType == typeof(IDefaultQueueNamingConvention) || desiredType == typeof(IDefaultTopicNamingConvention))
+            else if (desiredType == typeof(IQueueNamingConvention) || desiredType == typeof(ITopicNamingConvention))
             {
                 return new DefaultNamingConventions();
             }

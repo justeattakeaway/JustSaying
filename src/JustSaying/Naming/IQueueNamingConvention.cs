@@ -1,6 +1,6 @@
 namespace JustSaying.Naming
 {
-    public interface IDefaultQueueNamingConvention
+    public interface IQueueNamingConvention
     {
         string QueueName<T>();
     }

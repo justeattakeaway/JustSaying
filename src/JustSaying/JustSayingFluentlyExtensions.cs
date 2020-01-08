@@ -16,19 +16,19 @@ namespace JustSaying
             return dependencies;
         }
 
-        public static JustSayingFluentlyDependencies UsingDefaultTopicNameConvention(
+        public static JustSayingFluentlyDependencies UsingTopicNameConvention(
             this JustSayingFluentlyDependencies dependencies,
-            IDefaultTopicNamingConvention defaultTopicNamingConvention)
+            ITopicNamingConvention topicNamingConvention)
         {
-            dependencies.TopicNamingConvention = defaultTopicNamingConvention;
+            dependencies.TopicNamingConvention = topicNamingConvention;
             return dependencies;
         }
 
-        public static JustSayingFluentlyDependencies UsingDefaultQueueNameConvention(
+        public static JustSayingFluentlyDependencies UsingQueueNameConvention(
             this JustSayingFluentlyDependencies dependencies,
-            IDefaultQueueNamingConvention defaultQueueNamingConvention)
+            IQueueNamingConvention queueNamingConvention)
         {
-            dependencies.QueueNamingConvention = defaultQueueNamingConvention;
+            dependencies.QueueNamingConvention = queueNamingConvention;
             return dependencies;
         }
 
@@ -50,10 +50,10 @@ namespace JustSaying
                 config.MessageSubjectProvider = dependencies.MessageSubjectProvider;
 
             if (dependencies.TopicNamingConvention != null)
-                config.DefaultTopicNamingConvention = dependencies.TopicNamingConvention;
+                config.TopicNamingConvention = dependencies.TopicNamingConvention;
 
             if (dependencies.QueueNamingConvention != null)
-                config.DefaultQueueNamingConvention = dependencies.QueueNamingConvention;
+                config.QueueNamingConvention = dependencies.QueueNamingConvention;
 
             if (regions != null)
                 foreach (var region in regions)

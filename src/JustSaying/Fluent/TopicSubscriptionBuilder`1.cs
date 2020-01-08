@@ -32,7 +32,7 @@ namespace JustSaying.Fluent
         private Action<SqsReadConfiguration> ConfigureReads { get; set; }
 
         /// <summary>
-        /// Configures that the <see cref="IDefaultTopicNamingConvention"/> will create the topic name that should be used.
+        /// Configures that the <see cref="ITopicNamingConvention"/> will create the topic name that should be used.
         /// </summary>
         /// <returns>
         /// The current <see cref="TopicSubscriptionBuilder{T}"/>.

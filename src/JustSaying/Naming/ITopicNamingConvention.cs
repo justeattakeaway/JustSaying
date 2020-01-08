@@ -1,6 +1,6 @@
 namespace JustSaying.Naming
 {
-    public interface IDefaultTopicNamingConvention
+    public interface ITopicNamingConvention
     {
         string TopicName<T>();
     }
