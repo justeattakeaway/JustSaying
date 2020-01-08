@@ -6,6 +6,9 @@ using System.Text.RegularExpressions;
 
 namespace JustSaying.Naming
 {
+    /// <summary>
+    /// A class representing the default implementations of <see cref="ITopicNamingConvention"/> and <see cref="IQueueNamingConvention"/>. This is used when no custom implementation is provided.
+    /// </summary>
     public class DefaultNamingConventions : ITopicNamingConvention, IQueueNamingConvention
     {
         private const int MaxTopicNameLength = 256;
@@ -34,9 +37,9 @@ namespace JustSaying.Naming
             typeof(DateTimeOffset)
         };
 
-        public string TopicName<T>() => CreateResourceName(typeof(T), MaxTopicNameLength);
+        public virtual string TopicName<T>() => CreateResourceName(typeof(T), MaxTopicNameLength);
 
-        public string QueueName<T>() => CreateResourceName(typeof(T), MaxQueueNameLength);
+        public virtual string QueueName<T>() => CreateResourceName(typeof(T), MaxQueueNameLength);
 
         private static string CreateResourceName(Type type, int maximumLength)
         {
