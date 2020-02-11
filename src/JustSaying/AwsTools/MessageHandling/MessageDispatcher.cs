@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
@@ -17,7 +18,6 @@ namespace JustSaying.AwsTools.MessageHandling
 {
     public class MessageDispatcher
     {
-        private readonly SqsQueueBase _queue;
         private readonly IMessageSerializationRegister _serializationRegister;
         private readonly IMessageMonitor _messagingMonitor;
         private readonly Action<Exception, SQSMessage> _onError;
@@ -28,7 +28,6 @@ namespace JustSaying.AwsTools.MessageHandling
         private static ILogger _logger;
 
         public MessageDispatcher(
-            SqsQueueBase queue,
             IMessageSerializationRegister serializationRegister,
             IMessageMonitor messagingMonitor,
             Action<Exception, SQSMessage> onError,
@@ -37,7 +36,6 @@ namespace JustSaying.AwsTools.MessageHandling
             IMessageBackoffStrategy messageBackoffStrategy,
             IMessageContextAccessor messageContextAccessor)
         {
-            _queue = queue;
             _serializationRegister = serializationRegister;
             _messagingMonitor = messagingMonitor;
             _onError = onError;
@@ -47,7 +45,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _messageContextAccessor = messageContextAccessor;
         }
 
-        public async Task DispatchMessage(SQSMessage message, CancellationToken cancellationToken)
+        public async Task DispatchMessage(QueueMessageContext messageContext, CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested)
             {
@@ -57,17 +55,17 @@ namespace JustSaying.AwsTools.MessageHandling
             Message typedMessage;
             try
             {
-                typedMessage = _serializationRegister.DeserializeMessage(message.Body);
+                typedMessage = _serializationRegister.DeserializeMessage(messageContext.Message.Body);
             }
             catch (MessageFormatNotSupportedException ex)
             {
                 _logger.LogTrace(
                     "Could not handle message with Id '{MessageId}' because a deserializer for the content is not configured. Message body: '{MessageBody}'.",
-                    message.MessageId,
-                    message.Body);
+                    messageContext.Message.MessageId,
+                    messageContext.Message.Body);
 
-                await DeleteMessageFromQueue(message.ReceiptHandle).ConfigureAwait(false);
-                _onError(ex, message);
+                await DeleteMessageFromQueue(messageContext).ConfigureAwait(false);
+                _onError(ex, messageContext.Message);
 
                 return;
             }
@@ -78,10 +76,10 @@ namespace JustSaying.AwsTools.MessageHandling
                 _logger.LogError(
                     ex,
                     "Error deserializing message with Id '{MessageId}' and body '{MessageBody}'.",
-                    message.MessageId,
-                    message.Body);
+                    messageContext.Message.MessageId,
+                    messageContext.Message.Body);
 
-                _onError(ex, message);
+                _onError(ex, messageContext.Message);
                 return;
             }
 
@@ -92,14 +90,14 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 if (typedMessage != null)
                 {
-                    _messageContextAccessor.MessageContext = new MessageContext(message, _queue.Uri);
+                    _messageContextAccessor.MessageContext = new MessageContext(messageContext.Message, messageContext.Queue.Uri);
 
                     handlingSucceeded = await CallMessageHandler(typedMessage).ConfigureAwait(false);
                 }
 
                 if (handlingSucceeded)
                 {
-                    await DeleteMessageFromQueue(message.ReceiptHandle).ConfigureAwait(false);
+                    await DeleteMessageFromQueue(messageContext).ConfigureAwait(false);
                 }
             }
 #pragma warning disable CA1031
@@ -109,15 +107,15 @@ namespace JustSaying.AwsTools.MessageHandling
                 _logger.LogError(
                     ex,
                     "Error handling message with Id '{MessageId}' and body '{MessageBody}'.",
-                    message.MessageId,
-                    message.Body);
+                    messageContext.Message.MessageId,
+                    messageContext.Message.Body);
 
                 if (typedMessage != null)
                 {
                     _messagingMonitor.HandleException(typedMessage.GetType());
                 }
 
-                _onError(ex, message);
+                _onError(ex, messageContext.Message);
 
                 lastException = ex;
             }
@@ -127,7 +125,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     if (!handlingSucceeded && _messageBackoffStrategy != null)
                     {
-                        await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage, lastException).ConfigureAwait(false);
+                        await UpdateMessageVisibilityTimeout(messageContext, typedMessage, lastException).ConfigureAwait(false);
                     }
                 }
                 finally
@@ -165,34 +163,34 @@ namespace JustSaying.AwsTools.MessageHandling
             return handlerSucceeded;
         }
 
-        private async Task DeleteMessageFromQueue(string receiptHandle)
+        private async Task DeleteMessageFromQueue(QueueMessageContext context)
         {
             var deleteRequest = new DeleteMessageRequest
             {
-                QueueUrl = _queue.Uri.AbsoluteUri,
-                ReceiptHandle = receiptHandle
+                QueueUrl = context.Queue.Uri.AbsoluteUri,
+                ReceiptHandle = context.Message.ReceiptHandle
             };
 
-            await _queue.Client.DeleteMessageAsync(deleteRequest).ConfigureAwait(false);
+            await context.Queue.Client.DeleteMessageAsync(deleteRequest).ConfigureAwait(false);
         }
 
-        private async Task UpdateMessageVisibilityTimeout(SQSMessage message, string receiptHandle, Message typedMessage, Exception lastException)
+        private async Task UpdateMessageVisibilityTimeout(QueueMessageContext messageContext, Message typedMessage, Exception lastException)
         {
-            if (TryGetApproxReceiveCount(message.Attributes, out int approxReceiveCount))
+            if (TryGetApproxReceiveCount(messageContext.Message.Attributes, out int approxReceiveCount))
             {
                 var visibilityTimeout = _messageBackoffStrategy.GetBackoffDuration(typedMessage, approxReceiveCount, lastException);
                 var visibilityTimeoutSeconds = (int)visibilityTimeout.TotalSeconds;
 
                 var visibilityRequest = new ChangeMessageVisibilityRequest
                 {
-                    QueueUrl = _queue.Uri.AbsoluteUri,
-                    ReceiptHandle = receiptHandle,
+                    QueueUrl = messageContext.Queue.Uri.AbsoluteUri,
+                    ReceiptHandle = messageContext.Message.ReceiptHandle,
                     VisibilityTimeout = visibilityTimeoutSeconds
                 };
 
                 try
                 {
-                    await _queue.Client.ChangeMessageVisibilityAsync(visibilityRequest).ConfigureAwait(false);
+                    await messageContext.Queue.Client.ChangeMessageVisibilityAsync(visibilityRequest).ConfigureAwait(false);
                 }
                 catch (AmazonServiceException ex)
                 {
@@ -200,9 +198,9 @@ namespace JustSaying.AwsTools.MessageHandling
                         ex,
                         "Failed to update message visibility timeout by {VisibilityTimeout} seconds for message with receipt handle '{ReceiptHandle}'.",
                         visibilityTimeoutSeconds,
-                        receiptHandle);
+                        messageContext.Message.ReceiptHandle);
 
-                    _onError(ex, message);
+                    _onError(ex, messageContext.Message);
                 }
             }
         }

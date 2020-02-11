@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading;
@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
@@ -50,7 +51,6 @@ namespace JustSaying.AwsTools.MessageHandling
             _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor, loggerFactory);
 
             _messageDispatcher = new MessageDispatcher(
-                _queue,
                 serializationRegister,
                 messagingMonitor,
                 onError,
@@ -283,7 +283,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             async Task DispatchAsync()
             {
-                await _messageDispatcher.DispatchMessage(message, ct).ConfigureAwait(false);
+                await _messageDispatcher.DispatchMessage(new QueueMessageContext(message, _queue), ct).ConfigureAwait(false);
             }
 
             return _messageProcessingStrategy.StartWorkerAsync(DispatchAsync, ct);
