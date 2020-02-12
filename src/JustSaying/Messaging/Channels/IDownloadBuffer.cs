@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 
 namespace JustSaying.Messaging.Channels
@@ -12,17 +10,6 @@ namespace JustSaying.Messaging.Channels
     {
         Task Start(CancellationToken stoppingToken);
         ChannelReader<IQueueMessageContext> Reader { get; }
-    }
-
-    public interface IQueueMessageContext
-    {
-        Message Message { get; }
-
-        Task<ChangeMessageVisibilityResponse> ChangeMessageVisibilityAsync(int visibilityTimeoutSeconds);
-
-        Task DeleteMessageFromQueue();
-
-        Uri QueueUri { get; }
     }
 
     public class DownloadBuffer : IDownloadBuffer

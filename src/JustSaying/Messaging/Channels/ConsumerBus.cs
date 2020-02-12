@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Channels;
 
 namespace JustSaying.Messaging.Channels
 {
@@ -36,14 +34,6 @@ namespace JustSaying.Messaging.Channels
 
             buffer1.Start(stoppingToken);
             buffer2.Start(stoppingToken);
-
-        }
-
-        internal interface IMultiplexer
-        {
-            void Start();
-            void ReadFrom(ChannelReader<IQueueMessageContext> reader);
-            IAsyncEnumerable<IQueueMessageContext> Messages();
         }
 
         internal interface IChannelConsumer
