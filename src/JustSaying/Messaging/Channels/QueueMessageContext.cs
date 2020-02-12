@@ -14,6 +14,7 @@ namespace JustSaying.Messaging.Channels
         }
 
         public Message Message { get; }
+
         private ISqsQueue SqsQueue { get; }
 
         public async Task DeleteMessageFromQueue()

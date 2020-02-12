@@ -16,7 +16,7 @@ namespace JustSaying.Messaging.Channels
 
     public interface IQueueMessageContext
     {
-        public Message Message { get; }
+        Message Message { get; }
 
         Task<ChangeMessageVisibilityResponse> ChangeMessageVisibilityAsync(int visibilityTimeoutSeconds);
 
