@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading;
@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
-using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
@@ -19,7 +18,7 @@ namespace JustSaying.AwsTools.MessageHandling
 {
     public class SqsNotificationListener : INotificationSubscriber
     {
-        private readonly SqsQueueBase _queue;
+        private readonly ISqsQueue _queue;
         private readonly IMessageMonitor _messagingMonitor;
         private readonly List<string> _requestMessageAttributeNames = new List<string>();
 
@@ -33,7 +32,7 @@ namespace JustSaying.AwsTools.MessageHandling
         public bool IsListening { get; private set; }
 
         public SqsNotificationListener(
-            SqsQueueBase queue,
+            ISqsQueue queue,
             IMessageSerializationRegister serializationRegister,
             IMessageMonitor messagingMonitor,
             ILoggerFactory loggerFactory,
@@ -110,7 +109,7 @@ namespace JustSaying.AwsTools.MessageHandling
         public void Listen(CancellationToken cancellationToken)
         {
             var queueName = _queue.QueueName;
-            var region = _queue.Region.SystemName;
+            var region = _queue.RegionSystemName;
 
             // Run task in background
             // ListenLoop will cancel gracefully, so no need to pass cancellation token to Task.Run
@@ -128,7 +127,7 @@ namespace JustSaying.AwsTools.MessageHandling
         internal async Task ListenLoopAsync(CancellationToken ct)
         {
             var queueName = _queue.QueueName;
-            var regionName = _queue.Region.SystemName;
+            var regionName = _queue.RegionSystemName;
             ReceiveMessageResponse sqsMessageResponse = null;
 
             while (!ct.IsCancellationRequested)
@@ -237,7 +236,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, receiveTimeout.Token);
 
-                sqsMessageResponse = await _queue.Client.ReceiveMessageAsync(request, linkedCts.Token).ConfigureAwait(false);
+                sqsMessageResponse = await _queue.GetMessages(request, linkedCts.Token).ConfigureAwait(false);
             }
             finally
             {
@@ -283,7 +282,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             async Task DispatchAsync()
             {
-                await _messageDispatcher.DispatchMessage(new QueueMessageContext(message, _queue), ct).ConfigureAwait(false);
+                await _messageDispatcher.DispatchMessage(_queue.CreateQueueMessageContext(message), ct).ConfigureAwait(false);
             }
 
             return _messageProcessingStrategy.StartWorkerAsync(DispatchAsync, ct);

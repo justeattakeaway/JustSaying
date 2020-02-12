@@ -45,7 +45,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _messageContextAccessor = messageContextAccessor;
         }
 
-        public async Task DispatchMessage(QueueMessageContext messageContext, CancellationToken cancellationToken)
+        public async Task DispatchMessage(IQueueMessageContext messageContext, CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested)
             {
@@ -64,7 +64,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     messageContext.Message.MessageId,
                     messageContext.Message.Body);
 
-                await DeleteMessageFromQueue(messageContext).ConfigureAwait(false);
+                await messageContext.DeleteMessageFromQueue().ConfigureAwait(false);
                 _onError(ex, messageContext.Message);
 
                 return;
@@ -90,14 +90,14 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 if (typedMessage != null)
                 {
-                    _messageContextAccessor.MessageContext = new MessageContext(messageContext.Message, messageContext.Queue.Uri);
+                    _messageContextAccessor.MessageContext = new MessageContext(messageContext.Message, messageContext.QueueUri);
 
                     handlingSucceeded = await CallMessageHandler(typedMessage).ConfigureAwait(false);
                 }
 
                 if (handlingSucceeded)
                 {
-                    await DeleteMessageFromQueue(messageContext).ConfigureAwait(false);
+                    await messageContext.DeleteMessageFromQueue().ConfigureAwait(false);
                 }
             }
 #pragma warning disable CA1031
@@ -163,34 +163,16 @@ namespace JustSaying.AwsTools.MessageHandling
             return handlerSucceeded;
         }
 
-        private async Task DeleteMessageFromQueue(QueueMessageContext context)
-        {
-            var deleteRequest = new DeleteMessageRequest
-            {
-                QueueUrl = context.Queue.Uri.AbsoluteUri,
-                ReceiptHandle = context.Message.ReceiptHandle
-            };
-
-            await context.Queue.Client.DeleteMessageAsync(deleteRequest).ConfigureAwait(false);
-        }
-
-        private async Task UpdateMessageVisibilityTimeout(QueueMessageContext messageContext, Message typedMessage, Exception lastException)
+        private async Task UpdateMessageVisibilityTimeout(IQueueMessageContext messageContext, Message typedMessage, Exception lastException)
         {
             if (TryGetApproxReceiveCount(messageContext.Message.Attributes, out int approxReceiveCount))
             {
                 var visibilityTimeout = _messageBackoffStrategy.GetBackoffDuration(typedMessage, approxReceiveCount, lastException);
                 var visibilityTimeoutSeconds = (int)visibilityTimeout.TotalSeconds;
 
-                var visibilityRequest = new ChangeMessageVisibilityRequest
-                {
-                    QueueUrl = messageContext.Queue.Uri.AbsoluteUri,
-                    ReceiptHandle = messageContext.Message.ReceiptHandle,
-                    VisibilityTimeout = visibilityTimeoutSeconds
-                };
-
                 try
                 {
-                    await messageContext.Queue.Client.ChangeMessageVisibilityAsync(visibilityRequest).ConfigureAwait(false);
+                    await messageContext.ChangeMessageVisibilityAsync(visibilityTimeoutSeconds).ConfigureAwait(false);
                 }
                 catch (AmazonServiceException ex)
                 {

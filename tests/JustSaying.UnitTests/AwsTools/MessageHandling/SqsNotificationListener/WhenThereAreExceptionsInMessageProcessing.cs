@@ -11,6 +11,7 @@ using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -50,7 +51,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         private JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
             var listener = new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
-                new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri("http://foo.com"), _sqs),
+                new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri("http://foo.com"), _sqs, NullLoggerFactory.Instance),
                 _serializationRegister,
                 Substitute.For<IMessageMonitor>(),
                 Substitute.For<ILoggerFactory>(),

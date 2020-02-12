@@ -1,16 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Extensions;
+using JustSaying.Messaging.Channels;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public abstract class SqsQueueBase
+    public abstract class SqsQueueBase : ISqsQueue
     {
         public string Arn { get; protected set; }
         public Uri Uri { get; protected set; }
@@ -24,13 +27,22 @@ namespace JustSaying.AwsTools.MessageHandling
         internal RedrivePolicy RedrivePolicy { get; set; }
         internal ServerSideEncryption ServerSideEncryption { get; set; }
         public string Policy { get; private set; }
+        public string RegionSystemName { get; }
 
-
-        protected SqsQueueBase(RegionEndpoint region, IAmazonSQS client)
+        protected SqsQueueBase(RegionEndpoint region, IAmazonSQS client, ILoggerFactory loggerFactory)
         {
+            if (loggerFactory == null)
+            {
+                throw new ArgumentNullException(nameof(loggerFactory));
+            }
+
             Region = region;
             Client = client;
+
+            Logger = loggerFactory.CreateLogger("JustSaying");
         }
+
+        protected ILogger Logger { get; }
 
         public abstract Task<bool> ExistsAsync();
 
@@ -170,6 +182,73 @@ namespace JustSaying.AwsTools.MessageHandling
                 KmsMasterKeyId = queueAttributes[JustSayingConstants.AttributeEncryptionKeyId],
                 KmsDataKeyReusePeriodSeconds = queueAttributes[JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId]
             };
+        }
+
+        public async Task<IList<Message>> GetMessages(
+            int count,
+            List<string> requestMessageAttributeNames,
+            CancellationToken cancellationToken)
+        {
+            var request = new ReceiveMessageRequest
+            {
+                QueueUrl = Uri.AbsoluteUri,
+                MaxNumberOfMessages = count,
+                WaitTimeSeconds = 20,
+                AttributeNames = requestMessageAttributeNames
+            };
+
+            var response = await GetMessages(request, cancellationToken).ConfigureAwait(false);
+            return response?.Messages;
+        }
+
+        public async Task<ReceiveMessageResponse> GetMessages(ReceiveMessageRequest request, CancellationToken cancellationToken)
+        {
+            using var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));
+            ReceiveMessageResponse sqsMessageResponse;
+
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+            try
+            {
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, receiveTimeout.Token);
+
+                sqsMessageResponse = await Client.ReceiveMessageAsync(request, linkedCts.Token).ConfigureAwait(false);
+            }
+            finally
+            {
+                if (receiveTimeout.Token.IsCancellationRequested)
+                {
+                    Logger.LogInformation("Timed out while receiving messages from queue '{QueueName}' in region '{Region}'.",
+                        QueueName, Region);
+                }
+            }
+
+            return sqsMessageResponse;
+        }
+
+        public async Task<DeleteMessageResponse> DeleteMessageAsync(
+            string receiptHandle,
+            CancellationToken cancellationToken = default)
+        {
+            var deleteRequest = new DeleteMessageRequest
+            {
+                QueueUrl = Uri.AbsoluteUri,
+                ReceiptHandle = receiptHandle,
+            };
+
+            return await Client.DeleteMessageAsync(deleteRequest, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<ChangeMessageVisibilityResponse> ChangeMessageVisibilityAsync(
+            ChangeMessageVisibilityRequest changeMessageVisibilityRequest,
+            CancellationToken cancellationToken = default)
+        {
+            return await Client.ChangeMessageVisibilityAsync(changeMessageVisibilityRequest, cancellationToken).ConfigureAwait(false);
+        }
+
+        public IQueueMessageContext CreateQueueMessageContext(Message message)
+        {
+            return new QueueMessageContext(message, this);
         }
     }
 }

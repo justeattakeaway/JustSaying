@@ -14,6 +14,7 @@ using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -25,7 +26,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 {
     public class DummySqsQueue : SqsQueueBase
     {
-        public DummySqsQueue(Uri uri, IAmazonSQS client) : base(RegionEndpoint.EUWest1, client)
+        public DummySqsQueue(Uri uri, IAmazonSQS client, ILoggerFactory loggerFactory)
+            : base(RegionEndpoint.EUWest1, client, loggerFactory)
         {
             Uri = uri;
         }
@@ -83,7 +85,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             };
 
             _loggerFactory.CreateLogger(Arg.Any<string>()).Returns(_logger);
-            _queue = new DummySqsQueue(new Uri(ExpectedQueueUrl), _amazonSqsClient);
+            _queue = new DummySqsQueue(new Uri(ExpectedQueueUrl), _amazonSqsClient, NullLoggerFactory.Instance);
             _serializationRegister.DeserializeMessage(Arg.Any<string>()).Returns(_typedMessage);
         }
 

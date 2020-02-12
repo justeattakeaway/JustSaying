@@ -66,7 +66,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 
         protected JustSaying.AwsTools.MessageHandling.SqsNotificationListener CreateSystemUnderTest()
         {
-            var queue = new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri(QueueUrl), Sqs);
+            var queue = new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri(QueueUrl), Sqs, LoggerFactory);
             var listener = new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
                 queue, SerializationRegister, Monitor, LoggerFactory,
                 Substitute.For<IMessageContextAccessor>(),

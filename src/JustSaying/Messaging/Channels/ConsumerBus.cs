@@ -4,9 +4,9 @@ using System.Threading.Channels;
 
 namespace JustSaying.Messaging.Channels
 {
-    public class ConsumerBus
+    public static partial class ConsumerBus
     {
-        public void Start(CancellationToken stoppingToken)
+        public static void Start(CancellationToken stoppingToken)
         {
             // creates and owns core channel
 
@@ -30,28 +30,20 @@ namespace JustSaying.Messaging.Channels
             consumer1.ConsumeFrom(multiplexer);
             consumer2.ConsumeFrom(multiplexer);
 
-            var cts = new CancellationTokenSource();
-
             consumer1.Start();
             consumer2.Start();
             multiplexer.Start();
 
-            buffer1.Start(cts.Token);
-            buffer2.Start(cts.Token);
+            buffer1.Start(stoppingToken);
+            buffer2.Start(stoppingToken);
 
         }
 
         internal interface IMultiplexer
         {
             void Start();
-            void ReadFrom(ChannelReader<QueueMessageContext> reader);
-            IAsyncEnumerable<QueueMessageContext> Messages();
-        }
-
-        internal interface IDownloadBuffer
-        {
-            void Start(CancellationToken stoppingToken);
-            ChannelReader<QueueMessageContext> Reader { get; }
+            void ReadFrom(ChannelReader<IQueueMessageContext> reader);
+            IAsyncEnumerable<IQueueMessageContext> Messages();
         }
 
         internal interface IChannelConsumer
