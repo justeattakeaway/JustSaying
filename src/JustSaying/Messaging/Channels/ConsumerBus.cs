@@ -25,8 +25,8 @@ namespace JustSaying.Messaging.Channels
             multiplexer.ReadFrom(buffer1.Reader);
             multiplexer.ReadFrom(buffer2.Reader);
 
-            consumer1.ConsumeFrom(multiplexer);
-            consumer2.ConsumeFrom(multiplexer);
+            consumer1.ConsumeFrom(multiplexer.Messages());
+            consumer2.ConsumeFrom(multiplexer.Messages());
 
             consumer1.Start();
             consumer2.Start();
@@ -34,12 +34,6 @@ namespace JustSaying.Messaging.Channels
 
             buffer1.Start(stoppingToken);
             buffer2.Start(stoppingToken);
-        }
-
-        internal interface IChannelConsumer
-        {
-            void Start();
-            void ConsumeFrom(IMultiplexer multiplexer);
         }
     }
 }

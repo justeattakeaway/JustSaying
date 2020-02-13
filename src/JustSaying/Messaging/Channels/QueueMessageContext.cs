@@ -22,7 +22,7 @@ namespace JustSaying.Messaging.Channels
             await SqsQueue.DeleteMessageAsync(Message.ReceiptHandle).ConfigureAwait(false);
         }
 
-        public async Task<ChangeMessageVisibilityResponse> ChangeMessageVisibilityAsync(int visibilityTimeoutSeconds)
+        public async Task ChangeMessageVisibilityAsync(int visibilityTimeoutSeconds)
         {
             var visibilityRequest = new ChangeMessageVisibilityRequest
             {
@@ -31,7 +31,7 @@ namespace JustSaying.Messaging.Channels
                 VisibilityTimeout = visibilityTimeoutSeconds
             };
 
-            return await SqsQueue.ChangeMessageVisibilityAsync(visibilityRequest).ConfigureAwait(false);
+            await SqsQueue.ChangeMessageVisibilityAsync(visibilityRequest).ConfigureAwait(false);
         }
 
         public Uri QueueUri => SqsQueue.Uri;

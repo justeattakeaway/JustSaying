@@ -34,11 +34,13 @@ namespace JustSaying.Messaging.Channels
 
         public void ReadFrom(ChannelReader<IQueueMessageContext> reader)
         {
+            if(reader == null) throw new ArgumentNullException(nameof(reader));
+
             _syncRoot.Wait();
             _readers.Add(reader);
             _syncRoot.Release();
 
-            reader.Completion.ContinueWith(c => RemoveReader(reader));
+            reader.Completion.ContinueWith(c => RemoveReader(reader), TaskScheduler.Default);
         }
 
         private void RemoveReader(ChannelReader<IQueueMessageContext> reader)
@@ -85,9 +87,18 @@ namespace JustSaying.Messaging.Channels
             }
         }
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _syncRoot?.Dispose();
+            }
+        }
+
         public void Dispose()
         {
-            _syncRoot?.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

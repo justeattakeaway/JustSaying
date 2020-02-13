@@ -16,7 +16,12 @@ using SQSMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public class MessageDispatcher
+    public interface IMessageDispatcher
+    {
+        Task DispatchMessage(IQueueMessageContext messageContext, CancellationToken cancellationToken);
+    }
+
+    public class MessageDispatcher : IMessageDispatcher
     {
         private readonly IMessageSerializationRegister _serializationRegister;
         private readonly IMessageMonitor _messagingMonitor;
