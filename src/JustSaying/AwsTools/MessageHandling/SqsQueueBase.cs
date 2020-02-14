@@ -245,10 +245,13 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             return await Client.ChangeMessageVisibilityAsync(changeMessageVisibilityRequest, cancellationToken).ConfigureAwait(false);
         }
+    }
 
-        public IQueueMessageContext CreateQueueMessageContext(Message message)
+    public static class SqsQueueBaseExtensions
+    {
+        public static IQueueMessageContext CreateQueueMessageContext(this ISqsQueue sqsQueue, Message message)
         {
-            return new QueueMessageContext(message, this);
+            return new QueueMessageContext(message, sqsQueue);
         }
     }
 }

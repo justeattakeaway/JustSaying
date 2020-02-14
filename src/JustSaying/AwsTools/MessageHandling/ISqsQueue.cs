@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
-using JustSaying.Messaging.Channels;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -22,7 +21,5 @@ namespace JustSaying.AwsTools.MessageHandling
         Task<ChangeMessageVisibilityResponse> ChangeMessageVisibilityAsync(ChangeMessageVisibilityRequest request, CancellationToken cancellationToken = default);
 
         Task<DeleteMessageResponse> DeleteMessageAsync(string receiptHandle, CancellationToken cancellationToken = default);
-
-        IQueueMessageContext CreateQueueMessageContext(Message message);
     }
 }

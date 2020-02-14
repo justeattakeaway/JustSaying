@@ -19,22 +19,22 @@ namespace JustSaying.Messaging.Channels
     public class RoundRobinQueueMultiplexer : IMultiplexer, IDisposable
     {
         readonly IList<ChannelReader<IQueueMessageContext>> _readers;
-        readonly Channel<IQueueMessageContext> _targetChannel;
+        Channel<IQueueMessageContext> _targetChannel;
 
         readonly SemaphoreSlim _syncRoot = new SemaphoreSlim(1, 1);
         readonly ILogger<RoundRobinQueueMultiplexer> _logger;
+
+        private bool _started = false;
 
         public RoundRobinQueueMultiplexer(ILoggerFactory loggerFactory)
         {
             _readers = new List<ChannelReader<IQueueMessageContext>>();
             _logger = loggerFactory.CreateLogger<RoundRobinQueueMultiplexer>();
-
-            _targetChannel = Channel.CreateBounded<IQueueMessageContext>(_readers.Count * 10);
         }
 
         public void ReadFrom(ChannelReader<IQueueMessageContext> reader)
         {
-            if(reader == null) throw new ArgumentNullException(nameof(reader));
+            if (reader == null) throw new ArgumentNullException(nameof(reader));
 
             _syncRoot.Wait();
             _readers.Add(reader);
@@ -54,35 +54,43 @@ namespace JustSaying.Messaging.Channels
 
         public async Task Start()
         {
+            if (_started) return;
+            _started = true;
+
+            _targetChannel = Channel.CreateBounded<IQueueMessageContext>(_readers.Count * 10);
+
             var writer = _targetChannel.Writer;
-            while (true)
+            await Task.Run(async () =>
             {
-                await _syncRoot.WaitAsync().ConfigureAwait(false);
-
-                if (!_readers.Any())
+                while (true)
                 {
-                    _logger.LogInformation("All writers have completed, terminating multiplexer");
-                    writer.Complete();
-                    break;
-                }
+                    await _syncRoot.WaitAsync().ConfigureAwait(false);
 
-                foreach (var reader in _readers)
-                {
-                    if (reader.TryRead(out var message))
+                    if (!_readers.Any())
                     {
-                        await writer.WriteAsync(message);
+                        _logger.LogInformation("All writers have completed, terminating multiplexer");
+                        writer.Complete();
+                        break;
                     }
-                }
 
-                _syncRoot.Release();
-            }
+                    foreach (var reader in _readers)
+                    {
+                        if (reader.TryRead(out var message))
+                        {
+                            await writer.WriteAsync(message);
+                        }
+                    }
+
+                    _syncRoot.Release();
+                }
+            }).ConfigureAwait(false);
         }
 
         public async IAsyncEnumerable<IQueueMessageContext> Messages()
         {
-            while(await _targetChannel.Reader.WaitToReadAsync())
+            while (await _targetChannel.Reader.WaitToReadAsync())
             {
-                if (_targetChannel.Reader.TryRead(out var message))
+                while (_targetChannel.Reader.TryRead(out var message))
                     yield return message;
             }
         }

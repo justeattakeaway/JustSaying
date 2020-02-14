@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
@@ -21,7 +22,7 @@ namespace JustSaying.Messaging.Channels
         // todo: add logic around populating this
         private readonly List<string> _requestMessageAttributeNames = new List<string>();
 
-        public ChannelReader<IQueueMessageContext> Reader { get; }
+        public ChannelReader<IQueueMessageContext> Reader => _channel.Reader;
 
         public DownloadBuffer(
             int bufferLength,
@@ -37,7 +38,9 @@ namespace JustSaying.Messaging.Channels
             ChannelWriter<IQueueMessageContext> writer = _channel.Writer;
             while (!stoppingToken.IsCancellationRequested)
             {
-                bool writePermitted = await writer.WaitToWriteAsync(stoppingToken);
+                // we don't want to pass the stoppingToken here because
+                // we want to process any messages queued messages before stopping
+                bool writePermitted = await writer.WaitToWriteAsync();
                 if (!writePermitted)
                 {
                     break;

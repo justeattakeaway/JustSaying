@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <NoWarn>$(NoWarn);CA1034;CA1051;CA1707;CA2000;CA2007</NoWarn>
     <TargetFramework>netcoreapp3.1</TargetFramework>
@@ -12,7 +12,9 @@
   <ItemGroup>
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="$(AwsSdkSnsVersion)" />
     <PackageReference Include="AWSSDK.SQS" Version="$(AwsSdkSqsVersion)" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(DotNetTestSdkVersion)" />
+    <PackageReference Include="Moq" Version="4.13.1" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageReference Include="xunit" Version="$(XUnitVersion)" />
     <PackageReference Include="xunit.runner.visualstudio" Version="$(XUnitVersion)" />
