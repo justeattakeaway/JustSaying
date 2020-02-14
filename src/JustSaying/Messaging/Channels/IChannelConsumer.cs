@@ -28,7 +28,7 @@ namespace JustSaying.Messaging.Channels
 
         public async Task Start()
         {
-            await foreach ( var messageContext in _messageSource)
+            await foreach (var messageContext in _messageSource)
             {
                 await _dispatcher.DispatchMessage(messageContext, CancellationToken.None).ConfigureAwait(false);
             }
