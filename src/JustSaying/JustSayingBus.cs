@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
@@ -38,6 +39,7 @@ namespace JustSaying
         private readonly object _syncRoot = new object();
         private readonly ICollection<IPublisher> _publishers;
         private readonly ICollection<ISubscriber> _subscribers;
+        private ConsumerBus _consumerBus;
 
         public JustSayingBus(IMessagingConfig config, IMessageSerializationRegister serializationRegister, ILoggerFactory loggerFactory)
         {
@@ -52,6 +54,8 @@ namespace JustSaying
             SerializationRegister = serializationRegister;
             _publishers = new HashSet<IPublisher>();
             _subscribers = new HashSet<ISubscriber>();
+
+            _consumerBus = new ConsumerBus();
         }
 
         public void AddNotificationSubscriber(string region, INotificationSubscriber subscriber)

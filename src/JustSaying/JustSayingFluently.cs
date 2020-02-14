@@ -324,6 +324,8 @@ namespace JustSaying
 
         protected INotificationSubscriber CreateSubscriber(SqsQueueBase queue)
         {
+
+
             return new SqsNotificationListener(
                 queue,
                 Bus.SerializationRegister,

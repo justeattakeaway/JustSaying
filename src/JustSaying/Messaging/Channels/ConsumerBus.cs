@@ -1,10 +1,27 @@
+using System.Collections.Generic;
 using System.Threading;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace JustSaying.Messaging.Channels
 {
-    public static partial class ConsumerBus
+    internal class ConsumerBus
     {
-        public static void Start(CancellationToken stoppingToken)
+        private readonly IMultiplexer _multiplexer;
+        private IList<IDownloadBuffer> _downloadBuffers;
+
+        public ConsumerBus(ILoggerFactory loggerFactory)
+        {
+            _multiplexer = new RoundRobinQueueMultiplexer(loggerFactory);
+            _downloadBuffers = new List<IDownloadBuffer>();
+        }
+
+        public void AddDownloadBuffer(IDownloadBuffer downloadBuffer)
+        {
+            _downloadBuffers.Add(downloadBuffer);
+        }
+
+        public void Start(CancellationToken stoppingToken)
         {
             // creates and owns core channel
 
@@ -16,17 +33,18 @@ namespace JustSaying.Messaging.Channels
 
             // start()
 
+            var loggerFactory = new NullLoggerFactory();
+
             IDownloadBuffer buffer1 = null;
             IDownloadBuffer buffer2 = null;
-            IMultiplexer multiplexer = null;
             IChannelConsumer consumer1 = null;
             IChannelConsumer consumer2 = null;
 
-            multiplexer.ReadFrom(buffer1.Reader);
-            multiplexer.ReadFrom(buffer2.Reader);
+            _multiplexer.ReadFrom(buffer1.Reader);
+            _multiplexer.ReadFrom(buffer2.Reader);
 
-            consumer1.ConsumeFrom(multiplexer.Messages());
-            consumer2.ConsumeFrom(multiplexer.Messages());
+            consumer1.ConsumeFrom(_multiplexer.Messages());
+            consumer2.ConsumeFrom(_multiplexer.Messages());
 
             consumer1.Start();
             consumer2.Start();
