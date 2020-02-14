@@ -88,6 +88,9 @@ namespace JustSaying.Messaging.Channels
 
         public async IAsyncEnumerable<IQueueMessageContext> Messages()
         {
+            if (!_started)
+                throw new InvalidOperationException("Multiplexer not started");
+
             while (await _targetChannel.Reader.WaitToReadAsync())
             {
                 while (_targetChannel.Reader.TryRead(out var message))

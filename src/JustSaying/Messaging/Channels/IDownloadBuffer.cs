@@ -38,12 +38,23 @@ namespace JustSaying.Messaging.Channels
             ChannelWriter<IQueueMessageContext> writer = _channel.Writer;
             while (!stoppingToken.IsCancellationRequested)
             {
-                // we don't want to pass the stoppingToken here because
-                // we want to process any messages queued messages before stopping
-                bool writePermitted = await writer.WaitToWriteAsync();
-                if (!writePermitted)
+                try
                 {
-                    break;
+                    // we don't want to pass the stoppingToken here because
+                    // we want to process any messages queued messages before stopping
+                    using var cts = new CancellationTokenSource();
+                    cts.CancelAfter(TimeSpan.FromSeconds(2));
+
+                    bool writePermitted = await writer.WaitToWriteAsync(cts.Token);
+                    if (!writePermitted)
+                    {
+                        break;
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // no space in channel, break to check if stoppingToken is cancelled
+                    continue;
                 }
 
                 var messages = await _sqsQueue.GetMessages(_bufferLength, _requestMessageAttributeNames, stoppingToken).ConfigureAwait(false);

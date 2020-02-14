@@ -7,7 +7,8 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
+using NSubstitute;
+using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -27,7 +28,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             var sqsQueue = TestQueue("one");
             var buffer = new DownloadBuffer(10, sqsQueue);
-            IMessageDispatcher dispatcher = new LoggingDispatcher(_testOutputHelper.ToLogger<LoggingDispatcher>(), "one");
+            IMessageDispatcher dispatcher = TestDispatcher();
             IChannelConsumer consumer = new ChannelConsumer(dispatcher);
             IMultiplexer multiplexer = new RoundRobinQueueMultiplexer(NullLoggerFactory.Instance);
 
@@ -55,8 +56,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var buffer = new DownloadBuffer(10, sqsQueue);
 
             // using 2 dispatchers for logging, they should be the same/stateless
-            IMessageDispatcher dispatcher1 = new LoggingDispatcher(_testOutputHelper.ToLogger<LoggingDispatcher>(), "one");
-            IMessageDispatcher dispatcher2 = new LoggingDispatcher(_testOutputHelper.ToLogger<LoggingDispatcher>(), "two");
+            IMessageDispatcher dispatcher1 = TestDispatcher();
+            IMessageDispatcher dispatcher2 = TestDispatcher();
             IChannelConsumer consumer1 = new ChannelConsumer(dispatcher1);
             IChannelConsumer consumer2 = new ChannelConsumer(dispatcher2);
 
@@ -88,7 +89,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var buffer1 = new DownloadBuffer(10, sqsQueue1);
             var buffer2 = new DownloadBuffer(10, sqsQueue2);
 
-            IMessageDispatcher dispatcher1 = new LoggingDispatcher(_testOutputHelper.ToLogger<LoggingDispatcher>(), "one");
+            IMessageDispatcher dispatcher1 = TestDispatcher();
             IChannelConsumer consumer = new ChannelConsumer(dispatcher1);
 
             IMultiplexer multiplexer = new RoundRobinQueueMultiplexer(NullLoggerFactory.Instance);
@@ -124,8 +125,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var buffer2 = new DownloadBuffer(10, sqsQueue2);
 
             // using 2 dispatchers for logging, they should be the same/stateless
-            IMessageDispatcher dispatcher1 = new LoggingDispatcher(_testOutputHelper.ToLogger<LoggingDispatcher>(), "one");
-            IMessageDispatcher dispatcher2 = new LoggingDispatcher(_testOutputHelper.ToLogger<LoggingDispatcher>(), "two");
+            IMessageDispatcher dispatcher1 = TestDispatcher();
+            IMessageDispatcher dispatcher2 = TestDispatcher();
             IChannelConsumer consumer1 = new ChannelConsumer(dispatcher1);
             IChannelConsumer consumer2 = new ChannelConsumer(dispatcher2);
 
@@ -156,53 +157,103 @@ namespace JustSaying.UnitTests.Messaging.Channels
             await multiplexerTask;
         }
 
-        private static ISqsQueue TestQueue(string prefix)
+        [Fact]
+        public async Task All_Messages_Are_Processed()
         {
-            var sqsQueueMock = new Mock<ISqsQueue>();
-            sqsQueueMock.Setup(q => q.GetMessages(It.IsAny<int>(), It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
-                .Returns(async () =>
-                {
-                    await Task.Delay(5).ConfigureAwait(false);
-                    return new List<Message>
-                    {
-                        new TestMessage { Body = prefix },
-                    };
-                });
+            int messagesFromQueue = 0;
+            int messagesDispatched = 0;
+            var sqsQueue = TestQueue("one", () => messagesFromQueue++);
+            var buffer = new DownloadBuffer(10, sqsQueue);
+            IMessageDispatcher dispatcher = TestDispatcher(() => messagesDispatched++);
+            IChannelConsumer consumer = new ChannelConsumer(dispatcher);
+            IMultiplexer multiplexer = new RoundRobinQueueMultiplexer(NullLoggerFactory.Instance);
 
-            return sqsQueueMock.Object;
+            multiplexer.ReadFrom(buffer.Reader);
+            consumer.ConsumeFrom(multiplexer.Messages());
+
+            // need to start the multiplexer before calling Messages
+            var multiplexerTask = multiplexer.Start();
+
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeSpan.FromSeconds(2));
+
+            // consumer
+            var t1 = consumer.Start();
+
+            await buffer.Start(cts.Token);
+
+            await Task.WhenAll(multiplexerTask, t1);
+
+            messagesDispatched.ShouldBe(messagesFromQueue);
         }
 
-        private async Task Listen(IAsyncEnumerable<IQueueMessageContext> messages, string prefix)
+        [Fact]
+        public async Task Consumer_Not_Started_No_Buffer_Filled_Then_No_More_Messages_Requested()
         {
-            await foreach (var msg in messages)
+            int messagesFromQueue = 0;
+            int messagesDispatched = 0;
+            var sqsQueue = TestQueue("one", () => messagesFromQueue++);
+            var buffer = new DownloadBuffer(10, sqsQueue);
+            IMessageDispatcher dispatcher = TestDispatcher(() => messagesDispatched++);
+            IChannelConsumer consumer = new ChannelConsumer(dispatcher);
+            IMultiplexer multiplexer = new RoundRobinQueueMultiplexer(NullLoggerFactory.Instance);
+
+            multiplexer.ReadFrom(buffer.Reader);
+            consumer.ConsumeFrom(multiplexer.Messages());
+
+            // need to start the multiplexer before calling Messages
+            var multiplexerTask = multiplexer.Start();
+
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeSpan.FromSeconds(2));
+
+            await buffer.Start(cts.Token);
+
+            messagesFromQueue.ShouldBe(21);
+            messagesDispatched.ShouldBe(0);
+
+            var t1 = consumer.Start();
+
+            await Task.WhenAll(multiplexerTask, t1);
+
+            messagesFromQueue.ShouldBe(21);
+            messagesDispatched.ShouldBe(21);
+        }
+
+        private static ISqsQueue TestQueue(string prefix, Action spy = null)
+        {
+            async Task<IList<Message>> GetMessages()
             {
-                var mes = msg.Message?.ToString();
-                _testOutputHelper.WriteLine($"{prefix}-{mes}");
                 await Task.Delay(5).ConfigureAwait(false);
+                spy?.Invoke();
+                return new List<Message>
+                {
+                    new TestMessage { Body = prefix },
+                };
             }
+
+            ISqsQueue sqsQueueMock = Substitute.For<ISqsQueue>();
+            sqsQueueMock
+                .GetMessages(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
+                .Returns(async _ => await GetMessages());
+
+            return sqsQueueMock;
         }
 
-        private class LoggingDispatcher : IMessageDispatcher
+        private static IMessageDispatcher TestDispatcher(Action spy = null)
         {
-            private readonly ILogger _logger;
-            private readonly string _prefix;
-
-            public LoggingDispatcher(
-                ILogger logger,
-                string prefix)
+            async Task OnDispatchMessage()
             {
-                _logger = logger;
-                _prefix = prefix;
+                await Task.Delay(5).ConfigureAwait(false);
+                spy?.Invoke();
             }
 
-            public Task DispatchMessage(IQueueMessageContext messageContext, CancellationToken cancellationToken)
-            {
-                // get message type
-                // find type in HandlerMap
+            IMessageDispatcher dispatcherMock = Substitute.For<IMessageDispatcher>();
+            dispatcherMock
+                .DispatchMessage(Arg.Any<IQueueMessageContext>(), Arg.Any<CancellationToken>())
+                .Returns(async _ => await OnDispatchMessage());
 
-                _logger.LogInformation($"Dispatcher {_prefix} got message '{messageContext.Message}'");
-                return Task.CompletedTask;
-            }
+            return dispatcherMock;
         }
 
         private class TestMessage : Message
