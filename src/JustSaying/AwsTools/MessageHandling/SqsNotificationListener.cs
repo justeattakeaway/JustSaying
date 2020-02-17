@@ -16,6 +16,40 @@ using Message = JustSaying.Models.Message;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
+    public class MessageDispatcherFactory
+    {
+        private readonly IMessageSerializationRegister _serializationRegister;
+        private readonly IMessageMonitor _messagingMonitor;
+        private readonly Action<Exception, Amazon.SQS.Model.Message> _onError;
+        private readonly HandlerMap _handlerMap;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly IMessageBackoffStrategy _messageBackoffStrategy;
+        private readonly IMessageContextAccessor _messageContextAccessor;
+
+        public MessageDispatcherFactory(IMessageSerializationRegister serializationRegister, IMessageMonitor messagingMonitor, Action<Exception, Amazon.SQS.Model.Message> onError, HandlerMap handlerMap, ILoggerFactory loggerFactory, IMessageBackoffStrategy messageBackoffStrategy, IMessageContextAccessor messageContextAccessor)
+        {
+            _serializationRegister = serializationRegister;
+            _messagingMonitor = messagingMonitor;
+            _onError = onError;
+            _handlerMap = handlerMap;
+            _loggerFactory = loggerFactory;
+            _messageBackoffStrategy = messageBackoffStrategy;
+            _messageContextAccessor = messageContextAccessor;
+        }
+
+        IMessageDispatcher Create()
+        {
+            return new MessageDispatcher(
+                _serializationRegister,
+                _messagingMonitor,
+                _onError,
+                _handlerMap,
+                _loggerFactory,
+                _messageBackoffStrategy,
+                _messageContextAccessor);
+        }
+    }
+
     public class SqsNotificationListener : INotificationSubscriber
     {
         private readonly ISqsQueue _queue;
@@ -25,7 +59,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly MessageDispatcher _messageDispatcher;
         private readonly MessageHandlerWrapper _messageHandlerWrapper;
         private IMessageProcessingStrategy _messageProcessingStrategy;
-        private readonly HandlerMap _handlerMap = new HandlerMap();
+        private readonly HandlerMap _handlerMap;
 
         private readonly ILogger _log;
 
@@ -36,6 +70,7 @@ namespace JustSaying.AwsTools.MessageHandling
             IMessageSerializationRegister serializationRegister,
             IMessageMonitor messagingMonitor,
             ILoggerFactory loggerFactory,
+            HandlerMap handlerMap,
             IMessageContextAccessor messageContextAccessor,
             Action<Exception, Amazon.SQS.Model.Message> onError = null,
             IMessageLockAsync messageLock = null,
@@ -43,6 +78,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             _queue = queue;
             _messagingMonitor = messagingMonitor;
+            _handlerMap = handlerMap;
             onError ??= DefaultErrorHandler;
             _log = loggerFactory.CreateLogger("JustSaying");
 

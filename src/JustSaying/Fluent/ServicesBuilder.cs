@@ -1,4 +1,5 @@
 using System;
+using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
@@ -57,6 +58,8 @@ namespace JustSaying.Fluent
         /// Gets or sets a delegate to a method to create the <see cref="MessageContextAccessor"/> to use.
         /// </summary>
         internal Func<IMessageContextAccessor> MessageContextAccessor { get; private set; }
+
+        internal Func<IConsumerBus> ConsumerBus { get; private set; }
 
         /// <summary>
         /// Specifies the <see cref="IHandlerResolver"/> to use.

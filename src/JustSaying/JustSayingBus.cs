@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Interrogation;
@@ -30,20 +31,23 @@ namespace JustSaying
             get { return _monitor; }
             set { _monitor = value ?? new NullOpMessageMonitor(); }
         }
+        public IConsumerBus ConsumerBus { get; }
         public IMessageSerializationRegister SerializationRegister { get; private set; }
         public IMessageLockAsync MessageLock { get; set; }
         public IMessageContextAccessor MessageContextAccessor { get; set; }
+        public HandlerMap HandlerMap { get; private set; }
 
         private readonly ILogger _log;
 
         private readonly object _syncRoot = new object();
         private readonly ICollection<IPublisher> _publishers;
         private readonly ICollection<ISubscriber> _subscribers;
-        private ConsumerBus _consumerBus;
+        private ILoggerFactory _loggerFactory;
 
         public JustSayingBus(IMessagingConfig config, IMessageSerializationRegister serializationRegister, ILoggerFactory loggerFactory)
         {
-            _log = loggerFactory.CreateLogger("JustSaying");
+            _loggerFactory = loggerFactory;
+            _log = _loggerFactory.CreateLogger("JustSaying");
 
             Config = config;
             Monitor = new NullOpMessageMonitor();
@@ -55,7 +59,11 @@ namespace JustSaying
             _publishers = new HashSet<IPublisher>();
             _subscribers = new HashSet<ISubscriber>();
 
-            _consumerBus = new ConsumerBus();
+            HandlerMap = new HandlerMap();
+            var dispatcher = new MessageDispatcher(serializationRegister, Monitor, null,
+                HandlerMap, loggerFactory, null, MessageContextAccessor);
+            var consumerFactory = new ConsumerFactory(dispatcher);
+            ConsumerBus = new ConsumerBus(loggerFactory, consumerFactory);
         }
 
         public void AddNotificationSubscriber(string region, INotificationSubscriber subscriber)
@@ -95,9 +103,13 @@ namespace JustSaying
 
         public void AddMessageHandler<T>(string region, string queue, Func<IHandlerAsync<T>> futureHandler) where T : Message
         {
-            var subscribersByRegion = _subscribersByRegionAndQueue[region];
+            var handler = new MessageHandlerWrapper(MessageLock, Monitor, _loggerFactory);
+            var handlerFunc = handler.WrapMessageHandler(futureHandler);
+            HandlerMap.Add(typeof(T), handlerFunc);
+
+            /*var subscribersByRegion = _subscribersByRegionAndQueue[region];
             var subscriber = subscribersByRegion[queue];
-            subscriber.AddMessageHandler(futureHandler);
+            subscriber.AddMessageHandler(futureHandler);*/
         }
 
         public void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message
@@ -128,6 +140,9 @@ namespace JustSaying
 
             lock (_syncRoot)
             {
+                ConsumerBus.Start(5, cancellationToken);
+
+                /*
                 foreach (var regionSubscriber in _subscribersByRegionAndQueue)
                 {
                     foreach (var queueSubscriber in regionSubscriber.Value)
@@ -139,7 +154,7 @@ namespace JustSaying
 
                         queueSubscriber.Value.Listen(cancellationToken);
                     }
-                }
+                }*/
             }
         }
 

@@ -8,7 +8,7 @@ namespace JustSaying.Messaging.Channels
     internal interface IChannelConsumer
     {
         Task Start();
-        void ConsumeFrom(IAsyncEnumerable<IQueueMessageContext> messageSource);
+        IChannelConsumer ConsumeFrom(IAsyncEnumerable<IQueueMessageContext> messageSource);
     }
 
     internal class ChannelConsumer : IChannelConsumer
@@ -21,9 +21,10 @@ namespace JustSaying.Messaging.Channels
             _dispatcher = dispatcher;
         }
 
-        public void ConsumeFrom(IAsyncEnumerable<IQueueMessageContext> messageSource)
+        public IChannelConsumer ConsumeFrom(IAsyncEnumerable<IQueueMessageContext> messageSource)
         {
             _messageSource = messageSource;
+            return this;
         }
 
         public async Task Start()

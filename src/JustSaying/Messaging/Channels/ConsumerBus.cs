@@ -1,17 +1,30 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace JustSaying.Messaging.Channels
 {
-    internal class ConsumerBus
+    public interface IConsumerBus
     {
-        private readonly IMultiplexer _multiplexer;
-        private IList<IDownloadBuffer> _downloadBuffers;
+        void AddDownloadBuffer(IDownloadBuffer downloadBuffer);
+        void Start(int numberOfConsumers, CancellationToken stoppingToken);
+    }
 
-        public ConsumerBus(ILoggerFactory loggerFactory)
+    internal class ConsumerBus : IConsumerBus
+    {
+        private readonly IConsumerFactory _consumerFactory;
+        private readonly IMultiplexer _multiplexer;
+        private readonly IList<IDownloadBuffer> _downloadBuffers;
+        private readonly ILogger _logger;
+
+        public ConsumerBus(ILoggerFactory loggerFactory, IConsumerFactory consumerFactory)
         {
+            _logger = loggerFactory.CreateLogger<ConsumerBus>();
+            _consumerFactory = consumerFactory;
             _multiplexer = new RoundRobinQueueMultiplexer(loggerFactory);
             _downloadBuffers = new List<IDownloadBuffer>();
         }
@@ -21,37 +34,29 @@ namespace JustSaying.Messaging.Channels
             _downloadBuffers.Add(downloadBuffer);
         }
 
-        public void Start(CancellationToken stoppingToken)
+        public void Start(int numberOfConsumers, CancellationToken stoppingToken)
         {
-            // creates and owns core channel
-
-            // create download buffers (one-per-queue)
-            // create n consumers (defined by config)
-
             // link download buffers to core channel
+            foreach (var buffer in _downloadBuffers)
+            {
+                _multiplexer.ReadFrom(buffer.Reader);
+            }
+
+            // create n consumers (defined by config)
             // link consumers to core channel
+            var consumers = Enumerable.Range(0, numberOfConsumers)
+                .Select(x => _consumerFactory.CreateConsumer()
+                    .ConsumeFrom(_multiplexer.Messages()));
 
-            // start()
+            _logger.LogInformation("Starting up consumer bus with {ConsumerCount} consumers and {DownloadBufferCount} downloaders",
+                 numberOfConsumers, _downloadBuffers.Count);
 
-            var loggerFactory = new NullLoggerFactory();
+            // start
+            _multiplexer.Start();
+            foreach (var consumer in consumers) consumer.Start();
+            foreach (var buffer in _downloadBuffers) buffer.Start(stoppingToken);
 
-            IDownloadBuffer buffer1 = null;
-            IDownloadBuffer buffer2 = null;
-            IChannelConsumer consumer1 = null;
-            IChannelConsumer consumer2 = null;
-
-            _multiplexer.ReadFrom(buffer1.Reader);
-            _multiplexer.ReadFrom(buffer2.Reader);
-
-            consumer1.ConsumeFrom(_multiplexer.Messages());
-            consumer2.ConsumeFrom(_multiplexer.Messages());
-
-            consumer1.Start();
-            consumer2.Start();
-            multiplexer.Start();
-
-            buffer1.Start(stoppingToken);
-            buffer2.Start(stoppingToken);
+            _logger.LogInformation("Consumer bus successfully started");
         }
     }
 }

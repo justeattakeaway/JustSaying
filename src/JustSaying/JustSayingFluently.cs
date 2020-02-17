@@ -39,6 +39,7 @@ namespace JustSaying
         private IMessageSerializationFactory _serializationFactory;
         private readonly ILoggerFactory _loggerFactory;
 
+
         protected internal JustSayingFluently(
             IAmJustSaying bus,
             IVerifyAmazonQueues queueCreator,
@@ -50,6 +51,7 @@ namespace JustSaying
             Bus = bus;
             _amazonQueueCreator = queueCreator;
             _awsClientFactoryProxy = awsClientFactoryProxy;
+
         }
 
         /// <summary>
@@ -291,7 +293,7 @@ namespace JustSaying
                     _subscriptionConfig,
                     Bus.Config.MessageSubjectProvider).GetAwaiter().GetResult();
 
-                CreateSubscriptionListener<T>(region, queue);
+                CreateSubscriptionListener<T>(queue);
 
                 _log.LogInformation(
                     "Created SQS topic subscription on topic '{TopicName}' and queue '{QueueName}'.",
@@ -311,7 +313,7 @@ namespace JustSaying
                 // TODO Make this async and remove GetAwaiter().GetResult() call
                 var queue = _amazonQueueCreator.EnsureQueueExistsAsync(region, _subscriptionConfig).GetAwaiter().GetResult();
 
-                CreateSubscriptionListener<T>(region, queue);
+                CreateSubscriptionListener<T>(queue);
 
                 _log.LogInformation(
                     "Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",
@@ -324,31 +326,34 @@ namespace JustSaying
 
         protected INotificationSubscriber CreateSubscriber(SqsQueueBase queue)
         {
-
-
             return new SqsNotificationListener(
                 queue,
                 Bus.SerializationRegister,
                 Bus.Monitor,
                 _loggerFactory,
+                Bus.HandlerMap,
                 Bus.MessageContextAccessor,
                 _subscriptionConfig.OnError,
                 Bus.MessageLock,
                 _subscriptionConfig.MessageBackoffStrategy);
         }
 
-        private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue)
+        private void CreateSubscriptionListener<T>(SqsQueueBase queue)
             where T : Message
         {
-            INotificationSubscriber subscriber = CreateSubscriber(queue);
+            //INotificationSubscriber subscriber = CreateSubscriber(queue);
 
-            subscriber.Subscribers.Add(new Subscriber(typeof(T)));
+            var downloader = new DownloadBuffer(10, queue);
 
-            Bus.AddNotificationSubscriber(region, subscriber);
+            Bus.ConsumerBus.AddDownloadBuffer(downloader);
+
+            //subscriber.Subscribers.Add(new Subscriber(typeof(T)));
+
+            //Bus.AddNotificationSubscriber(region, subscriber);
 
             // TODO Concrete type check for backwards compatibility for now.
             // Refactor the interface for v7 to allow this to be done against the interface.
-            if (subscriber is SqsNotificationListener sqsSubscriptionListener)
+            /*if (subscriber is SqsNotificationListener sqsSubscriptionListener)
             {
                 if (_subscriptionConfig.MaxAllowedMessagesInFlight.HasValue)
                 {
@@ -359,7 +364,7 @@ namespace JustSaying
                 {
                     sqsSubscriptionListener.WithMessageProcessingStrategy(_subscriptionConfig.MessageProcessingStrategy);
                 }
-            }
+            }*/
         }
 
         private void ConfigureSqsSubscriptionViaTopic()

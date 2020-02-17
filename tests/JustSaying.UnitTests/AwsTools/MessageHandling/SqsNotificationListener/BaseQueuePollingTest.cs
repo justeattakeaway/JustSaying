@@ -69,7 +69,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
             var queue = new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri(QueueUrl), Sqs, LoggerFactory);
             var listener = new JustSaying.AwsTools.MessageHandling.SqsNotificationListener(
                 queue, SerializationRegister, Monitor, LoggerFactory,
-                Substitute.For<IMessageContextAccessor>(),
+                new HandlerMap(), Substitute.For<IMessageContextAccessor>(),
                 null, MessageLock);
             return listener;
         }

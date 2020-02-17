@@ -29,6 +29,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
                 null,
                 Substitute.For<IMessageMonitor>(),
                 Substitute.For<ILoggerFactory>(),
+                new HandlerMap(),
                 Substitute.For<IMessageContextAccessor>());
             return listener;
         }

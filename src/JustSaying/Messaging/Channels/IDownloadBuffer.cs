@@ -7,7 +7,7 @@ using JustSaying.AwsTools.MessageHandling;
 
 namespace JustSaying.Messaging.Channels
 {
-    internal interface IDownloadBuffer
+    public interface IDownloadBuffer
     {
         Task Start(CancellationToken stoppingToken);
         ChannelReader<IQueueMessageContext> Reader { get; }
