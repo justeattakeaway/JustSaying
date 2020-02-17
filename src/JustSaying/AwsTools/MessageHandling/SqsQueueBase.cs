@@ -184,7 +184,7 @@ namespace JustSaying.AwsTools.MessageHandling
             };
         }
 
-        public async Task<Message[]> GetMessages(
+        public async Task<IList<Message>> GetMessages(
             int count,
             List<string> requestMessageAttributeNames,
             CancellationToken cancellationToken)

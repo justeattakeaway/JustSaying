@@ -14,7 +14,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         Uri Uri { get; }
 
-        Task<Message[]> GetMessages(int count, List<string> requestMessageAttributeNames, CancellationToken cancellationToken);
+        Task<IList<Message>> GetMessages(int count, List<string> requestMessageAttributeNames, CancellationToken cancellationToken);
 
         Task<ReceiveMessageResponse> GetMessages(ReceiveMessageRequest request, CancellationToken cancellationToken);
 

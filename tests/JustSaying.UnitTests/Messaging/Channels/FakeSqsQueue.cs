@@ -31,14 +31,14 @@ namespace JustSaying.UnitTests.Messaging.Channels
         public string QueueName { get; }
         public string RegionSystemName { get; }
         public Uri Uri { get; }
-        public Task<Message[]> GetMessages(int count, List<string> requestMessageAttributeNames, CancellationToken cancellationToken)
+        public Task<IList<Message>> GetMessages(int count, List<string> requestMessageAttributeNames, CancellationToken cancellationToken)
         {
             var messages = Enumerable.Range(0, count).Select(x => new TestMessage
             {
                 Body = Guid.NewGuid().ToString()
             }).Cast<Message>().ToArray();
             SentMessages.AddRange(messages);
-            return Task.FromResult(messages);
+            return Task.FromResult((IList<Message>)messages.ToList());
         }
 
         public Task<ReceiveMessageResponse> GetMessages(ReceiveMessageRequest request, CancellationToken cancellationToken)

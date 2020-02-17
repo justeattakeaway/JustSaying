@@ -163,7 +163,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             int messagesFromQueue = 0;
             int messagesDispatched = 0;
             var sqsQueue = TestQueue("one", () => messagesFromQueue++);
-            var buffer = new DownloadBuffer(10, sqsQueue);
+            
+            IDownloadBuffer buffer = new DownloadBuffer(10, sqsQueue);
             IMessageDispatcher dispatcher = TestDispatcher(() => messagesDispatched++);
             IChannelConsumer consumer = new ChannelConsumer(dispatcher);
             IMultiplexer multiplexer = new RoundRobinQueueMultiplexer(NullLoggerFactory.Instance);
