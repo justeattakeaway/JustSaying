@@ -204,7 +204,6 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var buffer3 = new DownloadBuffer(10, sqsQueue3);
             var buffer4 = new DownloadBuffer(10, sqsQueue4);
 
-            // using 2 dispatchers for logging, they should be the same/stateless
             IMessageDispatcher dispatcher1 = TestDispatcher(() => Interlocked.Increment(ref messagesDispatched));
             IChannelConsumer consumer1 = new ChannelConsumer(dispatcher1);
             IChannelConsumer consumer2 = new ChannelConsumer(dispatcher1);
