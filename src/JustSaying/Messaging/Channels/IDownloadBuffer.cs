@@ -42,10 +42,10 @@ namespace JustSaying.Messaging.Channels
                 {
                     // we don't want to pass the stoppingToken here because
                     // we want to process any messages queued messages before stopping
-                    using var cts = new CancellationTokenSource();
-                    cts.CancelAfter(TimeSpan.FromSeconds(2));
+                    using var timeoutToken = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+                    var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, stoppingToken);
 
-                    bool writePermitted = await writer.WaitToWriteAsync(cts.Token);
+                    bool writePermitted = await writer.WaitToWriteAsync(linkedCts.Token);
                     if (!writePermitted)
                     {
                         break;
@@ -57,7 +57,8 @@ namespace JustSaying.Messaging.Channels
                     continue;
                 }
 
-                var messages = await _sqsQueue.GetMessages(_bufferLength, _requestMessageAttributeNames, stoppingToken).ConfigureAwait(false);
+                var messages = await _sqsQueue.GetMessages(_bufferLength, _requestMessageAttributeNames, stoppingToken)
+                    .ConfigureAwait(false);
                 if (messages == null) continue;
 
                 foreach (var message in messages)

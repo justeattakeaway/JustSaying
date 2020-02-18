@@ -140,7 +140,7 @@ namespace JustSaying
 
             lock (_syncRoot)
             {
-                ConsumerBus.Start(5, cancellationToken);
+                ConsumerBus.Start(numberOfConsumers: 5, cancellationToken);
 
                 /*
                 foreach (var regionSubscriber in _subscribersByRegionAndQueue)
