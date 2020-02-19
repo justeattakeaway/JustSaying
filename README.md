@@ -215,9 +215,9 @@ JustSaying requires the following IAM actions to run smoothly;
 // SNS
 sns:CreateTopic
 sns:ListTopics
+sns:Publish
 sns:SetSubscriptionAttributes
 sns:Subscribe
-sns:Publish
 
 // SQS
 sqs:ChangeMessageVisibility
