@@ -217,6 +217,7 @@ sns:CreateTopic
 sns:ListTopics
 sns:SetSubscriptionAttributes
 sns:Subscribe
+sns:Publish
 
 // SQS
 sqs:ChangeMessageVisibility
