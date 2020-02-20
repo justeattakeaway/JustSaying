@@ -14,13 +14,15 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
 
         /// <summary>
         /// Handles messages of type OrderPlacedEvent
-        /// Takes a dependency on IMessagePublisher so that further messages can be published 
+        /// Takes a dependency on IMessagePublisher so that further messages can be published
         /// </summary>
         public OrderPlacedEventHandler(IMessagePublisher publisher, ILogger<OrderPlacedEventHandler> log)
         {
             _publisher = publisher;
             _logger = log;
         }
+
+        private static Random R => new Random();
 
         public async Task<bool> Handle(OrderPlacedEvent message)
         {
@@ -40,6 +42,8 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
                 // Intentionally left empty for the sake of this being a sample application
 
                 _logger.LogInformation("Order {orderId} ready", message.OrderId);
+
+                await Task.Delay(R.Next(50, 100));
 
                 var orderReadyEvent = new OrderReadyEvent
                 {

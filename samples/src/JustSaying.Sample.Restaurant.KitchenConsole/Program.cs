@@ -1,10 +1,12 @@
 using System;
 using System.Threading.Tasks;
+using JustSaying.AwsTools;
 using JustSaying.Sample.Restaurant.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace JustSaying.Sample.Restaurant.KitchenConsole
 {
@@ -12,6 +14,13 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
     {
         public static async Task Main()
         {
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Seq("http://localhost:5341")
+                .WriteTo.Console()
+                .MinimumLevel.Debug()
+                .Enrich.WithProperty("AppName", nameof(KitchenConsole))
+                .CreateLogger();
+
             Console.Title = "KitchenConsole";
 
             await new HostBuilder()
@@ -21,7 +30,7 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
                     config.AddJsonFile($"appsettings.{hostContext.HostingEnvironment.EnvironmentName}.json", optional: true);
                     config.AddEnvironmentVariables();
                 })
-               .ConfigureLogging(loggingBuilder => loggingBuilder.AddConsole())
+                .UseSerilog()
                .ConfigureServices((hostContext, services) =>
                {
                    var configuration = hostContext.Configuration;

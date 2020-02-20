@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels
@@ -57,7 +58,11 @@ namespace JustSaying.Messaging.Channels
             if (_started) return;
             _started = true;
 
-            _targetChannel = Channel.CreateBounded<IQueueMessageContext>(_readers.Count * 10);
+            var channelCapacity = _readers.Count * 10;
+            _targetChannel = Channel.CreateBounded<IQueueMessageContext>(channelCapacity);
+
+            _logger.LogInformation("Starting up channel multiplexer with a queue capacity of {Capacity}",
+                channelCapacity);
 
             var writer = _targetChannel.Writer;
             await Task.Run(async () =>
@@ -91,8 +96,14 @@ namespace JustSaying.Messaging.Channels
             if (!_started)
                 throw new InvalidOperationException("Multiplexer not started");
 
-            while (await _targetChannel.Reader.WaitToReadAsync())
+            while (true)
             {
+                using (_logger.TimedOperation("Waiting for messages to arrive to the multiplexer channel"))
+                {
+                    var couldWait = await _targetChannel.Reader.WaitToReadAsync();
+                    if (!couldWait) break;
+                }
+
                 while (_targetChannel.Reader.TryRead(out var message))
                     yield return message;
             }

@@ -343,7 +343,7 @@ namespace JustSaying
         {
             //INotificationSubscriber subscriber = CreateSubscriber(queue);
 
-            var downloader = new DownloadBuffer(bufferLength: 10, queue);
+            var downloader = new DownloadBuffer(bufferLength: 10, queue, _loggerFactory);
 
             Bus.ConsumerBus.AddDownloadBuffer(downloader);
 

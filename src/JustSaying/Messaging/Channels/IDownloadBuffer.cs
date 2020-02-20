@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.Monitoring;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels
 {
@@ -18,6 +21,7 @@ namespace JustSaying.Messaging.Channels
         private readonly Channel<IQueueMessageContext> _channel;
         private readonly int _bufferLength;
         private readonly ISqsQueue _sqsQueue;
+        private readonly ILogger _logger;
 
         // todo: add logic around populating this
         private readonly List<string> _requestMessageAttributeNames = new List<string>();
@@ -26,10 +30,12 @@ namespace JustSaying.Messaging.Channels
 
         public DownloadBuffer(
             int bufferLength,
-            ISqsQueue sqsQueue)
+            ISqsQueue sqsQueue,
+            ILoggerFactory logger)
         {
             _bufferLength = bufferLength;
             _sqsQueue = sqsQueue;
+            _logger = logger.CreateLogger<IDownloadBuffer>();
             _channel = Channel.CreateBounded<IQueueMessageContext>(bufferLength);
         }
 
@@ -45,10 +51,13 @@ namespace JustSaying.Messaging.Channels
                     using var timeoutToken = new CancellationTokenSource(TimeSpan.FromSeconds(2));
                     var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, stoppingToken);
 
-                    bool writePermitted = await writer.WaitToWriteAsync(linkedCts.Token);
-                    if (!writePermitted)
+                    using (_logger.TimedOperation("Downloader waiting for buffer to empty before writing"))
                     {
-                        break;
+                        bool writePermitted = await writer.WaitToWriteAsync(linkedCts.Token);
+                        if (!writePermitted)
+                        {
+                            break;
+                        }
                     }
                 }
                 catch (OperationCanceledException)
@@ -57,9 +66,16 @@ namespace JustSaying.Messaging.Channels
                     continue;
                 }
 
-                var messages = await _sqsQueue.GetMessages(_bufferLength, _requestMessageAttributeNames, stoppingToken)
-                    .ConfigureAwait(false);
-                if (messages == null) continue;
+                if (stoppingToken.IsCancellationRequested) break;
+
+                IList<Message> messages;
+                using (_logger.TimedOperation("Receiving messages from SQS for queue {QueueName}", _sqsQueue.QueueName))
+                {
+                    messages = await _sqsQueue
+                        .GetMessages(_bufferLength, _requestMessageAttributeNames, stoppingToken)
+                        .ConfigureAwait(false);
+                    if (messages == null) continue;
+                }
 
                 foreach (var message in messages)
                 {
@@ -67,6 +83,8 @@ namespace JustSaying.Messaging.Channels
                     await writer.WriteAsync(messageContext).ConfigureAwait(false);
                 }
             }
+
+            _logger.LogInformation("Downloader for queue {QueueName} has completed, shutting down channel...", _sqsQueue.Uri);
 
             writer.Complete();
         }

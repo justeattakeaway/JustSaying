@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Sample.Restaurant.Models;
@@ -14,12 +15,14 @@ namespace JustSaying.Sample.Restaurant.OrderingApi.Handlers
             _log = log;
         }
 
-        public Task<bool> Handle(OrderReadyEvent message)
+        public async Task<bool> Handle(OrderReadyEvent message)
         {
             _log.LogInformation("Order {orderId} ready", message.OrderId);
 
             // This is where you would actually handle the order placement
             // Intentionally left empty for the sake of this being a sample application
+
+            await Task.Delay(R.Next(50, 100));
 
             // Returning true would indicate:
             //   The message was handled successfully
@@ -28,7 +31,9 @@ namespace JustSaying.Sample.Restaurant.OrderingApi.Handlers
             //   The message was not handled successfully
             //   The message handling should be retried (configured by default)
             //   The message should be moved to the error queue if all retries fail
-            return Task.FromResult(true);
+            return true;
         }
+
+        private static Random R => new Random();
     }
 }

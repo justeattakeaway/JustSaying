@@ -1,3 +1,4 @@
+using JustSaying.AwsTools;
 using JustSaying.Sample.Restaurant.Models;
 using JustSaying.Sample.Restaurant.OrderingApi.Handlers;
 using Microsoft.AspNetCore.Builder;
@@ -5,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
+using Serilog;
 
 namespace JustSaying.Sample.Restaurant.OrderingApi
 {
@@ -78,6 +80,8 @@ namespace JustSaying.Sample.Restaurant.OrderingApi
         public static void Configure(IApplicationBuilder app)
         {
             app.UseDeveloperExceptionPage();
+
+            app.UseSerilogRequestLogging();
 
             app.UseRouting();
             app.UseEndpoints((endpoints) => endpoints.MapDefaultControllerRoute());

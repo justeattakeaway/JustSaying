@@ -157,7 +157,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             watch.Stop();
 
-            _logger.LogTrace(
+            _logger.LogDebug(
                 "Handled message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}.",
                 message.Id,
                 messageType,

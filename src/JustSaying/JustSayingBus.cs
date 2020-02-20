@@ -62,7 +62,7 @@ namespace JustSaying
             HandlerMap = new HandlerMap();
             var dispatcher = new MessageDispatcher(serializationRegister, Monitor, null,
                 HandlerMap, loggerFactory, null, MessageContextAccessor);
-            var consumerFactory = new ConsumerFactory(dispatcher);
+            var consumerFactory = new ConsumerFactory(dispatcher, _loggerFactory);
             ConsumerBus = new ConsumerBus(loggerFactory, consumerFactory);
         }
 
@@ -140,7 +140,7 @@ namespace JustSaying
 
             lock (_syncRoot)
             {
-                ConsumerBus.Start(numberOfConsumers: 5, cancellationToken);
+                ConsumerBus.Start(numberOfConsumers: 2, cancellationToken);
 
                 /*
                 foreach (var regionSubscriber in _subscribersByRegionAndQueue)

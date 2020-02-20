@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -20,6 +21,7 @@ namespace JustSaying.Messaging.Channels
         private readonly IMultiplexer _multiplexer;
         private readonly IList<IDownloadBuffer> _downloadBuffers;
         private readonly ILogger _logger;
+        private Task _completionTask;
 
         public ConsumerBus(ILoggerFactory loggerFactory, IConsumerFactory consumerFactory)
         {
@@ -52,11 +54,17 @@ namespace JustSaying.Messaging.Channels
                  numberOfConsumers, _downloadBuffers.Count);
 
             // start
-            _multiplexer.Start();
-            foreach (var consumer in consumers) consumer.Start();
-            foreach (var buffer in _downloadBuffers) buffer.Start(stoppingToken);
+            var startTasks = new List<Task>();
+            startTasks.Add(_multiplexer.Start());
+
+            startTasks.AddRange(consumers.Select(x => x.Start()));
+            startTasks.AddRange(_downloadBuffers.Select(x => x.Start(stoppingToken)));
 
             _logger.LogInformation("Consumer bus successfully started");
+
+            _completionTask = Task.WhenAll(startTasks);
         }
+
+        public Task Completion => _completionTask;
     }
 }

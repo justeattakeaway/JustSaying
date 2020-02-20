@@ -12,6 +12,8 @@ using NSubstitute;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
+// ReSharper disable PossibleNullReferenceException
+#pragma warning disable 4014
 
 namespace JustSaying.UnitTests.Messaging.Channels
 {
@@ -28,9 +30,9 @@ namespace JustSaying.UnitTests.Messaging.Channels
         public async Task QueueCanBeAssignedToOnePump()
         {
             var sqsQueue = TestQueue("one");
-            var buffer = new DownloadBuffer(10, sqsQueue);
+            var buffer = new DownloadBuffer(10, sqsQueue, NullLoggerFactory.Instance);
             IMessageDispatcher dispatcher = TestDispatcher();
-            IChannelConsumer consumer = new ChannelConsumer(dispatcher);
+            IChannelConsumer consumer = new ChannelConsumer(dispatcher, NullLoggerFactory.Instance);
             IMultiplexer multiplexer = new RoundRobinQueueMultiplexer(NullLoggerFactory.Instance);
 
             multiplexer.ReadFrom(buffer.Reader);
@@ -54,13 +56,13 @@ namespace JustSaying.UnitTests.Messaging.Channels
         public async Task QueueCanBeAssignedToMultiplePumps()
         {
             var sqsQueue = TestQueue("one");
-            var buffer = new DownloadBuffer(10, sqsQueue);
+            var buffer = new DownloadBuffer(10, sqsQueue, NullLoggerFactory.Instance);
 
             // using 2 dispatchers for logging, they should be the same/stateless
             IMessageDispatcher dispatcher1 = TestDispatcher();
             IMessageDispatcher dispatcher2 = TestDispatcher();
-            IChannelConsumer consumer1 = new ChannelConsumer(dispatcher1);
-            IChannelConsumer consumer2 = new ChannelConsumer(dispatcher2);
+            IChannelConsumer consumer1 = new ChannelConsumer(dispatcher1, NullLoggerFactory.Instance);
+            IChannelConsumer consumer2 = new ChannelConsumer(dispatcher2, NullLoggerFactory.Instance);
 
             IMultiplexer multiplexer = new RoundRobinQueueMultiplexer(NullLoggerFactory.Instance);
 
@@ -87,11 +89,11 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             var sqsQueue1 = TestQueue("one");
             var sqsQueue2 = TestQueue("two");
-            var buffer1 = new DownloadBuffer(10, sqsQueue1);
-            var buffer2 = new DownloadBuffer(10, sqsQueue2);
+            var buffer1 = new DownloadBuffer(10, sqsQueue1, NullLoggerFactory.Instance);
+            var buffer2 = new DownloadBuffer(10, sqsQueue2, NullLoggerFactory.Instance);
 
             IMessageDispatcher dispatcher1 = TestDispatcher();
-            IChannelConsumer consumer = new ChannelConsumer(dispatcher1);
+            IChannelConsumer consumer = new ChannelConsumer(dispatcher1, NullLoggerFactory.Instance);
 
             IMultiplexer multiplexer = new RoundRobinQueueMultiplexer(NullLoggerFactory.Instance);
 
@@ -122,14 +124,14 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             var sqsQueue1 = TestQueue("one");
             var sqsQueue2 = TestQueue("two");
-            var buffer1 = new DownloadBuffer(10, sqsQueue1);
-            var buffer2 = new DownloadBuffer(10, sqsQueue2);
+            var buffer1 = new DownloadBuffer(10, sqsQueue1, NullLoggerFactory.Instance);
+            var buffer2 = new DownloadBuffer(10, sqsQueue2, NullLoggerFactory.Instance);
 
             // using 2 dispatchers for logging, they should be the same/stateless
             IMessageDispatcher dispatcher1 = TestDispatcher();
             IMessageDispatcher dispatcher2 = TestDispatcher();
-            IChannelConsumer consumer1 = new ChannelConsumer(dispatcher1);
-            IChannelConsumer consumer2 = new ChannelConsumer(dispatcher2);
+            IChannelConsumer consumer1 = new ChannelConsumer(dispatcher1, NullLoggerFactory.Instance);
+            IChannelConsumer consumer2 = new ChannelConsumer(dispatcher2, NullLoggerFactory.Instance);
 
             IMultiplexer multiplexer = new RoundRobinQueueMultiplexer(NullLoggerFactory.Instance);
 
@@ -165,9 +167,9 @@ namespace JustSaying.UnitTests.Messaging.Channels
             int messagesDispatched = 0;
             var sqsQueue = TestQueue("one", () => messagesFromQueue++);
 
-            IDownloadBuffer buffer = new DownloadBuffer(10, sqsQueue);
+            IDownloadBuffer buffer = new DownloadBuffer(10, sqsQueue, NullLoggerFactory.Instance);
             IMessageDispatcher dispatcher = TestDispatcher(() => messagesDispatched++);
-            IChannelConsumer consumer = new ChannelConsumer(dispatcher);
+            IChannelConsumer consumer = new ChannelConsumer(dispatcher, NullLoggerFactory.Instance);
             IMultiplexer multiplexer = new RoundRobinQueueMultiplexer(NullLoggerFactory.Instance);
 
             multiplexer.ReadFrom(buffer.Reader);
@@ -199,15 +201,15 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var sqsQueue2 = TestQueue("two", () => Interlocked.Increment(ref messagesSent));
             var sqsQueue3 = TestQueue("three", () => Interlocked.Increment(ref messagesSent));
             var sqsQueue4 = TestQueue("four", () => Interlocked.Increment(ref messagesSent));
-            var buffer1 = new DownloadBuffer(10, sqsQueue1);
-            var buffer2 = new DownloadBuffer(10, sqsQueue2);
-            var buffer3 = new DownloadBuffer(10, sqsQueue3);
-            var buffer4 = new DownloadBuffer(10, sqsQueue4);
+            var buffer1 = new DownloadBuffer(10, sqsQueue1, NullLoggerFactory.Instance);
+            var buffer2 = new DownloadBuffer(10, sqsQueue2, NullLoggerFactory.Instance);
+            var buffer3 = new DownloadBuffer(10, sqsQueue3, NullLoggerFactory.Instance);
+            var buffer4 = new DownloadBuffer(10, sqsQueue4, NullLoggerFactory.Instance);
 
             IMessageDispatcher dispatcher1 = TestDispatcher(() => Interlocked.Increment(ref messagesDispatched));
-            IChannelConsumer consumer1 = new ChannelConsumer(dispatcher1);
-            IChannelConsumer consumer2 = new ChannelConsumer(dispatcher1);
-            IChannelConsumer consumer3 = new ChannelConsumer(dispatcher1);
+            IChannelConsumer consumer1 = new ChannelConsumer(dispatcher1, NullLoggerFactory.Instance);
+            IChannelConsumer consumer2 = new ChannelConsumer(dispatcher1, NullLoggerFactory.Instance);
+            IChannelConsumer consumer3 = new ChannelConsumer(dispatcher1, NullLoggerFactory.Instance);
 
             IMultiplexer multiplexer = new RoundRobinQueueMultiplexer(NullLoggerFactory.Instance);
 
@@ -255,9 +257,9 @@ namespace JustSaying.UnitTests.Messaging.Channels
             int messagesFromQueue = 0;
             int messagesDispatched = 0;
             var sqsQueue = TestQueue("one", () => messagesFromQueue++);
-            var buffer = new DownloadBuffer(10, sqsQueue);
+            var buffer = new DownloadBuffer(10, sqsQueue, NullLoggerFactory.Instance);
             IMessageDispatcher dispatcher = TestDispatcher(() => messagesDispatched++);
-            IChannelConsumer consumer = new ChannelConsumer(dispatcher);
+            IChannelConsumer consumer = new ChannelConsumer(dispatcher, NullLoggerFactory.Instance);
             IMultiplexer multiplexer = new RoundRobinQueueMultiplexer(NullLoggerFactory.Instance);
 
             multiplexer.ReadFrom(buffer.Reader);
@@ -290,7 +292,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 spy?.Invoke();
                 return new List<Message>
                 {
-                    new TestMessage { Body = prefix },
+                    new TestMessage {Body = prefix},
                 };
             }
 
