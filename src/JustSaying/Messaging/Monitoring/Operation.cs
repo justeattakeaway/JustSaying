@@ -13,7 +13,7 @@ namespace JustSaying.Messaging.Monitoring
         }
     }
 
-    public class Operation : IDisposable
+    public sealed class Operation : IDisposable
     {
         private readonly Stopwatch _stopWatch;
         private readonly ILogger _logger;
@@ -32,15 +32,8 @@ namespace JustSaying.Messaging.Monitoring
 
         public void Dispose()
         {
-            try
-            {
-                var args = _args.Concat(new object[] {_stopWatch.ElapsedMilliseconds}).ToArray();
-                _logger.LogInformation($"{_template} completed in {{Elapsed:0.00}}ms", args);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Failure while writing log");
-            }
+            var args = _args.Concat(new object[] {_stopWatch.ElapsedMilliseconds}).ToArray();
+            _logger.LogInformation($"{_template} completed in {{Elapsed:0.00}}ms", args);
         }
     }
 }

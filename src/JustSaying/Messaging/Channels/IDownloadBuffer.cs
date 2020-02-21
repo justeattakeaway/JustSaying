@@ -42,6 +42,7 @@ namespace JustSaying.Messaging.Channels
         public async Task Start(CancellationToken stoppingToken)
         {
             ChannelWriter<IQueueMessageContext> writer = _channel.Writer;
+            CancellationTokenSource linkedCts = null;
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
@@ -49,7 +50,7 @@ namespace JustSaying.Messaging.Channels
                     // we don't want to pass the stoppingToken here because
                     // we want to process any messages queued messages before stopping
                     using var timeoutToken = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-                    var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, stoppingToken);
+                    linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, stoppingToken);
 
                     using (_logger.TimedOperation("Downloader waiting for buffer to empty before writing"))
                     {
@@ -64,6 +65,10 @@ namespace JustSaying.Messaging.Channels
                 {
                     // no space in channel, break to check if stoppingToken is cancelled
                     continue;
+                }
+                finally
+                {
+                    linkedCts?.Dispose();
                 }
 
                 if (stoppingToken.IsCancellationRequested) break;
@@ -87,6 +92,7 @@ namespace JustSaying.Messaging.Channels
             _logger.LogInformation("Downloader for queue {QueueName} has completed, shutting down channel...", _sqsQueue.Uri);
 
             writer.Complete();
+
         }
     }
 }
