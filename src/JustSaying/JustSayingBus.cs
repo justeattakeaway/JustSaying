@@ -41,7 +41,6 @@ namespace JustSaying
 
         private readonly object _syncRoot = new object();
         private readonly ICollection<IPublisher> _publishers;
-        private readonly ICollection<ISubscriber> _subscribers;
         private ILoggerFactory _loggerFactory;
 
         public JustSayingBus(IMessagingConfig config, IMessageSerializationRegister serializationRegister, ILoggerFactory loggerFactory)
@@ -57,7 +56,6 @@ namespace JustSaying
             _publishersByRegionAndType = new Dictionary<string, Dictionary<Type, IMessagePublisher>>();
             SerializationRegister = serializationRegister;
             _publishers = new HashSet<IPublisher>();
-            _subscribers = new HashSet<ISubscriber>();
 
             HandlerMap = new HandlerMap();
             var dispatcher = new MessageDispatcher(serializationRegister, Monitor, null,
@@ -89,17 +87,8 @@ namespace JustSaying
                 return;
             }
             subscribersForRegion[subscriber.Queue] = subscriber;
-
-            AddSubscribersToInterrogationResponse(subscriber);
         }
 
-        private void AddSubscribersToInterrogationResponse(INotificationSubscriberInterrogation interrogationSubscribers)
-        {
-            foreach (var subscriber in interrogationSubscribers.Subscribers)
-            {
-                _subscribers.Add(subscriber);
-            }
-        }
 
         public void AddMessageHandler<T>(string region, string queue, Func<IHandlerAsync<T>> futureHandler) where T : Message
         {
@@ -141,20 +130,6 @@ namespace JustSaying
             lock (_syncRoot)
             {
                 ConsumerBus.Start(numberOfConsumers: 2, cancellationToken);
-
-                /*
-                foreach (var regionSubscriber in _subscribersByRegionAndQueue)
-                {
-                    foreach (var queueSubscriber in regionSubscriber.Value)
-                    {
-                        if (queueSubscriber.Value.IsListening)
-                        {
-                            continue;
-                        }
-
-                        queueSubscriber.Value.Listen(cancellationToken);
-                    }
-                }*/
             }
         }
 
@@ -167,7 +142,8 @@ namespace JustSaying
 
         public IInterrogationResponse WhatDoIHave()
         {
-            return new InterrogationResponse(Config.Regions, _subscribers, _publishers);
+            var handlers = HandlerMap.Types.Select(t => new Subscriber(t));
+            return new InterrogationResponse(Config.Regions, handlers, _publishers);
         }
 
         private IMessagePublisher GetActivePublisherForMessage(Message message)
