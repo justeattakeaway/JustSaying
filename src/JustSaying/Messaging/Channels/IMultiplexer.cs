@@ -17,7 +17,7 @@ namespace JustSaying.Messaging.Channels
         IAsyncEnumerable<IQueueMessageContext> Messages();
     }
 
-    public class RoundRobinQueueMultiplexer : IMultiplexer, IDisposable
+    internal class RoundRobinQueueMultiplexer : IMultiplexer, IDisposable
     {
         readonly IList<ChannelReader<IQueueMessageContext>> _readers;
         Channel<IQueueMessageContext> _targetChannel;

@@ -1,6 +1,7 @@
 using System;
 using System.Reflection.Metadata;
 using System.Threading.Tasks;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
@@ -42,7 +43,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         [Fact]
         public void TheSubscriptionIsCreatedInEachRegion()
         {
-            Bus.Received(2).AddNotificationSubscriber(Arg.Any<string>(), Arg.Any<INotificationSubscriber>());
+            Bus.Received(2).AddQueue(Arg.Any<string>(), Arg.Any<ISqsQueue>());
         }
 
         [Fact]

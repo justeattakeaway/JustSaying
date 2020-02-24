@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
-using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
@@ -12,7 +11,7 @@ namespace JustSaying
 {
     public interface IAmJustSaying : IMessagePublisher
     {
-        void AddNotificationSubscriber(string region, INotificationSubscriber subscriber);
+        void AddQueue(string region, ISqsQueue queue);
 
         void AddMessageHandler<T>(string region, string queueName, Func<IHandlerAsync<T>> handler) where T : Message;
 
@@ -30,7 +29,7 @@ namespace JustSaying
         IMessageLockAsync MessageLock { get; set; }
 
         IMessageContextAccessor MessageContextAccessor { get; set; }
+
         HandlerMap HandlerMap { get; }
-        IConsumerBus ConsumerBus { get; }
     }
 }

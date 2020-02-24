@@ -293,7 +293,7 @@ namespace JustSaying
                     _subscriptionConfig,
                     Bus.Config.MessageSubjectProvider).GetAwaiter().GetResult();
 
-                CreateSubscriptionListener<T>(queue);
+                CreateSubscriptionListener<T>(region, queue);
 
                 _log.LogInformation(
                     "Created SQS topic subscription on topic '{TopicName}' and queue '{QueueName}'.",
@@ -313,7 +313,7 @@ namespace JustSaying
                 // TODO Make this async and remove GetAwaiter().GetResult() call
                 var queue = _amazonQueueCreator.EnsureQueueExistsAsync(region, _subscriptionConfig).GetAwaiter().GetResult();
 
-                CreateSubscriptionListener<T>(queue);
+                CreateSubscriptionListener<T>(region, queue);
 
                 _log.LogInformation(
                     "Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",
@@ -321,31 +321,17 @@ namespace JustSaying
                     _subscriptionConfig.QueueName);
             }
 
+
             return this;
         }
 
-        protected INotificationSubscriber CreateSubscriber(SqsQueueBase queue)
-        {
-            return new SqsNotificationListener(
-                queue,
-                Bus.SerializationRegister,
-                Bus.Monitor,
-                _loggerFactory,
-                Bus.HandlerMap,
-                Bus.MessageContextAccessor,
-                _subscriptionConfig.OnError,
-                Bus.MessageLock,
-                _subscriptionConfig.MessageBackoffStrategy);
-        }
-
-        private void CreateSubscriptionListener<T>(SqsQueueBase queue)
+        private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue)
             where T : Message
         {
+            // todo: should MaxAllowedMessagesInFlight be the bufferlength?
+            Bus.AddQueue(region, queue);
+
             //INotificationSubscriber subscriber = CreateSubscriber(queue);
-
-            var downloader = new DownloadBuffer(bufferLength: 10, queue, _loggerFactory);
-
-            Bus.ConsumerBus.AddDownloadBuffer(downloader);
 
             //subscriber.Subscribers.Add(new Subscriber(typeof(T)));
 

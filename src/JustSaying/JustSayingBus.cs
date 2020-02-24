@@ -18,8 +18,9 @@ namespace JustSaying
 {
     public sealed class JustSayingBus : IAmJustSaying, IAmJustInterrogating, IMessagingBus
     {
-        private readonly Dictionary<string, Dictionary<string, INotificationSubscriber>> _subscribersByRegionAndQueue;
+        private readonly Dictionary<string, Dictionary<string, ISqsQueue>> _subscribersByRegionAndQueue;
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _publishersByRegionAndType;
+        private readonly List<ISqsQueue> _sqsQueues;
 
         private string _previousActiveRegion;
 
@@ -31,7 +32,9 @@ namespace JustSaying
             get { return _monitor; }
             set { _monitor = value ?? new NullOpMessageMonitor(); }
         }
-        public IConsumerBus ConsumerBus { get; }
+
+        // todo: should this be private?
+        internal IConsumerBus ConsumerBus { get; private set; }
         public IMessageSerializationRegister SerializationRegister { get; private set; }
         public IMessageLockAsync MessageLock { get; set; }
         public IMessageContextAccessor MessageContextAccessor { get; set; }
@@ -53,20 +56,18 @@ namespace JustSaying
             Monitor = new NullOpMessageMonitor();
             MessageContextAccessor = new MessageContextAccessor();
 
-            _subscribersByRegionAndQueue = new Dictionary<string, Dictionary<string, INotificationSubscriber>>();
+            _subscribersByRegionAndQueue = new Dictionary<string, Dictionary<string, ISqsQueue>>();
             _publishersByRegionAndType = new Dictionary<string, Dictionary<Type, IMessagePublisher>>();
             SerializationRegister = serializationRegister;
             _publishers = new HashSet<IPublisher>();
             _subscribers = new HashSet<ISubscriber>();
 
+            _sqsQueues = new List<ISqsQueue>();
+
             HandlerMap = new HandlerMap();
-            var dispatcher = new MessageDispatcher(serializationRegister, Monitor, null,
-                HandlerMap, loggerFactory, null, MessageContextAccessor);
-            var consumerFactory = new ConsumerFactory(dispatcher, _loggerFactory);
-            ConsumerBus = new ConsumerBus(loggerFactory, consumerFactory);
         }
 
-        public void AddNotificationSubscriber(string region, INotificationSubscriber subscriber)
+        public void AddQueue(string region, ISqsQueue queue)
         {
             if (string.IsNullOrWhiteSpace(region))
             {
@@ -75,11 +76,11 @@ namespace JustSaying
 
             if (!_subscribersByRegionAndQueue.TryGetValue(region, out var subscribersForRegion))
             {
-                subscribersForRegion = new Dictionary<string, INotificationSubscriber>();
+                subscribersForRegion = new Dictionary<string, ISqsQueue>();
                 _subscribersByRegionAndQueue.Add(region, subscribersForRegion);
             }
 
-            if (subscribersForRegion.ContainsKey(subscriber.Queue))
+            if (subscribersForRegion.ContainsKey(queue.QueueName))
             {
                 // TODO - no, we don't need to create a new notification subscriber per queue
                 // JustSaying is creating subscribers per-topic per-region, but
@@ -88,9 +89,11 @@ namespace JustSaying
                 // Just re-use existing subscriber instead.
                 return;
             }
-            subscribersForRegion[subscriber.Queue] = subscriber;
+            subscribersForRegion[queue.QueueName] = queue;
 
-            AddSubscribersToInterrogationResponse(subscriber);
+            // todo: this could work if we make the sqsqueue generic?
+            // otherwise can we do this in the AddMessageHandler bit instead?
+            // AddSubscribersToInterrogationResponse(queue);
         }
 
         private void AddSubscribersToInterrogationResponse(INotificationSubscriberInterrogation interrogationSubscribers)
@@ -138,9 +141,19 @@ namespace JustSaying
                 return;
             }
 
+            if (ConsumerBus != null)
+            {
+                _log.LogWarning("Attempting to start an already running Bus");
+                return;
+            }
+
             lock (_syncRoot)
             {
-                ConsumerBus.Start(numberOfConsumers: 2, cancellationToken);
+                var dispatcher = new MessageDispatcher(SerializationRegister, Monitor, null,
+                    HandlerMap, _loggerFactory, null, MessageContextAccessor);
+
+                ConsumerBus = new ConsumerBus(_sqsQueues, numberOfConsumers: 2, dispatcher, _loggerFactory);
+                ConsumerBus.Start( cancellationToken);
 
                 /*
                 foreach (var regionSubscriber in _subscribersByRegionAndQueue)

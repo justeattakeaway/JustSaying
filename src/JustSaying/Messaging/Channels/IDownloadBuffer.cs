@@ -10,13 +10,13 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels
 {
-    public interface IDownloadBuffer
+    internal interface IDownloadBuffer
     {
         Task Start(CancellationToken stoppingToken);
         ChannelReader<IQueueMessageContext> Reader { get; }
     }
 
-    public class DownloadBuffer : IDownloadBuffer
+    internal class DownloadBuffer : IDownloadBuffer
     {
         private readonly Channel<IQueueMessageContext> _channel;
         private readonly int _bufferLength;

@@ -1,16 +1,18 @@
 using System;
 using System.Threading.Tasks;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 using NSubstitute;
+using Shouldly;
 using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
     public class WhenRegisteringMessageHandlers : GivenAServiceBus
     {
-        private INotificationSubscriber _subscriber;
+        private ISqsQueue _queue;
         private IHandlerAsync<Message> _handler1;
         private IHandlerAsync<Message2> _handler2;
         private string _region;
@@ -22,7 +24,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             base.Given();
             _futureHandler1 = () => _handler1;
             _futureHandler2 = () => _handler2;
-            _subscriber = Substitute.For<INotificationSubscriber>();
+            _queue = Substitute.For<ISqsQueue>();
             _handler1 = Substitute.For<IHandlerAsync<Message>>();
             _handler2 = Substitute.For<IHandlerAsync<Message2>>();
             _region = "west-1";
@@ -30,10 +32,9 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override Task WhenAsync()
         {
-            SystemUnderTest.AddNotificationSubscriber(_region, _subscriber);
-            SystemUnderTest.AddNotificationSubscriber(_region, _subscriber);
-            SystemUnderTest.AddMessageHandler(_region, _subscriber.Queue, _futureHandler1);
-            SystemUnderTest.AddMessageHandler(_region, _subscriber.Queue, _futureHandler2);
+            SystemUnderTest.AddQueue(_region, _queue);
+            SystemUnderTest.AddMessageHandler(_region, _queue.QueueName, _futureHandler1);
+            SystemUnderTest.AddMessageHandler(_region, _queue.QueueName, _futureHandler2);
             SystemUnderTest.Start();
 
             return Task.CompletedTask;
@@ -42,20 +43,21 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public void HandlersAreAdded()
         {
-            _subscriber.Received().AddMessageHandler(_futureHandler1);
-            _subscriber.Received().AddMessageHandler(_futureHandler2);
+            SystemUnderTest.HandlerMap.ContainsKey(typeof(Message)).ShouldBeTrue();
+            SystemUnderTest.HandlerMap.ContainsKey(typeof(Message2)).ShouldBeTrue();
         }
 
-        [Fact]
-        public void HandlersAreAddedBeforeSubscriberStartup()
-        {
-            Received.InOrder(() =>
-                {
-                    _subscriber.AddMessageHandler(Arg.Any<Func<IHandlerAsync<Message>>>());
-                    _subscriber.AddMessageHandler(Arg.Any<Func<IHandlerAsync<Message2>>>());
-                    _subscriber.Listen(default);
-                });
-        }
+        // todo: access the running bus?/check it has the correct handlers?
+        //[Fact]
+        //public void HandlersAreAddedBeforeSubscriberStartup()
+        //{
+        //    Received.InOrder(() =>
+        //        {
+        //            _subscriber.AddMessageHandler(Arg.Any<Func<IHandlerAsync<Message>>>());
+        //            _subscriber.AddMessageHandler(Arg.Any<Func<IHandlerAsync<Message2>>>());
+        //            _subscriber.Listen(default);
+        //        });
+        //}
 
         public class Message2 : Message { }
     }

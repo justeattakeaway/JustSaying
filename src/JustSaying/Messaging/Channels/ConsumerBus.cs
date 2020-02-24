@@ -1,55 +1,49 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using JustSaying.AwsTools.MessageHandling;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace JustSaying.Messaging.Channels
 {
-    public interface IConsumerBus
+    internal interface IConsumerBus
     {
-        void AddDownloadBuffer(IDownloadBuffer downloadBuffer);
-        void Start(int numberOfConsumers, CancellationToken stoppingToken);
+        void Start(CancellationToken stoppingToken);
+        Task Completion { get; }
     }
 
     internal class ConsumerBus : IConsumerBus
     {
-        private readonly IConsumerFactory _consumerFactory;
         private readonly IMultiplexer _multiplexer;
         private readonly IList<IDownloadBuffer> _downloadBuffers;
+        private readonly IList<IChannelConsumer> _consumers;
         private readonly ILogger _logger;
-        private Task _completionTask;
 
-        public ConsumerBus(ILoggerFactory loggerFactory, IConsumerFactory consumerFactory)
+        internal ConsumerBus(
+            IList<ISqsQueue> queues,
+            int numberOfConsumers,
+            IMessageDispatcher messageDispatcher,
+            ILoggerFactory loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<ConsumerBus>();
-            _consumerFactory = consumerFactory;
             _multiplexer = new RoundRobinQueueMultiplexer(loggerFactory);
-            _downloadBuffers = new List<IDownloadBuffer>();
-        }
 
-        public void AddDownloadBuffer(IDownloadBuffer downloadBuffer)
-        {
-            _downloadBuffers.Add(downloadBuffer);
-        }
-
-        public void Start(int numberOfConsumers, CancellationToken stoppingToken)
-        {
-            // link download buffers to core channel
-            foreach (var buffer in _downloadBuffers)
-            {
-                _multiplexer.ReadFrom(buffer.Reader);
-            }
+            _downloadBuffers = queues
+                .Select(q => CreateDownloadBuffer(q, loggerFactory))
+                .ToList();
 
             // create n consumers (defined by config)
             // link consumers to core channel
-            var consumers = Enumerable.Range(0, numberOfConsumers)
-                .Select(x => _consumerFactory.CreateConsumer()
-                    .ConsumeFrom(_multiplexer.Messages()));
+            _consumers = Enumerable.Range(0, numberOfConsumers)
+                .Select(x => new ChannelConsumer(messageDispatcher, loggerFactory)
+                    .ConsumeFrom(_multiplexer.Messages()))
+                .ToList();
+        }
 
+        public void Start(CancellationToken stoppingToken)
+        {
+            var numberOfConsumers = _consumers.Count;
             _logger.LogInformation("Starting up consumer bus with {ConsumerCount} consumers and {DownloadBufferCount} downloaders",
                  numberOfConsumers, _downloadBuffers.Count);
 
@@ -57,14 +51,25 @@ namespace JustSaying.Messaging.Channels
             var startTasks = new List<Task>();
             startTasks.Add(_multiplexer.Start());
 
-            startTasks.AddRange(consumers.Select(x => x.Start()));
+            startTasks.AddRange(_consumers.Select(x => x.Start()));
             startTasks.AddRange(_downloadBuffers.Select(x => x.Start(stoppingToken)));
 
             _logger.LogInformation("Consumer bus successfully started");
 
-            _completionTask = Task.WhenAll(startTasks);
+            Completion = Task.WhenAll(startTasks);
         }
 
-        public Task Completion => _completionTask;
+        public Task Completion { get; private set; }
+
+        private IDownloadBuffer CreateDownloadBuffer(ISqsQueue queue, ILoggerFactory loggerFactory)
+        {
+            int bufferLength = 10;
+            var buffer = new DownloadBuffer(bufferLength, queue, loggerFactory);
+
+            // link download buffers to core channel
+            _multiplexer.ReadFrom(buffer.Reader);
+
+            return buffer;
+        }
     }
 }
