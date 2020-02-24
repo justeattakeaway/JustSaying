@@ -44,7 +44,6 @@ namespace JustSaying
 
         private readonly object _syncRoot = new object();
         private readonly ICollection<IPublisher> _publishers;
-        private readonly ICollection<ISubscriber> _subscribers;
         private ILoggerFactory _loggerFactory;
 
         public JustSayingBus(IMessagingConfig config, IMessageSerializationRegister serializationRegister, ILoggerFactory loggerFactory)
@@ -60,7 +59,6 @@ namespace JustSaying
             _publishersByRegionAndType = new Dictionary<string, Dictionary<Type, IMessagePublisher>>();
             SerializationRegister = serializationRegister;
             _publishers = new HashSet<IPublisher>();
-            _subscribers = new HashSet<ISubscriber>();
 
             _sqsQueues = new List<ISqsQueue>();
 
@@ -96,13 +94,6 @@ namespace JustSaying
             // AddSubscribersToInterrogationResponse(queue);
         }
 
-        private void AddSubscribersToInterrogationResponse(INotificationSubscriberInterrogation interrogationSubscribers)
-        {
-            foreach (var subscriber in interrogationSubscribers.Subscribers)
-            {
-                _subscribers.Add(subscriber);
-            }
-        }
 
         public void AddMessageHandler<T>(string region, string queue, Func<IHandlerAsync<T>> futureHandler) where T : Message
         {
@@ -180,7 +171,8 @@ namespace JustSaying
 
         public IInterrogationResponse WhatDoIHave()
         {
-            return new InterrogationResponse(Config.Regions, _subscribers, _publishers);
+            var handlers = HandlerMap.Types.Select(t => new Subscriber(t));
+            return new InterrogationResponse(Config.Regions, handlers, _publishers);
         }
 
         private IMessagePublisher GetActivePublisherForMessage(Message message)
