@@ -72,6 +72,8 @@ namespace JustSaying
                 throw new ArgumentNullException(nameof(region));
             }
 
+            _sqsQueues.Add(queue);
+
             if (!_subscribersByRegionAndQueue.TryGetValue(region, out var subscribersForRegion))
             {
                 subscribersForRegion = new Dictionary<string, ISqsQueue>();
@@ -144,7 +146,7 @@ namespace JustSaying
                     HandlerMap, _loggerFactory, null, MessageContextAccessor);
 
                 ConsumerBus = new ConsumerBus(_sqsQueues, numberOfConsumers: 2, dispatcher, _loggerFactory);
-                ConsumerBus.Start( cancellationToken);
+                ConsumerBus.Start(cancellationToken);
 
                 /*
                 foreach (var regionSubscriber in _subscribersByRegionAndQueue)

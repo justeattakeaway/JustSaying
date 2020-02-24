@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
@@ -22,6 +24,12 @@ namespace JustSaying.UnitTests.JustSayingBus
             base.Given();
             _queue1 = Substitute.For<ISqsQueue>();
             _queue1.QueueName.Returns("queue1");
+            _queue1
+                .GetMessages(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
+                .Returns(new List<Message>
+                {
+                    new TestMessage(),
+                });
             //_subscriber1.Subscribers.Returns(new Collection<ISubscriber>
             //{
             //    new Subscriber(typeof (OrderAccepted)),
@@ -29,6 +37,12 @@ namespace JustSaying.UnitTests.JustSayingBus
             //});
             _queue2 = Substitute.For<ISqsQueue>();
             _queue2.QueueName.Returns("queue2");
+            _queue2
+                .GetMessages(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
+                .Returns(new List<Message>
+                {
+                    new TestMessage(),
+                });
             // _subscriber2.Subscribers.Returns(new Collection<ISubscriber> { new Subscriber(typeof(SimpleMessage)) });
         }
 
@@ -68,6 +82,10 @@ namespace JustSaying.UnitTests.JustSayingBus
             response.Subscribers.First(x => x.MessageType == typeof(OrderAccepted)).ShouldNotBe(null);
             response.Subscribers.First(x => x.MessageType == typeof(OrderRejected)).ShouldNotBe(null);
             response.Subscribers.First(x => x.MessageType == typeof(SimpleMessage)).ShouldNotBe(null);
+        }
+
+        private class TestMessage : Message
+        {
         }
     }
 }

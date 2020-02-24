@@ -192,6 +192,25 @@ namespace JustSaying.UnitTests.Messaging.Channels
         }
 
         [Fact]
+        public async Task Can_Be_Set_Up_Using_ConsumerBus()
+        {
+            var sqsQueue1 = TestQueue("one");
+            var sqsQueue2 = TestQueue("two");
+            var sqsQueue3 = TestQueue("three");
+
+            var queues = new List<ISqsQueue> { sqsQueue1, sqsQueue2, sqsQueue3 };
+            IMessageDispatcher dispatcher = TestDispatcher();
+            var bus = new ConsumerBus(queues, 1, dispatcher, _testOutputHelper.ToLoggerFactory());
+
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeSpan.FromSeconds(2));
+
+            bus.Start(cts.Token);
+
+            await bus.Completion;
+        }
+
+        [Fact]
         public async Task On_Cancellation_All_Downloaded_Messages_Should_Be_Processed()
         {
             int messagesSent = 0;
