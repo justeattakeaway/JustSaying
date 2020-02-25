@@ -42,9 +42,43 @@ namespace JustSaying.Messaging.Channels
         public async Task Start(CancellationToken stoppingToken)
         {
             ChannelWriter<IQueueMessageContext> writer = _channel.Writer;
-            CancellationTokenSource linkedCts = null;
+            try
+            {
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    var canWrite = await WaitToWriteAsync(writer, stoppingToken).ConfigureAwait(false);
+                    if (!canWrite) break;
+
+                    IList<Message> messages;
+                    using (_logger.TimedOperation("Receiving messages from SQS for queue {QueueName}", _sqsQueue.QueueName))
+                    {
+                        messages = await _sqsQueue
+                           .GetMessages(_bufferLength, _requestMessageAttributeNames, stoppingToken)
+                           .ConfigureAwait(false);
+
+                        if (messages == null) continue;
+                    }
+
+                    foreach (var message in messages)
+                    {
+                        IQueueMessageContext messageContext = _sqsQueue.CreateQueueMessageContext(message);
+                        await writer.WriteAsync(messageContext).ConfigureAwait(false);
+                    }
+                }
+
+                _logger.LogInformation("Downloader for queue {QueueName} has completed, shutting down channel...", _sqsQueue.Uri);
+            }
+            finally
+            {
+                writer.Complete();
+            }
+        }
+
+        private async Task<bool> WaitToWriteAsync(ChannelWriter<IQueueMessageContext> writer, CancellationToken stoppingToken)
+        {
             while (!stoppingToken.IsCancellationRequested)
             {
+                CancellationTokenSource linkedCts = null;
                 try
                 {
                     // we don't want to pass the stoppingToken here because
@@ -55,44 +89,21 @@ namespace JustSaying.Messaging.Channels
                     using (_logger.TimedOperation("Downloader waiting for buffer to empty before writing"))
                     {
                         bool writePermitted = await writer.WaitToWriteAsync(linkedCts.Token);
-                        if (!writePermitted)
-                        {
-                            break;
-                        }
+                        return writePermitted;
                     }
                 }
                 catch (OperationCanceledException)
                 {
-                    // no space in channel, break to check if stoppingToken is cancelled
+                    // no space in channel, check again
                     continue;
                 }
                 finally
                 {
                     linkedCts?.Dispose();
                 }
-
-                if (stoppingToken.IsCancellationRequested) break;
-
-                IList<Message> messages;
-                using (_logger.TimedOperation("Receiving messages from SQS for queue {QueueName}", _sqsQueue.QueueName))
-                {
-                    messages = await _sqsQueue
-                        .GetMessages(_bufferLength, _requestMessageAttributeNames, stoppingToken)
-                        .ConfigureAwait(false);
-                    if (messages == null) continue;
-                }
-
-                foreach (var message in messages)
-                {
-                    IQueueMessageContext messageContext = _sqsQueue.CreateQueueMessageContext(message);
-                    await writer.WriteAsync(messageContext).ConfigureAwait(false);
-                }
             }
 
-            _logger.LogInformation("Downloader for queue {QueueName} has completed, shutting down channel...", _sqsQueue.Uri);
-
-            writer.Complete();
-
+            return false;
         }
     }
 }
