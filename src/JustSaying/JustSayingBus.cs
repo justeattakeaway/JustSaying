@@ -97,7 +97,7 @@ namespace JustSaying
         }
 
 
-        public void AddMessageHandler<T>(string region, string queue, Func<IHandlerAsync<T>> futureHandler) where T : Message
+        public void AddMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler) where T : Message
         {
             var handler = new MessageHandlerWrapper(MessageLock, Monitor, _loggerFactory);
             var handlerFunc = handler.WrapMessageHandler(futureHandler);
