@@ -16,7 +16,7 @@ using Message = JustSaying.Models.Message;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public class SqsNotificationListener : INotificationSubscriber
+    public class SqsNotificationListener
     {
         private readonly ISqsQueue _queue;
         private readonly IMessageMonitor _messagingMonitor;
