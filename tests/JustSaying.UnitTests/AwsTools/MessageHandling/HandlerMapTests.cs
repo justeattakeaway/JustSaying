@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Shouldly;

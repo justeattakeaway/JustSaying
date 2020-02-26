@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Interrogation;
@@ -143,20 +144,6 @@ namespace JustSaying
 
                 ConsumerBus = new ConsumerBus(_sqsQueues, numberOfConsumers: 2, dispatcher, _loggerFactory);
                 ConsumerBus.Start(cancellationToken);
-
-                /*
-                foreach (var regionSubscriber in _subscribersByRegionAndQueue)
-                {
-                    foreach (var queueSubscriber in regionSubscriber.Value)
-                    {
-                        if (queueSubscriber.Value.IsListening)
-                        {
-                            continue;
-                        }
-
-                        queueSubscriber.Value.Listen(cancellationToken);
-                    }
-                }*/
             }
         }
 

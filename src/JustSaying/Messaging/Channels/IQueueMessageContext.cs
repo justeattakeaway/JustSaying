@@ -4,7 +4,7 @@ using Amazon.SQS.Model;
 
 namespace JustSaying.Messaging.Channels
 {
-    public interface IQueueMessageContext
+    internal interface IQueueMessageContext
     {
         Message Message { get; }
 

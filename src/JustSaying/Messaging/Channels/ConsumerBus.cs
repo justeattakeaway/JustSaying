@@ -3,20 +3,15 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.MessageHandling.Dispatch;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels
 {
-    internal interface IConsumerBus
-    {
-        void Start(CancellationToken stoppingToken);
-        Task Completion { get; }
-    }
-
     internal class ConsumerBus : IConsumerBus
     {
         private readonly IMultiplexer _multiplexer;
-        private readonly IList<IDownloadBuffer> _downloadBuffers;
+        private readonly IList<IMessageReceiveBuffer> _downloadBuffers;
         private readonly IList<IChannelConsumer> _consumers;
         private readonly ILogger _logger;
 
@@ -61,10 +56,10 @@ namespace JustSaying.Messaging.Channels
 
         public Task Completion { get; private set; }
 
-        private IDownloadBuffer CreateDownloadBuffer(ISqsQueue queue, ILoggerFactory loggerFactory)
+        private IMessageReceiveBuffer CreateDownloadBuffer(ISqsQueue queue, ILoggerFactory loggerFactory)
         {
             int bufferLength = 10;
-            var buffer = new DownloadBuffer(bufferLength, queue, loggerFactory);
+            var buffer = new MessageReceiveBuffer(bufferLength, queue, loggerFactory);
 
             // link download buffers to core channel
             _multiplexer.ReadFrom(buffer.Reader);
