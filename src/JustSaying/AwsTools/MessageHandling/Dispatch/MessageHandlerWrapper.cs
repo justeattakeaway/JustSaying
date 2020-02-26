@@ -5,7 +5,7 @@ using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.AwsTools.MessageHandling
+namespace JustSaying.AwsTools.MessageHandling.Dispatch
 {
     internal sealed class MessageHandlerWrapper
     {

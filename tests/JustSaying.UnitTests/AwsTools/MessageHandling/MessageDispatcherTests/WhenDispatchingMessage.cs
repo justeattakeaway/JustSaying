@@ -7,6 +7,7 @@ using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
@@ -52,7 +53,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
         private SQSMessage _sqsMessage;
         private Message _typedMessage;
 
-        protected MessageDispatcher SystemUnderTest { get; private set; }
+        internal MessageDispatcher SystemUnderTest { get; private set; }
 
         public virtual async Task InitializeAsync()
         {
@@ -89,7 +90,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             _serializationRegister.DeserializeMessage(Arg.Any<string>()).Returns(_typedMessage);
         }
 
-        private async Task When() => await SystemUnderTest.DispatchMessage(new QueueMessageContext(_sqsMessage, _queue), CancellationToken.None);
+        private async Task When() => await SystemUnderTest.DispatchMessageAsync(new QueueMessageContext(_sqsMessage, _queue), CancellationToken.None);
 
         private MessageDispatcher CreateSystemUnderTestAsync()
         {

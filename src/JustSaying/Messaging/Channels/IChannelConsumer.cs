@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 
@@ -37,7 +38,7 @@ namespace JustSaying.Messaging.Channels
             {
                 using (_logger.TimedOperation("Dispatching message to do actual work"))
                 {
-                    await _dispatcher.DispatchMessage(messageContext, CancellationToken.None).ConfigureAwait(false);
+                    await _dispatcher.DispatchMessageAsync(messageContext, CancellationToken.None).ConfigureAwait(false);
                 }
             }
         }

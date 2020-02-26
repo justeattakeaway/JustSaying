@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Runtime;
 using Amazon.SQS;
-using Amazon.SQS.Model;
 using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
@@ -14,14 +13,9 @@ using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
 using SQSMessage = Amazon.SQS.Model.Message;
 
-namespace JustSaying.AwsTools.MessageHandling
+namespace JustSaying.AwsTools.MessageHandling.Dispatch
 {
-    public interface IMessageDispatcher
-    {
-        Task DispatchMessage(IQueueMessageContext messageContext, CancellationToken cancellationToken);
-    }
-
-    public class MessageDispatcher : IMessageDispatcher
+    internal class MessageDispatcher : IMessageDispatcher
     {
         private readonly IMessageSerializationRegister _serializationRegister;
         private readonly IMessageMonitor _messagingMonitor;
@@ -50,7 +44,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _messageContextAccessor = messageContextAccessor;
         }
 
-        public async Task DispatchMessage(IQueueMessageContext messageContext, CancellationToken cancellationToken)
+        public async Task DispatchMessageAsync(IQueueMessageContext messageContext, CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested)
             {
@@ -157,7 +151,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             watch.Stop();
 
-            _logger.LogDebug(
+            _logger.LogTrace(
                 "Handled message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}.",
                 message.Id,
                 messageType,

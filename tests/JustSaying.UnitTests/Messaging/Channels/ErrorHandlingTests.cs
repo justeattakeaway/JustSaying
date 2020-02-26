@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels;
 using NSubstitute;
 using Shouldly;
@@ -20,7 +21,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             _testOutputHelper = testOutputHelper;
         }
-        
+
         [Fact]
         public async Task Sqs_Client_Throwing_Exceptions_Continues_To_Request_Messages()
         {
@@ -74,7 +75,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             IMessageDispatcher dispatcherMock = Substitute.For<IMessageDispatcher>();
             dispatcherMock
-                .DispatchMessage(Arg.Any<IQueueMessageContext>(), Arg.Any<CancellationToken>())
+                .DispatchMessageAsync(Arg.Any<IQueueMessageContext>(), Arg.Any<CancellationToken>())
                 .Returns(async _ => await OnDispatchMessage());
 
             return dispatcherMock;

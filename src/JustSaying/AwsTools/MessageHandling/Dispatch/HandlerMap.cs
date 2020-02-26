@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using HandlerFunc = System.Func<JustSaying.Models.Message, System.Threading.Tasks.Task<bool>>;
 
-namespace JustSaying.AwsTools.MessageHandling
+namespace JustSaying.AwsTools.MessageHandling.Dispatch
 {
     public class HandlerMap
     {

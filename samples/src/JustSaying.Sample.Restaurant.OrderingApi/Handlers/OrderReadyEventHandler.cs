@@ -1,4 +1,5 @@
 using System;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Sample.Restaurant.Models;
@@ -22,7 +23,7 @@ namespace JustSaying.Sample.Restaurant.OrderingApi.Handlers
             // This is where you would actually handle the order placement
             // Intentionally left empty for the sake of this being a sample application
 
-            await Task.Delay(R.Next(50, 100));
+            await Task.Delay(RandomNumberGenerator.GetInt32(50, 100));
 
             // Returning true would indicate:
             //   The message was handled successfully
