@@ -1,4 +1,5 @@
 using System;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
@@ -22,8 +23,6 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
             _logger = log;
         }
 
-        private static Random R => new Random();
-
         public async Task<bool> Handle(OrderPlacedEvent message)
         {
             // Returning true would indicate:
@@ -43,7 +42,7 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
 
                 _logger.LogInformation("Order {orderId} ready", message.OrderId);
 
-                await Task.Delay(R.Next(50, 100));
+                await Task.Delay(RandomNumberGenerator.GetInt32(50, 100));
 
                 var orderReadyEvent = new OrderReadyEvent
                 {

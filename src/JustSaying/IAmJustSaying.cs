@@ -13,7 +13,7 @@ namespace JustSaying
     {
         void AddQueue(string region, ISqsQueue queue);
 
-        void AddMessageHandler<T>(string region, string queueName, Func<IHandlerAsync<T>> handler) where T : Message;
+        void AddMessageHandler<T>(Func<IHandlerAsync<T>> handler) where T : Message;
 
         // TODO - swap params
         void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message;
@@ -29,7 +29,5 @@ namespace JustSaying
         IMessageLockAsync MessageLock { get; set; }
 
         IMessageContextAccessor MessageContextAccessor { get; set; }
-
-        HandlerMap HandlerMap { get; }
     }
 }

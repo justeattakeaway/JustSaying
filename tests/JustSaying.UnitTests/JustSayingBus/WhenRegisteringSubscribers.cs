@@ -3,14 +3,17 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
+using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.AwsTools.MessageHandling;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Message = Amazon.SQS.Model.Message;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -30,11 +33,7 @@ namespace JustSaying.UnitTests.JustSayingBus
                 {
                     new TestMessage(),
                 });
-            //_subscriber1.Subscribers.Returns(new Collection<ISubscriber>
-            //{
-            //    new Subscriber(typeof (OrderAccepted)),
-            //    new Subscriber(typeof (OrderRejected))
-            //});
+
             _queue2 = Substitute.For<ISqsQueue>();
             _queue2.QueueName.Returns("queue2");
             _queue2
@@ -43,11 +42,14 @@ namespace JustSaying.UnitTests.JustSayingBus
                 {
                     new TestMessage(),
                 });
-            // _subscriber2.Subscribers.Returns(new Collection<ISubscriber> { new Subscriber(typeof(SimpleMessage)) });
         }
 
         protected override Task WhenAsync()
         {
+            SystemUnderTest.AddMessageHandler(() => new InspectableHandler<OrderAccepted>());
+            SystemUnderTest.AddMessageHandler(() => new InspectableHandler<OrderRejected>());
+            SystemUnderTest.AddMessageHandler(() => new InspectableHandler<SimpleMessage>());
+
             SystemUnderTest.AddQueue("region1", _queue1);
             SystemUnderTest.AddQueue("region1", _queue2);
             SystemUnderTest.Start();

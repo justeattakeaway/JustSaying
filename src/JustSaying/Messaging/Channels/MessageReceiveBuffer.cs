@@ -10,13 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels
 {
-    internal interface IDownloadBuffer
-    {
-        Task Start(CancellationToken stoppingToken);
-        ChannelReader<IQueueMessageContext> Reader { get; }
-    }
-
-    internal class DownloadBuffer : IDownloadBuffer
+    internal class MessageReceiveBuffer : IMessageReceiveBuffer
     {
         private readonly Channel<IQueueMessageContext> _channel;
         private readonly int _bufferLength;
@@ -28,19 +22,21 @@ namespace JustSaying.Messaging.Channels
 
         public ChannelReader<IQueueMessageContext> Reader => _channel.Reader;
 
-        public DownloadBuffer(
+        public MessageReceiveBuffer(
             int bufferLength,
             ISqsQueue sqsQueue,
             ILoggerFactory logger)
         {
             _bufferLength = bufferLength;
             _sqsQueue = sqsQueue;
-            _logger = logger.CreateLogger<IDownloadBuffer>();
+            _logger = logger.CreateLogger<IMessageReceiveBuffer>();
             _channel = Channel.CreateBounded<IQueueMessageContext>(bufferLength);
         }
 
         public async Task Start(CancellationToken stoppingToken)
         {
+            await Task.Yield();
+
             ChannelWriter<IQueueMessageContext> writer = _channel.Writer;
             try
             {
@@ -61,7 +57,7 @@ namespace JustSaying.Messaging.Channels
 
                     foreach (var message in messages)
                     {
-                        IQueueMessageContext messageContext = _sqsQueue.CreateQueueMessageContext(message);
+                        IQueueMessageContext messageContext = _sqsQueue.ToMessageContext(message);
                         await writer.WriteAsync(messageContext).ConfigureAwait(false);
                     }
                 }
@@ -78,13 +74,12 @@ namespace JustSaying.Messaging.Channels
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                CancellationTokenSource linkedCts = null;
                 try
                 {
                     // we don't want to pass the stoppingToken here because
                     // we want to process any messages queued messages before stopping
                     using var timeoutToken = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-                    linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, stoppingToken);
+                    using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, stoppingToken);
 
                     using (_logger.TimedOperation("Downloader waiting for buffer to empty before writing"))
                     {
@@ -96,10 +91,6 @@ namespace JustSaying.Messaging.Channels
                 {
                     // no space in channel, check again
                     continue;
-                }
-                finally
-                {
-                    linkedCts?.Dispose();
                 }
             }
 

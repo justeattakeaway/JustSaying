@@ -8,7 +8,6 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Extensions;
-using JustSaying.Messaging.Channels;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
@@ -244,14 +243,6 @@ namespace JustSaying.AwsTools.MessageHandling
             CancellationToken cancellationToken = default)
         {
             return await Client.ChangeMessageVisibilityAsync(changeMessageVisibilityRequest, cancellationToken).ConfigureAwait(false);
-        }
-    }
-
-    public static class SqsQueueBaseExtensions
-    {
-        public static IQueueMessageContext CreateQueueMessageContext(this ISqsQueue sqsQueue, Message message)
-        {
-            return new QueueMessageContext(message, sqsQueue);
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
@@ -284,7 +285,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             async Task DispatchAsync()
             {
-                await _messageDispatcher.DispatchMessage(_queue.CreateQueueMessageContext(message), ct).ConfigureAwait(false);
+                await _messageDispatcher.DispatchMessageAsync(_queue.ToMessageContext(message), ct).ConfigureAwait(false);
             }
 
             return _messageProcessingStrategy.StartWorkerAsync(DispatchAsync, ct);
