@@ -29,7 +29,5 @@ namespace JustSaying
         IMessageLockAsync MessageLock { get; set; }
 
         IMessageContextAccessor MessageContextAccessor { get; set; }
-
-        HandlerMap HandlerMap { get; }
     }
 }

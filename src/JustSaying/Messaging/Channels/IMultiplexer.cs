@@ -15,9 +15,10 @@ namespace JustSaying.Messaging.Channels
         Task Start();
         void ReadFrom(ChannelReader<IQueueMessageContext> reader);
         IAsyncEnumerable<IQueueMessageContext> Messages();
+        Task Completion { get; }
     }
 
-    internal class RoundRobinQueueMultiplexer : IMultiplexer, IDisposable
+    internal sealed class RoundRobinQueueMultiplexer : IMultiplexer, IDisposable
     {
         private readonly IList<ChannelReader<IQueueMessageContext>> _readers;
         private Channel<IQueueMessageContext> _targetChannel;
@@ -46,8 +47,14 @@ namespace JustSaying.Messaging.Channels
             if (reader == null) throw new ArgumentNullException(nameof(reader));
 
             _readersLock.Wait();
-            _readers.Add(reader);
-            _readersLock.Release();
+            try
+            {
+                _readers.Add(reader);
+            }
+            finally
+            {
+                _readersLock.Release();
+            }
 
             reader.Completion.ContinueWith(c => RemoveReader(reader), TaskScheduler.Default);
         }
@@ -57,8 +64,14 @@ namespace JustSaying.Messaging.Channels
             _logger.LogInformation("Received notification to remove reader from multiplexer inputs");
 
             _readersLock.Wait();
-            _readers.Remove(reader);
-            _readersLock.Release();
+            try
+            {
+                _readers.Remove(reader);
+            }
+            finally
+            {
+                _readersLock.Release();
+            }
         }
 
         public async Task Start()
@@ -82,6 +95,8 @@ namespace JustSaying.Messaging.Channels
 
         private async Task Run()
         {
+            await Task.Yield();
+
             _logger.LogInformation("Starting up channel multiplexer with a queue capacity of {Capacity}",
                 _channelCapacity);
 
@@ -90,22 +105,27 @@ namespace JustSaying.Messaging.Channels
             {
                 await _readersLock.WaitAsync().ConfigureAwait(false);
 
-                if (!_readers.Any())
+                try
                 {
-                    _logger.LogInformation("All writers have completed, terminating multiplexer");
-                    writer.Complete();
-                    break;
-                }
-
-                foreach (var reader in _readers)
-                {
-                    if (reader.TryRead(out var message))
+                    if (_readers.Count < 1)
                     {
-                        await writer.WriteAsync(message);
+                        _logger.LogInformation("All writers have completed, terminating multiplexer");
+                        writer.Complete();
+                        break;
+                    }
+
+                    foreach (var reader in _readers)
+                    {
+                        if (reader.TryRead(out var message))
+                        {
+                            await writer.WriteAsync(message);
+                        }
                     }
                 }
-
-                _readersLock.Release();
+                finally
+                {
+                    _readersLock.Release();
+                }
             }
         }
 
@@ -126,19 +146,10 @@ namespace JustSaying.Messaging.Channels
             }
         }
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _startLock.Dispose();
-                _readersLock.Dispose();
-            }
-        }
-
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            _startLock.Dispose();
+            _readersLock.Dispose();
         }
     }
 }
