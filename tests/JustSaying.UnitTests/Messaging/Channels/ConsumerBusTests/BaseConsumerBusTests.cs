@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
@@ -112,5 +113,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 
             return Task.CompletedTask;
         }
+
+        protected class TestMessage : Amazon.SQS.Model.Message { }
     }
 }

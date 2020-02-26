@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace JustSaying.Messaging.Channels
 {
-    internal interface IConsumerBus
+    public interface IConsumerBus
     {
         void Start(CancellationToken stoppingToken);
         Task Completion { get; }

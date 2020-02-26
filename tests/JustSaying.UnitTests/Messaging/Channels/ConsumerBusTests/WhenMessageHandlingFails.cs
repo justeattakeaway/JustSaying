@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
@@ -10,13 +11,12 @@ using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 {
-    public class WhenMessageHandlingThrows : BaseConsumerBusTests
+    public class WhenMessageHandlingFails : BaseConsumerBusTests
     {
-        private bool _firstTime = true;
         private ISqsQueue _queue;
 
-        public WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper)
-            : base (testOutputHelper)
+        public WhenMessageHandlingFails(ITestOutputHelper testOutputHelper)
+            : base(testOutputHelper)
         {
         }
 
@@ -28,19 +28,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             _queue.Uri.Returns(new Uri("http://foo.com"));
 
             Queues.Add(_queue);
-            Handler.Handle(Arg.Any<SimpleMessage>())
-                .Returns(_ => ExceptionOnFirstCall());
-        }
-
-        private bool ExceptionOnFirstCall()
-        {
-            if (_firstTime)
-            {
-                _firstTime = false;
-                throw new TestException("Thrown by test handler");
-            }
-
-            return false;
+            Handler.Handle(Arg.Any<SimpleMessage>()).ReturnsForAnyArgs(false);
         }
 
         [Fact]
@@ -52,13 +40,14 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         [Fact]
         public void FailedMessageIsNotRemovedFromQueue()
         {
+            // The un-handled one is however.
             _queue.DidNotReceiveWithAnyArgs().DeleteMessageAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]
-        public void ExceptionIsLoggedToMonitor()
+        public void ExceptionIsNotLoggedToMonitor()
         {
-            Monitor.ReceivedWithAnyArgs().HandleException(Arg.Any<Type>());
+            Monitor.DidNotReceiveWithAnyArgs().HandleException(Arg.Any<Type>());
         }
     }
 }
