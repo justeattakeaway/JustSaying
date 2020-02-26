@@ -74,7 +74,6 @@ namespace JustSaying.Messaging.Channels
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                CancellationTokenSource linkedCts = null;
                 try
                 {
                     // we don't want to pass the stoppingToken here because

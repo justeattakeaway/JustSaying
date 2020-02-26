@@ -4,7 +4,7 @@ using JustSaying.Messaging.Channels;
 
 namespace JustSaying.AwsTools.MessageHandling.Dispatch
 {
-    internal interface IMessageDispatcher
+    public interface IMessageDispatcher
     {
         Task DispatchMessageAsync(IQueueMessageContext messageContext, CancellationToken cancellationToken);
     }
