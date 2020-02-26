@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels
 {
-    internal interface IConsumerBus
+    public interface IConsumerBus
     {
         void Start(CancellationToken stoppingToken);
         Task Completion { get; }
