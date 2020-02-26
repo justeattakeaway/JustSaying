@@ -41,6 +41,8 @@ namespace JustSaying.Messaging.Channels
 
         public async Task Start(CancellationToken stoppingToken)
         {
+            await Task.Yield();
+
             ChannelWriter<IQueueMessageContext> writer = _channel.Writer;
             try
             {

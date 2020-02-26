@@ -267,10 +267,7 @@ namespace JustSaying
                 throw new HandlerNotRegisteredWithContainerException($"There is no handler for '{typeof(T)}' messages.");
             }
 
-            foreach (var region in Bus.Config.Regions)
-            {
-                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handlerResolver.ResolveHandler<T>(resolutionContext));
-            }
+            Bus.AddMessageHandler(() => handlerResolver.ResolveHandler<T>(resolutionContext));
 
             _log.LogInformation(
                 "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",

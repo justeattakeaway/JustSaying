@@ -176,7 +176,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             consumer.ConsumeFrom(multiplexer.Messages());
 
             // need to start the multiplexer before calling Messages
-            var multiplexerTask = multiplexer.Start();
+            await multiplexer.Start();
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromSeconds(2));
@@ -186,7 +186,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             await buffer.Start(cts.Token);
 
-            await Task.WhenAll(multiplexerTask, t1);
+            await Task.WhenAll(multiplexer.Completion, t1);
 
             messagesDispatched.ShouldBe(messagesFromQueue);
         }
@@ -292,15 +292,15 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             await buffer.Start(cts.Token);
 
-            messagesFromQueue.ShouldBe(21);
+            messagesFromQueue.ShouldBe(111);
             messagesDispatched.ShouldBe(0);
 
             var t1 = consumer.Start();
 
             await Task.WhenAll(multiplexerTask, t1);
 
-            messagesFromQueue.ShouldBe(21);
-            messagesDispatched.ShouldBe(21);
+            messagesFromQueue.ShouldBe(111);
+            messagesDispatched.ShouldBe(111);
         }
 
         private static ISqsQueue TestQueue(string prefix, Action spy = null)

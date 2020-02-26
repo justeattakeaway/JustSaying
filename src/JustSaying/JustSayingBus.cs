@@ -20,7 +20,7 @@ namespace JustSaying
     {
         private readonly Dictionary<string, Dictionary<string, ISqsQueue>> _subscribersByRegionAndQueue;
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _publishersByRegionAndType;
-        private readonly List<ISqsQueue> _sqsQueues;
+        private readonly IList<ISqsQueue> _sqsQueues;
 
         private string _previousActiveRegion;
 
@@ -97,15 +97,11 @@ namespace JustSaying
         }
 
 
-        public void AddMessageHandler<T>(string region, string queue, Func<IHandlerAsync<T>> futureHandler) where T : Message
+        public void AddMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler) where T : Message
         {
             var handler = new MessageHandlerWrapper(MessageLock, Monitor, _loggerFactory);
             var handlerFunc = handler.WrapMessageHandler(futureHandler);
             HandlerMap.Add(typeof(T), handlerFunc);
-
-            /*var subscribersByRegion = _subscribersByRegionAndQueue[region];
-            var subscriber = subscribersByRegion[queue];
-            subscriber.AddMessageHandler(futureHandler);*/
         }
 
         public void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message
