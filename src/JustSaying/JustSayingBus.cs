@@ -37,7 +37,11 @@ namespace JustSaying
         // todo: should this be private?
         internal IConsumerBus ConsumerBus { get; private set; }
         public IMessageSerializationRegister SerializationRegister { get; private set; }
-        public IMessageLockAsync MessageLock { get; set; }
+        public IMessageLockAsync MessageLock
+        {
+            get => HandlerMap?.MessageLock;
+            set => HandlerMap.MessageLock = value;
+        }
         public IMessageContextAccessor MessageContextAccessor { get; set; }
         public HandlerMap HandlerMap { get; private set; }
 
@@ -63,7 +67,7 @@ namespace JustSaying
 
             _sqsQueues = new List<ISqsQueue>();
 
-            HandlerMap = new HandlerMap();
+            HandlerMap = new HandlerMap(Monitor, _loggerFactory);
         }
 
         public void AddQueue(string region, ISqsQueue queue)
@@ -100,9 +104,7 @@ namespace JustSaying
 
         public void AddMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler) where T : Message
         {
-            var handler = new MessageHandlerWrapper(MessageLock, Monitor, _loggerFactory);
-            var handlerFunc = handler.WrapMessageHandler(futureHandler);
-            HandlerMap.Add(typeof(T), handlerFunc);
+            HandlerMap.Add(futureHandler);
         }
 
         public void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message

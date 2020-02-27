@@ -22,11 +22,15 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
     {
         protected IList<ISqsQueue> Queues;
         protected int NumberOfConsumers;
-        protected readonly HandlerMap HandlerMap;
+        protected HandlerMap HandlerMap;
         protected IMessageMonitor Monitor;
         protected SimpleMessage DeserializedMessage;
         protected IMessageSerializationRegister SerializationRegister;
-
+        protected IMessageLockAsync MessageLock
+        {
+            get => HandlerMap.MessageLock;
+            set => HandlerMap.MessageLock = value;
+        }
         protected IHandlerAsync<SimpleMessage> Handler;
 
         protected IConsumerBus SystemUnderTest { get; private set; }
@@ -36,7 +40,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         public BaseConsumerBusTests(ITestOutputHelper testOutputHelper)
         {
             LoggerFactory = testOutputHelper.ToLoggerFactory();
-            HandlerMap = new HandlerMap();
         }
 
         public async Task InitializeAsync()
@@ -55,6 +58,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             Handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
             Monitor = Substitute.For<IMessageMonitor>();
             SerializationRegister = Substitute.For<IMessageSerializationRegister>();
+            HandlerMap = new HandlerMap(Monitor, LoggerFactory);
 
             DeserializedMessage = new SimpleMessage { RaisingComponent = "Component" };
             SerializationRegister.DeserializeMessage(Arg.Any<string>()).Returns(DeserializedMessage);

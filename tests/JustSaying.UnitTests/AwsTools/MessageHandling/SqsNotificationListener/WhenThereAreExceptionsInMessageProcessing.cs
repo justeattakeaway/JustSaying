@@ -55,7 +55,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
                 new SqsQueueByUrl(RegionEndpoint.EUWest1, new Uri("http://foo.com"), _sqs, NullLoggerFactory.Instance),
                 _serializationRegister,
                 Substitute.For<IMessageMonitor>(),
-                Substitute.For<ILoggerFactory>(), new HandlerMap(),
+                Substitute.For<ILoggerFactory>(),
+                new HandlerMap(Substitute.For<IMessageMonitor>(), NullLoggerFactory.Instance),
                 Substitute.For<IMessageContextAccessor>());
 
             return listener;
