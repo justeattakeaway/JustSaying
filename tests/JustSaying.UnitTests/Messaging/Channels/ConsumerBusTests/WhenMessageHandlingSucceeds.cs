@@ -13,7 +13,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
     {
         private ISqsQueue _queue;
         private string _messageBody = "Expected Message Body";
-        private int _messagesSent = 0;
+        private int _callCount = 0;
 
         public WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
@@ -26,7 +26,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             _queue.GetMessages(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
                 .Returns(_ =>
                 {
-                    Interlocked.Increment(ref _messagesSent);
+                    Interlocked.Increment(ref _callCount);
                     return new List<Message> { new TestMessage { Body = _messageBody } };
                 });
             _queue.Uri.Returns(new Uri("http://foo.com"));
@@ -50,7 +50,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         [Fact]
         public void AllMessagesAreClearedFromQueue()
         {
-            _queue.Received(_messagesSent).DeleteMessageAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+            _queue.Received(_callCount).DeleteMessageAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]

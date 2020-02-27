@@ -64,7 +64,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 
         protected abstract void Given();
 
-        protected async Task WhenAsync()
+        // Default implementation
+        protected virtual async Task WhenAsync()
         {
             var doneSignal = new TaskCompletionSource<object>();
             var signallingHandler = new SignallingHandler<SimpleMessage>(doneSignal, Handler);
