@@ -217,7 +217,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 if (receiveTimeout.Token.IsCancellationRequested)
                 {
-                    Logger.LogInformation("Timed out while receiving messages from queue '{QueueName}' in region '{Region}'.",
+                    Logger.LogWarning("Timed out while receiving messages from queue '{QueueName}' in region '{Region}'.",
                         QueueName, Region);
                 }
             }
