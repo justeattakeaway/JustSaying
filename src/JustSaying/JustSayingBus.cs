@@ -142,7 +142,12 @@ namespace JustSaying
                 var dispatcher = new MessageDispatcher(SerializationRegister, Monitor, null,
                     HandlerMap, _loggerFactory, null, MessageContextAccessor);
 
-                ConsumerBus = new ConsumerBus(_sqsQueues, numberOfConsumers: 2, dispatcher, _loggerFactory);
+                ConsumerBus = new ConsumerBus(
+                    _sqsQueues,
+                    numberOfConsumers: 2,
+                    dispatcher,
+                    Monitor,
+                    _loggerFactory);
                 ConsumerBus.Start(cancellationToken);
             }
         }

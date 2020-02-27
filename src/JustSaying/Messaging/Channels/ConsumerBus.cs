@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels
@@ -11,7 +12,7 @@ namespace JustSaying.Messaging.Channels
     internal class ConsumerBus : IConsumerBus
     {
         private readonly IMultiplexer _multiplexer;
-        private readonly IList<IMessageReceiveBuffer> _downloadBuffers;
+        private readonly IList<IMessageReceiveBuffer> _buffers;
         private readonly IList<IChannelConsumer> _consumers;
         private readonly ILogger _logger;
 
@@ -19,13 +20,14 @@ namespace JustSaying.Messaging.Channels
             IList<ISqsQueue> queues,
             int numberOfConsumers,
             IMessageDispatcher messageDispatcher,
+            IMessageMonitor monitor,
             ILoggerFactory loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<ConsumerBus>();
             _multiplexer = new RoundRobinQueueMultiplexer(loggerFactory);
 
-            _downloadBuffers = queues
-                .Select(q => CreateDownloadBuffer(q, loggerFactory))
+            _buffers = queues
+                .Select(q => CreateBuffer(q, monitor, loggerFactory))
                 .ToList();
 
             // create n consumers (defined by config)
@@ -40,14 +42,14 @@ namespace JustSaying.Messaging.Channels
         {
             var numberOfConsumers = _consumers.Count;
             _logger.LogInformation("Starting up consumer bus with {ConsumerCount} consumers and {DownloadBufferCount} downloaders",
-                 numberOfConsumers, _downloadBuffers.Count);
+                 numberOfConsumers, _buffers.Count);
 
             // start
             var startTasks = new List<Task>();
             startTasks.Add(_multiplexer.Start());
 
             startTasks.AddRange(_consumers.Select(x => x.Start()));
-            startTasks.AddRange(_downloadBuffers.Select(x => x.Start(stoppingToken)));
+            startTasks.AddRange(_buffers.Select(x => x.Start(stoppingToken)));
 
             _logger.LogInformation("Consumer bus successfully started");
 
@@ -56,10 +58,13 @@ namespace JustSaying.Messaging.Channels
 
         public Task Completion { get; private set; }
 
-        private IMessageReceiveBuffer CreateDownloadBuffer(ISqsQueue queue, ILoggerFactory loggerFactory)
+        private IMessageReceiveBuffer CreateBuffer(
+            ISqsQueue queue,
+            IMessageMonitor monitor,
+            ILoggerFactory loggerFactory)
         {
             int bufferLength = 10;
-            var buffer = new MessageReceiveBuffer(bufferLength, queue, loggerFactory);
+            var buffer = new MessageReceiveBuffer(bufferLength, queue, monitor, loggerFactory);
 
             // link download buffers to core channel
             _multiplexer.ReadFrom(buffer.Reader);

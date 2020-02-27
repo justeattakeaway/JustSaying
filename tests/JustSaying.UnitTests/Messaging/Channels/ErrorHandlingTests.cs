@@ -6,6 +6,7 @@ using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels;
+using JustSaying.Messaging.Monitoring;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -31,7 +32,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             var queues = new List<ISqsQueue> { sqsQueue1 };
             IMessageDispatcher dispatcher = TestDispatcher(() => Interlocked.Increment(ref messagesDispatched));
-            var bus = new ConsumerBus(queues, 1, dispatcher, _testOutputHelper.ToLoggerFactory());
+            var bus = new ConsumerBus(queues, 1, dispatcher, Substitute.For<IMessageMonitor>(), _testOutputHelper.ToLoggerFactory());
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromSeconds(2));

@@ -102,6 +102,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
                 Queues,
                 1,
                 dispatcher,
+                Monitor,
                 LoggerFactory);
 
             return bus;
