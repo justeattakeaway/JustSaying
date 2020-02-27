@@ -6,7 +6,7 @@ using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
-using JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.Support;
+using JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests.Support;
 using NSubstitute;
 using Shouldly;
 using Xunit;

@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 
-namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.Support
+namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests.Support
 {
     [ExactlyOnce(TimeOut = 5)]
     public class ExplicitExactlyOnceSignallingHandler : IHandlerAsync<SimpleMessage>

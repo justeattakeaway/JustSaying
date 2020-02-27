@@ -9,7 +9,7 @@ using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
-using JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.Support;
+using JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests.Support;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
