@@ -244,13 +244,11 @@ namespace JustSaying
             attemptCount++;
             try
             {
-                var watch = Stopwatch.StartNew();
-
-                await publisher.PublishAsync(message, metadata, cancellationToken)
-                    .ConfigureAwait(false);
-
-                watch.Stop();
-                Monitor.PublishMessageTime(watch.Elapsed);
+                using (Monitor.MeasurePublish())
+                {
+                    await publisher.PublishAsync(message, metadata, cancellationToken)
+                        .ConfigureAwait(false);
+                }
             }
             catch (Exception ex)
             {

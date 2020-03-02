@@ -35,10 +35,7 @@ namespace JustSaying.Messaging.Channels
         {
             await foreach (var messageContext in _messageSource)
             {
-                using (_logger.TimedOperation("Dispatching message to do actual work"))
-                {
-                    await _dispatcher.DispatchMessageAsync(messageContext, CancellationToken.None).ConfigureAwait(false);
-                }
+                await _dispatcher.DispatchMessageAsync(messageContext, CancellationToken.None).ConfigureAwait(false);
             }
         }
     }

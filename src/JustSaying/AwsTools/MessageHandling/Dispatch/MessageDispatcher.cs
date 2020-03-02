@@ -147,19 +147,21 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
 
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
-            var handlerSucceeded = await handler(message).ConfigureAwait(false);
+            using (_messagingMonitor.MeasureHandler())
+            {
+                var handlerSucceeded = await handler(message).ConfigureAwait(false);
 
-            watch.Stop();
+                watch.Stop();
 
-            _logger.LogTrace(
-                "Handled message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}.",
-                message.Id,
-                messageType,
-                watch.Elapsed);
+                _logger.LogTrace(
+                    "Handled message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}.",
+                    message.Id,
+                    messageType,
+                    watch.Elapsed);
 
-            _messagingMonitor.HandleTime(watch.Elapsed);
+                return handlerSucceeded;
+            }
 
-            return handlerSucceeded;
         }
 
         private async Task UpdateMessageVisibilityTimeout(IQueueMessageContext messageContext, Message typedMessage, Exception lastException)
