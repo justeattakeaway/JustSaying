@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -111,6 +112,26 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
                 LoggerFactory);
 
             return bus;
+        }
+
+        protected static ISqsQueue CreateSuccessfulTestQueue(params Amazon.SQS.Model.Message[] messages)
+        {
+            return CreateSuccessfulTestQueue(() => messages);
+        }
+
+        protected static ISqsQueue CreateSuccessfulTestQueue(Func<IList<Amazon.SQS.Model.Message>> getMessages)
+        {
+            return CreateSuccessfulTestQueue(() => Task.FromResult(getMessages()));
+        }
+
+        protected static ISqsQueue CreateSuccessfulTestQueue(Func<Task<IList<Amazon.SQS.Model.Message>>> getMessages)
+        {
+            var queue = Substitute.For<ISqsQueue>();
+            queue.GetMessages(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
+                .Returns(_ => getMessages());
+            queue.Uri.Returns(new Uri("http://foo.com"));
+
+            return queue;
         }
 
         public Task DisposeAsync()

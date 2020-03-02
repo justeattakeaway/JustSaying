@@ -22,11 +22,11 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 
         protected override void Given()
         {
-            _queue = Substitute.For<ISqsQueue>();
-            _queue.GetMessages(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
-                .Returns(_ => new List<Message> { new TestMessage { Body = _messageBody } })
-                .AndDoes(_ => Interlocked.Increment(ref _callCount));
-            _queue.Uri.Returns(new Uri("http://foo.com"));
+            _queue = CreateSuccessfulTestQueue(() =>
+            {
+                Interlocked.Increment(ref _callCount);
+                return new List<Message> { new TestMessage { Body = _messageBody } };
+            });
 
             Queues.Add(_queue);
             Handler.Handle(null)

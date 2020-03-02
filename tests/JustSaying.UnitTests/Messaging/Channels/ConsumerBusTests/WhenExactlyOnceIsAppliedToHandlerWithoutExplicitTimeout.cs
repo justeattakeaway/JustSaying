@@ -28,10 +28,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 
         protected override void Given()
         {
-            _queue = Substitute.For<ISqsQueue>();
-            _queue.GetMessages(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
-                .Returns(_ => new List<Message> { new TestMessage() });
-            _queue.Uri.Returns(new Uri("http://foo.com"));
+            _queue = CreateSuccessfulTestQueue(new TestMessage());
 
             Queues.Add(_queue);
 

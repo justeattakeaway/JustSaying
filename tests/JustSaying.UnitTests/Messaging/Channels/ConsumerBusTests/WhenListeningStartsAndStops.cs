@@ -35,13 +35,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             var response1 = new List<Message> { new Message { Body = _messageContentsRunning } };
             var response2 = new List<Message> { new Message { Body = _messageContentsAfterStop } };
 
-            _queue = Substitute.For<ISqsQueue>();
-            _queue.GetMessages(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
-                .Returns(_ =>
-                {
-                    return _running ? response1 : response2;
-                });
-            _queue.Uri.Returns(new Uri("http://foo.com"));
+            _queue = CreateSuccessfulTestQueue(() => _running ? response1 : response2);
 
             Queues.Add(_queue);
         }

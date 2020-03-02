@@ -24,10 +24,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 
         protected override void Given()
         {
-            _queue = Substitute.For<ISqsQueue>();
-            _queue.GetMessages(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
-                .Returns(_ => ExceptionOnFirstCall());
-            _queue.Uri.Returns(new Uri("http://foo.com"));
+            _queue = CreateSuccessfulTestQueue(async () => await ExceptionOnFirstCall());
 
             Queues.Add(_queue);
             Handler.Handle(null).ReturnsForAnyArgs(true);
@@ -37,7 +34,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
                 .Returns(x => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing"));
         }
 
-        private Task ExceptionOnFirstCall()
+        private Task<List<Message>> ExceptionOnFirstCall()
         {
             _callCount++;
             if (_callCount == 1)
@@ -45,7 +42,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
                 throw new TestException("testing the failure on first call");
             }
             
-            return Task.FromResult(new ReceiveMessageResponse());
+            return Task.FromResult(new List<Message>());
         }
 
         protected override async Task WhenAsync()
