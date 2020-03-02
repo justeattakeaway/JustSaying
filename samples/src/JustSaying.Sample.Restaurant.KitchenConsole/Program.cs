@@ -23,6 +23,22 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
 
             Console.Title = "KitchenConsole";
 
+            try
+            {
+                await Run();
+            }
+            catch (Exception e)
+            {
+                Log.Fatal(e, "Error occurred during startup: {Message}", e.Message);
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
+        }
+
+        private static async Task Run()
+        {
             await new HostBuilder()
                 .ConfigureAppConfiguration((hostContext, config) =>
                 {

@@ -1,6 +1,7 @@
 using System;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Sample.Restaurant.Models;
 using Microsoft.Extensions.Logging;
@@ -10,10 +11,12 @@ namespace JustSaying.Sample.Restaurant.OrderingApi.Handlers
     public class OrderReadyEventHandler : IHandlerAsync<OrderReadyEvent>
     {
         private readonly ILogger<OrderReadyEventHandler> _log;
+        private readonly IMessagePublisher _publisher;
 
-        public OrderReadyEventHandler(ILogger<OrderReadyEventHandler> log)
+        public OrderReadyEventHandler(ILogger<OrderReadyEventHandler> log, IMessagePublisher publisher)
         {
             _log = log;
+            _publisher = publisher;
         }
 
         public async Task<bool> Handle(OrderReadyEvent message)
@@ -24,6 +27,13 @@ namespace JustSaying.Sample.Restaurant.OrderingApi.Handlers
             // Intentionally left empty for the sake of this being a sample application
 
             await Task.Delay(RandomNumberGenerator.GetInt32(50, 100));
+
+            var orderOnItsWayEvent = new OrderOnItsWayEvent()
+            {
+                OrderId = message.OrderId
+            };
+
+            await _publisher.PublishAsync(orderOnItsWayEvent);
 
             // Returning true would indicate:
             //   The message was handled successfully
