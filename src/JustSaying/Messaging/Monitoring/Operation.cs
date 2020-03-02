@@ -5,35 +5,24 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Monitoring
 {
-    public static class LogExtensions
-    {
-        public static Operation TimedOperation(this ILogger logger, string template, params object[] args)
-        {
-            return new Operation(logger, template, args);
-        }
-    }
-
     public sealed class Operation : IDisposable
     {
+        private readonly IMessageMonitor _messageMonitor;
+        private readonly Action<TimeSpan, IMessageMonitor> _onComplete;
         private readonly Stopwatch _stopWatch;
-        private readonly ILogger _logger;
-        private readonly string _template;
-        private readonly object[] _args;
 
-        internal Operation(ILogger logger, string template, object[] args = null)
+        internal Operation(IMessageMonitor messageMonitor, Action<TimeSpan, IMessageMonitor> onComplete)
         {
-            _logger = logger;
-            _template = template;
-            _stopWatch = new Stopwatch();
-            _args = args ?? Array.Empty<object>();
+            _messageMonitor = messageMonitor ?? throw new ArgumentNullException(nameof(messageMonitor));
+            _onComplete = onComplete ?? throw new ArgumentNullException(nameof(onComplete));
 
+            _stopWatch = new Stopwatch();
             _stopWatch.Start();
         }
 
         public void Dispose()
         {
-            var args = _args.Concat(new object[] {_stopWatch.ElapsedMilliseconds}).ToArray();
-            _logger.LogInformation($"{_template} completed in {{Elapsed:0.00}}ms", args);
+            _onComplete(_stopWatch.Elapsed, _messageMonitor);
         }
     }
 }

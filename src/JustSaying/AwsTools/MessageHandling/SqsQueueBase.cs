@@ -205,8 +205,6 @@ namespace JustSaying.AwsTools.MessageHandling
             using var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));
             ReceiveMessageResponse sqsMessageResponse;
 
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-
             try
             {
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, receiveTimeout.Token);

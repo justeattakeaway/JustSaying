@@ -49,7 +49,7 @@ namespace JustSaying.Messaging.Channels
                     if (!canWrite) break;
 
                     IList<Message> messages;
-                    using (_logger.TimedOperation("Receiving messages from SQS for queue {QueueName}", _sqsQueue.QueueName))
+                    using (_monitor.MeasureReceive(_sqsQueue.QueueName, _sqsQueue.RegionSystemName))
                     {
                         messages = await GetMessagesAsync(_bufferLength, stoppingToken).ConfigureAwait(false);
 
@@ -63,7 +63,10 @@ namespace JustSaying.Messaging.Channels
                     }
                 }
 
-                _logger.LogInformation("Downloader for queue {QueueName} has completed, shutting down channel...", _sqsQueue.Uri);
+                _logger.LogInformation("Downloader for queue {QueueName} has completed, shutting down channel...",
+                    _sqsQueue.Uri);
+
+                stoppingToken.ThrowIfCancellationRequested();
             }
             finally
             {
@@ -79,17 +82,19 @@ namespace JustSaying.Messaging.Channels
 
             try
             {
-                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, receiveTimeout.Token);
+                using var linkedCts =
+                    CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, receiveTimeout.Token);
 
                 messages = await _sqsQueue
-                           .GetMessages(count, _requestMessageAttributeNames, stoppingToken)
-                           .ConfigureAwait(false);
+                    .GetMessages(count, _requestMessageAttributeNames, stoppingToken)
+                    .ConfigureAwait(false);
             }
             finally
             {
                 if (receiveTimeout.Token.IsCancellationRequested)
                 {
-                    _logger.LogInformation("Timed out while receiving messages from queue '{QueueName}' in region '{Region}'.",
+                    _logger.LogInformation(
+                        "Timed out while receiving messages from queue '{QueueName}' in region '{Region}'.",
                         _sqsQueue.QueueName, _sqsQueue.RegionSystemName);
                 }
             }
@@ -101,7 +106,8 @@ namespace JustSaying.Messaging.Channels
             return messages;
         }
 
-        private async Task<bool> WaitToWriteAsync(ChannelWriter<IQueueMessageContext> writer, CancellationToken stoppingToken)
+        private async Task<bool> WaitToWriteAsync(ChannelWriter<IQueueMessageContext> writer,
+            CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -110,9 +116,10 @@ namespace JustSaying.Messaging.Channels
                     // we don't want to pass the stoppingToken here because
                     // we want to process any messages queued messages before stopping
                     using var timeoutToken = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-                    using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, stoppingToken);
+                    using var linkedCts =
+                        CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, stoppingToken);
 
-                    using (_logger.TimedOperation("Downloader waiting for buffer to empty before writing"))
+                    using (_monitor.MeasureThrottle())
                     {
                         bool writePermitted = await writer.WaitToWriteAsync(linkedCts.Token);
                         return writePermitted;

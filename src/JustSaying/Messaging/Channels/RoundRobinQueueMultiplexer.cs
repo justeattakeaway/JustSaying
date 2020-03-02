@@ -125,11 +125,8 @@ namespace JustSaying.Messaging.Channels
 
             while (true)
             {
-                using (_logger.TimedOperation("Waiting for messages to arrive to the multiplexer channel"))
-                {
-                    var couldWait = await _targetChannel.Reader.WaitToReadAsync();
-                    if (!couldWait) break;
-                }
+                var couldWait = await _targetChannel.Reader.WaitToReadAsync();
+                if (!couldWait) break;
 
                 while (_targetChannel.Reader.TryRead(out var message))
                     yield return message;
