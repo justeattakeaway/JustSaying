@@ -127,7 +127,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         protected static ISqsQueue CreateSuccessfulTestQueue(Func<Task<IList<Amazon.SQS.Model.Message>>> getMessages)
         {
             var queue = Substitute.For<ISqsQueue>();
-            queue.GetMessages(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
+            queue.GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
                 .Returns(_ => getMessages());
             queue.Uri.Returns(new Uri("http://foo.com"));
 

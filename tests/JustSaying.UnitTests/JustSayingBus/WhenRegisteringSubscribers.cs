@@ -28,7 +28,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             _queue1 = Substitute.For<ISqsQueue>();
             _queue1.QueueName.Returns("queue1");
             _queue1
-                .GetMessages(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
+                .GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
                 .Returns(new List<Message>
                 {
                     new TestMessage(),
@@ -37,7 +37,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             _queue2 = Substitute.For<ISqsQueue>();
             _queue2.QueueName.Returns("queue2");
             _queue2
-                .GetMessages(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
+                .GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
                 .Returns(new List<Message>
                 {
                     new TestMessage(),
@@ -60,8 +60,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public void SubscribersStartedUp()
         {
-            _queue1.Received().GetMessages(Arg.Any<int>(), Arg.Any<List<string>>(), default);
-            _queue2.Received().GetMessages(Arg.Any<int>(), Arg.Any<List<string>>(), default);
+            _queue1.Received().GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), default);
+            _queue2.Received().GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), default);
         }
 
         // todo: how can we check this?

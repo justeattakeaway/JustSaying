@@ -60,7 +60,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             ISqsQueue sqsQueueMock = Substitute.For<ISqsQueue>();
             sqsQueueMock
-                .GetMessages(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
+                .GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
                 .Returns(async _ => await getMessages());
 
             return sqsQueueMock;
