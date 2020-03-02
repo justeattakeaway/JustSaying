@@ -45,8 +45,11 @@ namespace JustSaying.Messaging.Channels
             {
                 while (!stoppingToken.IsCancellationRequested)
                 {
-                    var canWrite = await WaitToWriteAsync(writer, stoppingToken).ConfigureAwait(false);
-                    if (!canWrite) break;
+                    using (_monitor.MeasureThrottle())
+                    {
+                        var canWrite = await WaitToWriteAsync(writer, stoppingToken).ConfigureAwait(false);
+                        if (!canWrite) break;
+                    }
 
                     IList<Message> messages;
                     using (_monitor.MeasureReceive(_sqsQueue.QueueName, _sqsQueue.RegionSystemName))
@@ -119,11 +122,8 @@ namespace JustSaying.Messaging.Channels
                     using var linkedCts =
                         CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, stoppingToken);
 
-                    using (_monitor.MeasureThrottle())
-                    {
-                        bool writePermitted = await writer.WaitToWriteAsync(linkedCts.Token);
-                        return writePermitted;
-                    }
+                    bool writePermitted = await writer.WaitToWriteAsync(linkedCts.Token);
+                    return writePermitted;
                 }
                 catch (OperationCanceledException)
                 {

@@ -5,6 +5,7 @@ namespace JustSaying.Messaging.Monitoring
         public static Operation MeasureThrottle(this IMessageMonitor messageMonitor)
             => new Operation(messageMonitor, (duration, monitor) =>
             {
+                if (duration.TotalMilliseconds < 1) return;
                 monitor.IncrementThrottlingStatistic();
                 monitor.HandleThrottlingTime(duration);
             });
