@@ -23,7 +23,6 @@ namespace JustSaying.AwsTools.QueueCreation
         public string PublishEndpoint { get; set; }
 
         public int? MaxAllowedMessagesInFlight { get; set; }
-        public IMessageProcessingStrategy MessageProcessingStrategy { get; set; }
         public Action<Exception, Amazon.SQS.Model.Message> OnError { get; set; }
         public string TopicSourceAccount { get; set; }
         public IMessageBackoffStrategy MessageBackoffStrategy { get; set; }
@@ -39,9 +38,9 @@ namespace JustSaying.AwsTools.QueueCreation
         {
             base.Validate();
 
-            if (MaxAllowedMessagesInFlight.HasValue && MessageProcessingStrategy != null)
+            if (!MaxAllowedMessagesInFlight.HasValue)
             {
-                throw new ConfigurationErrorsException("You have provided both 'maxAllowedMessagesInFlight' and 'messageProcessingStrategy' - these settings are mutually exclusive.");
+                throw new ConfigurationErrorsException("'MaxAllowedMessagesInFlight' must be specified.");
             }
         }
 
