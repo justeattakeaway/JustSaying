@@ -1,25 +1,37 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.SQS.Model;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.Support;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
+namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 {
-    public class WhenExactlyOnceIsAppliedToHandler : BaseQueuePollingTest
+    public class WhenExactlyOnceIsAppliedToHandler : BaseConsumerBusTests
     {
-        private int _expectedTimeout;
+        private ISqsQueue _queue;
+        private int _expectedTimeout = 5;
         private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
+
         private ExplicitExactlyOnceSignallingHandler _handler;
+
+        public WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelper)
+            : base(testOutputHelper)
+        {
+        }
 
         protected override void Given()
         {
-            base.Given();
-            _expectedTimeout = 5;
+            _queue = CreateSuccessfulTestQueue(new TestMessage());
+
+            Queues.Add(_queue);
 
             var messageLockResponse = new MessageLockResponse
             {
@@ -36,13 +48,16 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
 
         protected override async Task WhenAsync()
         {
-            SystemUnderTest.AddMessageHandler(() => Handler);
+            HandlerMap.Add(() => Handler);
+
             var cts = new CancellationTokenSource();
-            SystemUnderTest.Listen(cts.Token);
+            SystemUnderTest.Start(cts.Token);
 
             // wait until it's done
             await TaskHelpers.WaitWithTimeoutAsync(_tcs.Task);
             cts.Cancel();
+
+            await SystemUnderTest.Completion;
         }
 
         [Fact]

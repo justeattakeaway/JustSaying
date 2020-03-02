@@ -15,6 +15,7 @@ namespace JustSaying.Messaging.Channels
         private readonly Channel<IQueueMessageContext> _channel;
         private readonly int _bufferLength;
         private readonly ISqsQueue _sqsQueue;
+        private readonly IMessageMonitor _monitor;
         private readonly ILogger _logger;
 
         // todo: add logic around populating this
@@ -25,10 +26,12 @@ namespace JustSaying.Messaging.Channels
         public MessageReceiveBuffer(
             int bufferLength,
             ISqsQueue sqsQueue,
+            IMessageMonitor monitor,
             ILoggerFactory logger)
         {
             _bufferLength = bufferLength;
             _sqsQueue = sqsQueue;
+            _monitor = monitor;
             _logger = logger.CreateLogger<IMessageReceiveBuffer>();
             _channel = Channel.CreateBounded<IQueueMessageContext>(bufferLength);
         }
@@ -48,9 +51,7 @@ namespace JustSaying.Messaging.Channels
                     IList<Message> messages;
                     using (_logger.TimedOperation("Receiving messages from SQS for queue {QueueName}", _sqsQueue.QueueName))
                     {
-                        messages = await _sqsQueue
-                           .GetMessages(_bufferLength, _requestMessageAttributeNames, stoppingToken)
-                           .ConfigureAwait(false);
+                        messages = await GetMessagesAsync(_bufferLength, stoppingToken).ConfigureAwait(false);
 
                         if (messages == null) continue;
                     }
@@ -68,6 +69,36 @@ namespace JustSaying.Messaging.Channels
             {
                 writer.Complete();
             }
+        }
+
+        private async Task<IList<Message>> GetMessagesAsync(int count, CancellationToken stoppingToken)
+        {
+            using var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));
+            IList<Message> messages;
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+            try
+            {
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, receiveTimeout.Token);
+
+                messages = await _sqsQueue
+                           .GetMessages(count, _requestMessageAttributeNames, stoppingToken)
+                           .ConfigureAwait(false);
+            }
+            finally
+            {
+                if (receiveTimeout.Token.IsCancellationRequested)
+                {
+                    _logger.LogInformation("Timed out while receiving messages from queue '{QueueName}' in region '{Region}'.",
+                        _sqsQueue.QueueName, _sqsQueue.RegionSystemName);
+                }
+            }
+
+            stopwatch.Stop();
+
+            _monitor.ReceiveMessageTime(stopwatch.Elapsed, _sqsQueue.QueueName, _sqsQueue.RegionSystemName);
+
+            return messages;
         }
 
         private async Task<bool> WaitToWriteAsync(ChannelWriter<IQueueMessageContext> writer, CancellationToken stoppingToken)

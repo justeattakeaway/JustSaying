@@ -1,16 +1,30 @@
 using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
 using Amazon.SQS.Model;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.TestingFramework;
 using NSubstitute;
 using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
+namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 {
-    public class WhenMessageHandlingFails : BaseQueuePollingTest
+    public class WhenMessageHandlingFails : BaseConsumerBusTests
     {
+        private ISqsQueue _queue;
+
+        public WhenMessageHandlingFails(ITestOutputHelper testOutputHelper)
+            : base(testOutputHelper)
+        {
+        }
+
         protected override void Given()
         {
-            base.Given();
+            _queue = CreateSuccessfulTestQueue(new TestMessage());
+
+            Queues.Add(_queue);
             Handler.Handle(Arg.Any<SimpleMessage>()).ReturnsForAnyArgs(false);
         }
 
@@ -24,7 +38,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener
         public void FailedMessageIsNotRemovedFromQueue()
         {
             // The un-handled one is however.
-            Sqs.DidNotReceiveWithAnyArgs().DeleteMessageAsync(Arg.Any<DeleteMessageRequest>());
+            _queue.DidNotReceiveWithAnyArgs().DeleteMessageAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]

@@ -37,7 +37,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         {
             _serializationRegister = serializationRegister;
             _messagingMonitor = messagingMonitor;
-            _onError = onError;
+            _onError = onError ?? DefaultErrorHandler;
             _handlerMap = handlerMap;
             _logger = loggerFactory.CreateLogger("JustSaying");
             _messageBackoffStrategy = messageBackoffStrategy;
@@ -192,6 +192,11 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
 
             return attributes.TryGetValue(MessageSystemAttributeName.ApproximateReceiveCount, out string rawApproxReceiveCount) &&
                    int.TryParse(rawApproxReceiveCount, out approxReceiveCount);
+        }
+
+        private static void DefaultErrorHandler(Exception exception, Amazon.SQS.Model.Message message)
+        {
+            // No-op
         }
     }
 }

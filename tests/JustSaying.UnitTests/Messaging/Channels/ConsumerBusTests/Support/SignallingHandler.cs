@@ -1,8 +1,8 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 
-namespace JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.Support
+namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests.Support
 {
     public class SignallingHandler<T> : IHandlerAsync<T>
     {
