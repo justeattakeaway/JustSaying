@@ -86,7 +86,7 @@ namespace JustSaying.Messaging.Channels
                     CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, receiveTimeout.Token);
 
                 messages = await _sqsQueue
-                    .GetMessages(count, _requestMessageAttributeNames, stoppingToken)
+                    .GetMessagesAsync(count, _requestMessageAttributeNames, stoppingToken)
                     .ConfigureAwait(false);
             }
             finally

@@ -60,14 +60,14 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         public void MessagesAreReceived()
         {
             _queue.Received()
-                .GetMessages(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
+                .GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]
         public void TheMaxMessageAllowanceIsGrabbed()
         {
             _queue.Received()
-                .GetMessages(Arg.Is<int>(count => count == _expectedMaxMessageCount), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
+                .GetMessagesAsync(Arg.Is<int>(count => count == _expectedMaxMessageCount), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]
