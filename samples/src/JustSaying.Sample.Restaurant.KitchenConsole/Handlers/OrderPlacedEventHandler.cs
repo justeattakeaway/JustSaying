@@ -40,7 +40,7 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
                 // This is where you would actually handle the order placement
                 // Intentionally left empty for the sake of this being a sample application
 
-                _logger.LogInformation("Order {orderId} ready", message.OrderId);
+                _logger.LogInformation("Order {OrderId} ready", message.OrderId);
 
                 await Task.Delay(RandomNumberGenerator.GetInt32(50, 100));
 

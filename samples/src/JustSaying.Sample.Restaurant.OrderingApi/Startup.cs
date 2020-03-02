@@ -56,12 +56,14 @@ namespace JustSaying.Sample.Restaurant.OrderingApi
                     //  - a SNS topic of name `orderreadyevent`
                     //  - a SNS topic subscription on topic 'orderreadyevent' and queue 'orderreadyevent'
                     x.ForTopic<OrderReadyEvent>();
+                    x.ForTopic<OrderDeliveredEvent>();
                 });
                 config.Publications(x =>
                 {
                     // Creates the following if they do not already exist
                     //  - a SNS topic of name `orderplacedevent`
                     x.WithTopic<OrderPlacedEvent>();
+                    x.WithTopic<OrderOnItsWayEvent>();
                 });
             });
 

@@ -22,7 +22,18 @@ namespace JustSaying.Sample.Restaurant.OrderingApi
 
             Console.Title = "OrderingApi";
 
-            CreateHostBuilder(args).Build().Run();
+            try
+            {
+                CreateHostBuilder(args).Build().Run();
+            }
+            catch (Exception e)
+            {
+                Log.Fatal(e, "Error occurred during startup: {Message}", e.Message);
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args)
