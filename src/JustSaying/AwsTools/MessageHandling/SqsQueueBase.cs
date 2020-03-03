@@ -68,16 +68,16 @@ namespace JustSaying.AwsTools.MessageHandling
         protected async Task SetQueuePropertiesAsync()
         {
             var keys = new[]
-            {
-                JustSayingConstants.AttributeArn,
-                JustSayingConstants.AttributeRedrivePolicy,
-                JustSayingConstants.AttributePolicy,
-                JustSayingConstants.AttributeRetentionPeriod,
-                JustSayingConstants.AttributeVisibilityTimeout,
-                JustSayingConstants.AttributeDeliveryDelay,
-                JustSayingConstants.AttributeEncryptionKeyId,
-                JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId
-            };
+                {
+                    JustSayingConstants.AttributeArn,
+                    JustSayingConstants.AttributeRedrivePolicy,
+                    JustSayingConstants.AttributePolicy,
+                    JustSayingConstants.AttributeRetentionPeriod,
+                    JustSayingConstants.AttributeVisibilityTimeout,
+                    JustSayingConstants.AttributeDeliveryDelay,
+                    JustSayingConstants.AttributeEncryptionKeyId,
+                    JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId
+                };
             var attributes = await GetAttrsAsync(keys).ConfigureAwait(false);
             Arn = attributes.QueueARN;
             MessageRetentionPeriod = TimeSpan.FromSeconds(attributes.MessageRetentionPeriod);
@@ -105,17 +105,15 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 var attributes = new Dictionary<string, string>
                 {
-                    {JustSayingConstants.AttributeRetentionPeriod, queueConfig.MessageRetention.AsSecondsString()},
-                    {JustSayingConstants.AttributeVisibilityTimeout, queueConfig.VisibilityTimeout.AsSecondsString()},
-                    {JustSayingConstants.AttributeDeliveryDelay, queueConfig.DeliveryDelay.AsSecondsString()}
+                    {JustSayingConstants.AttributeRetentionPeriod, queueConfig.MessageRetention.AsSecondsString() },
+                    {JustSayingConstants.AttributeVisibilityTimeout, queueConfig.VisibilityTimeout.AsSecondsString() },
+                    {JustSayingConstants.AttributeDeliveryDelay, queueConfig.DeliveryDelay.AsSecondsString() }
                 };
 
                 if (queueConfig.ServerSideEncryption != null)
                 {
-                    attributes.Add(JustSayingConstants.AttributeEncryptionKeyId,
-                        queueConfig.ServerSideEncryption.KmsMasterKeyId);
-                    attributes.Add(JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId,
-                        queueConfig.ServerSideEncryption.KmsDataKeyReusePeriodSeconds);
+                    attributes.Add(JustSayingConstants.AttributeEncryptionKeyId, queueConfig.ServerSideEncryption.KmsMasterKeyId);
+                    attributes.Add(JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId, queueConfig.ServerSideEncryption.KmsDataKeyReusePeriodSeconds);
                 }
 
                 if (queueConfig.ServerSideEncryption == null)
@@ -159,8 +157,7 @@ namespace JustSaying.AwsTools.MessageHandling
             if (ServerSideEncryption != null && queueConfig.ServerSideEncryption != null)
             {
                 return ServerSideEncryption.KmsMasterKeyId != queueConfig.ServerSideEncryption.KmsMasterKeyId ||
-                       ServerSideEncryption.KmsDataKeyReusePeriodSeconds !=
-                       queueConfig.ServerSideEncryption.KmsDataKeyReusePeriodSeconds;
+                       ServerSideEncryption.KmsDataKeyReusePeriodSeconds != queueConfig.ServerSideEncryption.KmsDataKeyReusePeriodSeconds;
             }
 
             return true;
