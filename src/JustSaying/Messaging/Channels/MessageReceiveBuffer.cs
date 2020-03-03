@@ -43,7 +43,7 @@ namespace JustSaying.Messaging.Channels
             ChannelWriter<IQueueMessageContext> writer = _channel.Writer;
             try
             {
-                while (!stoppingToken.IsCancellationRequested)
+                while (true)
                 {
                     using (_monitor.MeasureThrottle())
                     {

@@ -33,11 +33,11 @@ namespace JustSaying.Messaging.Channels
 
         public async Task Start(CancellationToken stoppingToken)
         {
-            await Task.Yield();
-
             await foreach (var messageContext in _messageSource.WithCancellation(stoppingToken))
             {
                 await _dispatcher.DispatchMessageAsync(messageContext, stoppingToken).ConfigureAwait(false);
+
+                stoppingToken.ThrowIfCancellationRequested();
             }
         }
     }

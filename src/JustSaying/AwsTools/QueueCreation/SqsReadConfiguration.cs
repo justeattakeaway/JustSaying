@@ -30,19 +30,9 @@ namespace JustSaying.AwsTools.QueueCreation
 
         public override void Validate()
         {
-            ValidateSqsConfiguration();
             ValidateSnsConfiguration();
         }
 
-        public void ValidateSqsConfiguration()
-        {
-            base.Validate();
-
-            if (!MaxAllowedMessagesInFlight.HasValue)
-            {
-                throw new ConfigurationErrorsException("'MaxAllowedMessagesInFlight' must be specified.");
-            }
-        }
 
         private void ValidateSnsConfiguration()
         {

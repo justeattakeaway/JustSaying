@@ -41,6 +41,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 
             await SystemUnderTest.Start(cts.Token);
 
+            await SystemUnderTest.Completion;
+
         }
 
         [Fact]

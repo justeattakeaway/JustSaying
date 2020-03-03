@@ -328,12 +328,6 @@ namespace JustSaying
             // todo: should MaxAllowedMessagesInFlight be the bufferlength?
             Bus.AddQueue(region, queue);
 
-            //INotificationSubscriber subscriber = CreateSubscriber(queue);
-
-            //subscriber.Subscribers.Add(new Subscriber(typeof(T)));
-
-            //Bus.AddNotificationSubscriber(region, subscriber);
-
             // TODO Concrete type check for backwards compatibility for now.
             // Refactor the interface for v7 to allow this to be done against the interface.
             /*if (subscriber is SqsNotificationListener sqsSubscriptionListener)
@@ -361,7 +355,6 @@ namespace JustSaying
 
         private void ConfigureSqsSubscription<T>() where T : Message
         {
-            _subscriptionConfig.ValidateSqsConfiguration();
             _subscriptionConfig.QueueName = _subscriptionConfig.QueueName;
         }
 

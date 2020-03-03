@@ -48,9 +48,11 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         protected override async Task WhenAsync()
         {
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromMilliseconds(100));
+            cts.CancelAfter(TimeSpan.FromSeconds(1));
 
             await SystemUnderTest.Start(cts.Token);
+
+            await Assert.ThrowsAsync<OperationCanceledException>(() => SystemUnderTest.Completion);
         }
 
         // todo: this one fails because we haven't handled this error yet

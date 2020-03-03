@@ -49,17 +49,18 @@ namespace JustSaying.Messaging.Channels
             // start
             var completionTasks = new List<Task>();
 
-            await _multiplexer.Start().ConfigureAwait(false);
+            await _multiplexer.Start(stoppingToken).ConfigureAwait(false);
 
             completionTasks.Add(_multiplexer.Completion);
-
             completionTasks.AddRange(_consumers.Select(x => x.Start(stoppingToken)));
             completionTasks.AddRange(_buffers.Select(x => x.Start(stoppingToken)));
 
             _logger.LogInformation("Consumer bus successfully started");
 
-            await Task.WhenAll(completionTasks).ConfigureAwait(false);
+            Completion = Task.WhenAll(completionTasks);
         }
+
+        public Task Completion { get; private set; }
 
         private IMessageReceiveBuffer CreateBuffer(
             ISqsQueue queue,
