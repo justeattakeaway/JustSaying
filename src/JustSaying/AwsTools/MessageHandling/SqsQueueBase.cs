@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -67,16 +68,16 @@ namespace JustSaying.AwsTools.MessageHandling
         protected async Task SetQueuePropertiesAsync()
         {
             var keys = new[]
-                {
-                    JustSayingConstants.AttributeArn,
-                    JustSayingConstants.AttributeRedrivePolicy,
-                    JustSayingConstants.AttributePolicy,
-                    JustSayingConstants.AttributeRetentionPeriod,
-                    JustSayingConstants.AttributeVisibilityTimeout,
-                    JustSayingConstants.AttributeDeliveryDelay,
-                    JustSayingConstants.AttributeEncryptionKeyId,
-                    JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId
-                };
+            {
+                JustSayingConstants.AttributeArn,
+                JustSayingConstants.AttributeRedrivePolicy,
+                JustSayingConstants.AttributePolicy,
+                JustSayingConstants.AttributeRetentionPeriod,
+                JustSayingConstants.AttributeVisibilityTimeout,
+                JustSayingConstants.AttributeDeliveryDelay,
+                JustSayingConstants.AttributeEncryptionKeyId,
+                JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId
+            };
             var attributes = await GetAttrsAsync(keys).ConfigureAwait(false);
             Arn = attributes.QueueARN;
             MessageRetentionPeriod = TimeSpan.FromSeconds(attributes.MessageRetentionPeriod);
@@ -104,21 +105,24 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 var attributes = new Dictionary<string, string>
                 {
-                    {JustSayingConstants.AttributeRetentionPeriod, queueConfig.MessageRetention.AsSecondsString() },
-                    {JustSayingConstants.AttributeVisibilityTimeout, queueConfig.VisibilityTimeout.AsSecondsString() },
-                    {JustSayingConstants.AttributeDeliveryDelay, queueConfig.DeliveryDelay.AsSecondsString() }
+                    {JustSayingConstants.AttributeRetentionPeriod, queueConfig.MessageRetention.AsSecondsString()},
+                    {JustSayingConstants.AttributeVisibilityTimeout, queueConfig.VisibilityTimeout.AsSecondsString()},
+                    {JustSayingConstants.AttributeDeliveryDelay, queueConfig.DeliveryDelay.AsSecondsString()}
                 };
 
                 if (queueConfig.ServerSideEncryption != null)
                 {
-                    attributes.Add(JustSayingConstants.AttributeEncryptionKeyId, queueConfig.ServerSideEncryption.KmsMasterKeyId);
-                    attributes.Add(JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId, queueConfig.ServerSideEncryption.KmsDataKeyReusePeriodSeconds);
+                    attributes.Add(JustSayingConstants.AttributeEncryptionKeyId,
+                        queueConfig.ServerSideEncryption.KmsMasterKeyId);
+                    attributes.Add(JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId,
+                        queueConfig.ServerSideEncryption.KmsDataKeyReusePeriodSeconds);
                 }
 
                 if (queueConfig.ServerSideEncryption == null)
                 {
                     attributes.Add(JustSayingConstants.AttributeEncryptionKeyId, string.Empty);
                 }
+
                 var request = new SetQueueAttributesRequest
                 {
                     QueueUrl = Uri.AbsoluteUri,
@@ -155,7 +159,8 @@ namespace JustSaying.AwsTools.MessageHandling
             if (ServerSideEncryption != null && queueConfig.ServerSideEncryption != null)
             {
                 return ServerSideEncryption.KmsMasterKeyId != queueConfig.ServerSideEncryption.KmsMasterKeyId ||
-                       ServerSideEncryption.KmsDataKeyReusePeriodSeconds != queueConfig.ServerSideEncryption.KmsDataKeyReusePeriodSeconds;
+                       ServerSideEncryption.KmsDataKeyReusePeriodSeconds !=
+                       queueConfig.ServerSideEncryption.KmsDataKeyReusePeriodSeconds;
             }
 
             return true;
@@ -167,25 +172,29 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 return null;
             }
+
             return RedrivePolicy.ConvertFromString(queueAttributes[JustSayingConstants.AttributeRedrivePolicy]);
         }
 
-        private static ServerSideEncryption ExtractServerSideEncryptionFromQueueAttributes(Dictionary<string, string> queueAttributes)
+        private static ServerSideEncryption ExtractServerSideEncryptionFromQueueAttributes(
+            Dictionary<string, string> queueAttributes)
         {
             if (!queueAttributes.ContainsKey(JustSayingConstants.AttributeEncryptionKeyId))
             {
                 return null;
             }
+
             return new ServerSideEncryption
             {
                 KmsMasterKeyId = queueAttributes[JustSayingConstants.AttributeEncryptionKeyId],
-                KmsDataKeyReusePeriodSeconds = queueAttributes[JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId]
+                KmsDataKeyReusePeriodSeconds =
+                    queueAttributes[JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId]
             };
         }
 
         public async Task<IList<Message>> GetMessagesAsync(
             int count,
-            List<string> requestMessageAttributeNames,
+            IList<string> requestMessageAttributeNames,
             CancellationToken cancellationToken)
         {
             var request = new ReceiveMessageRequest
@@ -193,37 +202,32 @@ namespace JustSaying.AwsTools.MessageHandling
                 QueueUrl = Uri.AbsoluteUri,
                 MaxNumberOfMessages = count,
                 WaitTimeSeconds = 20,
-                AttributeNames = requestMessageAttributeNames
+                AttributeNames = requestMessageAttributeNames.ToList()
             };
 
-            var response = await GetMessages(request, cancellationToken).ConfigureAwait(false);
-            return response?.Messages.ToArray();
-        }
-
-        public async Task<ReceiveMessageResponse> GetMessages(ReceiveMessageRequest request, CancellationToken cancellationToken)
-        {
             using var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));
-            ReceiveMessageResponse sqsMessageResponse;
 
             try
             {
-                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, receiveTimeout.Token);
+                using var linkedCts =
+                    CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, receiveTimeout.Token);
 
-                sqsMessageResponse = await Client.ReceiveMessageAsync(request, linkedCts.Token).ConfigureAwait(false);
+                var sqsMessageResponse =
+                    await Client.ReceiveMessageAsync(request, linkedCts.Token).ConfigureAwait(false);
+                return sqsMessageResponse?.Messages.ToArray();
             }
             finally
             {
                 if (receiveTimeout.Token.IsCancellationRequested)
                 {
-                    Logger.LogWarning("Timed out while receiving messages from queue '{QueueName}' in region '{Region}'.",
+                    Logger.LogWarning(
+                        "Timed out while receiving messages from queue '{QueueName}' in region '{Region}'.",
                         QueueName, Region);
                 }
             }
-
-            return sqsMessageResponse;
         }
 
-        public async Task<DeleteMessageResponse> DeleteMessageAsync(
+        public async Task DeleteMessageAsync(
             string receiptHandle,
             CancellationToken cancellationToken = default)
         {
@@ -233,14 +237,20 @@ namespace JustSaying.AwsTools.MessageHandling
                 ReceiptHandle = receiptHandle,
             };
 
-            return await Client.DeleteMessageAsync(deleteRequest, cancellationToken).ConfigureAwait(false);
+            await Client.DeleteMessageAsync(deleteRequest, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<ChangeMessageVisibilityResponse> ChangeMessageVisibilityAsync(
-            ChangeMessageVisibilityRequest changeMessageVisibilityRequest,
+        public async Task ChangeMessageVisibilityAsync(string receiptHandle, int timeoutInSeconds,
             CancellationToken cancellationToken = default)
         {
-            return await Client.ChangeMessageVisibilityAsync(changeMessageVisibilityRequest, cancellationToken).ConfigureAwait(false);
+            var visibilityRequest = new ChangeMessageVisibilityRequest
+            {
+                QueueUrl = Uri.ToString(),
+                ReceiptHandle = receiptHandle,
+                VisibilityTimeout = timeoutInSeconds
+            };
+
+            await Client.ChangeMessageVisibilityAsync(visibilityRequest, cancellationToken).ConfigureAwait(false);
         }
     }
 }

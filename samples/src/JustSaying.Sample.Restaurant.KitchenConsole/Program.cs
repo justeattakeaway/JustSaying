@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using JustSaying.AwsTools;
+using JustSaying.Sample.Restaurant.KitchenConsole.Handlers;
 using JustSaying.Sample.Restaurant.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

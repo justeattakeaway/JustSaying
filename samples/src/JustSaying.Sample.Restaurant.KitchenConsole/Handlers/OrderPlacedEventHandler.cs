@@ -6,7 +6,7 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Sample.Restaurant.Models;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Sample.Restaurant.KitchenConsole
+namespace JustSaying.Sample.Restaurant.KitchenConsole.Handlers
 {
     public class OrderPlacedEventHandler : IHandlerAsync<OrderPlacedEvent>
     {
