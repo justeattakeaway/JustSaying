@@ -41,7 +41,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             {
                 throw new TestException("testing the failure on first call");
             }
-            
+
             return Task.FromResult(new List<Message>());
         }
 
@@ -50,9 +50,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromMilliseconds(100));
 
-            SystemUnderTest.Start(cts.Token);
-
-            await SystemUnderTest.Completion;
+            await SystemUnderTest.Start(cts.Token);
         }
 
         // todo: this one fails because we haven't handled this error yet

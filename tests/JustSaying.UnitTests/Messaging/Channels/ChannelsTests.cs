@@ -207,9 +207,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromSeconds(2));
 
-            bus.Start(cts.Token);
-
-            await bus.Completion;
+            await bus.Start(cts.Token);
         }
 
         [Fact]
