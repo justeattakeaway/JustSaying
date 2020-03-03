@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
@@ -33,7 +32,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
 
             SystemUnderTest = CreateSystemUnderTest();
 
-            await WhenAsync().ConfigureAwait(false);
+            await WhenInternalAsync().ConfigureAwait(false);
         }
 
         private void GivenInternal()
@@ -45,12 +44,15 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
         }
 
         protected abstract void Given();
+        protected abstract Task WhenAsync();
 
         // Default implementation
-        protected virtual async Task WhenAsync()
+        private async Task WhenInternalAsync()
         {
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromSeconds(1));
+
+            await WhenAsync();
 
             // wait until it's done
             var doneOk = await TaskHelpers.WaitWithTimeoutAsync(
@@ -67,18 +69,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
             }
             catch (OperationCanceledException)
             { }
-        }
-
-        protected async IAsyncEnumerable<IQueueMessageContext> Messages()
-        {
-            while (true)
-            {
-                var couldWait = await SystemUnderTest.Reader.WaitToReadAsync();
-                if (!couldWait) break;
-
-                while (SystemUnderTest.Reader.TryRead(out var message))
-                    yield return message;
-            }
         }
 
         protected IMessageReceiveBuffer CreateSystemUnderTest()

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -24,6 +25,11 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
                     Interlocked.Increment(ref _callCount);
                     return new[] { new TestMessage() };
                 });
+        }
+
+        protected override Task WhenAsync()
+        {
+            return Task.CompletedTask;
         }
 
         [Fact]
