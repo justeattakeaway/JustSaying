@@ -64,15 +64,14 @@ namespace JustSaying.Messaging.Channels
                         IQueueMessageContext messageContext = _sqsQueue.ToMessageContext(message);
                         await writer.WriteAsync(messageContext).ConfigureAwait(false);
                     }
+
+                    stoppingToken.ThrowIfCancellationRequested();
                 }
-
-                _logger.LogInformation("Downloader for queue {QueueName} has completed, shutting down channel...",
-                    _sqsQueue.Uri);
-
-                stoppingToken.ThrowIfCancellationRequested();
             }
             finally
             {
+                _logger.LogInformation("Downloader for queue {QueueName} has completed, shutting down channel...",
+                    _sqsQueue.Uri);
                 writer.Complete();
             }
         }

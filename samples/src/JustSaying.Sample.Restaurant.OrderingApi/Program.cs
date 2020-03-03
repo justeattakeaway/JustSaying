@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -7,6 +8,7 @@ using Serilog.Events;
 
 namespace JustSaying.Sample.Restaurant.OrderingApi
 {
+    [SuppressMessage("ReSharper", "CA1031")]
     public static class Program
     {
         public static void Main(string[] args)

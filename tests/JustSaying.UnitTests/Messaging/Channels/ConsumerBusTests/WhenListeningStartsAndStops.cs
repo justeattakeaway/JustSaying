@@ -80,3 +80,4 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         }
     }
 }
+
