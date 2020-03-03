@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -119,6 +120,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     attributes.Add(JustSayingConstants.AttributeEncryptionKeyId, string.Empty);
                 }
+
                 var request = new SetQueueAttributesRequest
                 {
                     QueueUrl = Uri.AbsoluteUri,
@@ -167,6 +169,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 return null;
             }
+
             return RedrivePolicy.ConvertFromString(queueAttributes[JustSayingConstants.AttributeRedrivePolicy]);
         }
 
@@ -176,6 +179,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 return null;
             }
+
             return new ServerSideEncryption
             {
                 KmsMasterKeyId = queueAttributes[JustSayingConstants.AttributeEncryptionKeyId],
@@ -185,7 +189,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public async Task<IList<Message>> GetMessagesAsync(
             int count,
-            List<string> requestMessageAttributeNames,
+            IList<string> requestMessageAttributeNames,
             CancellationToken cancellationToken)
         {
             var request = new ReceiveMessageRequest
@@ -193,37 +197,32 @@ namespace JustSaying.AwsTools.MessageHandling
                 QueueUrl = Uri.AbsoluteUri,
                 MaxNumberOfMessages = count,
                 WaitTimeSeconds = 20,
-                AttributeNames = requestMessageAttributeNames
+                AttributeNames = requestMessageAttributeNames.ToList()
             };
 
-            var response = await GetMessages(request, cancellationToken).ConfigureAwait(false);
-            return response?.Messages.ToArray();
-        }
-
-        public async Task<ReceiveMessageResponse> GetMessages(ReceiveMessageRequest request, CancellationToken cancellationToken)
-        {
             using var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));
-            ReceiveMessageResponse sqsMessageResponse;
 
             try
             {
-                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, receiveTimeout.Token);
+                using var linkedCts =
+                    CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, receiveTimeout.Token);
 
-                sqsMessageResponse = await Client.ReceiveMessageAsync(request, linkedCts.Token).ConfigureAwait(false);
+                var sqsMessageResponse =
+                    await Client.ReceiveMessageAsync(request, linkedCts.Token).ConfigureAwait(false);
+                return sqsMessageResponse?.Messages.ToArray();
             }
             finally
             {
                 if (receiveTimeout.Token.IsCancellationRequested)
                 {
-                    Logger.LogWarning("Timed out while receiving messages from queue '{QueueName}' in region '{Region}'.",
+                    Logger.LogWarning(
+                        "Timed out while receiving messages from queue '{QueueName}' in region '{Region}'.",
                         QueueName, Region);
                 }
             }
-
-            return sqsMessageResponse;
         }
 
-        public async Task<DeleteMessageResponse> DeleteMessageAsync(
+        public async Task DeleteMessageAsync(
             string receiptHandle,
             CancellationToken cancellationToken = default)
         {
@@ -233,14 +232,20 @@ namespace JustSaying.AwsTools.MessageHandling
                 ReceiptHandle = receiptHandle,
             };
 
-            return await Client.DeleteMessageAsync(deleteRequest, cancellationToken).ConfigureAwait(false);
+            await Client.DeleteMessageAsync(deleteRequest, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<ChangeMessageVisibilityResponse> ChangeMessageVisibilityAsync(
-            ChangeMessageVisibilityRequest changeMessageVisibilityRequest,
+        public async Task ChangeMessageVisibilityAsync(string receiptHandle, int timeoutInSeconds,
             CancellationToken cancellationToken = default)
         {
-            return await Client.ChangeMessageVisibilityAsync(changeMessageVisibilityRequest, cancellationToken).ConfigureAwait(false);
+            var visibilityRequest = new ChangeMessageVisibilityRequest
+            {
+                QueueUrl = Uri.ToString(),
+                ReceiptHandle = receiptHandle,
+                VisibilityTimeout = timeoutInSeconds
+            };
+
+            await Client.ChangeMessageVisibilityAsync(visibilityRequest, cancellationToken).ConfigureAwait(false);
         }
     }
 }

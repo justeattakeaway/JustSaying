@@ -14,10 +14,10 @@ namespace JustSaying.AwsTools.MessageHandling
 
         Uri Uri { get; }
 
-        Task<IList<Message>> GetMessagesAsync(int count, List<string> requestMessageAttributeNames, CancellationToken cancellationToken = default);
+        Task<IList<Message>> GetMessagesAsync(int count, IList<string> requestMessageAttributeNames, CancellationToken cancellationToken = default);
 
-        Task<ChangeMessageVisibilityResponse> ChangeMessageVisibilityAsync(ChangeMessageVisibilityRequest request, CancellationToken cancellationToken = default);
+        Task ChangeMessageVisibilityAsync(string receiptHandle, int timeoutInSeconds, CancellationToken cancellationToken = default);
 
-        Task<DeleteMessageResponse> DeleteMessageAsync(string receiptHandle, CancellationToken cancellationToken = default);
+        Task DeleteMessageAsync(string receiptHandle, CancellationToken cancellationToken = default);
     }
 }

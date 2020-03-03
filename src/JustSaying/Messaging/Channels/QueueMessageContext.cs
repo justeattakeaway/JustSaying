@@ -24,14 +24,7 @@ namespace JustSaying.Messaging.Channels
 
         public async Task ChangeMessageVisibilityAsync(int visibilityTimeoutSeconds)
         {
-            var visibilityRequest = new ChangeMessageVisibilityRequest
-            {
-                QueueUrl = QueueUri.AbsoluteUri,
-                ReceiptHandle = Message.ReceiptHandle,
-                VisibilityTimeout = visibilityTimeoutSeconds
-            };
-
-            await SqsQueue.ChangeMessageVisibilityAsync(visibilityRequest).ConfigureAwait(false);
+            await SqsQueue.ChangeMessageVisibilityAsync(Message.ReceiptHandle, visibilityTimeoutSeconds).ConfigureAwait(false);
         }
 
         public Uri QueueUri => SqsQueue.Uri;
