@@ -18,6 +18,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
     {
         private readonly ITestOutputHelper _testOutputHelper;
 
+        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(100);
+
         public ErrorHandlingTests(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
@@ -35,7 +37,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var bus = new ConsumerBus(queues, 1, dispatcher, Substitute.For<IMessageMonitor>(), _testOutputHelper.ToLoggerFactory());
 
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromSeconds(2));
+            cts.CancelAfter(TimeoutPeriod);
 
             await bus.Run(cts.Token);
 

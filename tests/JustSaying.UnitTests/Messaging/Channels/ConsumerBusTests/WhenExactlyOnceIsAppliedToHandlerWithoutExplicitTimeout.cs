@@ -26,6 +26,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         {
         }
 
+
+
         protected override void Given()
         {
             _queue = CreateSuccessfulTestQueue(new TestMessage());
@@ -50,7 +52,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             HandlerMap.Add(() => Handler);
 
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromMilliseconds(100));
+            cts.CancelAfter(TimeoutPeriod);
 
             var completion = SystemUnderTest.Run(cts.Token);
 
@@ -59,6 +61,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             // wait until it's done
             await TaskHelpers.WaitWithTimeoutAsync(_tcs.Task);
         }
+
 
         [Fact]
         public void MessageIsLocked()
