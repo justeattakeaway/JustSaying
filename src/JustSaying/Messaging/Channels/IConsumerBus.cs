@@ -5,7 +5,6 @@ namespace JustSaying.Messaging.Channels
 {
     public interface IConsumerBus
     {
-        Task Start(CancellationToken stoppingToken);
-        Task Completion { get; }
+        Task Run(CancellationToken stoppingToken);
     }
 }

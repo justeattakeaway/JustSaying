@@ -12,6 +12,5 @@ namespace JustSaying.Messaging.Channels
         Task Run(CancellationToken stoppingToken);
         void ReadFrom(ChannelReader<IQueueMessageContext> reader);
         IAsyncEnumerable<IQueueMessageContext> Messages();
-        Task Completion { get; }
     }
 }
