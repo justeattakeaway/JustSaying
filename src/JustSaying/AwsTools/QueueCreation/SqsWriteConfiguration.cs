@@ -12,10 +12,8 @@ namespace JustSaying.AwsTools.QueueCreation
 
         public string QueueName { get; set; }
 
-        public override void Validate()
+        protected override void ValidateCustom()
         {
-            base.Validate();
-
             if (string.IsNullOrWhiteSpace(QueueName))
             {
                 throw new ConfigurationErrorsException("Invalid configuration. QueueName must be provided.");

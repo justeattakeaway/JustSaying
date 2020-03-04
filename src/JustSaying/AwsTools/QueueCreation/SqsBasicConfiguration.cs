@@ -21,7 +21,7 @@ namespace JustSaying.AwsTools.QueueCreation
             DeliveryDelay = JustSayingConstants.MinimumDeliveryDelay;
         }
 
-        public virtual void Validate()
+        public void Validate()
         {
             if (MessageRetention < JustSayingConstants.MinimumRetentionPeriod ||
                 MessageRetention > JustSayingConstants.MaximumRetentionPeriod)
@@ -43,6 +43,10 @@ namespace JustSaying.AwsTools.QueueCreation
                 throw new ConfigurationErrorsException(
                     $"Invalid configuration. {nameof(DeliveryDelay)} must be between {JustSayingConstants.MinimumDeliveryDelay} and {JustSayingConstants.MaximumDeliveryDelay}.");
             }
+
+            ValidateCustom();
         }
+
+        protected virtual void ValidateCustom() {}
     }
 }

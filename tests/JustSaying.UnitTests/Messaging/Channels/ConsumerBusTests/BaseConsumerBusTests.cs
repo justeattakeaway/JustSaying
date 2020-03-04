@@ -78,7 +78,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             HandlerMap.Add(typeof(SimpleMessage), msg => signallingHandler.Handle(msg as SimpleMessage));
 
             var cts = new CancellationTokenSource();
-            var completion = SystemUnderTest.Start(cts.Token);
+            var completion = SystemUnderTest.Run(cts.Token);
 
             // wait until it's done
             var doneOk = await TaskHelpers.WaitWithTimeoutAsync(doneSignal.Task);

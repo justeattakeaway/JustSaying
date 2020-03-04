@@ -6,7 +6,7 @@ namespace JustSaying.Messaging.Channels
 {
     internal interface IMessageReceiveBuffer
     {
-        Task Start(CancellationToken stoppingToken);
+        Task Run(CancellationToken stoppingToken);
         ChannelReader<IQueueMessageContext> Reader { get; }
     }
 }

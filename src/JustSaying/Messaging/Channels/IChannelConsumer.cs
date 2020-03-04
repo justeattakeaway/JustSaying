@@ -9,7 +9,7 @@ namespace JustSaying.Messaging.Channels
 {
     internal interface IChannelConsumer
     {
-        Task Start(CancellationToken stoppingToken);
+        Task Run(CancellationToken stoppingToken);
         IChannelConsumer ConsumeFrom(IAsyncEnumerable<IQueueMessageContext> messageSource);
     }
 
@@ -31,7 +31,7 @@ namespace JustSaying.Messaging.Channels
             return this;
         }
 
-        public async Task Start(CancellationToken stoppingToken)
+        public async Task Run(CancellationToken stoppingToken)
         {
             await foreach (var messageContext in _messageSource.WithCancellation(stoppingToken))
             {

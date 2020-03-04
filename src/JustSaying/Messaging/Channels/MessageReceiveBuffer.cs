@@ -36,7 +36,12 @@ namespace JustSaying.Messaging.Channels
             _channel = Channel.CreateBounded<IQueueMessageContext>(bufferLength);
         }
 
-        public async Task Start(CancellationToken stoppingToken)
+        /// <summary>
+        /// Starts the receive buffer until it's cancelled by the stopping token.
+        /// </summary>
+        /// <param name="stoppingToken"></param>
+        /// <returns>A task that completes when the cancellation token is fired.</returns>
+        public async Task Run(CancellationToken stoppingToken)
         {
             await Task.Yield();
 
@@ -45,6 +50,8 @@ namespace JustSaying.Messaging.Channels
             {
                 while (true)
                 {
+                    stoppingToken.ThrowIfCancellationRequested();
+
                     using (_monitor.MeasureThrottle())
                     {
                         var canWrite = await WaitToWriteAsync(writer, stoppingToken).ConfigureAwait(false);
@@ -64,8 +71,6 @@ namespace JustSaying.Messaging.Channels
                         IQueueMessageContext messageContext = _sqsQueue.ToMessageContext(message);
                         await writer.WriteAsync(messageContext).ConfigureAwait(false);
                     }
-
-                    stoppingToken.ThrowIfCancellationRequested();
                 }
             }
             finally
@@ -73,6 +78,7 @@ namespace JustSaying.Messaging.Channels
                 _logger.LogInformation("Downloader for queue {QueueName} has completed, shutting down channel...",
                     _sqsQueue.Uri);
                 writer.Complete();
+                stoppingToken.ThrowIfCancellationRequested();
             }
         }
 

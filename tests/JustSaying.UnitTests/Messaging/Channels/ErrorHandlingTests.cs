@@ -37,7 +37,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromSeconds(2));
 
-            await bus.Start(cts.Token);
+            await bus.Run(cts.Token);
 
             messagesDispatched.ShouldBe(0);
         }
