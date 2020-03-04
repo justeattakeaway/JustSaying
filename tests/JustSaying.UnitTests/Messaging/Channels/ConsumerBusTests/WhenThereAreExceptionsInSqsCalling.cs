@@ -48,7 +48,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         protected override async Task WhenAsync()
         {
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromSeconds(1));
+            cts.CancelAfter(TimeSpan.FromMilliseconds(100));
 
             var completion = SystemUnderTest.Run(cts.Token);
 
