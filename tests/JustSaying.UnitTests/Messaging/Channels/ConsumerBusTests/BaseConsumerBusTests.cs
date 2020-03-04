@@ -21,6 +21,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 {
     public abstract class BaseConsumerBusTests : IAsyncLifetime
     {
+
+
         protected IList<ISqsQueue> Queues;
         protected int NumberOfConsumers;
         protected HandlerMap HandlerMap;
@@ -35,6 +37,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         protected IHandlerAsync<SimpleMessage> Handler;
 
         protected IConsumerBus SystemUnderTest { get; private set; }
+
+        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(100);
 
         protected readonly ILoggerFactory LoggerFactory;
 

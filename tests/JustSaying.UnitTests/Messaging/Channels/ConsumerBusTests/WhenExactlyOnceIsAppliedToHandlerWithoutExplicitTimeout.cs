@@ -26,7 +26,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         {
         }
 
-        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(100);
 
 
         protected override void Given()
