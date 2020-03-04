@@ -45,13 +45,16 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             _running = true;
             var cts = new CancellationTokenSource();
 
-            await SystemUnderTest.Run(cts.Token);
+            var completion = SystemUnderTest.Run(cts.Token);
 
             // todo: should this be needed/should Start only complete when everything is running?
             await Task.Delay(TimeSpan.FromMilliseconds(100));
 
             _running = false;
             cts.Cancel();
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
+
         }
 
         [Fact]

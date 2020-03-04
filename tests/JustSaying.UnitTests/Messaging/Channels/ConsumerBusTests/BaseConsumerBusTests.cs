@@ -85,7 +85,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 
             cts.Cancel();
 
-            await completion;
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
 
             doneOk.ShouldBeTrue("Timeout occured before done signal");
         }

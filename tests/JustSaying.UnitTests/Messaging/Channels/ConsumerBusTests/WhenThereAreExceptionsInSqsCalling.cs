@@ -50,7 +50,9 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromSeconds(1));
 
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => SystemUnderTest.Run(cts.Token));
+            var completion = SystemUnderTest.Run(cts.Token);
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
         }
 
         // todo: this one fails because we haven't handled this error yet
