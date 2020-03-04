@@ -76,7 +76,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         {
             SerializationRegister.Received()
                 .DeserializeMessage(_messageContentsRunning);
-            SerializationRegister.Received()
+            
+            SerializationRegister.DidNotReceive()
                 .DeserializeMessage(_messageContentsAfterStop);
         }
     }
