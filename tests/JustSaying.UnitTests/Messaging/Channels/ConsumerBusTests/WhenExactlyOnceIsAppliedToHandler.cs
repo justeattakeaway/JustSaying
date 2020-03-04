@@ -54,10 +54,11 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             cts.CancelAfter(TimeSpan.FromMilliseconds(100));
 
             var completion = SystemUnderTest.Run(cts.Token);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
 
             // wait until it's done
             await TaskHelpers.WaitWithTimeoutAsync(_tcs.Task);
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
         }
 
         [Fact]

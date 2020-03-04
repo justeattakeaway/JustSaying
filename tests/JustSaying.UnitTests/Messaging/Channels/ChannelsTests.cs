@@ -29,6 +29,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             _testOutputHelper = testOutputHelper;
         }
 
+        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
+
         [Fact]
         public async Task QueueCanBeAssignedToOnePump()
         {
@@ -46,7 +48,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             // consumer
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromSeconds(2));
+            cts.CancelAfter(TimeoutPeriod);
 
             var multiplexerCompletion = multiplexer.Run(cts.Token);
             var consumer1Completion = consumer.Run(cts.Token);
@@ -77,7 +79,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             consumer2.ConsumeFrom(multiplexer.Messages());
 
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromSeconds(2));
+            cts.CancelAfter(TimeoutPeriod);
 
             var multiplexerCompletion = multiplexer.Run(cts.Token);
 
@@ -114,7 +116,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             consumer.ConsumeFrom(multiplexer.Messages());
 
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromSeconds(2));
+            cts.CancelAfter(TimeoutPeriod);
 
             var multiplexerCompletion = multiplexer.Run(cts.Token);
 
@@ -155,7 +157,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             consumer2.ConsumeFrom(multiplexer.Messages());
 
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromSeconds(2));
+            cts.CancelAfter(TimeoutPeriod);
 
             var multiplexerCompletion = multiplexer.Run(cts.Token);
 
@@ -193,7 +195,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             // need to start the multiplexer before calling Messages
 
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromSeconds(2));
+            cts.CancelAfter(TimeoutPeriod);
 
             var multiplexerCompletion = multiplexer.Run(cts.Token);
 
@@ -221,7 +223,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 _testOutputHelper.ToLoggerFactory());
 
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromSeconds(2));
+            cts.CancelAfter(TimeoutPeriod);
 
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => bus.Run(cts.Token));
         }
@@ -307,7 +309,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             // need to start the multiplexer before calling Messages
 
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromSeconds(2));
+            cts.CancelAfter(TimeoutPeriod);
 
             var multiplexerCompletion = multiplexer.Run(cts.Token);
 
