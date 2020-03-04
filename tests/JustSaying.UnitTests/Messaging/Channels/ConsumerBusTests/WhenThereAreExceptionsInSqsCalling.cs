@@ -45,13 +45,14 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             return Task.FromResult(new List<Message>());
         }
 
-        protected override Task WhenAsync()
+        protected override async Task WhenAsync()
         {
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromSeconds(1));
 
-            _ = SystemUnderTest.Run(cts.Token);
-            return Task.CompletedTask;
+            var completion = SystemUnderTest.Run(cts.Token);
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
         }
 
         // todo: this one fails because we haven't handled this error yet

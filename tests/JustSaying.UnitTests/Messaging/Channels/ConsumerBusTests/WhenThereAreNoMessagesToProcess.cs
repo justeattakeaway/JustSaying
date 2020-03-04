@@ -34,13 +34,14 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             Handler.Handle(Arg.Any<SimpleMessage>()).ReturnsForAnyArgs(false);
         }
 
-        protected override Task WhenAsync()
+        protected override async Task WhenAsync()
         {
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromMilliseconds(100));
 
-            _ = SystemUnderTest.Run(cts.Token);
-            return Task.CompletedTask;
+            var completion = SystemUnderTest.Run(cts.Token);
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
         }
 
         [Fact]
