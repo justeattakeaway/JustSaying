@@ -14,7 +14,9 @@ namespace JustSaying.Messaging.Channels
         private Channel<IQueueMessageContext> _targetChannel;
 
         private readonly SemaphoreSlim _readersLock = new SemaphoreSlim(1, 1);
-        private readonly SemaphoreSlim _startLock = new SemaphoreSlim(1, 1);
+        private readonly object _startLock = new object();
+
+
         readonly ILogger<RoundRobinQueueMultiplexer> _logger;
 
         private bool _started = false;
@@ -47,14 +49,19 @@ namespace JustSaying.Messaging.Channels
                 _readersLock.Release();
             }
 
-            reader.Completion.ContinueWith(c => RemoveReader(reader), TaskScheduler.Default);
+            async Task OnReaderCompletion()
+            {
+                await reader.Completion.ConfigureAwait(false);
+                RemoveReader(reader);
+            }
+            _ = OnReaderCompletion();
         }
 
         private void RemoveReader(ChannelReader<IQueueMessageContext> reader)
         {
             _logger.LogInformation("Received notification to remove reader from multiplexer inputs");
 
-            _readersLock.Wait();
+            _readersLock.Wait(_stoppingToken);
             try
             {
                 _readers.Remove(reader);
@@ -65,28 +72,22 @@ namespace JustSaying.Messaging.Channels
             }
         }
 
-        public async Task Start(CancellationToken stoppingToken = default)
+        public Task Run(CancellationToken stoppingToken)
         {
-            if (_started) return;
-
-            await _startLock.WaitAsync().ConfigureAwait(false);
-
-            if (_started) return;
-            _started = true;
-
-            _stoppingToken = stoppingToken;
-
-            try
+            if (_started) return Completion;
+            lock (_startLock)
             {
-                Completion = Run(stoppingToken);
-            }
-            finally
-            {
-                _startLock.Release();
+                if (_started) return Completion;
+
+                _stoppingToken = stoppingToken;
+                Completion = RunImpl(_stoppingToken);
+                _started = true;
+
+                return Completion;
             }
         }
 
-        private async Task Run(CancellationToken stoppingToken)
+        private async Task RunImpl(CancellationToken stoppingToken)
         {
             await Task.Yield();
 
@@ -96,7 +97,7 @@ namespace JustSaying.Messaging.Channels
             var writer = _targetChannel.Writer;
             while (true)
             {
-                await _readersLock.WaitAsync().ConfigureAwait(false);
+                await _readersLock.WaitAsync(stoppingToken).ConfigureAwait(false);
 
                 try
                 {
@@ -111,11 +112,9 @@ namespace JustSaying.Messaging.Channels
                     {
                         if (reader.TryRead(out var message))
                         {
-                            await writer.WriteAsync(message);
+                            await writer.WriteAsync(message, stoppingToken);
                         }
                     }
-
-                    stoppingToken.ThrowIfCancellationRequested();
                 }
                 finally
                 {
@@ -126,7 +125,7 @@ namespace JustSaying.Messaging.Channels
 
         public async IAsyncEnumerable<IQueueMessageContext> Messages()
         {
-            await Start().ConfigureAwait(false);
+            if(!_started) throw new InvalidOperationException("");
 
             while (true)
             {
@@ -142,7 +141,6 @@ namespace JustSaying.Messaging.Channels
 
         public void Dispose()
         {
-            _startLock.Dispose();
             _readersLock.Dispose();
         }
     }

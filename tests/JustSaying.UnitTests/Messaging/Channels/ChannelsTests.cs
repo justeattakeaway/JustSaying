@@ -48,10 +48,10 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromSeconds(2));
 
-            await multiplexer.Start(cts.Token);
+            await multiplexer.Run(cts.Token);
 
-            var consumer1Completion = consumer.Start(cts.Token);
-            var buffer1Completion = buffer.Start(cts.Token);
+            var consumer1Completion = consumer.Run(cts.Token);
+            var buffer1Completion = buffer.Run(cts.Token);
 
             await Assert.ThrowsAsync<OperationCanceledException>(() =>
                 Task.WhenAll(multiplexer.Completion, consumer1Completion, buffer1Completion));
@@ -79,13 +79,13 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromSeconds(2));
 
-            await multiplexer.Start(cts.Token);
+            await multiplexer.Run(cts.Token);
 
             // consumers
-            var t1 = consumer1.Start(cts.Token);
-            var t2 = consumer2.Start(cts.Token);
+            var t1 = consumer1.Run(cts.Token);
+            var t2 = consumer2.Run(cts.Token);
 
-            var completion = buffer.Start(cts.Token);
+            var completion = buffer.Run(cts.Token);
 
             await Assert.ThrowsAsync<OperationCanceledException>(
                 () => Task.WhenAll(multiplexer.Completion, t1, t2, completion));
@@ -114,19 +114,18 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromSeconds(2));
 
-            await multiplexer.Start(cts.Token);
+            await multiplexer.Run(cts.Token);
 
             // consumers
-            var consumer1Completion = consumer.Start(cts.Token);
+            var consumer1Completion = consumer.Run(cts.Token);
 
-            var buffer1Completion = buffer1.Start(cts.Token);
-            var buffer2Completion = buffer2.Start(cts.Token);
+            var buffer1Completion = buffer1.Run(cts.Token);
+            var buffer2Completion = buffer2.Run(cts.Token);
 
-            await Assert.ThrowsAsync<OperationCanceledException>(async () => await multiplexer.Completion);
-            await Assert.ThrowsAsync<OperationCanceledException>(async () => await buffer1Completion);
-            await Assert.ThrowsAsync<OperationCanceledException>(async () => await buffer2Completion);
-            await Assert.ThrowsAsync<OperationCanceledException>(async () => await consumer1Completion);
-
+            await Assert.ThrowsAsync<OperationCanceledException>(() => multiplexer.Completion);
+            await Assert.ThrowsAsync<OperationCanceledException>(() => buffer1Completion);
+            await Assert.ThrowsAsync<OperationCanceledException>(() => buffer2Completion);
+            await Assert.ThrowsAsync<OperationCanceledException>(() => consumer1Completion);
         }
 
         [Fact]
@@ -157,18 +156,21 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromSeconds(2));
 
-            await multiplexer.Start(cts.Token);
+            await multiplexer.Run(cts.Token);
 
             // consumers
-            var consumer1Completion = consumer1.Start(cts.Token);
-            var consumer2Completion = consumer2.Start(cts.Token);
+            var consumer1Completion = consumer1.Run(cts.Token);
+            var consumer2Completion = consumer2.Run(cts.Token);
 
-            var buffer1Completion = buffer1.Start(cts.Token);
-            var buffer2Completion = buffer2.Start(cts.Token);
+            var buffer1Completion = buffer1.Run(cts.Token);
+            var buffer2Completion = buffer2.Run(cts.Token);
 
-            await Assert.ThrowsAsync<OperationCanceledException>(() =>
-                Task.WhenAll(buffer1Completion, buffer2Completion, consumer1Completion, consumer2Completion,
-                    multiplexer.Completion));
+            Assert.ThrowsAsync<OperationCanceledException>(() => buffer1Completion);
+            Assert.ThrowsAsync<OperationCanceledException>(() => buffer2Completion);
+            Assert.ThrowsAsync<OperationCanceledException>(() => consumer1Completion);
+            Assert.ThrowsAsync<OperationCanceledException>(() => consumer2Completion);
+            Assert.ThrowsAsync<OperationCanceledException>(() => multiplexer.Completion);
+
         }
 
         [Fact]
@@ -192,15 +194,16 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromSeconds(2));
 
-            await multiplexer.Start(cts.Token);
+            await multiplexer.Run(cts.Token);
 
             // consumer
-            var consumer1Completion = consumer.Start(cts.Token);
+            var consumer1Completion = consumer.Run(cts.Token);
 
-            var bufferCompletion = buffer.Start(cts.Token);
+            var buffer1Completion = buffer.Run(cts.Token);
 
-            await Assert.ThrowsAsync<OperationCanceledException>(() =>
-                Task.WhenAll(bufferCompletion, consumer1Completion, multiplexer.Completion));
+            Assert.ThrowsAsync<OperationCanceledException>(() => buffer1Completion);
+            Assert.ThrowsAsync<OperationCanceledException>(() => consumer1Completion);
+            Assert.ThrowsAsync<OperationCanceledException>(() => multiplexer.Completion);
 
             messagesDispatched.ShouldBe(messagesFromQueue);
         }
@@ -259,20 +262,26 @@ namespace JustSaying.UnitTests.Messaging.Channels
             consumer3.ConsumeFrom(multiplexer.Messages());
 
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-            await multiplexer.Start(cts.Token);
+            await multiplexer.Run(cts.Token);
 
             // consumers
-            var t1 = consumer1.Start(cts.Token);
-            var t2 = consumer2.Start(cts.Token);
-            var t3 = consumer3.Start(cts.Token);
+            var consumer1Completion = consumer1.Run(cts.Token);
+            var consumer2Completion = consumer2.Run(cts.Token);
+            var consumer3Completion = consumer3.Run(cts.Token);
 
-            var writeTask1 = buffer1.Start(cts.Token);
-            var writeTask2 = buffer2.Start(cts.Token);
-            var writeTask3 = buffer3.Start(cts.Token);
-            var writeTask4 = buffer4.Start(cts.Token);
+            var buffer1Completion = buffer1.Run(cts.Token);
+            var buffer2Completion = buffer2.Run(cts.Token);
+            var buffer3Completion = buffer3.Run(cts.Token);
+            var buffer4Completion = buffer4.Run(cts.Token);
 
-            Assert.ThrowsAsync<OperationCanceledException>(() =>
-                Task.WhenAll(writeTask1, writeTask2, writeTask3, writeTask4, t1, t2, t3, multiplexer.Completion));
+            Assert.ThrowsAsync<OperationCanceledException>(() => buffer1Completion);
+            Assert.ThrowsAsync<OperationCanceledException>(() => buffer2Completion);
+            Assert.ThrowsAsync<OperationCanceledException>(() => buffer3Completion);
+            Assert.ThrowsAsync<OperationCanceledException>(() => buffer4Completion);
+            Assert.ThrowsAsync<OperationCanceledException>(() => consumer1Completion);
+            Assert.ThrowsAsync<OperationCanceledException>(() => consumer2Completion);
+            Assert.ThrowsAsync<OperationCanceledException>(() => consumer3Completion);
+            Assert.ThrowsAsync<OperationCanceledException>(() => multiplexer.Completion);
 
             _testOutputHelper.WriteLine("Attempted to send {0} messages and dispatched {1} messages", messagesSent,
                 messagesDispatched);
@@ -300,17 +309,18 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromSeconds(2));
 
-            await multiplexer.Start(cts.Token);
+            await multiplexer.Run(cts.Token);
 
-            var bufferCompletion = buffer.Start(cts.Token);
+            var buffer1Completion = buffer.Run(cts.Token);
 
             messagesFromQueue.ShouldBe(111);
             messagesDispatched.ShouldBe(0);
 
-            var consumer1Completion = consumer.Start(cts.Token);
+            var consumer1Completion = consumer.Run(cts.Token);
 
-            Assert.ThrowsAsync<OperationCanceledException>(() =>
-                Task.WhenAll(bufferCompletion, consumer1Completion, multiplexer.Completion));
+            Assert.ThrowsAsync<OperationCanceledException>(() => buffer1Completion);
+            Assert.ThrowsAsync<OperationCanceledException>(() => consumer1Completion);
+            Assert.ThrowsAsync<OperationCanceledException>(() => multiplexer.Completion);
 
             messagesFromQueue.ShouldBe(111);
             messagesDispatched.ShouldBe(111);

@@ -8,7 +8,8 @@ using Serilog.Events;
 
 namespace JustSaying.Sample.Restaurant.OrderingApi
 {
-    [SuppressMessage("ReSharper", "CA1031")]
+    [SuppressMessage("ReSharper", "CA1031",
+        Justification = "We want to catch Exception so we can log fatals before shutting down")]
     public static class Program
     {
         public static void Main(string[] args)

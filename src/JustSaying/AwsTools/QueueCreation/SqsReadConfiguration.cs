@@ -28,11 +28,10 @@ namespace JustSaying.AwsTools.QueueCreation
         public IMessageBackoffStrategy MessageBackoffStrategy { get; set; }
         public string FilterPolicy { get; set; }
 
-        public override void Validate()
+        protected override void ValidateCustom()
         {
             ValidateSnsConfiguration();
         }
-
 
         private void ValidateSnsConfiguration()
         {
