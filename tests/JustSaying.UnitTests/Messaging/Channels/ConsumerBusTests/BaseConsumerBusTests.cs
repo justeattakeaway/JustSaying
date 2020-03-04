@@ -78,14 +78,14 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             HandlerMap.Add(typeof(SimpleMessage), msg => signallingHandler.Handle(msg as SimpleMessage));
 
             var cts = new CancellationTokenSource();
-            SystemUnderTest.Start(cts.Token);
+            var completion = SystemUnderTest.Start(cts.Token);
 
             // wait until it's done
             var doneOk = await TaskHelpers.WaitWithTimeoutAsync(doneSignal.Task);
 
             cts.Cancel();
 
-            await SystemUnderTest.Completion;
+            await completion;
 
             doneOk.ShouldBeTrue("Timeout occured before done signal");
         }

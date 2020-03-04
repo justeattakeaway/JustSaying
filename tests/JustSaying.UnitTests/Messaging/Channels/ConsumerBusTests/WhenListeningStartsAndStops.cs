@@ -45,15 +45,13 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             _running = true;
             var cts = new CancellationTokenSource();
 
-            SystemUnderTest.Start(cts.Token);
+            await SystemUnderTest.Start(cts.Token);
 
             // todo: should this be needed/should Start only complete when everything is running?
             await Task.Delay(TimeSpan.FromMilliseconds(100));
 
             _running = false;
             cts.Cancel();
-
-            await SystemUnderTest.Completion;
         }
 
         [Fact]
@@ -80,3 +78,4 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         }
     }
 }
+

@@ -150,7 +150,7 @@ namespace JustSaying
                     dispatcher,
                     Monitor,
                     _loggerFactory);
-                ConsumerBus.Start(cancellationToken);
+                ConsumerBus.Start(cancellationToken).GetAwaiter().GetResult();
             }
         }
 

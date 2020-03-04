@@ -19,6 +19,7 @@ namespace JustSaying.Messaging.Channels
 
         private bool _started = false;
         private int _channelCapacity;
+        private CancellationToken _stoppingToken;
 
         public Task Completion { get; private set; }
 
@@ -64,7 +65,7 @@ namespace JustSaying.Messaging.Channels
             }
         }
 
-        public async Task Start()
+        public async Task Start(CancellationToken stoppingToken = default)
         {
             if (_started) return;
 
@@ -73,9 +74,11 @@ namespace JustSaying.Messaging.Channels
             if (_started) return;
             _started = true;
 
+            _stoppingToken = stoppingToken;
+
             try
             {
-                Completion = Run();
+                Completion = Run(stoppingToken);
             }
             finally
             {
@@ -83,7 +86,7 @@ namespace JustSaying.Messaging.Channels
             }
         }
 
-        private async Task Run()
+        private async Task Run(CancellationToken stoppingToken)
         {
             await Task.Yield();
 
@@ -111,6 +114,8 @@ namespace JustSaying.Messaging.Channels
                             await writer.WriteAsync(message);
                         }
                     }
+
+                    stoppingToken.ThrowIfCancellationRequested();
                 }
                 finally
                 {
@@ -125,8 +130,10 @@ namespace JustSaying.Messaging.Channels
 
             while (true)
             {
-                var couldWait = await _targetChannel.Reader.WaitToReadAsync();
+                var couldWait = await _targetChannel.Reader.WaitToReadAsync(_stoppingToken);
                 if (!couldWait) break;
+
+                _stoppingToken.ThrowIfCancellationRequested();
 
                 while (_targetChannel.Reader.TryRead(out var message))
                     yield return message;

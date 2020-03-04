@@ -24,12 +24,12 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         {
             _queue = CreateSuccessfulTestQueue(() =>
             {
-                Interlocked.Increment(ref _callCount);
                 return new List<Message> { new TestMessage { Body = _messageBody } };
             });
 
             Queues.Add(_queue);
-            Handler.Handle(null).ReturnsForAnyArgs(true);
+            Handler.Handle(null)
+                .ReturnsForAnyArgs(true).AndDoes(ci => Interlocked.Increment(ref _callCount));
         }
 
         [Fact]

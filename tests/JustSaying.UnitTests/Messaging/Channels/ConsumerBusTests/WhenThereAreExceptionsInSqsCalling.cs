@@ -41,18 +41,18 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             {
                 throw new TestException("testing the failure on first call");
             }
-            
+
             return Task.FromResult(new List<Message>());
         }
 
         protected override async Task WhenAsync()
         {
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromMilliseconds(100));
+            cts.CancelAfter(TimeSpan.FromSeconds(1));
 
-            SystemUnderTest.Start(cts.Token);
+            await SystemUnderTest.Start(cts.Token);
 
-            await SystemUnderTest.Completion;
+            await Assert.ThrowsAsync<OperationCanceledException>(() => SystemUnderTest.Completion);
         }
 
         // todo: this one fails because we haven't handled this error yet

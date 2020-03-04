@@ -9,7 +9,7 @@ namespace JustSaying.Messaging.Channels
 {
     internal interface IChannelConsumer
     {
-        Task Start();
+        Task Start(CancellationToken stoppingToken);
         IChannelConsumer ConsumeFrom(IAsyncEnumerable<IQueueMessageContext> messageSource);
     }
 
@@ -31,11 +31,13 @@ namespace JustSaying.Messaging.Channels
             return this;
         }
 
-        public async Task Start()
+        public async Task Start(CancellationToken stoppingToken)
         {
-            await foreach (var messageContext in _messageSource)
+            await foreach (var messageContext in _messageSource.WithCancellation(stoppingToken))
             {
-                await _dispatcher.DispatchMessageAsync(messageContext, CancellationToken.None).ConfigureAwait(false);
+                await _dispatcher.DispatchMessageAsync(messageContext, stoppingToken).ConfigureAwait(false);
+
+                stoppingToken.ThrowIfCancellationRequested();
             }
         }
     }

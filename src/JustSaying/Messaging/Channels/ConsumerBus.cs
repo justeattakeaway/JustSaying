@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -38,22 +39,25 @@ namespace JustSaying.Messaging.Channels
                 .ToList();
         }
 
-        public void Start(CancellationToken stoppingToken)
+        public async Task Start(CancellationToken stoppingToken)
         {
             var numberOfConsumers = _consumers.Count;
-            _logger.LogInformation("Starting up consumer bus with {ConsumerCount} consumers and {DownloadBufferCount} downloaders",
-                 numberOfConsumers, _buffers.Count);
+            _logger.LogInformation(
+                "Starting up consumer bus with {ConsumerCount} consumers and {DownloadBufferCount} downloaders",
+                numberOfConsumers, _buffers.Count);
 
             // start
-            var startTasks = new List<Task>();
-            startTasks.Add(_multiplexer.Start());
+            var completionTasks = new List<Task>();
 
-            startTasks.AddRange(_consumers.Select(x => x.Start()));
-            startTasks.AddRange(_buffers.Select(x => x.Start(stoppingToken)));
+            await _multiplexer.Start(stoppingToken).ConfigureAwait(false);
+
+            completionTasks.Add(_multiplexer.Completion);
+            completionTasks.AddRange(_consumers.Select(x => x.Start(stoppingToken)));
+            completionTasks.AddRange(_buffers.Select(x => x.Start(stoppingToken)));
 
             _logger.LogInformation("Consumer bus successfully started");
 
-            Completion = Task.WhenAll(startTasks);
+            Completion = Task.WhenAll(completionTasks);
         }
 
         public Task Completion { get; private set; }
