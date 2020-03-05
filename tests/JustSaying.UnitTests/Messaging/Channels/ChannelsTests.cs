@@ -328,6 +328,71 @@ namespace JustSaying.UnitTests.Messaging.Channels
             messagesDispatched.ShouldBe(111);
         }
 
+        [Fact]
+        public async Task If_Queue_Is_Slow_All_Messages_Processed()
+        {
+            int messagesFromQueue = 0;
+            int messagesDispatched = 0;
+            var sqsQueue1 = TestQueue("one", () =>
+            {
+                Thread.Sleep(TimeSpan.FromSeconds(1));
+                messagesFromQueue++;
+            });
+
+            var queues = new List<ISqsQueue> { sqsQueue1 };
+            IMessageDispatcher dispatcher = TestDispatcher(() => messagesDispatched++);
+            var bus = new ConsumerBus(queues, 1, dispatcher, Substitute.For<IMessageMonitor>(), _testOutputHelper.ToLoggerFactory());
+
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeSpan.FromSeconds(2));
+
+            try
+            {
+                bus.Start(cts.Token);
+                await bus.Completion;
+            }
+            catch (OperationCanceledException)
+            { }
+
+            messagesFromQueue.ShouldBeGreaterThan(0);
+            messagesDispatched.ShouldBe(messagesFromQueue);
+        }
+
+        [Fact]
+        public async Task If_Consumer_Is_Slow_All_Messages_Processed()
+        {
+            int messagesFromQueue = 0;
+            int messagesDispatched = 0;
+
+            var sqsQueue1 = TestQueue("one", () =>
+            {
+                Thread.Sleep(TimeSpan.FromMilliseconds(500));
+                messagesFromQueue++;
+            });
+
+            var queues = new List<ISqsQueue> { sqsQueue1 };
+            IMessageDispatcher dispatcher = TestDispatcher(() =>
+            {
+                Thread.Sleep(TimeSpan.FromSeconds(1));
+                messagesDispatched++;
+            });
+            var bus = new ConsumerBus(queues, 1, dispatcher, new LoggingMonitor(_testOutputHelper.ToLogger<LoggingMonitor>()), _testOutputHelper.ToLoggerFactory());
+
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeSpan.FromSeconds(2));
+
+            try
+            {
+                bus.Start(cts.Token);
+                await bus.Completion;
+            }
+            catch (OperationCanceledException)
+            { }
+
+            messagesFromQueue.ShouldBeGreaterThan(0);
+            messagesDispatched.ShouldBe(messagesFromQueue);
+        }
+
         private static ISqsQueue TestQueue(string prefix, Action spy = null)
         {
             async Task<IList<Message>> GetMessages()
