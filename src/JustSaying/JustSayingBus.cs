@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +11,7 @@ using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.Messaging.Policies;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -44,6 +44,14 @@ namespace JustSaying
         }
         public IMessageContextAccessor MessageContextAccessor { get; set; }
         public HandlerMap HandlerMap { get; private set; }
+        public SqsPolicyAsync<IList<Amazon.SQS.Model.Message>> SqsPolicy { get; private set; }
+            = new InnerSqsPolicyAsync<IList<Amazon.SQS.Model.Message>>();
+
+        public SqsPolicyAsync<IList<Amazon.SQS.Model.Message>> WithSqsPolicy(Func<SqsPolicyAsync<IList<Amazon.SQS.Model.Message>>, SqsPolicyAsync<IList<Amazon.SQS.Model.Message>>> policyCreator)
+        {
+            SqsPolicy = SqsPolicyBuilder.WithAsync(SqsPolicy, policyCreator);
+            return SqsPolicy;
+        }
 
         private readonly ILogger _log;
 
@@ -147,6 +155,7 @@ namespace JustSaying
                 ConsumerBus = new ConsumerBus(
                     _sqsQueues,
                     numberOfConsumers: 2,
+                    SqsPolicy,
                     dispatcher,
                     Monitor,
                     _loggerFactory);

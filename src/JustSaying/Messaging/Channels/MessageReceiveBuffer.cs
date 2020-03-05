@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.Messaging.Policies;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels
@@ -15,6 +16,7 @@ namespace JustSaying.Messaging.Channels
         private readonly Channel<IQueueMessageContext> _channel;
         private readonly int _bufferLength;
         private readonly ISqsQueue _sqsQueue;
+        private readonly SqsPolicyAsync<IList<Message>> _sqsPolicyAsync;
         private readonly IMessageMonitor _monitor;
         private readonly ILogger _logger;
 
@@ -26,11 +28,13 @@ namespace JustSaying.Messaging.Channels
         public MessageReceiveBuffer(
             int bufferLength,
             ISqsQueue sqsQueue,
+            SqsPolicyAsync<IList<Message>> sqsPolicyAsync,
             IMessageMonitor monitor,
             ILoggerFactory logger)
         {
             _bufferLength = bufferLength;
             _sqsQueue = sqsQueue;
+            _sqsPolicyAsync = sqsPolicyAsync;
             _monitor = monitor;
             _logger = logger.CreateLogger<IMessageReceiveBuffer>();
             _channel = Channel.CreateBounded<IQueueMessageContext>(bufferLength);
@@ -93,8 +97,10 @@ namespace JustSaying.Messaging.Channels
                 using var linkedCts =
                     CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, receiveTimeout.Token);
 
-                messages = await _sqsQueue
-                    .GetMessagesAsync(count, _requestMessageAttributeNames, stoppingToken)
+                messages = await _sqsPolicyAsync.RunAsync(async () =>
+                    await _sqsQueue
+                        .GetMessagesAsync(count, _requestMessageAttributeNames, stoppingToken)
+                        .ConfigureAwait(false))
                     .ConfigureAwait(false);
             }
             finally

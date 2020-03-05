@@ -62,7 +62,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             await TaskHelpers.WaitWithTimeoutAsync(_tcs.Task);
         }
 
-
         [Fact]
         public void MessageIsLocked()
         {

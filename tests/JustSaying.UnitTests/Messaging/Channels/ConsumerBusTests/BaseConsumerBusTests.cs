@@ -9,6 +9,7 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.Messaging.Policies;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests.Support;
 using Microsoft.Extensions.Logging;
@@ -111,6 +112,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             var bus = new ConsumerBus(
                 Queues,
                 1,
+                new InnerSqsPolicyAsync<IList<Amazon.SQS.Model.Message>>(),
                 dispatcher,
                 Monitor,
                 LoggerFactory);

@@ -8,37 +8,43 @@ using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Messaging.Policies;
+using JustSaying.UnitTests.Messaging.Policies.ExamplePolicies;
 using NSubstitute;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels
+namespace JustSaying.UnitTests.Messaging.Policies
 {
-    public class ErrorHandlingTests
+    public class ChannelPolicyTests
     {
         private readonly ITestOutputHelper _testOutputHelper;
 
-        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(100);
-
-        public ErrorHandlingTests(ITestOutputHelper testOutputHelper)
+        public ChannelPolicyTests(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
         }
 
+        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
+
         [Fact]
-        public async Task Sqs_Client_Throwing_Exceptions_Continues_To_Request_Messages()
+        public async Task ErrorHandlingAroundSqs()
         {
-            int messagesDispatched = 0;
+            // Arrange
+            int queueCalledCount = 0;
+            int dispatchedMessageCount = 0;
+            var sqsQueue = TestQueue(() => Interlocked.Increment(ref queueCalledCount));
 
-            var sqsQueue1 = TestQueue(GetErrorMessages);
+            var queues = new List<ISqsQueue> { sqsQueue };
+            var sqsPolicy = SqsPolicyBuilder.BuildAsync<IList<Message>>(
+               next => new ErrorHandlingSqsPolicyAsync<IList<Message>, InvalidOperationException>(next));
 
-            var queues = new List<ISqsQueue> { sqsQueue1 };
-            IMessageDispatcher dispatcher = TestDispatcher(() => Interlocked.Increment(ref messagesDispatched));
+            IMessageDispatcher dispatcher = TestDispatcher(() => Interlocked.Increment(ref dispatchedMessageCount));
+
             var bus = new ConsumerBus(
                 queues,
                 1,
-                new InnerSqsPolicyAsync<IList<Amazon.SQS.Model.Message>>(),
+                sqsPolicy,
                 dispatcher,
                 Substitute.For<IMessageMonitor>(),
                 _testOutputHelper.ToLoggerFactory());
@@ -46,22 +52,26 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
 
-            await bus.Run(cts.Token);
+            // Act and Assert
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => bus.Run(cts.Token));
 
-            messagesDispatched.ShouldBe(0);
+            queueCalledCount.ShouldBeGreaterThan(1);
+            dispatchedMessageCount.ShouldBe(0);
         }
 
-        private static Task<IList<Message>> GetErrorMessages()
+        private static ISqsQueue TestQueue(Action spy = null)
         {
-            throw new InvalidOperationException();
-        }
+            async Task<IList<Message>> GetMessages()
+            {
+                await Task.Delay(5).ConfigureAwait(false);
+                spy?.Invoke();
+                throw new InvalidOperationException();
+            }
 
-        private static ISqsQueue TestQueue(Func<Task<IList<Message>>> getMessages)
-        {
             ISqsQueue sqsQueueMock = Substitute.For<ISqsQueue>();
             sqsQueueMock
                 .GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
-                .Returns(async _ => await getMessages());
+                .Returns(async _ => await GetMessages());
 
             return sqsQueueMock;
         }
