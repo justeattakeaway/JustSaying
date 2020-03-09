@@ -6,7 +6,7 @@ namespace JustSaying.Messaging.Policies
     {
         public static SqsPolicyAsync<T> BuildAsync<T>(params Func<SqsPolicyAsync<T>, SqsPolicyAsync<T>>[] policies)
         {
-            SqsPolicyAsync<T> policy = new InnerSqsPolicyAsync<T>();
+            SqsPolicyAsync<T> policy = new NoopSqsPolicyAsync<T>();
             return policy.WithAsync(policies);
         }
 

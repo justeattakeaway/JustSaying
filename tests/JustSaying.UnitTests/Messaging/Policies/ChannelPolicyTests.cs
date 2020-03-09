@@ -36,15 +36,16 @@ namespace JustSaying.UnitTests.Messaging.Policies
             var sqsQueue = TestQueue(() => Interlocked.Increment(ref queueCalledCount));
 
             var queues = new List<ISqsQueue> { sqsQueue };
-            var sqsPolicy = SqsPolicyBuilder.BuildAsync<IList<Message>>(
+
+            var config = new ConsumerConfig();
+            config.WithSqsPolicy(
                next => new ErrorHandlingSqsPolicyAsync<IList<Message>, InvalidOperationException>(next));
 
             IMessageDispatcher dispatcher = TestDispatcher(() => Interlocked.Increment(ref dispatchedMessageCount));
 
             var bus = new ConsumerBus(
                 queues,
-                1,
-                sqsPolicy,
+                config,
                 dispatcher,
                 Substitute.For<IMessageMonitor>(),
                 _testOutputHelper.ToLoggerFactory());

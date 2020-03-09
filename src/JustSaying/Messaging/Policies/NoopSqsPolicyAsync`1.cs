@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 
 namespace JustSaying.Messaging.Policies
 {
-    internal class InnerSqsPolicyAsync<T> : SqsPolicyAsync<T>
+    internal class NoopSqsPolicyAsync<T> : SqsPolicyAsync<T>
     {
-        public InnerSqsPolicyAsync() : base(null)
+        public NoopSqsPolicyAsync() : base(null)
         {
         }
 

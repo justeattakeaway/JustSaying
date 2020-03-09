@@ -9,7 +9,6 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.Messaging.Policies;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests.Support;
 using Microsoft.Extensions.Logging;
@@ -22,8 +21,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 {
     public abstract class BaseConsumerBusTests : IAsyncLifetime
     {
-
-
         protected IList<ISqsQueue> Queues;
         protected int NumberOfConsumers;
         protected HandlerMap HandlerMap;
@@ -39,7 +36,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 
         protected IConsumerBus SystemUnderTest { get; private set; }
 
-        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(100);
+        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
 
         protected readonly ILoggerFactory LoggerFactory;
 
@@ -111,8 +108,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 
             var bus = new ConsumerBus(
                 Queues,
-                1,
-                new InnerSqsPolicyAsync<IList<Amazon.SQS.Model.Message>>(),
+                new ConsumerConfig(),
                 dispatcher,
                 Monitor,
                 LoggerFactory);

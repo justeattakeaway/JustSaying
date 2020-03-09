@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.Messaging.Policies;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels
@@ -16,25 +15,27 @@ namespace JustSaying.Messaging.Channels
         private readonly IList<IMessageReceiveBuffer> _buffers;
         private readonly IList<IChannelConsumer> _consumers;
         private readonly ILogger _logger;
+        private readonly IConsumerConfig _consumerConfig;
 
         internal ConsumerBus(
             IList<ISqsQueue> queues,
-            int numberOfConsumers,
-            SqsPolicyAsync<IList<Amazon.SQS.Model.Message>> sqsPolicy,
+            IConsumerConfig consumerConfig,
             IMessageDispatcher messageDispatcher,
             IMessageMonitor monitor,
             ILoggerFactory loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<ConsumerBus>();
-            _multiplexer = new RoundRobinQueueMultiplexer(loggerFactory);
+            _consumerConfig = consumerConfig;
+
+            _multiplexer = new RoundRobinQueueMultiplexer(consumerConfig.MultiplexerCapacity, loggerFactory);
 
             _buffers = queues
-                .Select(q => CreateBuffer(q, sqsPolicy, monitor, loggerFactory))
+                .Select(q => CreateBuffer(q, monitor, loggerFactory))
                 .ToList();
 
             // create n consumers (defined by config)
             // link consumers to core channel
-            _consumers = Enumerable.Range(0, numberOfConsumers)
+            _consumers = Enumerable.Range(0, consumerConfig.ConsumerCount)
                 .Select(x => new ChannelConsumer(messageDispatcher)
                     .ConsumeFrom(_multiplexer.Messages()))
                 .ToList();
@@ -61,15 +62,13 @@ namespace JustSaying.Messaging.Channels
 
         private IMessageReceiveBuffer CreateBuffer(
             ISqsQueue queue,
-            SqsPolicyAsync<IList<Amazon.SQS.Model.Message>> sqsPolicy,
             IMessageMonitor monitor,
             ILoggerFactory loggerFactory)
         {
-            int bufferLength = 10;
             var buffer = new MessageReceiveBuffer(
-                bufferLength,
+                _consumerConfig.BufferSize,
                 queue,
-                sqsPolicy,
+                _consumerConfig.SqsPolicy,
                 monitor,
                 loggerFactory);
 

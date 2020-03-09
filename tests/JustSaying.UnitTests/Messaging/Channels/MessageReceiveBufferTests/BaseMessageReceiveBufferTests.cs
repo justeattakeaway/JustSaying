@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.Messaging.Policies;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -18,6 +20,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
         protected ISqsQueue Queue;
         protected IMessageMonitor Monitor;
         protected readonly ILoggerFactory LoggerFactory;
+        protected readonly SqsPolicyAsync<IList<Amazon.SQS.Model.Message>> SqsPolicy;
 
         protected IMessageReceiveBuffer SystemUnderTest { get; private set; }
 
@@ -65,7 +68,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
         {
             try
             {
-                await SystemUnderTest.Start(cancellationToken).ConfigureAwait(false);
+                await SystemUnderTest.Run(cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             { }
@@ -76,6 +79,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
             return new MessageReceiveBuffer(
                 10,
                 Queue,
+                SqsPolicy,
                 Monitor,
                 LoggerFactory);
         }

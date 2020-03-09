@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels
@@ -16,7 +15,6 @@ namespace JustSaying.Messaging.Channels
         private readonly SemaphoreSlim _readersLock = new SemaphoreSlim(1, 1);
         private readonly object _startLock = new object();
 
-
         readonly ILogger<RoundRobinQueueMultiplexer> _logger;
 
         private bool _started = false;
@@ -25,13 +23,14 @@ namespace JustSaying.Messaging.Channels
 
         public Task Completion { get; private set; }
 
-        public RoundRobinQueueMultiplexer(ILoggerFactory loggerFactory)
+        public RoundRobinQueueMultiplexer(
+            int channelCapacity,
+            ILoggerFactory loggerFactory)
         {
             _readers = new List<ChannelReader<IQueueMessageContext>>();
             _logger = loggerFactory.CreateLogger<RoundRobinQueueMultiplexer>();
 
-            // TODO: make configurable
-            _channelCapacity = 100;
+            _channelCapacity = channelCapacity;
             _targetChannel = Channel.CreateBounded<IQueueMessageContext>(_channelCapacity);
         }
 

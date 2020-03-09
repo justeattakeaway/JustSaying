@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.Naming;
@@ -20,6 +21,7 @@ namespace JustSaying
             MessageSubjectProvider = new NonGenericMessageSubjectProvider();
             TopicNamingConvention = new DefaultNamingConventions();
             QueueNamingConvention = new DefaultNamingConventions();
+            ConsumerConfig = new ConsumerConfig();
         }
 
         public int PublishFailureReAttempts { get; set; }
@@ -31,6 +33,7 @@ namespace JustSaying
         public IMessageSubjectProvider MessageSubjectProvider { get; set; }
         public ITopicNamingConvention TopicNamingConvention { get; set; }
         public IQueueNamingConvention QueueNamingConvention { get; set; }
+        public IConsumerConfig ConsumerConfig { get; set; }
 
         public virtual void Validate()
         {

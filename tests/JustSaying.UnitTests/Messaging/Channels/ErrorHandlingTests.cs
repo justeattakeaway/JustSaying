@@ -37,8 +37,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             IMessageDispatcher dispatcher = TestDispatcher(() => Interlocked.Increment(ref messagesDispatched));
             var bus = new ConsumerBus(
                 queues,
-                1,
-                new InnerSqsPolicyAsync<IList<Amazon.SQS.Model.Message>>(),
+                new ConsumerConfig(),
                 dispatcher,
                 Substitute.For<IMessageMonitor>(),
                 _testOutputHelper.ToLoggerFactory());
