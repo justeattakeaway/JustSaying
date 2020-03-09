@@ -69,9 +69,10 @@ namespace JustSaying.Sample.Restaurant.OrderingApi
 
             // Added a message handler for message type for 'OrderReadyEvent' on topic 'orderreadyevent' and queue 'orderreadyevent'
             services.AddJustSayingHandler<OrderReadyEvent, OrderReadyEventHandler>();
+            services.AddJustSayingHandler<OrderDeliveredEvent, OrderDeliveredEventHandler>();
 
             // Add a background service that is listening for messages related to the above subscriptions
-            services.AddHostedService<Subscriber>();
+            services.AddHostedService<BusService>();
 
             services.AddSwaggerGen(c =>
             {

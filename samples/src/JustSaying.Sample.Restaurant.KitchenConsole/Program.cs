@@ -85,6 +85,7 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
                            //  - a SNS topic of name `orderplacedevent`
                            //  - a SNS topic subscription on topic 'orderplacedevent' and queue 'orderplacedevent'
                            x.ForTopic<OrderPlacedEvent>();
+                           x.ForTopic<OrderOnItsWayEvent>();
                        });
 
                        config.Publications(x =>
@@ -97,6 +98,7 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
 
                    // Added a message handler for message type for 'OrderPlacedEvent' on topic 'orderplacedevent' and queue 'orderplacedevent'
                    services.AddJustSayingHandler<OrderPlacedEvent, OrderPlacedEventHandler>();
+                   services.AddJustSayingHandler<OrderOnItsWayEvent, OrderOnItsWayEventHandler>();
 
                    // Add a background service that is listening for messages related to the above subscriptions
                    services.AddHostedService<Subscriber>();
