@@ -149,7 +149,7 @@ namespace JustSaying
                     dispatcher,
                     Monitor,
                     _loggerFactory);
-                ConsumerBus.Run(cancellationToken).GetAwaiter().GetResult();
+                ConsumerBus.Run(cancellationToken);
             }
         }
 
