@@ -72,7 +72,7 @@ namespace JustSaying.Sample.Restaurant.OrderingApi
             services.AddJustSayingHandler<OrderDeliveredEvent, OrderDeliveredEventHandler>();
 
             // Add a background service that is listening for messages related to the above subscriptions
-            services.AddHostedService<Subscriber>();
+            services.AddHostedService<BusService>();
 
             services.AddSwaggerGen(c =>
             {

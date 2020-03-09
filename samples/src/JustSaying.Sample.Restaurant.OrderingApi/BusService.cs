@@ -13,13 +13,13 @@ namespace JustSaying.Sample.Restaurant.OrderingApi
     /// A background service responsible for starting the bus which listens for
     /// messages on the configured queues
     /// </summary>
-    public class Subscriber : BackgroundService
+    public class BusService : BackgroundService
     {
         private readonly IMessagingBus _bus;
-        private readonly ILogger<Subscriber> _logger;
+        private readonly ILogger<BusService> _logger;
         private readonly IMessagePublisher _publisher;
 
-        public Subscriber(IMessagingBus bus, ILogger<Subscriber> logger, IMessagePublisher publisher)
+        public BusService(IMessagingBus bus, ILogger<BusService> logger, IMessagePublisher publisher)
         {
             _bus = bus;
             _logger = logger;
