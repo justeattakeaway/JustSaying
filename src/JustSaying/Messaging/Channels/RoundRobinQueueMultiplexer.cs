@@ -38,7 +38,7 @@ namespace JustSaying.Messaging.Channels
         {
             if (reader == null) throw new ArgumentNullException(nameof(reader));
 
-            _readersLock.Wait();
+            _readersLock.Wait(_stoppingToken);
             try
             {
                 _readers.Add(reader);
@@ -79,14 +79,14 @@ namespace JustSaying.Messaging.Channels
                 if (_started) return Completion;
 
                 _stoppingToken = stoppingToken;
-                Completion = RunImpl(_stoppingToken);
+                Completion = RunImpl();
                 _started = true;
 
                 return Completion;
             }
         }
 
-        private async Task RunImpl(CancellationToken stoppingToken)
+        private async Task RunImpl()
         {
             await Task.Yield();
 
@@ -96,7 +96,9 @@ namespace JustSaying.Messaging.Channels
             var writer = _targetChannel.Writer;
             while (true)
             {
-                await _readersLock.WaitAsync(stoppingToken).ConfigureAwait(false);
+                await _readersLock.WaitAsync(_stoppingToken).ConfigureAwait(false);
+
+                _stoppingToken.ThrowIfCancellationRequested();
 
                 try
                 {
@@ -111,7 +113,7 @@ namespace JustSaying.Messaging.Channels
                     {
                         if (reader.TryRead(out var message))
                         {
-                            await writer.WriteAsync(message, stoppingToken);
+                            await writer.WriteAsync(message, _stoppingToken);
                         }
                     }
                 }
