@@ -34,16 +34,15 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         }
 
         [Fact]
-        public void TheQueueIsCreatedInEachRegion()
+        public void TheQueueIsCreatedInRegion()
         {
             QueueVerifier.Received().EnsureQueueExistsAsync("defaultRegion", Arg.Any<SqsReadConfiguration>());
-            QueueVerifier.Received().EnsureQueueExistsAsync("failoverRegion", Arg.Any<SqsReadConfiguration>());
         }
 
         [Fact]
-        public void TheSubscriptionIsCreatedInEachRegion()
+        public void TheSubscriptionIsCreatedInRegion()
         {
-            Bus.Received(2).AddQueue(Arg.Any<ISqsQueue>());
+            Bus.Received(1).AddQueue(Arg.Any<ISqsQueue>());
         }
 
         [Fact]

@@ -38,7 +38,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.ConfigValidation
         [Fact]
         public void RegionIsRequested()
         {
-            ThrownException.Message.ShouldBe("Config cannot have a blank entry for the Regions property.");
+            ThrownException.Message.ShouldBe("Config cannot have a blank entry for the Region property.");
         }
     }
 }
