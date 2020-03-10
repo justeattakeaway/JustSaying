@@ -88,6 +88,8 @@ namespace JustSaying.Messaging.Channels
 
         private async Task<IList<Message>> GetMessagesAsync(int count, CancellationToken stoppingToken)
         {
+            stoppingToken.ThrowIfCancellationRequested();
+
             using var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));
             IList<Message> messages;
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();

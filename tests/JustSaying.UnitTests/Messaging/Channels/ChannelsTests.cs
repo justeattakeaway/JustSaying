@@ -168,115 +168,6 @@ namespace JustSaying.UnitTests.Messaging.Channels
         }
 
         [Fact]
-        public async Task All_Messages_Are_Processed()
-        {
-            int messagesFromQueue = 0;
-            int messagesDispatched = 0;
-            var sqsQueue = TestQueue(() => messagesFromQueue++);
-
-            IMessageReceiveBuffer buffer = CreateMessageReceiveBuffer(sqsQueue);
-            IMessageDispatcher dispatcher = TestDispatcher(() => messagesDispatched++);
-            IChannelConsumer consumer = CreateChannelConsumer(dispatcher);
-            IMultiplexer multiplexer = CreateMultiplexer();
-
-            multiplexer.ReadFrom(buffer.Reader);
-            consumer.ConsumeFrom(multiplexer.Messages());
-
-            // need to start the multiplexer before calling Messages
-
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeoutPeriod);
-
-            var multiplexerCompletion = multiplexer.Run(cts.Token);
-
-            // consumer
-            var consumer1Completion = consumer.Run(cts.Token);
-            var buffer1Completion = buffer.Run(cts.Token);
-
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer1Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => multiplexerCompletion);
-
-            messagesDispatched.ShouldBe(messagesFromQueue);
-        }
-
-        [Fact]
-        public async Task Can_Be_Set_Up_Using_ConsumerBus()
-        {
-            var sqsQueue1 = TestQueue();
-            var sqsQueue2 = TestQueue();
-            var sqsQueue3 = TestQueue();
-
-            var queues = new List<ISqsQueue> { sqsQueue1, sqsQueue2, sqsQueue3 };
-            IMessageDispatcher dispatcher = TestDispatcher();
-            var bus = CreateConsumerBus(queues, dispatcher);
-
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeoutPeriod);
-
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => bus.Run(cts.Token));
-        }
-
-        [Fact]
-        public async Task On_Cancellation_All_Downloaded_Messages_Should_Be_Processed()
-        {
-            int messagesSent = 0;
-            int messagesDispatched = 0;
-
-            var sqsQueue1 = TestQueue(() => Interlocked.Increment(ref messagesSent));
-            var sqsQueue2 = TestQueue(() => Interlocked.Increment(ref messagesSent));
-            var sqsQueue3 = TestQueue(() => Interlocked.Increment(ref messagesSent));
-            var sqsQueue4 = TestQueue(() => Interlocked.Increment(ref messagesSent));
-            var buffer1 = CreateMessageReceiveBuffer(sqsQueue1);
-            var buffer2 = CreateMessageReceiveBuffer(sqsQueue2);
-            var buffer3 = CreateMessageReceiveBuffer(sqsQueue3);
-            var buffer4 = CreateMessageReceiveBuffer(sqsQueue4);
-
-            IMessageDispatcher dispatcher = TestDispatcher(() => Interlocked.Increment(ref messagesDispatched));
-            IChannelConsumer consumer1 = CreateChannelConsumer(dispatcher);
-            IChannelConsumer consumer2 = CreateChannelConsumer(dispatcher);
-            IChannelConsumer consumer3 = CreateChannelConsumer(dispatcher);
-
-            IMultiplexer multiplexer = CreateMultiplexer();
-
-            multiplexer.ReadFrom(buffer1.Reader);
-            multiplexer.ReadFrom(buffer2.Reader);
-            multiplexer.ReadFrom(buffer3.Reader);
-            multiplexer.ReadFrom(buffer4.Reader);
-
-            consumer1.ConsumeFrom(multiplexer.Messages());
-            consumer2.ConsumeFrom(multiplexer.Messages());
-            consumer3.ConsumeFrom(multiplexer.Messages());
-
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-            var multiplexerCompletion = multiplexer.Run(cts.Token);
-
-            // consumers
-            var consumer1Completion = consumer1.Run(cts.Token);
-            var consumer2Completion = consumer2.Run(cts.Token);
-            var consumer3Completion = consumer3.Run(cts.Token);
-
-            var buffer1Completion = buffer1.Run(cts.Token);
-            var buffer2Completion = buffer2.Run(cts.Token);
-            var buffer3Completion = buffer3.Run(cts.Token);
-            var buffer4Completion = buffer4.Run(cts.Token);
-
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer1Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer2Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer3Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer4Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer2Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer3Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => multiplexerCompletion);
-
-            _testOutputHelper.WriteLine("Attempted to send {0} messages and dispatched {1} messages", messagesSent,
-                messagesDispatched);
-
-            messagesDispatched.ShouldBe(messagesSent);
-        }
-
-        [Fact]
         public async Task Consumer_Not_Started_No_Buffer_Filled_Then_No_More_Messages_Requested()
         {
             // Arrange
@@ -315,66 +206,85 @@ namespace JustSaying.UnitTests.Messaging.Channels
         }
 
         [Fact]
-        public async Task If_Queue_Is_Slow_All_Messages_Processed()
+        public async Task Can_Be_Set_Up_Using_ConsumerBus()
         {
-            int messagesFromQueue = 0;
-            int messagesDispatched = 0;
-            var sqsQueue1 = TestQueue(() =>
-            {
-                Thread.Sleep(TimeSpan.FromSeconds(1));
-                messagesFromQueue++;
-            });
+            var sqsQueue1 = TestQueue();
+            var sqsQueue2 = TestQueue();
+            var sqsQueue3 = TestQueue();
 
-            var queues = new List<ISqsQueue> { sqsQueue1 };
-            IMessageDispatcher dispatcher = TestDispatcher(() => messagesDispatched++);
+            var queues = new List<ISqsQueue> { sqsQueue1, sqsQueue2, sqsQueue3 };
+            IMessageDispatcher dispatcher = TestDispatcher();
             var bus = CreateConsumerBus(queues, dispatcher);
 
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromSeconds(2));
+            cts.CancelAfter(TimeoutPeriod);
 
-            try
-            {
-                await bus.Run(cts.Token);
-            }
-            catch (OperationCanceledException)
-            { }
-
-            messagesFromQueue.ShouldBeGreaterThan(0);
-            messagesDispatched.ShouldBe(messagesFromQueue);
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => bus.Run(cts.Token));
         }
 
         [Fact]
-        public async Task If_Consumer_Is_Slow_All_Messages_Processed()
+        public async Task Sqs_Queue_Is_Not_Polled_After_Cancellation()
         {
-            int messagesFromQueue = 0;
-            int messagesDispatched = 0;
+            var cts = new CancellationTokenSource();
 
-            var sqsQueue1 = TestQueue(() =>
+            int callCountBeforeCancelled = 0;
+            int callCountAfterCancelled = 0;
+            ISqsQueue sqsQueue = TestQueue(() =>
             {
-                Thread.Sleep(TimeSpan.FromMilliseconds(500));
-                messagesFromQueue++;
+                if (cts.Token.IsCancellationRequested)
+                {
+                    callCountAfterCancelled++;
+                }
+                else
+                {
+                    callCountBeforeCancelled++;
+                }
             });
 
-            var queues = new List<ISqsQueue> { sqsQueue1 };
+            IMessageDispatcher dispatcher = TestDispatcher();
+            var bus = CreateConsumerBus(new[] { sqsQueue }, dispatcher);
+
+            var runTask = bus.Run(cts.Token);
+
+            cts.CancelAfter(TimeoutPeriod);
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await runTask);
+
+            callCountBeforeCancelled.ShouldBeGreaterThan(0);
+            callCountAfterCancelled.ShouldBe(0);
+        }
+
+        [Fact]
+        public async Task Messages_Not_Dispatched_After_Cancellation()
+        {
+            var cts = new CancellationTokenSource();
+
+            int dispatchedBeforeCancelled = 0;
+            int dispatchedAfterCancelled = 0;
+
+            ISqsQueue sqsQueue = TestQueue();
             IMessageDispatcher dispatcher = TestDispatcher(() =>
             {
-                Thread.Sleep(TimeSpan.FromSeconds(1));
-                messagesDispatched++;
+                if (cts.Token.IsCancellationRequested)
+                {
+                    dispatchedAfterCancelled++;
+                }
+                else
+                {
+                    dispatchedBeforeCancelled++;
+                }
             });
-            var bus = CreateConsumerBus(queues, dispatcher);
 
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromSeconds(2));
+            var bus = CreateConsumerBus(new[] { sqsQueue }, dispatcher);
 
-            try
-            {
-                await bus.Run(cts.Token);
-            }
-            catch (OperationCanceledException)
-            { }
+            var runTask = bus.Run(cts.Token);
 
-            messagesFromQueue.ShouldBeGreaterThan(0);
-            messagesDispatched.ShouldBe(messagesFromQueue);
+            cts.CancelAfter(TimeoutPeriod);
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await runTask);
+
+            dispatchedBeforeCancelled.ShouldBeGreaterThan(0);
+            dispatchedAfterCancelled.ShouldBe(0);
         }
 
         private static ISqsQueue TestQueue(Action spy = null)
@@ -450,6 +360,21 @@ namespace JustSaying.UnitTests.Messaging.Channels
             public override string ToString()
             {
                 return Body;
+            }
+        }
+
+        public class TestException : Exception
+        {
+            public TestException(string message) : base(message)
+            {
+            }
+
+            public TestException(string message, Exception innerException) : base(message, innerException)
+            {
+            }
+
+            public TestException()
+            {
             }
         }
     }

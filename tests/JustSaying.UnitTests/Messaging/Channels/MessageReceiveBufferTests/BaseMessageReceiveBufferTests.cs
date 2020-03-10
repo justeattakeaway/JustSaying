@@ -20,7 +20,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
         protected ISqsQueue Queue;
         protected IMessageMonitor Monitor;
         protected readonly ILoggerFactory LoggerFactory;
-        protected readonly SqsPolicyAsync<IList<Amazon.SQS.Model.Message>> SqsPolicy;
+        protected SqsPolicyAsync<IList<Amazon.SQS.Model.Message>> SqsPolicy;
 
         protected IMessageReceiveBuffer SystemUnderTest { get; private set; }
 
@@ -42,6 +42,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
         {
             Queue = Substitute.For<ISqsQueue>();
             Monitor = Substitute.For<IMessageMonitor>();
+            SqsPolicy = new NoopSqsPolicyAsync<IList<Amazon.SQS.Model.Message>>();
 
             Given();
         }

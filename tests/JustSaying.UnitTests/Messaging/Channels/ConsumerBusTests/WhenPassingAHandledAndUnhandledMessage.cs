@@ -53,14 +53,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             Monitor.Received()
                 .HandleTime(Arg.Is<TimeSpan>(x => x > TimeSpan.Zero));
         }
-
-        [Fact]
-        public void AllMessagesAreClearedFromQueue()
-        {
-            SerializationRegister.Received(_callCount).DeserializeMessage(Arg.Any<string>());
-
-            _queue.Received().DeleteMessageAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
-        }
     }
 
     /*
