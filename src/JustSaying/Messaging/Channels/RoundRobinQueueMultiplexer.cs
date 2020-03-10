@@ -38,7 +38,7 @@ namespace JustSaying.Messaging.Channels
         {
             if (reader == null) throw new ArgumentNullException(nameof(reader));
 
-            _readersLock.Wait();
+            _readersLock.Wait(_stoppingToken);
             try
             {
                 _readers.Add(reader);
