@@ -50,8 +50,8 @@ namespace JustSaying.UnitTests.JustSayingBus
             SystemUnderTest.AddMessageHandler(() => new InspectableHandler<OrderRejected>());
             SystemUnderTest.AddMessageHandler(() => new InspectableHandler<SimpleMessage>());
 
-            SystemUnderTest.AddQueue("region1", _queue1);
-            SystemUnderTest.AddQueue("region1", _queue2);
+            SystemUnderTest.AddQueue(_queue1);
+            SystemUnderTest.AddQueue(_queue2);
             SystemUnderTest.Start();
 
             return Task.CompletedTask;
@@ -64,16 +64,6 @@ namespace JustSaying.UnitTests.JustSayingBus
             _queue2.Received().GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), default);
         }
 
-        // todo: how can we check this?
-        //[Fact]
-        //public void CallingStartTwiceDoesNotStartListeningTwice()
-        //{
-        //    _subscriber1.IsListening.Returns(true);
-        //    _subscriber2.IsListening.Returns(true);
-        //    SystemUnderTest.Start();
-        //    _subscriber1.Received(1).Listen(default);
-        //    _subscriber2.Received(1).Listen(default);
-        //}
 
         [Fact]
         public void AndInterrogationShowsPublishersHaveBeenSet()

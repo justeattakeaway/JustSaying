@@ -38,11 +38,7 @@ namespace JustSaying
         public static JustSayingFluentlyDependencies WithGenericMessageSubjectProvider(this JustSayingFluentlyDependencies dependencies) =>
             dependencies.WithMessageSubjectProvider(new GenericMessageSubjectProvider());
 
-        public static IMayWantOptionalSettings InRegion(this JustSayingFluentlyDependencies dependencies, string region) => InRegions(dependencies, region);
-
-        public static IMayWantOptionalSettings InRegions(this JustSayingFluentlyDependencies dependencies, params string[] regions) => InRegions(dependencies, regions as IEnumerable<string>);
-
-        public static IMayWantOptionalSettings InRegions(this JustSayingFluentlyDependencies dependencies, IEnumerable<string> regions)
+        public static IMayWantOptionalSettings InRegion(this JustSayingFluentlyDependencies dependencies, string activeRegion)
         {
             var config = new MessagingConfig();
 
@@ -55,11 +51,8 @@ namespace JustSaying
             if (dependencies.QueueNamingConvention != null)
                 config.QueueNamingConvention = dependencies.QueueNamingConvention;
 
-            if (regions != null)
-                foreach (var region in regions)
-                {
-                    config.Regions.Add(region);
-                }
+            if (activeRegion != null)
+                config.Region = activeRegion;
 
             config.Validate();
 

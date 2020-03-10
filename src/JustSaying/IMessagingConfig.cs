@@ -8,8 +8,7 @@ namespace JustSaying
 {
     public interface IMessagingConfig : IPublishConfiguration
     {
-        IList<string> Regions { get; }
-        Func<string> GetActiveRegion { get; set; }
+        string Region { get; set; }
         IMessageSubjectProvider MessageSubjectProvider { get; set; }
         ITopicNamingConvention TopicNamingConvention { get; set; }
         IQueueNamingConvention QueueNamingConvention { get; set; }

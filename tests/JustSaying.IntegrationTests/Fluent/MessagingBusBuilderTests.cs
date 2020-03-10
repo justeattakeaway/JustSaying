@@ -35,7 +35,7 @@ namespace JustSaying.IntegrationTests
                     (builder) =>
                     {
                         builder.Client((options) => options.WithBasicCredentials("accessKey", "secretKey").WithServiceUri(TestEnvironment.SimulatorUrl))
-                               .Messaging((options) => options.WithRegions("eu-west-1"))
+                               .Messaging((options) => options.WithRegion("eu-west-1"))
                                .Publications((options) => options.WithQueue<QueueMessage>())
                                .Subscriptions((options) => options.ForQueue<QueueMessage>())
                                .Services((options) => options.WithMessageMonitoring(() => new MyMonitor()));
@@ -76,7 +76,6 @@ namespace JustSaying.IntegrationTests
                     (builder) =>
                     {
                         builder.Client((options) => options.WithBasicCredentials("accessKey", "secretKey").WithServiceUri(TestEnvironment.SimulatorUrl))
-                               .Messaging((options) => options.WithRegions("eu-west-1"))
                                .Publications((options) => options.WithTopic<TopicMessage>())
                                .Subscriptions((options) => options.ForTopic<TopicMessage>());
                     })

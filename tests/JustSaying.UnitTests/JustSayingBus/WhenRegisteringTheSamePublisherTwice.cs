@@ -21,8 +21,8 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override Task WhenAsync()
         {
-            SystemUnderTest.AddMessagePublisher<Message>(_publisher, string.Empty);
-            SystemUnderTest.AddMessagePublisher<Message>(_publisher, string.Empty);
+            SystemUnderTest.AddMessagePublisher<Message>(_publisher);
+            SystemUnderTest.AddMessagePublisher<Message>(_publisher);
 
             return Task.CompletedTask;
         }

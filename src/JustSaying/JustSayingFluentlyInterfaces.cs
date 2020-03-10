@@ -14,8 +14,8 @@ namespace JustSaying
     public interface IMayWantOptionalSettings : IMayWantMonitoring,
         IMayWantMessageLockStore,
         IMayWantCustomSerialization,
-        IMayWantAFailoverRegion,
         IMayWantAwsClientFactory,
+        IMayWantARegionPicker,
         IMayWantMessageContextAccessor
     {
     }
@@ -25,14 +25,9 @@ namespace JustSaying
         IMayWantOptionalSettings WithAwsClientFactory(Func<IAwsClientFactory> awsClientFactory);
     }
 
-    public interface IMayWantAFailoverRegion
+    public interface IMayWantARegionPicker
     {
-        IMayWantARegionPicker WithFailoverRegion(string region);
-    }
-
-    public interface IMayWantARegionPicker : IMayWantAFailoverRegion
-    {
-        IMayWantOptionalSettings WithActiveRegion(Func<string> getActiveRegion);
+        IMayWantOptionalSettings WithRegion(string region);
     }
 
     public interface IMayWantMonitoring : IAmJustSayingFluently

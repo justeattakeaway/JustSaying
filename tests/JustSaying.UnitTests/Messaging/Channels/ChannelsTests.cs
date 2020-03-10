@@ -287,6 +287,22 @@ namespace JustSaying.UnitTests.Messaging.Channels
             dispatchedAfterCancelled.ShouldBe(0);
         }
 
+        [Fact]
+        public void Bus_StartingTwice_ShouldReturnSameCompletionTask()
+        {
+            var queue = TestQueue();
+            var dispatcher = TestDispatcher();
+            var bus = CreateConsumerBus(new[] {queue}, dispatcher);
+
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+
+            var task1 = bus.Run(cts.Token);
+            var task2 = bus.Run(cts.Token);
+
+            Assert.True(ReferenceEquals(task1, task2));
+
+        }
+
         private static ISqsQueue TestQueue(Action spy = null)
         {
             IList<Message> GetMessages()

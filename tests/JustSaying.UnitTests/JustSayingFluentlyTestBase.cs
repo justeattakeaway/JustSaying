@@ -29,8 +29,7 @@ namespace JustSaying.UnitTests
             var fns = CreateMeABus
                 .WithLogging(new LoggerFactory())
                 .InRegion("defaultRegion")
-                .WithFailoverRegion("failoverRegion")
-                .WithActiveRegion(() => "defaultRegion")
+                .WithRegion("defaultRegion")
                 .ConfigurePublisherWith(x =>
                 {
                     x.PublishFailureBackoff = Configuration.PublishFailureBackoff;

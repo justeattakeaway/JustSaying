@@ -4,7 +4,7 @@ namespace JustSaying.Messaging.Interrogation
 {
     public interface IInterrogationResponse
     {
-        IEnumerable<string> Regions { get; set; }
+        string Region { get; set; }
         IEnumerable<ISubscriber> Subscribers { get; set; }
         IEnumerable<IPublisher> Publishers { get; set; }
     }

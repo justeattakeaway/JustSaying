@@ -22,8 +22,8 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override async Task WhenAsync()
         {
-            SystemUnderTest.AddMessagePublisher<OrderAccepted>(_publisher, string.Empty);
-            SystemUnderTest.AddMessagePublisher<OrderRejected>(_publisher, string.Empty);
+            SystemUnderTest.AddMessagePublisher<OrderAccepted>(_publisher);
+            SystemUnderTest.AddMessagePublisher<OrderRejected>(_publisher);
 
             await SystemUnderTest.PublishAsync(new OrderAccepted());
             await SystemUnderTest.PublishAsync(new OrderRejected());

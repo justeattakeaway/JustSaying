@@ -13,12 +13,11 @@ namespace JustSaying
 {
     public interface IAmJustSaying : IMessagePublisher
     {
-        void AddQueue(string region, ISqsQueue queue);
+        void AddQueue(ISqsQueue queue);
 
         void AddMessageHandler<T>(Func<IHandlerAsync<T>> handler) where T : Message;
 
-        // TODO - swap params
-        void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message;
+        void AddMessagePublisher<T>(IMessagePublisher messagePublisher) where T : Message;
 
         void Start(CancellationToken cancellationToken = default);
 

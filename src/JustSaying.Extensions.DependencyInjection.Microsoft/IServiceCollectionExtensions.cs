@@ -45,28 +45,28 @@ namespace Microsoft.Extensions.DependencyInjection
         /// Adds JustSaying services to the service collection.
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection"/> to add JustSaying services to.</param>
-        /// <param name="regions">The AWS region(s) to configure.</param>
+        /// <param name="region">The AWS region to configure.</param>
         /// <returns>
         /// The <see cref="IServiceCollection"/> specified by <paramref name="services"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="services"/> or <paramref name="regions"/> is <see langword="null"/>.
+        /// <paramref name="services"/> or <paramref name="region"/> is <see langword="null"/>.
         /// </exception>
-        public static IServiceCollection AddJustSaying(this IServiceCollection services, params string[] regions)
+        public static IServiceCollection AddJustSaying(this IServiceCollection services, string region)
         {
             if (services == null)
             {
                 throw new ArgumentNullException(nameof(services));
             }
 
-            if (regions == null)
+            if (region == null)
             {
-                throw new ArgumentNullException(nameof(regions));
+                throw new ArgumentNullException(nameof(region));
             }
 
             return services.AddJustSaying(
                 (builder) => builder.Messaging(
-                    (options) => options.WithRegions(regions)));
+                    (options) => options.WithRegion(region)));
         }
 
         /// <summary>

@@ -200,7 +200,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 AttributeNames = requestMessageAttributeNames.ToList()
             };
 
-            using var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));
+            using var receiveTimeout = new CancellationTokenSource(TimeSpan.FromMinutes(5));
 
             try
             {

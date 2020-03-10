@@ -51,7 +51,6 @@ namespace JustSaying
             Bus = bus;
             _amazonQueueCreator = queueCreator;
             _awsClientFactoryProxy = awsClientFactoryProxy;
-
         }
 
         /// <summary>
@@ -69,12 +68,14 @@ namespace JustSaying
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>(Action<SnsWriteConfiguration> configBuilder) where T : Message
+        public IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>(Action<SnsWriteConfiguration> configBuilder)
+            where T : Message
         {
             return AddSnsMessagePublisher<T>(configBuilder);
         }
 
-        private IHaveFulfilledPublishRequirements AddSnsMessagePublisher<T>(Action<SnsWriteConfiguration> configBuilder) where T : Message
+        private IHaveFulfilledPublishRequirements AddSnsMessagePublisher<T>(Action<SnsWriteConfiguration> configBuilder)
+            where T : Message
         {
             _log.LogInformation("Adding SNS publisher for message type '{MessageType}'.",
                 typeof(T));
@@ -86,25 +87,24 @@ namespace JustSaying
 
             Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
 
-            foreach (var region in Bus.Config.Regions)
+            // TODO pass region down into topic creation for when we have foreign topics so we can generate the arn
+            var eventPublisher = new SnsTopicByName(
+                _subscriptionConfig.TopicName,
+                _awsClientFactoryProxy.GetAwsClientFactory()
+                    .GetSnsClient(RegionEndpoint.GetBySystemName(Bus.Config.Region)),
+                Bus.SerializationRegister,
+                _loggerFactory, snsWriteConfig,
+                Bus.Config.MessageSubjectProvider)
             {
-                // TODO pass region down into topic creation for when we have foreign topics so we can generate the arn
-                var eventPublisher = new SnsTopicByName(
-                    _subscriptionConfig.TopicName,
-                    _awsClientFactoryProxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
-                    Bus.SerializationRegister,
-                    _loggerFactory, snsWriteConfig,
-                    Bus.Config.MessageSubjectProvider)
-                {
-                    MessageResponseLogger = Bus.Config.MessageResponseLogger
-                };
+                MessageResponseLogger = Bus.Config.MessageResponseLogger
+            };
 
-                CreatePublisher(eventPublisher, snsWriteConfig);
+            CreatePublisher(eventPublisher, snsWriteConfig);
 
-                eventPublisher.EnsurePolicyIsUpdatedAsync(Bus.Config.AdditionalSubscriberAccounts).GetAwaiter().GetResult();
+            eventPublisher.EnsurePolicyIsUpdatedAsync(Bus.Config.AdditionalSubscriberAccounts).GetAwaiter()
+                .GetResult();
 
-                Bus.AddMessagePublisher<T>(eventPublisher, region);
-            }
+            Bus.AddMessagePublisher<T>(eventPublisher);
 
             _log.LogInformation("Created SNS topic publisher on topic '{TopicName}' for message type '{MessageType}'.",
                 _subscriptionConfig.TopicName, typeof(T));
@@ -129,7 +129,8 @@ namespace JustSaying
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsWriteConfiguration> configBuilder) where T : Message
+        public IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsWriteConfiguration> configBuilder)
+            where T : Message
         {
             _log.LogInformation("Adding SQS publisher for message type '{MessageType}'.",
                 typeof(T));
@@ -141,29 +142,26 @@ namespace JustSaying
 
             config.QueueName = GetOrUseQueueNamingConvention<T>(config.QueueName);
 
-            foreach (var region in Bus.Config.Regions)
+            var regionEndpoint = RegionEndpoint.GetBySystemName(Bus.Config.Region);
+            var sqsClient = _awsClientFactoryProxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
+
+            var eventPublisher = new SqsPublisher(
+                regionEndpoint,
+                config.QueueName,
+                sqsClient,
+                config.RetryCountBeforeSendingToErrorQueue,
+                Bus.SerializationRegister,
+                _loggerFactory)
             {
-                var regionEndpoint = RegionEndpoint.GetBySystemName(region);
-                var sqsClient = _awsClientFactoryProxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
+                MessageResponseLogger = Bus.Config.MessageResponseLogger
+            };
 
-                var eventPublisher = new SqsPublisher(
-                    regionEndpoint,
-                    config.QueueName,
-                    sqsClient,
-                    config.RetryCountBeforeSendingToErrorQueue,
-                    Bus.SerializationRegister,
-                    _loggerFactory)
-                {
-                    MessageResponseLogger = Bus.Config.MessageResponseLogger
-                };
-
-                if (!eventPublisher.ExistsAsync().GetAwaiter().GetResult())
-                {
-                    eventPublisher.CreateAsync(config).GetAwaiter().GetResult();
-                }
-
-                Bus.AddMessagePublisher<T>(eventPublisher, region);
+            if (!eventPublisher.ExistsAsync().GetAwaiter().GetResult())
+            {
+                eventPublisher.CreateAsync(config).GetAwaiter().GetResult();
             }
+
+            Bus.AddMessagePublisher<T>(eventPublisher);
 
             _log.LogInformation(
                 "Created SQS publisher for message type '{MessageType}' on queue '{QueueName}'.",
@@ -187,11 +185,13 @@ namespace JustSaying
         /// </summary>
         /// <param name="message"></param>
         /// <param name="cancellationToken"></param>
-        public virtual async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
+        public virtual async Task PublishAsync(Message message, PublishMetadata metadata,
+            CancellationToken cancellationToken)
         {
             if (Bus == null)
             {
-                throw new InvalidOperationException("You must register for message publication before publishing a message");
+                throw new InvalidOperationException(
+                    "You must register for message publication before publishing a message");
             }
 
             await Bus.PublishAsync(message, metadata, cancellationToken)
@@ -243,7 +243,8 @@ namespace JustSaying
             return this;
         }
 
-        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message
+        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver)
+            where T : Message
         {
             if (_serializationFactory == null)
             {
@@ -264,7 +265,8 @@ namespace JustSaying
 
             if (proposedHandler == null)
             {
-                throw new HandlerNotRegisteredWithContainerException($"There is no handler for '{typeof(T)}' messages.");
+                throw new HandlerNotRegisteredWithContainerException(
+                    $"There is no handler for '{typeof(T)}' messages.");
             }
 
             Bus.AddMessageHandler(() => handlerResolver.ResolveHandler<T>(resolutionContext));
@@ -282,21 +284,18 @@ namespace JustSaying
         {
             ConfigureSqsSubscriptionViaTopic();
 
-            foreach (string region in Bus.Config.Regions)
-            {
                 // TODO Make this async and remove GetAwaiter().GetResult() call
                 var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribedAsync(
-                    region, Bus.SerializationRegister,
+                    Bus.Config.Region, Bus.SerializationRegister,
                     _subscriptionConfig,
                     Bus.Config.MessageSubjectProvider).GetAwaiter().GetResult();
 
-                CreateSubscriptionListener<T>(region, queue);
+                Bus.AddQueue(queue);
 
                 _log.LogInformation(
                     "Created SQS topic subscription on topic '{TopicName}' and queue '{QueueName}'.",
                     _subscriptionConfig.TopicName,
                     _subscriptionConfig.QueueName);
-            }
 
             return this;
         }
@@ -305,43 +304,18 @@ namespace JustSaying
         {
             ConfigureSqsSubscription<T>();
 
-            foreach (var region in Bus.Config.Regions)
-            {
-                // TODO Make this async and remove GetAwaiter().GetResult() call
-                var queue = _amazonQueueCreator.EnsureQueueExistsAsync(region, _subscriptionConfig).GetAwaiter().GetResult();
+            // TODO Make this async and remove GetAwaiter().GetResult() call
+            var queue = _amazonQueueCreator.EnsureQueueExistsAsync(Bus.Config.Region, _subscriptionConfig).GetAwaiter()
+                .GetResult();
 
-                CreateSubscriptionListener<T>(region, queue);
+            Bus.AddQueue(queue);
 
-                _log.LogInformation(
-                    "Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",
-                    typeof(T),
-                    _subscriptionConfig.QueueName);
-            }
-
+            _log.LogInformation(
+                "Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",
+                typeof(T),
+                _subscriptionConfig.QueueName);
 
             return this;
-        }
-
-        private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue)
-            where T : Message
-        {
-            // todo: should MaxAllowedMessagesInFlight be the bufferlength?
-            Bus.AddQueue(region, queue);
-
-            // TODO Concrete type check for backwards compatibility for now.
-            // Refactor the interface for v7 to allow this to be done against the interface.
-            /*if (subscriber is SqsNotificationListener sqsSubscriptionListener)
-            {
-                if (_subscriptionConfig.MaxAllowedMessagesInFlight.HasValue)
-                {
-                    sqsSubscriptionListener.WithMaximumConcurrentLimitOnMessagesInFlightOf(_subscriptionConfig.MaxAllowedMessagesInFlight.Value);
-                }
-
-                if (_subscriptionConfig.MessageProcessingStrategy != null)
-                {
-                    sqsSubscriptionListener.WithMessageProcessingStrategy(_subscriptionConfig.MessageProcessingStrategy);
-                }
-            }*/
         }
 
         private void ConfigureSqsSubscriptionViaTopic()
@@ -377,25 +351,9 @@ namespace JustSaying
             return this;
         }
 
-        public IMayWantARegionPicker WithFailoverRegion(string region)
+        public IMayWantOptionalSettings WithRegion(string region)
         {
-            Bus.Config.Regions.Add(region);
-            return this;
-        }
-
-        public IMayWantARegionPicker WithFailoverRegions(params string[] regions)
-        {
-            foreach (var region in regions)
-            {
-                Bus.Config.Regions.Add(region);
-            }
-            Bus.Config.Validate();
-            return this;
-        }
-
-        public IMayWantOptionalSettings WithActiveRegion(Func<string> getActiveRegion)
-        {
-            Bus.Config.GetActiveRegion = getActiveRegion;
+            Bus.Config.Region = region;
             return this;
         }
 
@@ -410,7 +368,7 @@ namespace JustSaying
             return this;
         }
 
-        private  string GetOrUseTopicNamingConvention<T>(string topicName)
+        private string GetOrUseTopicNamingConvention<T>(string topicName)
         {
             return string.IsNullOrWhiteSpace(topicName) ? Bus.Config.TopicNamingConvention.TopicName<T>() : topicName;
         }
