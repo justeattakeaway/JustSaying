@@ -106,9 +106,12 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
                 messageBackoffStrategy,
                 messageContextAccessor);
 
+            var config = new ConsumerConfig();
+            config.WithDefaultSqsPolicy(LoggerFactory);
+
             var bus = new ConsumerBus(
                 Queues,
-                new ConsumerConfig(),
+                config,
                 dispatcher,
                 Monitor,
                 LoggerFactory);

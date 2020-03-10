@@ -6,8 +6,8 @@ using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels;
+using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.Messaging.Policies;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
@@ -248,7 +248,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             cts.CancelAfter(TimeoutPeriod);
 
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await runTask);
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => runTask);
 
             callCountBeforeCancelled.ShouldBeGreaterThan(0);
             callCountAfterCancelled.ShouldBe(0);
@@ -327,7 +327,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             return new MessageReceiveBuffer(
                 10,
                 sqsQueue,
-                new NoopSqsPolicyAsync<IList<Message>>(),
+                new NoopMiddleware<GetMessagesContext, IList<Message>>(),
                 Substitute.For<IMessageMonitor>(),
                 _testOutputHelper.ToLoggerFactory());
         }

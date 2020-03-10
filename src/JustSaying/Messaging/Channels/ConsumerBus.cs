@@ -68,7 +68,7 @@ namespace JustSaying.Messaging.Channels
             var buffer = new MessageReceiveBuffer(
                 _consumerConfig.BufferSize,
                 queue,
-                _consumerConfig.SqsPolicy,
+                _consumerConfig.SqsMiddleware,
                 monitor,
                 loggerFactory);
 

@@ -1,18 +1,18 @@
 using System;
 using System.Threading.Tasks;
-using JustSaying.Messaging.Policies;
+using JustSaying.Messaging.Middleware;
 
 namespace JustSaying.UnitTests.Messaging.Policies.ExamplePolicies
 {
-    public class ErrorHandlingSqsPolicyAsync<T, TException> : SqsPolicyAsync<T>
+    public class ErrorHandlingMiddleware<TContext, TOut, TException> : MiddlewareBase<TContext, TOut>
         where TException : Exception
     {
-        public ErrorHandlingSqsPolicyAsync(SqsPolicyAsync<T> next) : base(next)
+        public ErrorHandlingMiddleware(MiddlewareBase<TContext, TOut> next) : base(next)
         {
 
         }
 
-        protected override async Task<T> RunInnerAsync(Func<Task<T>> func)
+        protected override async Task<TOut> RunInnerAsync(TContext context, Func<Task<TOut>> func)
         {
             try
             {

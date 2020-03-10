@@ -25,6 +25,12 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         protected override void Given()
         {
             _queue = CreateSuccessfulTestQueue(async () => await ExceptionOnFirstCall());
+            _queue
+                .QueueName
+                .Returns("QueueName");
+            _queue
+                .RegionSystemName
+                .Returns("RegionSystemName");
 
             Queues.Add(_queue);
             Handler.Handle(null).ReturnsForAnyArgs(true);

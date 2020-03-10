@@ -7,7 +7,6 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.Messaging.Policies;
 using JustSaying.UnitTests.Messaging.Policies.ExamplePolicies;
 using NSubstitute;
 using Shouldly;
@@ -39,7 +38,7 @@ namespace JustSaying.UnitTests.Messaging.Policies
 
             var config = new ConsumerConfig();
             config.WithSqsPolicy(
-               next => new ErrorHandlingSqsPolicyAsync<IList<Message>, InvalidOperationException>(next));
+               next => new ErrorHandlingMiddleware<GetMessagesContext, IList<Message>, InvalidOperationException>(next));
 
             IMessageDispatcher dispatcher = TestDispatcher(() => Interlocked.Increment(ref dispatchedMessageCount));
 

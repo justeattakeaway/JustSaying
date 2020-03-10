@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using JustSaying.Messaging.Policies;
+using JustSaying.Messaging.Middleware;
 
 namespace JustSaying.Messaging.Channels
 {
@@ -12,6 +12,6 @@ namespace JustSaying.Messaging.Channels
 
         int ConsumerCount { get; }
 
-        SqsPolicyAsync<IList<Amazon.SQS.Model.Message>> SqsPolicy { get; }
+        MiddlewareBase<GetMessagesContext, IList<Amazon.SQS.Model.Message>> SqsMiddleware { get; }
     }
 }

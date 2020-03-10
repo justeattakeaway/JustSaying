@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
 using JustSaying.Messaging.MessageProcessingStrategies;
-using JustSaying.Messaging.Policies;
+using JustSaying.Messaging.Middleware;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels
 {
@@ -18,13 +19,19 @@ namespace JustSaying.Messaging.Channels
 
         public int MultiplexerCapacity => 100;
 
-        public SqsPolicyAsync<IList<Amazon.SQS.Model.Message>> SqsPolicy { get; private set; }
-                    = new NoopSqsPolicyAsync<IList<Amazon.SQS.Model.Message>>();
+        public MiddlewareBase<GetMessagesContext, IList<Amazon.SQS.Model.Message>> SqsMiddleware { get; private set; }
+                    = new NoopMiddleware<GetMessagesContext, IList<Amazon.SQS.Model.Message>>();
 
-        public SqsPolicyAsync<IList<Amazon.SQS.Model.Message>> WithSqsPolicy(Func<SqsPolicyAsync<IList<Amazon.SQS.Model.Message>>, SqsPolicyAsync<IList<Amazon.SQS.Model.Message>>> policyCreator)
+        public MiddlewareBase<GetMessagesContext, IList<Amazon.SQS.Model.Message>> WithSqsPolicy(Func<MiddlewareBase<GetMessagesContext, IList<Amazon.SQS.Model.Message>>, MiddlewareBase<GetMessagesContext, IList<Amazon.SQS.Model.Message>>> creator)
         {
-            SqsPolicy = SqsPolicyBuilder.WithAsync(SqsPolicy, policyCreator);
-            return SqsPolicy;
+            SqsMiddleware = MiddlewareBuilder.WithAsync(SqsMiddleware, creator);
+            return SqsMiddleware;
+        }
+
+        public MiddlewareBase<GetMessagesContext, IList<Amazon.SQS.Model.Message>> WithDefaultSqsPolicy(ILoggerFactory loggerFactory)
+        {
+            SqsMiddleware = MiddlewareBuilder.WithAsync(SqsMiddleware, _ => new DefaultSqsMiddleware(loggerFactory.CreateLogger<DefaultSqsMiddleware>()));
+            return SqsMiddleware;
         }
     }
 }

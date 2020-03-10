@@ -7,7 +7,6 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.Messaging.Policies;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -19,7 +18,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
     {
         private readonly ITestOutputHelper _testOutputHelper;
 
-        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(100);
+        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
 
         public ErrorHandlingTests(ITestOutputHelper testOutputHelper)
         {
@@ -29,24 +28,34 @@ namespace JustSaying.UnitTests.Messaging.Channels
         [Fact]
         public async Task Sqs_Client_Throwing_Exceptions_Continues_To_Request_Messages()
         {
+            // Arrange
             int messagesDispatched = 0;
 
             var sqsQueue1 = TestQueue(GetErrorMessages);
 
             var queues = new List<ISqsQueue> { sqsQueue1 };
             IMessageDispatcher dispatcher = TestDispatcher(() => Interlocked.Increment(ref messagesDispatched));
+
+            var config = new ConsumerConfig();
+            config.WithDefaultSqsPolicy(_testOutputHelper.ToLoggerFactory());
+
             var bus = new ConsumerBus(
                 queues,
-                new ConsumerConfig(),
+                config,
                 dispatcher,
                 Substitute.For<IMessageMonitor>(),
                 _testOutputHelper.ToLoggerFactory());
 
             var cts = new CancellationTokenSource();
+
+            // Act
+            var runTask = bus.Run(cts.Token);
+
             cts.CancelAfter(TimeoutPeriod);
 
-            await bus.Run(cts.Token);
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => runTask);
 
+            // Assert
             messagesDispatched.ShouldBe(0);
         }
 
