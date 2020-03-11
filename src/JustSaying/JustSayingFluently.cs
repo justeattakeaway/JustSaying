@@ -39,7 +39,6 @@ namespace JustSaying
         private IMessageSerializationFactory _serializationFactory;
         private readonly ILoggerFactory _loggerFactory;
 
-
         protected internal JustSayingFluently(
             IAmJustSaying bus,
             IVerifyAmazonQueues queueCreator,
@@ -51,7 +50,6 @@ namespace JustSaying
             Bus = bus;
             _amazonQueueCreator = queueCreator;
             _awsClientFactoryProxy = awsClientFactoryProxy;
-
         }
 
         /// <summary>
@@ -178,6 +176,8 @@ namespace JustSaying
         /// </summary>
         public void StartListening(CancellationToken cancellationToken = default)
         {
+            Bus.SetMessageBackoffStrategy(_subscriptionConfig.MessageBackoffStrategy);
+            Bus.SetOnError(_subscriptionConfig.OnError);
             Bus.Start(cancellationToken);
             _log.LogInformation("Started listening for messages");
         }

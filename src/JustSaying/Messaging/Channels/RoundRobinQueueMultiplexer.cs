@@ -90,7 +90,8 @@ namespace JustSaying.Messaging.Channels
         {
             await Task.Yield();
 
-            _logger.LogInformation("Starting up channel multiplexer with a queue capacity of {Capacity}",
+            _logger.LogInformation(
+                "Starting up channel multiplexer with a queue capacity of {Capacity}",
                 _channelCapacity);
 
             var writer = _targetChannel.Writer;

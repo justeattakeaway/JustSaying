@@ -9,10 +9,12 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
+using SQSMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying
 {
@@ -43,6 +45,19 @@ namespace JustSaying
         }
         public IMessageContextAccessor MessageContextAccessor { get; set; }
         public HandlerMap HandlerMap { get; private set; }
+
+        private IMessageBackoffStrategy _messageBackoffStrategy;
+        private Action<Exception, SQSMessage> _onError;
+
+        public void SetMessageBackoffStrategy(IMessageBackoffStrategy value)
+        {
+            _messageBackoffStrategy = value;
+        }
+
+        public void SetOnError(Action<Exception, SQSMessage> value)
+        {
+            _onError = value;
+        }
 
         private readonly ILogger _log;
 
@@ -140,8 +155,14 @@ namespace JustSaying
 
             lock (_syncRoot)
             {
-                var dispatcher = new MessageDispatcher(SerializationRegister, Monitor, null,
-                    HandlerMap, _loggerFactory, null, MessageContextAccessor);
+                var dispatcher = new MessageDispatcher(
+                    SerializationRegister,
+                    Monitor,
+                    _onError,
+                    HandlerMap,
+                    _loggerFactory,
+                    _messageBackoffStrategy,
+                    MessageContextAccessor);
 
                 ConsumerBus = new ConsumerBus(
                     _sqsQueues,

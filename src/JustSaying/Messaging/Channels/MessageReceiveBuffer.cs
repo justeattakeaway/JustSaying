@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
@@ -20,7 +22,6 @@ namespace JustSaying.Messaging.Channels
         private readonly IMessageMonitor _monitor;
         private readonly ILogger _logger;
 
-        // todo: add logic around populating this
         private readonly List<string> _requestMessageAttributeNames = new List<string>();
 
         public ChannelReader<IQueueMessageContext> Reader => _channel.Reader;
@@ -30,7 +31,8 @@ namespace JustSaying.Messaging.Channels
             ISqsQueue sqsQueue,
             MiddlewareBase<GetMessagesContext, IList<Message>> sqsMiddleware,
             IMessageMonitor monitor,
-            ILoggerFactory logger)
+            ILoggerFactory logger,
+            IMessageBackoffStrategy messageBackoffStrategy = null)
         {
             _bufferLength = bufferLength;
             _sqsQueue = sqsQueue;
@@ -38,6 +40,11 @@ namespace JustSaying.Messaging.Channels
             _monitor = monitor;
             _logger = logger.CreateLogger<IMessageReceiveBuffer>();
             _channel = Channel.CreateBounded<IQueueMessageContext>(bufferLength);
+
+            if (messageBackoffStrategy != null)
+            {
+                _requestMessageAttributeNames.Add(MessageSystemAttributeName.ApproximateReceiveCount);
+            }
         }
 
         /// <summary>

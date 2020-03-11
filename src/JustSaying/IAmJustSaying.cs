@@ -3,9 +3,11 @@ using System.Threading;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
+using SQSMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying
 {
@@ -29,5 +31,9 @@ namespace JustSaying
         IMessageLockAsync MessageLock { get; set; }
 
         IMessageContextAccessor MessageContextAccessor { get; set; }
+
+        void SetMessageBackoffStrategy(IMessageBackoffStrategy value);
+
+        void SetOnError(Action<Exception, SQSMessage> value);
     }
 }
