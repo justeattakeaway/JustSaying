@@ -40,7 +40,25 @@ namespace JustSaying.Messaging.Channels
                 .ToList();
         }
 
+        private Task _completion;
+        private bool _started;
+        private readonly object _startLock = new object();
+
         public Task Run(CancellationToken stoppingToken)
+        {
+            if (_started) return _completion;
+            lock (_startLock)
+            {
+                if (_started) return _completion;
+
+                _completion = RunImpl(stoppingToken);
+
+                _started = true;
+                return _completion;
+            }
+        }
+
+        private Task RunImpl(CancellationToken stoppingToken)
         {
             var numberOfConsumers = _consumers.Count;
             _logger.LogInformation(
@@ -50,7 +68,7 @@ namespace JustSaying.Messaging.Channels
             // start
             var completionTasks = new List<Task>();
 
-            completionTasks.Add( _multiplexer.Run(stoppingToken));
+            completionTasks.Add(_multiplexer.Run(stoppingToken));
             completionTasks.AddRange(_consumers.Select(x => x.Run(stoppingToken)));
             completionTasks.AddRange(_buffers.Select(x => x.Run(stoppingToken)));
 
