@@ -27,11 +27,13 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         protected IMessageMonitor Monitor;
         protected SimpleMessage DeserializedMessage;
         protected IMessageSerializationRegister SerializationRegister;
+
         protected IMessageLockAsync MessageLock
         {
             get => HandlerMap.MessageLock;
             set => HandlerMap.MessageLock = value;
         }
+
         protected IHandlerAsync<SimpleMessage> Handler;
 
         protected IConsumerBus SystemUnderTest { get; private set; }
@@ -63,7 +65,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             SerializationRegister = Substitute.For<IMessageSerializationRegister>();
             HandlerMap = new HandlerMap(Monitor, LoggerFactory);
 
-            DeserializedMessage = new SimpleMessage { RaisingComponent = "Component" };
+            DeserializedMessage = new SimpleMessage {RaisingComponent = "Component"};
             SerializationRegister.DeserializeMessage(Arg.Any<string>()).Returns(DeserializedMessage);
 
             Given();
@@ -109,11 +111,15 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             var config = new ConsumerConfig();
             config.WithDefaultSqsPolicy(LoggerFactory);
 
+            var multiplexer = new RoundRobinQueueMultiplexer(config.MultiplexerCapacity,
+                LoggerFactory.CreateLogger<RoundRobinQueueMultiplexer>());
+
             var bus = new ConsumerBus(
                 Queues,
                 config,
                 dispatcher,
                 Monitor,
+                multiplexer,
                 LoggerFactory);
 
             return bus;
@@ -146,6 +152,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             return Task.CompletedTask;
         }
 
-        protected class TestMessage : Amazon.SQS.Model.Message { }
+        protected class TestMessage : Amazon.SQS.Model.Message
+        {
+        }
     }
 }

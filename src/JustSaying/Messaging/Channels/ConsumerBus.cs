@@ -17,20 +17,19 @@ namespace JustSaying.Messaging.Channels
         private readonly ILogger _logger;
         private readonly IConsumerConfig _consumerConfig;
 
-        internal ConsumerBus(
-            IList<ISqsQueue> queues,
+        internal ConsumerBus(IList<ISqsQueue> queues,
             IConsumerConfig consumerConfig,
             IMessageDispatcher messageDispatcher,
             IMessageMonitor monitor,
-            ILoggerFactory loggerFactory)
+            IMultiplexer multiplexer,
+            ILoggerFactory logger)
         {
-            _logger = loggerFactory.CreateLogger<ConsumerBus>();
+            _logger = logger.CreateLogger<ConsumerBus>();
             _consumerConfig = consumerConfig;
-
-            _multiplexer = new RoundRobinQueueMultiplexer(consumerConfig.MultiplexerCapacity, loggerFactory);
+            _multiplexer = multiplexer;
 
             _buffers = queues
-                .Select(q => CreateBuffer(q, monitor, loggerFactory))
+                .Select(q => CreateBuffer(q, monitor, logger))
                 .ToList();
 
             // create n consumers (defined by config)

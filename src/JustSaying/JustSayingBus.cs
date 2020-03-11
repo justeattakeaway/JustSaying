@@ -143,11 +143,15 @@ namespace JustSaying
                 var dispatcher = new MessageDispatcher(SerializationRegister, Monitor, null,
                     HandlerMap, _loggerFactory, null, MessageContextAccessor);
 
+                var multiplexer = new RoundRobinQueueMultiplexer(Config.ConsumerConfig.MultiplexerCapacity,
+                    _loggerFactory.CreateLogger<RoundRobinQueueMultiplexer>());
+
                 ConsumerBus = new ConsumerBus(
                     _sqsQueues,
                     Config.ConsumerConfig,
                     dispatcher,
                     Monitor,
+                    multiplexer,
                     _loggerFactory);
                 ConsumerBus.Run(cancellationToken);
             }

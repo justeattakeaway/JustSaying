@@ -21,11 +21,11 @@ namespace JustSaying.UnitTests.Messaging.Channels
 {
     public class ChannelsTests
     {
-        private readonly ITestOutputHelper _testOutputHelper;
+        private readonly ILoggerFactory LoggerFactory;
 
         public ChannelsTests(ITestOutputHelper testOutputHelper)
         {
-            _testOutputHelper = testOutputHelper;
+            LoggerFactory = testOutputHelper.ToLoggerFactory();
         }
 
         private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
@@ -164,14 +164,12 @@ namespace JustSaying.UnitTests.Messaging.Channels
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1Completion);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer2Completion);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => multiplexerCompletion);
-
         }
 
         [Fact]
         public async Task Consumer_Not_Started_No_Buffer_Filled_Then_No_More_Messages_Requested()
         {
             // Arrange
-            ILogger logger = _testOutputHelper.ToLogger<ChannelConsumer>();
             int messagesFromQueue = 0;
             int messagesDispatched = 0;
             var sqsQueue = TestQueue(() => Interlocked.Increment(ref messagesFromQueue));
@@ -212,7 +210,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var sqsQueue2 = TestQueue();
             var sqsQueue3 = TestQueue();
 
-            var queues = new List<ISqsQueue> { sqsQueue1, sqsQueue2, sqsQueue3 };
+            var queues = new List<ISqsQueue> {sqsQueue1, sqsQueue2, sqsQueue3};
             IMessageDispatcher dispatcher = TestDispatcher();
             var bus = CreateConsumerBus(queues, dispatcher);
 
@@ -242,7 +240,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             });
 
             IMessageDispatcher dispatcher = TestDispatcher();
-            var bus = CreateConsumerBus(new[] { sqsQueue }, dispatcher);
+            var bus = CreateConsumerBus(new[] {sqsQueue}, dispatcher);
 
             var runTask = bus.Run(cts.Token);
 
@@ -275,7 +273,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 }
             });
 
-            var bus = CreateConsumerBus(new[] { sqsQueue }, dispatcher);
+            var bus = CreateConsumerBus(new[] {sqsQueue}, dispatcher);
 
             var runTask = bus.Run(cts.Token);
 
@@ -287,10 +285,25 @@ namespace JustSaying.UnitTests.Messaging.Channels
             dispatchedAfterCancelled.ShouldBe(0);
         }
 
+        [Fact]
+        public void Bus_StartingTwice_ShouldReturnSameCompletionTask()
+        {
+            var queue = TestQueue();
+            var dispatcher = TestDispatcher();
+            var bus = CreateConsumerBus(new[] {queue}, dispatcher);
+
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+
+            var task1 = bus.Run(cts.Token);
+            var task2 = bus.Run(cts.Token);
+
+            Assert.True(ReferenceEquals(task1, task2));
+        }
+
         private static ISqsQueue TestQueue(Action spy = null)
         {
             IList<Message> GetMessages()
-             {
+            {
                 spy?.Invoke();
                 return new List<Message>
                 {
@@ -329,7 +342,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 sqsQueue,
                 new NoopMiddleware<GetMessagesContext, IList<Message>>(),
                 Substitute.For<IMessageMonitor>(),
-                _testOutputHelper.ToLoggerFactory());
+                LoggerFactory);
         }
 
         private IChannelConsumer CreateChannelConsumer(IMessageDispatcher dispatcher)
@@ -342,17 +355,23 @@ namespace JustSaying.UnitTests.Messaging.Channels
             IMessageDispatcher dispatcher)
         {
             var config = new ConsumerConfig();
+
+            var multiplexer = new RoundRobinQueueMultiplexer(config.MultiplexerCapacity,
+                LoggerFactory.CreateLogger<RoundRobinQueueMultiplexer>());
+
             return new ConsumerBus(
                 queues,
                 config,
                 dispatcher,
                 Substitute.For<IMessageMonitor>(),
-                _testOutputHelper.ToLoggerFactory());
+                multiplexer,
+                LoggerFactory);
         }
 
         private IMultiplexer CreateMultiplexer()
         {
-            return new RoundRobinQueueMultiplexer(100, _testOutputHelper.ToLoggerFactory());
+            return new RoundRobinQueueMultiplexer(100,
+                LoggerFactory.CreateLogger<RoundRobinQueueMultiplexer>());
         }
 
         private class TestMessage : Message
