@@ -127,7 +127,7 @@ namespace JustSaying.Messaging.Channels
 
         public async IAsyncEnumerable<IQueueMessageContext> Messages()
         {
-            if(!_started) throw new InvalidOperationException("");
+            if (!_started) throw new InvalidOperationException("");
 
             while (true)
             {

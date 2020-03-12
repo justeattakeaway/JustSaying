@@ -140,21 +140,27 @@ namespace JustSaying
             publishersByType[topicType] = messagePublisher;
         }
 
-        public void Start(CancellationToken cancellationToken = default)
+        public Task Start(CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (ConsumerBus != null)
             {
                 _log.LogWarning("Attempting to start an already running Bus");
-                return;
+                return ConsumerBus.Run(CancellationToken.None);
             }
 
             lock (_syncRoot)
             {
+                if (ConsumerBus != null)
+                {
+                    _log.LogWarning("Attempting to start an already running Bus");
+                    return ConsumerBus.Run(CancellationToken.None);
+                }
+
                 var dispatcher = new MessageDispatcher(
                     SerializationRegister,
                     Monitor,
@@ -170,7 +176,7 @@ namespace JustSaying
                     dispatcher,
                     Monitor,
                     _loggerFactory);
-                ConsumerBus.Run(cancellationToken);
+                return ConsumerBus.Run(cancellationToken);
             }
         }
 

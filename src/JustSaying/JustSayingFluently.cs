@@ -410,7 +410,7 @@ namespace JustSaying
             return this;
         }
 
-        private  string GetOrUseTopicNamingConvention<T>(string topicName)
+        private string GetOrUseTopicNamingConvention<T>(string topicName)
         {
             return string.IsNullOrWhiteSpace(topicName) ? Bus.Config.TopicNamingConvention.TopicName<T>() : topicName;
         }

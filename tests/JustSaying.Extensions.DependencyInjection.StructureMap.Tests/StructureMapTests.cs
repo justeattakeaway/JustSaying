@@ -58,7 +58,7 @@ namespace JustSaying
             var message = new SimpleMessage();
 
             using var source = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-            listener.Start(source.Token);
+            _ = listener.Start(source.Token);
 
             // Act
             await publisher.PublishAsync(message, source.Token);

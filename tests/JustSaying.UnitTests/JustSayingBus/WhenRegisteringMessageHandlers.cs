@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
@@ -29,14 +30,16 @@ namespace JustSaying.UnitTests.JustSayingBus
             _region = "west-1";
         }
 
-        protected override Task WhenAsync()
+        protected override async Task WhenAsync()
         {
             SystemUnderTest.AddQueue(_region, _queue);
             SystemUnderTest.AddMessageHandler(_futureHandler1);
             SystemUnderTest.AddMessageHandler(_futureHandler2);
-            SystemUnderTest.Start();
 
-            return Task.CompletedTask;
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeoutPeriod);
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => SystemUnderTest.Start(cts.Token));
         }
 
         [Fact]

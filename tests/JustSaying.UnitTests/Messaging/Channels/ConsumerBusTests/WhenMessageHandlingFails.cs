@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
-using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.TestingFramework;
 using NSubstitute;

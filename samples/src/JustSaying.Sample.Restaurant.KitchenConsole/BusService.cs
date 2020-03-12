@@ -32,8 +32,8 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
 
             _bus.Start(stoppingToken);
 
-            var consumerBus = (IAmJustInterrogating) _bus;
-            var publisherBus = (IAmJustInterrogating) _publisher;
+            var consumerBus = (IAmJustInterrogating)_bus;
+            var publisherBus = (IAmJustInterrogating)_publisher;
 
             var subscribers = consumerBus.WhatDoIHave();
             var publishers = publisherBus.WhatDoIHave();

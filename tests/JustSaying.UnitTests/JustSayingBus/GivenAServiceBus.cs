@@ -19,6 +19,8 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected JustSaying.JustSayingBus SystemUnderTest { get; private set; }
 
+        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
+
         public virtual async Task InitializeAsync()
         {
             Given();

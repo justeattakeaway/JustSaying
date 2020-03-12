@@ -17,7 +17,8 @@ namespace JustSaying.Messaging.Channels
         private readonly ILogger _logger;
         private readonly IConsumerConfig _consumerConfig;
 
-        internal ConsumerBus(IList<ISqsQueue> queues,
+        internal ConsumerBus(
+            IList<ISqsQueue> queues,
             IConsumerConfig consumerConfig,
             IMessageDispatcher messageDispatcher,
             IMessageMonitor monitor,
@@ -26,7 +27,8 @@ namespace JustSaying.Messaging.Channels
             _logger = loggerFactory.CreateLogger<ConsumerBus>();
             _consumerConfig = consumerConfig;
 
-            _multiplexer = new RoundRobinQueueMultiplexer(consumerConfig.MultiplexerCapacity,
+            _multiplexer = new RoundRobinQueueMultiplexer(
+                consumerConfig.MultiplexerCapacity,
                 loggerFactory.CreateLogger<RoundRobinQueueMultiplexer>());
 
             _buffers = queues

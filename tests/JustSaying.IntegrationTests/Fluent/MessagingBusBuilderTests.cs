@@ -50,7 +50,7 @@ namespace JustSaying.IntegrationTests
             using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
             {
                 // Act
-                listener.Start(source.Token);
+                _ = listener.Start(source.Token);
 
                 var message = new QueueMessage();
 
@@ -90,7 +90,7 @@ namespace JustSaying.IntegrationTests
             using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
             {
                 // Act
-                listener.Start(source.Token);
+                _ = listener.Start(source.Token);
 
                 var message = new TopicMessage();
 
@@ -149,7 +149,7 @@ namespace JustSaying.IntegrationTests
             using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
             {
                 // Act
-                listener.Start(source.Token);
+                _ = listener.Start(source.Token);
 
                 var message = new QueueMessage();
 

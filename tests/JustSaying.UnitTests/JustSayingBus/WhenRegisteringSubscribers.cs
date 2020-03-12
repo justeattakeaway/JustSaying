@@ -1,15 +1,11 @@
+using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging;
-using JustSaying.Messaging.Interrogation;
-using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.AwsTools.MessageHandling;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -44,7 +40,7 @@ namespace JustSaying.UnitTests.JustSayingBus
                 });
         }
 
-        protected override Task WhenAsync()
+        protected override async Task WhenAsync()
         {
             SystemUnderTest.AddMessageHandler(() => new InspectableHandler<OrderAccepted>());
             SystemUnderTest.AddMessageHandler(() => new InspectableHandler<OrderRejected>());
@@ -52,16 +48,18 @@ namespace JustSaying.UnitTests.JustSayingBus
 
             SystemUnderTest.AddQueue("region1", _queue1);
             SystemUnderTest.AddQueue("region1", _queue2);
-            SystemUnderTest.Start();
 
-            return Task.CompletedTask;
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeoutPeriod);
+
+           await Assert.ThrowsAnyAsync<OperationCanceledException>(() => SystemUnderTest.Start(cts.Token));
         }
 
         [Fact]
         public void SubscribersStartedUp()
         {
-            _queue1.Received().GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), default);
-            _queue2.Received().GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), default);
+            _queue1.Received().GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
+            _queue2.Received().GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
         }
 
         // todo: how can we check this?

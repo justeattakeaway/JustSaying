@@ -31,7 +31,7 @@ namespace JustSaying.IntegrationTests.Fluent.DependencyInjection.Microsoft
                 services,
                 async (publisher, listener, cancellationToken) =>
                 {
-                    listener.Start(cancellationToken);
+                    _ = listener.Start(cancellationToken);
 
                     var message = new OrderPlaced(Guid.NewGuid().ToString());
 
