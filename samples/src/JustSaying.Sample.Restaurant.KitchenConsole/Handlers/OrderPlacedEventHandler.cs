@@ -15,7 +15,7 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole.Handlers
 
         /// <summary>
         /// Handles messages of type OrderPlacedEvent
-        /// Takes a dependency on IMessagePublisher so that further messages can be published
+        /// Takes a dependency on IMessagePublisher so that further messages can be published 
         /// </summary>
         public OrderPlacedEventHandler(IMessagePublisher publisher, ILogger<OrderPlacedEventHandler> log)
         {
