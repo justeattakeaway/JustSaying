@@ -21,16 +21,16 @@ namespace JustSaying.Messaging.Channels
             IConsumerConfig consumerConfig,
             IMessageDispatcher messageDispatcher,
             IMessageMonitor monitor,
-            ILoggerFactory logger)
+            ILoggerFactory loggerFactory)
         {
-            _logger = logger.CreateLogger<ConsumerBus>();
+            _logger = loggerFactory.CreateLogger<ConsumerBus>();
             _consumerConfig = consumerConfig;
 
             _multiplexer = new RoundRobinQueueMultiplexer(consumerConfig.MultiplexerCapacity,
-                logger.CreateLogger<RoundRobinQueueMultiplexer>());
+                loggerFactory.CreateLogger<RoundRobinQueueMultiplexer>());
 
             _buffers = queues
-                .Select(q => CreateBuffer(q, monitor, logger))
+                .Select(q => CreateBuffer(q, monitor, loggerFactory))
                 .ToList();
 
             // create n consumers (defined by config)
