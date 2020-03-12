@@ -7,6 +7,7 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Monitoring;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -16,13 +17,14 @@ namespace JustSaying.UnitTests.Messaging.Channels
 {
     public class ErrorHandlingTests
     {
-        private readonly ITestOutputHelper _testOutputHelper;
+        public ILoggerFactory LoggerFactory { get; }
 
         protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
 
+
         public ErrorHandlingTests(ITestOutputHelper testOutputHelper)
         {
-            _testOutputHelper = testOutputHelper;
+            this.LoggerFactory = testOutputHelper.ToLoggerFactory();
         }
 
         [Fact]
@@ -37,14 +39,14 @@ namespace JustSaying.UnitTests.Messaging.Channels
             IMessageDispatcher dispatcher = TestDispatcher(() => Interlocked.Increment(ref messagesDispatched));
 
             var config = new ConsumerConfig();
-            config.WithDefaultSqsPolicy(_testOutputHelper.ToLoggerFactory());
+            config.WithDefaultSqsPolicy(LoggerFactory);
 
             var bus = new ConsumerBus(
                 queues,
                 config,
                 dispatcher,
                 Substitute.For<IMessageMonitor>(),
-                _testOutputHelper.ToLoggerFactory());
+                LoggerFactory);
 
             var cts = new CancellationTokenSource();
 

@@ -18,17 +18,17 @@ namespace JustSaying.Messaging.Channels
         readonly ILogger<RoundRobinQueueMultiplexer> _logger;
 
         private bool _started = false;
-        private int _channelCapacity;
+
+        private readonly int _channelCapacity;
         private CancellationToken _stoppingToken;
 
         public Task Completion { get; private set; }
 
-        public RoundRobinQueueMultiplexer(
-            int channelCapacity,
-            ILoggerFactory loggerFactory)
+        public RoundRobinQueueMultiplexer(int channelCapacity,
+            ILogger<RoundRobinQueueMultiplexer> logger)
         {
             _readers = new List<ChannelReader<IQueueMessageContext>>();
-            _logger = loggerFactory.CreateLogger<RoundRobinQueueMultiplexer>();
+            _logger = logger;
 
             _channelCapacity = channelCapacity;
             _targetChannel = Channel.CreateBounded<IQueueMessageContext>(_channelCapacity);

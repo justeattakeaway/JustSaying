@@ -46,18 +46,6 @@ namespace JustSaying.UnitTests.JustSayingBus
             SystemUnderTest.HandlerMap.ContainsKey(typeof(Message2)).ShouldBeTrue();
         }
 
-        // todo: access the running bus?/check it has the correct handlers?
-        //[Fact]
-        //public void HandlersAreAddedBeforeSubscriberStartup()
-        //{
-        //    Received.InOrder(() =>
-        //        {
-        //            _subscriber.AddMessageHandler(Arg.Any<Func<IHandlerAsync<Message>>>());
-        //            _subscriber.AddMessageHandler(Arg.Any<Func<IHandlerAsync<Message2>>>());
-        //            _subscriber.Listen(default);
-        //        });
-        //}
-
         public class Message2 : Message { }
     }
 }

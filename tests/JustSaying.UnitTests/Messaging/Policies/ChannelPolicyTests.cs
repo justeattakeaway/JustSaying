@@ -8,6 +8,7 @@ using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.UnitTests.Messaging.Policies.ExamplePolicies;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -17,11 +18,11 @@ namespace JustSaying.UnitTests.Messaging.Policies
 {
     public class ChannelPolicyTests
     {
-        private readonly ITestOutputHelper _testOutputHelper;
+        private readonly ILoggerFactory LoggerFactory;
 
         public ChannelPolicyTests(ITestOutputHelper testOutputHelper)
         {
-            _testOutputHelper = testOutputHelper;
+            LoggerFactory = testOutputHelper.ToLoggerFactory();
         }
 
         private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
@@ -47,7 +48,7 @@ namespace JustSaying.UnitTests.Messaging.Policies
                 config,
                 dispatcher,
                 Substitute.For<IMessageMonitor>(),
-                _testOutputHelper.ToLoggerFactory());
+                LoggerFactory);
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);

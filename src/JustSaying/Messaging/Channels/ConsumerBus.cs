@@ -17,8 +17,7 @@ namespace JustSaying.Messaging.Channels
         private readonly ILogger _logger;
         private readonly IConsumerConfig _consumerConfig;
 
-        internal ConsumerBus(
-            IList<ISqsQueue> queues,
+        internal ConsumerBus(IList<ISqsQueue> queues,
             IConsumerConfig consumerConfig,
             IMessageDispatcher messageDispatcher,
             IMessageMonitor monitor,
@@ -27,7 +26,8 @@ namespace JustSaying.Messaging.Channels
             _logger = loggerFactory.CreateLogger<ConsumerBus>();
             _consumerConfig = consumerConfig;
 
-            _multiplexer = new RoundRobinQueueMultiplexer(consumerConfig.MultiplexerCapacity, loggerFactory);
+            _multiplexer = new RoundRobinQueueMultiplexer(consumerConfig.MultiplexerCapacity,
+                loggerFactory.CreateLogger<RoundRobinQueueMultiplexer>());
 
             _buffers = queues
                 .Select(q => CreateBuffer(q, monitor, loggerFactory))
@@ -41,7 +41,25 @@ namespace JustSaying.Messaging.Channels
                 .ToList();
         }
 
+        private Task _completion;
+        private bool _started;
+        private readonly object _startLock = new object();
+
         public Task Run(CancellationToken stoppingToken)
+        {
+            if (_started) return _completion;
+            lock (_startLock)
+            {
+                if (_started) return _completion;
+
+                _completion = RunImpl(stoppingToken);
+
+                _started = true;
+                return _completion;
+            }
+        }
+
+        private Task RunImpl(CancellationToken stoppingToken)
         {
             var numberOfConsumers = _consumers.Count;
             _logger.LogInformation(
@@ -51,7 +69,7 @@ namespace JustSaying.Messaging.Channels
             // start
             var completionTasks = new List<Task>();
 
-            completionTasks.Add( _multiplexer.Run(stoppingToken));
+            completionTasks.Add(_multiplexer.Run(stoppingToken));
             completionTasks.AddRange(_consumers.Select(x => x.Run(stoppingToken)));
             completionTasks.AddRange(_buffers.Select(x => x.Run(stoppingToken)));
 
