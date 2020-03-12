@@ -20,7 +20,7 @@ namespace JustSaying.Messaging.Channels
         public int MultiplexerCapacity => 100;
 
         public MiddlewareBase<GetMessagesContext, IList<Amazon.SQS.Model.Message>> SqsMiddleware { get; private set; }
-                    = new NoopMiddleware<GetMessagesContext, IList<Amazon.SQS.Model.Message>>();
+            = new NoopMiddleware<GetMessagesContext, IList<Amazon.SQS.Model.Message>>();
 
         public MiddlewareBase<GetMessagesContext, IList<Amazon.SQS.Model.Message>> WithSqsPolicy(Func<MiddlewareBase<GetMessagesContext, IList<Amazon.SQS.Model.Message>>, MiddlewareBase<GetMessagesContext, IList<Amazon.SQS.Model.Message>>> creator)
         {

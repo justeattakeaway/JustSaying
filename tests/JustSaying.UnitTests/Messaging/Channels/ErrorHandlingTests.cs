@@ -21,7 +21,6 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
         protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
 
-
         public ErrorHandlingTests(ITestOutputHelper testOutputHelper)
         {
             this.LoggerFactory = testOutputHelper.ToLoggerFactory();

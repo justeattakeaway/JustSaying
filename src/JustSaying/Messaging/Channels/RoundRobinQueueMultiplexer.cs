@@ -39,6 +39,7 @@ namespace JustSaying.Messaging.Channels
             if (reader == null) throw new ArgumentNullException(nameof(reader));
 
             _readersLock.Wait(_stoppingToken);
+
             try
             {
                 _readers.Add(reader);
@@ -61,6 +62,7 @@ namespace JustSaying.Messaging.Channels
             _logger.LogInformation("Received notification to remove reader from multiplexer inputs");
 
             _readersLock.Wait(_stoppingToken);
+
             try
             {
                 _readers.Remove(reader);
@@ -74,6 +76,7 @@ namespace JustSaying.Messaging.Channels
         public Task Run(CancellationToken stoppingToken)
         {
             if (_started) return Completion;
+
             lock (_startLock)
             {
                 if (_started) return Completion;

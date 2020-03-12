@@ -35,8 +35,7 @@ namespace JustSaying
             set { _monitor = value ?? new NullOpMessageMonitor(); }
         }
 
-        // todo: should this be private?
-        internal IConsumerBus ConsumerBus { get; private set; }
+        private IConsumerBus ConsumerBus { get; set; }
         public IMessageSerializationRegister SerializationRegister { get; private set; }
         public IMessageLockAsync MessageLock
         {

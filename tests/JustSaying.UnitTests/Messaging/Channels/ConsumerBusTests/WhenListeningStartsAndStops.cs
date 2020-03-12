@@ -14,16 +14,16 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
     public class WhenListeningStartsAndStops : BaseConsumerBusTests
     {
         private ISqsQueue _queue;
-
-        public WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper)
-            : base(testOutputHelper)
-        {
-        }
         private const string _messageContentsRunning = @"Message Contents Running";
         private const string _messageContentsAfterStop = @"Message Contents After Stop";
 
         private int _expectedMaxMessageCount;
         private bool _running = false;
+
+        public WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper)
+            : base(testOutputHelper)
+        {
+        }
 
         protected override void Given()
         {
@@ -54,7 +54,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             cts.Cancel();
 
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
-
         }
 
         [Fact]
@@ -82,4 +81,3 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         }
     }
 }
-

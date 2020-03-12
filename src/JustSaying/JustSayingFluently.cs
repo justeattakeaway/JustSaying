@@ -325,23 +325,7 @@ namespace JustSaying
         private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue)
             where T : Message
         {
-            // todo: should MaxAllowedMessagesInFlight be the bufferlength?
             Bus.AddQueue(region, queue);
-
-            // TODO Concrete type check for backwards compatibility for now.
-            // Refactor the interface for v7 to allow this to be done against the interface.
-            /*if (subscriber is SqsNotificationListener sqsSubscriptionListener)
-            {
-                if (_subscriptionConfig.MaxAllowedMessagesInFlight.HasValue)
-                {
-                    sqsSubscriptionListener.WithMaximumConcurrentLimitOnMessagesInFlightOf(_subscriptionConfig.MaxAllowedMessagesInFlight.Value);
-                }
-
-                if (_subscriptionConfig.MessageProcessingStrategy != null)
-                {
-                    sqsSubscriptionListener.WithMessageProcessingStrategy(_subscriptionConfig.MessageProcessingStrategy);
-                }
-            }*/
         }
 
         private void ConfigureSqsSubscriptionViaTopic()
