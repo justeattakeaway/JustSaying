@@ -43,15 +43,11 @@ namespace JustSaying.UnitTests.Messaging.Policies
 
             IMessageDispatcher dispatcher = TestDispatcher(() => Interlocked.Increment(ref dispatchedMessageCount));
 
-            var multiplexer = new RoundRobinQueueMultiplexer(config.MultiplexerCapacity,
-                LoggerFactory.CreateLogger<RoundRobinQueueMultiplexer>());
-
             var bus = new ConsumerBus(
                 queues,
                 config,
                 dispatcher,
                 Substitute.For<IMessageMonitor>(),
-                multiplexer,
                 LoggerFactory);
 
             var cts = new CancellationTokenSource();

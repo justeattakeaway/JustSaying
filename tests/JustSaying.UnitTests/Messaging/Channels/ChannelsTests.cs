@@ -356,15 +356,11 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             var config = new ConsumerConfig();
 
-            var multiplexer = new RoundRobinQueueMultiplexer(config.MultiplexerCapacity,
-                LoggerFactory.CreateLogger<RoundRobinQueueMultiplexer>());
-
             return new ConsumerBus(
                 queues,
                 config,
                 dispatcher,
                 Substitute.For<IMessageMonitor>(),
-                multiplexer,
                 LoggerFactory);
         }
 

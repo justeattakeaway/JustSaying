@@ -111,15 +111,11 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             var config = new ConsumerConfig();
             config.WithDefaultSqsPolicy(LoggerFactory);
 
-            var multiplexer = new RoundRobinQueueMultiplexer(config.MultiplexerCapacity,
-                LoggerFactory.CreateLogger<RoundRobinQueueMultiplexer>());
-
             var bus = new ConsumerBus(
                 Queues,
                 config,
                 dispatcher,
                 Monitor,
-                multiplexer,
                 LoggerFactory);
 
             return bus;

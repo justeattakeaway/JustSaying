@@ -41,15 +41,11 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var config = new ConsumerConfig();
             config.WithDefaultSqsPolicy(LoggerFactory);
 
-            var multiplexer = new RoundRobinQueueMultiplexer(config.MultiplexerCapacity,
-                LoggerFactory.CreateLogger<RoundRobinQueueMultiplexer>());
-
             var bus = new ConsumerBus(
                 queues,
                 config,
                 dispatcher,
                 Substitute.For<IMessageMonitor>(),
-                multiplexer,
                 LoggerFactory);
 
             var cts = new CancellationTokenSource();
