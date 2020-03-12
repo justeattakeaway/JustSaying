@@ -10,18 +10,18 @@ namespace JustSaying.Sample.Restaurant.OrderingApi.Handlers
 {
     public class OrderReadyEventHandler : IHandlerAsync<OrderReadyEvent>
     {
-        private readonly ILogger<OrderReadyEventHandler> _log;
+        private readonly ILogger<OrderReadyEventHandler> _logger;
         private readonly IMessagePublisher _publisher;
 
-        public OrderReadyEventHandler(ILogger<OrderReadyEventHandler> log, IMessagePublisher publisher)
+        public OrderReadyEventHandler(ILogger<OrderReadyEventHandler> logger, IMessagePublisher publisher)
         {
-            _log = log;
+            _logger = logger;
             _publisher = publisher;
         }
 
         public async Task<bool> Handle(OrderReadyEvent message)
         {
-            _log.LogInformation("Order {orderId} ready", message.OrderId);
+            _logger.LogInformation("Order {orderId} ready", message.OrderId);
 
             // This is where you would actually handle the order placement
             // Intentionally left empty for the sake of this being a sample application
@@ -44,7 +44,5 @@ namespace JustSaying.Sample.Restaurant.OrderingApi.Handlers
             //   The message should be moved to the error queue if all retries fail
             return true;
         }
-
-        private static Random R => new Random();
     }
 }
