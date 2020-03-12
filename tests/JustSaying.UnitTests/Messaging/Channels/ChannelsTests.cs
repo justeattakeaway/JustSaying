@@ -210,7 +210,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var sqsQueue2 = TestQueue();
             var sqsQueue3 = TestQueue();
 
-            var queues = new List<ISqsQueue> {sqsQueue1, sqsQueue2, sqsQueue3};
+            var queues = new List<ISqsQueue> { sqsQueue1, sqsQueue2, sqsQueue3 };
             IMessageDispatcher dispatcher = TestDispatcher();
             var bus = CreateConsumerBus(queues, dispatcher);
 
@@ -240,7 +240,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             });
 
             IMessageDispatcher dispatcher = TestDispatcher();
-            var bus = CreateConsumerBus(new[] {sqsQueue}, dispatcher);
+            var bus = CreateConsumerBus(new[] { sqsQueue }, dispatcher);
 
             var runTask = bus.Run(cts.Token);
 
@@ -273,7 +273,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 }
             });
 
-            var bus = CreateConsumerBus(new[] {sqsQueue}, dispatcher);
+            var bus = CreateConsumerBus(new[] { sqsQueue }, dispatcher);
 
             var runTask = bus.Run(cts.Token);
 
@@ -290,7 +290,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             var queue = TestQueue();
             var dispatcher = TestDispatcher();
-            var bus = CreateConsumerBus(new[] {queue}, dispatcher);
+            var bus = CreateConsumerBus(new[] { queue }, dispatcher);
 
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
 
@@ -366,7 +366,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
         private IMultiplexer CreateMultiplexer()
         {
-            return new RoundRobinQueueMultiplexer(100,
+            return new RoundRobinQueueMultiplexer(
+                100,
                 LoggerFactory.CreateLogger<RoundRobinQueueMultiplexer>());
         }
 
