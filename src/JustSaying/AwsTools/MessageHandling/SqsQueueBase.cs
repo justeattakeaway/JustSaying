@@ -187,14 +187,14 @@ namespace JustSaying.AwsTools.MessageHandling
             };
         }
 
-        public async Task<IList<Message>> GetMessagesAsync(int count,
+        public async Task<IList<Message>> GetMessagesAsync(int maximumCount,
             IEnumerable<string> requestMessageAttributeNames,
             CancellationToken cancellationToken = default)
         {
             var request = new ReceiveMessageRequest
             {
                 QueueUrl = Uri.AbsoluteUri,
-                MaxNumberOfMessages = count,
+                MaxNumberOfMessages = maximumCount,
                 WaitTimeSeconds = 20,
                 AttributeNames = requestMessageAttributeNames.ToList()
             };
