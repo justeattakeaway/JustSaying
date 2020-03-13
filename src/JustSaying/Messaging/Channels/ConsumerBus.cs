@@ -65,7 +65,7 @@ namespace JustSaying.Messaging.Channels
         {
             var numberOfConsumers = _consumers.Count;
             _logger.LogInformation(
-                "Starting up consumer bus with {ConsumerCount} consumers and {DownloadBufferCount} downloaders",
+                "Starting up consumer bus with {ConsumerCount} consumers and {ReceiveBuffferCount} receivers",
                 numberOfConsumers, _buffers.Count);
 
             // start
@@ -92,7 +92,6 @@ namespace JustSaying.Messaging.Channels
                 monitor,
                 loggerFactory);
 
-            // link download buffers to core channel
             _multiplexer.ReadFrom(buffer.Reader);
 
             return buffer;

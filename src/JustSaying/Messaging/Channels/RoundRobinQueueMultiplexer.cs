@@ -10,19 +10,19 @@ namespace JustSaying.Messaging.Channels
     internal sealed class RoundRobinQueueMultiplexer : IMultiplexer, IDisposable
     {
         private readonly IList<ChannelReader<IQueueMessageContext>> _readers;
-        private Channel<IQueueMessageContext> _targetChannel;
+        private readonly Channel<IQueueMessageContext> _targetChannel;
 
         private readonly SemaphoreSlim _readersLock = new SemaphoreSlim(1, 1);
         private readonly object _startLock = new object();
 
-        readonly ILogger<RoundRobinQueueMultiplexer> _logger;
+        private readonly ILogger<RoundRobinQueueMultiplexer> _logger;
 
         private bool _started = false;
 
         private readonly int _channelCapacity;
         private CancellationToken _stoppingToken;
 
-        public Task Completion { get; private set; }
+        private Task _completion;
 
         public RoundRobinQueueMultiplexer(int channelCapacity,
             ILogger<RoundRobinQueueMultiplexer> logger)
@@ -75,17 +75,17 @@ namespace JustSaying.Messaging.Channels
 
         public Task Run(CancellationToken stoppingToken)
         {
-            if (_started) return Completion;
+            if (_started) return _completion;
 
             lock (_startLock)
             {
-                if (_started) return Completion;
+                if (_started) return _completion;
 
                 _stoppingToken = stoppingToken;
-                Completion = RunImpl();
+                _completion = RunImpl();
                 _started = true;
 
-                return Completion;
+                return _completion;
             }
         }
 

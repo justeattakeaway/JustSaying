@@ -7,6 +7,9 @@ using JustSaying.Messaging.MessageHandling;
 
 namespace JustSaying.Messaging.Channels
 {
+    /// <summary>
+    /// Reduces multiple input streams of messages into a single stream, interleaving them.
+    /// </summary>
     internal interface IMultiplexer
     {
         Task Run(CancellationToken stoppingToken);
