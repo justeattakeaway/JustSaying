@@ -63,7 +63,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                     messageContext.Message.MessageId,
                     messageContext.Message.Body);
 
-                await messageContext.DeleteMessageFromQueue().ConfigureAwait(false);
+                await messageContext.DeleteMessageFromQueueAsync().ConfigureAwait(false);
                 _onError(ex, messageContext.Message);
 
                 return;
@@ -96,7 +96,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
 
                 if (handlingSucceeded)
                 {
-                    await messageContext.DeleteMessageFromQueue().ConfigureAwait(false);
+                    await messageContext.DeleteMessageFromQueueAsync().ConfigureAwait(false);
                 }
             }
 #pragma warning disable CA1031

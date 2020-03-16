@@ -10,7 +10,7 @@ namespace JustSaying.Messaging.Channels
 
         Task ChangeMessageVisibilityAsync(TimeSpan visibilityTimeout);
 
-        Task DeleteMessageFromQueue();
+        Task DeleteMessageFromQueueAsync();
 
         Uri QueueUri { get; }
     }

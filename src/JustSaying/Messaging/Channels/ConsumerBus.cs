@@ -39,7 +39,7 @@ namespace JustSaying.Messaging.Channels
             // link consumers to core channel
             _consumers = Enumerable.Range(0, consumerConfig.ConsumerCount)
                 .Select(x => new ChannelConsumer(messageDispatcher)
-                    .ConsumeFrom(_multiplexer.Messages()))
+                    .ConsumeFrom(_multiplexer.GetMessagesAsync()))
                 .ToList();
         }
 

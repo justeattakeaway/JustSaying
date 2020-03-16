@@ -17,7 +17,7 @@ namespace JustSaying.Messaging.Channels
 
         private ISqsQueue SqsQueue { get; }
 
-        public async Task DeleteMessageFromQueue()
+        public async Task DeleteMessageFromQueueAsync()
         {
             await SqsQueue.DeleteMessageAsync(Message.ReceiptHandle).ConfigureAwait(false);
         }

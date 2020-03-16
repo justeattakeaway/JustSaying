@@ -34,12 +34,12 @@ namespace JustSaying.Messaging.Channels
             ILoggerFactory logger,
             IMessageBackoffStrategy messageBackoffStrategy = null)
         {
+            _channel = Channel.CreateBounded<IQueueMessageContext>(bufferLength);
             _bufferLength = bufferLength;
             _sqsQueue = sqsQueue;
             _sqsMiddleware = sqsMiddleware;
             _monitor = monitor;
             _logger = logger.CreateLogger<IMessageReceiveBuffer>();
-            _channel = Channel.CreateBounded<IQueueMessageContext>(bufferLength);
 
             if (messageBackoffStrategy != null)
             {
@@ -50,8 +50,8 @@ namespace JustSaying.Messaging.Channels
         /// <summary>
         /// Starts the receive buffer until it's cancelled by the stopping token.
         /// </summary>
-        /// <param name="stoppingToken"></param>
-        /// <returns>A task that completes when the cancellation token is fired.</returns>
+        /// <param name="stoppingToken">A CancellationToken token that will stop the buffer when fired</param>
+        /// <returns>A task that throws an `OperationCancelledException` when the cancellation token is fired.</returns>
         public async Task Run(CancellationToken stoppingToken)
         {
             await Task.Yield();
@@ -86,7 +86,7 @@ namespace JustSaying.Messaging.Channels
             }
             finally
             {
-                _logger.LogInformation("Downloader for queue {QueueName} has completed, shutting down channel...",
+                _logger.LogInformation("Receive buffer for queue {QueueName} has completed, shutting down channel",
                     _sqsQueue.Uri);
                 writer.Complete();
                 stoppingToken.ThrowIfCancellationRequested();
@@ -141,18 +141,17 @@ namespace JustSaying.Messaging.Channels
         {
             while (!stoppingToken.IsCancellationRequested)
             {
+                using var timeoutToken = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+                // we don't want to pass the stoppingToken here because
+                // we want to process any messages queued messages before stopping
+                using var linkedCts =
+                    CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, stoppingToken);
+
                 try
                 {
-                    // we don't want to pass the stoppingToken here because
-                    // we want to process any messages queued messages before stopping
-                    using var timeoutToken = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-                    using var linkedCts =
-                        CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, stoppingToken);
-
-                    bool writePermitted = await writer.WaitToWriteAsync(linkedCts.Token);
-                    return writePermitted;
+                    return await writer.WaitToWriteAsync(linkedCts.Token);
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException) when (!stoppingToken.IsCancellationRequested)
                 {
                     // no space in channel, check again
                     continue;
