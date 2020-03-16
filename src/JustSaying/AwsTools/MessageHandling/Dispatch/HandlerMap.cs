@@ -37,13 +37,18 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
 
         public void Add(Type messageType, HandlerFunc handlerFunc)
         {
+            if (_handlers.ContainsKey(messageType))
+            {
+                throw new InvalidOperationException(
+                    $"A message handler has already been registered for type {messageType.FullName}");
+            }
+
             _handlers.Add(messageType, handlerFunc);
         }
 
         public HandlerFunc Get(Type messageType)
         {
-            HandlerFunc handler;
-            return _handlers.TryGetValue(messageType, out handler) ? handler : null;
+            return _handlers.TryGetValue(messageType, out var handler) ? handler : null;
         }
     }
 }

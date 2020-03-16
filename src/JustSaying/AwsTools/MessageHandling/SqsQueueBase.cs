@@ -187,7 +187,8 @@ namespace JustSaying.AwsTools.MessageHandling
             };
         }
 
-        public async Task<IList<Message>> GetMessagesAsync(int maximumCount,
+        public async Task<IList<Message>> GetMessagesAsync(
+            int maximumCount,
             IEnumerable<string> requestMessageAttributeNames,
             CancellationToken cancellationToken = default)
         {
@@ -235,7 +236,9 @@ namespace JustSaying.AwsTools.MessageHandling
             await Client.DeleteMessageAsync(deleteRequest, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task ChangeMessageVisibilityAsync(string receiptHandle, int timeoutInSeconds,
+        public async Task ChangeMessageVisibilityAsync(
+            string receiptHandle,
+            int timeoutInSeconds,
             CancellationToken cancellationToken = default)
         {
             var visibilityRequest = new ChangeMessageVisibilityRequest
