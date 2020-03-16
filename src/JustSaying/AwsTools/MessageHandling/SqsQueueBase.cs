@@ -238,14 +238,14 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public async Task ChangeMessageVisibilityAsync(
             string receiptHandle,
-            int timeoutInSeconds,
+            TimeSpan timeout,
             CancellationToken cancellationToken = default)
         {
             var visibilityRequest = new ChangeMessageVisibilityRequest
             {
                 QueueUrl = Uri.ToString(),
                 ReceiptHandle = receiptHandle,
-                VisibilityTimeout = timeoutInSeconds
+                VisibilityTimeout = (int)timeout.TotalSeconds,
             };
 
             await Client.ChangeMessageVisibilityAsync(visibilityRequest, cancellationToken).ConfigureAwait(false);

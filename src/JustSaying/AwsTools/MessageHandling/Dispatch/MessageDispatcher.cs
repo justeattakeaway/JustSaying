@@ -169,18 +169,17 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             if (TryGetApproxReceiveCount(messageContext.Message.Attributes, out int approxReceiveCount))
             {
                 var visibilityTimeout = _messageBackoffStrategy.GetBackoffDuration(typedMessage, approxReceiveCount, lastException);
-                var visibilityTimeoutSeconds = (int)visibilityTimeout.TotalSeconds;
 
                 try
                 {
-                    await messageContext.ChangeMessageVisibilityAsync(visibilityTimeoutSeconds).ConfigureAwait(false);
+                    await messageContext.ChangeMessageVisibilityAsync(visibilityTimeout).ConfigureAwait(false);
                 }
                 catch (AmazonServiceException ex)
                 {
                     _logger.LogError(
                         ex,
                         "Failed to update message visibility timeout by {VisibilityTimeout} seconds for message with receipt handle '{ReceiptHandle}'.",
-                        visibilityTimeoutSeconds,
+                        visibilityTimeout,
                         messageContext.Message.ReceiptHandle);
 
                     _onError(ex, messageContext.Message);

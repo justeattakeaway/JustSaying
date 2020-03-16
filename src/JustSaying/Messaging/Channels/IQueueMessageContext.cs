@@ -8,7 +8,7 @@ namespace JustSaying.Messaging.Channels
     {
         Message Message { get; }
 
-        Task ChangeMessageVisibilityAsync(int visibilityTimeoutSeconds);
+        Task ChangeMessageVisibilityAsync(TimeSpan visibilityTimeout);
 
         Task DeleteMessageFromQueue();
 
