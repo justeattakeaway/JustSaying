@@ -91,27 +91,6 @@ namespace JustSaying
             }
 
             _sqsQueues.Add(queue);
-
-            if (!_subscribersByRegionAndQueue.TryGetValue(region, out var subscribersForRegion))
-            {
-                subscribersForRegion = new Dictionary<string, ISqsQueue>();
-                _subscribersByRegionAndQueue.Add(region, subscribersForRegion);
-            }
-
-            if (subscribersForRegion.ContainsKey(queue.QueueName))
-            {
-                // TODO - no, we don't need to create a new notification subscriber per queue
-                // JustSaying is creating subscribers per-topic per-region, but
-                // we want to have that per-queue per-region, not
-                // per-topic per-region.
-                // Just re-use existing subscriber instead.
-                return;
-            }
-            subscribersForRegion[queue.QueueName] = queue;
-
-            // todo: this could work if we make the sqsqueue generic?
-            // otherwise can we do this in the AddMessageHandler bit instead?
-            // AddSubscribersToInterrogationResponse(queue);
         }
 
 
