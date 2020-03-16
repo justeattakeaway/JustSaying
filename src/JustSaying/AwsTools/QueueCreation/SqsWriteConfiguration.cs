@@ -12,7 +12,7 @@ namespace JustSaying.AwsTools.QueueCreation
 
         public string QueueName { get; set; }
 
-        protected override void ValidateCustom()
+        protected override void OnValidate()
         {
             if (string.IsNullOrWhiteSpace(QueueName))
             {

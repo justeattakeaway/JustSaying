@@ -44,9 +44,9 @@ namespace JustSaying.AwsTools.QueueCreation
                     $"Invalid configuration. {nameof(DeliveryDelay)} must be between {JustSayingConstants.MinimumDeliveryDelay} and {JustSayingConstants.MaximumDeliveryDelay}.");
             }
 
-            ValidateCustom();
+            OnValidate();
         }
 
-        protected virtual void ValidateCustom() {}
+        protected virtual void OnValidate() {}
     }
 }
