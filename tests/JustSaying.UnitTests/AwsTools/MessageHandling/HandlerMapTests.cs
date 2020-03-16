@@ -91,7 +91,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             var map = CreateHandlerMap();
 
             map.Add(typeof(SimpleMessage), fn1);
-            new Action(() => map.Add(typeof(SimpleMessage), fn2)).ShouldThrow<ArgumentException>();
+            Assert.Throws<InvalidOperationException>(() => map.Add(typeof(SimpleMessage), fn2));
         }
 
         [Fact]
@@ -104,7 +104,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             var map = CreateHandlerMap();
             map.Add(typeof(SimpleMessage), fn1);
             map.Add(typeof(AnotherSimpleMessage), fn3);
-            new Action(() => map.Add(typeof(SimpleMessage), fn2)).ShouldThrow<ArgumentException>();
+
+            Assert.Throws<InvalidOperationException>(() => map.Add(typeof(SimpleMessage), fn2));
         }
 
         private static HandlerMap CreateHandlerMap()

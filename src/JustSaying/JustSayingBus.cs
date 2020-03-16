@@ -118,6 +118,7 @@ namespace JustSaying
             publishersByType[topicType] = messagePublisher;
         }
 
+        private Task _consumerCompletionTask;
         public Task Start(CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -125,18 +126,18 @@ namespace JustSaying
                 return Task.CompletedTask;
             }
 
-            if (ConsumerBus != null)
+            if (_consumerCompletionTask != null)
             {
                 _log.LogWarning("Attempting to start an already running Bus");
-                return ConsumerBus.Run(CancellationToken.None);
+                return _consumerCompletionTask;
             }
 
             lock (_syncRoot)
             {
-                if (ConsumerBus != null)
+                if (_consumerCompletionTask != null)
                 {
                     _log.LogWarning("Attempting to start an already running Bus");
-                    return ConsumerBus.Run(CancellationToken.None);
+                    return _consumerCompletionTask;
                 }
 
                 var dispatcher = new MessageDispatcher(
@@ -154,7 +155,8 @@ namespace JustSaying
                     dispatcher,
                     Monitor,
                     _loggerFactory);
-                return ConsumerBus.Run(cancellationToken);
+                _consumerCompletionTask = ConsumerBus.Run(cancellationToken);
+                return _consumerCompletionTask;
             }
         }
 
