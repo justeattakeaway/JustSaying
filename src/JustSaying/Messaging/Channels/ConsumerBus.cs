@@ -68,7 +68,7 @@ namespace JustSaying.Messaging.Channels
         {
             var numberOfConsumers = _consumers.Count;
             _logger.LogInformation(
-                "Starting up consumer bus with {ConsumerCount} consumers and {ReceiveBuffferCount} receivers",
+                "Starting up consumer bus with {ConsumerCount} consumers and {ReceiveBuffferCount} receive buffers",
                 numberOfConsumers, _buffers.Count);
 
             // start
