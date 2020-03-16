@@ -49,6 +49,9 @@ namespace JustSaying.Messaging.Channels
 
         public Task Run(CancellationToken stoppingToken)
         {
+            if (stoppingToken.IsCancellationRequested) return Task.CompletedTask;
+
+            // Double check lock to ensure single-start
             if (_started) return _completion;
             lock (_startLock)
             {

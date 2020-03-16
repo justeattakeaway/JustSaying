@@ -119,45 +119,42 @@ namespace JustSaying
         }
 
         private Task _consumerCompletionTask;
-        public Task Start(CancellationToken cancellationToken)
+        private bool _consumerStarted;
+        public Task Start(CancellationToken stoppingToken)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return Task.CompletedTask;
-            }
+            if (stoppingToken.IsCancellationRequested) return Task.CompletedTask;
 
-            if (_consumerCompletionTask != null)
-            {
-                _log.LogWarning("Attempting to start an already running Bus");
-                return _consumerCompletionTask;
-            }
-
+            // Double check lock to ensure single-start
+            if (_consumerStarted) return _consumerCompletionTask;
             lock (_syncRoot)
             {
-                if (_consumerCompletionTask != null)
-                {
-                    _log.LogWarning("Attempting to start an already running Bus");
-                    return _consumerCompletionTask;
-                }
+                if (_consumerStarted) return _consumerCompletionTask;
 
-                var dispatcher = new MessageDispatcher(
-                    SerializationRegister,
-                    Monitor,
-                    _onError,
-                    HandlerMap,
-                    _loggerFactory,
-                    _messageBackoffStrategy,
-                    MessageContextAccessor);
+                _consumerCompletionTask = RunImpl(stoppingToken);
 
-                ConsumerBus = new ConsumerBus(
-                    _sqsQueues,
-                    Config.ConsumerConfig,
-                    dispatcher,
-                    Monitor,
-                    _loggerFactory);
-                _consumerCompletionTask = ConsumerBus.Run(cancellationToken);
+                _consumerStarted = true;
                 return _consumerCompletionTask;
             }
+        }
+
+        private Task RunImpl(CancellationToken stoppingToken)
+        {
+            var dispatcher = new MessageDispatcher(
+                SerializationRegister,
+                Monitor,
+                _onError,
+                HandlerMap,
+                _loggerFactory,
+                _messageBackoffStrategy,
+                MessageContextAccessor);
+
+            ConsumerBus = new ConsumerBus(
+                _sqsQueues,
+                Config.ConsumerConfig,
+                dispatcher,
+                Monitor,
+                _loggerFactory);
+            return ConsumerBus.Run(stoppingToken);
         }
 
         public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
