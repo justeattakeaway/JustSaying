@@ -7,11 +7,11 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Middleware
 {
-    public class DefaultSqsMiddleware : MiddlewareBase<GetMessagesContext, IList<Amazon.SQS.Model.Message>>
+    public class DefaultSqsMiddleware : MiddlewareBase<GetMessagesContext, IList<Message>>
     {
         private readonly ILogger<DefaultSqsMiddleware> _logger;
 
-        public DefaultSqsMiddleware(ILogger<DefaultSqsMiddleware> logger) : base(null)
+        public DefaultSqsMiddleware(ILogger<DefaultSqsMiddleware> logger)
         {
             _logger = logger;
         }

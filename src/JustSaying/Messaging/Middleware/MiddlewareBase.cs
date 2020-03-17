@@ -7,7 +7,7 @@ namespace JustSaying.Messaging.Middleware
     {
         private readonly MiddlewareBase<TContext, TOut> _next;
 
-        public MiddlewareBase(MiddlewareBase<TContext, TOut> next)
+        public MiddlewareBase(MiddlewareBase<TContext, TOut> next = null)
         {
             _next = next;
         }

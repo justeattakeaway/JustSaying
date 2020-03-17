@@ -9,22 +9,21 @@ namespace JustSaying.Messaging.Channels
 {
     internal sealed class RoundRobinQueueMultiplexer : IMultiplexer, IDisposable
     {
+        private readonly ILogger<RoundRobinQueueMultiplexer> _logger;
+
         private readonly IList<ChannelReader<IQueueMessageContext>> _readers;
         private readonly Channel<IQueueMessageContext> _targetChannel;
+        private readonly int _channelCapacity;
 
         private readonly SemaphoreSlim _readersLock = new SemaphoreSlim(1, 1);
         private readonly object _startLock = new object();
 
-        private readonly ILogger<RoundRobinQueueMultiplexer> _logger;
-
         private bool _started = false;
-
-        private readonly int _channelCapacity;
         private CancellationToken _stoppingToken;
-
         private Task _completion;
 
-        public RoundRobinQueueMultiplexer(int channelCapacity,
+        public RoundRobinQueueMultiplexer(
+            int channelCapacity,
             ILogger<RoundRobinQueueMultiplexer> logger)
         {
             _readers = new List<ChannelReader<IQueueMessageContext>>();
@@ -130,7 +129,8 @@ namespace JustSaying.Messaging.Channels
 
         public async IAsyncEnumerable<IQueueMessageContext> GetMessagesAsync()
         {
-            if (!_started) throw new InvalidOperationException("");
+            if (!_started) throw new InvalidOperationException(
+                "Multiplexer must be started before listening to messages");
 
             while (true)
             {
@@ -140,7 +140,9 @@ namespace JustSaying.Messaging.Channels
                 _stoppingToken.ThrowIfCancellationRequested();
 
                 while (_targetChannel.Reader.TryRead(out var message))
+                {
                     yield return message;
+                }
             }
         }
 
