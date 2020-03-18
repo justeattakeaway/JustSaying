@@ -340,7 +340,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             return new MessageReceiveBuffer(
                 10,
                 sqsQueue,
-                new NoopMiddleware<GetMessagesContext, IList<Message>>(),
+                new DelegateMiddleware<GetMessagesContext, IList<Message>>(),
                 Substitute.For<IMessageMonitor>(),
                 LoggerFactory);
         }
@@ -356,7 +356,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             var config = new ConsumerConfig();
 
-            return new ConsumerBus(
+            return new ConsumerGroup(
                 queues,
                 config,
                 dispatcher,

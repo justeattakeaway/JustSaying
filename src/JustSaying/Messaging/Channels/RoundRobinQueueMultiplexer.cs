@@ -33,27 +33,35 @@ namespace JustSaying.Messaging.Channels
             _targetChannel = Channel.CreateBounded<IQueueMessageContext>(_channelCapacity);
         }
 
-        public void ReadFrom(ChannelReader<IQueueMessageContext> reader)
+        public void ReadFrom(params ChannelReader<IQueueMessageContext>[] readers)
         {
-            if (reader == null) throw new ArgumentNullException(nameof(reader));
+            if (readers == null) throw new ArgumentNullException(nameof(readers));
+            if(readers.Length < 1) throw new ArgumentException(nameof(readers), "Must supply at least one reader");
 
             _readersLock.Wait(_stoppingToken);
 
             try
             {
-                _readers.Add(reader);
+                foreach(var reader in readers)
+                {
+                    _readers.Add(reader);
+                }
             }
             finally
             {
                 _readersLock.Release();
             }
 
-            async Task OnReaderCompletion()
+            foreach(var reader in readers)
             {
-                await reader.Completion.ConfigureAwait(false);
-                RemoveReader(reader);
+                async Task OnReaderCompletion()
+                {
+                    await reader.Completion.ConfigureAwait(false);
+                    RemoveReader(reader);
+                }
+
+                _ = OnReaderCompletion();
             }
-            _ = OnReaderCompletion();
         }
 
         private void RemoveReader(ChannelReader<IQueueMessageContext> reader)

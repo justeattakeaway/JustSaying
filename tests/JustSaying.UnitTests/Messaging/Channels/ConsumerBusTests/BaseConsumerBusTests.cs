@@ -111,7 +111,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             var config = new ConsumerConfig();
             config.WithDefaultSqsPolicy(LoggerFactory);
 
-            var bus = new ConsumerBus(
+            var bus = new ConsumerGroup(
                 Queues,
                 config,
                 dispatcher,

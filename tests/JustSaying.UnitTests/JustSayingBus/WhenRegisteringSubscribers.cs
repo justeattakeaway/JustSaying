@@ -62,17 +62,6 @@ namespace JustSaying.UnitTests.JustSayingBus
             _queue2.Received().GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
         }
 
-        // todo: how can we check this?
-        //[Fact]
-        //public void CallingStartTwiceDoesNotStartListeningTwice()
-        //{
-        //    _subscriber1.IsListening.Returns(true);
-        //    _subscriber2.IsListening.Returns(true);
-        //    SystemUnderTest.Start();
-        //    _subscriber1.Received(1).Listen(default);
-        //    _subscriber2.Received(1).Listen(default);
-        //}
-
         [Fact]
         public void AndInterrogationShowsPublishersHaveBeenSet()
         {

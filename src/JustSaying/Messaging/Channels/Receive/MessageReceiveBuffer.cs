@@ -151,7 +151,7 @@ namespace JustSaying.Messaging.Channels
                 {
                     return await writer.WaitToWriteAsync(linkedCts.Token);
                 }
-                catch (OperationCanceledException) when (!stoppingToken.IsCancellationRequested)
+                catch (OperationCanceledException) when (timeoutToken.IsCancellationRequested)
                 {
                     // no space in channel, check again
                     continue;

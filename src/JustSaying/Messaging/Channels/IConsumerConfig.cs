@@ -10,7 +10,8 @@ namespace JustSaying.Messaging.Channels
 
         int MultiplexerCapacity { get; }
 
-        int ConsumerCount { get; }
+        int DefaultConsumerCount { get; }
+        ConcurrencyGroupConfiguration ConcurrencyGroupConfiguration { get; }
 
         MiddlewareBase<GetMessagesContext, IList<Amazon.SQS.Model.Message>> SqsMiddleware { get; }
     }

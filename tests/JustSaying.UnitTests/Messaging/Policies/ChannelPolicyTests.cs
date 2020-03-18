@@ -43,7 +43,7 @@ namespace JustSaying.UnitTests.Messaging.Policies
 
             IMessageDispatcher dispatcher = TestDispatcher(() => Interlocked.Increment(ref dispatchedMessageCount));
 
-            var bus = new ConsumerBus(
+            var bus = new ConsumerGroup(
                 queues,
                 config,
                 dispatcher,

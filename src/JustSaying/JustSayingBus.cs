@@ -148,7 +148,7 @@ namespace JustSaying
                 _messageBackoffStrategy,
                 MessageContextAccessor);
 
-            ConsumerBus = new ConsumerBus(
+            ConsumerBus = new ConsumerGroup(
                 _sqsQueues,
                 Config.ConsumerConfig,
                 dispatcher,

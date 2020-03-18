@@ -22,7 +22,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
         protected readonly ILoggerFactory LoggerFactory;
         protected MiddlewareBase<GetMessagesContext, IList<Amazon.SQS.Model.Message>> SqsMiddleware;
 
-        protected IMessageReceiveBuffer SystemUnderTest { get; private set; }
+        internal IMessageReceiveBuffer SystemUnderTest { get; private set; }
 
         public BaseMessageReceiveBufferTests(ITestOutputHelper testOutputHelper)
         {
@@ -42,7 +42,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
         {
             Queue = Substitute.For<ISqsQueue>();
             Monitor = Substitute.For<IMessageMonitor>();
-            SqsMiddleware = new NoopMiddleware<GetMessagesContext, IList<Amazon.SQS.Model.Message>>();
+            SqsMiddleware = new DelegateMiddleware<GetMessagesContext, IList<Amazon.SQS.Model.Message>>();
 
             Given();
         }
@@ -75,7 +75,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
             { }
         }
 
-        protected IMessageReceiveBuffer CreateSystemUnderTest()
+        internal IMessageReceiveBuffer CreateSystemUnderTest()
         {
             return new MessageReceiveBuffer(
                 10,

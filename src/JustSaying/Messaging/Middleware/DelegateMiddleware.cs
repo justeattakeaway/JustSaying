@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 
 namespace JustSaying.Messaging.Middleware
 {
-    internal class NoopMiddleware<TContext, TOut> : MiddlewareBase<TContext, TOut>
+    internal class DelegateMiddleware<TContext, TOut> : MiddlewareBase<TContext, TOut>
     {
-        public NoopMiddleware() : base(null)
+        public DelegateMiddleware() : base(null)
         {
         }
 

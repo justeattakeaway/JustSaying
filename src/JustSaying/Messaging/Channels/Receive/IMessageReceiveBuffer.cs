@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace JustSaying.Messaging.Channels
 {
-    public interface IMessageReceiveBuffer
+    internal interface IMessageReceiveBuffer
     {
         Task Run(CancellationToken stoppingToken);
         ChannelReader<IQueueMessageContext> Reader { get; }

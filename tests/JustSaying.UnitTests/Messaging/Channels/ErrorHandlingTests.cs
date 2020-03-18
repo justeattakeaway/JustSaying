@@ -40,7 +40,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var config = new ConsumerConfig();
             config.WithDefaultSqsPolicy(LoggerFactory);
 
-            var bus = new ConsumerBus(
+            var bus = new ConsumerGroup(
                 queues,
                 config,
                 dispatcher,
