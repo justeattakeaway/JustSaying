@@ -2,22 +2,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using JustSaying.Messaging.Channels.Dispatch;
+using JustSaying.Messaging.Channels.Multiplexer;
+using JustSaying.Messaging.Channels.Receive;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Messaging.Channels.Factory
+namespace JustSaying.Messaging.Channels.ConsumerGroups
 {
-    internal class SingleConsumerBus : IConsumerBus
+    internal class SingleConsumerGroup : IConsumerGroup
     {
         private readonly ICollection<IMessageReceiveBuffer> _receiveBuffers;
         private readonly IMultiplexer _multiplexer;
-        private readonly ICollection<IChannelConsumer> _consumers;
-        private readonly ILogger<SingleConsumerBus> _logger;
+        private readonly ICollection<IChannelDispatcher> _consumers;
+        private readonly ILogger<SingleConsumerGroup> _logger;
 
-        public SingleConsumerBus(
+        public SingleConsumerGroup(
             IEnumerable<IMessageReceiveBuffer> receiveBuffers,
             IMultiplexer multiplexer,
-            IEnumerable<IChannelConsumer> consumers,
-            ILogger<SingleConsumerBus> logger)
+            IEnumerable<IChannelDispatcher> consumers,
+            ILogger<SingleConsumerGroup> logger)
         {
             _receiveBuffers = receiveBuffers.ToList();
             _multiplexer = multiplexer;

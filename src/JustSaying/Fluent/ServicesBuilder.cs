@@ -1,5 +1,6 @@
 using System;
 using JustSaying.Messaging.Channels;
+using JustSaying.Messaging.Channels.ConsumerGroups;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
@@ -59,7 +60,7 @@ namespace JustSaying.Fluent
         /// </summary>
         internal Func<IMessageContextAccessor> MessageContextAccessor { get; private set; }
 
-        internal Func<IConsumerBus> ConsumerBus { get; private set; }
+        internal Func<IConsumerGroup> ConsumerBus { get; private set; }
 
         /// <summary>
         /// Specifies the <see cref="IHandlerResolver"/> to use.

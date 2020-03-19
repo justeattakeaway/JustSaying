@@ -5,7 +5,11 @@ using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels;
-using JustSaying.Messaging.Channels.Factory;
+using JustSaying.Messaging.Channels.Configuration;
+using JustSaying.Messaging.Channels.ConsumerGroups;
+using JustSaying.Messaging.Channels.Dispatch;
+using JustSaying.Messaging.Channels.Multiplexer;
+using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
@@ -37,15 +41,17 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 
         protected IHandlerAsync<SimpleMessage> Handler;
 
-        protected IConsumerBus SystemUnderTest { get; private set; }
+        protected IConsumerGroup SystemUnderTest { get; private set; }
 
-        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
+        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
 
         protected ILoggerFactory LoggerFactory { get; }
+        protected ILogger Logger { get; }
 
         public BaseConsumerBusTests(ITestOutputHelper testOutputHelper)
         {
             LoggerFactory = testOutputHelper.ToLoggerFactory();
+            Logger = LoggerFactory.CreateLogger(GetType());
         }
 
         public async Task InitializeAsync()
@@ -66,7 +72,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             SerializationRegister = Substitute.For<IMessageSerializationRegister>();
             HandlerMap = new HandlerMap(Monitor, LoggerFactory);
 
-            DeserializedMessage = new SimpleMessage {RaisingComponent = "Component"};
+            DeserializedMessage = new SimpleMessage { RaisingComponent = "Component" };
             SerializationRegister.DeserializeMessage(Arg.Any<string>()).Returns(DeserializedMessage);
 
             Given();
@@ -95,7 +101,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             doneOk.ShouldBeTrue("Timeout occured before done signal");
         }
 
-        protected IConsumerBus CreateSystemUnderTest()
+        protected IConsumerGroup CreateSystemUnderTest()
         {
             var messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
             var messageContextAccessor = Substitute.For<IMessageContextAccessor>();
@@ -109,17 +115,17 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
                 messageBackoffStrategy,
                 messageContextAccessor);
 
-            var config = new ConsumerConfig();
+            var config = new ConsumerGroupConfig();
             config.WithDefaultSqsPolicy(LoggerFactory);
 
             var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, Monitor);
             var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
-            var consumerFactory = new ConsumerFactory(dispatcher);
-            var consumerBusFactory = new SingleConsumerBusFactory(config,
+            var consumerFactory = new ChannelDispatcherFactory(dispatcher);
+            var consumerBusFactory = new SingleConsumerGroupFactory(config,
                 Queues, multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
 
-            var bus = new MultipleConsumerBus(
-                consumerBusFactory, LoggerFactory.CreateLogger<MultipleConsumerBus>(), config);
+            var bus = new CombinedConsumerGroup(
+                consumerBusFactory, LoggerFactory.CreateLogger<CombinedConsumerGroup>(), config);
 
             return bus;
         }

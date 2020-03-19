@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
@@ -28,9 +29,11 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         protected override void Given()
         {
             // we expect to get max 10 messages per batch
-            // except on single-core machines when we top out at ParallelHandlerExecutionPerCore=8
+            // except on single-core machines when we top out at ParallelHandlerExecutionPerCore=4
             _expectedMaxMessageCount = Math.Min(MessageConstants.MaxAmazonMessageCap,
                 Environment.ProcessorCount * MessageConstants.ParallelHandlerExecutionPerCore);
+
+            Logger.LogInformation("Expected max message count is {MaxMessageCount}", _expectedMaxMessageCount);
 
             var response1 = new List<Message> { new Message { Body = _messageContentsRunning } };
             var response2 = new List<Message> { new Message { Body = _messageContentsAfterStop } };
@@ -47,11 +50,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 
             var completion = SystemUnderTest.Run(cts.Token);
 
-            // todo: should this be needed/should Start only complete when everything is running?
-            await Task.Delay(TimeSpan.FromMilliseconds(100));
-
             _running = false;
-            cts.Cancel();
+            cts.CancelAfter(TimeoutPeriod.Subtract(TimeSpan.FromMilliseconds(500)));
 
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
         }
@@ -75,7 +75,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         {
             SerializationRegister.Received()
                 .DeserializeMessage(_messageContentsRunning);
-            
+
             SerializationRegister.DidNotReceive()
                 .DeserializeMessage(_messageContentsAfterStop);
         }

@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using JustSaying.Messaging.Channels.Context;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Messaging.Channels
+namespace JustSaying.Messaging.Channels.Multiplexer
 {
     internal sealed class RoundRobinQueueMultiplexer : IMultiplexer, IDisposable
     {

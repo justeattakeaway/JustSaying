@@ -4,6 +4,7 @@ using System.Linq;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels;
+using JustSaying.Messaging.Channels.Configuration;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.Naming;
@@ -21,7 +22,7 @@ namespace JustSaying
             MessageSubjectProvider = new NonGenericMessageSubjectProvider();
             TopicNamingConvention = new DefaultNamingConventions();
             QueueNamingConvention = new DefaultNamingConventions();
-            ConsumerConfig = new ConsumerConfig();
+            ConsumerGroupConfig = new ConsumerGroupConfig();
         }
 
         public int PublishFailureReAttempts { get; set; }
@@ -33,7 +34,7 @@ namespace JustSaying
         public IMessageSubjectProvider MessageSubjectProvider { get; set; }
         public ITopicNamingConvention TopicNamingConvention { get; set; }
         public IQueueNamingConvention QueueNamingConvention { get; set; }
-        public IConsumerConfig ConsumerConfig { get; set; }
+        public ConsumerGroupConfig ConsumerGroupConfig { get; set; }
 
         public virtual void Validate()
         {
@@ -63,6 +64,8 @@ namespace JustSaying
             {
                 throw new InvalidOperationException($"Config cannot have a null for the {nameof(MessageSubjectProvider)} property.");
             }
+
+            // Todo: validate the consumer config
         }
     }
 }

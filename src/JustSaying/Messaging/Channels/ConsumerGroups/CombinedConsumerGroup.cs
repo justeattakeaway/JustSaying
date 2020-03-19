@@ -2,25 +2,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using JustSaying.Messaging.Channels.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Messaging.Channels.Factory
+namespace JustSaying.Messaging.Channels.ConsumerGroups
 {
-    internal class MultipleConsumerBus : IConsumerBus
+    internal class CombinedConsumerGroup : IConsumerGroup
     {
         private readonly ILogger _logger;
-        private readonly IEnumerable<IConsumerBus> _buses;
+        private readonly IEnumerable<IConsumerGroup> _buses;
 
-        public MultipleConsumerBus(
-            IConsumerBusFactory busFactory,
-            ILogger<MultipleConsumerBus> logger,
-            IConsumerConfig consumerConfig)
+        public CombinedConsumerGroup(
+            IConsumerGroupFactory groupFactory,
+            ILogger<CombinedConsumerGroup> logger,
+            ConsumerGroupConfig consumerGroupConfig)
         {
             _logger = logger;
 
-            var groups = consumerConfig.ConcurrencyGroupConfiguration.GetAllConcurrencyGroups();
+            var groups = consumerGroupConfig.ConsumerGroupConfiguration.GetAllConcurrencyGroups();
 
-            _buses = groups.Select(busFactory.Create);
+            _buses = groups.Select(groupFactory.Create);
         }
 
         private Task _completion;

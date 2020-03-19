@@ -6,7 +6,11 @@ using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels;
-using JustSaying.Messaging.Channels.Factory;
+using JustSaying.Messaging.Channels.Configuration;
+using JustSaying.Messaging.Channels.ConsumerGroups;
+using JustSaying.Messaging.Channels.Dispatch;
+using JustSaying.Messaging.Channels.Multiplexer;
+using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
@@ -43,17 +47,17 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var queues = new List<ISqsQueue> { sqsQueue1 };
             IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
 
-            var config = new ConsumerConfig();
+            var config = new ConsumerGroupConfig();
             config.WithDefaultSqsPolicy(LoggerFactory);
 
             var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, MessageMonitor);
             var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
-            var consumerFactory = new ConsumerFactory(dispatcher);
-            var consumerBusFactory = new SingleConsumerBusFactory(config,
+            var consumerFactory = new ChannelDispatcherFactory(dispatcher);
+            var consumerBusFactory = new SingleConsumerGroupFactory(config,
                 queues, multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
 
-            var bus = new MultipleConsumerBus(
-                consumerBusFactory, LoggerFactory.CreateLogger<MultipleConsumerBus>(), config);
+            var bus = new CombinedConsumerGroup(
+                consumerBusFactory, LoggerFactory.CreateLogger<CombinedConsumerGroup>(), config);
 
             var cts = new CancellationTokenSource();
 

@@ -6,12 +6,14 @@ using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.Channels.Configuration;
+using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Messaging.Channels
+namespace JustSaying.Messaging.Channels.Receive
 {
     internal class MessageReceiveBuffer : IMessageReceiveBuffer
     {

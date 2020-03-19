@@ -7,7 +7,10 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels;
-using JustSaying.Messaging.Channels.Factory;
+using JustSaying.Messaging.Channels.ConsumerGroups;
+using JustSaying.Messaging.Channels.Dispatch;
+using JustSaying.Messaging.Channels.Multiplexer;
+using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
@@ -35,7 +38,7 @@ namespace JustSaying
             set { _monitor = value ?? new NullOpMessageMonitor(); }
         }
 
-        private IConsumerBus ConsumerBus { get; set; }
+        private IConsumerGroup ConsumerGroup { get; set; }
         public IMessageSerializationRegister SerializationRegister { get; private set; }
         public IMessageLockAsync MessageLock
         {
@@ -147,16 +150,16 @@ namespace JustSaying
                 _messageBackoffStrategy,
                 MessageContextAccessor);
 
-            var receiveBufferFactory = new ReceiveBufferFactory(_loggerFactory, Config.ConsumerConfig, Monitor);
+            var receiveBufferFactory = new ReceiveBufferFactory(_loggerFactory, Config.ConsumerGroupConfig, Monitor);
             var multiplexerFactory = new MultiplexerFactory(_loggerFactory);
-            var consumerFactory = new ConsumerFactory(dispatcher);
-            var consumerBusFactory = new SingleConsumerBusFactory(Config.ConsumerConfig,
+            var consumerFactory = new ChannelDispatcherFactory(dispatcher);
+            var consumerBusFactory = new SingleConsumerGroupFactory(Config.ConsumerGroupConfig,
                 _sqsQueues, multiplexerFactory, receiveBufferFactory, consumerFactory, _loggerFactory);
 
-            ConsumerBus = new MultipleConsumerBus(
-                consumerBusFactory, _loggerFactory.CreateLogger<MultipleConsumerBus>(), Config.ConsumerConfig);
+            ConsumerGroup = new CombinedConsumerGroup(
+                consumerBusFactory, _loggerFactory.CreateLogger<CombinedConsumerGroup>(), Config.ConsumerGroupConfig);
 
-            return ConsumerBus.Run(stoppingToken);
+            return ConsumerGroup.Run(stoppingToken);
         }
 
         public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)

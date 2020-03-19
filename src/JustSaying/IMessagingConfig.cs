@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using JustSaying.Messaging.Channels;
+using JustSaying.Messaging.Channels.Configuration;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Naming;
 
@@ -13,7 +14,7 @@ namespace JustSaying
         IMessageSubjectProvider MessageSubjectProvider { get; set; }
         ITopicNamingConvention TopicNamingConvention { get; set; }
         IQueueNamingConvention QueueNamingConvention { get; set; }
-        IConsumerConfig ConsumerConfig { get; set; }
+        ConsumerGroupConfig ConsumerGroupConfig { get; set; }
         void Validate();
     }
 }

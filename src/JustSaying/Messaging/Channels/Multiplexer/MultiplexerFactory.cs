@@ -1,12 +1,7 @@
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Messaging.Channels.Factory
+namespace JustSaying.Messaging.Channels.Multiplexer
 {
-    internal interface IMultiplexerFactory
-    {
-        IMultiplexer Create(int channelCapacity);
-    }
-
     internal class MultiplexerFactory : IMultiplexerFactory
     {
         private readonly ILoggerFactory _loggerFactory;

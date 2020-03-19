@@ -10,6 +10,7 @@ insert_final_newline=true
 indent_size=2
 
 # ReSharper properties
+resharper_csharp_wrap_arguments_style=chop_if_long
 resharper_csharp_wrap_parameters_style=chop_if_long
 resharper_wrap_after_declaration_lpar=true
 
