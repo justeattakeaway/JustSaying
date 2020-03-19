@@ -39,7 +39,7 @@ namespace JustSaying.Messaging.Channels.Factory
 
         public IConsumerBus Create(string groupName)
         {
-            var groupConsumerCount = _consumerConfig.ConcurrencyGroupConfiguration.GetConcurrencyForGroup(groupName);
+            var groupConsumerSettings = _consumerConfig.ConcurrencyGroupConfiguration.GetConcurrencyForGroup(groupName);
             var groupQueues = _queuesGroupedByConcurrencyGroup[groupName];
 
             var multiplexer = _multiplexerFactory.Create(_consumerConfig.MultiplexerCapacity);
@@ -53,7 +53,7 @@ namespace JustSaying.Messaging.Channels.Factory
                 multiplexer.ReadFrom(receiveBuffer.Reader);
             }
 
-            var consumers = Enumerable.Range(0, groupConsumerCount)
+            var consumers = Enumerable.Range(0, groupConsumerSettings.ConsumerCount)
                 .Select(x => _consumerFactory.Create())
                 .ToList();
 

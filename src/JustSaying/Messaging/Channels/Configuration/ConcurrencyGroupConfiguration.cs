@@ -6,24 +6,25 @@ namespace JustSaying.Messaging.Channels
 {
     public class ConcurrencyGroupConfiguration
     {
-        const string DefaultConcurrencyGroup = "Default";
+        private const string DefaultConcurrencyGroup = "Default";
 
         private readonly Dictionary<string, string> _queueNameToGroupName;
-        private readonly Dictionary<string, int> _groupNameToConcurrencyLimit;
+        private readonly Dictionary<string, ConcurrencyGroupSettings> _groupNameToConcurrencyLimit;
 
         public ConcurrencyGroupConfiguration(int defaultConsumerCount)
         {
             _queueNameToGroupName = new Dictionary<string, string>();
-            _groupNameToConcurrencyLimit = new Dictionary<string, int>();
+            _groupNameToConcurrencyLimit = new Dictionary<string, ConcurrencyGroupSettings>();
 
-            EnsureConcurrencyGroupExists(DefaultConcurrencyGroup, defaultConsumerCount);
+            EnsureConcurrencyGroupExists(DefaultConcurrencyGroup,
+                new ConcurrencyGroupSettings(defaultConsumerCount));
         }
 
-        public void EnsureConcurrencyGroupExists(string groupName, int maxConcurrency)
+        public void EnsureConcurrencyGroupExists(string groupName, ConcurrencyGroupSettings groupSettings)
         {
             if (_groupNameToConcurrencyLimit.ContainsKey(groupName)) return;
 
-            _groupNameToConcurrencyLimit.Add(groupName, maxConcurrency);
+            _groupNameToConcurrencyLimit.Add(groupName, groupSettings);
         }
 
         public void SetConcurrencyGroup(string queueName, string groupName)
@@ -37,7 +38,7 @@ namespace JustSaying.Messaging.Channels
             _queueNameToGroupName.Add(queueName, groupName);
         }
 
-        public int GetConcurrencyForGroup(string group) =>
+        public ConcurrencyGroupSettings GetConcurrencyForGroup(string group) =>
             _groupNameToConcurrencyLimit[group];
 
         public string GetConcurrencyGroupForQueue(string queueName)
