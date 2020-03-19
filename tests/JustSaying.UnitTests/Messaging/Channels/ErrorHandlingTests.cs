@@ -6,7 +6,9 @@ using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels;
+using JustSaying.Messaging.Channels.Factory;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
@@ -18,12 +20,16 @@ namespace JustSaying.UnitTests.Messaging.Channels
     public class ErrorHandlingTests
     {
         public ILoggerFactory LoggerFactory { get; }
+        private IMessageMonitor MessageMonitor { get; }
+
 
         protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
 
         public ErrorHandlingTests(ITestOutputHelper testOutputHelper)
         {
-            this.LoggerFactory = testOutputHelper.ToLoggerFactory();
+            LoggerFactory = testOutputHelper.ToLoggerFactory();
+            MessageMonitor = new LoggingMonitor(LoggerFactory.CreateLogger(nameof(IMessageMonitor)));
+
         }
 
         [Fact]
@@ -35,17 +41,19 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var sqsQueue1 = TestQueue(GetErrorMessages);
 
             var queues = new List<ISqsQueue> { sqsQueue1 };
-            IMessageDispatcher dispatcher = TestDispatcher(() => Interlocked.Increment(ref messagesDispatched));
+            IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
 
             var config = new ConsumerConfig();
             config.WithDefaultSqsPolicy(LoggerFactory);
 
-            var bus = new ConsumerGroup(
-                queues,
-                config,
-                dispatcher,
-                Substitute.For<IMessageMonitor>(),
-                LoggerFactory);
+            var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, MessageMonitor);
+            var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
+            var consumerFactory = new ConsumerFactory(dispatcher);
+            var consumerBusFactory = new SingleConsumerBusFactory(config,
+                queues, multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
+
+            var bus = new MultipleConsumerBus(
+                consumerBusFactory, LoggerFactory.CreateLogger<MultipleConsumerBus>(), config);
 
             var cts = new CancellationTokenSource();
 
@@ -73,22 +81,6 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 .Returns(async _ => await getMessages());
 
             return sqsQueueMock;
-        }
-
-        private static IMessageDispatcher TestDispatcher(Action spy = null)
-        {
-            async Task OnDispatchMessage()
-            {
-                await Task.Delay(5).ConfigureAwait(false);
-                spy?.Invoke();
-            }
-
-            IMessageDispatcher dispatcherMock = Substitute.For<IMessageDispatcher>();
-            dispatcherMock
-                .DispatchMessageAsync(Arg.Any<IQueueMessageContext>(), Arg.Any<CancellationToken>())
-                .Returns(async _ => await OnDispatchMessage());
-
-            return dispatcherMock;
         }
     }
 }

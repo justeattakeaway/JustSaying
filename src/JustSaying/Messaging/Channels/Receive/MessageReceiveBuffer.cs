@@ -31,15 +31,15 @@ namespace JustSaying.Messaging.Channels
             ISqsQueue sqsQueue,
             MiddlewareBase<GetMessagesContext, IList<Message>> sqsMiddleware,
             IMessageMonitor monitor,
-            ILoggerFactory logger,
+            ILogger<IMessageReceiveBuffer> logger,
             IMessageBackoffStrategy messageBackoffStrategy = null)
         {
             _channel = Channel.CreateBounded<IQueueMessageContext>(bufferLength);
             _bufferLength = bufferLength;
-            _sqsQueue = sqsQueue;
-            _sqsMiddleware = sqsMiddleware;
-            _monitor = monitor;
-            _logger = logger.CreateLogger<IMessageReceiveBuffer>();
+            _sqsQueue = sqsQueue ?? throw new ArgumentNullException(nameof(sqsQueue));
+            _sqsMiddleware = sqsMiddleware ?? throw new ArgumentNullException(nameof(sqsMiddleware));
+            _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             if (messageBackoffStrategy != null)
             {

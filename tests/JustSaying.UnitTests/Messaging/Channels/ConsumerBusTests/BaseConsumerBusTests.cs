@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels;
+using JustSaying.Messaging.Channels.Factory;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
@@ -40,7 +41,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 
         protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
 
-        protected readonly ILoggerFactory LoggerFactory;
+        protected ILoggerFactory LoggerFactory { get; }
 
         public BaseConsumerBusTests(ITestOutputHelper testOutputHelper)
         {
@@ -111,12 +112,14 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             var config = new ConsumerConfig();
             config.WithDefaultSqsPolicy(LoggerFactory);
 
-            var bus = new ConsumerGroup(
-                Queues,
-                config,
-                dispatcher,
-                Monitor,
-                LoggerFactory);
+            var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, Monitor);
+            var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
+            var consumerFactory = new ConsumerFactory(dispatcher);
+            var consumerBusFactory = new SingleConsumerBusFactory(config,
+                Queues, multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
+
+            var bus = new MultipleConsumerBus(
+                consumerBusFactory, LoggerFactory.CreateLogger<MultipleConsumerBus>(), config);
 
             return bus;
         }

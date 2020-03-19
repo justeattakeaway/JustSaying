@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace JustSaying.Messaging.Channels
 {
@@ -41,9 +42,11 @@ namespace JustSaying.Messaging.Channels
 
         public string GetConcurrencyGroupForQueue(string queueName)
         {
-            var groupName = _queueNameToGroupName[queueName];
-            return groupName;
+            return _queueNameToGroupName.ContainsKey(queueName)
+                ? _queueNameToGroupName[queueName]
+                : DefaultConcurrencyGroup;
         }
 
+        public IEnumerable<string> GetAllConcurrencyGroups() => _groupNameToConcurrencyLimit.Keys;
     }
 }

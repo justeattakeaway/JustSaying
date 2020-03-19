@@ -82,7 +82,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
                 Queue,
                 SqsMiddleware,
                 Monitor,
-                LoggerFactory);
+                LoggerFactory.CreateLogger<IMessageReceiveBuffer>());
         }
 
         public Task DisposeAsync()

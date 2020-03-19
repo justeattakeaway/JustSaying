@@ -7,6 +7,7 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels;
+using JustSaying.Messaging.Channels.Factory;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
@@ -20,7 +21,6 @@ namespace JustSaying
 {
     public sealed class JustSayingBus : IAmJustSaying, IAmJustInterrogating, IMessagingBus
     {
-        private readonly Dictionary<string, Dictionary<string, ISqsQueue>> _subscribersByRegionAndQueue;
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _publishersByRegionAndType;
         private readonly IList<ISqsQueue> _sqsQueues;
 
@@ -73,7 +73,6 @@ namespace JustSaying
             Monitor = new NullOpMessageMonitor();
             MessageContextAccessor = new MessageContextAccessor();
 
-            _subscribersByRegionAndQueue = new Dictionary<string, Dictionary<string, ISqsQueue>>();
             _publishersByRegionAndType = new Dictionary<string, Dictionary<Type, IMessagePublisher>>();
             SerializationRegister = serializationRegister;
             _publishers = new HashSet<IPublisher>();
@@ -148,12 +147,15 @@ namespace JustSaying
                 _messageBackoffStrategy,
                 MessageContextAccessor);
 
-            ConsumerBus = new ConsumerGroup(
-                _sqsQueues,
-                Config.ConsumerConfig,
-                dispatcher,
-                Monitor,
-                _loggerFactory);
+            var receiveBufferFactory = new ReceiveBufferFactory(_loggerFactory, Config.ConsumerConfig, Monitor);
+            var multiplexerFactory = new MultiplexerFactory(_loggerFactory);
+            var consumerFactory = new ConsumerFactory(dispatcher);
+            var consumerBusFactory = new SingleConsumerBusFactory(Config.ConsumerConfig,
+                _sqsQueues, multiplexerFactory, receiveBufferFactory, consumerFactory, _loggerFactory);
+
+            ConsumerBus = new MultipleConsumerBus(
+                consumerBusFactory, _loggerFactory.CreateLogger<MultipleConsumerBus>(), Config.ConsumerConfig);
+
             return ConsumerBus.Run(stoppingToken);
         }
 

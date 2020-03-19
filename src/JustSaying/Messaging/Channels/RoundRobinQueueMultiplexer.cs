@@ -36,7 +36,7 @@ namespace JustSaying.Messaging.Channels
         public void ReadFrom(params ChannelReader<IQueueMessageContext>[] readers)
         {
             if (readers == null) throw new ArgumentNullException(nameof(readers));
-            if(readers.Length < 1) throw new ArgumentException(nameof(readers), "Must supply at least one reader");
+            if(readers.Length < 1) throw new ArgumentException("Must supply at least one reader", nameof(readers));
 
             _readersLock.Wait(_stoppingToken);
 
