@@ -32,6 +32,7 @@ namespace JustSaying
         public IMessagingConfig Config { get; private set; }
 
         private IMessageMonitor _monitor;
+
         public IMessageMonitor Monitor
         {
             get { return _monitor; }
@@ -40,11 +41,13 @@ namespace JustSaying
 
         private IConsumerGroup ConsumerGroup { get; set; }
         public IMessageSerializationRegister SerializationRegister { get; private set; }
+
         public IMessageLockAsync MessageLock
         {
             get => HandlerMap?.MessageLock;
             set => HandlerMap.MessageLock = value;
         }
+
         public IMessageContextAccessor MessageContextAccessor { get; set; }
         public HandlerMap HandlerMap { get; private set; }
 
@@ -67,7 +70,10 @@ namespace JustSaying
         private readonly ICollection<IPublisher> _publishers;
         private ILoggerFactory _loggerFactory;
 
-        public JustSayingBus(IMessagingConfig config, IMessageSerializationRegister serializationRegister, ILoggerFactory loggerFactory)
+        public JustSayingBus(
+            IMessagingConfig config,
+            IMessageSerializationRegister serializationRegister,
+            ILoggerFactory loggerFactory)
         {
             _loggerFactory = loggerFactory;
             _log = _loggerFactory.CreateLogger("JustSaying");
@@ -105,7 +111,8 @@ namespace JustSaying
         {
             if (Config.PublishFailureReAttempts == 0)
             {
-                _log.LogWarning("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages.");
+                _log.LogWarning(
+                    "You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages.");
             }
 
             if (!_publishersByRegionAndType.TryGetValue(region, out var publishersByType))
@@ -122,6 +129,7 @@ namespace JustSaying
 
         private Task _consumerCompletionTask;
         private bool _consumerStarted;
+
         public Task Start(CancellationToken stoppingToken)
         {
             if (stoppingToken.IsCancellationRequested) return Task.CompletedTask;
@@ -152,12 +160,18 @@ namespace JustSaying
 
             var receiveBufferFactory = new ReceiveBufferFactory(_loggerFactory, Config.ConsumerGroupConfig, Monitor);
             var multiplexerFactory = new MultiplexerFactory(_loggerFactory);
-            var consumerFactory = new ChannelDispatcherFactory(dispatcher);
-            var consumerBusFactory = new SingleConsumerGroupFactory(Config.ConsumerGroupConfig,
-                _sqsQueues, multiplexerFactory, receiveBufferFactory, consumerFactory, _loggerFactory);
+            var channelDispatcherFactory = new ChannelDispatcherFactory(dispatcher);
+            var consumerGroupFactory = new SingleConsumerGroupFactory(Config.ConsumerGroupConfig,
+                _sqsQueues,
+                multiplexerFactory,
+                receiveBufferFactory,
+                channelDispatcherFactory,
+                _loggerFactory);
 
             ConsumerGroup = new CombinedConsumerGroup(
-                consumerBusFactory, _loggerFactory.CreateLogger<CombinedConsumerGroup>(), Config.ConsumerGroupConfig);
+                consumerGroupFactory,
+                _loggerFactory.CreateLogger<CombinedConsumerGroup>(),
+                Config.ConsumerGroupConfig);
 
             return ConsumerGroup.Run(stoppingToken);
         }
@@ -186,11 +200,14 @@ namespace JustSaying
 
             string activeRegion = GetActiveRegionWithChangeLog();
 
-            var publishersForRegionFound = _publishersByRegionAndType.TryGetValue(activeRegion, out var publishersForRegion);
+            var publishersForRegionFound =
+                _publishersByRegionAndType.TryGetValue(activeRegion, out var publishersForRegion);
             if (!publishersForRegionFound)
             {
-                _log.LogError("Error publishing message. No publishers registered for active region '{Region}'.", activeRegion);
-                throw new InvalidOperationException($"Error publishing message. No publishers registered for active region '{activeRegion}'.");
+                _log.LogError("Error publishing message. No publishers registered for active region '{Region}'.",
+                    activeRegion);
+                throw new InvalidOperationException(
+                    $"Error publishing message. No publishers registered for active region '{activeRegion}'.");
             }
 
             var messageType = message.GetType();
@@ -203,7 +220,8 @@ namespace JustSaying
                     messageType,
                     activeRegion);
 
-                throw new InvalidOperationException($"Error publishing message, no publishers registered for message type '{messageType}' in active region '{activeRegion}'.");
+                throw new InvalidOperationException(
+                    $"Error publishing message, no publishers registered for message type '{messageType}' in active region '{activeRegion}'.");
             }
 
             return publisher;
@@ -222,8 +240,10 @@ namespace JustSaying
                 }
                 else
                 {
-                    _log.LogInformation("Active region for publishing has been changed to '{Region}', was '{PreviousRegion}'.",
-                        currentActiveRegion, _previousActiveRegion);
+                    _log.LogInformation(
+                        "Active region for publishing has been changed to '{Region}', was '{PreviousRegion}'.",
+                        currentActiveRegion,
+                        _previousActiveRegion);
                 }
 
                 _previousActiveRegion = currentActiveRegion;
@@ -282,7 +302,8 @@ namespace JustSaying
                     attemptCount,
                     Config.PublishFailureReAttempts);
 
-                var delayForAttempt = TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
+                var delayForAttempt =
+                    TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
                 await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);
 
                 await PublishAsync(publisher, message, metadata, attemptCount, cancellationToken).ConfigureAwait(false);
