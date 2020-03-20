@@ -347,15 +347,22 @@ namespace JustSaying.UnitTests.Messaging.Channels
             IMessageDispatcher dispatcher)
         {
             var config = new ConsumerGroupConfig();
+            var consumerGroupSettings = config.CreateConsumerGroupSettings(queues);
+            var settings = new Dictionary<string, ConsumerGroupSettings>
+            {
+                { "test", consumerGroupSettings },
+            };
 
             var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, MessageMonitor);
             var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
             var consumerFactory = new ChannelDispatcherFactory(dispatcher);
-            var consumerBusFactory = new SingleConsumerGroupFactory(config,
-                queues, multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
+            var consumerGroupFactory = new SingleConsumerGroupFactory(
+                 multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
 
             var bus = new CombinedConsumerGroup(
-                consumerBusFactory, LoggerFactory.CreateLogger<CombinedConsumerGroup>(), config);
+                consumerGroupFactory,
+                settings,
+                LoggerFactory.CreateLogger<CombinedConsumerGroup>());
 
             return bus;
         }

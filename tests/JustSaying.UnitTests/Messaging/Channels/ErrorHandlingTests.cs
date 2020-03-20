@@ -49,15 +49,21 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             var config = new ConsumerGroupConfig();
             config.WithDefaultSqsPolicy(LoggerFactory);
+            var consumerGroupSettings = config.CreateConsumerGroupSettings(queues);
+            var settings = new Dictionary<string, ConsumerGroupSettings>
+            {
+                { "test", consumerGroupSettings },
+            };
 
             var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, MessageMonitor);
             var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
             var consumerFactory = new ChannelDispatcherFactory(dispatcher);
-            var consumerBusFactory = new SingleConsumerGroupFactory(config,
-                queues, multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
+            var consumerBusFactory = new SingleConsumerGroupFactory(multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
 
             var bus = new CombinedConsumerGroup(
-                consumerBusFactory, LoggerFactory.CreateLogger<CombinedConsumerGroup>(), config);
+                consumerBusFactory,
+                settings,
+                LoggerFactory.CreateLogger<CombinedConsumerGroup>());
 
             var cts = new CancellationTokenSource();
 

@@ -51,17 +51,23 @@ namespace JustSaying.UnitTests.Messaging.Policies
             config.WithSqsPolicy(
                 next =>
                     new ErrorHandlingMiddleware<GetMessagesContext, IList<Message>, InvalidOperationException>(next));
+            var consumerGroupSettings = config.CreateConsumerGroupSettings(queues);
+            var settings = new Dictionary<string, ConsumerGroupSettings>
+            {
+                { "test", consumerGroupSettings },
+            };
 
             IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref dispatchedMessageCount));
 
             var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, MessageMonitor);
             var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
             var consumerFactory = new ChannelDispatcherFactory(dispatcher);
-            var consumerBusFactory = new SingleConsumerGroupFactory(config,
-                queues, multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
+            var consumerBusFactory = new SingleConsumerGroupFactory(multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
 
             var bus = new CombinedConsumerGroup(
-                consumerBusFactory, LoggerFactory.CreateLogger<CombinedConsumerGroup>(), config);
+                consumerBusFactory,
+                settings,
+                LoggerFactory.CreateLogger<CombinedConsumerGroup>());
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging;
-using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Channels.ConsumerGroups;
 using JustSaying.Messaging.Channels.Dispatch;
 using JustSaying.Messaging.Channels.Multiplexer;
@@ -25,7 +24,7 @@ namespace JustSaying
     public sealed class JustSayingBus : IAmJustSaying, IAmJustInterrogating, IMessagingBus
     {
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _publishersByRegionAndType;
-        private readonly IList<ISqsQueue> _sqsQueues;
+        private readonly Dictionary<string, ConsumerGroupSettings> _consumerGroupSettings;
 
         private string _previousActiveRegion;
 
@@ -86,21 +85,33 @@ namespace JustSaying
             SerializationRegister = serializationRegister;
             _publishers = new HashSet<IPublisher>();
 
-            _sqsQueues = new List<ISqsQueue>();
+            _consumerGroupSettings = new Dictionary<string, ConsumerGroupSettings>();
 
             HandlerMap = new HandlerMap(Monitor, _loggerFactory);
         }
 
-        public void AddQueue(string region, ISqsQueue queue)
+        public void AddQueue<T>(string region, ISqsQueue queue)
         {
-            if (string.IsNullOrWhiteSpace(region))
-            {
-                throw new ArgumentNullException(nameof(region));
-            }
-
-            _sqsQueues.Add(queue);
+            AddQueue(region, typeof(T).FullName, queue);
         }
 
+        public void AddQueue(string region, string consumerGroup, ISqsQueue queue)
+        {
+            if (string.IsNullOrWhiteSpace(region))
+                throw new ArgumentNullException(nameof(region));
+
+            if (string.IsNullOrWhiteSpace(consumerGroup))
+                throw new ArgumentNullException(nameof(consumerGroup));
+
+            ConsumerGroupSettings consumerGroupSettings;
+            if (!_consumerGroupSettings.TryGetValue(consumerGroup, out consumerGroupSettings))
+            {
+                consumerGroupSettings = Config.ConsumerGroupConfig.CreateConsumerGroupSettings();
+                _consumerGroupSettings[consumerGroup] = consumerGroupSettings;
+            }
+
+            consumerGroupSettings.AddQueue(queue);
+        }
 
         public void AddMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler) where T : Message
         {
@@ -161,8 +172,7 @@ namespace JustSaying
             var receiveBufferFactory = new ReceiveBufferFactory(_loggerFactory, Config.ConsumerGroupConfig, Monitor);
             var multiplexerFactory = new MultiplexerFactory(_loggerFactory);
             var channelDispatcherFactory = new ChannelDispatcherFactory(dispatcher);
-            var consumerGroupFactory = new SingleConsumerGroupFactory(Config.ConsumerGroupConfig,
-                _sqsQueues,
+            var consumerGroupFactory = new SingleConsumerGroupFactory(
                 multiplexerFactory,
                 receiveBufferFactory,
                 channelDispatcherFactory,
@@ -170,8 +180,8 @@ namespace JustSaying
 
             ConsumerGroup = new CombinedConsumerGroup(
                 consumerGroupFactory,
-                _loggerFactory.CreateLogger<CombinedConsumerGroup>(),
-                Config.ConsumerGroupConfig);
+                _consumerGroupSettings,
+                _loggerFactory.CreateLogger<CombinedConsumerGroup>());
 
             return ConsumerGroup.Run(stoppingToken);
         }

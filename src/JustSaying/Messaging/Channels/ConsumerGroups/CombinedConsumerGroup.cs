@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using JustSaying.Messaging.Channels.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels.ConsumerGroups
@@ -14,14 +13,14 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
 
         public CombinedConsumerGroup(
             IConsumerGroupFactory groupFactory,
-            ILogger<CombinedConsumerGroup> logger,
-            ConsumerGroupConfig consumerGroupConfig)
+            IDictionary<string, ConsumerGroupSettings> consumerGroupSettings,
+            ILogger<CombinedConsumerGroup> logger)
         {
             _logger = logger;
 
-            var groups = consumerGroupConfig.ConsumerGroupConfiguration.GetAllConcurrencyGroups();
-
-            _buses = groups.Select(groupFactory.Create).ToList();
+            _buses = consumerGroupSettings
+                .Values
+                .Select(settings => groupFactory.Create(settings)).ToList();
         }
 
         private Task _completion;

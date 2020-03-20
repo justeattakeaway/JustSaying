@@ -43,7 +43,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         [Fact]
         public void TheSubscriptionIsCreatedInEachRegion()
         {
-            Bus.Received(2).AddQueue(Arg.Any<string>(), Arg.Any<ISqsQueue>());
+            Bus.Received(2).AddQueue(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<ISqsQueue>());
         }
 
         [Fact]
