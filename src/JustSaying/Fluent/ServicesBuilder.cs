@@ -60,8 +60,6 @@ namespace JustSaying.Fluent
         /// </summary>
         internal Func<IMessageContextAccessor> MessageContextAccessor { get; private set; }
 
-        internal Func<IConsumerGroup> ConsumerBus { get; private set; }
-
         /// <summary>
         /// Specifies the <see cref="IHandlerResolver"/> to use.
         /// </summary>

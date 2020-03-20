@@ -10,7 +10,7 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
     internal class CombinedConsumerGroup : IConsumerGroup
     {
         private readonly ILogger _logger;
-        private readonly IEnumerable<IConsumerGroup> _buses;
+        private readonly IList<IConsumerGroup> _buses;
 
         public CombinedConsumerGroup(
             IConsumerGroupFactory groupFactory,
@@ -21,7 +21,7 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
 
             var groups = consumerGroupConfig.ConsumerGroupConfiguration.GetAllConcurrencyGroups();
 
-            _buses = groups.Select(groupFactory.Create);
+            _buses = groups.Select(groupFactory.Create).ToList();
         }
 
         private Task _completion;

@@ -64,7 +64,6 @@ namespace JustSaying.Sample.Restaurant.OrderingApi
                     //  - a SNS topic of name `orderplacedevent`
                     x.WithTopic<OrderPlacedEvent>();
                     x.WithTopic<OrderOnItsWayEvent>();
-
                 });
             });
 
