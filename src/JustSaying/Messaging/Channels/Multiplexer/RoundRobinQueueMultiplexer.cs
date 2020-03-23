@@ -36,7 +36,8 @@ namespace JustSaying.Messaging.Channels.Multiplexer
 
         public void ReadFrom(params ChannelReader<IQueueMessageContext>[] readers)
         {
-            if (readers == null) throw new ArgumentNullException(nameof(readers));
+            if(readers == null) throw new ArgumentNullException(nameof(readers));
+
             if(readers.Length < 1) throw new ArgumentException("Must supply at least one reader", nameof(readers));
 
             _readersLock.Wait(_stoppingToken);
@@ -83,11 +84,11 @@ namespace JustSaying.Messaging.Channels.Multiplexer
 
         public Task Run(CancellationToken stoppingToken)
         {
-            if (_started) return _completion;
+            if(_started) return _completion;
 
             lock (_startLock)
             {
-                if (_started) return _completion;
+                if(_started) return _completion;
 
                 _stoppingToken = stoppingToken;
                 _completion = RunImpl();
@@ -114,16 +115,16 @@ namespace JustSaying.Messaging.Channels.Multiplexer
 
                 try
                 {
-                    if (_readers.Count < 1)
+                    if(_readers.Count < 1)
                     {
                         _logger.LogInformation("All writers have completed, terminating multiplexer");
                         writer.Complete();
                         break;
                     }
 
-                    foreach (var reader in _readers)
+                    foreach(var reader in _readers)
                     {
-                        if (reader.TryRead(out var message))
+                        if(reader.TryRead(out var message))
                         {
                             await writer.WriteAsync(message, _stoppingToken);
                         }
@@ -138,13 +139,16 @@ namespace JustSaying.Messaging.Channels.Multiplexer
 
         public async IAsyncEnumerable<IQueueMessageContext> GetMessagesAsync()
         {
-            if (!_started) throw new InvalidOperationException(
-                "Multiplexer must be started before listening to messages");
+            if(!_started)
+            {
+                throw new InvalidOperationException(
+                    "Multiplexer must be started before listening to messages");
+            }
 
             while (true)
             {
                 var couldWait = await _targetChannel.Reader.WaitToReadAsync(_stoppingToken);
-                if (!couldWait) break;
+                if(!couldWait) break;
 
                 _stoppingToken.ThrowIfCancellationRequested();
 
