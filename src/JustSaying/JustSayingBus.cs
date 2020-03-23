@@ -166,7 +166,7 @@ namespace JustSaying
 
             var receiveBufferFactory = new ReceiveBufferFactory(_loggerFactory, Config.ConsumerGroupConfig, Monitor);
             var multiplexerFactory = new MultiplexerFactory(_loggerFactory);
-            var channelDispatcherFactory = new ChannelDispatcherFactory(dispatcher);
+            var channelDispatcherFactory = new ChannelConsumerFactory(dispatcher);
             var consumerGroupFactory = new SingleConsumerGroupFactory(
                 multiplexerFactory,
                 receiveBufferFactory,

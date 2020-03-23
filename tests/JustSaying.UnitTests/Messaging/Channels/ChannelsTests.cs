@@ -44,11 +44,11 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var sqsQueue = TestQueue();
             var buffer = CreateMessageReceiveBuffer(sqsQueue);
             IMessageDispatcher dispatcher = new FakeDispatcher();
-            IChannelDispatcher channelDispatcher = CreateChannelConsumer(dispatcher);
+            IChannelConsumer channelConsumer = CreateChannelConsumer(dispatcher);
             IMultiplexer multiplexer = CreateMultiplexer();
 
             multiplexer.ReadFrom(buffer.Reader);
-            channelDispatcher.DispatchFrom(multiplexer.GetMessagesAsync());
+            channelConsumer.DispatchFrom(multiplexer.GetMessagesAsync());
 
             // need to start the multiplexer before calling Start
 
@@ -57,7 +57,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             cts.CancelAfter(TimeoutPeriod);
 
             var multiplexerCompletion = multiplexer.Run(cts.Token);
-            var consumer1Completion = channelDispatcher.Run(cts.Token);
+            var consumer1Completion = channelConsumer.Run(cts.Token);
             var buffer1Completion = buffer.Run(cts.Token);
 
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => multiplexerCompletion);
@@ -72,8 +72,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var buffer = CreateMessageReceiveBuffer(sqsQueue);
 
             IMessageDispatcher dispatcher = new FakeDispatcher();
-            IChannelDispatcher consumer1 = CreateChannelConsumer(dispatcher);
-            IChannelDispatcher consumer2 = CreateChannelConsumer(dispatcher);
+            IChannelConsumer consumer1 = CreateChannelConsumer(dispatcher);
+            IChannelConsumer consumer2 = CreateChannelConsumer(dispatcher);
 
             IMultiplexer multiplexer = CreateMultiplexer();
 
@@ -107,14 +107,14 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var buffer2 = CreateMessageReceiveBuffer(sqsQueue2);
 
             IMessageDispatcher dispatcher = new FakeDispatcher();
-            IChannelDispatcher channelDispatcher = CreateChannelConsumer(dispatcher);
+            IChannelConsumer channelConsumer = CreateChannelConsumer(dispatcher);
 
             IMultiplexer multiplexer = CreateMultiplexer();
 
             multiplexer.ReadFrom(buffer1.Reader);
             multiplexer.ReadFrom(buffer2.Reader);
 
-            channelDispatcher.DispatchFrom(multiplexer.GetMessagesAsync());
+            channelConsumer.DispatchFrom(multiplexer.GetMessagesAsync());
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
@@ -122,7 +122,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var multiplexerCompletion = multiplexer.Run(cts.Token);
 
             // consumers
-            var consumer1Completion = channelDispatcher.Run(cts.Token);
+            var consumer1Completion = channelConsumer.Run(cts.Token);
 
             var buffer1Completion = buffer1.Run(cts.Token);
             var buffer2Completion = buffer2.Run(cts.Token);
@@ -144,8 +144,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             // using 2 dispatchers for logging, they should be the same/stateless
             IMessageDispatcher dispatcher1 = new FakeDispatcher();
             IMessageDispatcher dispatcher2 = new FakeDispatcher();
-            IChannelDispatcher consumer1 = CreateChannelConsumer(dispatcher1);
-            IChannelDispatcher consumer2 = CreateChannelConsumer(dispatcher2);
+            IChannelConsumer consumer1 = CreateChannelConsumer(dispatcher1);
+            IChannelConsumer consumer2 = CreateChannelConsumer(dispatcher2);
 
             IMultiplexer multiplexer = CreateMultiplexer();
 
@@ -183,11 +183,11 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var sqsQueue = TestQueue(() => Interlocked.Increment(ref messagesFromQueue));
             IMessageReceiveBuffer buffer = CreateMessageReceiveBuffer(sqsQueue);
             IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
-            IChannelDispatcher channelDispatcher = CreateChannelConsumer(dispatcher);
+            IChannelConsumer channelConsumer = CreateChannelConsumer(dispatcher);
             IMultiplexer multiplexer = CreateMultiplexer();
 
             multiplexer.ReadFrom(buffer.Reader);
-            channelDispatcher.DispatchFrom(multiplexer.GetMessagesAsync());
+            channelConsumer.DispatchFrom(multiplexer.GetMessagesAsync());
 
             // need to start the multiplexer before calling Messages
 
@@ -205,7 +205,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             messagesDispatched.ShouldBe(0);
 
             // Starting the consumer after the token is cancelled will not dispatch messages
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => channelDispatcher.Run(cts.Token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => channelConsumer.Run(cts.Token));
 
             messagesFromQueue.ShouldBe(111);
             messagesDispatched.ShouldBe(0);
@@ -337,9 +337,9 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 LoggerFactory.CreateLogger<MessageReceiveBuffer>());
         }
 
-        private IChannelDispatcher CreateChannelConsumer(IMessageDispatcher dispatcher)
+        private IChannelConsumer CreateChannelConsumer(IMessageDispatcher dispatcher)
         {
-            return new ChannelDispatcher(dispatcher);
+            return new ChannelConsumer(dispatcher);
         }
 
         private IConsumerGroup CreateConsumerBus(
@@ -355,7 +355,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, MessageMonitor);
             var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
-            var consumerFactory = new ChannelDispatcherFactory(dispatcher);
+            var consumerFactory = new ChannelConsumerFactory(dispatcher);
             var consumerGroupFactory = new SingleConsumerGroupFactory(
                  multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
 

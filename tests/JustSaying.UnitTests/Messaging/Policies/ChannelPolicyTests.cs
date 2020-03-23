@@ -61,7 +61,7 @@ namespace JustSaying.UnitTests.Messaging.Policies
 
             var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, MessageMonitor);
             var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
-            var consumerFactory = new ChannelDispatcherFactory(dispatcher);
+            var consumerFactory = new ChannelConsumerFactory(dispatcher);
             var consumerBusFactory = new SingleConsumerGroupFactory(multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
 
             var bus = new CombinedConsumerGroup(

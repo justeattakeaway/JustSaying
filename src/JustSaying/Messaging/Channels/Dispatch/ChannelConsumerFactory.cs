@@ -2,18 +2,18 @@ using JustSaying.AwsTools.MessageHandling.Dispatch;
 
 namespace JustSaying.Messaging.Channels.Dispatch
 {
-    internal class ChannelDispatcherFactory : IChannelDispatcherFactory
+    internal class ChannelConsumerFactory : IChannelConsumerFactory
     {
         private readonly IMessageDispatcher _dispatcher;
 
-        public ChannelDispatcherFactory(IMessageDispatcher dispatcher)
+        public ChannelConsumerFactory(IMessageDispatcher dispatcher)
         {
             _dispatcher = dispatcher;
         }
 
-        public IChannelDispatcher Create()
+        public IChannelConsumer Create()
         {
-            return new ChannelDispatcher(_dispatcher);
+            return new ChannelConsumer(_dispatcher);
         }
     }
 }

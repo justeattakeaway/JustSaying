@@ -13,13 +13,13 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
     {
         private readonly ICollection<IMessageReceiveBuffer> _receiveBuffers;
         private readonly IMultiplexer _multiplexer;
-        private readonly ICollection<IChannelDispatcher> _consumers;
+        private readonly ICollection<IChannelConsumer> _consumers;
         private readonly ILogger<SingleConsumerGroup> _logger;
 
         public SingleConsumerGroup(
             IEnumerable<IMessageReceiveBuffer> receiveBuffers,
             IMultiplexer multiplexer,
-            IEnumerable<IChannelDispatcher> consumers,
+            IEnumerable<IChannelConsumer> consumers,
             ILogger<SingleConsumerGroup> logger)
         {
             _receiveBuffers = receiveBuffers.ToList();

@@ -13,21 +13,21 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
     {
         private readonly IMultiplexerFactory _multiplexerFactory;
         private readonly IReceiveBufferFactory _receiveBufferFactory;
-        private readonly IChannelDispatcherFactory _channelDispatcherFactory;
+        private readonly IChannelConsumerFactory _channelConsumerFactory;
         private readonly ILoggerFactory _loggerFactory;
 
         public SingleConsumerGroupFactory(
             IMultiplexerFactory multiplexerFactory,
             IReceiveBufferFactory receiveBufferFactory,
-            IChannelDispatcherFactory channelDispatcherFactory,
+            IChannelConsumerFactory channelConsumerFactory,
             ILoggerFactory loggerFactory)
         {
             _multiplexerFactory = multiplexerFactory ??
                                   throw new ArgumentNullException(nameof(multiplexerFactory));
             _receiveBufferFactory = receiveBufferFactory ??
                                     throw new ArgumentNullException(nameof(receiveBufferFactory));
-            _channelDispatcherFactory = channelDispatcherFactory ??
-                                        throw new ArgumentNullException(nameof(channelDispatcherFactory));
+            _channelConsumerFactory = channelConsumerFactory ??
+                                        throw new ArgumentNullException(nameof(channelConsumerFactory));
             _loggerFactory = loggerFactory ??
                              throw new ArgumentNullException(nameof(loggerFactory));
         }
@@ -48,10 +48,10 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
             }
 
             var consumers = Enumerable.Range(0, consumerGroupSettings.ConsumerCount)
-                .Select(x => _channelDispatcherFactory.Create())
+                .Select(x => _channelConsumerFactory.Create())
                 .ToList();
 
-            foreach (IChannelDispatcher consumer in consumers)
+            foreach (IChannelConsumer consumer in consumers)
             {
                 consumer.DispatchFrom(multiplexer.GetMessagesAsync());
             }
