@@ -15,7 +15,7 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override Task WhenAsync()
         {
-            SystemUnderTest.AddQueue(" ", null);
+            SystemUnderTest.AddQueue(" ", " ", null);
             return Task.CompletedTask;
         }
 

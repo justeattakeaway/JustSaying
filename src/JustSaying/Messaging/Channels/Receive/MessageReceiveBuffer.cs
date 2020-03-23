@@ -6,12 +6,14 @@ using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.Channels.Configuration;
+using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Messaging.Channels
+namespace JustSaying.Messaging.Channels.Receive
 {
     internal class MessageReceiveBuffer : IMessageReceiveBuffer
     {
@@ -31,15 +33,15 @@ namespace JustSaying.Messaging.Channels
             ISqsQueue sqsQueue,
             MiddlewareBase<GetMessagesContext, IList<Message>> sqsMiddleware,
             IMessageMonitor monitor,
-            ILoggerFactory logger,
+            ILogger<IMessageReceiveBuffer> logger,
             IMessageBackoffStrategy messageBackoffStrategy = null)
         {
             _channel = Channel.CreateBounded<IQueueMessageContext>(bufferLength);
             _bufferLength = bufferLength;
-            _sqsQueue = sqsQueue;
-            _sqsMiddleware = sqsMiddleware;
-            _monitor = monitor;
-            _logger = logger.CreateLogger<IMessageReceiveBuffer>();
+            _sqsQueue = sqsQueue ?? throw new ArgumentNullException(nameof(sqsQueue));
+            _sqsMiddleware = sqsMiddleware ?? throw new ArgumentNullException(nameof(sqsMiddleware));
+            _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             if (messageBackoffStrategy != null)
             {
@@ -65,7 +67,7 @@ namespace JustSaying.Messaging.Channels
 
                     using (_monitor.MeasureThrottle())
                     {
-                        var canWrite = await WaitToWriteAsync(writer, stoppingToken).ConfigureAwait(false);
+                        bool canWrite = await WaitToWriteAsync(writer, stoppingToken).ConfigureAwait(false);
                         if (!canWrite) break;
                     }
 
@@ -77,7 +79,7 @@ namespace JustSaying.Messaging.Channels
                         if (messages == null) continue;
                     }
 
-                    foreach (var message in messages)
+                    foreach (Message message in messages)
                     {
                         IQueueMessageContext messageContext = _sqsQueue.ToMessageContext(message);
                         await writer.WriteAsync(messageContext).ConfigureAwait(false);
@@ -113,10 +115,11 @@ namespace JustSaying.Messaging.Channels
                     RegionName = _sqsQueue.RegionSystemName,
                 };
 
-                messages = await _sqsMiddleware.RunAsync(context, async () =>
-                    await _sqsQueue
-                        .GetMessagesAsync(count, _requestMessageAttributeNames, stoppingToken)
-                        .ConfigureAwait(false))
+                messages = await _sqsMiddleware.RunAsync(context,
+                        async () =>
+                            await _sqsQueue
+                                .GetMessagesAsync(count, _requestMessageAttributeNames, stoppingToken)
+                                .ConfigureAwait(false))
                     .ConfigureAwait(false);
             }
             finally
@@ -125,7 +128,8 @@ namespace JustSaying.Messaging.Channels
                 {
                     _logger.LogInformation(
                         "Timed out while receiving messages from queue '{QueueName}' in region '{Region}'.",
-                        _sqsQueue.QueueName, _sqsQueue.RegionSystemName);
+                        _sqsQueue.QueueName,
+                        _sqsQueue.RegionSystemName);
                 }
             }
 
@@ -136,7 +140,8 @@ namespace JustSaying.Messaging.Channels
             return messages;
         }
 
-        private async Task<bool> WaitToWriteAsync(ChannelWriter<IQueueMessageContext> writer,
+        private async Task<bool> WaitToWriteAsync(
+            ChannelWriter<IQueueMessageContext> writer,
             CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
@@ -151,7 +156,7 @@ namespace JustSaying.Messaging.Channels
                 {
                     return await writer.WaitToWriteAsync(linkedCts.Token);
                 }
-                catch (OperationCanceledException) when (!stoppingToken.IsCancellationRequested)
+                catch (OperationCanceledException) when (timeoutToken.IsCancellationRequested)
                 {
                     // no space in channel, check again
                     continue;

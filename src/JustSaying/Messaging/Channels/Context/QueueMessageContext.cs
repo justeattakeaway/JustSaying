@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 
-namespace JustSaying.Messaging.Channels
+namespace JustSaying.Messaging.Channels.Context
 {
     public class QueueMessageContext : IQueueMessageContext
     {

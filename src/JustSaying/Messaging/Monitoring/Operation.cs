@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace JustSaying.Messaging.Monitoring
 {
-    public sealed class Operation : IDisposable
+    internal sealed class Operation : IDisposable
     {
         private readonly IMessageMonitor _messageMonitor;
         private readonly Action<TimeSpan, IMessageMonitor> _onComplete;

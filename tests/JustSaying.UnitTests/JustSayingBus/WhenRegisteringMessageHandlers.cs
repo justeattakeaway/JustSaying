@@ -32,7 +32,7 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override async Task WhenAsync()
         {
-            SystemUnderTest.AddQueue(_region, _queue);
+            SystemUnderTest.AddQueue(_region, typeof(Message).FullName, _queue);
             SystemUnderTest.AddMessageHandler(_futureHandler1);
             SystemUnderTest.AddMessageHandler(_futureHandler2);
 

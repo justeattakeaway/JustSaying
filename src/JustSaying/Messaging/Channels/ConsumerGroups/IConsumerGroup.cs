@@ -1,9 +1,9 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace JustSaying.Messaging.Channels
+namespace JustSaying.Messaging.Channels.ConsumerGroups
 {
-    public interface IConsumerBus
+    public interface IConsumerGroup
     {
         Task Run(CancellationToken stoppingToken);
     }

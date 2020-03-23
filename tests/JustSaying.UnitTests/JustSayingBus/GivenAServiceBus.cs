@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using JustSaying.Messaging.Channels;
+using JustSaying.Messaging.Channels.Configuration;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -47,7 +48,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             Monitor = Substitute.For<IMessageMonitor>();
             LoggerFactory = Substitute.For<ILoggerFactory>();
 
-            Config.ConsumerConfig.Returns(new ConsumerConfig());
+            Config.ConsumerGroupConfig.Returns(new ConsumerGroupConfig());
         }
 
         protected abstract Task WhenAsync();

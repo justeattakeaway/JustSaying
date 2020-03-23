@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using JustSaying.Messaging.Channels.Context;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Messaging.Channels
+namespace JustSaying.Messaging.Channels.Multiplexer
 {
     internal sealed class RoundRobinQueueMultiplexer : IMultiplexer, IDisposable
     {
@@ -53,6 +54,7 @@ namespace JustSaying.Messaging.Channels
                 await reader.Completion.ConfigureAwait(false);
                 RemoveReader(reader);
             }
+
             _ = OnReaderCompletion();
         }
 
@@ -96,7 +98,7 @@ namespace JustSaying.Messaging.Channels
                 "Starting up channel multiplexer with a queue capacity of {Capacity}",
                 _channelCapacity);
 
-            var writer = _targetChannel.Writer;
+            ChannelWriter<IQueueMessageContext> writer = _targetChannel.Writer;
             while (true)
             {
                 await _readersLock.WaitAsync(_stoppingToken).ConfigureAwait(false);
@@ -112,9 +114,9 @@ namespace JustSaying.Messaging.Channels
                         break;
                     }
 
-                    foreach (var reader in _readers)
+                    foreach (ChannelReader<IQueueMessageContext> reader in _readers)
                     {
-                        if (reader.TryRead(out var message))
+                        if (reader.TryRead(out IQueueMessageContext message))
                         {
                             await writer.WriteAsync(message, _stoppingToken);
                         }
@@ -129,17 +131,20 @@ namespace JustSaying.Messaging.Channels
 
         public async IAsyncEnumerable<IQueueMessageContext> GetMessagesAsync()
         {
-            if (!_started) throw new InvalidOperationException(
-                "Multiplexer must be started before listening to messages");
+            if (!_started)
+            {
+                throw new InvalidOperationException(
+                    "Multiplexer must be started before listening to messages");
+            }
 
             while (true)
             {
-                var couldWait = await _targetChannel.Reader.WaitToReadAsync(_stoppingToken);
+                bool couldWait = await _targetChannel.Reader.WaitToReadAsync(_stoppingToken);
                 if (!couldWait) break;
 
                 _stoppingToken.ThrowIfCancellationRequested();
 
-                while (_targetChannel.Reader.TryRead(out var message))
+                while (_targetChannel.Reader.TryRead(out IQueueMessageContext message))
                 {
                     yield return message;
                 }

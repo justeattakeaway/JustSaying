@@ -16,7 +16,7 @@ namespace JustSaying.UnitTests.Messaging.Policies.ExamplePolicies
 
         protected override async Task<TOut> RunInnerAsync(TContext context, Func<Task<TOut>> func)
         {
-            return await _policy.ExecuteAsync(async () => await func());
+            return await _policy.ExecuteAsync(func);
         }
     }
 }

@@ -1,4 +1,4 @@
-namespace JustSaying.Messaging.Channels
+namespace JustSaying.Messaging.Channels.Configuration
 {
     public class GetMessagesContext
     {

@@ -6,8 +6,14 @@ using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels;
+using JustSaying.Messaging.Channels.Configuration;
+using JustSaying.Messaging.Channels.ConsumerGroups;
+using JustSaying.Messaging.Channels.Dispatch;
+using JustSaying.Messaging.Channels.Multiplexer;
+using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
@@ -21,11 +27,13 @@ namespace JustSaying.UnitTests.Messaging.Channels
 {
     public class ChannelsTests
     {
-        private readonly ILoggerFactory LoggerFactory;
+        private ILoggerFactory LoggerFactory { get; }
+        private IMessageMonitor MessageMonitor { get; }
 
         public ChannelsTests(ITestOutputHelper testOutputHelper)
         {
             LoggerFactory = testOutputHelper.ToLoggerFactory();
+            MessageMonitor = new LoggingMonitor(LoggerFactory.CreateLogger(nameof(IMessageMonitor)));
         }
 
         private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
@@ -35,12 +43,12 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             var sqsQueue = TestQueue();
             var buffer = CreateMessageReceiveBuffer(sqsQueue);
-            IMessageDispatcher dispatcher = TestDispatcher();
-            IChannelConsumer consumer = CreateChannelConsumer(dispatcher);
+            IMessageDispatcher dispatcher = new FakeDispatcher();
+            IChannelConsumer channelConsumer = CreateChannelConsumer(dispatcher);
             IMultiplexer multiplexer = CreateMultiplexer();
 
             multiplexer.ReadFrom(buffer.Reader);
-            consumer.ConsumeFrom(multiplexer.GetMessagesAsync());
+            channelConsumer.DispatchFrom(multiplexer.GetMessagesAsync());
 
             // need to start the multiplexer before calling Start
 
@@ -49,7 +57,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             cts.CancelAfter(TimeoutPeriod);
 
             var multiplexerCompletion = multiplexer.Run(cts.Token);
-            var consumer1Completion = consumer.Run(cts.Token);
+            var consumer1Completion = channelConsumer.Run(cts.Token);
             var buffer1Completion = buffer.Run(cts.Token);
 
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => multiplexerCompletion);
@@ -63,15 +71,15 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var sqsQueue = TestQueue();
             var buffer = CreateMessageReceiveBuffer(sqsQueue);
 
-            IMessageDispatcher dispatcher = TestDispatcher();
+            IMessageDispatcher dispatcher = new FakeDispatcher();
             IChannelConsumer consumer1 = CreateChannelConsumer(dispatcher);
             IChannelConsumer consumer2 = CreateChannelConsumer(dispatcher);
 
             IMultiplexer multiplexer = CreateMultiplexer();
 
             multiplexer.ReadFrom(buffer.Reader);
-            consumer1.ConsumeFrom(multiplexer.GetMessagesAsync());
-            consumer2.ConsumeFrom(multiplexer.GetMessagesAsync());
+            consumer1.DispatchFrom(multiplexer.GetMessagesAsync());
+            consumer2.DispatchFrom(multiplexer.GetMessagesAsync());
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
@@ -98,15 +106,15 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var buffer1 = CreateMessageReceiveBuffer(sqsQueue1);
             var buffer2 = CreateMessageReceiveBuffer(sqsQueue2);
 
-            IMessageDispatcher dispatcher = TestDispatcher();
-            IChannelConsumer consumer = CreateChannelConsumer(dispatcher);
+            IMessageDispatcher dispatcher = new FakeDispatcher();
+            IChannelConsumer channelConsumer = CreateChannelConsumer(dispatcher);
 
             IMultiplexer multiplexer = CreateMultiplexer();
 
             multiplexer.ReadFrom(buffer1.Reader);
             multiplexer.ReadFrom(buffer2.Reader);
 
-            consumer.ConsumeFrom(multiplexer.GetMessagesAsync());
+            channelConsumer.DispatchFrom(multiplexer.GetMessagesAsync());
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
@@ -114,7 +122,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var multiplexerCompletion = multiplexer.Run(cts.Token);
 
             // consumers
-            var consumer1Completion = consumer.Run(cts.Token);
+            var consumer1Completion = channelConsumer.Run(cts.Token);
 
             var buffer1Completion = buffer1.Run(cts.Token);
             var buffer2Completion = buffer2.Run(cts.Token);
@@ -134,8 +142,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var buffer2 = CreateMessageReceiveBuffer(sqsQueue2);
 
             // using 2 dispatchers for logging, they should be the same/stateless
-            IMessageDispatcher dispatcher1 = TestDispatcher();
-            IMessageDispatcher dispatcher2 = TestDispatcher();
+            IMessageDispatcher dispatcher1 = new FakeDispatcher();
+            IMessageDispatcher dispatcher2 = new FakeDispatcher();
             IChannelConsumer consumer1 = CreateChannelConsumer(dispatcher1);
             IChannelConsumer consumer2 = CreateChannelConsumer(dispatcher2);
 
@@ -144,8 +152,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             multiplexer.ReadFrom(buffer1.Reader);
             multiplexer.ReadFrom(buffer2.Reader);
 
-            consumer1.ConsumeFrom(multiplexer.GetMessagesAsync());
-            consumer2.ConsumeFrom(multiplexer.GetMessagesAsync());
+            consumer1.DispatchFrom(multiplexer.GetMessagesAsync());
+            consumer2.DispatchFrom(multiplexer.GetMessagesAsync());
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
@@ -174,12 +182,12 @@ namespace JustSaying.UnitTests.Messaging.Channels
             int messagesDispatched = 0;
             var sqsQueue = TestQueue(() => Interlocked.Increment(ref messagesFromQueue));
             IMessageReceiveBuffer buffer = CreateMessageReceiveBuffer(sqsQueue);
-            IMessageDispatcher dispatcher = TestDispatcher(() => Interlocked.Increment(ref messagesDispatched));
-            IChannelConsumer consumer = CreateChannelConsumer(dispatcher);
+            IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
+            IChannelConsumer channelConsumer = CreateChannelConsumer(dispatcher);
             IMultiplexer multiplexer = CreateMultiplexer();
 
             multiplexer.ReadFrom(buffer.Reader);
-            consumer.ConsumeFrom(multiplexer.GetMessagesAsync());
+            channelConsumer.DispatchFrom(multiplexer.GetMessagesAsync());
 
             // need to start the multiplexer before calling Messages
 
@@ -197,7 +205,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             messagesDispatched.ShouldBe(0);
 
             // Starting the consumer after the token is cancelled will not dispatch messages
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer.Run(cts.Token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => channelConsumer.Run(cts.Token));
 
             messagesFromQueue.ShouldBe(111);
             messagesDispatched.ShouldBe(0);
@@ -211,7 +219,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var sqsQueue3 = TestQueue();
 
             var queues = new List<ISqsQueue> { sqsQueue1, sqsQueue2, sqsQueue3 };
-            IMessageDispatcher dispatcher = TestDispatcher();
+            IMessageDispatcher dispatcher = new FakeDispatcher();
             var bus = CreateConsumerBus(queues, dispatcher);
 
             var cts = new CancellationTokenSource();
@@ -239,7 +247,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 }
             });
 
-            IMessageDispatcher dispatcher = TestDispatcher();
+            IMessageDispatcher dispatcher = new FakeDispatcher();
             var bus = CreateConsumerBus(new[] { sqsQueue }, dispatcher);
 
             var runTask = bus.Run(cts.Token);
@@ -261,7 +269,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             int dispatchedAfterCancelled = 0;
 
             ISqsQueue sqsQueue = TestQueue();
-            IMessageDispatcher dispatcher = TestDispatcher(() =>
+            IMessageDispatcher dispatcher = new FakeDispatcher(() =>
             {
                 if (cts.Token.IsCancellationRequested)
                 {
@@ -289,10 +297,10 @@ namespace JustSaying.UnitTests.Messaging.Channels
         public void Bus_StartingTwice_ShouldReturnSameCompletionTask()
         {
             var queue = TestQueue();
-            var dispatcher = TestDispatcher();
+            var dispatcher = new FakeDispatcher();
             var bus = CreateConsumerBus(new[] { queue }, dispatcher);
 
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            var cts = new CancellationTokenSource(TimeoutPeriod);
 
             var task1 = bus.Run(cts.Token);
             var task2 = bus.Run(cts.Token);
@@ -319,30 +327,14 @@ namespace JustSaying.UnitTests.Messaging.Channels
             return sqsQueueMock;
         }
 
-        private static IMessageDispatcher TestDispatcher(Action spy = null)
-        {
-            async Task OnDispatchMessage()
-            {
-                spy?.Invoke();
-                await Task.CompletedTask;
-            }
-
-            IMessageDispatcher dispatcherMock = Substitute.For<IMessageDispatcher>();
-            dispatcherMock
-                .DispatchMessageAsync(Arg.Any<IQueueMessageContext>(), Arg.Any<CancellationToken>())
-                .Returns(async _ => await OnDispatchMessage());
-
-            return dispatcherMock;
-        }
-
         private IMessageReceiveBuffer CreateMessageReceiveBuffer(ISqsQueue sqsQueue)
         {
             return new MessageReceiveBuffer(
                 10,
                 sqsQueue,
-                new NoopMiddleware<GetMessagesContext, IList<Message>>(),
+                new DelegateMiddleware<GetMessagesContext, IList<Message>>(),
                 Substitute.For<IMessageMonitor>(),
-                LoggerFactory);
+                LoggerFactory.CreateLogger<MessageReceiveBuffer>());
         }
 
         private IChannelConsumer CreateChannelConsumer(IMessageDispatcher dispatcher)
@@ -350,18 +342,29 @@ namespace JustSaying.UnitTests.Messaging.Channels
             return new ChannelConsumer(dispatcher);
         }
 
-        private IConsumerBus CreateConsumerBus(
+        private IConsumerGroup CreateConsumerBus(
             IList<ISqsQueue> queues,
             IMessageDispatcher dispatcher)
         {
-            var config = new ConsumerConfig();
+            var config = new ConsumerGroupConfig();
+            var consumerGroupSettings = config.CreateConsumerGroupSettings(queues);
+            var settings = new Dictionary<string, ConsumerGroupSettings>
+            {
+                { "test", consumerGroupSettings },
+            };
 
-            return new ConsumerBus(
-                queues,
-                config,
-                dispatcher,
-                Substitute.For<IMessageMonitor>(),
-                LoggerFactory);
+            var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, MessageMonitor);
+            var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
+            var consumerFactory = new ChannelConsumerFactory(dispatcher);
+            var consumerGroupFactory = new SingleConsumerGroupFactory(
+                 multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
+
+            var bus = new CombinedConsumerGroup(
+                consumerGroupFactory,
+                settings,
+                LoggerFactory.CreateLogger<CombinedConsumerGroup>());
+
+            return bus;
         }
 
         private IMultiplexer CreateMultiplexer()

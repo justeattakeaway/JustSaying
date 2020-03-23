@@ -2,8 +2,9 @@
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging.Channels.Context;
 
-namespace JustSaying.Messaging.Channels
+namespace JustSaying.Messaging.Channels.Dispatch
 {
     internal class ChannelConsumer : IChannelConsumer
     {
@@ -15,20 +16,19 @@ namespace JustSaying.Messaging.Channels
             _dispatcher = dispatcher;
         }
 
-        public IChannelConsumer ConsumeFrom(IAsyncEnumerable<IQueueMessageContext> messageSource)
+        public void DispatchFrom(IAsyncEnumerable<IQueueMessageContext> messageSource)
         {
             _messageSource = messageSource;
-            return this;
         }
 
         public async Task Run(CancellationToken stoppingToken)
         {
-            await foreach (var messageContext in _messageSource.WithCancellation(stoppingToken))
+            await foreach (IQueueMessageContext messageContext in _messageSource.WithCancellation(stoppingToken))
             {
                 stoppingToken.ThrowIfCancellationRequested();
 
                 await _dispatcher.DispatchMessageAsync(messageContext, stoppingToken)
-                        .ConfigureAwait(false);
+                    .ConfigureAwait(false);
             }
         }
     }

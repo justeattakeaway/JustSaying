@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using JustSaying.Messaging.Channels.Context;
 
-namespace JustSaying.Messaging.Channels
+namespace JustSaying.Messaging.Channels.Dispatch
 {
     internal interface IChannelConsumer
     {
         Task Run(CancellationToken stoppingToken);
-        IChannelConsumer ConsumeFrom(IAsyncEnumerable<IQueueMessageContext> messageSource);
+        void DispatchFrom(IAsyncEnumerable<IQueueMessageContext> messageSource);
     }
 }

@@ -1,6 +1,6 @@
 namespace JustSaying.Messaging.Monitoring
 {
-    public static class MonitorExtensions
+    internal static class MonitorExtensions
     {
         public static Operation MeasureThrottle(this IMessageMonitor messageMonitor)
             => new Operation(messageMonitor, (duration, monitor) =>

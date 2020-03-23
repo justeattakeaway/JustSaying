@@ -1,10 +1,11 @@
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using JustSaying.Messaging.Channels.Context;
 
-namespace JustSaying.Messaging.Channels
+namespace JustSaying.Messaging.Channels.Receive
 {
-    public interface IMessageReceiveBuffer
+    internal interface IMessageReceiveBuffer
     {
         Task Run(CancellationToken stoppingToken);
         ChannelReader<IQueueMessageContext> Reader { get; }

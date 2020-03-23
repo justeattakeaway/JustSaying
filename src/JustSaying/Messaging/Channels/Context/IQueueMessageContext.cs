@@ -2,9 +2,9 @@ using System;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
 
-namespace JustSaying.Messaging.Channels
+namespace JustSaying.Messaging.Channels.Context
 {
-    public interface IQueueMessageContext
+    internal interface IQueueMessageContext
     {
         Message Message { get; }
 

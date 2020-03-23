@@ -1,11 +1,10 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Channels.Context;
 
-namespace JustSaying.Messaging.Channels
+namespace JustSaying.Messaging.Channels.Multiplexer
 {
     /// <summary>
     /// Reduces multiple input streams of messages into a single stream, interleaving them.
