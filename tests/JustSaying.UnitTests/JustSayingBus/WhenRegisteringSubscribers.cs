@@ -46,8 +46,8 @@ namespace JustSaying.UnitTests.JustSayingBus
             SystemUnderTest.AddMessageHandler(() => new InspectableHandler<OrderRejected>());
             SystemUnderTest.AddMessageHandler(() => new InspectableHandler<SimpleMessage>());
 
-            SystemUnderTest.AddQueue<TestMessage>("region1", _queue1);
-            SystemUnderTest.AddQueue<TestMessage>("region1", _queue2);
+            SystemUnderTest.AddQueue("region1", typeof(TestMessage).FullName, _queue1);
+            SystemUnderTest.AddQueue("region1", typeof(TestMessage).FullName, _queue2);
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);

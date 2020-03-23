@@ -22,12 +22,14 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
             IChannelDispatcherFactory channelDispatcherFactory,
             ILoggerFactory loggerFactory)
         {
-            _multiplexerFactory = multiplexerFactory ?? throw new ArgumentNullException(nameof(multiplexerFactory));
-            _receiveBufferFactory =
-                receiveBufferFactory ?? throw new ArgumentNullException(nameof(receiveBufferFactory));
+            _multiplexerFactory = multiplexerFactory ??
+                                  throw new ArgumentNullException(nameof(multiplexerFactory));
+            _receiveBufferFactory = receiveBufferFactory ??
+                                    throw new ArgumentNullException(nameof(receiveBufferFactory));
             _channelDispatcherFactory = channelDispatcherFactory ??
                                         throw new ArgumentNullException(nameof(channelDispatcherFactory));
-            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _loggerFactory = loggerFactory ??
+                             throw new ArgumentNullException(nameof(loggerFactory));
         }
 
         public IConsumerGroup Create(ConsumerGroupSettings consumerGroupSettings)

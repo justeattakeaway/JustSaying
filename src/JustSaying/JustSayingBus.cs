@@ -90,11 +90,6 @@ namespace JustSaying
             HandlerMap = new HandlerMap(Monitor, _loggerFactory);
         }
 
-        public void AddQueue<T>(string region, ISqsQueue queue)
-        {
-            AddQueue(region, typeof(T).FullName, queue);
-        }
-
         public void AddQueue(string region, string consumerGroup, ISqsQueue queue)
         {
             if (string.IsNullOrWhiteSpace(region))

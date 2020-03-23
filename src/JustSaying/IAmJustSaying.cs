@@ -14,8 +14,6 @@ namespace JustSaying
 {
     public interface IAmJustSaying : IMessagePublisher
     {
-        void AddQueue<T>(string region, ISqsQueue queue);
-
         void AddQueue(string region, string consumerGroup, ISqsQueue queue);
 
         void AddMessageHandler<T>(Func<IHandlerAsync<T>> handler) where T : Message;

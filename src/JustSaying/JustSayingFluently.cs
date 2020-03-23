@@ -325,7 +325,7 @@ namespace JustSaying
         private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue)
             where T : Message
         {
-            Bus.AddQueue<T>(region, queue);
+            Bus.AddQueue(region, typeof(T).FullName, queue);
         }
 
         private void ConfigureSqsSubscriptionViaTopic()
