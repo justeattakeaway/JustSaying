@@ -27,19 +27,21 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
             _receiveBufferFactory = receiveBufferFactory ??
                                     throw new ArgumentNullException(nameof(receiveBufferFactory));
             _channelConsumerFactory = channelConsumerFactory ??
-                                        throw new ArgumentNullException(nameof(channelConsumerFactory));
+                                      throw new ArgumentNullException(nameof(channelConsumerFactory));
             _loggerFactory = loggerFactory ??
                              throw new ArgumentNullException(nameof(loggerFactory));
         }
 
-        public IConsumerGroup Create(ConsumerGroupSettings consumerGroupSettings)
+        public IConsumerGroup Create(ConsumerGroupSettingsBuilder settingsBuilder)
         {
-            IReadOnlyList<ISqsQueue> groupQueues = consumerGroupSettings.Queues;
+            ConsumerGroupSettings settings = settingsBuilder.Build();
 
-            IMultiplexer multiplexer = _multiplexerFactory.Create(consumerGroupSettings.MultiplexerCapacity);
+            IReadOnlyList<ISqsQueue> groupQueues = settings.Queues;
+
+            IMultiplexer multiplexer = _multiplexerFactory.Create(settings.MultiplexerCapacity);
 
             var receiveBuffers =
-                groupQueues.Select(queue => _receiveBufferFactory.CreateBuffer(queue, consumerGroupSettings))
+                groupQueues.Select(queue => _receiveBufferFactory.CreateBuffer(queue, settings))
                     .ToList();
 
             foreach (IMessageReceiveBuffer receiveBuffer in receiveBuffers)
@@ -47,7 +49,7 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
                 multiplexer.ReadFrom(receiveBuffer.Reader);
             }
 
-            var consumers = Enumerable.Range(0, consumerGroupSettings.ConsumerCount)
+            var consumers = Enumerable.Range(0, settings.ConsumerCount)
                 .Select(x => _channelConsumerFactory.Create())
                 .ToList();
 

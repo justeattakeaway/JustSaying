@@ -49,10 +49,9 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             var config = new ConsumerGroupConfig();
             config.WithDefaultSqsPolicy(LoggerFactory);
-            var consumerGroupSettings = config.CreateConsumerGroupSettings(queues);
-            var settings = new Dictionary<string, ConsumerGroupSettings>
+            var settings = new Dictionary<string, ConsumerGroupSettingsBuilder>
             {
-                { "test", consumerGroupSettings },
+                { "test", new ConsumerGroupSettingsBuilder().AddQueues(queues) },
             };
 
             var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, MessageMonitor);

@@ -13,14 +13,14 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
 
         public CombinedConsumerGroup(
             IConsumerGroupFactory groupFactory,
-            IDictionary<string, ConsumerGroupSettings> consumerGroupSettings,
+            IDictionary<string, ConsumerGroupSettingsBuilder> consumerGroupSettings,
             ILogger<CombinedConsumerGroup> logger)
         {
             _logger = logger;
 
             _buses = consumerGroupSettings
                 .Values
-                .Select(settings => groupFactory.Create(settings)).ToList();
+                .Select(groupFactory.Create).ToList();
         }
 
         private Task _completion;

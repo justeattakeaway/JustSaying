@@ -1,37 +1,28 @@
 using System.Collections.Generic;
-using System.Linq;
 using JustSaying.AwsTools.MessageHandling;
 
 namespace JustSaying.Messaging.Channels.ConsumerGroups
 {
-    public class ConsumerGroupSettings
+    internal class ConsumerGroupSettings
     {
-        private readonly List<ISqsQueue> _sqsQueues;
-
-        public ConsumerGroupSettings(
-            int bufferSize,
+        internal ConsumerGroupSettings(
             int consumerCount,
+            int bufferSize,
             int multiplexerCapacity,
             int prefetch,
-            IList<ISqsQueue> sqsQueues = null)
+            IReadOnlyList<ISqsQueue> queues)
         {
-            BufferSize = bufferSize;
             ConsumerCount = consumerCount;
+            BufferSize = bufferSize;
             MultiplexerCapacity = multiplexerCapacity;
             Prefetch = prefetch;
-            _sqsQueues = sqsQueues?.ToList() ?? new List<ISqsQueue>();
-        }
-
-        public void AddQueue(ISqsQueue sqsQueue)
-        {
-            _sqsQueues.Add(sqsQueue);
+            Queues = queues;
         }
 
         public int ConsumerCount { get; }
         public int BufferSize { get; }
         public int MultiplexerCapacity { get; }
         public int Prefetch { get; }
-
-        public IReadOnlyList<ISqsQueue> Queues => _sqsQueues;
+        public IReadOnlyList<ISqsQueue> Queues { get; }
     }
 }

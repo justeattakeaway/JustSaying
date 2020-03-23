@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Channels.Configuration;
 using JustSaying.Messaging.Channels.ConsumerGroups;
 using JustSaying.Messaging.Channels.Dispatch;
 using JustSaying.Messaging.Channels.Multiplexer;
@@ -24,7 +25,7 @@ namespace JustSaying
     public sealed class JustSayingBus : IAmJustSaying, IAmJustInterrogating, IMessagingBus
     {
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _publishersByRegionAndType;
-        private readonly Dictionary<string, ConsumerGroupSettings> _consumerGroupSettings;
+        private readonly Dictionary<string, ConsumerGroupSettingsBuilder> _consumerGroupSettings;
 
         private string _previousActiveRegion;
 
@@ -67,7 +68,7 @@ namespace JustSaying
 
         private readonly object _syncRoot = new object();
         private readonly ICollection<IPublisher> _publishers;
-        private ILoggerFactory _loggerFactory;
+        private readonly ILoggerFactory _loggerFactory;
 
         public JustSayingBus(
             IMessagingConfig config,
@@ -85,7 +86,7 @@ namespace JustSaying
             SerializationRegister = serializationRegister;
             _publishers = new HashSet<IPublisher>();
 
-            _consumerGroupSettings = new Dictionary<string, ConsumerGroupSettings>();
+            _consumerGroupSettings = new Dictionary<string, ConsumerGroupSettingsBuilder>();
 
             HandlerMap = new HandlerMap(Monitor, _loggerFactory);
         }
@@ -98,9 +99,14 @@ namespace JustSaying
             if (string.IsNullOrWhiteSpace(consumerGroup))
                 throw new ArgumentNullException(nameof(consumerGroup));
 
-            if (!_consumerGroupSettings.TryGetValue(consumerGroup, out ConsumerGroupSettings consumerGroupSettings))
+            if (!_consumerGroupSettings.TryGetValue(consumerGroup, out ConsumerGroupSettingsBuilder consumerGroupSettings))
             {
-                consumerGroupSettings = Config.ConsumerGroupConfig.CreateConsumerGroupSettings();
+                ConsumerGroupConfig defaultSettings = Config.ConsumerGroupConfig;
+                consumerGroupSettings = new ConsumerGroupSettingsBuilder()
+                    .WithPrefetch(defaultSettings.DefaultPrefetch)
+                    .WithBufferSize(defaultSettings.DefaultBufferSize)
+                    .WithConsumerCount(defaultSettings.DefaultConsumerCount)
+                    .WithMultiplexerCapacity(defaultSettings.DefaultMultiplexerCapacity);
                 _consumerGroupSettings[consumerGroup] = consumerGroupSettings;
             }
 
