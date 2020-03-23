@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Channels.Configuration;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Naming;

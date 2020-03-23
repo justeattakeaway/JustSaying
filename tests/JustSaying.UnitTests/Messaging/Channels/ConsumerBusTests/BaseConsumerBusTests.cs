@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
-using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Channels.Configuration;
 using JustSaying.Messaging.Channels.ConsumerGroups;
 using JustSaying.Messaging.Channels.Dispatch;
@@ -121,11 +120,19 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, Monitor);
             var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
             var consumerFactory = new ChannelDispatcherFactory(dispatcher);
-            var consumerBusFactory = new SingleConsumerGroupFactory(config,
-                Queues, multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
+            var consumerBusFactory = new SingleConsumerGroupFactory(
+                multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
+
+            var consumerGroupSettings = config.CreateConsumerGroupSettings(Queues);
+            var settings = new Dictionary<string, ConsumerGroupSettings>
+            {
+                { "test", consumerGroupSettings },
+            };
 
             var bus = new CombinedConsumerGroup(
-                consumerBusFactory, LoggerFactory.CreateLogger<CombinedConsumerGroup>(), config);
+                consumerBusFactory,
+                settings,
+                LoggerFactory.CreateLogger<CombinedConsumerGroup>());
 
             return bus;
         }
