@@ -98,8 +98,7 @@ namespace JustSaying
             if (string.IsNullOrWhiteSpace(consumerGroup))
                 throw new ArgumentNullException(nameof(consumerGroup));
 
-            ConsumerGroupSettings consumerGroupSettings;
-            if (!_consumerGroupSettings.TryGetValue(consumerGroup, out consumerGroupSettings))
+            if (!_consumerGroupSettings.TryGetValue(consumerGroup, out ConsumerGroupSettings consumerGroupSettings))
             {
                 consumerGroupSettings = Config.ConsumerGroupConfig.CreateConsumerGroupSettings();
                 _consumerGroupSettings[consumerGroup] = consumerGroupSettings;

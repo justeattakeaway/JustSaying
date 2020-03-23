@@ -11,13 +11,13 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
         public ConsumerGroupSettings(
             int bufferSize,
             int consumerCount,
-            int multiplexerCapcity,
+            int multiplexerCapacity,
             int prefetch,
             IList<ISqsQueue> sqsQueues = null)
         {
             BufferSize = bufferSize;
             ConsumerCount = consumerCount;
-            MultiplexerCapacity = multiplexerCapcity;
+            MultiplexerCapacity = multiplexerCapacity;
             Prefetch = prefetch;
             _sqsQueues = sqsQueues?.ToList() ?? new List<ISqsQueue>();
         }
