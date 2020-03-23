@@ -28,11 +28,11 @@ namespace JustSaying.Messaging.Channels.Configuration
         public ConsumerGroupSettings CreateConsumerGroupSettings(IList<ISqsQueue> sqsQueues = null)
         {
             return new ConsumerGroupSettings(
-                    DefaultConsumerCount,
-                    DefaultBufferSize,
-                    DefaultMultiplexerCapacity,
-                    DefaultPrefetch,
-                    sqsQueues);
+                DefaultConsumerCount,
+                DefaultBufferSize,
+                DefaultMultiplexerCapacity,
+                DefaultPrefetch,
+                sqsQueues);
         }
 
         public MiddlewareBase<GetMessagesContext, IList<Amazon.SQS.Model.Message>> SqsMiddleware { get; private set; }

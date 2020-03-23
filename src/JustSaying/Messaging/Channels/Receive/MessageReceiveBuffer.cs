@@ -67,7 +67,7 @@ namespace JustSaying.Messaging.Channels.Receive
 
                     using (_monitor.MeasureThrottle())
                     {
-                        var canWrite = await WaitToWriteAsync(writer, stoppingToken).ConfigureAwait(false);
+                        bool canWrite = await WaitToWriteAsync(writer, stoppingToken).ConfigureAwait(false);
                         if (!canWrite) break;
                     }
 
@@ -79,7 +79,7 @@ namespace JustSaying.Messaging.Channels.Receive
                         if (messages == null) continue;
                     }
 
-                    foreach (var message in messages)
+                    foreach (Message message in messages)
                     {
                         IQueueMessageContext messageContext = _sqsQueue.ToMessageContext(message);
                         await writer.WriteAsync(messageContext).ConfigureAwait(false);
@@ -115,10 +115,11 @@ namespace JustSaying.Messaging.Channels.Receive
                     RegionName = _sqsQueue.RegionSystemName,
                 };
 
-                messages = await _sqsMiddleware.RunAsync(context, async () =>
-                    await _sqsQueue
-                        .GetMessagesAsync(count, _requestMessageAttributeNames, stoppingToken)
-                        .ConfigureAwait(false))
+                messages = await _sqsMiddleware.RunAsync(context,
+                        async () =>
+                            await _sqsQueue
+                                .GetMessagesAsync(count, _requestMessageAttributeNames, stoppingToken)
+                                .ConfigureAwait(false))
                     .ConfigureAwait(false);
             }
             finally
@@ -127,7 +128,8 @@ namespace JustSaying.Messaging.Channels.Receive
                 {
                     _logger.LogInformation(
                         "Timed out while receiving messages from queue '{QueueName}' in region '{Region}'.",
-                        _sqsQueue.QueueName, _sqsQueue.RegionSystemName);
+                        _sqsQueue.QueueName,
+                        _sqsQueue.RegionSystemName);
                 }
             }
 
@@ -138,7 +140,8 @@ namespace JustSaying.Messaging.Channels.Receive
             return messages;
         }
 
-        private async Task<bool> WaitToWriteAsync(ChannelWriter<IQueueMessageContext> writer,
+        private async Task<bool> WaitToWriteAsync(
+            ChannelWriter<IQueueMessageContext> writer,
             CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)

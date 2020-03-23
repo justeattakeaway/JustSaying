@@ -32,13 +32,14 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
         {
             _logger.LogInformation(
                 "Starting up consumer bus with {ConsumerCount} consumers and {ReceiveBuffferCount} receive buffers",
-                _consumers.Count, _receiveBuffers.Count);
+                _consumers.Count,
+                _receiveBuffers.Count);
 
-            var bufferTasks = _receiveBuffers.Select(buffer => buffer.Run(stoppingToken));
-            var multiplexerTask = _multiplexer.Run(stoppingToken);
-            var consumerTasks = _consumers.Select(consumer => consumer.Run(stoppingToken));
+            IEnumerable<Task> bufferTasks = _receiveBuffers.Select(buffer => buffer.Run(stoppingToken));
+            Task multiplexerTask = _multiplexer.Run(stoppingToken);
+            IEnumerable<Task> consumerTasks = _consumers.Select(consumer => consumer.Run(stoppingToken));
 
-            var allTasks = bufferTasks.Concat(consumerTasks).Concat(new[] { multiplexerTask });
+            IEnumerable<Task> allTasks = bufferTasks.Concat(consumerTasks).Concat(new[] { multiplexerTask });
 
             return Task.WhenAll(allTasks);
         }

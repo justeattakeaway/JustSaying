@@ -23,12 +23,12 @@ namespace JustSaying.Messaging.Channels.Dispatch
 
         public async Task Run(CancellationToken stoppingToken)
         {
-            await foreach (var messageContext in _messageSource.WithCancellation(stoppingToken))
+            await foreach (IQueueMessageContext messageContext in _messageSource.WithCancellation(stoppingToken))
             {
                 stoppingToken.ThrowIfCancellationRequested();
 
                 await _dispatcher.DispatchMessageAsync(messageContext, stoppingToken)
-                        .ConfigureAwait(false);
+                    .ConfigureAwait(false);
             }
         }
     }

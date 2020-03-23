@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels.Dispatch;
 using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.Messaging.Channels.Receive;
@@ -21,22 +23,24 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
             ILoggerFactory loggerFactory)
         {
             _multiplexerFactory = multiplexerFactory ?? throw new ArgumentNullException(nameof(multiplexerFactory));
-            _receiveBufferFactory = receiveBufferFactory ?? throw new ArgumentNullException(nameof(receiveBufferFactory));
-            _channelDispatcherFactory = channelDispatcherFactory ?? throw new ArgumentNullException(nameof(channelDispatcherFactory));
+            _receiveBufferFactory =
+                receiveBufferFactory ?? throw new ArgumentNullException(nameof(receiveBufferFactory));
+            _channelDispatcherFactory = channelDispatcherFactory ??
+                                        throw new ArgumentNullException(nameof(channelDispatcherFactory));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
         }
 
         public IConsumerGroup Create(ConsumerGroupSettings consumerGroupSettings)
         {
-            var groupQueues = consumerGroupSettings.Queues;
+            IReadOnlyList<ISqsQueue> groupQueues = consumerGroupSettings.Queues;
 
-            var multiplexer = _multiplexerFactory.Create(consumerGroupSettings.MultiplexerCapacity);
+            IMultiplexer multiplexer = _multiplexerFactory.Create(consumerGroupSettings.MultiplexerCapacity);
 
             var receiveBuffers =
                 groupQueues.Select(queue => _receiveBufferFactory.CreateBuffer(queue, consumerGroupSettings))
                     .ToList();
 
-            foreach(var receiveBuffer in receiveBuffers)
+            foreach (IMessageReceiveBuffer receiveBuffer in receiveBuffers)
             {
                 multiplexer.ReadFrom(receiveBuffer.Reader);
             }
@@ -45,7 +49,7 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
                 .Select(x => _channelDispatcherFactory.Create())
                 .ToList();
 
-            foreach(var consumer in consumers)
+            foreach (IChannelDispatcher consumer in consumers)
             {
                 consumer.DispatchFrom(multiplexer.GetMessagesAsync());
             }

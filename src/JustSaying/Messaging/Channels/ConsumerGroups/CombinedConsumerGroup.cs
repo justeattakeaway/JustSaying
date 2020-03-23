@@ -46,7 +46,7 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
 
         private Task RunImpl(CancellationToken stoppingToken)
         {
-            var completionTasks = _buses.Select(bus => bus.Run(stoppingToken));
+            IEnumerable<Task> completionTasks = _buses.Select(bus => bus.Run(stoppingToken));
 
             _logger.LogInformation("Consumer bus successfully started");
 

@@ -36,15 +36,15 @@ namespace JustSaying.Messaging.Channels.Multiplexer
 
         public void ReadFrom(params ChannelReader<IQueueMessageContext>[] readers)
         {
-            if(readers == null) throw new ArgumentNullException(nameof(readers));
+            if (readers == null) throw new ArgumentNullException(nameof(readers));
 
-            if(readers.Length < 1) throw new ArgumentException("Must supply at least one reader", nameof(readers));
+            if (readers.Length < 1) throw new ArgumentException("Must supply at least one reader", nameof(readers));
 
             _readersLock.Wait(_stoppingToken);
 
             try
             {
-                foreach(var reader in readers)
+                foreach (ChannelReader<IQueueMessageContext> reader in readers)
                 {
                     _readers.Add(reader);
                 }
@@ -54,7 +54,7 @@ namespace JustSaying.Messaging.Channels.Multiplexer
                 _readersLock.Release();
             }
 
-            foreach(var reader in readers)
+            foreach (ChannelReader<IQueueMessageContext> reader in readers)
             {
                 async Task OnReaderCompletion()
                 {
@@ -84,11 +84,11 @@ namespace JustSaying.Messaging.Channels.Multiplexer
 
         public Task Run(CancellationToken stoppingToken)
         {
-            if(_started) return _completion;
+            if (_started) return _completion;
 
             lock (_startLock)
             {
-                if(_started) return _completion;
+                if (_started) return _completion;
 
                 _stoppingToken = stoppingToken;
                 _completion = RunImpl();
@@ -106,7 +106,7 @@ namespace JustSaying.Messaging.Channels.Multiplexer
                 "Starting up channel multiplexer with a queue capacity of {Capacity}",
                 _channelCapacity);
 
-            var writer = _targetChannel.Writer;
+            ChannelWriter<IQueueMessageContext> writer = _targetChannel.Writer;
             while (true)
             {
                 await _readersLock.WaitAsync(_stoppingToken).ConfigureAwait(false);
@@ -115,16 +115,16 @@ namespace JustSaying.Messaging.Channels.Multiplexer
 
                 try
                 {
-                    if(_readers.Count < 1)
+                    if (_readers.Count < 1)
                     {
                         _logger.LogInformation("All writers have completed, terminating multiplexer");
                         writer.Complete();
                         break;
                     }
 
-                    foreach(var reader in _readers)
+                    foreach (ChannelReader<IQueueMessageContext> reader in _readers)
                     {
-                        if(reader.TryRead(out var message))
+                        if (reader.TryRead(out IQueueMessageContext message))
                         {
                             await writer.WriteAsync(message, _stoppingToken);
                         }
@@ -139,7 +139,7 @@ namespace JustSaying.Messaging.Channels.Multiplexer
 
         public async IAsyncEnumerable<IQueueMessageContext> GetMessagesAsync()
         {
-            if(!_started)
+            if (!_started)
             {
                 throw new InvalidOperationException(
                     "Multiplexer must be started before listening to messages");
@@ -147,12 +147,12 @@ namespace JustSaying.Messaging.Channels.Multiplexer
 
             while (true)
             {
-                var couldWait = await _targetChannel.Reader.WaitToReadAsync(_stoppingToken);
-                if(!couldWait) break;
+                bool couldWait = await _targetChannel.Reader.WaitToReadAsync(_stoppingToken);
+                if (!couldWait) break;
 
                 _stoppingToken.ThrowIfCancellationRequested();
 
-                while (_targetChannel.Reader.TryRead(out var message))
+                while (_targetChannel.Reader.TryRead(out IQueueMessageContext message))
                 {
                     yield return message;
                 }
