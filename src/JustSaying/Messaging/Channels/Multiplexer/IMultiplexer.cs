@@ -12,7 +12,7 @@ namespace JustSaying.Messaging.Channels.Multiplexer
     internal interface IMultiplexer
     {
         Task Run(CancellationToken stoppingToken);
-        void ReadFrom(params ChannelReader<IQueueMessageContext>[] readers);
+        void ReadFrom(ChannelReader<IQueueMessageContext> reader);
         IAsyncEnumerable<IQueueMessageContext> GetMessagesAsync();
     }
 }

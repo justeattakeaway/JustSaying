@@ -34,36 +34,28 @@ namespace JustSaying.Messaging.Channels.Multiplexer
             _targetChannel = Channel.CreateBounded<IQueueMessageContext>(_channelCapacity);
         }
 
-        public void ReadFrom(params ChannelReader<IQueueMessageContext>[] readers)
+        public void ReadFrom(ChannelReader<IQueueMessageContext> reader)
         {
-            if (readers == null) throw new ArgumentNullException(nameof(readers));
-
-            if (readers.Length < 1) throw new ArgumentException("Must supply at least one reader", nameof(readers));
+            if (reader == null) throw new ArgumentNullException(nameof(reader));
 
             _readersLock.Wait(_stoppingToken);
 
             try
             {
-                foreach (ChannelReader<IQueueMessageContext> reader in readers)
-                {
-                    _readers.Add(reader);
-                }
+                _readers.Add(reader);
             }
             finally
             {
                 _readersLock.Release();
             }
 
-            foreach (ChannelReader<IQueueMessageContext> reader in readers)
+            async Task OnReaderCompletion()
             {
-                async Task OnReaderCompletion()
-                {
-                    await reader.Completion.ConfigureAwait(false);
-                    RemoveReader(reader);
-                }
-
-                _ = OnReaderCompletion();
+                await reader.Completion.ConfigureAwait(false);
+                RemoveReader(reader);
             }
+
+            _ = OnReaderCompletion();
         }
 
         private void RemoveReader(ChannelReader<IQueueMessageContext> reader)
