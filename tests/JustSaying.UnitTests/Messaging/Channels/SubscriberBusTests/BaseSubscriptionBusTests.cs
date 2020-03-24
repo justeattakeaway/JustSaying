@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels.Configuration;
-using JustSaying.Messaging.Channels.ConsumerGroups;
 using JustSaying.Messaging.Channels.Dispatch;
 using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
@@ -23,7 +23,7 @@ using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 {
-    public abstract class BaseConsumerBusTests : IAsyncLifetime
+    public abstract class BaseSubscriptionBusTests : IAsyncLifetime
     {
         protected IList<ISqsQueue> Queues;
         protected HandlerMap HandlerMap;
@@ -39,14 +39,14 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 
         protected IHandlerAsync<SimpleMessage> Handler;
 
-        protected IConsumerGroup SystemUnderTest { get; private set; }
+        protected ISubscriptionGroup SystemUnderTest { get; private set; }
 
         protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
 
         protected ILoggerFactory LoggerFactory { get; }
         protected ILogger Logger { get; }
 
-        public BaseConsumerBusTests(ITestOutputHelper testOutputHelper)
+        public BaseSubscriptionBusTests(ITestOutputHelper testOutputHelper)
         {
             LoggerFactory = testOutputHelper.ToLoggerFactory();
             Logger = LoggerFactory.CreateLogger(GetType());
@@ -98,7 +98,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             doneOk.ShouldBeTrue("Timeout occured before done signal");
         }
 
-        protected IConsumerGroup CreateSystemUnderTest()
+        protected ISubscriptionGroup CreateSystemUnderTest()
         {
             var messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
             var messageContextAccessor = Substitute.For<IMessageContextAccessor>();
@@ -112,26 +112,37 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
                 messageBackoffStrategy,
                 messageContextAccessor);
 
-            var config = new ConsumerConfig();
+            var config = new SubscriptionConfig();
             config.WithDefaultSqsPolicy(LoggerFactory);
 
             var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, Monitor);
             var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
-            var consumerFactory = new ChannelConsumerFactory(dispatcher);
-            var consumerBusFactory = new SingleConsumerGroupFactory(
-                multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
+            var consumerFactory = new MultiplexerSubscriberFactory(dispatcher);
+            var consumerBusFactory = new SubscriptionGroupFactory(
+                multiplexerFactory,
+                receiveBufferFactory,
+                consumerFactory,
+                LoggerFactory);
 
-            var settings = new Dictionary<string, ConsumerGroupSettingsBuilder>
+            var settings = new Dictionary<string, SubscriptionGroupSettingsBuilder>
             {
-                { "test", new ConsumerGroupSettingsBuilder(config).AddQueues(Queues) },
+                { "test", new SubscriptionGroupSettingsBuilder(config).AddQueues(Queues) },
             };
 
-            var bus = new CombinedConsumerGroup(
+            var bus = new SubscriptionGroupCollection(
                 consumerBusFactory,
                 settings,
-                LoggerFactory.CreateLogger<CombinedConsumerGroup>());
+                LoggerFactory.CreateLogger<SubscriptionGroupCollection>());
 
             return bus;
+        }
+
+        protected virtual Dictionary<string, SubscriptionGroupSettingsBuilder> SetupBusConfig(SubscriptionConfig config)
+        {
+            return new Dictionary<string, SubscriptionGroupSettingsBuilder>
+            {
+                { "test", new SubscriptionGroupSettingsBuilder(config).AddQueues(Queues) },
+            };
         }
 
         protected static ISqsQueue CreateSuccessfulTestQueue(params Amazon.SQS.Model.Message[] messages)

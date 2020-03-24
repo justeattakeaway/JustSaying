@@ -1,6 +1,6 @@
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels.Configuration;
-using JustSaying.Messaging.Channels.ConsumerGroups;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 
@@ -9,25 +9,25 @@ namespace JustSaying.Messaging.Channels.Receive
     internal class ReceiveBufferFactory : IReceiveBufferFactory
     {
         private readonly ILoggerFactory _loggerFactory;
-        private readonly ConsumerConfig _consumerConfig;
+        private readonly SubscriptionConfig _subscriptionConfig;
         private readonly IMessageMonitor _monitor;
 
         public ReceiveBufferFactory(
             ILoggerFactory loggerFactory,
-            ConsumerConfig consumerConfig,
+            SubscriptionConfig subscriptionConfig,
             IMessageMonitor monitor)
         {
             _loggerFactory = loggerFactory;
-            _consumerConfig = consumerConfig;
+            _subscriptionConfig = subscriptionConfig;
             _monitor = monitor;
         }
 
-        public IMessageReceiveBuffer CreateBuffer(ISqsQueue queue, ConsumerGroupSettings consumerGroupSettings)
+        public IMessageReceiveBuffer CreateBuffer(ISqsQueue queue, SubscriptionGroupSettings subscriptionGroupSettings)
         {
             var buffer = new MessageReceiveBuffer(
-                consumerGroupSettings.BufferSize,
+                subscriptionGroupSettings.BufferSize,
                 queue,
-                _consumerConfig.SqsMiddleware,
+                _subscriptionConfig.SqsMiddleware,
                 _monitor,
                 _loggerFactory.CreateLogger<MessageReceiveBuffer>());
 

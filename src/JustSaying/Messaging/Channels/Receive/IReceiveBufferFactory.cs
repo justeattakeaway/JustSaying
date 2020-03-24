@@ -1,10 +1,10 @@
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.Channels.ConsumerGroups;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 
 namespace JustSaying.Messaging.Channels.Receive
 {
     internal interface IReceiveBufferFactory
     {
-        IMessageReceiveBuffer CreateBuffer(ISqsQueue queue, ConsumerGroupSettings consumerGroupSettings);
+        IMessageReceiveBuffer CreateBuffer(ISqsQueue queue, SubscriptionGroupSettings subscriptionGroupSettings);
     }
 }

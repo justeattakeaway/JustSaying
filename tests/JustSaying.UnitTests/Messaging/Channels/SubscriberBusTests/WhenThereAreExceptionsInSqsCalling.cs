@@ -12,7 +12,7 @@ using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 {
-    public class WhenThereAreExceptionsInSqsCalling : BaseConsumerBusTests
+    public class WhenThereAreExceptionsInSqsCalling : BaseSubscriptionBusTests
     {
         private ISqsQueue _queue;
         private int _callCount;

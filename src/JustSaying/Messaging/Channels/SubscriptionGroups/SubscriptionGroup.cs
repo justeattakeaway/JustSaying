@@ -7,20 +7,20 @@ using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.Messaging.Channels.Receive;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Messaging.Channels.ConsumerGroups
+namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
-    internal class SingleConsumerGroup : IConsumerGroup
+    internal class SubscriptionGroup : ISubscriptionGroup
     {
         private readonly ICollection<IMessageReceiveBuffer> _receiveBuffers;
         private readonly IMultiplexer _multiplexer;
-        private readonly ICollection<IChannelConsumer> _consumers;
-        private readonly ILogger<SingleConsumerGroup> _logger;
+        private readonly ICollection<IMultiplexerSubscriber> _consumers;
+        private readonly ILogger<SubscriptionGroup> _logger;
 
-        public SingleConsumerGroup(
+        public SubscriptionGroup(
             IEnumerable<IMessageReceiveBuffer> receiveBuffers,
             IMultiplexer multiplexer,
-            IEnumerable<IChannelConsumer> consumers,
-            ILogger<SingleConsumerGroup> logger)
+            IEnumerable<IMultiplexerSubscriber> consumers,
+            ILogger<SubscriptionGroup> logger)
         {
             _receiveBuffers = receiveBuffers.ToList();
             _multiplexer = multiplexer;

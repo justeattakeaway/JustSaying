@@ -12,7 +12,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
     public class WhenSqsIsSlow : BaseMessageReceiveBufferTests
     {
         private int _callCount = 0;
-        private Task<int> ConsumerTask;
+        private Task<int> SubscriberTask;
 
         public WhenSqsIsSlow(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
@@ -32,20 +32,20 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
 
         protected override Task WhenAsync()
         {
-            ConsumerTask = Messages();
+            SubscriberTask = Messages();
             return Task.CompletedTask;
         }
 
         [Fact]
         public async Task Consumer_Task_Completes()
         {
-            await ConsumerTask;
+            await SubscriberTask;
         }
 
         [Fact]
         public async Task All_Messages_Are_Processed()
         {
-            var messagesHandled = await ConsumerTask;
+            var messagesHandled = await SubscriberTask;
             messagesHandled.ShouldBe(_callCount);
         }
 

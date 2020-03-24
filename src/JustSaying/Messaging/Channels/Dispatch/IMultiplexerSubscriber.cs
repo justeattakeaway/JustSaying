@@ -5,7 +5,7 @@ using JustSaying.Messaging.Channels.Context;
 
 namespace JustSaying.Messaging.Channels.Dispatch
 {
-    internal interface IChannelConsumer
+    internal interface IMultiplexerSubscriber
     {
         Task Run(CancellationToken stoppingToken);
         void ConsumeFrom(IAsyncEnumerable<IQueueMessageContext> messageSource);

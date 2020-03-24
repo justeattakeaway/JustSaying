@@ -7,10 +7,10 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Channels.Configuration;
-using JustSaying.Messaging.Channels.ConsumerGroups;
 using JustSaying.Messaging.Channels.Dispatch;
 using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
@@ -47,22 +47,22 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var queues = new List<ISqsQueue> { sqsQueue1 };
             IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
 
-            var config = new ConsumerConfig();
+            var config = new SubscriptionConfig();
             config.WithDefaultSqsPolicy(LoggerFactory);
-            var settings = new Dictionary<string, ConsumerGroupSettingsBuilder>
+            var settings = new Dictionary<string, SubscriptionGroupSettingsBuilder>
             {
-                { "test", new ConsumerGroupSettingsBuilder(config).AddQueues(queues) },
+                { "test", new SubscriptionGroupSettingsBuilder(config).AddQueues(queues) },
             };
 
             var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, MessageMonitor);
             var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
-            var consumerFactory = new ChannelConsumerFactory(dispatcher);
-            var consumerBusFactory = new SingleConsumerGroupFactory(multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
+            var consumerFactory = new MultiplexerSubscriberFactory(dispatcher);
+            var consumerBusFactory = new SubscriptionGroupFactory(multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
 
-            var bus = new CombinedConsumerGroup(
+            var bus = new SubscriptionGroupCollection(
                 consumerBusFactory,
                 settings,
-                LoggerFactory.CreateLogger<CombinedConsumerGroup>());
+                LoggerFactory.CreateLogger<SubscriptionGroupCollection>());
 
             var cts = new CancellationTokenSource();
 

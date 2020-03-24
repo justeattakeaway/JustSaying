@@ -13,7 +13,7 @@ namespace JustSaying
         IMessageSubjectProvider MessageSubjectProvider { get; set; }
         ITopicNamingConvention TopicNamingConvention { get; set; }
         IQueueNamingConvention QueueNamingConvention { get; set; }
-        ConsumerConfig ConsumerConfig { get; set; }
+        SubscriptionConfig SubscriptionConfig { get; set; }
         void Validate();
     }
 }

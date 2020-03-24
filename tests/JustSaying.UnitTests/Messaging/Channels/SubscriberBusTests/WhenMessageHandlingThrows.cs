@@ -10,7 +10,7 @@ using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 {
-    public class WhenMessageHandlingThrows : BaseConsumerBusTests
+    public class WhenMessageHandlingThrows : BaseSubscriptionBusTests
     {
         private bool _firstTime = true;
         private ISqsQueue _queue;

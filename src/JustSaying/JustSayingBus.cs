@@ -7,10 +7,10 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Configuration;
-using JustSaying.Messaging.Channels.ConsumerGroups;
 using JustSaying.Messaging.Channels.Dispatch;
 using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
@@ -25,7 +25,7 @@ namespace JustSaying
     public sealed class JustSayingBus : IAmJustSaying, IAmJustInterrogating, IMessagingBus
     {
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _publishersByRegionAndType;
-        private readonly Dictionary<string, ConsumerGroupSettingsBuilder> _consumerGroupSettings;
+        private readonly Dictionary<string, SubscriptionGroupSettingsBuilder> _consumerGroupSettings;
 
         private string _previousActiveRegion;
 
@@ -39,7 +39,7 @@ namespace JustSaying
             set { _monitor = value ?? new NullOpMessageMonitor(); }
         }
 
-        private IConsumerGroup ConsumerGroup { get; set; }
+        private ISubscriptionGroup SubscriptionGroup { get; set; }
         public IMessageSerializationRegister SerializationRegister { get; private set; }
 
         public IMessageLockAsync MessageLock
@@ -86,7 +86,7 @@ namespace JustSaying
             SerializationRegister = serializationRegister;
             _publishers = new HashSet<IPublisher>();
 
-            _consumerGroupSettings = new Dictionary<string, ConsumerGroupSettingsBuilder>();
+            _consumerGroupSettings = new Dictionary<string, SubscriptionGroupSettingsBuilder>();
 
             HandlerMap = new HandlerMap(Monitor, _loggerFactory);
         }
@@ -99,9 +99,9 @@ namespace JustSaying
             if (string.IsNullOrWhiteSpace(consumerGroup))
                 throw new ArgumentNullException(nameof(consumerGroup));
 
-            if (!_consumerGroupSettings.TryGetValue(consumerGroup, out ConsumerGroupSettingsBuilder consumerGroupSettings))
+            if (!_consumerGroupSettings.TryGetValue(consumerGroup, out SubscriptionGroupSettingsBuilder consumerGroupSettings))
             {
-                consumerGroupSettings = new ConsumerGroupSettingsBuilder(Config.ConsumerConfig);
+                consumerGroupSettings = new SubscriptionGroupSettingsBuilder(Config.SubscriptionConfig);
                 _consumerGroupSettings[consumerGroup] = consumerGroupSettings;
             }
 
@@ -164,21 +164,21 @@ namespace JustSaying
                 _messageBackoffStrategy,
                 MessageContextAccessor);
 
-            var receiveBufferFactory = new ReceiveBufferFactory(_loggerFactory, Config.ConsumerConfig, Monitor);
+            var receiveBufferFactory = new ReceiveBufferFactory(_loggerFactory, Config.SubscriptionConfig, Monitor);
             var multiplexerFactory = new MultiplexerFactory(_loggerFactory);
-            var channelDispatcherFactory = new ChannelConsumerFactory(dispatcher);
-            var consumerGroupFactory = new SingleConsumerGroupFactory(
+            var channelDispatcherFactory = new MultiplexerSubscriberFactory(dispatcher);
+            var consumerGroupFactory = new SubscriptionGroupFactory(
                 multiplexerFactory,
                 receiveBufferFactory,
                 channelDispatcherFactory,
                 _loggerFactory);
 
-            ConsumerGroup = new CombinedConsumerGroup(
+            SubscriptionGroup = new SubscriptionGroupCollection(
                 consumerGroupFactory,
                 _consumerGroupSettings,
-                _loggerFactory.CreateLogger<CombinedConsumerGroup>());
+                _loggerFactory.CreateLogger<SubscriptionGroupCollection>());
 
-            return ConsumerGroup.Run(stoppingToken);
+            return SubscriptionGroup.Run(stoppingToken);
         }
 
         public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)

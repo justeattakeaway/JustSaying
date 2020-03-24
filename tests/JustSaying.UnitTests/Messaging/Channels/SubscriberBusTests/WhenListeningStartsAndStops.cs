@@ -12,7 +12,7 @@ using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 {
-    public class WhenListeningStartsAndStops : BaseConsumerBusTests
+    public class WhenListeningStartsAndStops : BaseSubscriptionBusTests
     {
         private ISqsQueue _queue;
         private const string _messageContentsRunning = @"Message Contents Running";

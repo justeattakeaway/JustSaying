@@ -1,10 +1,11 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace JustSaying.Messaging.Channels.ConsumerGroups
+namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
-    public interface IConsumerGroup
+    public interface ISubscriptionGroup
     {
         Task Run(CancellationToken stoppingToken);
     }
 }
+

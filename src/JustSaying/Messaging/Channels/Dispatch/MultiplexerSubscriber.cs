@@ -6,12 +6,12 @@ using JustSaying.Messaging.Channels.Context;
 
 namespace JustSaying.Messaging.Channels.Dispatch
 {
-    internal class ChannelConsumer : IChannelConsumer
+    internal class MultiplexerSubscriber : IMultiplexerSubscriber
     {
         private IAsyncEnumerable<IQueueMessageContext> _messageSource;
         private readonly IMessageDispatcher _dispatcher;
 
-        public ChannelConsumer(IMessageDispatcher dispatcher)
+        public MultiplexerSubscriber(IMessageDispatcher dispatcher)
         {
             _dispatcher = dispatcher;
         }

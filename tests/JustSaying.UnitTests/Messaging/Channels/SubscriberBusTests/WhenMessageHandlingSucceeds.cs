@@ -9,7 +9,7 @@ using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 {
-    public class WhenMessageHandlingSucceeds : BaseConsumerBusTests
+    public class WhenMessageHandlingSucceeds : BaseSubscriptionBusTests
     {
         private ISqsQueue _queue;
         private string _messageBody = "Expected Message Body";

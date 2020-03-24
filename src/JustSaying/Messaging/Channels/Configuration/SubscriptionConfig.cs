@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.Channels.ConsumerGroups;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware;
 using Microsoft.Extensions.Logging;
@@ -10,9 +9,9 @@ using ReceiveMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSay
 
 namespace JustSaying.Messaging.Channels.Configuration
 {
-    public class ConsumerConfig
+    public class SubscriptionConfig
     {
-        public ConsumerConfig()
+        public SubscriptionConfig()
         {
             DefaultBufferSize = MessageConstants.MaxAmazonMessageCap;
             DefaultMultiplexerCapacity = 100;
