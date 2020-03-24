@@ -26,7 +26,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
     public abstract class BaseConsumerBusTests : IAsyncLifetime
     {
         protected IList<ISqsQueue> Queues;
-        protected int NumberOfConsumers;
         protected HandlerMap HandlerMap;
         protected IMessageMonitor Monitor;
         protected SimpleMessage DeserializedMessage;
@@ -65,7 +64,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         private void GivenInternal()
         {
             Queues = new List<ISqsQueue>();
-            NumberOfConsumers = 1;
             Handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
             Monitor = Substitute.For<IMessageMonitor>();
             SerializationRegister = Substitute.For<IMessageSerializationRegister>();
@@ -123,10 +121,9 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             var consumerBusFactory = new SingleConsumerGroupFactory(
                 multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
 
-            var consumerGroupSettings = config.CreateConsumerGroupSettings(Queues);
-            var settings = new Dictionary<string, ConsumerGroupSettings>
+            var settings = new Dictionary<string, ConsumerGroupSettingsBuilder>
             {
-                { "test", consumerGroupSettings },
+                { "test", new ConsumerGroupSettingsBuilder().AddQueues(Queues) },
             };
 
             var bus = new CombinedConsumerGroup(

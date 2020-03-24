@@ -51,10 +51,9 @@ namespace JustSaying.UnitTests.Messaging.Policies
             config.WithSqsPolicy(
                 next =>
                     new ErrorHandlingMiddleware<GetMessagesContext, IList<Message>, InvalidOperationException>(next));
-            var consumerGroupSettings = config.CreateConsumerGroupSettings(queues);
-            var settings = new Dictionary<string, ConsumerGroupSettings>
+            var settings = new Dictionary<string, ConsumerGroupSettingsBuilder>
             {
-                { "test", consumerGroupSettings },
+                { "test", new ConsumerGroupSettingsBuilder().AddQueues(queues) },
             };
 
             IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref dispatchedMessageCount));

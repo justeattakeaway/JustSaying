@@ -8,7 +8,7 @@ namespace JustSaying.Messaging.Channels.Receive
 {
     internal interface IReceiveBufferFactory
     {
-        IMessageReceiveBuffer CreateBuffer(ISqsQueue queue, ConsumerGroupSettings settings);
+        IMessageReceiveBuffer CreateBuffer(ISqsQueue queue, ConsumerGroupSettings consumerGroupSettings);
     }
 
     internal class ReceiveBufferFactory : IReceiveBufferFactory
@@ -27,10 +27,10 @@ namespace JustSaying.Messaging.Channels.Receive
             _monitor = monitor;
         }
 
-        public IMessageReceiveBuffer CreateBuffer(ISqsQueue queue, ConsumerGroupSettings settings)
+        public IMessageReceiveBuffer CreateBuffer(ISqsQueue queue, ConsumerGroupSettings consumerGroupSettings)
         {
             var buffer = new MessageReceiveBuffer(
-                settings.BufferSize,
+                consumerGroupSettings.BufferSize,
                 queue,
                 _consumerGroupConfig.SqsMiddleware,
                 _monitor,
