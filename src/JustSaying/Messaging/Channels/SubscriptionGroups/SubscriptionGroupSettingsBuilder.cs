@@ -8,6 +8,11 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
     {
         private readonly List<ISqsQueue> _sqsQueues;
 
+        private int _bufferSize;
+        private int _consumerCount;
+        private int _multiplexerCapacity;
+        private int _prefetch;
+
         internal SubscriptionGroupSettingsBuilder(SubscriptionConfig defaultConfig)
         {
             _sqsQueues = new List<ISqsQueue>();
@@ -29,15 +34,11 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             return this;
         }
 
-        private int _consumerCount;
-
         public SubscriptionGroupSettingsBuilder WithConsumerCount(int consumerCount)
         {
             _consumerCount = consumerCount;
             return this;
         }
-
-        private int _bufferSize;
 
         public SubscriptionGroupSettingsBuilder WithBufferSize(int bufferSize)
         {
@@ -45,15 +46,11 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             return this;
         }
 
-        private int _multiplexerCapacity;
-
         public SubscriptionGroupSettingsBuilder WithMultiplexerCapacity(int multiplexerCapacity)
         {
             _multiplexerCapacity = multiplexerCapacity;
             return this;
         }
-
-        private int _prefetch;
 
         public SubscriptionGroupSettingsBuilder WithPrefetch(int prefetch)
         {
