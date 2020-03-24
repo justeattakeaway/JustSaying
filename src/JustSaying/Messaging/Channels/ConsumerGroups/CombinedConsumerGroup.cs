@@ -31,17 +31,18 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
         {
             if (stoppingToken.IsCancellationRequested) return Task.CompletedTask;
 
-            // Double check lock to ensure single-start
-            if (_started) return _completion;
-            lock (_startLock)
+            if (!_started)
             {
-                if (_started) return _completion;
-
-                _completion = RunImpl(stoppingToken);
-
-                _started = true;
-                return _completion;
+                lock (_startLock)
+                {
+                    if (!_started)
+                    {
+                        _completion = RunImpl(stoppingToken);
+                        _started = true;
+                    }
+                }
             }
+            return _completion;
         }
 
         private Task RunImpl(CancellationToken stoppingToken)
