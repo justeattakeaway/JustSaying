@@ -52,8 +52,8 @@ namespace JustSaying.Messaging.Channels.Receive
         /// <summary>
         /// Starts the receive buffer until it's cancelled by the stopping token.
         /// </summary>
-        /// <param name="stoppingToken">A CancellationToken token that will stop the buffer when fired</param>
-        /// <returns>A task that throws an `OperationCancelledException` when the cancellation token is fired.</returns>
+        /// <param name="stoppingToken">A <see cref="CancellationToken"/> that will stop the buffer when signalled.</param>
+         /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation to receive the messages.</returns>
         public async Task Run(CancellationToken stoppingToken)
         {
             await Task.Yield();
