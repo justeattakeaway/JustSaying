@@ -143,16 +143,19 @@ namespace JustSaying
             if (stoppingToken.IsCancellationRequested) return Task.CompletedTask;
 
             // Double check lock to ensure single-start
-            if (_subscriberStarted) return _subscriberCompletionTask;
-            lock (_syncRoot)
+            if (!_subscriberStarted)
             {
-                if (_subscriberStarted) return _subscriberCompletionTask;
-
-                _subscriberCompletionTask = RunImpl(stoppingToken);
-
-                _subscriberStarted = true;
-                return _subscriberCompletionTask;
+                lock (_syncRoot)
+                {
+                    if (!_subscriberStarted)
+                    {
+                        _subscriberCompletionTask = RunImpl(stoppingToken);
+                        _subscriberStarted = true;
+                    }
+                }
             }
+
+            return _subscriberCompletionTask;
         }
 
         private Task RunImpl(CancellationToken stoppingToken)
