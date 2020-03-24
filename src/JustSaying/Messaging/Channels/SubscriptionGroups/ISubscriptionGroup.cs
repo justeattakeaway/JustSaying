@@ -8,4 +8,3 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         Task Run(CancellationToken stoppingToken);
     }
 }
-
