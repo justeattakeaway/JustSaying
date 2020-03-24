@@ -29,9 +29,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         protected override void Given()
         {
             // we expect to get max 10 messages per batch
-            // except on single-core machines when we top out at ParallelHandlerExecutionPerCore=4
-            _expectedMaxMessageCount = Math.Min(MessageConstants.MaxAmazonMessageCap,
-                Environment.ProcessorCount * MessageConstants.ParallelHandlerExecutionPerCore);
+            _expectedMaxMessageCount = MessageConstants.MaxAmazonMessageCap;
 
             Logger.LogInformation("Expected max message count is {MaxMessageCount}", _expectedMaxMessageCount);
 
@@ -50,10 +48,10 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 
             var completion = SystemUnderTest.Run(cts.Token);
 
-            _running = false;
             cts.CancelAfter(TimeoutPeriod.Subtract(TimeSpan.FromMilliseconds(500)));
 
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
+            _running = false;
         }
 
         [Fact]

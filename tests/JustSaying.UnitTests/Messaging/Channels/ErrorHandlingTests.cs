@@ -47,11 +47,11 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var queues = new List<ISqsQueue> { sqsQueue1 };
             IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
 
-            var config = new ConsumerGroupConfig();
+            var config = new ConsumerConfig();
             config.WithDefaultSqsPolicy(LoggerFactory);
             var settings = new Dictionary<string, ConsumerGroupSettingsBuilder>
             {
-                { "test", new ConsumerGroupSettingsBuilder().AddQueues(queues) },
+                { "test", new ConsumerGroupSettingsBuilder(config).AddQueues(queues) },
             };
 
             var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, MessageMonitor);

@@ -112,7 +112,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
                 messageBackoffStrategy,
                 messageContextAccessor);
 
-            var config = new ConsumerGroupConfig();
+            var config = new ConsumerConfig();
             config.WithDefaultSqsPolicy(LoggerFactory);
 
             var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, Monitor);
@@ -123,7 +123,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
 
             var settings = new Dictionary<string, ConsumerGroupSettingsBuilder>
             {
-                { "test", new ConsumerGroupSettingsBuilder().AddQueues(Queues) },
+                { "test", new ConsumerGroupSettingsBuilder(config).AddQueues(Queues) },
             };
 
             var bus = new CombinedConsumerGroup(

@@ -346,10 +346,10 @@ namespace JustSaying.UnitTests.Messaging.Channels
             IList<ISqsQueue> queues,
             IMessageDispatcher dispatcher)
         {
-            var config = new ConsumerGroupConfig();
+            var config = new ConsumerConfig();
             var settings = new Dictionary<string, ConsumerGroupSettingsBuilder>
             {
-                { "test", new ConsumerGroupSettingsBuilder().AddQueues(queues) },
+                { "test", new ConsumerGroupSettingsBuilder(config).AddQueues(queues) },
             };
 
             var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, MessageMonitor);

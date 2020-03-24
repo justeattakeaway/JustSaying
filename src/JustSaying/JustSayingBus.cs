@@ -101,12 +101,7 @@ namespace JustSaying
 
             if (!_consumerGroupSettings.TryGetValue(consumerGroup, out ConsumerGroupSettingsBuilder consumerGroupSettings))
             {
-                ConsumerGroupConfig defaultSettings = Config.ConsumerGroupConfig;
-                consumerGroupSettings = new ConsumerGroupSettingsBuilder()
-                    .WithPrefetch(defaultSettings.DefaultPrefetch)
-                    .WithBufferSize(defaultSettings.DefaultBufferSize)
-                    .WithConsumerCount(defaultSettings.DefaultConsumerCount)
-                    .WithMultiplexerCapacity(defaultSettings.DefaultMultiplexerCapacity);
+                consumerGroupSettings = new ConsumerGroupSettingsBuilder(Config.ConsumerConfig);
                 _consumerGroupSettings[consumerGroup] = consumerGroupSettings;
             }
 
@@ -169,7 +164,7 @@ namespace JustSaying
                 _messageBackoffStrategy,
                 MessageContextAccessor);
 
-            var receiveBufferFactory = new ReceiveBufferFactory(_loggerFactory, Config.ConsumerGroupConfig, Monitor);
+            var receiveBufferFactory = new ReceiveBufferFactory(_loggerFactory, Config.ConsumerConfig, Monitor);
             var multiplexerFactory = new MultiplexerFactory(_loggerFactory);
             var channelDispatcherFactory = new ChannelConsumerFactory(dispatcher);
             var consumerGroupFactory = new SingleConsumerGroupFactory(

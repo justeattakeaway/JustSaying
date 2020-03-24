@@ -14,16 +14,16 @@ namespace JustSaying.Messaging.Channels.Receive
     internal class ReceiveBufferFactory : IReceiveBufferFactory
     {
         private readonly ILoggerFactory _loggerFactory;
-        private readonly ConsumerGroupConfig _consumerGroupConfig;
+        private readonly ConsumerConfig _consumerConfig;
         private readonly IMessageMonitor _monitor;
 
         public ReceiveBufferFactory(
             ILoggerFactory loggerFactory,
-            ConsumerGroupConfig consumerGroupConfig,
+            ConsumerConfig consumerConfig,
             IMessageMonitor monitor)
         {
             _loggerFactory = loggerFactory;
-            _consumerGroupConfig = consumerGroupConfig;
+            _consumerConfig = consumerConfig;
             _monitor = monitor;
         }
 
@@ -32,7 +32,7 @@ namespace JustSaying.Messaging.Channels.Receive
             var buffer = new MessageReceiveBuffer(
                 consumerGroupSettings.BufferSize,
                 queue,
-                _consumerGroupConfig.SqsMiddleware,
+                _consumerConfig.SqsMiddleware,
                 _monitor,
                 _loggerFactory.CreateLogger<MessageReceiveBuffer>());
 

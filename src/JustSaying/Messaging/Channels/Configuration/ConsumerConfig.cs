@@ -6,15 +6,15 @@ using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware;
 using Microsoft.Extensions.Logging;
 
+using ReceiveMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Channels.Configuration.GetMessagesContext, System.Collections.Generic.IList<Amazon.SQS.Model.Message>>;
+
 namespace JustSaying.Messaging.Channels.Configuration
 {
-    public class ConsumerGroupConfig
+    public class ConsumerConfig
     {
-        public ConsumerGroupConfig()
+        public ConsumerConfig()
         {
-            DefaultBufferSize = Math.Min(
-                MessageConstants.MaxAmazonMessageCap,
-                Environment.ProcessorCount * MessageConstants.ParallelHandlerExecutionPerCore);
+            DefaultBufferSize = MessageConstants.MaxAmazonMessageCap;
             DefaultMultiplexerCapacity = 100;
             DefaultPrefetch = 10;
             DefaultConsumerCount = Environment.ProcessorCount * MessageConstants.ParallelHandlerExecutionPerCore;
@@ -25,19 +25,16 @@ namespace JustSaying.Messaging.Channels.Configuration
         public int DefaultConsumerCount { get; set; }
         public int DefaultMultiplexerCapacity { get; set; }
 
-        public MiddlewareBase<GetMessagesContext, IList<Amazon.SQS.Model.Message>> SqsMiddleware { get; private set; }
+        public ReceiveMiddleware SqsMiddleware { get; private set; }
             = new DelegateMiddleware<GetMessagesContext, IList<Amazon.SQS.Model.Message>>();
 
-        public MiddlewareBase<GetMessagesContext, IList<Amazon.SQS.Model.Message>> WithSqsPolicy(
-            Func<MiddlewareBase<GetMessagesContext, IList<Amazon.SQS.Model.Message>>,
-                MiddlewareBase<GetMessagesContext, IList<Amazon.SQS.Model.Message>>> creator)
+        public ReceiveMiddleware WithSqsPolicy(Func<ReceiveMiddleware, ReceiveMiddleware> creator)
         {
             SqsMiddleware = SqsMiddleware.WithAsync(creator);
             return SqsMiddleware;
         }
 
-        public MiddlewareBase<GetMessagesContext, IList<Amazon.SQS.Model.Message>> WithDefaultSqsPolicy(
-            ILoggerFactory loggerFactory)
+        public ReceiveMiddleware WithDefaultSqsPolicy(ILoggerFactory loggerFactory)
         {
             SqsMiddleware = SqsMiddleware.WithAsync(_ =>
                 new DefaultSqsMiddleware(loggerFactory.CreateLogger<DefaultSqsMiddleware>()));

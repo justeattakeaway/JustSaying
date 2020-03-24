@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.Channels.Configuration;
 
 namespace JustSaying.Messaging.Channels.ConsumerGroups
 {
@@ -9,9 +10,14 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
     {
         private readonly List<ISqsQueue> _sqsQueues;
 
-        public ConsumerGroupSettingsBuilder()
+        public ConsumerGroupSettingsBuilder(ConsumerConfig defaultConfig)
         {
             _sqsQueues = new List<ISqsQueue>();
+            _prefetch = defaultConfig.DefaultPrefetch;
+            _bufferSize = defaultConfig.DefaultBufferSize;
+            _consumerCount = defaultConfig.DefaultConsumerCount;
+            _multiplexerCapacity = defaultConfig.DefaultMultiplexerCapacity;
+
         }
 
         public ConsumerGroupSettingsBuilder AddQueue(ISqsQueue sqsQueue)
