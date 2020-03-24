@@ -103,7 +103,7 @@ namespace JustSaying
             if (!_subscriptionGroupSettings.TryGetValue(consumerGroup,
                 out SubscriptionGroupSettingsBuilder consumerGroupSettings))
             {
-                _subscriptionGroupSettings[consumerGroup] =
+                consumerGroupSettings = _subscriptionGroupSettings[consumerGroup] =
                     new SubscriptionGroupSettingsBuilder(Config.SubscriptionConfig);
             }
 
