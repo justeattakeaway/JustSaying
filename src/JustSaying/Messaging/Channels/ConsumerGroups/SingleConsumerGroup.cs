@@ -35,13 +35,13 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
                 _consumers.Count,
                 _receiveBuffers.Count);
 
-            IEnumerable<Task> bufferTasks = _receiveBuffers.Select(buffer => buffer.Run(stoppingToken));
-            Task multiplexerTask = _multiplexer.Run(stoppingToken);
-            IEnumerable<Task> consumerTasks = _consumers.Select(consumer => consumer.Run(stoppingToken));
+            var completionTasks = new List<Task>();
 
-            IEnumerable<Task> allTasks = bufferTasks.Concat(consumerTasks).Concat(new[] { multiplexerTask });
+            completionTasks.AddRange(_receiveBuffers.Select(buffer => buffer.Run(stoppingToken)));
+            completionTasks.Add(_multiplexer.Run(stoppingToken));
+            completionTasks.AddRange(_consumers.Select(consumer => consumer.Run(stoppingToken)));
 
-            return Task.WhenAll(allTasks);
+            return Task.WhenAll(completionTasks);
         }
     }
 }
