@@ -1,18 +1,16 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
-using JustSaying.UnitTests.AwsTools.MessageHandling.SqsNotificationListener.Support;
+using JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests.Support;
 using NSubstitute;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
 {
     public class WhenExactlyOnceIsAppliedToHandler : BaseSubscriptionBusTests
     {

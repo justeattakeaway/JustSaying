@@ -4,7 +4,7 @@ using JustSaying.Messaging.Channels.Configuration;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
 {
     public class WhenListeningWithMultipleGroups : BaseSubscriptionBusTests
     {

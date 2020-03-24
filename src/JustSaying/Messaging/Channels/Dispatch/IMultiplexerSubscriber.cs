@@ -8,6 +8,6 @@ namespace JustSaying.Messaging.Channels.Dispatch
     internal interface IMultiplexerSubscriber
     {
         Task Run(CancellationToken stoppingToken);
-        void ConsumeFrom(IAsyncEnumerable<IQueueMessageContext> messageSource);
+        void Subscribe(IAsyncEnumerable<IQueueMessageContext> messageSource);
     }
 }

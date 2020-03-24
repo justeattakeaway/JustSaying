@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 
-namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests.Support
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests.Support
 {
     [ExactlyOnce]
     public class ExactlyOnceSignallingHandler : IHandlerAsync<SimpleMessage>

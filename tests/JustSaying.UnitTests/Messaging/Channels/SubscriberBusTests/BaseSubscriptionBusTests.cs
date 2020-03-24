@@ -14,14 +14,14 @@ using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
-using JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests.Support;
+using JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests.Support;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
 {
     public abstract class BaseSubscriptionBusTests : IAsyncLifetime
     {

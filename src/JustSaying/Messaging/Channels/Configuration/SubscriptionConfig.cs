@@ -16,12 +16,12 @@ namespace JustSaying.Messaging.Channels.Configuration
             DefaultBufferSize = MessageConstants.MaxAmazonMessageCap;
             DefaultMultiplexerCapacity = 100;
             DefaultPrefetch = 10;
-            DefaultConsumerCount = Environment.ProcessorCount * MessageConstants.ParallelHandlerExecutionPerCore;
+            DefaultConcurrencyLimit = Environment.ProcessorCount * MessageConstants.ParallelHandlerExecutionPerCore;
         }
 
         public int DefaultPrefetch { get; set; }
         public int DefaultBufferSize { get; set; }
-        public int DefaultConsumerCount { get; set; }
+        public int DefaultConcurrencyLimit { get; set; }
         public int DefaultMultiplexerCapacity { get; set; }
 
         public ReceiveMiddleware SqsMiddleware { get; private set; }

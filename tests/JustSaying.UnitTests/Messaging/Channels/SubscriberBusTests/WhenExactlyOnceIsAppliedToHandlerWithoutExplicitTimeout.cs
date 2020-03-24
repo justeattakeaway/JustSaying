@@ -4,13 +4,13 @@ using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
-using JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests.Support;
+using JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests.Support;
 using NSubstitute;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
 {
     public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout : BaseSubscriptionBusTests
     {

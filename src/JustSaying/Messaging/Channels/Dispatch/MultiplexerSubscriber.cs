@@ -16,7 +16,7 @@ namespace JustSaying.Messaging.Channels.Dispatch
             _dispatcher = dispatcher;
         }
 
-        public void ConsumeFrom(IAsyncEnumerable<IQueueMessageContext> messageSource)
+        public void Subscribe(IAsyncEnumerable<IQueueMessageContext> messageSource)
         {
             _messageSource = messageSource;
         }

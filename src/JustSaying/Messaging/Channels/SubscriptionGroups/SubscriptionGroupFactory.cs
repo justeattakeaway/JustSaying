@@ -56,7 +56,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
             foreach (IMultiplexerSubscriber consumer in consumers)
             {
-                consumer.ConsumeFrom(multiplexer.GetMessagesAsync());
+                consumer.Subscribe(multiplexer.GetMessagesAsync());
             }
 
             var bus = new SubscriptionGroup(

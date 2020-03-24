@@ -25,7 +25,7 @@ namespace JustSaying
     public sealed class JustSayingBus : IAmJustSaying, IAmJustInterrogating, IMessagingBus
     {
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _publishersByRegionAndType;
-        private readonly Dictionary<string, SubscriptionGroupSettingsBuilder> _consumerGroupSettings;
+        private readonly Dictionary<string, SubscriptionGroupSettingsBuilder> _subscriptionGroupSettings;
 
         private string _previousActiveRegion;
 
@@ -86,7 +86,7 @@ namespace JustSaying
             SerializationRegister = serializationRegister;
             _publishers = new HashSet<IPublisher>();
 
-            _consumerGroupSettings = new Dictionary<string, SubscriptionGroupSettingsBuilder>();
+            _subscriptionGroupSettings = new Dictionary<string, SubscriptionGroupSettingsBuilder>();
 
             HandlerMap = new HandlerMap(Monitor, _loggerFactory);
         }
@@ -99,10 +99,10 @@ namespace JustSaying
             if (string.IsNullOrWhiteSpace(consumerGroup))
                 throw new ArgumentNullException(nameof(consumerGroup));
 
-            if (!_consumerGroupSettings.TryGetValue(consumerGroup, out SubscriptionGroupSettingsBuilder consumerGroupSettings))
+            if (!_subscriptionGroupSettings.TryGetValue(consumerGroup, out SubscriptionGroupSettingsBuilder consumerGroupSettings))
             {
                 consumerGroupSettings = new SubscriptionGroupSettingsBuilder(Config.SubscriptionConfig);
-                _consumerGroupSettings[consumerGroup] = consumerGroupSettings;
+                _subscriptionGroupSettings[consumerGroup] = consumerGroupSettings;
             }
 
             consumerGroupSettings.AddQueue(queue);
@@ -133,23 +133,23 @@ namespace JustSaying
             publishersByType[topicType] = messagePublisher;
         }
 
-        private Task _consumerCompletionTask;
-        private bool _consumerStarted;
+        private Task _subscriberCompletionTask;
+        private bool _subscriberStarted;
 
         public Task Start(CancellationToken stoppingToken)
         {
             if (stoppingToken.IsCancellationRequested) return Task.CompletedTask;
 
             // Double check lock to ensure single-start
-            if (_consumerStarted) return _consumerCompletionTask;
+            if (_subscriberStarted) return _subscriberCompletionTask;
             lock (_syncRoot)
             {
-                if (_consumerStarted) return _consumerCompletionTask;
+                if (_subscriberStarted) return _subscriberCompletionTask;
 
-                _consumerCompletionTask = RunImpl(stoppingToken);
+                _subscriberCompletionTask = RunImpl(stoppingToken);
 
-                _consumerStarted = true;
-                return _consumerCompletionTask;
+                _subscriberStarted = true;
+                return _subscriberCompletionTask;
             }
         }
 
@@ -175,7 +175,7 @@ namespace JustSaying
 
             SubscriptionGroup = new SubscriptionGroupCollection(
                 consumerGroupFactory,
-                _consumerGroupSettings,
+                _subscriptionGroupSettings,
                 _loggerFactory.CreateLogger<SubscriptionGroupCollection>());
 
             return SubscriptionGroup.Run(stoppingToken);

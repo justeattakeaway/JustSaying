@@ -36,7 +36,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
         }
 
         [Fact]
-        public async Task Consumer_Task_Completes()
+        public async Task Subscriber_Task_Completes()
         {
             await SubscriberTask;
         }

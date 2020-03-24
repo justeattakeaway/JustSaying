@@ -13,7 +13,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
     {
         private readonly ICollection<IMessageReceiveBuffer> _receiveBuffers;
         private readonly IMultiplexer _multiplexer;
-        private readonly ICollection<IMultiplexerSubscriber> _consumers;
+        private readonly ICollection<IMultiplexerSubscriber> _subscribers;
         private readonly ILogger<SubscriptionGroup> _logger;
 
         public SubscriptionGroup(
@@ -24,7 +24,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         {
             _receiveBuffers = receiveBuffers.ToList();
             _multiplexer = multiplexer;
-            _consumers = consumers.ToList();
+            _subscribers = consumers.ToList();
             _logger = logger;
         }
 
@@ -32,14 +32,14 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         {
             _logger.LogInformation(
                 "Starting up consumer bus with {ConsumerCount} consumers and {ReceiveBuffferCount} receive buffers",
-                _consumers.Count,
+                _subscribers.Count,
                 _receiveBuffers.Count);
 
             var completionTasks = new List<Task>();
 
             completionTasks.AddRange(_receiveBuffers.Select(buffer => buffer.Run(stoppingToken)));
             completionTasks.Add(_multiplexer.Run(stoppingToken));
-            completionTasks.AddRange(_consumers.Select(consumer => consumer.Run(stoppingToken)));
+            completionTasks.AddRange(_subscribers.Select(consumer => consumer.Run(stoppingToken)));
 
             return Task.WhenAll(completionTasks);
         }
