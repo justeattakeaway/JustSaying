@@ -86,7 +86,8 @@ namespace JustSaying
             SerializationRegister = serializationRegister;
             _publishers = new HashSet<IPublisher>();
 
-            _subscriptionGroupSettings = new Dictionary<string, SubscriptionGroupSettingsBuilder>();
+            _subscriptionGroupSettings =
+                new Dictionary<string, SubscriptionGroupSettingsBuilder>(StringComparer.Ordinal);
 
             HandlerMap = new HandlerMap(Monitor, _loggerFactory);
         }
@@ -99,10 +100,11 @@ namespace JustSaying
             if (string.IsNullOrWhiteSpace(consumerGroup))
                 throw new ArgumentNullException(nameof(consumerGroup));
 
-            if (!_subscriptionGroupSettings.TryGetValue(consumerGroup, out SubscriptionGroupSettingsBuilder consumerGroupSettings))
+            if (!_subscriptionGroupSettings.TryGetValue(consumerGroup,
+                out SubscriptionGroupSettingsBuilder consumerGroupSettings))
             {
-                consumerGroupSettings = new SubscriptionGroupSettingsBuilder(Config.SubscriptionConfig);
-                _subscriptionGroupSettings[consumerGroup] = consumerGroupSettings;
+                _subscriptionGroupSettings[consumerGroup] =
+                    new SubscriptionGroupSettingsBuilder(Config.SubscriptionConfig);
             }
 
             consumerGroupSettings.AddQueue(queue);
