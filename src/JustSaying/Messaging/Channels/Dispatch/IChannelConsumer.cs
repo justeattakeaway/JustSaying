@@ -8,6 +8,6 @@ namespace JustSaying.Messaging.Channels.Dispatch
     internal interface IChannelConsumer
     {
         Task Run(CancellationToken stoppingToken);
-        void DispatchFrom(IAsyncEnumerable<IQueueMessageContext> messageSource);
+        void ConsumeFrom(IAsyncEnumerable<IQueueMessageContext> messageSource);
     }
 }

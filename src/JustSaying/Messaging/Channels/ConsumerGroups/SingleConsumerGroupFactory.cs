@@ -36,12 +36,13 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
         {
             ConsumerGroupSettings settings = settingsBuilder.Build();
 
-            IReadOnlyList<ISqsQueue> groupQueues = settings.Queues;
+            IReadOnlyCollection<ISqsQueue> groupQueues = settings.Queues;
 
             IMultiplexer multiplexer = _multiplexerFactory.Create(settings.MultiplexerCapacity);
 
             var receiveBuffers =
-                groupQueues.Select(queue => _receiveBufferFactory.CreateBuffer(queue, settings))
+                groupQueues
+                    .Select(queue => _receiveBufferFactory.CreateBuffer(queue, settings))
                     .ToList();
 
             foreach (IMessageReceiveBuffer receiveBuffer in receiveBuffers)
@@ -55,7 +56,7 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
 
             foreach (IChannelConsumer consumer in consumers)
             {
-                consumer.DispatchFrom(multiplexer.GetMessagesAsync());
+                consumer.ConsumeFrom(multiplexer.GetMessagesAsync());
             }
 
             var bus = new SingleConsumerGroup(

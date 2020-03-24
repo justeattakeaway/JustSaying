@@ -17,7 +17,6 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
             _bufferSize = defaultConfig.DefaultBufferSize;
             _consumerCount = defaultConfig.DefaultConsumerCount;
             _multiplexerCapacity = defaultConfig.DefaultMultiplexerCapacity;
-
         }
 
         public ConsumerGroupSettingsBuilder AddQueue(ISqsQueue sqsQueue)

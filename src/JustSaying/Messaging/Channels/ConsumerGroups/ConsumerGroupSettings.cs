@@ -10,7 +10,7 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
             int bufferSize,
             int multiplexerCapacity,
             int prefetch,
-            IReadOnlyList<ISqsQueue> queues)
+            IReadOnlyCollection<ISqsQueue> queues)
         {
             ConsumerCount = consumerCount;
             BufferSize = bufferSize;
@@ -23,6 +23,6 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
         public int BufferSize { get; }
         public int MultiplexerCapacity { get; }
         public int Prefetch { get; }
-        public IReadOnlyList<ISqsQueue> Queues { get; }
+        public IReadOnlyCollection<ISqsQueue> Queues { get; }
     }
 }

@@ -48,7 +48,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             IMultiplexer multiplexer = CreateMultiplexer();
 
             multiplexer.ReadFrom(buffer.Reader);
-            channelConsumer.DispatchFrom(multiplexer.GetMessagesAsync());
+            channelConsumer.ConsumeFrom(multiplexer.GetMessagesAsync());
 
             // need to start the multiplexer before calling Start
 
@@ -78,8 +78,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             IMultiplexer multiplexer = CreateMultiplexer();
 
             multiplexer.ReadFrom(buffer.Reader);
-            consumer1.DispatchFrom(multiplexer.GetMessagesAsync());
-            consumer2.DispatchFrom(multiplexer.GetMessagesAsync());
+            consumer1.ConsumeFrom(multiplexer.GetMessagesAsync());
+            consumer2.ConsumeFrom(multiplexer.GetMessagesAsync());
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
@@ -114,7 +114,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             multiplexer.ReadFrom(buffer1.Reader);
             multiplexer.ReadFrom(buffer2.Reader);
 
-            channelConsumer.DispatchFrom(multiplexer.GetMessagesAsync());
+            channelConsumer.ConsumeFrom(multiplexer.GetMessagesAsync());
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
@@ -152,8 +152,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             multiplexer.ReadFrom(buffer1.Reader);
             multiplexer.ReadFrom(buffer2.Reader);
 
-            consumer1.DispatchFrom(multiplexer.GetMessagesAsync());
-            consumer2.DispatchFrom(multiplexer.GetMessagesAsync());
+            consumer1.ConsumeFrom(multiplexer.GetMessagesAsync());
+            consumer2.ConsumeFrom(multiplexer.GetMessagesAsync());
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
@@ -187,7 +187,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             IMultiplexer multiplexer = CreateMultiplexer();
 
             multiplexer.ReadFrom(buffer.Reader);
-            channelConsumer.DispatchFrom(multiplexer.GetMessagesAsync());
+            channelConsumer.ConsumeFrom(multiplexer.GetMessagesAsync());
 
             // need to start the multiplexer before calling Messages
 
