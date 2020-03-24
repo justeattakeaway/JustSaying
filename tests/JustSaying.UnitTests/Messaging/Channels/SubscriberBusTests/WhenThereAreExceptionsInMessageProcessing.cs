@@ -10,14 +10,14 @@ using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
 {
-    public class WhenThereAreNoMessagesToProcess : BaseConsumerBusTests
+    public class WhenThereAreExceptionsInMessageProcessing : BaseSubscriptionBusTests
     {
         private ISqsQueue _queue;
-        private int _callCount = 0;
+        private int _callCount;
 
-        public WhenThereAreNoMessagesToProcess(ITestOutputHelper testOutputHelper)
+        public WhenThereAreExceptionsInMessageProcessing(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
         {
         }
@@ -31,7 +31,11 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
             });
 
             Queues.Add(_queue);
-            Handler.Handle(Arg.Any<SimpleMessage>()).ReturnsForAnyArgs(false);
+            Handler.Handle(null).ReturnsForAnyArgs(true);
+
+            SerializationRegister
+                .DeserializeMessage(Arg.Any<string>())
+                .Returns(x => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing"));
         }
 
         protected override async Task WhenAsync()
@@ -45,9 +49,9 @@ namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
         }
 
         [Fact]
-        public void ListenLoopDoesNotDie()
+        public void TheListenerDoesNotDie()
         {
-            _callCount.ShouldBeGreaterThan(3);
+            _callCount.ShouldBeGreaterThanOrEqualTo(3);
         }
     }
 }

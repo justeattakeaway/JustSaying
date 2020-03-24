@@ -1,16 +1,14 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
-using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.TestingFramework;
 using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
 {
-    public class WhenMessageHandlingThrows : BaseConsumerBusTests
+    public class WhenMessageHandlingThrows : BaseSubscriptionBusTests
     {
         private bool _firstTime = true;
         private ISqsQueue _queue;

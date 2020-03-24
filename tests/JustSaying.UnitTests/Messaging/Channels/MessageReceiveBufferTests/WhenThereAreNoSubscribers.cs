@@ -8,11 +8,11 @@ using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
 {
-    public class WhenThereAreNoConsumers : BaseMessageReceiveBufferTests
+    public class WhenThereAreNoSubscribers : BaseMessageReceiveBufferTests
     {
         private int _callCount = 0;
 
-        public WhenThereAreNoConsumers(ITestOutputHelper testOutputHelper)
+        public WhenThereAreNoSubscribers(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
         {
         }

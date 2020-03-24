@@ -4,17 +4,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Messaging.Channels.ConsumerGroups
+namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
-    internal class CombinedConsumerGroup : IConsumerGroup
+    internal class SubscriptionGroupCollection : ISubscriptionGroup
     {
         private readonly ILogger _logger;
-        private readonly IList<IConsumerGroup> _buses;
+        private readonly IList<ISubscriptionGroup> _buses;
 
-        public CombinedConsumerGroup(
-            IConsumerGroupFactory groupFactory,
-            IDictionary<string, ConsumerGroupSettingsBuilder> consumerGroupSettings,
-            ILogger<CombinedConsumerGroup> logger)
+        public SubscriptionGroupCollection(
+            ISubscriptionGroupFactory groupFactory,
+            IDictionary<string, SubscriptionGroupSettingsBuilder> consumerGroupSettings,
+            ILogger<SubscriptionGroupCollection> logger)
         {
             _logger = logger;
 
@@ -47,7 +47,7 @@ namespace JustSaying.Messaging.Channels.ConsumerGroups
 
         private Task RunImpl(CancellationToken stoppingToken)
         {
-            IEnumerable<Task> completionTasks = _buses.Select(bus => bus.Run(stoppingToken));
+            IEnumerable<Task> completionTasks = _buses.Select(bus => bus.Run(stoppingToken)).ToList();
 
             _logger.LogInformation("Consumer bus successfully started");
 

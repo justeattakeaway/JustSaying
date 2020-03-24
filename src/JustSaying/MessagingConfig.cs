@@ -22,7 +22,7 @@ namespace JustSaying
             MessageSubjectProvider = new NonGenericMessageSubjectProvider();
             TopicNamingConvention = new DefaultNamingConventions();
             QueueNamingConvention = new DefaultNamingConventions();
-            ConsumerGroupConfig = new ConsumerGroupConfig();
+            SubscriptionConfig = new SubscriptionConfig();
         }
 
         public int PublishFailureReAttempts { get; set; }
@@ -34,7 +34,7 @@ namespace JustSaying
         public IMessageSubjectProvider MessageSubjectProvider { get; set; }
         public ITopicNamingConvention TopicNamingConvention { get; set; }
         public IQueueNamingConvention QueueNamingConvention { get; set; }
-        public ConsumerGroupConfig ConsumerGroupConfig { get; set; }
+        public SubscriptionConfig SubscriptionConfig { get; set; }
 
         public virtual void Validate()
         {

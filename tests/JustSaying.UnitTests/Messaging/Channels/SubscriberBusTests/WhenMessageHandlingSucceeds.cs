@@ -7,9 +7,9 @@ using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.ConsumerBusTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
 {
-    public class WhenMessageHandlingSucceeds : BaseConsumerBusTests
+    public class WhenMessageHandlingSucceeds : BaseSubscriptionBusTests
     {
         private ISqsQueue _queue;
         private string _messageBody = "Expected Message Body";
