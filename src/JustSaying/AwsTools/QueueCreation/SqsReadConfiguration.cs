@@ -23,7 +23,6 @@ namespace JustSaying.AwsTools.QueueCreation
         public string PublishEndpoint { get; set; }
 
         public int? MaxAllowedMessagesInFlight { get; set; }
-        public Action<Exception, Amazon.SQS.Model.Message> OnError { get; set; }
         public string TopicSourceAccount { get; set; }
         public IMessageBackoffStrategy MessageBackoffStrategy { get; set; }
         public string FilterPolicy { get; set; }

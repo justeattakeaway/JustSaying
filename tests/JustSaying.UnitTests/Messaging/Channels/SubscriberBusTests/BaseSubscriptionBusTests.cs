@@ -106,7 +106,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
             var dispatcher = new MessageDispatcher(
                 SerializationRegister,
                 Monitor,
-                null,
                 HandlerMap,
                 LoggerFactory,
                 messageBackoffStrategy,
