@@ -39,7 +39,7 @@ namespace JustSaying
             set { _monitor = value ?? new NullOpMessageMonitor(); }
         }
 
-        private ISubscriptionGroup SubscriptionGroup { get; set; }
+        private ISubscriptionGroupCollection SubscriptionGroup { get; set; }
         public IMessageSerializationRegister SerializationRegister { get; private set; }
 
         public IMessageLockAsync MessageLock
@@ -98,7 +98,7 @@ namespace JustSaying
                 out SubscriptionGroupSettingsBuilder consumerGroupSettings))
             {
                 consumerGroupSettings = _subscriptionGroupSettings[consumerGroup] =
-                    new SubscriptionGroupSettingsBuilder(Config.SubscriptionConfig);
+                    new SubscriptionGroupSettingsBuilder(consumerGroup, Config.SubscriptionConfig);
             }
 
             consumerGroupSettings.AddQueue(queue);

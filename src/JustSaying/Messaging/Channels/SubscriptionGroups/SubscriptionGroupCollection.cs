@@ -2,11 +2,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using JustSaying.Messaging.Channels.Interrogation;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
-    internal class SubscriptionGroupCollection : ISubscriptionGroup
+    internal class SubscriptionGroupCollection : ISubscriptionGroupCollection
     {
         private readonly ILogger _logger;
         private readonly IList<ISubscriptionGroup> _buses;
@@ -43,6 +44,13 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
                 }
             }
             return _completion;
+        }
+
+        public SubscriptionGroupsInterrogationResult Interrogate()
+        {
+            var interrogationResponses = _buses.Select(bus => bus.Interrogate());
+
+            return new SubscriptionGroupsInterrogationResult(interrogationResponses);
         }
 
         private Task RunImpl(CancellationToken stoppingToken)

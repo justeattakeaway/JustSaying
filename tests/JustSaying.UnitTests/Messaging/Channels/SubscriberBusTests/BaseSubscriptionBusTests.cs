@@ -39,7 +39,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
 
         protected IHandlerAsync<SimpleMessage> Handler;
 
-        protected ISubscriptionGroup SystemUnderTest { get; private set; }
+        protected ISubscriptionGroupCollection SystemUnderTest { get; private set; }
 
         protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
 
@@ -98,7 +98,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
             doneOk.ShouldBeTrue("Timeout occured before done signal");
         }
 
-        protected ISubscriptionGroup CreateSystemUnderTest()
+        protected ISubscriptionGroupCollection CreateSystemUnderTest()
         {
             var messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
             var messageContextAccessor = Substitute.For<IMessageContextAccessor>();
@@ -123,10 +123,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
                 consumerFactory,
                 LoggerFactory);
 
-            var settings = new Dictionary<string, SubscriptionGroupSettingsBuilder>
-            {
-                { "test", new SubscriptionGroupSettingsBuilder(config).AddQueues(Queues) },
-            };
+            var settings = SetupBusConfig(config);
 
             var bus = new SubscriptionGroupCollection(
                 consumerBusFactory,
@@ -140,7 +137,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
         {
             return new Dictionary<string, SubscriptionGroupSettingsBuilder>
             {
-                { "test", new SubscriptionGroupSettingsBuilder(config).AddQueues(Queues) },
+                { "test", new SubscriptionGroupSettingsBuilder("test", config).AddQueues(Queues) },
             };
         }
 

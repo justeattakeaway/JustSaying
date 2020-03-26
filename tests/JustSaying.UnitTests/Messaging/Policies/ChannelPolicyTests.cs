@@ -53,7 +53,7 @@ namespace JustSaying.UnitTests.Messaging.Policies
                     new ErrorHandlingMiddleware<GetMessagesContext, IList<Message>, InvalidOperationException>(next));
             var settings = new Dictionary<string, SubscriptionGroupSettingsBuilder>
             {
-                { "test", new SubscriptionGroupSettingsBuilder(config).AddQueues(queues) },
+                { "test", new SubscriptionGroupSettingsBuilder("test", config).AddQueues(queues) },
             };
 
             IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref dispatchedMessageCount));

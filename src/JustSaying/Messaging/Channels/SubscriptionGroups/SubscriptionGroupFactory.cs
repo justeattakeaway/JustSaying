@@ -60,6 +60,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             }
 
             var bus = new SubscriptionGroup(
+                settings,
                 receiveBuffers,
                 multiplexer,
                 consumers,

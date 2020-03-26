@@ -342,7 +342,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             return new MultiplexerSubscriber(dispatcher);
         }
 
-        private ISubscriptionGroup CreateSubscriptionGroup(
+        private ISubscriptionGroupCollection CreateSubscriptionGroup(
             IList<ISqsQueue> queues,
             IMessageDispatcher dispatcher)
         {
@@ -350,7 +350,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             var settings = new Dictionary<string, SubscriptionGroupSettingsBuilder>
             {
-                { "test",  new SubscriptionGroupSettingsBuilder(config).AddQueues(queues) },
+                { "test",  new SubscriptionGroupSettingsBuilder("test", config).AddQueues(queues) },
             };
 
             var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, MessageMonitor);

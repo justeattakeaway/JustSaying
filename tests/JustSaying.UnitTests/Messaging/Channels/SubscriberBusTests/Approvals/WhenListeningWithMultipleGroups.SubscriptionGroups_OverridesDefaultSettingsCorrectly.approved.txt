@@ -1,0 +1,36 @@
+{
+  "Groups": [
+    {
+      "Settings": {
+        "ConcurrencyLimit": 1,
+        "BufferSize": 20,
+        "MultiplexerCapacity": 30,
+        "Prefetch": 5,
+        "Name": "queueA",
+        "Queues": [
+          {
+            "QueueName": "",
+            "RegionSystemName": "",
+            "Uri": "http://foo.com"
+          }
+        ]
+      }
+    },
+    {
+      "Settings": {
+        "ConcurrencyLimit": 48,
+        "BufferSize": 10,
+        "MultiplexerCapacity": 100,
+        "Prefetch": 10,
+        "Name": "queueB",
+        "Queues": [
+          {
+            "QueueName": "",
+            "RegionSystemName": "",
+            "Uri": "http://foo.com"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -11,7 +11,7 @@ namespace JustSaying.Messaging.Channels.Configuration
 {
     public class SubscriptionConfig
     {
-        public SubscriptionConfig()
+        internal SubscriptionConfig()
         {
             DefaultBufferSize = MessageConstants.MaxAmazonMessageCap;
             DefaultMultiplexerCapacity = 100;

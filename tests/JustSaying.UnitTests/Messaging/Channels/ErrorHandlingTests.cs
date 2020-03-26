@@ -51,7 +51,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             config.WithDefaultSqsPolicy(LoggerFactory);
             var settings = new Dictionary<string, SubscriptionGroupSettingsBuilder>
             {
-                { "test", new SubscriptionGroupSettingsBuilder(config).AddQueues(queues) },
+                { "test", new SubscriptionGroupSettingsBuilder("test", config).AddQueues(queues) },
             };
 
             var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, MessageMonitor);
