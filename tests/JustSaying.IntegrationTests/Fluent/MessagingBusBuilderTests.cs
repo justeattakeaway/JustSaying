@@ -243,6 +243,10 @@ namespace JustSaying.IntegrationTests
             {
             }
 
+            public void HandleError(Exception ex, Amazon.SQS.Model.Message message)
+            {
+            }
+
             public void HandleThrottlingTime(TimeSpan duration)
             {
             }

@@ -20,7 +20,6 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
     {
         private readonly IMessageSerializationRegister _serializationRegister;
         private readonly IMessageMonitor _messagingMonitor;
-        private readonly Action<Exception, SQSMessage> _onError;
         private readonly HandlerMap _handlerMap;
         private readonly IMessageBackoffStrategy _messageBackoffStrategy;
         private readonly IMessageContextAccessor _messageContextAccessor;
@@ -30,7 +29,6 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         public MessageDispatcher(
             IMessageSerializationRegister serializationRegister,
             IMessageMonitor messagingMonitor,
-            Action<Exception, SQSMessage> onError,
             HandlerMap handlerMap,
             ILoggerFactory loggerFactory,
             IMessageBackoffStrategy messageBackoffStrategy,
@@ -38,7 +36,6 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         {
             _serializationRegister = serializationRegister;
             _messagingMonitor = messagingMonitor;
-            _onError = onError ?? DefaultErrorHandler;
             _handlerMap = handlerMap;
             _logger = loggerFactory.CreateLogger("JustSaying");
             _messageBackoffStrategy = messageBackoffStrategy;
@@ -65,7 +62,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                     messageContext.Message.Body);
 
                 await messageContext.DeleteMessageFromQueueAsync().ConfigureAwait(false);
-                _onError(ex, messageContext.Message);
+                _messagingMonitor.HandleError(ex, messageContext.Message);
 
                 return;
             }
@@ -79,7 +76,8 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                     messageContext.Message.MessageId,
                     messageContext.Message.Body);
 
-                _onError(ex, messageContext.Message);
+                _messagingMonitor.HandleError(ex, messageContext.Message);
+
                 return;
             }
 
@@ -115,7 +113,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                     _messagingMonitor.HandleException(typedMessage.GetType());
                 }
 
-                _onError(ex, messageContext.Message);
+                _messagingMonitor.HandleError(ex, messageContext.Message);
 
                 lastException = ex;
             }
@@ -183,7 +181,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                         visibilityTimeout,
                         messageContext.Message.ReceiptHandle);
 
-                    _onError(ex, messageContext.Message);
+                    _messagingMonitor.HandleError(ex, messageContext.Message);
                 }
             }
         }
@@ -194,11 +192,6 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
 
             return attributes.TryGetValue(MessageSystemAttributeName.ApproximateReceiveCount, out string rawApproxReceiveCount) &&
                    int.TryParse(rawApproxReceiveCount, out approxReceiveCount);
-        }
-
-        private static void DefaultErrorHandler(Exception exception, Amazon.SQS.Model.Message message)
-        {
-            // No-op
         }
     }
 }

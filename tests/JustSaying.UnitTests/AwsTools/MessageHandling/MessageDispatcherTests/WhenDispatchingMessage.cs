@@ -43,7 +43,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
         private readonly IMessageMonitor _messageMonitor = Substitute.For<IMessageMonitor>();
-        private readonly Action<Exception, SQSMessage> _onError = Substitute.For<Action<Exception, SQSMessage>>();
         private readonly HandlerMap _handlerMap = new HandlerMap(Substitute.For<IMessageMonitor>(), NullLoggerFactory.Instance);
         private readonly ILoggerFactory _loggerFactory = Substitute.For<ILoggerFactory>();
         private readonly ILogger _logger = Substitute.For<ILogger>();
@@ -97,8 +96,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
         {
             var dispatcher = new MessageDispatcher(
                 _serializationRegister,
-                _messageMonitor, _onError,
-                _handlerMap, _loggerFactory,
+                _messageMonitor,
+                _handlerMap,
+                _loggerFactory,
                 _messageBackoffStrategy,
                 new MessageContextAccessor());
 
