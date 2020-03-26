@@ -1,5 +1,4 @@
 using System;
-using Amazon.SQS.Model;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 
@@ -16,12 +15,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
         public void HandleException(Type messageType)
         {
-            _logger.LogInformation("HandleException {MessageType}.", messageType.FullName);
-        }
-
-        public void HandleError(Exception ex, Message message)
-        {
-            _logger.LogError(ex, "HandleError {ExceptionMessage}", ex.Message);
+            _logger.LogInformation($"HandleException {messageType}.");
         }
 
         public void HandleThrottlingTime(TimeSpan duration)

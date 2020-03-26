@@ -1,14 +1,11 @@
 using System;
 using System.Threading.Tasks;
-using Amazon.SQS.Model;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing
@@ -24,18 +21,22 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         public async Task Then_The_Message_Is_Handled()
         {
             // Arrange
-            var monitor = new TrackingMonitor();
+            bool handledException = false;
+
+            void ErrorHandler(Exception exception)
+            {
+                handledException = true;
+            }
 
             var handler = new ThrowingHandler();
 
             var services = GivenJustSaying()
-                .ConfigureJustSaying((builder) => builder.Publications((options) =>
-                    options.WithQueue<SimpleMessage>(UniqueName)))
+                .ConfigureJustSaying((builder) => builder.Publications((options) => options.WithQueue<SimpleMessage>(UniqueName)))
                 .ConfigureJustSaying(
                     (builder) => builder.Subscriptions(
                         (options) => options.ForQueue<SimpleMessage>(
-                            (queue) => queue.WithName(UniqueName)))
-                        .Services(c => c.WithMessageMonitoring(() => monitor)))
+                            (queue) => queue.WithName(UniqueName).WithReadConfiguration(
+                                (config) => config.WithErrorHandler(ErrorHandler)))))
                 .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
             var message = new SimpleMessage();
@@ -52,53 +53,8 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
                     // Assert
                     handler.MessageReceived.ShouldNotBeNull();
-                    monitor.ErrorCount.ShouldBe(1);
+                    handledException.ShouldBeTrue();
                 });
-        }
-    }
-
-    public class TrackingMonitor : IMessageMonitor
-    {
-        public void HandleException(Type messageType)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void HandleError(Exception ex, Message message)
-        {
-            ErrorCount++;
-        }
-
-        public int ErrorCount { get; private set; }
-
-        public void HandleTime(TimeSpan duration)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void IssuePublishingMessage()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void IncrementThrottlingStatistic()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void HandleThrottlingTime(TimeSpan duration)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void PublishMessageTime(TimeSpan duration)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ReceiveMessageTime(TimeSpan duration, string queueName, string region)
-        {
-            throw new NotImplementedException();
         }
     }
 }

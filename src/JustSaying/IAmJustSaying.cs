@@ -34,5 +34,7 @@ namespace JustSaying
         IMessageContextAccessor MessageContextAccessor { get; set; }
 
         void SetMessageBackoffStrategy(IMessageBackoffStrategy value);
+
+        void SetOnError(Action<Exception, SQSMessage> value);
     }
 }

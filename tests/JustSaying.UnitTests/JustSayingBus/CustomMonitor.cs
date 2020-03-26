@@ -1,5 +1,4 @@
 using System;
-using Amazon.SQS.Model;
 using JustSaying.Messaging.Monitoring;
 
 namespace JustSaying.UnitTests.JustSayingBus
@@ -7,7 +6,6 @@ namespace JustSaying.UnitTests.JustSayingBus
     public class CustomMonitor : IMessageMonitor, IMeasureHandlerExecutionTime
     {
         public void HandleException(Type messageType) { }
-        public void HandleError(Exception ex, Message message) { }
         public void HandleTime(TimeSpan duration) { }
         public void IssuePublishingMessage() { }
         public void IncrementThrottlingStatistic() { }

@@ -52,10 +52,16 @@ namespace JustSaying
         public HandlerMap HandlerMap { get; private set; }
 
         private IMessageBackoffStrategy _messageBackoffStrategy;
+        private Action<Exception, SQSMessage> _onError;
 
         public void SetMessageBackoffStrategy(IMessageBackoffStrategy value)
         {
             _messageBackoffStrategy = value;
+        }
+
+        public void SetOnError(Action<Exception, SQSMessage> value)
+        {
+            _onError = value;
         }
 
         private readonly ILogger _log;
@@ -157,6 +163,7 @@ namespace JustSaying
             var dispatcher = new MessageDispatcher(
                 SerializationRegister,
                 Monitor,
+                _onError,
                 HandlerMap,
                 _loggerFactory,
                 _messageBackoffStrategy,

@@ -1,13 +1,10 @@
 using System;
-using Amazon.SQS.Model;
 
 namespace JustSaying.Messaging.Monitoring
 {
     public class NullOpMessageMonitor : IMessageMonitor
     {
         public void HandleException(Type messageType) { }
-
-        public void HandleError(Exception ex, Message message)  { }
 
         public void HandleTime(TimeSpan duration) { }
 
