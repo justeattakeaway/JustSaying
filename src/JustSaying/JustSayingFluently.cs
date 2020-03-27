@@ -177,7 +177,6 @@ namespace JustSaying
         public void StartListening(CancellationToken cancellationToken = default)
         {
             Bus.SetMessageBackoffStrategy(_subscriptionConfig.MessageBackoffStrategy);
-            Bus.SetOnError(_subscriptionConfig.OnError);
             Bus.Start(cancellationToken);
             _log.LogInformation("Started listening for messages");
         }
