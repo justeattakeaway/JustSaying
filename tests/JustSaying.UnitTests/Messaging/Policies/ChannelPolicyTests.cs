@@ -5,11 +5,7 @@ using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
-using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Channels.Configuration;
-using JustSaying.Messaging.Channels.Dispatch;
-using JustSaying.Messaging.Channels.Multiplexer;
-using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.UnitTests.Messaging.Channels;
@@ -49,8 +45,8 @@ namespace JustSaying.UnitTests.Messaging.Policies
 
             var config = new SubscriptionConfig();
             config.WithSqsPolicy(
-                next =>
-                    new ErrorHandlingMiddleware<GetMessagesContext, IList<Message>, InvalidOperationException>(next));
+                next => new ErrorHandlingMiddleware<GetMessagesContext, IList<Message>, InvalidOperationException>(next));
+
             var settings = new Dictionary<string, SubscriptionGroupSettingsBuilder>
             {
                 { "test", new SubscriptionGroupSettingsBuilder("test", config).AddQueues(queues) },
@@ -58,21 +54,19 @@ namespace JustSaying.UnitTests.Messaging.Policies
 
             IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref dispatchedMessageCount));
 
-            var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, MessageMonitor);
-            var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
-            var consumerFactory = new MultiplexerSubscriberFactory(dispatcher);
-            var consumerBusFactory = new SubscriptionGroupFactory(multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
+            var groupFactory = new SubscriptionGroupFactory(
+                config,
+                dispatcher,
+                MessageMonitor,
+                LoggerFactory);
 
-            var bus = new SubscriptionGroupCollection(
-                consumerBusFactory,
-                settings,
-                LoggerFactory.CreateLogger<SubscriptionGroupCollection>());
+            SubscriptionGroupCollection collection = groupFactory.Create(settings);
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
 
             // Act and Assert
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => bus.Run(cts.Token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => collection.Run(cts.Token));
 
             queueCalledCount.ShouldBeGreaterThan(1);
             dispatchedMessageCount.ShouldBe(0);

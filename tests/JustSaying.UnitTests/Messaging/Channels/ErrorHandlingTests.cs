@@ -54,20 +54,18 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 { "test", new SubscriptionGroupSettingsBuilder("test", config).AddQueues(queues) },
             };
 
-            var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, MessageMonitor);
-            var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
-            var consumerFactory = new MultiplexerSubscriberFactory(dispatcher);
-            var consumerBusFactory = new SubscriptionGroupFactory(multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
+            var consumerBusFactory = new SubscriptionGroupFactory(
+                config,
+                dispatcher,
+                MessageMonitor,
+                LoggerFactory);
 
-            var bus = new SubscriptionGroupCollection(
-                consumerBusFactory,
-                settings,
-                LoggerFactory.CreateLogger<SubscriptionGroupCollection>());
+            SubscriptionGroupCollection collection = consumerBusFactory.Create(settings);
 
             var cts = new CancellationTokenSource();
 
             // Act
-            var runTask = bus.Run(cts.Token);
+            var runTask = collection.Run(cts.Token);
 
             cts.CancelAfter(TimeoutPeriod);
 

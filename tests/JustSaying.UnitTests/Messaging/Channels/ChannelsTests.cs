@@ -353,18 +353,13 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 { "test",  new SubscriptionGroupSettingsBuilder("test", config).AddQueues(queues) },
             };
 
-            var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, MessageMonitor);
-            var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
-            var consumerFactory = new MultiplexerSubscriberFactory(dispatcher);
             var consumerGroupFactory = new SubscriptionGroupFactory(
-                 multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
+                config,
+                dispatcher,
+                MessageMonitor,
+                LoggerFactory);
 
-            var bus = new SubscriptionGroupCollection(
-                consumerGroupFactory,
-                settings,
-                LoggerFactory.CreateLogger<SubscriptionGroupCollection>());
-
-            return bus;
+            return consumerGroupFactory.Create(settings);
         }
 
         private IMultiplexer CreateMultiplexer()

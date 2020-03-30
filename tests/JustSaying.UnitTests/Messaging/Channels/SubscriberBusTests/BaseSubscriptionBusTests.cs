@@ -114,23 +114,15 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
             var config = new SubscriptionConfig();
             config.WithDefaultSqsPolicy(LoggerFactory);
 
-            var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, Monitor);
-            var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
-            var consumerFactory = new MultiplexerSubscriberFactory(dispatcher);
-            var consumerBusFactory = new SubscriptionGroupFactory(
-                multiplexerFactory,
-                receiveBufferFactory,
-                consumerFactory,
+            var subscriptionGroupFactory = new SubscriptionGroupFactory(
+                config,
+                dispatcher,
+                Monitor,
                 LoggerFactory);
 
             var settings = SetupBusConfig(config);
 
-            var bus = new SubscriptionGroupCollection(
-                consumerBusFactory,
-                settings,
-                LoggerFactory.CreateLogger<SubscriptionGroupCollection>());
-
-            return bus;
+            return subscriptionGroupFactory.Create(settings);
         }
 
         protected virtual Dictionary<string, SubscriptionGroupSettingsBuilder> SetupBusConfig(SubscriptionConfig config)
