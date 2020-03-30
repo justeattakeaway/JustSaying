@@ -35,7 +35,7 @@ namespace JustSaying
             set { _monitor = value ?? new NullOpMessageMonitor(); }
         }
 
-        private ISubscriptionGroupCollection SubscriptionGroup { get; set; }
+        private ISubscriptionGroupCollection SubscriptionGroups { get; set; }
         public IMessageSerializationRegister SerializationRegister { get; private set; }
 
         public IMessageLockAsync MessageLock
@@ -164,9 +164,9 @@ namespace JustSaying
                 Monitor,
                 _loggerFactory);
 
-            SubscriptionGroup = subscriptionGroupFactory.Create(_subscriptionGroupSettings);
+            SubscriptionGroups = subscriptionGroupFactory.Create(_subscriptionGroupSettings);
 
-            return SubscriptionGroup.Run(stoppingToken);
+            return SubscriptionGroups.Run(stoppingToken);
         }
 
         public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
