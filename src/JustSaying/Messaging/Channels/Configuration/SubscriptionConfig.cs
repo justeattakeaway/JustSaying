@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware;
 using Microsoft.Extensions.Logging;

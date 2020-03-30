@@ -6,10 +6,6 @@ using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging;
-using JustSaying.Messaging.Channels.Configuration;
-using JustSaying.Messaging.Channels.Dispatch;
-using JustSaying.Messaging.Channels.Multiplexer;
-using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
@@ -162,19 +158,13 @@ namespace JustSaying
                 _messageBackoffStrategy,
                 MessageContextAccessor);
 
-            var receiveBufferFactory = new ReceiveBufferFactory(_loggerFactory, Config.SubscriptionConfig, Monitor);
-            var multiplexerFactory = new MultiplexerFactory(_loggerFactory);
-            var channelDispatcherFactory = new MultiplexerSubscriberFactory(dispatcher);
-            var consumerGroupFactory = new SubscriptionGroupFactory(
-                multiplexerFactory,
-                receiveBufferFactory,
-                channelDispatcherFactory,
+            var subscriptionGroupFactory = new SubscriptionGroupFactory(
+                Config.SubscriptionConfig,
+                dispatcher,
+                Monitor,
                 _loggerFactory);
 
-            SubscriptionGroup = new SubscriptionGroupCollection(
-                consumerGroupFactory,
-                _subscriptionGroupSettings,
-                _loggerFactory.CreateLogger<SubscriptionGroupCollection>());
+            SubscriptionGroup = subscriptionGroupFactory.Create(_subscriptionGroupSettings);
 
             return SubscriptionGroup.Run(stoppingToken);
         }

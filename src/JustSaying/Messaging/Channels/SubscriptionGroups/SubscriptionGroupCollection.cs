@@ -13,15 +13,11 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         private readonly IList<ISubscriptionGroup> _buses;
 
         public SubscriptionGroupCollection(
-            ISubscriptionGroupFactory groupFactory,
-            IDictionary<string, SubscriptionGroupSettingsBuilder> consumerGroupSettings,
+            IList<ISubscriptionGroup> buses,
             ILogger<SubscriptionGroupCollection> logger)
         {
+            _buses = buses;
             _logger = logger;
-
-            _buses = consumerGroupSettings
-                .Values
-                .Select(groupFactory.Create).ToList();
         }
 
         private Task _completion;

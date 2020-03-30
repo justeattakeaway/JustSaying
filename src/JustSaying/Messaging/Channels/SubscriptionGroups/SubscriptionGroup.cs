@@ -20,15 +20,15 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
         public SubscriptionGroup(
             SubscriptionGroupSettings settings,
-            IEnumerable<IMessageReceiveBuffer> receiveBuffers,
+            ICollection<IMessageReceiveBuffer> receiveBuffers,
             IMultiplexer multiplexer,
-            IEnumerable<IMultiplexerSubscriber> consumers,
+            ICollection<IMultiplexerSubscriber> subscribers,
             ILogger<SubscriptionGroup> logger)
         {
-            _receiveBuffers = receiveBuffers.ToList();
+            _receiveBuffers = receiveBuffers;
             _settings = settings;
             _multiplexer = multiplexer;
-            _subscribers = consumers.ToList();
+            _subscribers = subscribers;
             _logger = logger;
         }
 
