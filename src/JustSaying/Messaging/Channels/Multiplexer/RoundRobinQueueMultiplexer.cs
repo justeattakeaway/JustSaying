@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -154,6 +155,15 @@ namespace JustSaying.Messaging.Channels.Multiplexer
         public void Dispose()
         {
             _readersLock.Dispose();
+        }
+
+        public object Interrogate()
+        {
+            return new
+            {
+                ChannelCapacity = _channelCapacity,
+                ReaderCount = _readers.Count,
+            };
         }
     }
 }

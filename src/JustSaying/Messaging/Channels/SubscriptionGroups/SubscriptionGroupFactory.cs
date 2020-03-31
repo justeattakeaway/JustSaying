@@ -75,6 +75,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             foreach (ISqsQueue queue in subscriptionGroupSettings.Queues)
             {
                 var buffer = new MessageReceiveBuffer(
+                    subscriptionGroupSettings.Prefetch,
                     subscriptionGroupSettings.BufferSize,
                     queue,
                     _subscriptionConfig.SqsMiddleware,

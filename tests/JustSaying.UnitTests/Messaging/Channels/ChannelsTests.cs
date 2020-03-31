@@ -331,6 +331,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             return new MessageReceiveBuffer(
                 10,
+                10,
                 sqsQueue,
                 new DelegateMiddleware<GetMessagesContext, IList<Message>>(),
                 Substitute.For<IMessageMonitor>(),

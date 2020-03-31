@@ -39,14 +39,17 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
                     }
                 }
             }
+
             return _completion;
         }
 
-        public SubscriptionGroupsInterrogationResult Interrogate()
+        public object Interrogate()
         {
-            var interrogationResponses = _buses.Select(bus => bus.Interrogate());
-
-            return new SubscriptionGroupsInterrogationResult(interrogationResponses);
+            IEnumerable<object> interrogationResponses = _buses.Select(bus => bus.Interrogate());
+            return new
+            {
+                SubscriptionGroups = interrogationResponses,
+            };
         }
 
         private Task RunImpl(CancellationToken stoppingToken)

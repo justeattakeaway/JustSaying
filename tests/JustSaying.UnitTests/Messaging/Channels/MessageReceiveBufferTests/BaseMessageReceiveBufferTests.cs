@@ -81,6 +81,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
         {
             return new MessageReceiveBuffer(
                 10,
+                10,
                 Queue,
                 SqsMiddleware,
                 Monitor,

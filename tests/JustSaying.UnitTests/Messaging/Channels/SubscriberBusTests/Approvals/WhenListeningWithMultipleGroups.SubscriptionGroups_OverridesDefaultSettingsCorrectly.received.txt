@@ -1,6 +1,8 @@
 {
   "SubscriptionGroups": [
     {
+      "Name": "queueA",
+      "ConcurrencyLimit": 1,
       "Settings": {
         "ConcurrencyLimit": 1,
         "BufferSize": 20,
@@ -30,6 +32,8 @@
       ]
     },
     {
+      "Name": "queueB",
+      "ConcurrencyLimit": 48,
       "Settings": {
         "ConcurrencyLimit": 48,
         "BufferSize": 10,

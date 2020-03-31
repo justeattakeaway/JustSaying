@@ -48,9 +48,16 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             return Task.WhenAll(completionTasks);
         }
 
-        public SubscriptionGroupInterrogationResult Interrogate()
+        public object Interrogate()
         {
-            return new SubscriptionGroupInterrogationResult(_settings);
+            return new
+            {
+                _settings.Name,
+                ConcurrencyLimit = _subscribers.Count,
+                Settings = _settings,
+                Multiplexer = _multiplexer.Interrogate(),
+                ReceiveBuffers = _receiveBuffers.Select(rb => rb.Interrogate()),
+            };
         }
     }
 }

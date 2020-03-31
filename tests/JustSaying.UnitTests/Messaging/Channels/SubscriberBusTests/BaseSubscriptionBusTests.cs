@@ -148,6 +148,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
             queue.GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
                 .Returns(_ => getMessages());
             queue.Uri.Returns(new Uri("http://foo.com"));
+            queue.QueueName.Returns($"TestQueue");
 
             return queue;
         }
