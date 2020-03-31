@@ -6,7 +6,6 @@ using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels;
-using JustSaying.Messaging.Channels.Configuration;
 using JustSaying.Messaging.Channels.Dispatch;
 using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.Messaging.Channels.Receive;
@@ -51,7 +50,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             config.WithDefaultSqsPolicy(LoggerFactory);
             var settings = new Dictionary<string, SubscriptionGroupSettingsBuilder>
             {
-                { "test", new SubscriptionGroupSettingsBuilder("test", config).AddQueues(queues) },
+                { "test", new SubscriptionGroupSettingsBuilder("test").WithDefaultsFrom(config).AddQueues(queues) },
             };
 
             var consumerBusFactory = new SubscriptionGroupFactory(

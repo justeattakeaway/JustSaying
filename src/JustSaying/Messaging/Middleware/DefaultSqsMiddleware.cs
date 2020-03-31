@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.Channels;
-using JustSaying.Messaging.Channels.Configuration;
+using JustSaying.Messaging.Channels.Context;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Middleware

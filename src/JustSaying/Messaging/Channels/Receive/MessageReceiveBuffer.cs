@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.Channels.Configuration;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware;

@@ -316,15 +316,13 @@ namespace JustSaying
                     typeof(T),
                     _subscriptionConfig.QueueName);
             }
-
-
             return this;
         }
 
-        private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue)
+        private void CreateSubscriptionListener<T>(string region, string subscriptionGroup, SqsQueueBase queue)
             where T : Message
         {
-            Bus.AddQueue(region, typeof(T).FullName, queue);
+            Bus.AddQueue(region, queue);
         }
 
         private void ConfigureSqsSubscriptionViaTopic()

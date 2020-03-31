@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels;
-using JustSaying.Messaging.Channels.Configuration;
+using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;

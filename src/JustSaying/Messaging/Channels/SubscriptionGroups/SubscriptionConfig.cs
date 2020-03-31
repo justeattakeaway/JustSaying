@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware;
 using Microsoft.Extensions.Logging;
+using ReceiveMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Channels.Context.GetMessagesContext, System.Collections.Generic.IList<Amazon.SQS.Model.Message>>;
 
-using ReceiveMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Channels.Configuration.GetMessagesContext, System.Collections.Generic.IList<Amazon.SQS.Model.Message>>;
-
-namespace JustSaying.Messaging.Channels.Configuration
+namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
     public class SubscriptionConfig
     {

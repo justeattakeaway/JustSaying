@@ -82,19 +82,20 @@ namespace JustSaying
             HandlerMap = new HandlerMap(Monitor, _loggerFactory);
         }
 
-        public void AddQueue(string region, string consumerGroup, ISqsQueue queue)
+        public void AddQueue(string region, string subscriptionGroup, ISqsQueue queue)
         {
             if (string.IsNullOrWhiteSpace(region))
                 throw new ArgumentNullException(nameof(region));
 
-            if (string.IsNullOrWhiteSpace(consumerGroup))
-                throw new ArgumentNullException(nameof(consumerGroup));
+            if (string.IsNullOrWhiteSpace(subscriptionGroup))
+                throw new ArgumentNullException(nameof(subscriptionGroup));
 
-            if (!_subscriptionGroupSettings.TryGetValue(consumerGroup,
+            if (!_subscriptionGroupSettings.TryGetValue(subscriptionGroup,
                 out SubscriptionGroupSettingsBuilder consumerGroupSettings))
             {
-                consumerGroupSettings = _subscriptionGroupSettings[consumerGroup] =
-                    new SubscriptionGroupSettingsBuilder(consumerGroup, Config.SubscriptionConfig);
+
+                consumerGroupSettings = _subscriptionGroupSettings[subscriptionGroup] =
+                    new SubscriptionGroupSettingsBuilder(Config.SubscriptionConfig);
             }
 
             consumerGroupSettings.AddQueue(queue);

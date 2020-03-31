@@ -1,6 +1,6 @@
+using System;
 using System.Collections.Generic;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.Channels.Configuration;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
@@ -8,29 +8,25 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
     {
         private readonly List<ISqsQueue> _sqsQueues;
 
-        private int _bufferSize;
-        private int _concurrencyLimit;
-        private int _multiplexerCapacity;
-        private int _prefetch;
-        private readonly string _name;
+        private int? _bufferSize;
+        private int? _concurrencyLimit;
+        private int? _multiplexerCapacity;
+        private int? _prefetch;
+        private SubscriptionConfig _defaults;
 
-        internal SubscriptionGroupSettingsBuilder(string name, SubscriptionConfig defaultConfig)
+        internal SubscriptionGroupSettingsBuilder(string name)
         {
             _name = name;
             _sqsQueues = new List<ISqsQueue>();
-            _prefetch = defaultConfig.DefaultPrefetch;
-            _bufferSize = defaultConfig.DefaultBufferSize;
-            _concurrencyLimit = defaultConfig.DefaultConcurrencyLimit;
-            _multiplexerCapacity = defaultConfig.DefaultMultiplexerCapacity;
         }
 
-        public SubscriptionGroupSettingsBuilder AddQueue(ISqsQueue sqsQueue)
+        internal SubscriptionGroupSettingsBuilder AddQueue(ISqsQueue sqsQueue)
         {
             _sqsQueues.Add(sqsQueue);
             return this;
         }
 
-        public SubscriptionGroupSettingsBuilder AddQueues(IEnumerable<ISqsQueue> sqsQueues)
+        internal SubscriptionGroupSettingsBuilder AddQueues(IEnumerable<ISqsQueue> sqsQueues)
         {
             _sqsQueues.AddRange(sqsQueues);
             return this;
@@ -60,14 +56,22 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             return this;
         }
 
+        public SubscriptionGroupSettingsBuilder WithDefaultsFrom(SubscriptionConfig defaults)
+        {
+            _defaults = defaults;
+            return this;
+        }
+
         internal SubscriptionGroupSettings Build()
         {
+            if(_defaults == null) throw new InvalidOperationException("Defaults must be set before building settings");
+
             return new SubscriptionGroupSettings(
                 _name,
-                _concurrencyLimit,
-                _bufferSize,
-                _multiplexerCapacity,
-                _prefetch,
+                _concurrencyLimit ?? _defaults.DefaultConcurrencyLimit,
+                _bufferSize ?? _defaults.DefaultBufferSize,
+                _multiplexerCapacity ?? _defaults.DefaultMultiplexerCapacity,
+                _prefetch ?? _defaults.DefaultPrefetch,
                 _sqsQueues);
         }
     }

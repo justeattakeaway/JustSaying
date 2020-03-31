@@ -49,7 +49,7 @@ namespace JustSaying.UnitTests.Messaging.Policies
 
             var settings = new Dictionary<string, SubscriptionGroupSettingsBuilder>
             {
-                { "test", new SubscriptionGroupSettingsBuilder("test", config).AddQueues(queues) },
+                { "test", new SubscriptionGroupSettingsBuilder("test").WithDefaultsFrom(config).AddQueues(queues) },
             };
 
             IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref dispatchedMessageCount));
