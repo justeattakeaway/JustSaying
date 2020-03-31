@@ -10,13 +10,13 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
     internal class SubscriptionGroupCollection : ISubscriptionGroupCollection
     {
         private readonly ILogger _logger;
-        private readonly IList<ISubscriptionGroup> _buses;
+        private readonly IList<ISubscriptionGroup> _subscriptionGroups;
 
         public SubscriptionGroupCollection(
-            IList<ISubscriptionGroup> buses,
+            IList<ISubscriptionGroup> subscriptionGroups,
             ILogger<SubscriptionGroupCollection> logger)
         {
-            _buses = buses;
+            _subscriptionGroups = subscriptionGroups;
             _logger = logger;
         }
 
@@ -45,7 +45,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
         public object Interrogate()
         {
-            IEnumerable<object> interrogationResponses = _buses.Select(bus => bus.Interrogate());
+            IEnumerable<object> interrogationResponses = _subscriptionGroups.Select(bus => bus.Interrogate());
             return new
             {
                 SubscriptionGroups = interrogationResponses,
@@ -54,7 +54,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
         private Task RunImpl(CancellationToken stoppingToken)
         {
-            IEnumerable<Task> completionTasks = _buses.Select(bus => bus.Run(stoppingToken)).ToList();
+            IEnumerable<Task> completionTasks = _subscriptionGroups.Select(bus => bus.Run(stoppingToken)).ToList();
 
             _logger.LogInformation("Consumer bus successfully started");
 
