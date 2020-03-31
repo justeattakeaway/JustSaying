@@ -6,7 +6,7 @@ using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels;
-using JustSaying.Messaging.Channels.Configuration;
+using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.Channels.Dispatch;
 using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.Messaging.Channels.Receive;
@@ -331,6 +331,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             return new MessageReceiveBuffer(
                 10,
+                10,
                 sqsQueue,
                 new DelegateMiddleware<GetMessagesContext, IList<Message>>(),
                 Substitute.For<IMessageMonitor>(),
@@ -342,7 +343,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             return new MultiplexerSubscriber(dispatcher);
         }
 
-        private ISubscriptionGroup CreateSubscriptionGroup(
+        private ISubscriptionGroupCollection CreateSubscriptionGroup(
             IList<ISqsQueue> queues,
             IMessageDispatcher dispatcher)
         {
@@ -350,21 +351,16 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             var settings = new Dictionary<string, SubscriptionGroupSettingsBuilder>
             {
-                { "test",  new SubscriptionGroupSettingsBuilder(config).AddQueues(queues) },
+                { "test",  new SubscriptionGroupSettingsBuilder("test").WithDefaultsFrom(config).AddQueues(queues) },
             };
 
-            var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, MessageMonitor);
-            var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
-            var consumerFactory = new MultiplexerSubscriberFactory(dispatcher);
             var consumerGroupFactory = new SubscriptionGroupFactory(
-                 multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
+                config,
+                dispatcher,
+                MessageMonitor,
+                LoggerFactory);
 
-            var bus = new SubscriptionGroupCollection(
-                consumerGroupFactory,
-                settings,
-                LoggerFactory.CreateLogger<SubscriptionGroupCollection>());
-
-            return bus;
+            return consumerGroupFactory.Create(settings);
         }
 
         private IMultiplexer CreateMultiplexer()

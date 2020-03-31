@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.Channels.Configuration;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware;
@@ -18,30 +17,35 @@ namespace JustSaying.Messaging.Channels.Receive
     internal class MessageReceiveBuffer : IMessageReceiveBuffer
     {
         private readonly Channel<IQueueMessageContext> _channel;
-        private readonly int _bufferLength;
+        private readonly int _prefetch;
+        private readonly int _bufferSize;
         private readonly ISqsQueue _sqsQueue;
         private readonly MiddlewareBase<GetMessagesContext, IList<Message>> _sqsMiddleware;
         private readonly IMessageMonitor _monitor;
         private readonly ILogger _logger;
 
         private readonly List<string> _requestMessageAttributeNames = new List<string>();
+        private string _backoffStrategyName;
 
         public ChannelReader<IQueueMessageContext> Reader => _channel.Reader;
 
         public MessageReceiveBuffer(
-            int bufferLength,
+            int prefetch,
+            int bufferSize,
             ISqsQueue sqsQueue,
             MiddlewareBase<GetMessagesContext, IList<Message>> sqsMiddleware,
             IMessageMonitor monitor,
             ILogger<IMessageReceiveBuffer> logger,
             IMessageBackoffStrategy messageBackoffStrategy = null)
         {
-            _channel = Channel.CreateBounded<IQueueMessageContext>(bufferLength);
-            _bufferLength = bufferLength;
+            _channel = Channel.CreateBounded<IQueueMessageContext>(bufferSize);
+            _prefetch = prefetch;
+            _bufferSize = bufferSize;
             _sqsQueue = sqsQueue ?? throw new ArgumentNullException(nameof(sqsQueue));
             _sqsMiddleware = sqsMiddleware ?? throw new ArgumentNullException(nameof(sqsMiddleware));
             _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _backoffStrategyName = messageBackoffStrategy?.GetType()?.Name;
 
             if (messageBackoffStrategy != null)
             {
@@ -74,7 +78,7 @@ namespace JustSaying.Messaging.Channels.Receive
                     IList<Message> messages;
                     using (_monitor.MeasureReceive(_sqsQueue.QueueName, _sqsQueue.RegionSystemName))
                     {
-                        messages = await GetMessagesAsync(_bufferLength, stoppingToken).ConfigureAwait(false);
+                        messages = await GetMessagesAsync(_bufferSize, stoppingToken).ConfigureAwait(false);
 
                         if (messages == null) continue;
                     }
@@ -164,6 +168,18 @@ namespace JustSaying.Messaging.Channels.Receive
             }
 
             return false;
+        }
+
+        public object Interrogate()
+        {
+            return new
+            {
+                BufferSize = _bufferSize,
+                QueueName = _sqsQueue.QueueName,
+                Region = _sqsQueue.RegionSystemName,
+                Prefetch = _prefetch,
+                BackoffStrategyName = _backoffStrategyName,
+            };
         }
     }
 }

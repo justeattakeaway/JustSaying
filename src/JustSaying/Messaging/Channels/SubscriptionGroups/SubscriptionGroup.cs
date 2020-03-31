@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.Channels.Dispatch;
+using JustSaying.Messaging.Channels.Interrogation;
 using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.Messaging.Channels.Receive;
 using Microsoft.Extensions.Logging;
@@ -12,19 +13,22 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
     internal class SubscriptionGroup : ISubscriptionGroup
     {
         private readonly ICollection<IMessageReceiveBuffer> _receiveBuffers;
+        private readonly SubscriptionGroupSettings _settings;
         private readonly IMultiplexer _multiplexer;
         private readonly ICollection<IMultiplexerSubscriber> _subscribers;
         private readonly ILogger<SubscriptionGroup> _logger;
 
         public SubscriptionGroup(
-            IEnumerable<IMessageReceiveBuffer> receiveBuffers,
+            SubscriptionGroupSettings settings,
+            ICollection<IMessageReceiveBuffer> receiveBuffers,
             IMultiplexer multiplexer,
-            IEnumerable<IMultiplexerSubscriber> consumers,
+            ICollection<IMultiplexerSubscriber> subscribers,
             ILogger<SubscriptionGroup> logger)
         {
-            _receiveBuffers = receiveBuffers.ToList();
+            _receiveBuffers = receiveBuffers;
+            _settings = settings;
             _multiplexer = multiplexer;
-            _subscribers = consumers.ToList();
+            _subscribers = subscribers;
             _logger = logger;
         }
 
@@ -42,6 +46,18 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             completionTasks.AddRange(_subscribers.Select(consumer => consumer.Run(stoppingToken)));
 
             return Task.WhenAll(completionTasks);
+        }
+
+        public object Interrogate()
+        {
+            return new
+            {
+                _settings.Name,
+                ConcurrencyLimit = _subscribers.Count,
+                Settings = _settings,
+                Multiplexer = _multiplexer.Interrogate(),
+                ReceiveBuffers = _receiveBuffers.Select(rb => rb.Interrogate()),
+            };
         }
     }
 }

@@ -6,7 +6,6 @@ using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels;
-using JustSaying.Messaging.Channels.Configuration;
 using JustSaying.Messaging.Channels.Dispatch;
 using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.Messaging.Channels.Receive;
@@ -51,23 +50,21 @@ namespace JustSaying.UnitTests.Messaging.Channels
             config.WithDefaultSqsPolicy(LoggerFactory);
             var settings = new Dictionary<string, SubscriptionGroupSettingsBuilder>
             {
-                { "test", new SubscriptionGroupSettingsBuilder(config).AddQueues(queues) },
+                { "test", new SubscriptionGroupSettingsBuilder("test").WithDefaultsFrom(config).AddQueues(queues) },
             };
 
-            var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, MessageMonitor);
-            var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
-            var consumerFactory = new MultiplexerSubscriberFactory(dispatcher);
-            var consumerBusFactory = new SubscriptionGroupFactory(multiplexerFactory, receiveBufferFactory, consumerFactory, LoggerFactory);
+            var consumerBusFactory = new SubscriptionGroupFactory(
+                config,
+                dispatcher,
+                MessageMonitor,
+                LoggerFactory);
 
-            var bus = new SubscriptionGroupCollection(
-                consumerBusFactory,
-                settings,
-                LoggerFactory.CreateLogger<SubscriptionGroupCollection>());
+            SubscriptionGroupCollection collection = consumerBusFactory.Create(settings);
 
             var cts = new CancellationTokenSource();
 
             // Act
-            var runTask = bus.Run(cts.Token);
+            var runTask = collection.Run(cts.Token);
 
             cts.CancelAfter(TimeoutPeriod);
 

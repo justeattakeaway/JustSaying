@@ -6,10 +6,6 @@ using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging;
-using JustSaying.Messaging.Channels.Configuration;
-using JustSaying.Messaging.Channels.Dispatch;
-using JustSaying.Messaging.Channels.Multiplexer;
-using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
@@ -39,7 +35,7 @@ namespace JustSaying
             set { _monitor = value ?? new NullOpMessageMonitor(); }
         }
 
-        private ISubscriptionGroup SubscriptionGroup { get; set; }
+        private ISubscriptionGroupCollection SubscriptionGroups { get; set; }
         public IMessageSerializationRegister SerializationRegister { get; private set; }
 
         public IMessageLockAsync MessageLock
@@ -86,19 +82,19 @@ namespace JustSaying
             HandlerMap = new HandlerMap(Monitor, _loggerFactory);
         }
 
-        public void AddQueue(string region, string consumerGroup, ISqsQueue queue)
+        public void AddQueue(string region, string subscriptionGroup, ISqsQueue queue)
         {
             if (string.IsNullOrWhiteSpace(region))
                 throw new ArgumentNullException(nameof(region));
 
-            if (string.IsNullOrWhiteSpace(consumerGroup))
-                throw new ArgumentNullException(nameof(consumerGroup));
+            if (string.IsNullOrWhiteSpace(subscriptionGroup))
+                throw new ArgumentNullException(nameof(subscriptionGroup));
 
-            if (!_subscriptionGroupSettings.TryGetValue(consumerGroup,
+            if (!_subscriptionGroupSettings.TryGetValue(subscriptionGroup,
                 out SubscriptionGroupSettingsBuilder consumerGroupSettings))
             {
-                consumerGroupSettings = _subscriptionGroupSettings[consumerGroup] =
-                    new SubscriptionGroupSettingsBuilder(Config.SubscriptionConfig);
+                consumerGroupSettings = _subscriptionGroupSettings[subscriptionGroup] =
+                    new SubscriptionGroupSettingsBuilder(subscriptionGroup).WithDefaultsFrom(Config.SubscriptionConfig);
             }
 
             consumerGroupSettings.AddQueue(queue);
@@ -162,21 +158,15 @@ namespace JustSaying
                 _messageBackoffStrategy,
                 MessageContextAccessor);
 
-            var receiveBufferFactory = new ReceiveBufferFactory(_loggerFactory, Config.SubscriptionConfig, Monitor);
-            var multiplexerFactory = new MultiplexerFactory(_loggerFactory);
-            var channelDispatcherFactory = new MultiplexerSubscriberFactory(dispatcher);
-            var consumerGroupFactory = new SubscriptionGroupFactory(
-                multiplexerFactory,
-                receiveBufferFactory,
-                channelDispatcherFactory,
+            var subscriptionGroupFactory = new SubscriptionGroupFactory(
+                Config.SubscriptionConfig,
+                dispatcher,
+                Monitor,
                 _loggerFactory);
 
-            SubscriptionGroup = new SubscriptionGroupCollection(
-                consumerGroupFactory,
-                _subscriptionGroupSettings,
-                _loggerFactory.CreateLogger<SubscriptionGroupCollection>());
+            SubscriptionGroups = subscriptionGroupFactory.Create(_subscriptionGroupSettings);
 
-            return SubscriptionGroup.Run(stoppingToken);
+            return SubscriptionGroups.Run(stoppingToken);
         }
 
         public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)

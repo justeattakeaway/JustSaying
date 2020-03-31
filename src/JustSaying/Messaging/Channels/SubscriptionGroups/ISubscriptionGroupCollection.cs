@@ -4,7 +4,7 @@ using JustSaying.Messaging.Channels.Interrogation;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
-    public interface ISubscriptionGroup : IInterrogable
+    public interface ISubscriptionGroupCollection : IInterrogable
     {
         Task Run(CancellationToken stoppingToken);
     }

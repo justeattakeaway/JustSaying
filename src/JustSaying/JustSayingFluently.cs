@@ -289,7 +289,7 @@ namespace JustSaying
                     _subscriptionConfig,
                     Bus.Config.MessageSubjectProvider).GetAwaiter().GetResult();
 
-                CreateSubscriptionListener<T>(region, queue);
+                CreateSubscriptionListener<T>(region, _subscriptionConfig.SubscriptionGroup, queue);
 
                 _log.LogInformation(
                     "Created SQS topic subscription on topic '{TopicName}' and queue '{QueueName}'.",
@@ -309,22 +309,20 @@ namespace JustSaying
                 // TODO Make this async and remove GetAwaiter().GetResult() call
                 var queue = _amazonQueueCreator.EnsureQueueExistsAsync(region, _subscriptionConfig).GetAwaiter().GetResult();
 
-                CreateSubscriptionListener<T>(region, queue);
+                CreateSubscriptionListener<T>(region, _subscriptionConfig.SubscriptionGroup, queue);
 
                 _log.LogInformation(
                     "Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",
                     typeof(T),
                     _subscriptionConfig.QueueName);
             }
-
-
             return this;
         }
 
-        private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue)
+        private void CreateSubscriptionListener<T>(string region, string subscriptionGroup, SqsQueueBase queue)
             where T : Message
         {
-            Bus.AddQueue(region, typeof(T).FullName, queue);
+            Bus.AddQueue(region, subscriptionGroup, queue);
         }
 
         private void ConfigureSqsSubscriptionViaTopic()

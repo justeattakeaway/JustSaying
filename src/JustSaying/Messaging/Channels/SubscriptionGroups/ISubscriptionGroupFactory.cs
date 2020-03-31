@@ -1,7 +1,10 @@
+using System.Collections.Generic;
+
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
     internal interface ISubscriptionGroupFactory
     {
-        ISubscriptionGroup Create(SubscriptionGroupSettingsBuilder settingsBuilder);
+        SubscriptionGroupCollection Create(
+            IDictionary<string, SubscriptionGroupSettingsBuilder> consumerGroupSettings);
     }
 }

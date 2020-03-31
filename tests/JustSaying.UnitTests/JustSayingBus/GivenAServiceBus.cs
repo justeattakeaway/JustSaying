@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using JustSaying.Messaging.Channels;
-using JustSaying.Messaging.Channels.Configuration;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 using NSubstitute;

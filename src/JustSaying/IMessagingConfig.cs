@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using JustSaying.Messaging.Channels.Configuration;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Naming;
 

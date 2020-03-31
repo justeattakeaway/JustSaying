@@ -1,6 +1,7 @@
 using System;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 
 namespace JustSaying.Fluent
 {
@@ -22,6 +23,8 @@ namespace JustSaying.Fluent
         /// </summary>
         private string TopicSourceAccountId { get; set; }
 
+        private string SubscriptionGroup { get; set; }
+
         /// <summary>
         /// Configures the maximum number of messages that can be inflight at any time.
         /// </summary>
@@ -32,6 +35,13 @@ namespace JustSaying.Fluent
         public SqsReadConfigurationBuilder WithMaximumMessagesInflight(int value)
         {
             MaximumAllowedMessagesInflight = value;
+            return this;
+        }
+
+
+        public SqsReadConfigurationBuilder WithSubscriptionGroup(string subscriptionGroup)
+        {
+            SubscriptionGroup = subscriptionGroup;
             return this;
         }
 
@@ -78,6 +88,11 @@ namespace JustSaying.Fluent
             if (TopicSourceAccountId != null)
             {
                 config.TopicSourceAccount = TopicSourceAccountId;
+            }
+
+            if (SubscriptionGroup != null)
+            {
+                config.SubscriptionGroup = SubscriptionGroup;
             }
         }
     }

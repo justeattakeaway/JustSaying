@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
-using JustSaying.Messaging.Channels.Configuration;
 using JustSaying.Messaging.Channels.Dispatch;
 using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.Messaging.Channels.Receive;
@@ -39,7 +38,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
 
         protected IHandlerAsync<SimpleMessage> Handler;
 
-        protected ISubscriptionGroup SystemUnderTest { get; private set; }
+        protected ISubscriptionGroupCollection SystemUnderTest { get; private set; }
 
         protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
 
@@ -98,7 +97,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
             doneOk.ShouldBeTrue("Timeout occured before done signal");
         }
 
-        protected ISubscriptionGroup CreateSystemUnderTest()
+        protected ISubscriptionGroupCollection CreateSystemUnderTest()
         {
             var messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
             var messageContextAccessor = Substitute.For<IMessageContextAccessor>();
@@ -114,33 +113,22 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
             var config = new SubscriptionConfig();
             config.WithDefaultSqsPolicy(LoggerFactory);
 
-            var receiveBufferFactory = new ReceiveBufferFactory(LoggerFactory, config, Monitor);
-            var multiplexerFactory = new MultiplexerFactory(LoggerFactory);
-            var consumerFactory = new MultiplexerSubscriberFactory(dispatcher);
-            var consumerBusFactory = new SubscriptionGroupFactory(
-                multiplexerFactory,
-                receiveBufferFactory,
-                consumerFactory,
+            var subscriptionGroupFactory = new SubscriptionGroupFactory(
+                config,
+                dispatcher,
+                Monitor,
                 LoggerFactory);
 
-            var settings = new Dictionary<string, SubscriptionGroupSettingsBuilder>
-            {
-                { "test", new SubscriptionGroupSettingsBuilder(config).AddQueues(Queues) },
-            };
+            var settings = SetupBusConfig(config);
 
-            var bus = new SubscriptionGroupCollection(
-                consumerBusFactory,
-                settings,
-                LoggerFactory.CreateLogger<SubscriptionGroupCollection>());
-
-            return bus;
+            return subscriptionGroupFactory.Create(settings);
         }
 
         protected virtual Dictionary<string, SubscriptionGroupSettingsBuilder> SetupBusConfig(SubscriptionConfig config)
         {
             return new Dictionary<string, SubscriptionGroupSettingsBuilder>
             {
-                { "test", new SubscriptionGroupSettingsBuilder(config).AddQueues(Queues) },
+                { "test", new SubscriptionGroupSettingsBuilder("test").WithDefaultsFrom(config).AddQueues(Queues) },
             };
         }
 
@@ -160,6 +148,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
             queue.GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
                 .Returns(_ => getMessages());
             queue.Uri.Returns(new Uri("http://foo.com"));
+            queue.QueueName.Returns($"TestQueue");
 
             return queue;
         }
