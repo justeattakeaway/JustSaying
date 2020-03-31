@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.Channels.Configuration;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using Newtonsoft.Json;
 using Shouldly;
@@ -26,14 +25,15 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
             return new Dictionary<string, SubscriptionGroupSettingsBuilder>
             {
                 {
-                    "queueA", new SubscriptionGroupSettingsBuilder("queueA", config)
+                    "queueA", new SubscriptionGroupSettingsBuilder("queueA")
+                        .WithDefaultsFrom(config)
                         .AddQueue(_queueA)
                         .WithPrefetch(5)
                         .WithBufferSize(20)
                         .WithConcurrencyLimit(1)
                         .WithMultiplexerCapacity(30)
                 },
-                { "queueB", new SubscriptionGroupSettingsBuilder("queueB", config).AddQueue(_queueB) }
+                { "queueB", new SubscriptionGroupSettingsBuilder("queueB").WithDefaultsFrom(config).AddQueue(_queueB) }
             };
         }
 

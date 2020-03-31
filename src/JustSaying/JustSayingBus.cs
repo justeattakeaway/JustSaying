@@ -93,9 +93,8 @@ namespace JustSaying
             if (!_subscriptionGroupSettings.TryGetValue(subscriptionGroup,
                 out SubscriptionGroupSettingsBuilder consumerGroupSettings))
             {
-
                 consumerGroupSettings = _subscriptionGroupSettings[subscriptionGroup] =
-                    new SubscriptionGroupSettingsBuilder(Config.SubscriptionConfig);
+                    new SubscriptionGroupSettingsBuilder(subscriptionGroup).WithDefaultsFrom(Config.SubscriptionConfig);
             }
 
             consumerGroupSettings.AddQueue(queue);

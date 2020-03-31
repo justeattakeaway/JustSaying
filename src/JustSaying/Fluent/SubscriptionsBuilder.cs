@@ -171,6 +171,11 @@ namespace JustSaying.Fluent
             {
                 builder.Configure(bus, resolver);
             }
+
+            foreach (KeyValuePair<string, SubscriptionGroupSettingsBuilder> group in SubscriptionGroupSettings)
+            {
+                bus.
+            }
         }
 
         public SubscriptionsBuilder WithSubscriptionGroup(string groupName, Action<SubscriptionGroupSettingsBuilder> action)
@@ -184,7 +189,7 @@ namespace JustSaying.Fluent
             }
             else
             {
-                var newSettings = new SubscriptionGroupSettingsBuilder();
+                var newSettings = new SubscriptionGroupSettingsBuilder(groupName);
                 action.Invoke(newSettings);
                 SubscriptionGroupSettings.Add(groupName, newSettings);
             }
