@@ -108,7 +108,6 @@ namespace JustSaying.Fluent
                 queue.ConfigureSubscriptionWith(ConfigureReads);
             }
 
-            // Need to pass in the group config so it can be configured in here...
             queue.WithMessageHandler<T>(resolver);
         }
     }

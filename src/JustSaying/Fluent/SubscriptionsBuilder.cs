@@ -160,7 +160,8 @@ namespace JustSaying.Fluent
         /// </exception>
         internal void Configure(JustSayingFluently bus)
         {
-            var resolver = Parent.ServicesBuilder?.HandlerResolver?.Invoke() ?? Parent.ServiceResolver.ResolveService<IHandlerResolver>();
+            var resolver = Parent.ServicesBuilder?.HandlerResolver?.Invoke() ??
+                Parent.ServiceResolver.ResolveService<IHandlerResolver>();
 
             if (resolver == null)
             {
@@ -173,10 +174,12 @@ namespace JustSaying.Fluent
             }
         }
 
-        public SubscriptionsBuilder WithSubscriptionGroup(string groupName, Action<SubscriptionGroupSettingsBuilder> action)
+        public SubscriptionsBuilder WithSubscriptionGroup(
+            string groupName,
+            Action<SubscriptionGroupSettingsBuilder> action)
         {
             if (string.IsNullOrEmpty(groupName)) throw new ArgumentNullException(nameof(groupName));
-            if(action == null) throw new ArgumentNullException(nameof(action));
+            if (action == null) throw new ArgumentNullException(nameof(action));
 
             if (SubscriptionGroupSettings.TryGetValue(groupName, out var settings))
             {
