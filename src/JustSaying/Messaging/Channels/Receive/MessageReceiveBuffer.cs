@@ -120,10 +120,10 @@ namespace JustSaying.Messaging.Channels.Receive
                 };
 
                 messages = await _sqsMiddleware.RunAsync(context,
-                        async () =>
+                        async ct =>
                             await _sqsQueue
-                                .GetMessagesAsync(count, _requestMessageAttributeNames, stoppingToken)
-                                .ConfigureAwait(false))
+                                .GetMessagesAsync(count, _requestMessageAttributeNames, ct)
+                                .ConfigureAwait(false), linkedCts.Token)
                     .ConfigureAwait(false);
             }
             finally

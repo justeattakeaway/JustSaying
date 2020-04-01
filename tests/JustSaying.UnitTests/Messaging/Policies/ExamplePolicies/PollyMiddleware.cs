@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.Middleware;
 using Polly;
@@ -14,9 +15,12 @@ namespace JustSaying.UnitTests.Messaging.Policies.ExamplePolicies
             _policy = policy;
         }
 
-        protected override async Task<TOut> RunInnerAsync(TContext context, Func<Task<TOut>> func)
+        protected override async Task<TOut> RunInnerAsync(
+            TContext context,
+            Func<CancellationToken, Task<TOut>> func,
+            CancellationToken stoppingToken)
         {
-            return await _policy.ExecuteAsync(func);
+            return await _policy.ExecuteAsync(() => func(stoppingToken));
         }
     }
 }

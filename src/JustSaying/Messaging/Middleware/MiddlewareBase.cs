@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JustSaying.Messaging.Middleware
@@ -12,21 +13,29 @@ namespace JustSaying.Messaging.Middleware
             _next = next;
         }
 
-        public async Task<TOut> RunAsync(TContext context, Func<Task<TOut>> func)
+        public async Task<TOut> RunAsync(
+            TContext context,
+            Func<CancellationToken, Task<TOut>> func,
+            CancellationToken stoppingToken)
         {
-            return await RunInnerAsync(context, async () =>
-            {
-                if (_next == null)
+            return await RunInnerAsync(context,
+                async ct =>
                 {
-                    return await func().ConfigureAwait(false);
-                }
-                else
-                {
-                    return await _next.RunAsync(context, func).ConfigureAwait(false);
-                }
-            }).ConfigureAwait(false);
+                    if (_next == null)
+                    {
+                        return await func(ct).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        return await _next.RunAsync(context, func, ct).ConfigureAwait(false);
+                    }
+                },
+                stoppingToken).ConfigureAwait(false);
         }
 
-        protected abstract Task<TOut> RunInnerAsync(TContext context, Func<Task<TOut>> func);
+        protected abstract Task<TOut> RunInnerAsync(
+            TContext context,
+            Func<CancellationToken, Task<TOut>> func,
+            CancellationToken stoppingToken);
     }
 }

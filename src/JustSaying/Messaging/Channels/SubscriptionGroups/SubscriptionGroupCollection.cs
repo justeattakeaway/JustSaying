@@ -48,7 +48,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             IEnumerable<object> interrogationResponses = _subscriptionGroups.Select(bus => bus.Interrogate());
             return new
             {
-                SubscriptionGroups = interrogationResponses,
+                SubscriptionGroups = interrogationResponses.ToArray(),
             };
         }
 

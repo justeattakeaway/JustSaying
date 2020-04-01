@@ -165,6 +165,8 @@ namespace JustSaying
 
             SubscriptionGroups = subscriptionGroupFactory.Create(_subscriptionGroupSettings);
 
+            _log.LogDebug("Interrogation response: {@Response}", SubscriptionGroups.Interrogate());
+
             return SubscriptionGroups.Run(stoppingToken);
         }
 
