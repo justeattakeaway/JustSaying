@@ -24,7 +24,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
 
         protected override void Given()
         {
-            _queue = CreateSuccessfulTestQueue(() =>
+            _queue = CreateSuccessfulTestQueue("TestQueue", () =>
             {
                 Interlocked.Increment(ref _callCount);
                 return new List<Message> { new TestMessage() };

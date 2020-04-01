@@ -42,9 +42,9 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override async Task WhenAsync()
         {
-            SystemUnderTest.AddMessageHandler(() => new InspectableHandler<OrderAccepted>());
-            SystemUnderTest.AddMessageHandler(() => new InspectableHandler<OrderRejected>());
-            SystemUnderTest.AddMessageHandler(() => new InspectableHandler<SimpleMessage>());
+            SystemUnderTest.AddMessageHandler(_queue1.QueueName, () => new InspectableHandler<OrderAccepted>());
+            SystemUnderTest.AddMessageHandler(_queue1.QueueName, () => new InspectableHandler<OrderRejected>());
+            SystemUnderTest.AddMessageHandler(_queue1.QueueName, () => new InspectableHandler<SimpleMessage>());
 
             SystemUnderTest.AddQueue("region1", typeof(TestMessage).FullName, _queue1);
             SystemUnderTest.AddQueue("region1", typeof(TestMessage).FullName, _queue2);

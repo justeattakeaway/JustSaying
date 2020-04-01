@@ -15,8 +15,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
 
         public WhenListeningWithMultipleGroups(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
         {
-            _queueA = CreateSuccessfulTestQueue(new TestMessage());
-            _queueB = CreateSuccessfulTestQueue(new TestMessage());
+            _queueA = CreateSuccessfulTestQueue("TestQueueA", new TestMessage());
+            _queueB = CreateSuccessfulTestQueue("TestQueueB", new TestMessage());
         }
 
         protected override Dictionary<string, SubscriptionGroupSettingsBuilder> SetupBusConfig(

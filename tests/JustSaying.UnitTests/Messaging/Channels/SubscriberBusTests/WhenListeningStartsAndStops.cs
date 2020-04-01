@@ -36,7 +36,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
             var response1 = new List<Message> { new Message { Body = _messageContentsRunning } };
             var response2 = new List<Message> { new Message { Body = _messageContentsAfterStop } };
 
-            _queue = CreateSuccessfulTestQueue(() => _running ? response1 : response2);
+            _queue = CreateSuccessfulTestQueue("TestQueue", () => _running ? response1 : response2);
 
             Queues.Add(_queue);
         }

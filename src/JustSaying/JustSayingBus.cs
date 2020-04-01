@@ -14,7 +14,6 @@ using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
-using SQSMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying
 {
@@ -91,18 +90,18 @@ namespace JustSaying
                 throw new ArgumentNullException(nameof(subscriptionGroup));
 
             if (!_subscriptionGroupSettings.TryGetValue(subscriptionGroup,
-                out SubscriptionGroupSettingsBuilder consumerGroupSettings))
+                out SubscriptionGroupSettingsBuilder builder))
             {
-                consumerGroupSettings = _subscriptionGroupSettings[subscriptionGroup] =
+                builder = _subscriptionGroupSettings[subscriptionGroup] =
                     new SubscriptionGroupSettingsBuilder(subscriptionGroup).WithDefaultsFrom(Config.SubscriptionConfig);
             }
 
-            consumerGroupSettings.AddQueue(queue);
+            builder.AddQueue(queue);
         }
 
-        public void AddMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler) where T : Message
+        public void AddMessageHandler<T>(string queueName, Func<IHandlerAsync<T>> futureHandler) where T : Message
         {
-            HandlerMap.Add(futureHandler);
+            HandlerMap.Add(queueName, futureHandler);
         }
 
         public void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message

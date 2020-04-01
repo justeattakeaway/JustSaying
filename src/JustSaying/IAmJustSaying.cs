@@ -8,7 +8,6 @@ using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
-using SQSMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying
 {
@@ -16,7 +15,7 @@ namespace JustSaying
     {
         void AddQueue(string region, string subscriptionGroup, ISqsQueue queue);
 
-        void AddMessageHandler<T>(Func<IHandlerAsync<T>> handler) where T : Message;
+        void AddMessageHandler<T>(string queue, Func<IHandlerAsync<T>> handler) where T : Message;
 
         // TODO - swap params
         void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message;

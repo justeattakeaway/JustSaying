@@ -9,7 +9,8 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
 {
     public class HandlerMap
     {
-        private readonly Dictionary<Type, HandlerFunc> _handlers = new Dictionary<Type, HandlerFunc>();
+        private readonly Dictionary<(string queueName, Type type), HandlerFunc> _handlers
+            = new Dictionary<(string, Type), HandlerFunc>();
 
         public HandlerMap(
             IMessageMonitor messagingMonitor,
@@ -19,36 +20,49 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             LoggerFactory = loggerFactory;
         }
 
-        public bool ContainsKey(Type messageType) => _handlers.ContainsKey(messageType);
+        public bool Contains(string queueName, Type messageType)
+            => _handlers.ContainsKey((queueName, messageType));
 
-        public IEnumerable<Type> Types => _handlers.Keys;
+        public IEnumerable<Type> Types
+        {
+            get
+            {
+                var types = new HashSet<Type>();
+                foreach ((string queueName, Type type) key in _handlers.Keys)
+                {
+                    types.Add(key.type);
+                }
+
+                return types;
+            }
+        }
 
         public IMessageLockAsync MessageLock { get; set; }
         public IMessageMonitor MessagingMonitor { get; }
         public ILoggerFactory LoggerFactory { get; }
 
-        public void Add<T>(Func<IHandlerAsync<T>> futureHandler) where T : Models.Message
+        public void Add<T>(string queueName, Func<IHandlerAsync<T>> futureHandler) where T : Models.Message
         {
             var handlerWrapper = new MessageHandlerWrapper(MessageLock, MessagingMonitor, LoggerFactory);
             var handlerFunc = handlerWrapper.WrapMessageHandler(futureHandler);
 
-            Add(typeof(T), handlerFunc);
+            Add(queueName, typeof(T), handlerFunc);
         }
 
-        public void Add(Type messageType, HandlerFunc handlerFunc)
+        public void Add(string queueName, Type messageType, HandlerFunc handlerFunc)
         {
-            if (_handlers.ContainsKey(messageType))
+            if (_handlers.ContainsKey((queueName, messageType)))
             {
                 throw new InvalidOperationException(
                     $"A message handler has already been registered for type {messageType.FullName}");
             }
 
-            _handlers.Add(messageType, handlerFunc);
+            _handlers.Add((queueName, messageType), handlerFunc);
         }
 
-        public HandlerFunc Get(Type messageType)
+        public HandlerFunc Get(string queueName, Type messageType)
         {
-            return _handlers.TryGetValue(messageType, out var handler) ? handler : null;
+            return _handlers.TryGetValue((queueName, messageType), out var handler) ? handler : null;
         }
     }
 }

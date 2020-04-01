@@ -20,7 +20,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
 
         protected override void Given()
         {
-            _queue = CreateSuccessfulTestQueue(new TestMessage());
+            _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
 
             Queues.Add(_queue);
             Handler.Handle(Arg.Any<SimpleMessage>())

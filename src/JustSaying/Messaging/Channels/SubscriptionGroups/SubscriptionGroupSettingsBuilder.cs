@@ -66,7 +66,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
         internal SubscriptionGroupSettings Build()
         {
-            if(_defaults == null) throw new InvalidOperationException("Defaults must be set before building settings");
+            if (_defaults == null) throw new InvalidOperationException("Defaults must be set before building settings");
 
             return new SubscriptionGroupSettings(
                 _groupName,

@@ -13,5 +13,7 @@ namespace JustSaying.Messaging.Channels.Context
         Task DeleteMessageFromQueueAsync();
 
         Uri QueueUri { get; }
+
+        string QueueName { get; }
     }
 }

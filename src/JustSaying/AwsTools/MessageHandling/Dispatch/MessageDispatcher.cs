@@ -90,7 +90,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                 {
                     _messageContextAccessor.MessageContext = new MessageContext(messageContext.Message, messageContext.QueueUri);
 
-                    handlingSucceeded = await CallMessageHandler(typedMessage).ConfigureAwait(false);
+                    handlingSucceeded = await CallMessageHandler(messageContext.QueueName, typedMessage).ConfigureAwait(false);
                 }
 
                 if (handlingSucceeded)
@@ -133,11 +133,11 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             }
         }
 
-        private async Task<bool> CallMessageHandler(Message message)
+        private async Task<bool> CallMessageHandler(string queueName, Message message)
         {
             var messageType = message.GetType();
 
-            var handler = _handlerMap.Get(messageType);
+            var handler = _handlerMap.Get(queueName, messageType);
 
             if (handler == null)
             {

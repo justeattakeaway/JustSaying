@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
-using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.Channels.Dispatch;
 using JustSaying.Messaging.Channels.Multiplexer;
@@ -33,7 +32,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
         public ChannelsTests(ITestOutputHelper testOutputHelper)
         {
             LoggerFactory = testOutputHelper.ToLoggerFactory();
-            MessageMonitor = new LoggingMonitor(LoggerFactory.CreateLogger(nameof(IMessageMonitor)));
+            MessageMonitor = new LoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
         }
 
         private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
@@ -192,7 +191,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             // need to start the multiplexer before calling Messages
 
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeoutPeriod);
+            cts.CancelAfter(TimeSpan.FromSeconds(1));
 
             // Act and Assert
             var multiplexerCompletion = multiplexer.Run(cts.Token);

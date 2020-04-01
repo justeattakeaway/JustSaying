@@ -33,8 +33,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         protected override async Task WhenAsync()
         {
             SystemUnderTest.AddQueue(_region, typeof(Message).FullName, _queue);
-            SystemUnderTest.AddMessageHandler(_futureHandler1);
-            SystemUnderTest.AddMessageHandler(_futureHandler2);
+            SystemUnderTest.AddMessageHandler(_queue.QueueName, _futureHandler1);
+            SystemUnderTest.AddMessageHandler(_queue.QueueName, _futureHandler2);
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
@@ -45,8 +45,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public void HandlersAreAdded()
         {
-            SystemUnderTest.HandlerMap.ContainsKey(typeof(Message)).ShouldBeTrue();
-            SystemUnderTest.HandlerMap.ContainsKey(typeof(Message2)).ShouldBeTrue();
+            SystemUnderTest.HandlerMap.Contains(_queue.QueueName, typeof(Message)).ShouldBeTrue();
+            SystemUnderTest.HandlerMap.Contains(_queue.QueueName, typeof(Message2)).ShouldBeTrue();
         }
 
         public class Message2 : Message { }

@@ -28,5 +28,7 @@ namespace JustSaying.Messaging.Channels.Context
         }
 
         public Uri QueueUri => SqsQueue.Uri;
+
+        public string QueueName => SqsQueue.QueueName;
     }
 }

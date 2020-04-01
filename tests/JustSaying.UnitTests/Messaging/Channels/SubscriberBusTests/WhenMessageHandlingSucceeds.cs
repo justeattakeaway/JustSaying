@@ -22,7 +22,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
 
         protected override void Given()
         {
-            _queue = CreateSuccessfulTestQueue(() =>
+            _queue = CreateSuccessfulTestQueue("TestQueue", () =>
             {
                 return new List<Message> { new TestMessage { Body = _messageBody } };
             });

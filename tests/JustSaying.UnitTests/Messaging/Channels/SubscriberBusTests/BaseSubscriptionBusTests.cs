@@ -82,7 +82,10 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
             var doneSignal = new TaskCompletionSource<object>();
             var signallingHandler = new SignallingHandler<SimpleMessage>(doneSignal, Handler);
 
-            HandlerMap.Add(typeof(SimpleMessage), msg => signallingHandler.Handle(msg as SimpleMessage));
+            foreach (ISqsQueue queue in Queues)
+            {
+                HandlerMap.Add(queue.QueueName, typeof(SimpleMessage), msg => signallingHandler.Handle(msg as SimpleMessage));
+            }
 
             var cts = new CancellationTokenSource();
             var completion = SystemUnderTest.Run(cts.Token);
@@ -132,23 +135,23 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
             };
         }
 
-        protected static ISqsQueue CreateSuccessfulTestQueue(params Amazon.SQS.Model.Message[] messages)
+        protected static ISqsQueue CreateSuccessfulTestQueue(string queueName, params Amazon.SQS.Model.Message[] messages)
         {
-            return CreateSuccessfulTestQueue(() => messages);
+            return CreateSuccessfulTestQueue(queueName, () => messages);
         }
 
-        protected static ISqsQueue CreateSuccessfulTestQueue(Func<IList<Amazon.SQS.Model.Message>> getMessages)
+        protected static ISqsQueue CreateSuccessfulTestQueue(string queueName, Func<IList<Amazon.SQS.Model.Message>> getMessages)
         {
-            return CreateSuccessfulTestQueue(() => Task.FromResult(getMessages()));
+            return CreateSuccessfulTestQueue(queueName, () => Task.FromResult(getMessages()));
         }
 
-        protected static ISqsQueue CreateSuccessfulTestQueue(Func<Task<IList<Amazon.SQS.Model.Message>>> getMessages)
+        protected static ISqsQueue CreateSuccessfulTestQueue(string queueName, Func<Task<IList<Amazon.SQS.Model.Message>>> getMessages)
         {
             var queue = Substitute.For<ISqsQueue>();
             queue.GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
                 .Returns(_ => getMessages());
             queue.Uri.Returns(new Uri("http://foo.com"));
-            queue.QueueName.Returns($"TestQueue");
+            queue.QueueName.Returns(queueName);
 
             return queue;
         }

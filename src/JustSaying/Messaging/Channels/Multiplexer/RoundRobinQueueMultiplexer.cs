@@ -115,12 +115,19 @@ namespace JustSaying.Messaging.Channels.Multiplexer
                         break;
                     }
 
+                    bool any = false;
                     foreach (ChannelReader<IQueueMessageContext> reader in _readers)
                     {
                         if (reader.TryRead(out IQueueMessageContext message))
                         {
+                            any = true;
                             await writer.WriteAsync(message, _stoppingToken);
                         }
+                    }
+
+                    if (!any)
+                    {
+                        await Task.Delay(5).ConfigureAwait(false);
                     }
                 }
                 finally

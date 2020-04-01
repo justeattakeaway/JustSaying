@@ -15,10 +15,10 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
     public class HandlerMapTests
     {
         [Fact]
-        public void EmptyMapDoesNotContainKey()
+        public void EmptyMapDoesNotContain()
         {
             var map = CreateHandlerMap();
-            map.ContainsKey(typeof(SimpleMessage)).ShouldBeFalse();
+            map.Contains("queue", typeof(SimpleMessage)).ShouldBeFalse();
         }
 
         [Fact]
@@ -26,7 +26,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         {
             var map = CreateHandlerMap();
 
-            var handler = map.Get(typeof(SimpleMessage));
+            var handler = map.Get("queue", typeof(SimpleMessage));
 
             handler.ShouldBeNull();
         }
@@ -35,9 +35,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         public void HandlerIsReturnedForMatchingType()
         {
             var map = CreateHandlerMap();
-            map.Add(typeof(SimpleMessage), m => Task.FromResult(true));
+            map.Add("queue", typeof(SimpleMessage), m => Task.FromResult(true));
 
-            var handler = map.Get(typeof(SimpleMessage));
+            var handler = map.Get("queue", typeof(SimpleMessage));
 
             handler.ShouldNotBeNull();
         }
@@ -46,19 +46,19 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         public void HandlerContainsKeyForMatchingTypeOnly()
         {
             var map = CreateHandlerMap();
-            map.Add(typeof(SimpleMessage), m => Task.FromResult(true));
+            map.Add("queue", typeof(SimpleMessage), m => Task.FromResult(true));
 
-            map.ContainsKey(typeof(SimpleMessage)).ShouldBeTrue();
-            map.ContainsKey(typeof(AnotherSimpleMessage)).ShouldBeFalse();
+            map.Contains("queue", typeof(SimpleMessage)).ShouldBeTrue();
+            map.Contains("queue", typeof(AnotherSimpleMessage)).ShouldBeFalse();
         }
 
         [Fact]
         public void HandlerIsNotReturnedForNonMatchingType()
         {
             var map = CreateHandlerMap();
-            map.Add(typeof(SimpleMessage), m => Task.FromResult(true));
+            map.Add("queue", typeof(SimpleMessage), m => Task.FromResult(true));
 
-            var handler = map.Get(typeof(AnotherSimpleMessage));
+            var handler = map.Get("queue", typeof(AnotherSimpleMessage));
 
             handler.ShouldBeNull();
         }
@@ -70,14 +70,14 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             Func<Message, Task<bool>> fn2 = m => Task.FromResult(true);
 
             var map = CreateHandlerMap();
-            map.Add(typeof(SimpleMessage), fn1);
-            map.Add(typeof(AnotherSimpleMessage), fn2);
+            map.Add("queue", typeof(SimpleMessage), fn1);
+            map.Add("queue", typeof(AnotherSimpleMessage), fn2);
 
-            var handler1 = map.Get(typeof(SimpleMessage));
+            var handler1 = map.Get("queue", typeof(SimpleMessage));
 
             handler1.ShouldBe(fn1);
 
-            var handler2 = map.Get(typeof(AnotherSimpleMessage));
+            var handler2 = map.Get("queue", typeof(AnotherSimpleMessage));
 
             handler2.ShouldBe(fn2);
         }
@@ -90,8 +90,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
 
             var map = CreateHandlerMap();
 
-            map.Add(typeof(SimpleMessage), fn1);
-            Assert.Throws<InvalidOperationException>(() => map.Add(typeof(SimpleMessage), fn2));
+            map.Add("queue", typeof(SimpleMessage), fn1);
+            Assert.Throws<InvalidOperationException>(() => map.Add("queue", typeof(SimpleMessage), fn2));
         }
 
         [Fact]
@@ -102,10 +102,56 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             Func<Message, Task<bool>> fn3 = m => Task.FromResult(true);
 
             var map = CreateHandlerMap();
-            map.Add(typeof(SimpleMessage), fn1);
-            map.Add(typeof(AnotherSimpleMessage), fn3);
+            map.Add("queue", typeof(SimpleMessage), fn1);
+            map.Add("queue", typeof(AnotherSimpleMessage), fn3);
 
-            Assert.Throws<InvalidOperationException>(() => map.Add(typeof(SimpleMessage), fn2));
+            Assert.Throws<InvalidOperationException>(() => map.Add("queue", typeof(SimpleMessage), fn2));
+        }
+
+        [Fact]
+        public void HandlerIsNotReturnedForAnotherQueue()
+        {
+            string queue1 = "queue1";
+            string queue2 = "queue2";
+            var map = CreateHandlerMap();
+            map.Add(queue1, typeof(SimpleMessage), m => Task.FromResult(true));
+
+            var handler = map.Get(queue2, typeof(SimpleMessage));
+
+            handler.ShouldBeNull();
+        }
+
+        [Fact]
+        public void HandlerContainsKeyForMatchingQueueOnly()
+        {
+            string queue1 = "queue1";
+            string queue2 = "queue2";
+            var map = CreateHandlerMap();
+            map.Add(queue1, typeof(SimpleMessage), m => Task.FromResult(true));
+
+            map.Contains(queue1, typeof(SimpleMessage)).ShouldBeTrue();
+            map.Contains(queue2, typeof(AnotherSimpleMessage)).ShouldBeFalse();
+        }
+
+        [Fact]
+        public void CorrectHandlerIsReturnedForQueue()
+        {
+            string queue1 = "queue1";
+            string queue2 = "queue2";
+            Func<Message, Task<bool>> fn1 = m => Task.FromResult(true);
+            Func<Message, Task<bool>> fn2 = m => Task.FromResult(true);
+
+            var map = CreateHandlerMap();
+            map.Add(queue1, typeof(SimpleMessage), fn1);
+            map.Add(queue2, typeof(SimpleMessage), fn2);
+
+            var handler1 = map.Get(queue1, typeof(SimpleMessage));
+
+            handler1.ShouldBe(fn1);
+
+            var handler2 = map.Get(queue2, typeof(SimpleMessage));
+
+            handler2.ShouldBe(fn2);
         }
 
         private static HandlerMap CreateHandlerMap()

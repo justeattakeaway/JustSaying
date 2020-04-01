@@ -27,7 +27,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
 
         protected override void Given()
         {
-            _queue = CreateSuccessfulTestQueue(new TestMessage());
+            _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
 
             Queues.Add(_queue);
 
@@ -46,7 +46,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
 
         protected override async Task WhenAsync()
         {
-            HandlerMap.Add(() => Handler);
+            HandlerMap.Add(_queue.QueueName, () => Handler);
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromMilliseconds(100));
