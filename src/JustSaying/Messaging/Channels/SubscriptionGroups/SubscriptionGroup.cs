@@ -54,7 +54,6 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             {
                 _settings.Name,
                 ConcurrencyLimit = _subscribers.Count,
-                Settings = _settings,
                 Multiplexer = _multiplexer.Interrogate(),
                 ReceiveBuffers = _receiveBuffers.Select(rb => rb.Interrogate()).ToArray(),
             };
