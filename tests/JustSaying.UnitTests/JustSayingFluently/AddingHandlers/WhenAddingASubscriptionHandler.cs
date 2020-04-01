@@ -53,7 +53,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         [Fact]
         public void SerializationIsRegisteredForMessage()
         {
-            Bus.Received().AddMessageHandler(Arg.Any<Func<IHandlerAsync<Message>>>());
+            Bus.Received().AddMessageHandler(Arg.Any<string>(),Arg.Any<Func<IHandlerAsync<Message>>>());
         }
 
         [Fact]

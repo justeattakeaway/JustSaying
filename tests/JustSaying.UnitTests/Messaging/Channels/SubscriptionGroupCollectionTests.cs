@@ -79,7 +79,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var config = Substitute.For<IMessagingConfig>();
             config.SubscriptionConfig.Returns(new SubscriptionConfig());
             var serializationRegister = new MessageSerializationRegister(
-                new NonGenericMessageSubjectProvider());
+                new NonGenericMessageSubjectProvider(),
+                new NewtonsoftSerializationFactory());
             var serializationFactory = new NewtonsoftSerializationFactory();
 
             var bus = new JustSaying.JustSayingBus(config, serializationRegister, LoggerFactory)
@@ -87,7 +88,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 Monitor = MessageMonitor,
             };
 
-            bus.SerializationRegister.AddSerializer<TestJustSayingMessage>(serializationFactory.GetSerializer<TestJustSayingMessage>());
+            bus.SerializationRegister.AddSerializer<TestJustSayingMessage>();
 
             return bus;
         }
