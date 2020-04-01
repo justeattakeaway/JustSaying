@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.Middleware;
 using JustSaying.UnitTests.Messaging.Policies.ExamplePolicies;
@@ -17,12 +18,12 @@ namespace JustSaying.UnitTests.Messaging.Policies
             var called = false;
             var noop = MiddlewareBuilder.BuildAsync<int, int>();
 
-            var result = await noop.RunAsync(1, async () =>
+            var result = await noop.RunAsync(1, async ct =>
             {
                 called = true;
-                await Task.Delay(5);
+                await Task.Delay(5, ct);
                 return 1;
-            });
+            }, CancellationToken.None);
 
             called.ShouldBeTrue();
             result.ShouldBe(1);
@@ -35,12 +36,12 @@ namespace JustSaying.UnitTests.Messaging.Policies
             var noop = MiddlewareBuilder.BuildAsync<int, int>(
                 next => new ErrorHandlingMiddleware<int, int, InvalidOperationException>(next));
 
-            var result = await noop.RunAsync(1, async () =>
+            var result = await noop.RunAsync(1, async ct =>
             {
                 called = true;
-                await Task.Delay(5);
+                await Task.Delay(5, ct);
                 throw new InvalidOperationException();
-            });
+            }, CancellationToken.None);
 
             called.ShouldBeTrue();
             result.ShouldBe(0);
@@ -59,21 +60,21 @@ namespace JustSaying.UnitTests.Messaging.Policies
                 next => new PollyMiddleware<int, int>(next, pollyPolicy));
 
             var calledCount = 0;
-            await Assert.ThrowsAsync<CustomException>(async () => await policy.RunAsync(1, () =>
+            await Assert.ThrowsAsync<CustomException>(async () => await policy.RunAsync(1, ct =>
             {
                 calledCount++;
                 throw new CustomException();
-            }));
-            await Assert.ThrowsAsync<CustomException>(async () => await policy.RunAsync(1, () =>
+            }, CancellationToken.None));
+            await Assert.ThrowsAsync<CustomException>(async () => await policy.RunAsync(1, ct =>
             {
                 calledCount++;
                 throw new CustomException();
-            }));
-            await Assert.ThrowsAsync<BrokenCircuitException>(async () => await policy.RunAsync(1, () =>
+            }, CancellationToken.None));
+            await Assert.ThrowsAsync<BrokenCircuitException>(async () => await policy.RunAsync(1, ct =>
             {
                 calledCount++;
                 throw new CustomException();
-            }));
+            }, CancellationToken.None));
 
             calledCount.ShouldBe(2);
         }
