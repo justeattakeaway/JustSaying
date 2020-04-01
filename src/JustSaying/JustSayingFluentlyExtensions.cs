@@ -63,18 +63,25 @@ namespace JustSaying
 
             config.Validate();
 
-            var messageSerializationRegister = new MessageSerializationRegister(config.MessageSubjectProvider);
+            var serializationFactory = dependencies.SerializationFactory ?? new NewtonsoftSerializationFactory();
+
+            var messageSerializationRegister = new MessageSerializationRegister(
+                config.MessageSubjectProvider,
+                serializationFactory);
             var justSayingBus = new JustSayingBus(config, messageSerializationRegister, dependencies.LoggerFactory);
 
             var awsClientFactoryProxy = new AwsClientFactoryProxy(() => CreateMeABus.DefaultClientFactory());
 
             var amazonQueueCreator = new AmazonQueueCreator(awsClientFactoryProxy, dependencies.LoggerFactory);
 
-            var bus = new JustSayingFluently(justSayingBus, amazonQueueCreator, awsClientFactoryProxy, dependencies.LoggerFactory);
+            var bus = new JustSayingFluently(justSayingBus,
+                amazonQueueCreator,
+                awsClientFactoryProxy,
+                serializationFactory,
+                dependencies.LoggerFactory);
 
             bus
-                .WithMonitoring(new NullOpMessageMonitor())
-                .WithSerializationFactory(new NewtonsoftSerializationFactory());
+                .WithMonitoring(new NullOpMessageMonitor());
 
             return bus;
         }

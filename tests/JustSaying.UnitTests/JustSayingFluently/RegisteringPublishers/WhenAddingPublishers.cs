@@ -3,6 +3,7 @@ using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using System;
+using JustSaying.Messaging.MessageSerialization;
 using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
@@ -13,7 +14,11 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
 
         protected override JustSaying.JustSayingFluently CreateSystemUnderTest()
         {
-            return new JustSaying.JustSayingFluently(_bus, null, new AwsClientFactoryProxy(), Substitute.For<ILoggerFactory>());
+            return new JustSaying.JustSayingFluently(_bus,
+                null,
+                new AwsClientFactoryProxy(),
+                new NewtonsoftSerializationFactory(),
+                Substitute.For<ILoggerFactory>());
         }
 
         protected override void Given()

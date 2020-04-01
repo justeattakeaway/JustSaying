@@ -34,15 +34,16 @@ namespace JustSaying
         private readonly ILogger _log;
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
         private readonly IAwsClientFactoryProxy _awsClientFactoryProxy;
+        private readonly IMessageSerializationFactory _serializationFactory;
         protected internal IAmJustSaying Bus { get; set; }
         private SqsReadConfiguration _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic);
-        private IMessageSerializationFactory _serializationFactory;
         private readonly ILoggerFactory _loggerFactory;
 
         protected internal JustSayingFluently(
             IAmJustSaying bus,
             IVerifyAmazonQueues queueCreator,
             IAwsClientFactoryProxy awsClientFactoryProxy,
+            IMessageSerializationFactory serializationFactory,
             ILoggerFactory loggerFactory)
         {
             _loggerFactory = loggerFactory;
@@ -50,6 +51,7 @@ namespace JustSaying
             Bus = bus;
             _amazonQueueCreator = queueCreator;
             _awsClientFactoryProxy = awsClientFactoryProxy;
+            _serializationFactory = serializationFactory;
         }
 
         /// <summary>
@@ -82,7 +84,7 @@ namespace JustSaying
 
             _subscriptionConfig.TopicName = GetOrUseTopicNamingConvention<T>(_subscriptionConfig.TopicName);
 
-            Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
+            Bus.SerializationRegister.AddSerializer<T>();
 
             foreach (var region in Bus.Config.Regions)
             {
@@ -134,8 +136,6 @@ namespace JustSaying
 
             var config = new SqsWriteConfiguration();
             configBuilder?.Invoke(config);
-
-            Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
 
             config.QueueName = GetOrUseQueueNamingConvention<T>(config.QueueName);
 
@@ -197,12 +197,6 @@ namespace JustSaying
                 .ConfigureAwait(false);
         }
 
-        public IMayWantOptionalSettings WithSerializationFactory(IMessageSerializationFactory factory)
-        {
-            _serializationFactory = factory;
-            return this;
-        }
-
         public IMayWantOptionalSettings WithMessageLockStoreOf(IMessageLockAsync messageLock)
         {
             Bus.MessageLock = messageLock;
@@ -244,11 +238,6 @@ namespace JustSaying
 
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message
         {
-            if (_serializationFactory == null)
-            {
-                throw new InvalidOperationException($"No {nameof(IMessageSerializationFactory)} has been configured.");
-            }
-
             _subscriptionConfig.TopicName = GetOrUseTopicNamingConvention<T>(_subscriptionConfig.TopicName);
             _subscriptionConfig.QueueName = GetOrUseQueueNamingConvention<T>(_subscriptionConfig.QueueName);
             _subscriptionConfig.SubscriptionGroup ??= _subscriptionConfig.QueueName;
@@ -256,8 +245,6 @@ namespace JustSaying
             var thing = _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
                 ? PointToPointHandler<T>()
                 : TopicHandler<T>();
-
-            Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
 
             var resolutionContext = new HandlerResolutionContext(_subscriptionConfig.QueueName);
             var proposedHandler = handlerResolver.ResolveHandler<T>(resolutionContext);

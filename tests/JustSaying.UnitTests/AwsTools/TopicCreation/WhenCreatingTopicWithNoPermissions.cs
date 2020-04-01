@@ -30,7 +30,8 @@ namespace JustSaying.UnitTests.AwsTools.TopicCreation
             ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
 
             var subjectProvider = new NonGenericMessageSubjectProvider();
-            var serializationRegister = new MessageSerializationRegister(subjectProvider);
+            var serializerFactor = new NewtonsoftSerializationFactory();
+            var serializationRegister = new MessageSerializationRegister(subjectProvider, serializerFactor);
 
             IAmazonSimpleNotificationService client = CreateSnsClient(exists: true);
 
@@ -57,7 +58,8 @@ namespace JustSaying.UnitTests.AwsTools.TopicCreation
             ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
 
             var subjectProvider = new NonGenericMessageSubjectProvider();
-            var serializationRegister = new MessageSerializationRegister(subjectProvider);
+            var serializerFactor = new NewtonsoftSerializationFactory();
+            var serializationRegister = new MessageSerializationRegister(subjectProvider, serializerFactor);
 
             IAmazonSimpleNotificationService client = CreateSnsClient(exists: false);
 

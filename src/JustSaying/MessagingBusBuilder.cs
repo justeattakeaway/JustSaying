@@ -308,15 +308,14 @@ namespace JustSaying
         {
             IAwsClientFactoryProxy proxy = CreateFactoryProxy();
             IVerifyAmazonQueues queueCreator = new AmazonQueueCreator(proxy, loggerFactory);
-
-            var fluent = new JustSayingFluently(bus, queueCreator, proxy, loggerFactory);
-
             IMessageSerializationFactory serializationFactory = CreateMessageSerializationFactory();
+
+            var fluent = new JustSayingFluently(bus, queueCreator, proxy, serializationFactory, loggerFactory);
+
             IMessageMonitor messageMonitor = CreateMessageMonitor();
             IMessageContextAccessor messageContextAccessor = CreateMessageContextAccessor();
 
-            fluent.WithSerializationFactory(serializationFactory)
-                .WithMonitoring(messageMonitor)
+            fluent.WithMonitoring(messageMonitor)
                 .WithMessageContextAccessor(messageContextAccessor);
 
             if (ServicesBuilder?.MessageLock != null)

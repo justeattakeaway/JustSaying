@@ -14,9 +14,11 @@ namespace JustSaying.UnitTests.Messaging.Serialization.SerializationRegister
         }
 
         protected override MessageSerializationRegister CreateSystemUnderTest() =>
-            new MessageSerializationRegister(new NonGenericMessageSubjectProvider());
+            new MessageSerializationRegister(
+                new NonGenericMessageSubjectProvider(),
+                new NewtonsoftSerializationFactory());
 
-        private string messageBody = "msgBody";
+        private string messageBody = "{'Subject':'nonexistent'}";
         protected override void Given()
         {
             RecordAnyExceptionsThrown();
@@ -27,20 +29,13 @@ namespace JustSaying.UnitTests.Messaging.Serialization.SerializationRegister
             var messageSerializer = Substitute.For<IMessageSerializer>();
             messageSerializer.GetMessageSubject(messageBody).Returns(typeof(CustomMessage).Name);
             messageSerializer.Deserialize(messageBody, typeof(CustomMessage)).Returns(new CustomMessage());
-            SystemUnderTest.AddSerializer<CustomMessage>(messageSerializer);
+            SystemUnderTest.AddSerializer<CustomMessage>();
         }
 
         [Fact]
         public void ThrowsMessageFormatNotSupportedWhenMessabeBodyIsUnserializable()
         {
-            new Action(() => SystemUnderTest.DeserializeMessage(string.Empty)).ShouldThrow<MessageFormatNotSupportedException>();
+            Assert.Throws<MessageFormatNotSupportedException>(() => SystemUnderTest.DeserializeMessage(messageBody));
         }
-
-        [Fact]
-        public void TheMappingContainsTheSerializer()
-        {
-            SystemUnderTest.DeserializeMessage(messageBody).ShouldNotBeNull();
-        }
-
     }
 }
