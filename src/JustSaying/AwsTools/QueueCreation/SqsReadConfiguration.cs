@@ -26,7 +26,7 @@ namespace JustSaying.AwsTools.QueueCreation
         public string TopicSourceAccount { get; set; }
         public IMessageBackoffStrategy MessageBackoffStrategy { get; set; }
         public string FilterPolicy { get; set; }
-        public string SubscriptionGroup { get; set; }
+        public string SubscriptionGroupName { get; set; }
 
         protected override void OnValidate()
         {
