@@ -8,6 +8,7 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using NSubstitute;
+using NSubstitute.ReceivedExtensions;
 using Shouldly;
 using Xunit;
 
@@ -55,7 +56,7 @@ namespace JustSaying.UnitTests.JustSayingFluently.AddingHandlers
         [Fact]
         public void SerializationIsRegisteredForMessage()
         {
-            Bus.SerializationRegister.Received().AddSerializer<Message>(Arg.Any<IMessageSerializer>());
+            Bus.Received().AddMessageHandler(Arg.Any<string>(),Arg.Any<Func<IHandlerAsync<Message>>>());
         }
 
         [Fact]

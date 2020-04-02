@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.Middleware;
 
@@ -9,14 +10,16 @@ namespace JustSaying.UnitTests.Messaging.Policies.ExamplePolicies
     {
         public ErrorHandlingMiddleware(MiddlewareBase<TContext, TOut> next) : base(next)
         {
-
         }
 
-        protected override async Task<TOut> RunInnerAsync(TContext context, Func<Task<TOut>> func)
+        protected override async Task<TOut> RunInnerAsync(
+            TContext context,
+            Func<CancellationToken, Task<TOut>> func,
+            CancellationToken stoppingToken)
         {
             try
             {
-                return await func();
+                return await func(stoppingToken);
             }
             catch (TException)
             {

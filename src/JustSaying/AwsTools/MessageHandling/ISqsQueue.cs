@@ -15,7 +15,7 @@ namespace JustSaying.AwsTools.MessageHandling
         Uri Uri { get; }
 
         Task<IList<Message>> GetMessagesAsync(int maximumCount, IEnumerable<string> requestMessageAttributeNames,
-            CancellationToken cancellationToken = default);
+            CancellationToken stoppingToken = default);
 
         Task ChangeMessageVisibilityAsync(string receiptHandle, TimeSpan timeout, CancellationToken cancellationToken = default);
 

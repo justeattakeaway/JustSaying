@@ -190,7 +190,7 @@ namespace JustSaying.AwsTools.MessageHandling
         public async Task<IList<Message>> GetMessagesAsync(
             int maximumCount,
             IEnumerable<string> requestMessageAttributeNames,
-            CancellationToken cancellationToken = default)
+            CancellationToken stoppingToken)
         {
             var request = new ReceiveMessageRequest
             {
@@ -200,27 +200,10 @@ namespace JustSaying.AwsTools.MessageHandling
                 AttributeNames = requestMessageAttributeNames.ToList()
             };
 
-            using var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));
+            ReceiveMessageResponse sqsMessageResponse =
+                await Client.ReceiveMessageAsync(request, stoppingToken).ConfigureAwait(false);
 
-            try
-            {
-                using var linkedCts =
-                    CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, receiveTimeout.Token);
-
-                ReceiveMessageResponse sqsMessageResponse =
-                    await Client.ReceiveMessageAsync(request, linkedCts.Token).ConfigureAwait(false);
-
-                return sqsMessageResponse?.Messages;
-            }
-            finally
-            {
-                if (receiveTimeout.Token.IsCancellationRequested)
-                {
-                    Logger.LogWarning(
-                        "Timed out while receiving messages from queue '{QueueName}' in region '{Region}'.",
-                        QueueName, Region);
-                }
-            }
+            return sqsMessageResponse?.Messages;
         }
 
         public async Task DeleteMessageAsync(

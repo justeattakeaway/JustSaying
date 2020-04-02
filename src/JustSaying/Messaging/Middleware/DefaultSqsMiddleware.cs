@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.Channels;
@@ -17,11 +18,14 @@ namespace JustSaying.Messaging.Middleware
             _logger = logger;
         }
 
-        protected override async Task<IList<Message>> RunInnerAsync(GetMessagesContext context, Func<Task<IList<Message>>> func)
+        protected override async Task<IList<Message>> RunInnerAsync(
+            GetMessagesContext context,
+            Func<CancellationToken, Task<IList<Message>>> func,
+            CancellationToken stoppingToken)
         {
             try
             {
-                var results = await func().ConfigureAwait(false);
+                var results = await func(stoppingToken).ConfigureAwait(false);
 
                 _logger.LogTrace(
                     "Polled for messages on queue '{QueueName}' in region '{Region}', and received {MessageCount} messages.",

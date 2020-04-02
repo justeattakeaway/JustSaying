@@ -13,7 +13,6 @@ namespace JustSaying
 
     public interface IMayWantOptionalSettings : IMayWantMonitoring,
         IMayWantMessageLockStore,
-        IMayWantCustomSerialization,
         IMayWantAFailoverRegion,
         IMayWantAwsClientFactory,
         IMayWantMessageContextAccessor
@@ -43,11 +42,6 @@ namespace JustSaying
     public interface IMayWantMessageLockStore : IAmJustSayingFluently
     {
         IMayWantOptionalSettings WithMessageLockStoreOf(IMessageLockAsync messageLock);
-    }
-
-    public interface IMayWantCustomSerialization : IAmJustSayingFluently
-    {
-        IMayWantOptionalSettings WithSerializationFactory(IMessageSerializationFactory factory);
     }
 
     public interface IMayWantMessageContextAccessor : IAmJustSayingFluently

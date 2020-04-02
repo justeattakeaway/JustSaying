@@ -139,7 +139,8 @@ namespace Microsoft.Extensions.DependencyInjection
                 (p) =>
                 {
                     var config = p.GetRequiredService<IMessagingConfig>();
-                    return new MessageSerializationRegister(config.MessageSubjectProvider);
+                    var serializerFactory = p.GetRequiredService<IMessageSerializationFactory>();
+                    return new MessageSerializationRegister(config.MessageSubjectProvider, serializerFactory);
                 });
 
             services.TryAddSingleton(

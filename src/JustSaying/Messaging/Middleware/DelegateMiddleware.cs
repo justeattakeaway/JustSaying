@@ -1,13 +1,14 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JustSaying.Messaging.Middleware
 {
     internal class DelegateMiddleware<TContext, TOut> : MiddlewareBase<TContext, TOut>
     {
-        protected override async Task<TOut> RunInnerAsync(TContext context, Func<Task<TOut>> func)
+        protected override async Task<TOut> RunInnerAsync(TContext context, Func<CancellationToken, Task<TOut>> func, CancellationToken stoppingToken)
         {
-            return await func().ConfigureAwait(false);
+            return await func(stoppingToken).ConfigureAwait(false);
         }
     }
 }

@@ -8,19 +8,21 @@ namespace JustSaying.Messaging.MessageSerialization
     public class MessageSerializationRegister : IMessageSerializationRegister
     {
         private readonly IMessageSubjectProvider _messageSubjectProvider;
+        private readonly IMessageSerializationFactory _serializationFactory;
         private readonly IDictionary<Type, TypeSerializer> _map = new ConcurrentDictionary<Type, TypeSerializer>();
 
-        public MessageSerializationRegister(IMessageSubjectProvider messageSubjectProvider)
+        public MessageSerializationRegister(IMessageSubjectProvider messageSubjectProvider, IMessageSerializationFactory serializationFactory)
         {
             _messageSubjectProvider = messageSubjectProvider ?? throw new ArgumentNullException(nameof(messageSubjectProvider));
+            _serializationFactory = serializationFactory;
         }
 
-        public void AddSerializer<T>(IMessageSerializer serializer) where T : Message
+        public void AddSerializer<T>() where T : Message
         {
             var key = typeof(T);
             if (!_map.TryGetValue(key, out TypeSerializer typeSerializer))
             {
-                _map[key] = new TypeSerializer(typeof(T), serializer);
+                _map[key] = new TypeSerializer(typeof(T), _serializationFactory.GetSerializer<T>());
             }
         }
 
