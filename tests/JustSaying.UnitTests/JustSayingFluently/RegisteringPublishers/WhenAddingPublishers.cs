@@ -17,7 +17,6 @@ namespace JustSaying.UnitTests.JustSayingFluently.RegisteringPublishers
             return new JustSaying.JustSayingFluently(_bus,
                 null,
                 new AwsClientFactoryProxy(),
-                new NewtonsoftSerializationFactory(),
                 Substitute.For<ILoggerFactory>());
         }
 

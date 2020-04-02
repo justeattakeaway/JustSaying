@@ -34,7 +34,6 @@ namespace JustSaying
         private readonly ILogger _log;
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
         private readonly IAwsClientFactoryProxy _awsClientFactoryProxy;
-        private readonly IMessageSerializationFactory _serializationFactory;
         protected internal IAmJustSaying Bus { get; set; }
         private SqsReadConfiguration _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic);
         private readonly ILoggerFactory _loggerFactory;
@@ -43,7 +42,6 @@ namespace JustSaying
             IAmJustSaying bus,
             IVerifyAmazonQueues queueCreator,
             IAwsClientFactoryProxy awsClientFactoryProxy,
-            IMessageSerializationFactory serializationFactory,
             ILoggerFactory loggerFactory)
         {
             _loggerFactory = loggerFactory;
@@ -51,7 +49,6 @@ namespace JustSaying
             Bus = bus;
             _amazonQueueCreator = queueCreator;
             _awsClientFactoryProxy = awsClientFactoryProxy;
-            _serializationFactory = serializationFactory;
         }
 
         /// <summary>

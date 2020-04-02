@@ -77,7 +77,6 @@ namespace JustSaying
             var bus = new JustSayingFluently(justSayingBus,
                 amazonQueueCreator,
                 awsClientFactoryProxy,
-                serializationFactory,
                 dependencies.LoggerFactory);
 
             bus

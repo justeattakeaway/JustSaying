@@ -299,18 +299,12 @@ namespace JustSaying
             return ServicesBuilder?.MessageContextAccessor?.Invoke() ?? ServiceResolver.ResolveService<IMessageContextAccessor>();
         }
 
-        private IMessageSerializationFactory CreateMessageSerializationFactory()
-        {
-            return ServicesBuilder?.MessageSerializationFactory?.Invoke() ?? ServiceResolver.ResolveService<IMessageSerializationFactory>();
-        }
-
         private JustSayingFluently CreateFluent(JustSayingBus bus, ILoggerFactory loggerFactory)
         {
             IAwsClientFactoryProxy proxy = CreateFactoryProxy();
             IVerifyAmazonQueues queueCreator = new AmazonQueueCreator(proxy, loggerFactory);
-            IMessageSerializationFactory serializationFactory = CreateMessageSerializationFactory();
 
-            var fluent = new JustSayingFluently(bus, queueCreator, proxy, serializationFactory, loggerFactory);
+            var fluent = new JustSayingFluently(bus, queueCreator, proxy, loggerFactory);
 
             IMessageMonitor messageMonitor = CreateMessageMonitor();
             IMessageContextAccessor messageContextAccessor = CreateMessageContextAccessor();
