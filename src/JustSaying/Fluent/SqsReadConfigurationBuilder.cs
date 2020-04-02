@@ -23,7 +23,7 @@ namespace JustSaying.Fluent
         /// </summary>
         private string TopicSourceAccountId { get; set; }
 
-        private string SubscriptionGroup { get; set; }
+        private string SubscriptionGroupName { get; set; }
 
         /// <summary>
         /// Configures the maximum number of messages that can be inflight at any time.
@@ -39,9 +39,9 @@ namespace JustSaying.Fluent
         }
 
 
-        public SqsReadConfigurationBuilder WithSubscriptionGroup(string subscriptionGroup)
+        public SqsReadConfigurationBuilder WithSubscriptionGroup(string subscriptionGroupName)
         {
-            SubscriptionGroup = subscriptionGroup;
+            SubscriptionGroupName = subscriptionGroupName;
             return this;
         }
 
@@ -90,9 +90,9 @@ namespace JustSaying.Fluent
                 config.TopicSourceAccount = TopicSourceAccountId;
             }
 
-            if (SubscriptionGroup != null)
+            if (SubscriptionGroupName != null)
             {
-                config.SubscriptionGroup = SubscriptionGroup;
+                config.SubscriptionGroupName = SubscriptionGroupName;
             }
         }
     }
