@@ -11,7 +11,7 @@
     <AwsSdkSqsVersion>3.3.102.65</AwsSdkSqsVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="coverlet.msbuild" Version="2.8.0" PrivateAssets="All" />
+    <PackageReference Include="coverlet.msbuild" Version="2.8.1" PrivateAssets="All" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
     <PackageReference Include="ReportGenerator" Version="4.5.3" PrivateAssets="All" />
