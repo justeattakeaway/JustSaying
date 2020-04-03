@@ -77,6 +77,8 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
                 var buffer = new MessageReceiveBuffer(
                     subscriptionGroupSettings.Prefetch,
                     subscriptionGroupSettings.BufferSize,
+                    subscriptionGroupSettings.ReceiveBufferReadTimeout,
+                    subscriptionGroupSettings.ReceiveBufferWriteTimeout,
                     queue,
                     _subscriptionConfig.SqsMiddleware,
                     _monitor,

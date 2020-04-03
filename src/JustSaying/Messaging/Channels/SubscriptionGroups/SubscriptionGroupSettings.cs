@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using JustSaying.AwsTools.MessageHandling;
 
@@ -9,12 +10,16 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             string name,
             int concurrencyLimit,
             int bufferSize,
+            TimeSpan receiveBufferReadTimeout,
+            TimeSpan receiveBufferWriteTimeout,
             int multiplexerCapacity,
             int prefetch,
             IReadOnlyCollection<ISqsQueue> queues)
         {
             ConcurrencyLimit = concurrencyLimit;
             BufferSize = bufferSize;
+            ReceiveBufferReadTimeout = receiveBufferReadTimeout;
+            ReceiveBufferWriteTimeout = receiveBufferWriteTimeout;
             MultiplexerCapacity = multiplexerCapacity;
             Prefetch = prefetch;
             Queues = queues;
@@ -23,6 +28,8 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
         public int ConcurrencyLimit { get; }
         public int BufferSize { get; }
+        public TimeSpan ReceiveBufferReadTimeout { get; }
+        public TimeSpan ReceiveBufferWriteTimeout { get; }
         public int MultiplexerCapacity { get; }
         public int Prefetch { get; }
         public string Name { get; }

@@ -1,18 +1,10 @@
-using System;
 using JustSaying.Messaging.MessageSerialization;
-using JustSaying.Models;
-using NSubstitute;
-using Shouldly;
 using Xunit;
 
 namespace JustSaying.UnitTests.Messaging.Serialization.SerializationRegister
 {
     public class WhenDeserializingMessage : XBehaviourTest<MessageSerializationRegister>
     {
-        private class CustomMessage : Message
-        {
-        }
-
         protected override MessageSerializationRegister CreateSystemUnderTest() =>
             new MessageSerializationRegister(
                 new NonGenericMessageSubjectProvider(),

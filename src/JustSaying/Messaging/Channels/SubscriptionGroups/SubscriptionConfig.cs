@@ -13,6 +13,8 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         internal SubscriptionConfig()
         {
             DefaultBufferSize = MessageConstants.MaxAmazonMessageCap;
+            DefaultReceiveBufferReadTimeout = TimeSpan.FromMinutes(5);
+            DefaultReceiveBufferWriteTimeout = TimeSpan.FromSeconds(2);
             DefaultMultiplexerCapacity = 100;
             DefaultPrefetch = 10;
             DefaultConcurrencyLimit = Environment.ProcessorCount * MessageConstants.ParallelHandlerExecutionPerCore;
@@ -20,6 +22,8 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
         public int DefaultPrefetch { get; set; }
         public int DefaultBufferSize { get; set; }
+        public TimeSpan DefaultReceiveBufferReadTimeout { get; set; }
+        public TimeSpan DefaultReceiveBufferWriteTimeout { get; set; }
         public int DefaultConcurrencyLimit { get; set; }
         public int DefaultMultiplexerCapacity { get; set; }
 

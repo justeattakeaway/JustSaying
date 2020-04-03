@@ -9,6 +9,8 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         private readonly List<ISqsQueue> _sqsQueues;
 
         private int? _bufferSize;
+        private TimeSpan? _receiveBufferReadTimeout;
+        private TimeSpan? _receiveBufferWriteTimeout;
         private int? _concurrencyLimit;
         private int? _multiplexerCapacity;
         private int? _prefetch;
@@ -46,6 +48,18 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             return this;
         }
 
+        public SubscriptionGroupSettingsBuilder WithReceiveBufferReadTimeout(TimeSpan receiveBufferReadTimeout)
+        {
+            _receiveBufferReadTimeout = receiveBufferReadTimeout;
+            return this;
+        }
+
+        public SubscriptionGroupSettingsBuilder WithReceiveBufferWriteTimeout(TimeSpan receiveBufferWriteTimeout)
+        {
+            _receiveBufferWriteTimeout = receiveBufferWriteTimeout;
+            return this;
+        }
+
         public SubscriptionGroupSettingsBuilder WithMultiplexerCapacity(int multiplexerCapacity)
         {
             _multiplexerCapacity = multiplexerCapacity;
@@ -72,6 +86,8 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
                 _groupName,
                 _concurrencyLimit ?? _defaults.DefaultConcurrencyLimit,
                 _bufferSize ?? _defaults.DefaultBufferSize,
+                _receiveBufferReadTimeout ?? _defaults.DefaultReceiveBufferReadTimeout,
+                _receiveBufferWriteTimeout ?? _defaults.DefaultReceiveBufferWriteTimeout,
                 _multiplexerCapacity ?? _defaults.DefaultMultiplexerCapacity,
                 _prefetch ?? _defaults.DefaultPrefetch,
                 _sqsQueues);

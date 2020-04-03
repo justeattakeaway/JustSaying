@@ -19,6 +19,8 @@ namespace JustSaying.Messaging.Channels.Receive
         private readonly Channel<IQueueMessageContext> _channel;
         private readonly int _prefetch;
         private readonly int _bufferSize;
+        private readonly TimeSpan _readTimeout;
+        private readonly TimeSpan _writeTimeout;
         private readonly ISqsQueue _sqsQueue;
         private readonly MiddlewareBase<GetMessagesContext, IList<Message>> _sqsMiddleware;
         private readonly IMessageMonitor _monitor;
@@ -32,6 +34,8 @@ namespace JustSaying.Messaging.Channels.Receive
         public MessageReceiveBuffer(
             int prefetch,
             int bufferSize,
+            TimeSpan readTimeout,
+            TimeSpan writeTimeout,
             ISqsQueue sqsQueue,
             MiddlewareBase<GetMessagesContext, IList<Message>> sqsMiddleware,
             IMessageMonitor monitor,
@@ -41,6 +45,8 @@ namespace JustSaying.Messaging.Channels.Receive
             _channel = Channel.CreateBounded<IQueueMessageContext>(bufferSize);
             _prefetch = prefetch;
             _bufferSize = bufferSize;
+            _readTimeout = readTimeout;
+            _writeTimeout = writeTimeout;
             _sqsQueue = sqsQueue ?? throw new ArgumentNullException(nameof(sqsQueue));
             _sqsMiddleware = sqsMiddleware ?? throw new ArgumentNullException(nameof(sqsMiddleware));
             _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
@@ -57,7 +63,7 @@ namespace JustSaying.Messaging.Channels.Receive
         /// Starts the receive buffer until it's cancelled by the stopping token.
         /// </summary>
         /// <param name="stoppingToken">A <see cref="CancellationToken"/> that will stop the buffer when signalled.</param>
-         /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation to receive the messages.</returns>
+        /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation to receive the messages.</returns>
         public async Task Run(CancellationToken stoppingToken)
         {
             await Task.Yield();
@@ -103,7 +109,7 @@ namespace JustSaying.Messaging.Channels.Receive
         {
             stoppingToken.ThrowIfCancellationRequested();
 
-            using var receiveTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(300));
+            using var receiveTimeout = new CancellationTokenSource(_readTimeout);
             IList<Message> messages;
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -150,11 +156,8 @@ namespace JustSaying.Messaging.Channels.Receive
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                using var timeoutToken = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-                // we don't want to pass the stoppingToken here because
-                // we want to process any messages queued messages before stopping
-                using var linkedCts =
-                    CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, stoppingToken);
+                using var timeoutToken = new CancellationTokenSource(_writeTimeout);
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, stoppingToken);
 
                 try
                 {
