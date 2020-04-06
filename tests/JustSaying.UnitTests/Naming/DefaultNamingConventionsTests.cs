@@ -15,7 +15,7 @@ namespace JustSaying.UnitTests.Naming
         public void WhenGeneratingTopicName_ForNonGenericType_ThenTheCorrectNameShouldBeReturned()
         {
             // Arrange + Act
-            var result = Sut.TopicName<SimpleMessage>();
+            var result = Sut.TopicName<SimpleMessage>(null);
 
             // Assert
             result.ShouldBe("simplemessage");
@@ -25,7 +25,7 @@ namespace JustSaying.UnitTests.Naming
         public void WhenGeneratingTopicName_ForGenericType_ThenTheCorrectNameShouldBeReturned()
         {
             // Arrange + Act
-            var result = Sut.TopicName<List<List<string>>>();
+            var result = Sut.TopicName<List<List<string>>>(null);
 
             // Assert
             result.ShouldBe("listliststring");
@@ -39,7 +39,7 @@ namespace JustSaying.UnitTests.Naming
                 .TopicName<Tuple<
                     TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName
                     , TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName,
-                    TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName>>();
+                    TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName>>(null);
 
             // Arrange
             result.Length.ShouldBe(256);
@@ -49,7 +49,7 @@ namespace JustSaying.UnitTests.Naming
         public void WhenGeneratingQueueName_ForNonGenericType_ThenTheCorrectNameShouldBeReturned()
         {
             // Arrange + Act
-            var result = Sut.QueueName<SimpleMessage>();
+            var result = Sut.QueueName<SimpleMessage>(null);
 
             // Assert
             result.ShouldBe("simplemessage");
@@ -59,7 +59,7 @@ namespace JustSaying.UnitTests.Naming
         public void WhenGeneratingQueueName_ForGenericType_ThenTheCorrectNameShouldBeReturned()
         {
             // Arrange + Act
-            var result = Sut.QueueName<List<string>>();
+            var result = Sut.QueueName<List<string>>(null);
 
             // Assert
             result.ShouldBe("liststring");
@@ -71,7 +71,7 @@ namespace JustSaying.UnitTests.Naming
             // Arrange + Act
             var result =
                 Sut.QueueName<
-                    TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName>();
+                    TypeWithAReallyReallyReallyLongClassNameThatShouldExceedTheMaximumLengthOfAnAwsResourceName>(null);
 
             // Assert
             result.Length.ShouldBe(80);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using JustSaying.AwsTools.QueueCreation;
 
 namespace JustSaying.Naming
 {
@@ -37,9 +38,9 @@ namespace JustSaying.Naming
             typeof(DateTimeOffset)
         };
 
-        public virtual string TopicName<T>() => CreateResourceName(typeof(T), MaxTopicNameLength);
+        public virtual string TopicName<T>(SqsBasicConfiguration config) => CreateResourceName(typeof(T), MaxTopicNameLength);
 
-        public virtual string QueueName<T>() => CreateResourceName(typeof(T), MaxQueueNameLength);
+        public virtual string QueueName<T>(SqsBasicConfiguration config) => CreateResourceName(typeof(T), MaxQueueNameLength);
 
         private static string CreateResourceName(Type type, int maximumLength)
         {

@@ -18,7 +18,6 @@ namespace JustSaying.AwsTools.QueueCreation
 
         public SubscriptionType SubscriptionType { get; private set; }
 
-        public string QueueName { get; set; }
         public string TopicName { get; set; }
         public string PublishEndpoint { get; set; }
 

@@ -10,14 +10,6 @@ namespace JustSaying.AwsTools.QueueCreation
             RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
         }
 
-        public string QueueName { get; set; }
 
-        protected override void OnValidate()
-        {
-            if (string.IsNullOrWhiteSpace(QueueName))
-            {
-                throw new ConfigurationErrorsException("Invalid configuration. QueueName must be provided.");
-            }
-        }
     }
 }

@@ -1,3 +1,5 @@
+using JustSaying.AwsTools.QueueCreation;
+
 namespace JustSaying.Naming
 {
     /// <summary>
@@ -12,6 +14,6 @@ namespace JustSaying.Naming
         /// The message type
         /// </typeparam>
         /// <returns>The topic name that will be used for the message type.</returns>
-        string TopicName<T>();
+        string TopicName<T>(SqsBasicConfiguration config);
     }
 }
