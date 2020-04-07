@@ -18,7 +18,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
         private readonly string _groupName;
 
-        internal SubscriptionGroupSettingsBuilder(string groupName)
+        public SubscriptionGroupSettingsBuilder(string groupName)
         {
             _groupName = groupName;
             _sqsQueues = new List<ISqsQueue>();
