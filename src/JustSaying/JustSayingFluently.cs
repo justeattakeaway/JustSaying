@@ -79,7 +79,7 @@ namespace JustSaying
             var snsWriteConfig = new SnsWriteConfiguration();
             configBuilder?.Invoke(snsWriteConfig);
 
-            _subscriptionConfig.TopicName = GetOrUseTopicNamingConvention<T>(_subscriptionConfig, _subscriptionConfig.TopicName);
+            _subscriptionConfig.TopicName = GetOrUseTopicNamingConvention<T>(_subscriptionConfig.TopicName);
 
             Bus.SerializationRegister.AddSerializer<T>();
 
@@ -134,7 +134,7 @@ namespace JustSaying
             var config = new SqsWriteConfiguration();
             configBuilder?.Invoke(config);
 
-            config.QueueName = GetOrUseQueueNamingConvention<T>(config, config.QueueName);
+            config.QueueName = GetOrUseQueueNamingConvention<T>(config.QueueName);
 
             foreach (var region in Bus.Config.Regions)
             {
@@ -235,8 +235,8 @@ namespace JustSaying
 
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message
         {
-            _subscriptionConfig.TopicName = GetOrUseTopicNamingConvention<T>(_subscriptionConfig, _subscriptionConfig.TopicName);
-            _subscriptionConfig.QueueName = GetOrUseQueueNamingConvention<T>(_subscriptionConfig, _subscriptionConfig.QueueName);
+            _subscriptionConfig.TopicName = GetOrUseTopicNamingConvention<T>(_subscriptionConfig.TopicName);
+            _subscriptionConfig.QueueName = GetOrUseQueueNamingConvention<T>(_subscriptionConfig.QueueName);
             _subscriptionConfig.SubscriptionGroupName ??= _subscriptionConfig.QueueName;
 
             var thing = _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
@@ -376,14 +376,18 @@ namespace JustSaying
             return this;
         }
 
-        private string GetOrUseTopicNamingConvention<T>(SqsBasicConfiguration config, string defaultTopicName)
+        private string GetOrUseTopicNamingConvention<T>(string defaultTopicName)
         {
-            return string.IsNullOrWhiteSpace(defaultTopicName) ? Bus.Config.TopicNamingConvention.TopicName<T>(config) : defaultTopicName;
+            return string.IsNullOrWhiteSpace(defaultTopicName)
+                ? Bus.Config.TopicNamingConvention.TopicName<T>(defaultTopicName)
+                : defaultTopicName;
         }
 
-        private string GetOrUseQueueNamingConvention<T>(SqsBasicConfiguration config, string defaultQueueName)
+        private string GetOrUseQueueNamingConvention<T>(string defaultQueueName)
         {
-            return string.IsNullOrWhiteSpace(defaultQueueName) ? Bus.Config.QueueNamingConvention.QueueName<T>(config) : defaultQueueName;
+            return string.IsNullOrWhiteSpace(defaultQueueName)
+                ? Bus.Config.QueueNamingConvention.QueueName<T>(defaultQueueName)
+                : defaultQueueName;
         }
     }
 }

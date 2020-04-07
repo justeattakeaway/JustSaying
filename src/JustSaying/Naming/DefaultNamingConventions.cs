@@ -38,9 +38,9 @@ namespace JustSaying.Naming
             typeof(DateTimeOffset)
         };
 
-        public virtual string TopicName<T>(SqsBasicConfiguration config) => CreateResourceName(typeof(T), MaxTopicNameLength);
+        public virtual string TopicName<T>(string nameOverride) => CreateResourceName(typeof(T), MaxTopicNameLength);
 
-        public virtual string QueueName<T>(SqsBasicConfiguration config) => CreateResourceName(typeof(T), MaxQueueNameLength);
+        public virtual string QueueName<T>(string nameOverride) => CreateResourceName(typeof(T), MaxQueueNameLength);
 
         private static string CreateResourceName(Type type, int maximumLength)
         {

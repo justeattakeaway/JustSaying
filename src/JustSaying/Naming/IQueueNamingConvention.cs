@@ -14,6 +14,6 @@ namespace JustSaying.Naming
         /// The message type
         /// </typeparam>
         /// <returns>The queue name that will be used for the message type.</returns>
-        string QueueName<T>(SqsBasicConfiguration config);
+        string QueueName<T>(string queueNameOverride);
     }
 }
