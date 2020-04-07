@@ -24,13 +24,13 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             _sqsQueues = new List<ISqsQueue>();
         }
 
-        internal SubscriptionGroupSettingsBuilder AddQueue(ISqsQueue sqsQueue)
+        public SubscriptionGroupSettingsBuilder AddQueue(ISqsQueue sqsQueue)
         {
             _sqsQueues.Add(sqsQueue);
             return this;
         }
 
-        internal SubscriptionGroupSettingsBuilder AddQueues(IEnumerable<ISqsQueue> sqsQueues)
+        public SubscriptionGroupSettingsBuilder AddQueues(IEnumerable<ISqsQueue> sqsQueues)
         {
             _sqsQueues.AddRange(sqsQueues);
             return this;
@@ -78,7 +78,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             return this;
         }
 
-        internal SubscriptionGroupSettings Build()
+        public SubscriptionGroupSettings Build()
         {
             if (_defaults == null) throw new InvalidOperationException("Defaults must be set before building settings");
 
