@@ -15,10 +15,10 @@ namespace JustSaying.AwsTools.QueueCreation
             ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod;
             VisibilityTimeout = JustSayingConstants.DefaultVisibilityTimeout;
             RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
-            SubscriptionConfigBuilder = new SubscriptionConfigBuilder();
+            SubscriptionConfig = new SubscriptionConfigBuilder();
         }
 
-        SubscriptionConfigBuilder SubscriptionConfigBuilder { get; set; }
+        SubscriptionConfigBuilder SubscriptionConfig { get; set; }
         public SubscriptionType SubscriptionType { get; private set; }
 
         public string TopicName { get; set; }
