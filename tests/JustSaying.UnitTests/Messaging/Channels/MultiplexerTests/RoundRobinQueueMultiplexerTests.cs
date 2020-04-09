@@ -53,7 +53,12 @@ namespace JustSaying.UnitTests.Messaging.Channels.MultiplexerTests
             using var multiplexer = new RoundRobinQueueMultiplexer(10, _outputHelper.ToLogger<RoundRobinQueueMultiplexer>());
 
             // Act and Assert
-            Assert.Throws<InvalidOperationException>(() => multiplexer.GetMessagesAsync());
+            Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            {
+                await foreach (var msg in multiplexer.GetMessagesAsync())
+                {
+                }
+            });
         }
 
         [Fact]
