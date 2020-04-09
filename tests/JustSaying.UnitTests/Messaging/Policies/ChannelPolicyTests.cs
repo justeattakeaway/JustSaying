@@ -43,7 +43,7 @@ namespace JustSaying.UnitTests.Messaging.Policies
 
             var queues = new List<ISqsQueue> { sqsQueue };
 
-            var config = new SubscriptionConfig();
+            var config = new SubscriptionConfigBuilder();
             config.WithSqsPolicy(
                 next => new ErrorHandlingMiddleware<GetMessagesContext, IList<Message>, InvalidOperationException>(next));
 

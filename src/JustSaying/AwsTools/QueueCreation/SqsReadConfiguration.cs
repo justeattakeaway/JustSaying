@@ -1,4 +1,5 @@
 using System;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageProcessingStrategies;
 
 namespace JustSaying.AwsTools.QueueCreation
@@ -14,14 +15,15 @@ namespace JustSaying.AwsTools.QueueCreation
             ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod;
             VisibilityTimeout = JustSayingConstants.DefaultVisibilityTimeout;
             RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
+            SubscriptionConfigBuilder = new SubscriptionConfigBuilder();
         }
 
+        SubscriptionConfigBuilder SubscriptionConfigBuilder { get; set; }
         public SubscriptionType SubscriptionType { get; private set; }
 
         public string TopicName { get; set; }
         public string PublishEndpoint { get; set; }
 
-        public int? MaxAllowedMessagesInFlight { get; set; }
         public string TopicSourceAccount { get; set; }
         public IMessageBackoffStrategy MessageBackoffStrategy { get; set; }
         public string FilterPolicy { get; set; }

@@ -43,9 +43,15 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 .ConfigureJustSaying((builder) => builder.Publications((options) => options.WithQueue<SimpleMessage>(UniqueName)))
                 .ConfigureJustSaying(
                     (builder) => builder.Subscriptions(
-                        (options) => options.ForQueue<SimpleMessage>(
-                            (queue) => queue.WithName(UniqueName).WithReadConfiguration(
-                                (config) => config.WithMaximumMessagesInflight(25)))))
+                        (options) => options
+                            .WithDefaults(c => c
+                                .WithPrefetch(5)
+                                .WithConcurrencyLimit(10))
+                            .WithSubscriptionGroup("group", groupConfig =>
+                                groupConfig.WithPrefetch(10))
+                            .ForQueue<SimpleMessage>((queue) => queue.WithName(UniqueName)
+                                .WithReadConfiguration(c =>
+                                    c.WithSubscriptionGroup("group")))))
                 .AddSingleton(_handler);
 
             var baseSleep = TestEnvironment.IsSimulatorConfigured ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(2);

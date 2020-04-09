@@ -11,20 +11,20 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
-    internal class SubscriptionGroupFactory : ISubscriptionGroupFactory
+    public class SubscriptionGroupFactory : ISubscriptionGroupFactory
     {
-        private readonly SubscriptionConfig _subscriptionConfig;
+        private readonly SubscriptionConfigBuilder _subscriptionConfigBuilder;
         private readonly IMessageDispatcher _messageDispatcher;
         private readonly IMessageMonitor _monitor;
         private readonly ILoggerFactory _loggerFactory;
 
         public SubscriptionGroupFactory(
-            SubscriptionConfig subscriptionConfig,
+            SubscriptionConfigBuilder subscriptionConfigBuilder,
             IMessageDispatcher messageDispatcher,
             IMessageMonitor monitor,
             ILoggerFactory loggerFactory)
         {
-            _subscriptionConfig = subscriptionConfig;
+            _subscriptionConfigBuilder = subscriptionConfigBuilder;
             _messageDispatcher = messageDispatcher;
             _monitor = monitor;
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
@@ -80,7 +80,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
                     subscriptionGroupSettings.ReceiveBufferReadTimeout,
                     subscriptionGroupSettings.ReceiveBufferWriteTimeout,
                     queue,
-                    _subscriptionConfig.SqsMiddleware,
+                    _subscriptionConfigBuilder.SqsMiddleware,
                     _monitor,
                     _loggerFactory.CreateLogger<MessageReceiveBuffer>());
 

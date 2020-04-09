@@ -113,7 +113,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
                 messageBackoffStrategy,
                 messageContextAccessor);
 
-            var config = new SubscriptionConfig();
+            var config = new SubscriptionConfigBuilder();
             config.WithDefaultSqsPolicy(LoggerFactory);
 
             var subscriptionGroupFactory = new SubscriptionGroupFactory(
@@ -127,11 +127,11 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
             return subscriptionGroupFactory.Create(settings);
         }
 
-        protected virtual Dictionary<string, SubscriptionGroupSettingsBuilder> SetupBusConfig(SubscriptionConfig config)
+        protected virtual Dictionary<string, SubscriptionGroupSettingsBuilder> SetupBusConfig(SubscriptionConfigBuilder configBuilder)
         {
             return new Dictionary<string, SubscriptionGroupSettingsBuilder>
             {
-                { "test", new SubscriptionGroupSettingsBuilder("test").WithDefaultsFrom(config).AddQueues(Queues) },
+                { "test", new SubscriptionGroupSettingsBuilder("test").WithDefaultsFrom(configBuilder).AddQueues(Queues) },
             };
         }
 

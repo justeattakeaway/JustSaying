@@ -93,7 +93,7 @@ namespace JustSaying
                 out SubscriptionGroupSettingsBuilder builder))
             {
                 builder = _subscriptionGroupSettings[subscriptionGroup] =
-                    new SubscriptionGroupSettingsBuilder(subscriptionGroup).WithDefaultsFrom(Config.SubscriptionConfig);
+                    new SubscriptionGroupSettingsBuilder(subscriptionGroup).WithDefaultsFrom(Config.SubscriptionConfigDefaults);
             }
 
             builder.AddQueue(queue);
@@ -158,7 +158,8 @@ namespace JustSaying
                 MessageContextAccessor);
 
             var subscriptionGroupFactory = new SubscriptionGroupFactory(
-                Config.SubscriptionConfig,
+
+                Config.SubscriptionConfigDefaults,
                 dispatcher,
                 Monitor,
                 _loggerFactory);

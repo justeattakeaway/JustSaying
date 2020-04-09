@@ -14,7 +14,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         private int? _concurrencyLimit;
         private int? _multiplexerCapacity;
         private int? _prefetch;
-        private SubscriptionConfig _defaults;
+        private SubscriptionConfigBuilder _defaults;
 
         private readonly string _groupName;
 
@@ -72,7 +72,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             return this;
         }
 
-        public SubscriptionGroupSettingsBuilder WithDefaultsFrom(SubscriptionConfig defaults)
+        public SubscriptionGroupSettingsBuilder WithDefaultsFrom(SubscriptionConfigBuilder defaults)
         {
             _defaults = defaults;
             return this;

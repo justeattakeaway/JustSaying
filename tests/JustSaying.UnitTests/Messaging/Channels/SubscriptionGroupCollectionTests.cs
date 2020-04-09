@@ -77,11 +77,10 @@ namespace JustSaying.UnitTests.Messaging.Channels
         private JustSaying.JustSayingBus CreateBus()
         {
             var config = Substitute.For<IMessagingConfig>();
-            config.SubscriptionConfig.Returns(new SubscriptionConfig());
+            config.SubscriptionConfigDefaults = new SubscriptionConfigBuilder();
             var serializationRegister = new MessageSerializationRegister(
                 new NonGenericMessageSubjectProvider(),
                 new NewtonsoftSerializationFactory());
-            var serializationFactory = new NewtonsoftSerializationFactory();
 
             var bus = new JustSaying.JustSayingBus(config, serializationRegister, LoggerFactory)
             {
@@ -130,7 +129,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             IList<ISqsQueue> queues,
             IMessageDispatcher dispatcher)
         {
-            var config = new SubscriptionConfig();
+            var config = new SubscriptionConfigBuilder();
 
             var settings = new Dictionary<string, SubscriptionGroupSettingsBuilder>
             {

@@ -20,20 +20,20 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
         }
 
         protected override Dictionary<string, SubscriptionGroupSettingsBuilder> SetupBusConfig(
-            SubscriptionConfig config)
+            SubscriptionConfigBuilder configBuilder)
         {
             return new Dictionary<string, SubscriptionGroupSettingsBuilder>
             {
                 {
                     "queueA", new SubscriptionGroupSettingsBuilder("queueA")
-                        .WithDefaultsFrom(config)
+                        .WithDefaultsFrom(configBuilder)
                         .AddQueue(_queueA)
                         .WithPrefetch(5)
                         .WithBufferSize(20)
                         .WithConcurrencyLimit(1)
                         .WithMultiplexerCapacity(30)
                 },
-                { "queueB", new SubscriptionGroupSettingsBuilder("queueB").WithDefaultsFrom(config).AddQueue(_queueB) }
+                { "queueB", new SubscriptionGroupSettingsBuilder("queueB").WithDefaultsFrom(configBuilder).AddQueue(_queueB) }
             };
         }
 

@@ -46,7 +46,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var queues = new List<ISqsQueue> { sqsQueue1 };
             IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
 
-            var config = new SubscriptionConfig();
+            var config = new SubscriptionConfigBuilder();
             config.WithDefaultSqsPolicy(LoggerFactory);
             var settings = new Dictionary<string, SubscriptionGroupSettingsBuilder>
             {

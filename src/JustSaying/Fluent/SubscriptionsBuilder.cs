@@ -24,6 +24,9 @@ namespace JustSaying.Fluent
         /// </summary>
         internal MessagingBusBuilder Parent { get; }
 
+        internal SubscriptionConfigBuilder Defaults = new SubscriptionConfigBuilder();
+
+
         /// <summary>
         /// Gets the configured subscription builders.
         /// </summary>
@@ -31,6 +34,23 @@ namespace JustSaying.Fluent
 
         private IDictionary<string, SubscriptionGroupSettingsBuilder> SubscriptionGroupSettings { get; } =
             new Dictionary<string, SubscriptionGroupSettingsBuilder>();
+
+        /// <summary>
+        /// Configure the default settings for all subscription groups
+        /// </summary>
+        /// <param name="configure">A delegate that configures the default settings</param>
+        /// <returns>
+        /// The current <see cref="SubscriptionsBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public SubscriptionsBuilder WithDefaults(Action<SubscriptionConfigBuilder> configure)
+        {
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
+            configure(default);
+            return this;
+        }
 
         /// <summary>
         /// Configures a queue subscription for the default queue.
