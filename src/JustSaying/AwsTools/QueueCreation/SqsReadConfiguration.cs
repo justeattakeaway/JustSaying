@@ -18,7 +18,7 @@ namespace JustSaying.AwsTools.QueueCreation
             SubscriptionConfig = new SubscriptionConfigBuilder();
         }
 
-        SubscriptionConfigBuilder SubscriptionConfig { get; set; }
+        public SubscriptionConfigBuilder SubscriptionConfig { get; private set; }
         public SubscriptionType SubscriptionType { get; private set; }
 
         public string TopicName { get; set; }

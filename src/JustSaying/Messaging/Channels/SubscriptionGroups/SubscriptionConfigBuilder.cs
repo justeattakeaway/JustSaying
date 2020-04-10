@@ -10,7 +10,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
     public class SubscriptionConfigBuilder
     {
-        internal SubscriptionConfigBuilder()
+        public SubscriptionConfigBuilder()
         {
             DefaultBufferSize = MessageConstants.MaxAmazonMessageCap;
             DefaultReceiveBufferReadTimeout = TimeSpan.FromMinutes(5);

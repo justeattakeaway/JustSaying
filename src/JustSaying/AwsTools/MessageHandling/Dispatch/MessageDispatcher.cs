@@ -16,7 +16,7 @@ using SQSMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying.AwsTools.MessageHandling.Dispatch
 {
-    internal class MessageDispatcher : IMessageDispatcher
+    public class MessageDispatcher : IMessageDispatcher
     {
         private readonly IMessageSerializationRegister _serializationRegister;
         private readonly IMessageMonitor _messagingMonitor;
