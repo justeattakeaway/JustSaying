@@ -14,6 +14,6 @@ namespace JustSaying.Naming
         /// The message type
         /// </typeparam>
         /// <returns>The topic name that will be used for the message type.</returns>
-        string TopicName<T>(string topicNameOverride);
+        string TopicName<T>();
     }
 }

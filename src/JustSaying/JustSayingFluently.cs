@@ -379,14 +379,14 @@ namespace JustSaying
         private string GetOrUseTopicNamingConvention<T>(string defaultTopicName)
         {
             return string.IsNullOrWhiteSpace(defaultTopicName)
-                ? Bus.Config.TopicNamingConvention.TopicName<T>(defaultTopicName)
+                ? Bus.Config.TopicNamingConvention.TopicName<T>()
                 : defaultTopicName;
         }
 
         private string GetOrUseQueueNamingConvention<T>(string defaultQueueName)
         {
             return string.IsNullOrWhiteSpace(defaultQueueName)
-                ? Bus.Config.QueueNamingConvention.QueueName<T>(defaultQueueName)
+                ? Bus.Config.QueueNamingConvention.QueueName<T>()
                 : defaultQueueName;
         }
     }
