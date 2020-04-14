@@ -46,20 +46,19 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var queues = new List<ISqsQueue> { sqsQueue1 };
             IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
 
-            var config = new SubscriptionConfigBuilder();
-            config.WithDefaultSqsPolicy(LoggerFactory);
-            var settings = new Dictionary<string, SubscriptionGroupSettingsBuilder>
+            var defaults = new SubscriptionConfigBuilder();
+            defaults.WithDefaultSqsPolicy(LoggerFactory);
+            var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
             {
-                { "test", new SubscriptionGroupSettingsBuilder("test").WithDefaultsFrom(config).AddQueues(queues) },
+                { "test", new SubscriptionGroupConfigBuilder("test").AddQueues(queues) },
             };
 
             var consumerBusFactory = new SubscriptionGroupFactory(
-                config,
                 dispatcher,
                 MessageMonitor,
                 LoggerFactory);
 
-            SubscriptionGroupCollection collection = consumerBusFactory.Create(settings);
+            SubscriptionGroupCollection collection = consumerBusFactory.Create(defaults, settings);
 
             var cts = new CancellationTokenSource();
 

@@ -19,21 +19,19 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
             _queueB = CreateSuccessfulTestQueue("TestQueueB", new TestMessage());
         }
 
-        protected override Dictionary<string, SubscriptionGroupSettingsBuilder> SetupBusConfig(
-            SubscriptionConfigBuilder configBuilder)
+        protected override Dictionary<string, SubscriptionGroupConfigBuilder> SetupBusConfig()
         {
-            return new Dictionary<string, SubscriptionGroupSettingsBuilder>
+            return new Dictionary<string, SubscriptionGroupConfigBuilder>
             {
                 {
-                    "queueA", new SubscriptionGroupSettingsBuilder("queueA")
-                        .WithDefaultsFrom(configBuilder)
+                    "queueA", new SubscriptionGroupConfigBuilder("queueA")
                         .AddQueue(_queueA)
                         .WithPrefetch(5)
                         .WithBufferSize(20)
                         .WithConcurrencyLimit(1)
                         .WithMultiplexerCapacity(30)
                 },
-                { "queueB", new SubscriptionGroupSettingsBuilder("queueB").WithDefaultsFrom(configBuilder).AddQueue(_queueB) }
+                { "queueB", new SubscriptionGroupConfigBuilder("queueB").AddQueue(_queueB) }
             };
         }
 

@@ -348,20 +348,19 @@ namespace JustSaying.UnitTests.Messaging.Channels
             IList<ISqsQueue> queues,
             IMessageDispatcher dispatcher)
         {
-            var config = new SubscriptionConfigBuilder();
+            var defaults = new SubscriptionConfigBuilder();
 
-            var settings = new Dictionary<string, SubscriptionGroupSettingsBuilder>
+            var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
             {
-                { "test",  new SubscriptionGroupSettingsBuilder("test").WithDefaultsFrom(config).AddQueues(queues) },
+                { "test",  new SubscriptionGroupConfigBuilder("test").AddQueues(queues) },
             };
 
             var consumerGroupFactory = new SubscriptionGroupFactory(
-                config,
                 dispatcher,
                 MessageMonitor,
                 LoggerFactory);
 
-            return consumerGroupFactory.Create(settings);
+            return consumerGroupFactory.Create(defaults, settings);
         }
 
         private IMultiplexer CreateMultiplexer()

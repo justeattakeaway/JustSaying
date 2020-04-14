@@ -32,8 +32,8 @@ namespace JustSaying.Fluent
         /// </summary>
         private IList<ISubscriptionBuilder<Message>> Subscriptions { get; } = new List<ISubscriptionBuilder<Message>>();
 
-        private IDictionary<string, SubscriptionGroupSettingsBuilder> SubscriptionGroupSettings { get; } =
-            new Dictionary<string, SubscriptionGroupSettingsBuilder>();
+        private IDictionary<string, SubscriptionGroupConfigBuilder> SubscriptionGroupSettings { get; } =
+            new Dictionary<string, SubscriptionGroupConfigBuilder>();
 
         /// <summary>
         /// Configure the default settings for all subscription groups
@@ -196,7 +196,7 @@ namespace JustSaying.Fluent
 
         public SubscriptionsBuilder WithSubscriptionGroup(
             string groupName,
-            Action<SubscriptionGroupSettingsBuilder> action)
+            Action<SubscriptionGroupConfigBuilder> action)
         {
             if (string.IsNullOrEmpty(groupName)) throw new ArgumentNullException(nameof(groupName));
             if (action == null) throw new ArgumentNullException(nameof(action));
@@ -207,7 +207,7 @@ namespace JustSaying.Fluent
             }
             else
             {
-                var newSettings = new SubscriptionGroupSettingsBuilder(groupName);
+                var newSettings = new SubscriptionGroupConfigBuilder(groupName);
                 action.Invoke(newSettings);
                 SubscriptionGroupSettings.Add(groupName, newSettings);
             }
