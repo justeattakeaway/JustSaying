@@ -47,6 +47,11 @@ namespace JustSaying.AwsTools.QueueCreation
                     throw new ConfigurationErrorsException("You must provide a value for PublishEndpoint.");
                 }
             }
+
+            if (string.IsNullOrWhiteSpace(SubscriptionGroupName))
+            {
+                throw new ConfigurationErrorsException("You must provide a name for the subscription group");
+            }
         }
     }
 }
