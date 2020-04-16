@@ -4,7 +4,11 @@ using JustSaying.Messaging.MessageProcessingStrategies;
 
 namespace JustSaying.AwsTools.QueueCreation
 {
-    public enum SubscriptionType { ToTopic, PointToPoint };
+    public enum SubscriptionType
+    {
+        ToTopic,
+        PointToPoint
+    };
 
     public class SqsReadConfiguration : SqsBasicConfiguration
     {
@@ -31,14 +35,17 @@ namespace JustSaying.AwsTools.QueueCreation
 
         protected override void OnValidate()
         {
-            if (string.IsNullOrWhiteSpace(TopicName) && SubscriptionType == SubscriptionType.ToTopic)
+            if (SubscriptionType == SubscriptionType.ToTopic)
             {
-                throw new ConfigurationErrorsException("Invalid configuration. Topic name must be provided.");
-            }
+                if (string.IsNullOrWhiteSpace(TopicName))
+                {
+                    throw new ConfigurationErrorsException("Invalid configuration. Topic name must be provided.");
+                }
 
-            if (PublishEndpoint == null)
-            {
-                throw new ConfigurationErrorsException("You must provide a value for PublishEndpoint.");
+                if (PublishEndpoint == null)
+                {
+                    throw new ConfigurationErrorsException("You must provide a value for PublishEndpoint.");
+                }
             }
         }
     }
