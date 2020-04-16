@@ -125,6 +125,8 @@ namespace JustSaying.Messaging.Channels.Receive
                     RegionName = _sqsQueue.RegionSystemName,
                 };
 
+                _requestMessageAttributeNames.Add("content");
+
                 messages = await _sqsMiddleware.RunAsync(context,
                         async ct =>
                             await _sqsQueue
