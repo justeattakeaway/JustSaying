@@ -1,4 +1,5 @@
 using System;
+using Amazon.SimpleNotificationService.Model;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageProcessingStrategies;
 
@@ -52,6 +53,28 @@ namespace JustSaying.AwsTools.QueueCreation
             {
                 throw new ConfigurationErrorsException("You must provide a name for the subscription group");
             }
+        }
+
+        public SqsReadConfiguration Copy()
+        {
+            return new SqsReadConfiguration(SubscriptionType)
+            {
+                SubscriptionConfig = SubscriptionConfig,
+                FilterPolicy = FilterPolicy,
+                PublishEndpoint = PublishEndpoint,
+                TopicName = TopicName,
+                MessageBackoffStrategy = MessageBackoffStrategy,
+                TopicSourceAccount = TopicSourceAccount,
+                DeliveryDelay = DeliveryDelay,
+                MessageRetention = MessageRetention,
+                SubscriptionGroupName = SubscriptionGroupName,
+                QueueName = QueueName,
+                VisibilityTimeout = VisibilityTimeout,
+                ErrorQueueOptOut = ErrorQueueOptOut,
+                ErrorQueueRetentionPeriod = ErrorQueueRetentionPeriod,
+                ServerSideEncryption = ServerSideEncryption,
+                RetryCountBeforeSendingToErrorQueue = RetryCountBeforeSendingToErrorQueue
+            };
         }
     }
 }
