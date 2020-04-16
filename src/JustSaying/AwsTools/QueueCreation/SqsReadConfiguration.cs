@@ -31,7 +31,7 @@ namespace JustSaying.AwsTools.QueueCreation
 
         protected override void OnValidate()
         {
-            if (SubscriptionType == SubscriptionType.ToTopic && string.IsNullOrWhiteSpace(TopicName))
+            if (string.IsNullOrWhiteSpace(TopicName) && SubscriptionType == SubscriptionType.ToTopic)
             {
                 throw new ConfigurationErrorsException("Invalid configuration. Topic name must be provided.");
             }
