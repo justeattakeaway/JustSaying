@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
-using JustSaying.Messaging.Channels.Interrogation;
+using JustSaying.Messaging.Interrogation;
 
 namespace JustSaying.AwsTools.MessageHandling
 {

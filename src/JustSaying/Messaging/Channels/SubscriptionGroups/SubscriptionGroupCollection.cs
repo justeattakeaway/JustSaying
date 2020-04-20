@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using JustSaying.Messaging.Channels.Interrogation;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups

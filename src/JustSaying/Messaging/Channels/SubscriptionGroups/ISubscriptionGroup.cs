@@ -1,6 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
-using JustSaying.Messaging.Channels.Interrogation;
+using JustSaying.Messaging.Interrogation;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {

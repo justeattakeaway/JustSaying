@@ -1,4 +1,4 @@
-namespace JustSaying.Messaging.Channels.Interrogation
+namespace JustSaying.Messaging.Interrogation
 {
     public interface IInterrogable
     {
