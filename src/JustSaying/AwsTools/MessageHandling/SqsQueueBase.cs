@@ -244,7 +244,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 Policy,
                 Uri,
                 DeliveryDelay,
-                ErrorQueue,
+                ErrorQueue = ErrorQueue.QueueName,
                 VisibilityTimeout,
                 MessageRetentionPeriod,
             };
