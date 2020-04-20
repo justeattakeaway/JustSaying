@@ -91,7 +91,10 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             var map = CreateHandlerMap();
 
             map.Add("queue", typeof(SimpleMessage), fn1);
-            Assert.Throws<InvalidOperationException>(() => map.Add("queue", typeof(SimpleMessage), fn2));
+            map.Add("queue", typeof(SimpleMessage), fn2);
+
+            // First in wins
+            map.Get("queue", typeof(SimpleMessage)).ShouldBe(fn1);
         }
 
         [Fact]
@@ -104,8 +107,10 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             var map = CreateHandlerMap();
             map.Add("queue", typeof(SimpleMessage), fn1);
             map.Add("queue", typeof(AnotherSimpleMessage), fn3);
+            map.Add("queue", typeof(SimpleMessage), fn2);
 
-            Assert.Throws<InvalidOperationException>(() => map.Add("queue", typeof(SimpleMessage), fn2));
+            // First in wins
+            map.Get("queue", typeof(SimpleMessage)).ShouldBe(fn1);
         }
 
         [Fact]

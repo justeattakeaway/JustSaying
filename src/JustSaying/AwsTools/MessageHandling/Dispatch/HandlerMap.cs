@@ -49,15 +49,20 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             Add(queueName, typeof(T), handlerFunc);
         }
 
+        /// <summary>
+        /// Adds a handler to the handler map. If the handler is already registered for a queue, it will not be added again.
+        /// </summary>
+        /// <param name="queueName">The queue name to register the handler for</param>
+        /// <param name="messageType">The type of message to handle for this queue</param>
+        /// <param name="handlerFunc">The provider of the handler to run for the queue/message type</param>
         public void Add(string queueName, Type messageType, HandlerFunc handlerFunc)
         {
-            if (_handlers.ContainsKey((queueName, messageType)))
+            // We don't throw here when a handler has already been added, because sometimes callers want safe idempotent behaviour
+            // e.g. when adding a handler for a queue who's name doesn't change between tenants.
+            if (!_handlers.ContainsKey((queueName, messageType)))
             {
-                throw new InvalidOperationException(
-                    $"A message handler has already been registered for type {messageType.FullName}");
+                _handlers.Add((queueName, messageType), handlerFunc);
             }
-
-            _handlers.Add((queueName, messageType), handlerFunc);
         }
 
         public HandlerFunc Get(string queueName, Type messageType)
