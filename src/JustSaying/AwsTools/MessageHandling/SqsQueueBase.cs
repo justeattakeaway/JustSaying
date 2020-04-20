@@ -233,5 +233,21 @@ namespace JustSaying.AwsTools.MessageHandling
 
             await Client.ChangeMessageVisibilityAsync(visibilityRequest, cancellationToken).ConfigureAwait(false);
         }
+
+        public object Interrogate()
+        {
+            return new
+            {
+                Arn,
+                QueueName,
+                Region,
+                Policy,
+                Uri,
+                DeliveryDelay,
+                ErrorQueue,
+                VisibilityTimeout,
+                MessageRetentionPeriod,
+            };
+        }
     }
 }
