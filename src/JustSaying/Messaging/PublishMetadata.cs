@@ -10,6 +10,19 @@ namespace JustSaying.Messaging
 
         public IDictionary<string, MessageAttributeValue> MessageAttributes { get; private set; }
 
+        public PublishMetadata AddMessageAttribute(string key, IReadOnlyCollection<byte> data)
+        {
+            if(data == null) throw new ArgumentNullException(nameof(data));
+
+            var mav = new MessageAttributeValue();
+            mav.BinaryValue = data;
+            mav.DataType = "Binary";
+
+            MessageAttributes[key] = mav;
+
+            return this;
+        }
+
         public PublishMetadata AddMessageAttribute(string key, MessageAttributeValue value)
         {
             if (MessageAttributes == null)

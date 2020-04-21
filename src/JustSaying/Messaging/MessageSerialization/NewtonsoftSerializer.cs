@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Models;
 using Newtonsoft.Json;
@@ -55,8 +58,30 @@ namespace JustSaying.Messaging.MessageSerialization
 
         public MessageAttributes GetMessageAttributes(string message)
         {
-            var body = JObject.Parse(message);
-            return new MessageAttributes(null );
+            var props = JObject.Parse(message).Value<JObject>("MessageAttributes").Properties();
+            var dict = new Dictionary<string, Amazon.SQS.Model.MessageAttributeValue>();
+
+            foreach (var prop in props)
+            {
+                var propData = prop.Value as JObject;
+                if (propData == null) continue;
+
+                var dataType = propData.GetValue("Type", StringComparison.Ordinal);
+                if (dataType == null) continue;
+
+                var isString = dataType.ToString().Equals("String", StringComparison.Ordinal);
+                var data = propData.GetValue("Value", StringComparison.Ordinal);
+
+                var mav = new Amazon.SQS.Model.MessageAttributeValue
+                {
+                    DataType = dataType.ToString(),
+                    StringValue = isString ? data.ToString() : null,
+                    BinaryValue = !isString ? new MemoryStream(Convert.FromBase64String(data.ToString())) : null
+                };
+                dict.Add(prop.Name, mav);
+            }
+
+            return new MessageAttributes(dict);
         }
 
         public string GetMessageSubject(string sqsMessage)
