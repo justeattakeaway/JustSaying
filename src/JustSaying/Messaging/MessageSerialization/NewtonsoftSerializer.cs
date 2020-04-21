@@ -58,7 +58,8 @@ namespace JustSaying.Messaging.MessageSerialization
 
         public MessageAttributes GetMessageAttributes(string message)
         {
-            var props = JObject.Parse(message).Value<JObject>("MessageAttributes").Properties();
+            var props = JObject.Parse(message).Value<JObject>("MessageAttributes")?.Properties();
+            if (props == null) return new MessageAttributes();
             var dict = new Dictionary<string, MessageAttributeValue>();
 
             foreach (var prop in props)
