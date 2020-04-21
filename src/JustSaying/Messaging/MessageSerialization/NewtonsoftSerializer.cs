@@ -59,7 +59,7 @@ namespace JustSaying.Messaging.MessageSerialization
         public MessageAttributes GetMessageAttributes(string message)
         {
             var props = JObject.Parse(message).Value<JObject>("MessageAttributes").Properties();
-            var dict = new Dictionary<string, Amazon.SQS.Model.MessageAttributeValue>();
+            var dict = new Dictionary<string, MessageAttributeValue>();
 
             foreach (var prop in props)
             {
@@ -72,11 +72,11 @@ namespace JustSaying.Messaging.MessageSerialization
                 var isString = dataType.ToString().Equals("String", StringComparison.Ordinal);
                 var data = propData.GetValue("Value", StringComparison.Ordinal);
 
-                var mav = new Amazon.SQS.Model.MessageAttributeValue
+                var mav = new MessageAttributeValue
                 {
                     DataType = dataType.ToString(),
                     StringValue = isString ? data.ToString() : null,
-                    BinaryValue = !isString ? new MemoryStream(Convert.FromBase64String(data.ToString())) : null
+                    BinaryValue = !isString ? Convert.FromBase64String(data.ToString()) : null
                 };
                 dict.Add(prop.Name, mav);
             }
