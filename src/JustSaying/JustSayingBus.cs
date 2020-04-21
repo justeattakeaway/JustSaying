@@ -35,7 +35,7 @@ namespace JustSaying
         }
 
         private ISubscriptionGroupCollection SubscriptionGroups { get; set; }
-        public IMessageSerializationRegister SerializationRegister { get; private set; }
+        public IMessageSerializationRegister SerializationRegister { get; }
 
         public IMessageLockAsync MessageLock
         {
@@ -101,6 +101,7 @@ namespace JustSaying
 
         public void AddMessageHandler<T>(string queueName, Func<IHandlerAsync<T>> futureHandler) where T : Message
         {
+            SerializationRegister.AddSerializer<T>();
             HandlerMap.Add(queueName, futureHandler);
         }
 

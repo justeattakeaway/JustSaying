@@ -1,4 +1,5 @@
 using System;
+using JustSaying.Messaging.Channels.Context;
 using JustSaying.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -50,6 +51,12 @@ namespace JustSaying.Messaging.MessageSerialization
             // For direct publishing to SQS, add Subject and Message properties manually
             var context = new { Subject = subject, Message = json };
             return JsonConvert.SerializeObject(context, _settings);
+        }
+
+        public MessageAttributes GetMessageAttributes(string message)
+        {
+            var body = JObject.Parse(message);
+            return new MessageAttributes(null );
         }
 
         public string GetMessageSubject(string sqsMessage)

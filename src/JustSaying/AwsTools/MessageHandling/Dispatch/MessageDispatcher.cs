@@ -50,9 +50,10 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             }
 
             Message typedMessage;
+            MessageAttributes attributes;
             try
             {
-                typedMessage = _serializationRegister.DeserializeMessage(messageContext.Message.Body);
+                (typedMessage, attributes) = _serializationRegister.DeserializeMessage(messageContext.Message.Body);
             }
             catch (MessageFormatNotSupportedException ex)
             {
@@ -88,7 +89,8 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             {
                 if (typedMessage != null)
                 {
-                    _messageContextAccessor.MessageContext = new MessageContext(messageContext.Message, messageContext.QueueUri);
+                    _messageContextAccessor.MessageContext =
+                        new MessageContext(messageContext.Message, messageContext.QueueUri, attributes);
 
                     handlingSucceeded = await CallMessageHandler(messageContext.QueueName, typedMessage).ConfigureAwait(false);
                 }

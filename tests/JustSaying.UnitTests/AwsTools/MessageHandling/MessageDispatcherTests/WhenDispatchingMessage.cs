@@ -87,10 +87,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
             _loggerFactory.CreateLogger(Arg.Any<string>()).Returns(_logger);
             _queue = new DummySqsQueue(new Uri(ExpectedQueueUrl), _amazonSqsClient, NullLoggerFactory.Instance);
-            _serializationRegister.DeserializeMessage(Arg.Any<string>()).Returns(_typedMessage);
+            _serializationRegister.DeserializeMessage(Arg.Any<string>()).Returns((_typedMessage, new MessageAttributes()));
         }
 
-        private async Task When() => await SystemUnderTest.DispatchMessageAsync(new QueueMessageContext(_sqsMessage, _queue), CancellationToken.None);
+        private async Task When() => await SystemUnderTest
+            .DispatchMessageAsync(_queue.ToMessageContext(_sqsMessage), CancellationToken.None);
 
         private MessageDispatcher CreateSystemUnderTestAsync()
         {

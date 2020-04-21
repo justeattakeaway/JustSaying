@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
@@ -9,6 +11,7 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
+using MessageAttributeValue = Amazon.SQS.Model.MessageAttributeValue;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -68,7 +71,7 @@ namespace JustSaying.AwsTools.MessageHandling
             var request = new SendMessageRequest
             {
                 MessageBody = GetMessageInContext(message),
-                QueueUrl = Uri?.AbsoluteUri
+                QueueUrl = Uri?.AbsoluteUri,
             };
 
             if (metadata?.Delay != null)

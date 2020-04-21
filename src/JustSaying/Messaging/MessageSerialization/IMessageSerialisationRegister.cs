@@ -1,3 +1,4 @@
+using JustSaying.Messaging.Channels.Context;
 using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialization
@@ -9,7 +10,7 @@ namespace JustSaying.Messaging.MessageSerialization
         /// </summary>
         /// <param name="body">Message must always have Subject and Message properties</param>
         /// <returns></returns>
-        Message DeserializeMessage(string body);
+        (Message, MessageAttributes) DeserializeMessage(string body);
 
         /// <summary>
         /// Serializes a message for publishing

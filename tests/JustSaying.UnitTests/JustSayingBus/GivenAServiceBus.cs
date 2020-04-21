@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -54,7 +55,11 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         private JustSaying.JustSayingBus CreateSystemUnderTest()
         {
-            return new JustSaying.JustSayingBus(Config, null, LoggerFactory)
+            var subjectProvider = new GenericMessageSubjectProvider();
+            var serializerFactory = new NewtonsoftSerializationFactory();
+            return new JustSaying.JustSayingBus(Config,
+                new MessageSerializationRegister(subjectProvider, serializerFactory),
+                LoggerFactory)
             {
                 Monitor = Monitor
             };

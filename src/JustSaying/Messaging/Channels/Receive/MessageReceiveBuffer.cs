@@ -180,7 +180,7 @@ namespace JustSaying.Messaging.Channels.Receive
             return new
             {
                 BufferSize = _bufferSize,
-                QueueName = _sqsQueue.QueueName,
+                _sqsQueue.QueueName,
                 Region = _sqsQueue.RegionSystemName,
                 Prefetch = _prefetch,
                 BackoffStrategyName = _backoffStrategyName,

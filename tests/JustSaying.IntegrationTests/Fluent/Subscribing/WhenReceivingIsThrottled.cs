@@ -38,17 +38,13 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         {
             // Arrange
             var services = GivenJustSaying()
-                .ConfigureJustSaying((builder) => builder.Client((client) => client.WithAnonymousCredentials()))
                 .ConfigureJustSaying((builder) => builder.Messaging((options) => options.WithPublishFailureBackoff(TimeSpan.FromMilliseconds(1))))
                 .ConfigureJustSaying((builder) => builder.Publications((options) => options.WithQueue<SimpleMessage>(UniqueName)))
                 .ConfigureJustSaying(
                     (builder) => builder.Subscriptions(
                         (options) => options
-                            .WithDefaults(c => c
-                                .WithPrefetch(5)
-                                .WithConcurrencyLimit(10))
                             .WithSubscriptionGroup("group", groupConfig =>
-                                groupConfig.WithPrefetch(10))
+                                groupConfig.WithConcurrencyLimit(1))
                             .ForQueue<SimpleMessage>((queue) => queue.WithName(UniqueName)
                                 .WithReadConfiguration(c =>
                                     c.WithSubscriptionGroup("group")))))
@@ -74,12 +70,12 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                         await publisher.PublishAsync(_messages[i]);
                     }
 
-                    // Publish the last message after a couple of seconds to guaranty it was scheduled after all the rest
+                    // Publish the last message after a couple of seconds to guarantee it was scheduled after all the rest
                     await Task.Delay(baseSleep);
                     await publisher.PublishAsync(_messages[100]);
 
                     // Wait for a reasonble time before asserting whether the last message has been scheduled.
-                    await Task.Delay(baseSleep * 50);
+                    await Task.Delay(baseSleep);
 
                     Received.InOrder(() => _handler.Handle(Arg.Is<SimpleMessage>((p) => p.Id == _ids[100])));
                 });

@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
@@ -66,7 +67,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
             HandlerMap = new HandlerMap(Monitor, LoggerFactory);
 
             DeserializedMessage = new SimpleMessage { RaisingComponent = "Component" };
-            SerializationRegister.DeserializeMessage(Arg.Any<string>()).Returns(DeserializedMessage);
+            SerializationRegister.DeserializeMessage(Arg.Any<string>()).Returns((DeserializedMessage, new MessageAttributes()));
 
             Given();
         }
