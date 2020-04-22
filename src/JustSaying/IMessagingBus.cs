@@ -9,7 +9,7 @@ namespace JustSaying
     public interface IMessagingBus
     {
         /// <summary>
-        /// Starts the message bus.
+        /// Starts the message bus as an asynchronous operation.
         /// </summary>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> which will stop the bus when signalled.</param>
         Task Start(CancellationToken cancellationToken);

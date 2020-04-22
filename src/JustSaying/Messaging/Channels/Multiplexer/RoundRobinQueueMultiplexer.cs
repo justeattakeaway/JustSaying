@@ -77,18 +77,21 @@ namespace JustSaying.Messaging.Channels.Multiplexer
 
         public Task Run(CancellationToken stoppingToken)
         {
-            if (_started) return _completion;
 
-            lock (_startLock)
+            if (!_started)
             {
-                if (_started) return _completion;
-
-                _stoppingToken = stoppingToken;
-                _completion = RunImpl();
-                _started = true;
-
-                return _completion;
+                lock (_startLock)
+                {
+                    if (!_started)
+                    {
+                        _stoppingToken = stoppingToken;
+                        _completion = RunImpl();
+                        _started = true;
+                    }
+                }
             }
+
+            return _completion;
         }
 
         private async Task RunImpl()

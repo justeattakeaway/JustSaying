@@ -12,7 +12,6 @@
   <ItemGroup>
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="$(AwsSdkSnsVersion)" />
     <PackageReference Include="AWSSDK.SQS" Version="$(AwsSdkSqsVersion)" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(DotNetTestSdkVersion)" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageReference Include="Polly" Version="7.2.0" />
