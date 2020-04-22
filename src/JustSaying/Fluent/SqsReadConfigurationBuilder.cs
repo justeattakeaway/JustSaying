@@ -14,30 +14,11 @@ namespace JustSaying.Fluent
         protected override SqsReadConfigurationBuilder Self => this;
 
         /// <summary>
-        /// Gets or sets the maximum number of messages that can be inflight.
-        /// </summary>
-        private int? MaximumAllowedMessagesInflight { get; set; }
-
-        /// <summary>
         /// Gets or sets the topic source account Id to use.
         /// </summary>
         private string TopicSourceAccountId { get; set; }
 
         private string SubscriptionGroupName { get; set; }
-
-        /// <summary>
-        /// Configures the maximum number of messages that can be inflight at any time.
-        /// </summary>
-        /// <param name="value">The value to use for maximum number of inflight messages.</param>
-        /// <returns>
-        /// The current <see cref="SqsReadConfigurationBuilder"/>.
-        /// </returns>
-        public SqsReadConfigurationBuilder WithMaximumMessagesInflight(int value)
-        {
-            MaximumAllowedMessagesInflight = value;
-            return this;
-        }
-
 
         public SqsReadConfigurationBuilder WithSubscriptionGroup(string subscriptionGroupName)
         {
@@ -79,11 +60,6 @@ namespace JustSaying.Fluent
             // config.Topic = default;
 
             base.Configure(config);
-
-            if (MaximumAllowedMessagesInflight.HasValue)
-            {
-                config.MaxAllowedMessagesInFlight = MaximumAllowedMessagesInflight.Value;
-            }
 
             if (TopicSourceAccountId != null)
             {

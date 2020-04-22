@@ -125,6 +125,8 @@ namespace JustSaying.Messaging.Channels.Receive
                     RegionName = _sqsQueue.RegionSystemName,
                 };
 
+                _requestMessageAttributeNames.Add("content");
+
                 messages = await _sqsMiddleware.RunAsync(context,
                         async ct =>
                             await _sqsQueue
@@ -178,7 +180,7 @@ namespace JustSaying.Messaging.Channels.Receive
             return new
             {
                 BufferSize = _bufferSize,
-                QueueName = _sqsQueue.QueueName,
+                _sqsQueue.QueueName,
                 Region = _sqsQueue.RegionSystemName,
                 Prefetch = _prefetch,
                 BackoffStrategyName = _backoffStrategyName,

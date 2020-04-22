@@ -20,7 +20,7 @@ namespace JustSaying
     public sealed class JustSayingBus : IAmJustSaying, IAmJustInterrogating, IMessagingBus
     {
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _publishersByRegionAndType;
-        private readonly Dictionary<string, SubscriptionGroupSettingsBuilder> _subscriptionGroupSettings;
+        private readonly Dictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings;
 
         private string _previousActiveRegion;
 
@@ -35,7 +35,7 @@ namespace JustSaying
         }
 
         private ISubscriptionGroupCollection SubscriptionGroups { get; set; }
-        public IMessageSerializationRegister SerializationRegister { get; private set; }
+        public IMessageSerializationRegister SerializationRegister { get; }
 
         public IMessageLockAsync MessageLock
         {
@@ -76,7 +76,7 @@ namespace JustSaying
             _publishers = new HashSet<IPublisher>();
 
             _subscriptionGroupSettings =
-                new Dictionary<string, SubscriptionGroupSettingsBuilder>(StringComparer.Ordinal);
+                new Dictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
 
             HandlerMap = new HandlerMap(Monitor, _loggerFactory);
         }
@@ -90,10 +90,10 @@ namespace JustSaying
                 throw new ArgumentNullException(nameof(subscriptionGroup));
 
             if (!_subscriptionGroupSettings.TryGetValue(subscriptionGroup,
-                out SubscriptionGroupSettingsBuilder builder))
+                out SubscriptionGroupConfigBuilder builder))
             {
                 builder = _subscriptionGroupSettings[subscriptionGroup] =
-                    new SubscriptionGroupSettingsBuilder(subscriptionGroup).WithDefaultsFrom(Config.SubscriptionConfig);
+                    new SubscriptionGroupConfigBuilder(subscriptionGroup);
             }
 
             builder.AddQueue(queue);
@@ -101,6 +101,7 @@ namespace JustSaying
 
         public void AddMessageHandler<T>(string queueName, Func<IHandlerAsync<T>> futureHandler) where T : Message
         {
+            SerializationRegister.AddSerializer<T>();
             HandlerMap.Add(queueName, futureHandler);
         }
 
@@ -158,12 +159,11 @@ namespace JustSaying
                 MessageContextAccessor);
 
             var subscriptionGroupFactory = new SubscriptionGroupFactory(
-                Config.SubscriptionConfig,
                 dispatcher,
                 Monitor,
                 _loggerFactory);
 
-            SubscriptionGroups = subscriptionGroupFactory.Create(_subscriptionGroupSettings);
+            SubscriptionGroups = subscriptionGroupFactory.Create(Config.SubscriptionConfigDefaults, _subscriptionGroupSettings);
 
             _log.LogInformation("Starting bus with settings: {@Response}", SubscriptionGroups.Interrogate());
 

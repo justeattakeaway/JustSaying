@@ -24,13 +24,33 @@ namespace JustSaying.Fluent
         /// </summary>
         internal MessagingBusBuilder Parent { get; }
 
+        internal SubscriptionConfigBuilder Defaults = new SubscriptionConfigBuilder();
+
+
         /// <summary>
         /// Gets the configured subscription builders.
         /// </summary>
         private IList<ISubscriptionBuilder<Message>> Subscriptions { get; } = new List<ISubscriptionBuilder<Message>>();
 
-        private IDictionary<string, SubscriptionGroupSettingsBuilder> SubscriptionGroupSettings { get; } =
-            new Dictionary<string, SubscriptionGroupSettingsBuilder>();
+        private IDictionary<string, SubscriptionGroupConfigBuilder> SubscriptionGroupSettings { get; } =
+            new Dictionary<string, SubscriptionGroupConfigBuilder>();
+
+        /// <summary>
+        /// Configure the default settings for all subscription groups
+        /// </summary>
+        /// <param name="configure">A delegate that configures the default settings</param>
+        /// <returns>
+        /// The current <see cref="SubscriptionsBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public SubscriptionsBuilder WithDefaults(Action<SubscriptionConfigBuilder> configure)
+        {
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
+            configure(default);
+            return this;
+        }
 
         /// <summary>
         /// Configures a queue subscription for the default queue.
@@ -176,7 +196,7 @@ namespace JustSaying.Fluent
 
         public SubscriptionsBuilder WithSubscriptionGroup(
             string groupName,
-            Action<SubscriptionGroupSettingsBuilder> action)
+            Action<SubscriptionGroupConfigBuilder> action)
         {
             if (string.IsNullOrEmpty(groupName)) throw new ArgumentNullException(nameof(groupName));
             if (action == null) throw new ArgumentNullException(nameof(action));
@@ -187,7 +207,7 @@ namespace JustSaying.Fluent
             }
             else
             {
-                var newSettings = new SubscriptionGroupSettingsBuilder(groupName);
+                var newSettings = new SubscriptionGroupConfigBuilder(groupName);
                 action.Invoke(newSettings);
                 SubscriptionGroupSettings.Add(groupName, newSettings);
             }

@@ -1,12 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
 
 namespace JustSaying.Messaging.Channels.Context
 {
-    internal interface IQueueMessageContext
+    public interface IQueueMessageContext
     {
         Message Message { get; }
+
+        MessageAttributes MessageAttributes { get; }
 
         Task ChangeMessageVisibilityAsync(TimeSpan visibilityTimeout);
 

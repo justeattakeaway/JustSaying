@@ -34,8 +34,7 @@ namespace JustSaying.IntegrationTests
                 .AddJustSaying(
                     (builder) =>
                     {
-                        builder.Client((options) => options.WithBasicCredentials("accessKey", "secretKey").WithServiceUri(TestEnvironment.SimulatorUrl))
-                               .Messaging((options) => options.WithRegions("eu-west-1"))
+                        builder.Messaging((options) => options.WithRegions("eu-west-1"))
                                .Publications((options) => options.WithQueue<QueueMessage>())
                                .Subscriptions((options) => options.ForQueue<QueueMessage>())
                                .Services((options) => options.WithMessageMonitoring(() => new MyMonitor()));
@@ -75,8 +74,7 @@ namespace JustSaying.IntegrationTests
                 .AddJustSaying(
                     (builder) =>
                     {
-                        builder.Client((options) => options.WithBasicCredentials("accessKey", "secretKey").WithServiceUri(TestEnvironment.SimulatorUrl))
-                               .Messaging((options) => options.WithRegions("eu-west-1"))
+                        builder.Messaging((options) => options.WithRegions("eu-west-1"))
                                .Publications((options) => options.WithTopic<TopicMessage>())
                                .Subscriptions((options) => options.ForTopic<TopicMessage>());
                     })
@@ -134,7 +132,6 @@ namespace JustSaying.IntegrationTests
             var services = new ServiceCollection()
                 .AddLogging((p) => p.AddXUnit(OutputHelper))
                 .AddJustSaying()
-                .AddSingleton<IMessageBusConfigurationContributor, AwsContributor>()
                 .AddSingleton<IMessageBusConfigurationContributor, MessagingContributor>()
                 .AddSingleton<IMessageBusConfigurationContributor, QueueContributor>()
                 .AddSingleton<IMessageBusConfigurationContributor, RegionContributor>()
@@ -162,16 +159,6 @@ namespace JustSaying.IntegrationTests
                 }
 
                 QueueHandler.MessageIds.ShouldContain(message.Id);
-            }
-        }
-
-        private sealed class AwsContributor : IMessageBusConfigurationContributor
-        {
-            public void Configure(MessagingBusBuilder builder)
-            {
-                builder.Client(
-                    (options) => options.WithSessionCredentials("accessKeyId", "secretKeyId", "token")
-                                        .WithServiceUri(TestEnvironment.SimulatorUrl));
             }
         }
 

@@ -43,24 +43,23 @@ namespace JustSaying.UnitTests.Messaging.Policies
 
             var queues = new List<ISqsQueue> { sqsQueue };
 
-            var config = new SubscriptionConfig();
+            var config = new SubscriptionConfigBuilder();
             config.WithSqsPolicy(
                 next => new ErrorHandlingMiddleware<GetMessagesContext, IList<Message>, InvalidOperationException>(next));
 
-            var settings = new Dictionary<string, SubscriptionGroupSettingsBuilder>
+            var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
             {
-                { "test", new SubscriptionGroupSettingsBuilder("test").WithDefaultsFrom(config).AddQueues(queues) },
+                { "test", new SubscriptionGroupConfigBuilder("test").AddQueues(queues) },
             };
 
             IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref dispatchedMessageCount));
 
             var groupFactory = new SubscriptionGroupFactory(
-                config,
                 dispatcher,
                 MessageMonitor,
                 LoggerFactory);
 
-            SubscriptionGroupCollection collection = groupFactory.Create(settings);
+            SubscriptionGroupCollection collection = groupFactory.Create(config, settings);
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);

@@ -11,6 +11,7 @@ namespace JustSaying.AwsTools.QueueCreation
         public int RetryCountBeforeSendingToErrorQueue { get; set; }
         public bool ErrorQueueOptOut { get; set; }
         public ServerSideEncryption ServerSideEncryption { get; set; }
+        public string QueueName { get; set; }
 
         public SqsBasicConfiguration()
         {
@@ -44,9 +45,16 @@ namespace JustSaying.AwsTools.QueueCreation
                     $"Invalid configuration. {nameof(DeliveryDelay)} must be between {JustSayingConstants.MinimumDeliveryDelay} and {JustSayingConstants.MaximumDeliveryDelay}.");
             }
 
+            if (string.IsNullOrWhiteSpace(QueueName))
+            {
+                throw new ConfigurationErrorsException("Invalid configuration. QueueName must be provided.");
+            }
+
             OnValidate();
         }
 
-        protected virtual void OnValidate() {}
+        protected virtual void OnValidate() {
+
+        }
     }
 }

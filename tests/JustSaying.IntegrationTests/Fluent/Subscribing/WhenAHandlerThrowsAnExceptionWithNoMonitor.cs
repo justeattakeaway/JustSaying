@@ -61,7 +61,6 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
     {
         public void HandleException(Type messageType)
         {
-            throw new NotImplementedException();
         }
 
         public void HandleError(Exception ex, Message message)
@@ -73,32 +72,26 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
         public void HandleTime(TimeSpan duration)
         {
-            throw new NotImplementedException();
         }
 
         public void IssuePublishingMessage()
         {
-            throw new NotImplementedException();
         }
 
         public void IncrementThrottlingStatistic()
         {
-            throw new NotImplementedException();
         }
 
         public void HandleThrottlingTime(TimeSpan duration)
         {
-            throw new NotImplementedException();
         }
 
         public void PublishMessageTime(TimeSpan duration)
         {
-            throw new NotImplementedException();
         }
 
         public void ReceiveMessageTime(TimeSpan duration, string queueName, string region)
         {
-            throw new NotImplementedException();
         }
     }
 }

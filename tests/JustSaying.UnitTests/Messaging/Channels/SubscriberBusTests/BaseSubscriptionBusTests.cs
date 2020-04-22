@@ -4,9 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
-using JustSaying.Messaging.Channels.Dispatch;
-using JustSaying.Messaging.Channels.Multiplexer;
-using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
@@ -69,7 +67,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
             HandlerMap = new HandlerMap(Monitor, LoggerFactory);
 
             DeserializedMessage = new SimpleMessage { RaisingComponent = "Component" };
-            SerializationRegister.DeserializeMessage(Arg.Any<string>()).Returns(DeserializedMessage);
+            SerializationRegister.DeserializeMessage(Arg.Any<string>()).Returns((DeserializedMessage, new MessageAttributes()));
 
             Given();
         }
@@ -113,25 +111,24 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
                 messageBackoffStrategy,
                 messageContextAccessor);
 
-            var config = new SubscriptionConfig();
-            config.WithDefaultSqsPolicy(LoggerFactory);
+            var defaults = new SubscriptionConfigBuilder();
+            defaults.WithDefaultSqsPolicy(LoggerFactory);
 
             var subscriptionGroupFactory = new SubscriptionGroupFactory(
-                config,
                 dispatcher,
                 Monitor,
                 LoggerFactory);
 
-            var settings = SetupBusConfig(config);
+            var settings = SetupBusConfig();
 
-            return subscriptionGroupFactory.Create(settings);
+            return subscriptionGroupFactory.Create(defaults, settings);
         }
 
-        protected virtual Dictionary<string, SubscriptionGroupSettingsBuilder> SetupBusConfig(SubscriptionConfig config)
+        protected virtual Dictionary<string, SubscriptionGroupConfigBuilder> SetupBusConfig()
         {
-            return new Dictionary<string, SubscriptionGroupSettingsBuilder>
+            return new Dictionary<string, SubscriptionGroupConfigBuilder>
             {
-                { "test", new SubscriptionGroupSettingsBuilder("test").WithDefaultsFrom(config).AddQueues(Queues) },
+                { "test", new SubscriptionGroupConfigBuilder("test").AddQueues(Queues) },
             };
         }
 

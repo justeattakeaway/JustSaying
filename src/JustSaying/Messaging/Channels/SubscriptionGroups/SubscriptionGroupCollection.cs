@@ -2,12 +2,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using JustSaying.Messaging.Channels.Interrogation;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
-    internal class SubscriptionGroupCollection : ISubscriptionGroupCollection
+    public class SubscriptionGroupCollection : ISubscriptionGroupCollection
     {
         private readonly ILogger _logger;
         private readonly IList<ISubscriptionGroup> _subscriptionGroups;

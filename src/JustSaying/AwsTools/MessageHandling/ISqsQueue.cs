@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
+using JustSaying.Messaging.Interrogation;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public interface ISqsQueue
+    public interface ISqsQueue : IInterrogable
     {
         string QueueName { get; }
 

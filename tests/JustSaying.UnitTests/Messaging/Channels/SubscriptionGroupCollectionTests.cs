@@ -77,11 +77,10 @@ namespace JustSaying.UnitTests.Messaging.Channels
         private JustSaying.JustSayingBus CreateBus()
         {
             var config = Substitute.For<IMessagingConfig>();
-            config.SubscriptionConfig.Returns(new SubscriptionConfig());
+            config.SubscriptionConfigDefaults = new SubscriptionConfigBuilder();
             var serializationRegister = new MessageSerializationRegister(
                 new NonGenericMessageSubjectProvider(),
                 new NewtonsoftSerializationFactory());
-            var serializationFactory = new NewtonsoftSerializationFactory();
 
             var bus = new JustSaying.JustSayingBus(config, serializationRegister, LoggerFactory)
             {
@@ -130,20 +129,19 @@ namespace JustSaying.UnitTests.Messaging.Channels
             IList<ISqsQueue> queues,
             IMessageDispatcher dispatcher)
         {
-            var config = new SubscriptionConfig();
+            var defaults = new SubscriptionConfigBuilder();
 
-            var settings = new Dictionary<string, SubscriptionGroupSettingsBuilder>
+            var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
             {
-                { "test",  new SubscriptionGroupSettingsBuilder("test").WithDefaultsFrom(config).AddQueues(queues) },
+                { "test",  new SubscriptionGroupConfigBuilder("test").AddQueues(queues) },
             };
 
             var consumerGroupFactory = new SubscriptionGroupFactory(
-                config,
                 dispatcher,
                 MessageMonitor,
                 LoggerFactory);
 
-            return consumerGroupFactory.Create(settings);
+            return consumerGroupFactory.Create(defaults, settings);
         }
 
         private class TestMessage : Amazon.SQS.Model.Message

@@ -376,14 +376,18 @@ namespace JustSaying
             return this;
         }
 
-        private string GetOrUseTopicNamingConvention<T>(string topicName)
+        private string GetOrUseTopicNamingConvention<T>(string defaultTopicName)
         {
-            return string.IsNullOrWhiteSpace(topicName) ? Bus.Config.TopicNamingConvention.TopicName<T>() : topicName;
+            return string.IsNullOrWhiteSpace(defaultTopicName)
+                ? Bus.Config.TopicNamingConvention.TopicName<T>()
+                : defaultTopicName;
         }
 
-        private string GetOrUseQueueNamingConvention<T>(string queueName)
+        private string GetOrUseQueueNamingConvention<T>(string defaultQueueName)
         {
-            return string.IsNullOrWhiteSpace(queueName) ? Bus.Config.QueueNamingConvention.QueueName<T>() : queueName;
+            return string.IsNullOrWhiteSpace(defaultQueueName)
+                ? Bus.Config.QueueNamingConvention.QueueName<T>()
+                : defaultQueueName;
         }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
+using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.MessageHandling;
 using Xunit;
 
@@ -121,7 +122,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
                 Body = "test message " + uniqueness
             };
 
-            return new MessageContext(sqsMessage, queueUri);
+            return new MessageContext(sqsMessage, queueUri, new MessageAttributes());
         }
 
         private static IMessageContextAccessor MakeAccessor()

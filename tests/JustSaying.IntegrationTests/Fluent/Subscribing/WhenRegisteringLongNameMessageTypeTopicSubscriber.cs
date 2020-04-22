@@ -21,10 +21,10 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         {
             // Arrange
             var completionSource = new TaskCompletionSource<object>();
-            var handler = CreateHandler<LongLongLongLongLonggLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLonggLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongMessage>(completionSource);
+            var handler = CreateHandler<LongestPossibleMessageSizeLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongMessag>(completionSource);
 
             var services = GivenJustSaying()
-                .ConfigureJustSaying((builder) => builder.WithLoopbackTopic<LongLongLongLongLonggLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLonggLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongMessage>(UniqueName))
+                .ConfigureJustSaying((builder) => builder.WithLoopbackTopic<LongestPossibleMessageSizeLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongMessag>(UniqueName))
                 .AddSingleton(handler);
 
             await WhenAsync(
@@ -34,7 +34,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     _ = listener.Start(cancellationToken);
 
                     // Act
-                    await publisher.PublishAsync(new LongLongLongLongLonggLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLonggLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongMessage(), cancellationToken);
+                    await publisher.PublishAsync(new LongestPossibleMessageSizeLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongMessag(), cancellationToken);
                     completionSource.Task.Wait(cancellationToken);
 
                     // Assert
@@ -51,7 +51,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 });
         }
 
-        public sealed class LongLongLongLongLonggLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLonggLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongMessage : Message
+        public sealed class LongestPossibleMessageSizeLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongMessag : Message
         {
         }
     }

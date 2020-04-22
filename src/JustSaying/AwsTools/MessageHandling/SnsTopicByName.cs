@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public class SnsTopicByName : SnsTopicBase
+    public class SnsTopicByName : SnsTopicBase, IInterrogable
     {
         public string TopicName { get; }
         private readonly ILogger _log;
@@ -41,6 +42,15 @@ namespace JustSaying.AwsTools.MessageHandling
             TopicName = topicName;
             Client = client;
             _log = loggerFactory.CreateLogger("JustSaying");
+        }
+
+        public object Interrogate()
+        {
+            return new
+            {
+                Arn,
+                TopicName
+            };
         }
 
         public async Task EnsurePolicyIsUpdatedAsync(IReadOnlyCollection<string> config)
@@ -112,7 +122,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private async Task<ServerSideEncryption> ExtractServerSideEncryptionFromTopicAttributes()
         {
             var attributesResponse = await Client.GetTopicAttributesAsync(Arn).ConfigureAwait(false);
-            
+
             if (!attributesResponse.Attributes.TryGetValue(JustSayingConstants.AttributeEncryptionKeyId, out var encryptionKeyId))
             {
                 return null;
