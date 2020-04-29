@@ -34,7 +34,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         public Task Run(CancellationToken stoppingToken)
         {
             _logger.LogInformation(
-                "Starting up consumer bus with {ConsumerCount} consumers and {ReceiveBuffferCount} receive buffers",
+                "Starting up Subscription group with {ReceiveBuffferCount} receive buffers and {SubscriberCount} subscribers ",
                 _subscribers.Count,
                 _receiveBuffers.Count);
 

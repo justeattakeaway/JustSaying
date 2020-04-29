@@ -5,6 +5,10 @@ using Amazon.SQS.Model;
 
 namespace JustSaying.Messaging.Channels.Context
 {
+    /// <summary>
+    /// A context object that is created by <see cref="Receive.IMessageReceiveBuffer"/> and consumed by
+    /// <see cref="Dispatch.IMultiplexerSubscriber"/>
+    /// </summary>
     public interface IQueueMessageContext
     {
         Message Message { get; }

@@ -55,7 +55,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         {
             IEnumerable<Task> completionTasks = _subscriptionGroups.Select(bus => bus.Run(stoppingToken)).ToList();
 
-            _logger.LogInformation("Consumer bus successfully started");
+            _logger.LogInformation("Subscription group collection successfully started");
 
             return Task.WhenAll(completionTasks);
         }
