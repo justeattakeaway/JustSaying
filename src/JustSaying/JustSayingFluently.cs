@@ -183,6 +183,15 @@ namespace JustSaying
         /// </summary>
         /// <param name="message"></param>
         /// <param name="cancellationToken"></param>
+        public Task PublishAsync(Message message, CancellationToken cancellationToken)
+            => PublishAsync(message, null, cancellationToken);
+
+        /// <summary>
+        /// Publish a message to the stack, asynchronously.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="metadata"></param>
+        /// <param name="cancellationToken"></param>
         public virtual async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
             if (Bus == null)

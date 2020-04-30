@@ -170,6 +170,9 @@ namespace JustSaying
             return SubscriptionGroups.Run(stoppingToken);
         }
 
+        public Task PublishAsync(Message message, CancellationToken cancellationToken)
+            => PublishAsync(message, null, cancellationToken);
+
         public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
             var publisher = GetActivePublisherForMessage(message);

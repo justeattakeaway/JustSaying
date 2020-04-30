@@ -34,6 +34,9 @@ namespace JustSaying.AwsTools.MessageHandling
             _serializationRegister = serializationRegister;
         }
 
+        public Task PublishAsync(Message message, CancellationToken cancellationToken)
+            => PublishAsync(message, null, cancellationToken);
+
         public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
             var request = BuildSendMessageRequest(message, metadata);
