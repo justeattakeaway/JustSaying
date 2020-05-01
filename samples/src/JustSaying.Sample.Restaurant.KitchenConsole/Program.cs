@@ -14,7 +14,6 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
         public static async Task Main()
         {
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.Seq("http://localhost:5341")
                 .WriteTo.Console()
                 .MinimumLevel.Debug()
                 .Enrich.WithProperty("AppName", nameof(KitchenConsole))

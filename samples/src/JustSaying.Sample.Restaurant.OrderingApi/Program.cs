@@ -15,7 +15,6 @@ namespace JustSaying.Sample.Restaurant.OrderingApi
         public static void Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.Seq("http://localhost:5341")
                 .WriteTo.Console()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
                 .MinimumLevel.Override("System", LogEventLevel.Warning)
