@@ -1,14 +1,14 @@
 using System;
 using System.Threading.Tasks;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.MessageHandling
 {
-    internal sealed class ExactlyOnceHandler<T> : IHandlerAsync<T> where T : Message
+    internal sealed class ExactlyOnceHandler<T> : IHandlerAsync<T> where T : class
     {
         private readonly IHandlerAsync<T> _inner;
         private readonly IMessageLockAsync _messageLock;
+        private readonly Func<T, string> _uniqueKeySelector;
         private readonly TimeSpan _timeout;
         private readonly string _lockSuffixKeyForHandler;
         private readonly ILogger _logger;
@@ -16,12 +16,14 @@ namespace JustSaying.Messaging.MessageHandling
         public ExactlyOnceHandler(
             IHandlerAsync<T> inner,
             IMessageLockAsync messageLock,
+            Func<T, string> uniqueKeySelector,
             TimeSpan timeout,
             string handlerName,
             ILogger<ExactlyOnceHandler<T>> logger)
         {
             _inner = inner;
             _messageLock = messageLock;
+            _uniqueKeySelector = uniqueKeySelector;
             _timeout = timeout;
             _lockSuffixKeyForHandler = $"{typeof(T).ToString().ToLowerInvariant()}-{handlerName}";
             _logger = logger;
@@ -32,7 +34,7 @@ namespace JustSaying.Messaging.MessageHandling
 
         public async Task<bool> Handle(T message)
         {
-            string lockKey = $"{message.UniqueKey()}-{_lockSuffixKeyForHandler}";
+            string lockKey = $"{_uniqueKeySelector(message)}-{_lockSuffixKeyForHandler}";
             MessageLockResponse lockResponse = await _messageLock.TryAquireLockAsync(lockKey, _timeout).ConfigureAwait(false);
 
             if (!lockResponse.DoIHaveExclusiveLock)

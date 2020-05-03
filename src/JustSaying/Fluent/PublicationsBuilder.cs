@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using JustSaying.Models;
 
 namespace JustSaying.Fluent
 {
@@ -26,7 +25,7 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Gets the configured publication builders.
         /// </summary>
-        private IList<IPublicationBuilder<Message>> Publications { get; } = new List<IPublicationBuilder<Message>>();
+        private IList<IPublicationBuilder> Publications { get; } = new List<IPublicationBuilder>();
 
         /// <summary>
         /// Configures a publisher for a queue.
@@ -39,7 +38,7 @@ namespace JustSaying.Fluent
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
         public PublicationsBuilder WithQueue<T>()
-            where T : Message
+            where T : class
         {
             Publications.Add(new QueuePublicationBuilder<T>());
             return this;
@@ -54,7 +53,7 @@ namespace JustSaying.Fluent
         /// The current <see cref="PublicationsBuilder"/>.
         /// </returns>
         public PublicationsBuilder WithQueue<T>(string name)
-            where T : Message
+            where T : class
         {
             return WithQueue<T>((options) => options.WithWriteConfiguration((r) => r.WithQueueName(name)));
         }
@@ -71,7 +70,7 @@ namespace JustSaying.Fluent
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
         public PublicationsBuilder WithQueue<T>(Action<QueuePublicationBuilder<T>> configure)
-            where T : Message
+            where T : class
         {
             if (configure == null)
             {
@@ -98,7 +97,7 @@ namespace JustSaying.Fluent
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
         public PublicationsBuilder WithTopic<T>()
-            where T : Message
+            where T : class
         {
             Publications.Add(new TopicPublicationBuilder<T>());
             return this;
@@ -116,7 +115,7 @@ namespace JustSaying.Fluent
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
         public PublicationsBuilder WithTopic<T>(Action<TopicPublicationBuilder<T>> configure)
-            where T : Message
+            where T : class
         {
             if (configure == null)
             {
@@ -138,7 +137,7 @@ namespace JustSaying.Fluent
         /// <param name="bus">The <see cref="JustSayingFluently"/> to configure publications for.</param>
         internal void Configure(JustSayingFluently bus)
         {
-            foreach (IPublicationBuilder<Message> builder in Publications)
+            foreach (IPublicationBuilder builder in Publications)
             {
                 builder.Configure(bus);
             }

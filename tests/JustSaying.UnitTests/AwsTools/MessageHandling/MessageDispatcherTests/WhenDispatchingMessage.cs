@@ -17,7 +17,7 @@ using Newtonsoft.Json;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using Message = JustSaying.Models.Message;
+using Message = JustSaying.TestingFramework.Message;
 using SQSMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests

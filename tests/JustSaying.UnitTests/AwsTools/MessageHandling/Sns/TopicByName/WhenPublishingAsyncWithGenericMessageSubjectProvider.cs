@@ -4,7 +4,7 @@ using Amazon.SimpleNotificationService.Model;
 using JustSaying.Messaging;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
-using JustSaying.Models;
+using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;

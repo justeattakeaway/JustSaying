@@ -1,5 +1,4 @@
 using System;
-using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialization
 {
@@ -7,7 +6,7 @@ namespace JustSaying.Messaging.MessageSerialization
     {
         string GetMessageSubject(string sqsMessage);
 
-        Message Deserialize(string message, Type type);
+        object Deserialize(string message, Type type);
 
         /// <summary>
         /// Serializes a message for publishing
@@ -19,6 +18,6 @@ namespace JustSaying.Messaging.MessageSerialization
         /// AWS SNS service adds these automatically, so for publishing to topics don't add these properties
         /// </param>
         /// <returns></returns>
-        string Serialize(Message message, bool serializeForSnsPublishing, string subject);
+        string Serialize(object message, bool serializeForSnsPublishing, string subject);
     }
 }

@@ -1,17 +1,13 @@
 using System;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Models;
 
 namespace JustSaying.Fluent
 {
     /// <summary>
     /// A class representing a builder for a topic publication. This class cannot be inherited.
     /// </summary>
-    /// <typeparam name="T">
-    /// The type of the message.
-    /// </typeparam>
-    public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
-        where T : Message
+    public sealed class TopicPublicationBuilder<T> : IPublicationBuilder
+        where T : class
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="TopicPublicationBuilder{T}"/> class.
@@ -67,7 +63,7 @@ namespace JustSaying.Fluent
         }
 
         /// <inheritdoc />
-        void IPublicationBuilder<T>.Configure(JustSayingFluently bus)
+        void IPublicationBuilder.Configure(JustSayingFluently bus)
         {
             bus.WithSnsMessagePublisher<T>(ConfigureWrites);
         }

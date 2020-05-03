@@ -1,6 +1,6 @@
 using System;
 using JustSaying.Messaging.MessageSerialization;
-using JustSaying.Models;
+using JustSaying.TestingFramework;
 using NSubstitute;
 using Shouldly;
 using Xunit;

@@ -10,7 +10,6 @@ using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying
@@ -56,7 +55,7 @@ namespace JustSaying
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>() where T : Message
+        public IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>() where T : class
         {
             return WithSnsMessagePublisher<T>(null);
         }
@@ -66,12 +65,12 @@ namespace JustSaying
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>(Action<SnsWriteConfiguration> configBuilder) where T : Message
+        public IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>(Action<SnsWriteConfiguration> configBuilder) where T : class
         {
             return AddSnsMessagePublisher<T>(configBuilder);
         }
 
-        private IHaveFulfilledPublishRequirements AddSnsMessagePublisher<T>(Action<SnsWriteConfiguration> configBuilder) where T : Message
+        private IHaveFulfilledPublishRequirements AddSnsMessagePublisher<T>(Action<SnsWriteConfiguration> configBuilder) where T : class
         {
             _log.LogInformation("Adding SNS publisher for message type '{MessageType}'.",
                 typeof(T));
@@ -126,7 +125,7 @@ namespace JustSaying
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsWriteConfiguration> configBuilder) where T : Message
+        public IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsWriteConfiguration> configBuilder) where T : class
         {
             _log.LogInformation("Adding SQS publisher for message type '{MessageType}'.",
                 typeof(T));
@@ -184,7 +183,8 @@ namespace JustSaying
         /// </summary>
         /// <param name="message"></param>
         /// <param name="cancellationToken"></param>
-        public virtual async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
+        public virtual async Task PublishAsync<T>(T message, PublishMetadata metadata, CancellationToken cancellationToken)
+            where T : class
         {
             if (Bus == null)
             {
@@ -240,7 +240,7 @@ namespace JustSaying
             return this;
         }
 
-        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message
+        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : class
         {
             if (_serializationFactory == null)
             {
@@ -278,7 +278,7 @@ namespace JustSaying
             return thing;
         }
 
-        private IHaveFulfilledSubscriptionRequirements TopicHandler<T>() where T : Message
+        private IHaveFulfilledSubscriptionRequirements TopicHandler<T>() where T : class
         {
             ConfigureSqsSubscriptionViaTopic();
 
@@ -301,7 +301,7 @@ namespace JustSaying
             return this;
         }
 
-        private IHaveFulfilledSubscriptionRequirements PointToPointHandler<T>() where T : Message
+        private IHaveFulfilledSubscriptionRequirements PointToPointHandler<T>() where T : class
         {
             ConfigureSqsSubscription<T>();
 
@@ -335,7 +335,7 @@ namespace JustSaying
         }
 
         private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue)
-            where T : Message
+            where T : class
         {
             INotificationSubscriber subscriber = CreateSubscriber(queue);
 
@@ -368,7 +368,7 @@ namespace JustSaying
             _subscriptionConfig.Validate();
         }
 
-        private void ConfigureSqsSubscription<T>() where T : Message
+        private void ConfigureSqsSubscription<T>() where T : class
         {
             _subscriptionConfig.ValidateSqsConfiguration();
             _subscriptionConfig.QueueName = _subscriptionConfig.QueueName;

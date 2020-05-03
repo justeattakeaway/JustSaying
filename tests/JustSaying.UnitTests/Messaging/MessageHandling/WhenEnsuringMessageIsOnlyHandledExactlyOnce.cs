@@ -27,6 +27,7 @@ namespace JustSaying.UnitTests.Messaging.MessageHandling
             var sut = new ExactlyOnceHandler<OrderAccepted>(
                 Substitute.For<IHandlerAsync<OrderAccepted>>(),
                 messageLock,
+                m => m.UniqueKey(),
                 TimeSpan.FromSeconds(1),
                 "handlerName",
                 logger);

@@ -12,7 +12,7 @@ using NSubstitute;
 using NSubstitute.Core;
 using Shouldly;
 using Xunit;
-using Message = JustSaying.Models.Message;
+using Message = JustSaying.TestingFramework.Message;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 {
@@ -36,7 +36,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
                 MessageResponseLogger = (r, m) =>
                 {
                     _response = r;
-                    _message = m;
+                    _message = (Message)m;
                 }
             };
             await sqs.ExistsAsync();

@@ -1,11 +1,10 @@
 using System.Threading;
 using System.Threading.Tasks;
-using JustSaying.Models;
 
 namespace JustSaying.Messaging
 {
     public interface IMessagePublisher
     {
-        Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken);
+        Task PublishAsync<T>(T message, PublishMetadata metadata, CancellationToken cancellationToken) where T : class;
     }
 }

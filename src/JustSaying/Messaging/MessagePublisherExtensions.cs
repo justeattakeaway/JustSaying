@@ -2,20 +2,21 @@ using System;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
-using JustSaying.Models;
 
 namespace JustSaying.Messaging
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
     public static class MessagePublisherExtensions
     {
-        public static Task PublishAsync(this IMessagePublisher publisher, Message message)
+        public static Task PublishAsync<T>(this IMessagePublisher publisher, T message)
+            where T : class
         {
             return publisher.PublishAsync(message, CancellationToken.None);
         }
 
-        public static async Task PublishAsync(this IMessagePublisher publisher,
-            Message message, PublishMetadata metadata)
+        public static async Task PublishAsync<T>(this IMessagePublisher publisher,
+            T message, PublishMetadata metadata)
+            where T : class
         {
             if (publisher == null)
             {
@@ -26,8 +27,9 @@ namespace JustSaying.Messaging
                 .ConfigureAwait(false);
         }
 
-        public static async Task PublishAsync(this IMessagePublisher publisher,
-            Message message, CancellationToken cancellationToken)
+        public static async Task PublishAsync<T>(this IMessagePublisher publisher,
+            T message, CancellationToken cancellationToken)
+            where T : class
         {
             if (publisher == null)
             {

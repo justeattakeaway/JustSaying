@@ -9,7 +9,6 @@ using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.Models;
 using JustSaying.Naming;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -194,7 +193,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <paramref name="services"/> is <see langword="null"/>.
         /// </exception>
         public static IServiceCollection AddJustSayingHandler<TMessage, THandler>(this IServiceCollection services)
-            where TMessage : Message
+            where TMessage : class
             where THandler : class, IHandlerAsync<TMessage>
         {
             if (services == null)
@@ -224,7 +223,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IServiceCollection AddJustSayingHandlers<TMessage>(
             this IServiceCollection services,
             IEnumerable<IHandlerAsync<TMessage>> handlers)
-            where TMessage : Message
+            where TMessage : class
         {
             if (services == null)
             {

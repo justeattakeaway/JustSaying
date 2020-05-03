@@ -1,4 +1,4 @@
-using JustSaying.Models;
+using JustSaying.TestingFramework;
 
 namespace JustSaying.IntegrationTests.TestHandlers
 {

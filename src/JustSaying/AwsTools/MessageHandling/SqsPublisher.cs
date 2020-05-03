@@ -8,7 +8,6 @@ using Amazon.SQS.Model;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
-using Message = JustSaying.Models.Message;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -16,7 +15,7 @@ namespace JustSaying.AwsTools.MessageHandling
     {
         private readonly IAmazonSQS _client;
         private readonly IMessageSerializationRegister _serializationRegister;
-        public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
+        public Action<MessageResponse, object> MessageResponseLogger { get; set; }
 
         public SqsPublisher(
             RegionEndpoint region,
@@ -31,7 +30,8 @@ namespace JustSaying.AwsTools.MessageHandling
             _serializationRegister = serializationRegister;
         }
 
-        public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
+        public async Task PublishAsync<T>(T message, PublishMetadata metadata, CancellationToken cancellationToken)
+            where T : class
         {
             var request = BuildSendMessageRequest(message, metadata);
             SendMessageResponse response;
@@ -63,7 +63,8 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        private SendMessageRequest BuildSendMessageRequest(Message message, PublishMetadata metadata)
+        private SendMessageRequest BuildSendMessageRequest<T>(T message, PublishMetadata metadata)
+            where T : class
         {
             var request = new SendMessageRequest
             {
@@ -78,6 +79,6 @@ namespace JustSaying.AwsTools.MessageHandling
             return request;
         }
 
-        public string GetMessageInContext(Message message) => _serializationRegister.Serialize(message, serializeForSnsPublishing: false);
+        public string GetMessageInContext<T>(T message) where T : class => _serializationRegister.Serialize(message, serializeForSnsPublishing: false);
     }
 }

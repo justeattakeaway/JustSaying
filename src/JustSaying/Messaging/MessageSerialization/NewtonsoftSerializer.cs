@@ -1,5 +1,4 @@
 using System;
-using JustSaying.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -28,15 +27,15 @@ namespace JustSaying.Messaging.MessageSerialization
             _settings = settings;
         }
 
-        public Message Deserialize(string message, Type type)
+        public object Deserialize(string message, Type type)
         {
             var document = JObject.Parse(message);
             string json = document["Message"].ToString();
 
-            return (Message)JsonConvert.DeserializeObject(json, type, _settings);
+            return JsonConvert.DeserializeObject(json, type, _settings);
         }
 
-        public string Serialize(Message message, bool serializeForSnsPublishing, string subject)
+        public string Serialize(object message, bool serializeForSnsPublishing, string subject)
         {
             var json = JsonConvert.SerializeObject(message, _settings);
 

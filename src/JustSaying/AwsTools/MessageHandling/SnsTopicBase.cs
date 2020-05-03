@@ -11,7 +11,6 @@ using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
-using Message = JustSaying.Models.Message;
 using MessageAttributeValue = Amazon.SimpleNotificationService.Model.MessageAttributeValue;
 
 namespace JustSaying.AwsTools.MessageHandling
@@ -21,7 +20,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly IMessageSerializationRegister _serializationRegister; // ToDo: Grrr...why is this here even. GET OUT!
         private readonly IMessageSubjectProvider _messageSubjectProvider;
         private readonly SnsWriteConfiguration _snsWriteConfiguration;
-        public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
+        public Action<MessageResponse, object> MessageResponseLogger { get; set; }
         public string Arn { get; protected set; }
         internal ServerSideEncryption ServerSideEncryption { get; set; }
         protected IAmazonSimpleNotificationService Client { get; set; }
@@ -51,7 +50,8 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public abstract Task<bool> ExistsAsync();
 
-        public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
+        public async Task PublishAsync<T>(T message, PublishMetadata metadata, CancellationToken cancellationToken)
+            where T : class
         {
             var request = BuildPublishRequest(message, metadata);
             PublishResponse response = null;
@@ -87,9 +87,9 @@ namespace JustSaying.AwsTools.MessageHandling
 
         }
 
-        private bool ClientExceptionHandler(Exception ex, Message message) => _snsWriteConfiguration?.HandleException?.Invoke(ex, message) ?? false;
+        private bool ClientExceptionHandler<T>(Exception ex, T message) where T : class => _snsWriteConfiguration?.HandleException?.Invoke(ex, message) ?? false;
 
-        private PublishRequest BuildPublishRequest(Message message, PublishMetadata metadata)
+        private PublishRequest BuildPublishRequest<T>(T message, PublishMetadata metadata) where T : class
         {
             var messageToSend = _serializationRegister.Serialize(message, serializeForSnsPublishing: true);
             var messageType = _messageSubjectProvider.GetSubjectForType(message.GetType());

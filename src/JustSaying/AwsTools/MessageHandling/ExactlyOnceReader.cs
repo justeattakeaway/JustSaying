@@ -2,13 +2,12 @@
 using System.Linq;
 using System.Reflection;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Models;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
     internal static class HandlerMetadata
     {
-        public static ExactlyOnceReader ReadExactlyOnce<T>(IHandlerAsync<T> handler) where T : Message
+        public static ExactlyOnceReader ReadExactlyOnce<T>(IHandlerAsync<T> handler) where T : class
         {
             return new ExactlyOnceReader(handler.GetType());
         }

@@ -6,7 +6,6 @@ using JustSaying.Messaging;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialization;
-using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -34,7 +33,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
                 MessageResponseLogger = (r, m) =>
                 {
                     _response = r;
-                    _message = m;
+                    _message = (Message)m;
                 }
             };
 

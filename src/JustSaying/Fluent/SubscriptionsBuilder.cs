@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using JustSaying.Models;
 
 namespace JustSaying.Fluent
 {
@@ -26,7 +25,7 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Gets the configured subscription builders.
         /// </summary>
-        private IList<ISubscriptionBuilder<Message>> Subscriptions { get; } = new List<ISubscriptionBuilder<Message>>();
+        private IList<ISubscriptionBuilder> Subscriptions { get; } = new List<ISubscriptionBuilder>();
 
         /// <summary>
         /// Configures a queue subscription for the default queue.
@@ -39,7 +38,7 @@ namespace JustSaying.Fluent
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
         public SubscriptionsBuilder ForQueue<T>()
-            where T : Message
+            where T : class
         {
             return ForQueue<T>((p) => p.WithDefaultQueue());
         }
@@ -56,7 +55,7 @@ namespace JustSaying.Fluent
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
         public SubscriptionsBuilder ForQueue<T>(string name)
-            where T : Message
+            where T : class
         {
             return ForQueue<T>((p) => p.WithName(name));
         }
@@ -73,7 +72,7 @@ namespace JustSaying.Fluent
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
         public SubscriptionsBuilder ForQueue<T>(Action<QueueSubscriptionBuilder<T>> configure)
-            where T : Message
+            where T : class
         {
             if (configure == null)
             {
@@ -97,7 +96,7 @@ namespace JustSaying.Fluent
         /// The current <see cref="SubscriptionsBuilder"/>.
         /// </returns>
         public SubscriptionsBuilder ForTopic<T>()
-            where T : Message
+            where T : class
         {
             return ForTopic<T>((p) => p.IntoDefaultTopic());
         }
@@ -114,7 +113,7 @@ namespace JustSaying.Fluent
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
         public SubscriptionsBuilder ForTopic<T>(string name)
-            where T : Message
+            where T : class
         {
             return ForTopic<T>((p) => p.WithName(name));
         }
@@ -131,7 +130,7 @@ namespace JustSaying.Fluent
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
         public SubscriptionsBuilder ForTopic<T>(Action<TopicSubscriptionBuilder<T>> configure)
-            where T : Message
+            where T : class
         {
             if (configure == null)
             {
@@ -163,7 +162,7 @@ namespace JustSaying.Fluent
                 throw new InvalidOperationException($"No {nameof(IHandlerResolver)} is registered.");
             }
 
-            foreach (ISubscriptionBuilder<Message> builder in Subscriptions)
+            foreach (ISubscriptionBuilder builder in Subscriptions)
             {
                 builder.Configure(bus, resolver);
             }

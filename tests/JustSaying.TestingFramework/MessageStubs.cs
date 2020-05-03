@@ -1,7 +1,19 @@
-using JustSaying.Models;
+using System;
 
 namespace JustSaying.TestingFramework
 {
+    public abstract class Message
+    {
+        protected Message()
+        {
+            Id = Guid.NewGuid();
+        }
+
+        public Guid Id { get; set; }
+
+        public string UniqueKey() => Id.ToString();
+    }
+
     public class Order : Message
     {
     }
@@ -17,6 +29,7 @@ namespace JustSaying.TestingFramework
     public class SimpleMessage : Message
     {
         public string Content { get; set; }
+        public string RaisingComponent { get; set; }
     }
 
     public class AnotherSimpleMessage : Message

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Models;
 
 namespace JustSaying
 {
@@ -9,7 +8,7 @@ namespace JustSaying
     {
         int PublishFailureReAttempts { get; set; }
         TimeSpan PublishFailureBackoff { get; set; }
-        Action<MessageResponse, Message> MessageResponseLogger { get; set; }
+        Action<MessageResponse, object> MessageResponseLogger { get; set; }
         IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
     }
 }

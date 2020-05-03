@@ -1,6 +1,5 @@
 using System;
 using System.Text.Json;
-using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialization
 {
@@ -55,19 +54,19 @@ namespace JustSaying.Messaging.MessageSerialization
         }
 
         /// <inheritdoc />
-        public Message Deserialize(string message, Type type)
+        public object Deserialize(string message, Type type)
         {
             using (var document = JsonDocument.Parse(message))
             {
                 JsonElement element = document.RootElement.GetProperty("Message");
                 string json = element.ToString();
 
-                return (Message)JsonSerializer.Deserialize(json, type, _options);
+                return JsonSerializer.Deserialize(json, type, _options);
             }
         }
 
         /// <inheritdoc />
-        public string Serialize(Message message, bool serializeForSnsPublishing, string subject)
+        public string Serialize(object message, bool serializeForSnsPublishing, string subject)
         {
             string json = JsonSerializer.Serialize(message, message.GetType(), _options);
 

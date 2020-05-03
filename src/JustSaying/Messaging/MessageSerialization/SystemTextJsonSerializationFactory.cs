@@ -1,5 +1,4 @@
 using System.Text.Json;
-using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialization
 {
@@ -17,6 +16,6 @@ namespace JustSaying.Messaging.MessageSerialization
             _serializer = new SystemTextJsonSerializer(options);
         }
 
-        public IMessageSerializer GetSerializer<T>() where T : Message => _serializer;
+        public IMessageSerializer GetSerializer<T>() where T : class => _serializer;
     }
 }

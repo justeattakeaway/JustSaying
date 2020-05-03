@@ -4,7 +4,7 @@ using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
-using JustSaying.Models;
+using JustSaying.TestingFramework;
 using NSubstitute;
 using Shouldly;
 using Xunit;

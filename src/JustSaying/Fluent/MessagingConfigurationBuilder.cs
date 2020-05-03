@@ -4,7 +4,6 @@ using System.Linq;
 using Amazon;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
-using JustSaying.Models;
 using JustSaying.Naming;
 
 namespace JustSaying.Fluent
@@ -34,7 +33,7 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Gets or sets the optional value to use for <see cref="IPublishConfiguration.MessageResponseLogger"/>
         /// </summary>
-        private Action<MessageResponse, Message> MessageResponseLogger { get; set; }
+        private Action<MessageResponse, object> MessageResponseLogger { get; set; }
 
         /// <summary>
         /// Gets or sets the optional value to use for <see cref="IPublishConfiguration.PublishFailureBackoff"/>
@@ -197,7 +196,7 @@ namespace JustSaying.Fluent
         /// <exception cref="ArgumentNullException">
         /// <paramref name="logger"/> is <see cref="null"/>.
         /// </exception>
-        public MessagingConfigurationBuilder WithMessageResponseLogger(Action<MessageResponse, Message> logger)
+        public MessagingConfigurationBuilder WithMessageResponseLogger(Action<MessageResponse, object> logger)
         {
             MessageResponseLogger = logger ?? throw new ArgumentNullException(nameof(logger));
             return this;

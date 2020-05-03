@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Shouldly;
 using Xunit;
@@ -62,8 +61,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         [Fact]
         public void CorrectHandlerIsReturnedForType()
         {
-            Func<Message, Task<bool>> fn1 = m => Task.FromResult(true);
-            Func<Message, Task<bool>> fn2 = m => Task.FromResult(true);
+            Func<object, Task<bool>> fn1 = m => Task.FromResult(true);
+            Func<object, Task<bool>> fn2 = m => Task.FromResult(true);
 
             var map = new HandlerMap();
             map.Add(typeof(SimpleMessage), fn1);
@@ -81,8 +80,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         [Fact]
         public void MultipleHandlersForATypeAreNotSupported()
         {
-            Func<Message, Task<bool>> fn1 = m => Task.FromResult(true);
-            Func<Message, Task<bool>> fn2 = m => Task.FromResult(true);
+            Func<object, Task<bool>> fn1 = m => Task.FromResult(true);
+            Func<object, Task<bool>> fn2 = m => Task.FromResult(true);
 
             var map = new HandlerMap();
 
@@ -93,9 +92,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         [Fact]
         public void MultipleHandlersForATypeWithOtherHandlersAreNotSupported()
         {
-            Func<Message, Task<bool>> fn1 = m => Task.FromResult(true);
-            Func<Message, Task<bool>> fn2 = m => Task.FromResult(false);
-            Func<Message, Task<bool>> fn3 = m => Task.FromResult(true);
+            Func<object, Task<bool>> fn1 = m => Task.FromResult(true);
+            Func<object, Task<bool>> fn2 = m => Task.FromResult(false);
+            Func<object, Task<bool>> fn3 = m => Task.FromResult(true);
 
             var map = new HandlerMap();
             map.Add(typeof(SimpleMessage), fn1);

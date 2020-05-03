@@ -83,7 +83,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 });
         }
 
-        public class MySqsTopicMessageForMultipleRegions : JustSaying.Models.Message
+        public class MySqsTopicMessageForMultipleRegions : Message
         {
         }
     }

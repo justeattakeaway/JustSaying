@@ -1,11 +1,9 @@
-using JustSaying.Models;
-
 namespace JustSaying.IntegrationTests.Fluent
 {
     internal static class MessagingBusBuilderTestExtensions
     {
         public static MessagingBusBuilder WithLoopbackQueue<T>(this MessagingBusBuilder builder, string name)
-            where T : Message
+            where T : class
         {
             return builder
                 .Publications((options) => options.WithQueue<T>(name))
@@ -13,7 +11,7 @@ namespace JustSaying.IntegrationTests.Fluent
         }
 
         public static MessagingBusBuilder WithLoopbackTopic<T>(this MessagingBusBuilder builder, string name)
-            where T : Message
+            where T : class
         {
             return builder
                 .Publications((options) => options.WithTopic<T>())

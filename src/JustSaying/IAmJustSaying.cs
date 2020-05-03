@@ -4,7 +4,6 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.Models;
 
 namespace JustSaying
 {
@@ -12,10 +11,10 @@ namespace JustSaying
     {
         void AddNotificationSubscriber(string region, INotificationSubscriber subscriber);
 
-        void AddMessageHandler<T>(string region, string queueName, Func<IHandlerAsync<T>> handler) where T : Message;
+        void AddMessageHandler<T>(string region, string queueName, Func<IHandlerAsync<T>> handler) where T : class;
 
         // TODO - swap params
-        void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message;
+        void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : class;
 
         void Start(CancellationToken cancellationToken = default);
 

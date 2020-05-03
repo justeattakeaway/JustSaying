@@ -10,7 +10,6 @@ using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
-using Message = JustSaying.Models.Message;
 using SQSMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying.AwsTools.MessageHandling
@@ -54,10 +53,10 @@ namespace JustSaying.AwsTools.MessageHandling
                 return;
             }
 
-            Message typedMessage;
+            object untypedMessage;
             try
             {
-                typedMessage = _serializationRegister.DeserializeMessage(message.Body);
+                untypedMessage = _serializationRegister.DeserializeMessage(message.Body);
             }
             catch (MessageFormatNotSupportedException ex)
             {
@@ -90,11 +89,11 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                if (typedMessage != null)
+                if (untypedMessage != null)
                 {
                     _messageContextAccessor.MessageContext = new MessageContext(message, _queue.Uri);
 
-                    handlingSucceeded = await CallMessageHandler(typedMessage).ConfigureAwait(false);
+                    handlingSucceeded = await CallMessageHandler(untypedMessage).ConfigureAwait(false);
                 }
 
                 if (handlingSucceeded)
@@ -112,9 +111,9 @@ namespace JustSaying.AwsTools.MessageHandling
                     message.MessageId,
                     message.Body);
 
-                if (typedMessage != null)
+                if (untypedMessage != null)
                 {
-                    _messagingMonitor.HandleException(typedMessage.GetType());
+                    _messagingMonitor.HandleException(untypedMessage.GetType());
                 }
 
                 _onError(ex, message);
@@ -127,7 +126,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     if (!handlingSucceeded && _messageBackoffStrategy != null)
                     {
-                        await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage, lastException).ConfigureAwait(false);
+                        await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, untypedMessage, lastException).ConfigureAwait(false);
                     }
                 }
                 finally
@@ -137,7 +136,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        private async Task<bool> CallMessageHandler(Message message)
+        private async Task<bool> CallMessageHandler(object message)
         {
             var messageType = message.GetType();
 
@@ -155,8 +154,7 @@ namespace JustSaying.AwsTools.MessageHandling
             watch.Stop();
 
             _logger.LogTrace(
-                "Handled message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}.",
-                message.Id,
+                "Handled message of type {MessageType} in {TimeToHandle}.",
                 messageType,
                 watch.Elapsed);
 
@@ -176,11 +174,11 @@ namespace JustSaying.AwsTools.MessageHandling
             await _queue.Client.DeleteMessageAsync(deleteRequest).ConfigureAwait(false);
         }
 
-        private async Task UpdateMessageVisibilityTimeout(SQSMessage message, string receiptHandle, Message typedMessage, Exception lastException)
+        private async Task UpdateMessageVisibilityTimeout(SQSMessage message, string receiptHandle, object untypedMessage, Exception lastException)
         {
             if (TryGetApproxReceiveCount(message.Attributes, out int approxReceiveCount))
             {
-                var visibilityTimeout = _messageBackoffStrategy.GetBackoffDuration(typedMessage, approxReceiveCount, lastException);
+                var visibilityTimeout = _messageBackoffStrategy.GetBackoffDuration(untypedMessage, approxReceiveCount, lastException);
                 var visibilityTimeoutSeconds = (int)visibilityTimeout.TotalSeconds;
 
                 var visibilityRequest = new ChangeMessageVisibilityRequest

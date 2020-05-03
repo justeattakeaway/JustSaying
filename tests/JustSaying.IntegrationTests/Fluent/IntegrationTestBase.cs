@@ -6,7 +6,6 @@ using Amazon.Runtime;
 using JustSaying.AwsTools;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -73,7 +72,7 @@ namespace JustSaying.IntegrationTests.Fluent
         }
 
         protected IHandlerAsync<T> CreateHandler<T>(TaskCompletionSource<object> completionSource)
-            where T : Message
+            where T : class
         {
             IHandlerAsync<T> handler = Substitute.For<IHandlerAsync<T>>();
 

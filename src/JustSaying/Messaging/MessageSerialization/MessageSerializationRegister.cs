@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialization
 {
@@ -15,7 +14,7 @@ namespace JustSaying.Messaging.MessageSerialization
             _messageSubjectProvider = messageSubjectProvider ?? throw new ArgumentNullException(nameof(messageSubjectProvider));
         }
 
-        public void AddSerializer<T>(IMessageSerializer serializer) where T : Message
+        public void AddSerializer<T>(IMessageSerializer serializer) where T : class
         {
             var key = typeof(T);
             if (!_map.TryGetValue(key, out TypeSerializer typeSerializer))
@@ -24,7 +23,7 @@ namespace JustSaying.Messaging.MessageSerialization
             }
         }
 
-        public Message DeserializeMessage(string body)
+        public object DeserializeMessage(string body)
         {
             foreach (var pair in _map)
             {
@@ -52,7 +51,8 @@ namespace JustSaying.Messaging.MessageSerialization
                 $"Message can not be handled - type undetermined. Message body: '{body}'");
         }
 
-        public string Serialize(Message message, bool serializeForSnsPublishing)
+        public string Serialize<T>(T message, bool serializeForSnsPublishing)
+            where T : class
         {
             var messageType = message.GetType();
 

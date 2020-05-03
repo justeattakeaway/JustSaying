@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using HandlerFunc = System.Func<JustSaying.Models.Message, System.Threading.Tasks.Task<bool>>;
+using HandlerFunc = System.Func<object, System.Threading.Tasks.Task<bool>>;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -14,8 +14,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public HandlerFunc Get(Type messageType)
         {
-            HandlerFunc handler;
-            return _handlers.TryGetValue(messageType, out handler) ? handler : null;
+            return _handlers.TryGetValue(messageType, out var handler) ? handler : null;
         }
     }
 }

@@ -6,7 +6,6 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.Models;
 
 namespace JustSaying
 {
@@ -58,9 +57,9 @@ namespace JustSaying
     public interface IAmJustSayingFluently : IMessagePublisher
     {
         IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder);
-        IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>() where T : Message;
-        IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>(Action<SnsWriteConfiguration> config) where T : Message;
-        IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsWriteConfiguration> config) where T : Message;
+        IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>() where T : class;
+        IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>(Action<SnsWriteConfiguration> config) where T : class;
+        IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsWriteConfiguration> config) where T : class;
 
         /// <summary>
         /// Adds subscriber to topic.
@@ -77,7 +76,7 @@ namespace JustSaying
 
     public interface IFluentSubscription
     {
-        IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message;
+        IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : class;
 
         IFluentSubscription ConfigureSubscriptionWith(Action<SqsReadConfiguration> config);
     }

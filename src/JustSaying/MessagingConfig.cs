@@ -4,7 +4,6 @@ using System.Linq;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
-using JustSaying.Models;
 using JustSaying.Naming;
 
 namespace JustSaying
@@ -24,7 +23,7 @@ namespace JustSaying
 
         public int PublishFailureReAttempts { get; set; }
         public TimeSpan PublishFailureBackoff { get; set; }
-        public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
+        public Action<MessageResponse, object> MessageResponseLogger { get; set; }
         public IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
         public IList<string> Regions { get; }
         public Func<string> GetActiveRegion { get; set; }

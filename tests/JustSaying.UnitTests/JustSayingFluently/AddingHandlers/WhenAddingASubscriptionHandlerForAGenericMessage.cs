@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Models;
+using JustSaying.TestingFramework;
 using NSubstitute;
 using Xunit;
 

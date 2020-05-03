@@ -1,7 +1,5 @@
 using System;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Extensions;
-using JustSaying.Models;
 
 namespace JustSaying.Fluent
 {
@@ -11,8 +9,8 @@ namespace JustSaying.Fluent
     /// <typeparam name="T">
     /// The type of the message.
     /// </typeparam>
-    public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
-        where T : Message
+    public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder
+        where T : class
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="TopicSubscriptionBuilder{T}"/> class.
@@ -98,7 +96,7 @@ namespace JustSaying.Fluent
         }
 
         /// <inheritdoc />
-        void ISubscriptionBuilder<T>.Configure(JustSayingFluently bus, IHandlerResolver resolver)
+        void ISubscriptionBuilder.Configure(JustSayingFluently bus, IHandlerResolver resolver)
         {
             var topic = bus.WithSqsTopicSubscriber()
                            .IntoQueue(TopicName);

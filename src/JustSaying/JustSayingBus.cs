@@ -9,7 +9,6 @@ using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying
@@ -89,14 +88,14 @@ namespace JustSaying
             }
         }
 
-        public void AddMessageHandler<T>(string region, string queue, Func<IHandlerAsync<T>> futureHandler) where T : Message
+        public void AddMessageHandler<T>(string region, string queue, Func<IHandlerAsync<T>> futureHandler) where T : class
         {
             var subscribersByRegion = _subscribersByRegionAndQueue[region];
             var subscriber = subscribersByRegion[queue];
             subscriber.AddMessageHandler(futureHandler);
         }
 
-        public void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message
+        public void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : class
         {
             if (Config.PublishFailureReAttempts == 0)
             {
@@ -139,7 +138,8 @@ namespace JustSaying
             }
         }
 
-        public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
+        public async Task PublishAsync<T>(T message, PublishMetadata metadata, CancellationToken cancellationToken)
+            where T : class
         {
             var publisher = GetActivePublisherForMessage(message);
             await PublishAsync(publisher, message, metadata, 0, cancellationToken)
@@ -151,7 +151,8 @@ namespace JustSaying
             return new InterrogationResponse(Config.Regions, _subscribers, _publishers);
         }
 
-        private IMessagePublisher GetActivePublisherForMessage(Message message)
+        private IMessagePublisher GetActivePublisherForMessage<T>(T message)
+            where T : class
         {
             if (_publishersByRegionAndType.Count == 0)
             {
@@ -218,12 +219,13 @@ namespace JustSaying
             return Config.Regions.First();
         }
 
-        private async Task PublishAsync(
+        private async Task PublishAsync<T>(
             IMessagePublisher publisher,
-            Message message,
+            T message,
             PublishMetadata metadata,
             int attemptCount,
             CancellationToken cancellationToken)
+            where T : class
         {
             attemptCount++;
             try

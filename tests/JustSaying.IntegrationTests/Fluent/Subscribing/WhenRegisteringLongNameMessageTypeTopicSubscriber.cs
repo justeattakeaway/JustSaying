@@ -1,7 +1,6 @@
 using System.Net;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
-using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;

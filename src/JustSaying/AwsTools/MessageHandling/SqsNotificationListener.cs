@@ -12,7 +12,6 @@ using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
-using Message = JustSaying.Models.Message;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -93,7 +92,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return this;
         }
 
-        public void AddMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler) where T : Message
+        public void AddMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler, Func<T, string> uniqueKeySelector = default) where T : class
         {
             if (_handlerMap.ContainsKey(typeof(T)))
             {
@@ -103,7 +102,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             Subscribers.Add(new Subscriber(typeof(T)));
 
-            var handlerFunc = _messageHandlerWrapper.WrapMessageHandler(futureHandler);
+            var handlerFunc = _messageHandlerWrapper.WrapMessageHandler(futureHandler, uniqueKeySelector);
             _handlerMap.Add(typeof(T), handlerFunc);
         }
 

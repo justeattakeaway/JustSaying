@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
@@ -48,7 +47,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                     builder.Messaging(
                         (config) => config.WithPublishFailureBackoff(TimeSpan.FromMilliseconds(1))
                                           .WithPublishFailureReattempts(1));
-                    
+
                     builder.Subscriptions(
                         (subscription) => subscription.ForTopic<SimpleMessage>(
                             (topic) => topic.WithName(UniqueName)));

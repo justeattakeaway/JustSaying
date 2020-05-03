@@ -1,4 +1,3 @@
-using JustSaying.Models;
 using Newtonsoft.Json;
 
 namespace JustSaying.Messaging.MessageSerialization
@@ -17,6 +16,6 @@ namespace JustSaying.Messaging.MessageSerialization
             _serializer = new NewtonsoftSerializer(settings);
         }
 
-        public IMessageSerializer GetSerializer<T>() where T : Message => _serializer;
+        public IMessageSerializer GetSerializer<T>() where T : class => _serializer;
     }
 }

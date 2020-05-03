@@ -31,8 +31,6 @@ namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft
         public void MessagesContainSameDetails()
         {
             _messageOut.EnumVal.ShouldBe(_messageIn.EnumVal);
-            _messageOut.RaisingComponent.ShouldBe(_messageIn.RaisingComponent);
-            _messageOut.TimeStamp.ShouldBe(_messageIn.TimeStamp);
         }
 
         [Fact]

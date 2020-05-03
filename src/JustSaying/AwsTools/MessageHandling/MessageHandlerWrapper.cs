@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
@@ -23,19 +22,19 @@ namespace JustSaying.AwsTools.MessageHandling
             _loggerFactory = loggerFactory;
         }
 
-        public Func<Message, Task<bool>> WrapMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler) where T : Message
+        public Func<object, Task<bool>> WrapMessageHandler<T>(Func<IHandlerAsync<T>> futureHandler, Func<T, string> uniqueKeySelector = default) where T : class
         {
             return async message =>
             {
                 var handler = futureHandler();
-                handler = MaybeWrapWithExactlyOnce(handler);
+                handler = MaybeWrapWithExactlyOnce(handler, uniqueKeySelector);
                 handler = MaybeWrapWithStopwatch(handler);
 
                 return await handler.Handle((T)message).ConfigureAwait(false);
             };
         }
 
-        private IHandlerAsync<T> MaybeWrapWithExactlyOnce<T>(IHandlerAsync<T> handler) where T : Message
+        private IHandlerAsync<T> MaybeWrapWithExactlyOnce<T>(IHandlerAsync<T> handler, Func<T, string> uniqueKeySelector) where T : class
         {
             var handlerType = handler.GetType();
             var exactlyOnceMetadata = new ExactlyOnceReader(handlerType);
@@ -49,14 +48,19 @@ namespace JustSaying.AwsTools.MessageHandling
                 throw new Exception("IMessageLock is null. You need to specify an implementation for IMessageLock.");
             }
 
+            if (uniqueKeySelector == null)
+            {
+                throw new ArgumentNullException(nameof(uniqueKeySelector), "You must specify a uniqueKeySelector in order to use exactly once functionality.");
+            }
+
             var handlerName = handlerType.FullName.ToLowerInvariant();
             var timeout = TimeSpan.FromSeconds(exactlyOnceMetadata.GetTimeOut());
             var logger = _loggerFactory.CreateLogger<ExactlyOnceHandler<T>>();
 
-            return new ExactlyOnceHandler<T>(handler, _messageLock, timeout, handlerName, logger);
+            return new ExactlyOnceHandler<T>(handler, _messageLock, uniqueKeySelector, timeout, handlerName, logger);
         }
 
-        private IHandlerAsync<T> MaybeWrapWithStopwatch<T>(IHandlerAsync<T> handler) where T : Message
+        private IHandlerAsync<T> MaybeWrapWithStopwatch<T>(IHandlerAsync<T> handler) where T : class
         {
             if (!(_messagingMonitor is IMeasureHandlerExecutionTime executionTimeMonitoring))
             {
