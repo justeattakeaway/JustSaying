@@ -28,6 +28,10 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             _loggerFactory = loggerFactory;
         }
 
+        public bool Contains(string queueName, Type messageType)
+            => _handlers.ContainsKey((queueName, messageType));
+
+
         public IEnumerable<Type> Types
         {
             get
