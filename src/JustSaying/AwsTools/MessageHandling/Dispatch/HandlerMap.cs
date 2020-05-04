@@ -7,21 +7,26 @@ using HandlerFunc = System.Func<JustSaying.Models.Message, System.Threading.Task
 
 namespace JustSaying.AwsTools.MessageHandling.Dispatch
 {
+    /// <summary>
+    /// A <see cref="HandlerMap"/> is a register of handlers keyed by type and queue. Calling <see cref="Add"/>
+    /// with a queue name, type, and handler will cause the handler to be called when a message matching the type
+    /// arrives in the queue.
+    /// </summary>
     public class HandlerMap
     {
+        private readonly IMessageMonitor _messageMonitor;
+        private readonly ILoggerFactory _loggerFactory;
+
         private readonly Dictionary<(string queueName, Type type), HandlerFunc> _handlers
             = new Dictionary<(string, Type), HandlerFunc>();
 
         public HandlerMap(
-            IMessageMonitor messagingMonitor,
+            IMessageMonitor messageMonitor,
             ILoggerFactory loggerFactory)
         {
-            MessagingMonitor = messagingMonitor;
-            LoggerFactory = loggerFactory;
+            _messageMonitor = messageMonitor;
+            _loggerFactory = loggerFactory;
         }
-
-        public bool Contains(string queueName, Type messageType)
-            => _handlers.ContainsKey((queueName, messageType));
 
         public IEnumerable<Type> Types
         {
@@ -38,19 +43,26 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         }
 
         public IMessageLockAsync MessageLock { get; set; }
-        public IMessageMonitor MessagingMonitor { get; }
-        public ILoggerFactory LoggerFactory { get; }
 
+
+        /// <summary>
+        /// Adds a handler to be executed when a message arrives in a queue.
+        /// If the handler is already registered for a queue, it will not be added again.
+        /// </summary>
+        /// <typeparam name="T">The type of the message to handle on this queue</typeparam>
+        /// <param name="queueName">The queue to register the handler for</param>
+        /// <param name="futureHandler">The factory function to create handlers with</param>
         public void Add<T>(string queueName, Func<IHandlerAsync<T>> futureHandler) where T : Models.Message
         {
-            var handlerWrapper = new MessageHandlerWrapper(MessageLock, MessagingMonitor, LoggerFactory);
+            var handlerWrapper = new MessageHandlerWrapper(MessageLock, _messageMonitor, _loggerFactory);
             var handlerFunc = handlerWrapper.WrapMessageHandler(futureHandler);
 
             Add(queueName, typeof(T), handlerFunc);
         }
 
         /// <summary>
-        /// Adds a handler to the handler map. If the handler is already registered for a queue, it will not be added again.
+        /// Adds a handler to be executed when a message arrives in a queue.
+        /// If the handler is already registered for a queue, it will not be added again.
         /// </summary>
         /// <param name="queueName">The queue name to register the handler for</param>
         /// <param name="messageType">The type of message to handle for this queue</param>
@@ -65,6 +77,12 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             }
         }
 
+        /// <summary>
+        /// Gets a handler factory for a queue and message type
+        /// </summary>
+        /// <param name="queueName">The queue name to get the handler func for</param>
+        /// <param name="messageType">The message type to get the handler func for</param>
+        /// <returns></returns>
         public HandlerFunc Get(string queueName, Type messageType)
         {
             return _handlers.TryGetValue((queueName, messageType), out var handler) ? handler : null;
