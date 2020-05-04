@@ -55,7 +55,12 @@ namespace JustSaying.IntegrationTests.Fluent
                 .AddJustSaying(
                     (builder, serviceProvider) =>
                     {
-                        builder.Messaging((options) => options.WithRegion(RegionName));
+                        builder.Messaging((options) => options.WithRegion(RegionName))
+                            .Client((options) =>
+                            {
+                                options.WithSessionCredentials(AccessKeyId, SecretAccessKey, SessionToken)
+                                    .WithServiceUri(ServiceUri);
+                            });
 
                         configure(builder, serviceProvider);
                     });

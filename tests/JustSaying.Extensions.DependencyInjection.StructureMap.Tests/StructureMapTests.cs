@@ -45,9 +45,12 @@ namespace JustSaying
                     registry.AddJustSaying(
                         (builder) =>
                         {
-                            builder.Messaging((options) => options.WithRegions("eu-west-1"))
-                                   .Publications((options) => options.WithQueue<SimpleMessage>())
-                                   .Subscriptions((options) => options.ForQueue<SimpleMessage>());
+                            builder.Client((options) =>
+                                    options.WithBasicCredentials("accessKey", "secretKey")
+                                        .WithServiceUri(TestEnvironment.SimulatorUrl))
+                                .Messaging((options) => options.WithRegions("eu-west-1"))
+                                .Publications((options) => options.WithQueue<SimpleMessage>())
+                                .Subscriptions((options) => options.ForQueue<SimpleMessage>());
                         });
                 });
 

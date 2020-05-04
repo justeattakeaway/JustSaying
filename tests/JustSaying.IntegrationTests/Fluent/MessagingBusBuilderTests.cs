@@ -34,10 +34,13 @@ namespace JustSaying.IntegrationTests
                 .AddJustSaying(
                     (builder) =>
                     {
-                        builder.Messaging((options) => options.WithRegions("eu-west-1"))
-                               .Publications((options) => options.WithQueue<QueueMessage>())
-                               .Subscriptions((options) => options.ForQueue<QueueMessage>())
-                               .Services((options) => options.WithMessageMonitoring(() => new MyMonitor()));
+                        builder.Client((options) =>
+                                options.WithBasicCredentials("accessKey", "secretKey")
+                                    .WithServiceUri(TestEnvironment.SimulatorUrl))
+                            .Messaging((options) => options.WithRegions("eu-west-1"))
+                            .Publications((options) => options.WithQueue<QueueMessage>())
+                            .Subscriptions((options) => options.ForQueue<QueueMessage>())
+                            .Services((options) => options.WithMessageMonitoring(() => new MyMonitor()));
                     })
                 .AddJustSayingHandler<QueueMessage, QueueHandler>();
 
