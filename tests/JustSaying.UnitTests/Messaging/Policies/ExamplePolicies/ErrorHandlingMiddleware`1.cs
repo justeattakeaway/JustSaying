@@ -8,10 +8,6 @@ namespace JustSaying.UnitTests.Messaging.Policies.ExamplePolicies
     public class ErrorHandlingMiddleware<TContext, TOut, TException> : MiddlewareBase<TContext, TOut>
         where TException : Exception
     {
-        public ErrorHandlingMiddleware(MiddlewareBase<TContext, TOut> next) : base(next)
-        {
-        }
-
         protected override async Task<TOut> RunInnerAsync(
             TContext context,
             Func<CancellationToken, Task<TOut>> func,

@@ -112,7 +112,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
                 messageContextAccessor);
 
             var defaults = new SubscriptionConfigBuilder();
-            defaults.WithDefaultSqsPolicy(LoggerFactory);
 
             var subscriptionGroupFactory = new SubscriptionGroupFactory(
                 dispatcher,

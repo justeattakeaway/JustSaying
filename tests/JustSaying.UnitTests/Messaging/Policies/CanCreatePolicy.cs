@@ -34,7 +34,7 @@ namespace JustSaying.UnitTests.Messaging.Policies
         {
             var called = false;
             var noop = MiddlewareBuilder.BuildAsync<int, int>(
-                next => new ErrorHandlingMiddleware<int, int, InvalidOperationException>(next));
+                _ => new ErrorHandlingMiddleware<int, int, InvalidOperationException>());
 
             var result = await noop.RunAsync(1, async ct =>
             {

@@ -60,22 +60,26 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             return this;
         }
 
-        public SubscriptionConfigBuilder WithBufferSize(int bufferSize)
+        /// <summary>
+        /// Sets the default number of messages to buffer in the MessageReceiveBuffer before they are sent to the Multiplexer
+        /// </summary>
+        /// <param name="bufferSize"></param>
+        /// <returns></returns>
+        public SubscriptionConfigBuilder WithDefaultBufferSize(int bufferSize)
         {
             DefaultBufferSize = bufferSize;
             return this;
         }
 
-        public SubscriptionConfigBuilder WithSqsPolicy(Func<ReceiveMiddleware, ReceiveMiddleware> creator)
+        /// <summary>
+        /// Overrides the default middleware used by the receive pipeline, which performs some default error handling
+        /// (see <see cref="DefaultSqsMiddleware"/>)
+        /// </summary>
+        /// <param name="middleware">A provider func that takes a source ReceiveMiddleware and returns the custom ReceiveMiddleware</param>
+        /// <returns>The builder object</returns>
+        public SubscriptionConfigBuilder WithCustomMiddleware(ReceiveMiddleware middleware)
         {
-            SqsMiddleware = SqsMiddleware.WithAsync(creator);
-            return this;
-        }
-
-        public SubscriptionConfigBuilder WithDefaultSqsPolicy(ILoggerFactory loggerFactory)
-        {
-            SqsMiddleware = SqsMiddleware.WithAsync(_ =>
-                new DefaultSqsMiddleware(loggerFactory.CreateLogger<DefaultSqsMiddleware>()));
+            SqsMiddleware = middleware;
             return this;
         }
     }

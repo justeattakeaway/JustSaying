@@ -44,8 +44,8 @@ namespace JustSaying.UnitTests.Messaging.Policies
             var queues = new List<ISqsQueue> { sqsQueue };
 
             var config = new SubscriptionConfigBuilder();
-            config.WithSqsPolicy(
-                next => new ErrorHandlingMiddleware<GetMessagesContext, IList<Message>, InvalidOperationException>(next));
+            config.WithCustomMiddleware(
+                new ErrorHandlingMiddleware<GetMessagesContext, IList<Message>, InvalidOperationException>());
 
             var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
             {
