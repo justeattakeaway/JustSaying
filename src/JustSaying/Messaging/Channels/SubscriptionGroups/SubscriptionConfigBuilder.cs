@@ -1,13 +1,15 @@
 using System;
-using System.Collections.Generic;
-using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware;
-using Microsoft.Extensions.Logging;
-using ReceiveMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Channels.Context.GetMessagesContext, System.Collections.Generic.IList<Amazon.SQS.Model.Message>>;
+using ReceiveMiddleware =
+    JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Channels.Context.GetMessagesContext,
+        System.Collections.Generic.IList<Amazon.SQS.Model.Message>>;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
+    /// <summary>
+    /// Configures the default settings for all subscription groups.
+    /// </summary>
     public class SubscriptionConfigBuilder
     {
         public SubscriptionConfigBuilder()
@@ -27,34 +29,57 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         public int DefaultConcurrencyLimit { get; private set; }
         public int DefaultMultiplexerCapacity { get; private set; }
         public ReceiveMiddleware SqsMiddleware { get; private set; }
-            = new DelegateMiddleware<GetMessagesContext, IList<Amazon.SQS.Model.Message>>();
 
-
-        public SubscriptionConfigBuilder WithReceiveBufferWriteTimeout(TimeSpan receiveBufferWriteTimeout)
+        /// <summary>
+        /// Sets the default duration to wait to write messages to the multiplexer between checking for cancellation
+        /// </summary>
+        /// <param name="receiveBufferWriteTimeout"></param>
+        /// <returns></returns>
+        public SubscriptionConfigBuilder WithDefaultReceiveBufferWriteTimeout(TimeSpan receiveBufferWriteTimeout)
         {
             DefaultReceiveBufferWriteTimeout = receiveBufferWriteTimeout;
             return this;
         }
 
-        public SubscriptionConfigBuilder WithReceiveBufferReadTimeout(TimeSpan receiveBufferReadTimeout)
+        /// <summary>
+        /// Sets the default duration to wait to read from SQS before starting a new long polling connection
+        /// </summary>
+        /// <param name="receiveBufferReadTimeout"></param>
+        /// <returns></returns>
+        public SubscriptionConfigBuilder WithDefaultReceiveBufferReadTimeout(TimeSpan receiveBufferReadTimeout)
         {
             DefaultReceiveBufferReadTimeout = receiveBufferReadTimeout;
             return this;
         }
 
-        public SubscriptionConfigBuilder WithMultiplexerCapacity(int multiplexerCapacity)
+        /// <summary>
+        /// Sets the default capacity of the multiplexer
+        /// </summary>
+        /// <param name="multiplexerCapacity"></param>
+        /// <returns></returns>
+        public SubscriptionConfigBuilder WithDefaultMultiplexerCapacity(int multiplexerCapacity)
         {
             DefaultMultiplexerCapacity = multiplexerCapacity;
             return this;
         }
 
-        public SubscriptionConfigBuilder WithPrefetch(int prefetch)
+        /// <summary>
+        /// Sets the default number of messages to attempt to fetch in each request to SQS.
+        /// </summary>
+        /// <param name="prefetch">The number of messages to load. Must be between 1 and 10</param>
+        /// <returns></returns>
+        public SubscriptionConfigBuilder WithDefaultPrefetch(int prefetch)
         {
             DefaultPrefetch = prefetch;
             return this;
         }
 
-        public SubscriptionConfigBuilder WithConcurrencyLimit(int concurrencyLimit)
+        /// <summary>
+        /// Sets the default maximum number of messages that may be processed at a time, per subscription group.
+        /// </summary>
+        /// <param name="concurrencyLimit"></param>
+        /// <returns></returns>
+        public SubscriptionConfigBuilder WithDefaultConcurrencyLimit(int concurrencyLimit)
         {
             DefaultConcurrencyLimit = concurrencyLimit;
             return this;
@@ -75,7 +100,8 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// Overrides the default middleware used by the receive pipeline, which performs some default error handling
         /// (see <see cref="DefaultSqsMiddleware"/>)
         /// </summary>
-        /// <param name="middleware">A provider func that takes a source ReceiveMiddleware and returns the custom ReceiveMiddleware</param>
+        /// <param name="middleware">A <see cref="ReceiveMiddleware"/> that replaces the default middleware
+        /// (see <see cref="DefaultSqsMiddleware"/>)</param>
         /// <returns>The builder object</returns>
         public SubscriptionConfigBuilder WithCustomMiddleware(ReceiveMiddleware middleware)
         {
