@@ -35,19 +35,13 @@ namespace JustSaying.Messaging.Middleware
 
                 return results;
             }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogTrace(
-                    ex,
-                    "Could not determine number of messages to read from queue '{QueueName}' in '{Region}'.",
-                    context.QueueName,
-                    context.RegionName);
-            }
             catch (OperationCanceledException ex)
             {
                 _logger.LogTrace(
                     ex,
-                    "Suspected no message on queue '{QueueName}' in region '{Region}'.",
+                    "Request to get more messages from queue was canceled for queue '{QueueName}' in region '{Region}'," +
+                    "likely because there are no messages in the queue. " +
+                    "This might have also been caused by the application shutting down.",
                     context.QueueName,
                     context.RegionName);
             }
