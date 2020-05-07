@@ -6,6 +6,7 @@ using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels.Dispatch;
 using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 
@@ -79,7 +80,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
                     subscriptionGroupSettings.ReceiveBufferReadTimeout,
                     subscriptionGroupSettings.ReceiveBufferWriteTimeout,
                     queue,
-                    defaults.SqsMiddleware,
+                    defaults.SqsMiddleware ?? new DefaultSqsMiddleware(_loggerFactory.CreateLogger<DefaultSqsMiddleware>()),
                     _monitor,
                     _loggerFactory.CreateLogger<MessageReceiveBuffer>());
 

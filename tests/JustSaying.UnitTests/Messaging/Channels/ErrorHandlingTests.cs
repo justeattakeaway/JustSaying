@@ -47,7 +47,6 @@ namespace JustSaying.UnitTests.Messaging.Channels
             IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
 
             var defaults = new SubscriptionConfigBuilder();
-            defaults.WithDefaultSqsPolicy(LoggerFactory);
             var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
             {
                 { "test", new SubscriptionGroupConfigBuilder("test").AddQueues(queues) },
