@@ -25,7 +25,7 @@ namespace JustSaying.AwsTools.MessageHandling
         Uri Uri { get; }
 
         /// <summary>
-        /// Fetches some messages from SQS, with a list of attributes to also load.
+        /// Fetches messages from SQS, with a list of attributes to also load
         /// </summary>
         /// <param name="maximumCount">The maximum number of messages to get from SQS</param>
         /// <param name="requestMessageAttributeNames">A list of attributes to try and fetch for each message</param>
@@ -37,7 +37,7 @@ namespace JustSaying.AwsTools.MessageHandling
         /// <summary>
         /// Updates a messages visibility timeout so that it won't be released to another subscriber before the timeout passes
         /// </summary>
-        /// <param name="receiptHandle">The ReceiptHandle of the message to update</param>
+        /// <param name="receiptHandle">The ReceiptHandle of the message to update (available from <see cref="Message"/>)</param>
         /// <param name="timeout">How far into the future this message should remain invisible to other consumers</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> to cancel the visibility update</param>
         /// <returns></returns>
@@ -46,7 +46,7 @@ namespace JustSaying.AwsTools.MessageHandling
         /// <summary>
         /// Deletes a message from SQS
         /// </summary>
-        /// <param name="receiptHandle">The ReceiptHandle of the message to delete</param>
+        /// <param name="receiptHandle">The ReceiptHandle of the message to delete (available from <see cref="Message"/>)</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> to cancel the deletion</param>
         /// <returns></returns>
         Task DeleteMessageAsync(string receiptHandle, CancellationToken cancellationToken = default);
