@@ -17,7 +17,6 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
         private int? _bufferSize;
         private TimeSpan? _receiveBufferReadTimeout;
-        private TimeSpan? _receiveBufferWriteTimeout;
         private int? _concurrencyLimit;
         private int? _multiplexerCapacity;
         private int? _prefetch;
@@ -89,18 +88,6 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         }
 
         /// <summary>
-        /// Specifies the maximum amount of time for each queue in this <see cref="ISubscriptionGroup"/> to wait for
-        /// there to be room in the <see cref="IMultiplexer"/> before cancelling and trying again.
-        /// </summary>
-        /// <param name="receiveBufferWriteTimeout">The maximum amount of time to wait to write to the <see cref="IMultiplexer"/></param>
-        /// <returns>This builder object.</returns>
-        public SubscriptionGroupConfigBuilder WithReceiveBufferWriteTimeout(TimeSpan receiveBufferWriteTimeout)
-        {
-            _receiveBufferWriteTimeout = receiveBufferWriteTimeout;
-            return this;
-        }
-
-        /// <summary>
         /// Specifies the number of messages that may be buffered across all of the queues in this <see cref="ISubscriptionGroup"/>.
         /// Note: This setting is shared across all queues in this group. For per-queue settings, see <see cref="WithBufferSize"/>
         /// </summary>
@@ -139,7 +126,6 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
                 _concurrencyLimit ?? defaults.DefaultConcurrencyLimit,
                 _bufferSize ?? defaults.DefaultBufferSize,
                 _receiveBufferReadTimeout ?? defaults.DefaultReceiveBufferReadTimeout,
-                _receiveBufferWriteTimeout ?? defaults.DefaultReceiveBufferWriteTimeout,
                 _multiplexerCapacity ?? defaults.DefaultMultiplexerCapacity,
                 _prefetch ?? defaults.DefaultPrefetch,
                 _sqsQueues);
