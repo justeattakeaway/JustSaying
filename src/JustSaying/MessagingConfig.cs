@@ -65,7 +65,7 @@ namespace JustSaying
                 throw new InvalidOperationException($"Config cannot have a null for the {nameof(MessageSubjectProvider)} property.");
             }
 
-            // Todo: validate the consumer config
+            SubscriptionConfigDefaults.Validate();
         }
     }
 }

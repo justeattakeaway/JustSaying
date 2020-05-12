@@ -109,6 +109,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         {
             if (DefaultPrefetch < 0)
                 throw new InvalidOperationException($"{nameof(DefaultPrefetch)} cannot be negative");
+            
             if (DefaultPrefetch > MessageConstants.MaxAmazonMessageCap)
                 throw new InvalidOperationException(
                     $"{nameof(DefaultPrefetch)} cannot be greater than {nameof(MessageConstants.MaxAmazonMessageCap)}");
