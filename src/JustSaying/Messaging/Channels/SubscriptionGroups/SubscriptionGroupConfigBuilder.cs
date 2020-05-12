@@ -42,7 +42,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         }
 
         /// <summary>
-        /// Adds a colelction of <see cref="ISqsQueue"/> to be consumed by this <see cref="ISubscriptionGroup"/>/
+        /// Adds a collection of <see cref="ISqsQueue"/> to be consumed by this <see cref="ISubscriptionGroup"/>/
         /// </summary>
         /// <param name="sqsQueues">The queues to be consumed, assumed to already be created and ready.</param>
         /// <returns>This builder object.</returns>

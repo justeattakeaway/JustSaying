@@ -31,10 +31,11 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         public ReceiveMiddleware SqsMiddleware { get; private set; }
 
         /// <summary>
-        /// Sets the default duration to wait to write messages to the multiplexer between checking for cancellation
+        /// Specifies the default maximum amount of time for each queue in a <see cref="ISubscriptionGroup"/> to wait for
+        /// there to be room in the <see cref="IMultiplexer"/> before cancelling and trying again.
         /// </summary>
-        /// <param name="receiveBufferWriteTimeout"></param>
-        /// <returns></returns>
+        /// <param name="receiveBufferWriteTimeout">The maximum amount of time to wait to write to the <see cref="IMultiplexer"/></param>
+        /// <returns>This builder object.</returns>
         public SubscriptionConfigBuilder WithDefaultReceiveBufferWriteTimeout(TimeSpan receiveBufferWriteTimeout)
         {
             DefaultReceiveBufferWriteTimeout = receiveBufferWriteTimeout;
@@ -42,10 +43,11 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         }
 
         /// <summary>
-        /// Sets the default duration to wait to read from SQS before starting a new long polling connection
+        /// Specifies the default maximum amount of time to wait for messages to be available on each SQS queue in a
+        /// <see cref="ISubscriptionGroup"/> before resetting the connection.
         /// </summary>
-        /// <param name="receiveBufferReadTimeout"></param>
-        /// <returns></returns>
+        /// <param name="receiveBufferReadTimeout">The maximum amount of time to wait to read from each SQS queue</param>
+        /// <returns>This builder object.</returns>
         public SubscriptionConfigBuilder WithDefaultReceiveBufferReadTimeout(TimeSpan receiveBufferReadTimeout)
         {
             DefaultReceiveBufferReadTimeout = receiveBufferReadTimeout;
@@ -53,10 +55,11 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         }
 
         /// <summary>
-        /// Sets the default capacity of the multiplexer
+        /// Specifies the default number of messages that may be buffered across all of the queues in this <see cref="ISubscriptionGroup"/>.
+        /// Note: This setting is shared across all queues in thiss group. For per-queue settings, see <see cref="WithBufferSize"/>
         /// </summary>
-        /// <param name="multiplexerCapacity"></param>
-        /// <returns></returns>
+        /// <param name="multiplexerCapacity">The maximum multiplexer capacity</param>
+        /// <returns>This builder object.</returns>
         public SubscriptionConfigBuilder WithDefaultMultiplexerCapacity(int multiplexerCapacity)
         {
             DefaultMultiplexerCapacity = multiplexerCapacity;
@@ -64,10 +67,10 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         }
 
         /// <summary>
-        /// Sets the default number of messages to attempt to fetch in each request to SQS.
+        /// Specifies the default number of messages to try and fetch from SQS per attempt for each queue in a <see cref="ISubscriptionGroup"/>
         /// </summary>
-        /// <param name="prefetch">The number of messages to load. Must be between 1 and 10</param>
-        /// <returns></returns>
+        /// <param name="prefetch">the number of messages to load per request</param>
+        /// <returns>This builder object.</returns>
         public SubscriptionConfigBuilder WithDefaultPrefetch(int prefetch)
         {
             DefaultPrefetch = prefetch;
@@ -75,10 +78,10 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         }
 
         /// <summary>
-        /// Sets the default maximum number of messages that may be processed at a time, per subscription group.
+        /// Specifies the default maximum number of messages that may be processed at once by a <see cref="ISubscriptionGroup"/>.
         /// </summary>
-        /// <param name="concurrencyLimit"></param>
-        /// <returns></returns>
+        /// <param name="concurrencyLimit">The maximum number of messages to process at the same time</param>
+        /// <returns>This builder object.</returns>
         public SubscriptionConfigBuilder WithDefaultConcurrencyLimit(int concurrencyLimit)
         {
             DefaultConcurrencyLimit = concurrencyLimit;
@@ -86,10 +89,12 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         }
 
         /// <summary>
-        /// Sets the default number of messages to buffer in the MessageReceiveBuffer before they are sent to the Multiplexer
+        /// Specifies the default number of messages that will be buffered from SQS for each of the queues in a <see cref="ISubscriptionGroup"/>
+        /// before waiting for them to drain into the <see cref="IMultiplexer"/>.
+        /// Note: This setting is per-queue. To set the shared buffer size for all queues, see <see cref="WithMultiplexerCapacity"/>
         /// </summary>
-        /// <param name="bufferSize"></param>
-        /// <returns></returns>
+        /// <param name="bufferSize">The maximum number of messages for each queue to buffer</param>
+        /// <returns>This builder object.</returns>
         public SubscriptionConfigBuilder WithDefaultBufferSize(int bufferSize)
         {
             DefaultBufferSize = bufferSize;
