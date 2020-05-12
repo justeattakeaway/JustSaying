@@ -20,7 +20,6 @@ namespace JustSaying.Messaging.Channels.Receive
         private readonly int _prefetch;
         private readonly int _bufferSize;
         private readonly TimeSpan _readTimeout;
-        private readonly TimeSpan _writeTimeout;
         private readonly ISqsQueue _sqsQueue;
         private readonly MiddlewareBase<GetMessagesContext, IList<Message>> _sqsMiddleware;
         private readonly IMessageMonitor _monitor;
@@ -35,7 +34,6 @@ namespace JustSaying.Messaging.Channels.Receive
             int prefetch,
             int bufferSize,
             TimeSpan readTimeout,
-            TimeSpan writeTimeout,
             ISqsQueue sqsQueue,
             MiddlewareBase<GetMessagesContext, IList<Message>> sqsMiddleware,
             IMessageMonitor monitor,
@@ -46,7 +44,6 @@ namespace JustSaying.Messaging.Channels.Receive
             _prefetch = prefetch;
             _bufferSize = bufferSize;
             _readTimeout = readTimeout;
-            _writeTimeout = writeTimeout;
             _sqsQueue = sqsQueue ?? throw new ArgumentNullException(nameof(sqsQueue));
             _sqsMiddleware = sqsMiddleware ?? throw new ArgumentNullException(nameof(sqsMiddleware));
             _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
@@ -77,7 +74,7 @@ namespace JustSaying.Messaging.Channels.Receive
 
                     using (_monitor.MeasureThrottle())
                     {
-                        bool canWrite = await WaitToWriteAsync(writer, stoppingToken).ConfigureAwait(false);
+                        bool canWrite = await writer.WaitToWriteAsync(stoppingToken).ConfigureAwait(false);
                         if (!canWrite) break;
                     }
 
@@ -130,7 +127,8 @@ namespace JustSaying.Messaging.Channels.Receive
                         async ct =>
                             await _sqsQueue
                                 .GetMessagesAsync(count, _requestMessageAttributeNames, ct)
-                                .ConfigureAwait(false), linkedCts.Token)
+                                .ConfigureAwait(false),
+                        linkedCts.Token)
                     .ConfigureAwait(false);
             }
             finally
@@ -149,29 +147,6 @@ namespace JustSaying.Messaging.Channels.Receive
             _monitor.ReceiveMessageTime(stopwatch.Elapsed, _sqsQueue.QueueName, _sqsQueue.RegionSystemName);
 
             return messages;
-        }
-
-        private async Task<bool> WaitToWriteAsync(
-            ChannelWriter<IQueueMessageContext> writer,
-            CancellationToken stoppingToken)
-        {
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                using var timeoutToken = new CancellationTokenSource(_writeTimeout);
-                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, stoppingToken);
-
-                try
-                {
-                    return await writer.WaitToWriteAsync(linkedCts.Token);
-                }
-                catch (OperationCanceledException) when (timeoutToken.IsCancellationRequested)
-                {
-                    // no space in target channel, check again
-                    continue;
-                }
-            }
-
-            return false;
         }
 
         public object Interrogate()

@@ -78,7 +78,6 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
                     subscriptionGroupSettings.Prefetch,
                     subscriptionGroupSettings.BufferSize,
                     subscriptionGroupSettings.ReceiveBufferReadTimeout,
-                    subscriptionGroupSettings.ReceiveBufferWriteTimeout,
                     queue,
                     defaults.SqsMiddleware ?? new DefaultSqsMiddleware(_loggerFactory.CreateLogger<DefaultSqsMiddleware>()),
                     _monitor,
