@@ -74,7 +74,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
         private static Task<IList<Message>> GetErrorMessages()
         {
-            throw new InvalidOperationException();
+            throw new OperationCanceledException();
         }
 
         private static ISqsQueue TestQueue(Func<Task<IList<Message>>> getMessages)

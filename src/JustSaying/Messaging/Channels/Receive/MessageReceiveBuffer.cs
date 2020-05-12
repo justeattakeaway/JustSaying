@@ -101,7 +101,6 @@ namespace JustSaying.Messaging.Channels.Receive
                 _logger.LogInformation("Receive buffer for queue {QueueName} has completed, shutting down channel",
                     _sqsQueue.Uri);
                 writer.Complete();
-                stoppingToken.ThrowIfCancellationRequested();
             }
         }
 
@@ -167,7 +166,7 @@ namespace JustSaying.Messaging.Channels.Receive
                 }
                 catch (OperationCanceledException) when (timeoutToken.IsCancellationRequested)
                 {
-                    // no space in channel, check again
+                    // no space in target channel, check again
                     continue;
                 }
             }

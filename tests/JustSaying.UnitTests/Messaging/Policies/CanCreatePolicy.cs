@@ -30,7 +30,7 @@ namespace JustSaying.UnitTests.Messaging.Policies
         }
 
         [Fact]
-        public async Task PolicyBuilder_Error_Handler_Async()
+        public async Task MiddlewareBuilder_Error_Handler_Async()
         {
             var called = false;
             var noop = MiddlewareBuilder.BuildAsync<int, int>(
