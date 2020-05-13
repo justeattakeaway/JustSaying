@@ -23,6 +23,9 @@ namespace JustSaying.Messaging.MessageHandling
         /// </summary>
         public Uri QueueUri { get; }
 
+        /// <summary>
+        /// A collection of <see cref="MessageAttributeValue"/>'s that were sent with this message
+        /// </summary>
         public MessageAttributes MessageAttributes { get; }
     }
 }

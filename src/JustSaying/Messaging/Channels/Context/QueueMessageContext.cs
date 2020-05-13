@@ -8,16 +8,13 @@ namespace JustSaying.Messaging.Channels.Context
 {
     public class QueueMessageContext : IQueueMessageContext
     {
-        public QueueMessageContext(Message message, ISqsQueue sqsQueue, MessageAttributes messageAttributes)
+        public QueueMessageContext(Message message, ISqsQueue sqsQueue)
         {
             Message = message;
             SqsQueue = sqsQueue;
-            MessageAttributes = messageAttributes;
         }
 
         public Message Message { get; }
-
-        public MessageAttributes MessageAttributes { get; }
 
         private ISqsQueue SqsQueue { get; }
 
