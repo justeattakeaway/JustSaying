@@ -77,7 +77,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
         private JustSaying.JustSayingBus CreateBus()
         {
             var config = Substitute.For<IMessagingConfig>();
-            config.SubscriptionConfigDefaults = new SubscriptionConfigBuilder();
+            config.SubscriptionConfigDefaults = new SubscriptionConfigBuilder()
+                .WithDefaultConcurrencyLimit(9); // Need this as we want the config to be stable
             var serializationRegister = new MessageSerializationRegister(
                 new NonGenericMessageSubjectProvider(),
                 new NewtonsoftSerializationFactory());
@@ -129,7 +130,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             IList<ISqsQueue> queues,
             IMessageDispatcher dispatcher)
         {
-            var defaults = new SubscriptionConfigBuilder();
+            var defaults = new SubscriptionConfigBuilder()
+                .WithDefaultConcurrencyLimit(8);
 
             var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
             {

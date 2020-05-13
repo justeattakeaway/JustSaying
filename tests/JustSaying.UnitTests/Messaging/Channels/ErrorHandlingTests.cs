@@ -46,7 +46,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var queues = new List<ISqsQueue> { sqsQueue1 };
             IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
 
-            var defaults = new SubscriptionConfigBuilder();
+            var defaults = new SubscriptionConfigBuilder()
+                .WithDefaultConcurrencyLimit(8);
             var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
             {
                 { "test", new SubscriptionGroupConfigBuilder("test").AddQueues(queues) },

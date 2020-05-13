@@ -19,7 +19,7 @@
     },
     {
       "Name": "queueB",
-      "ConcurrencyLimit": 48,
+      "ConcurrencyLimit": 8,
       "Multiplexer": {
         "ChannelCapacity": 100,
         "ReaderCount": 1

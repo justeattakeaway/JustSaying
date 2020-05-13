@@ -111,7 +111,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
                 messageBackoffStrategy,
                 messageContextAccessor);
 
-            var defaults = new SubscriptionConfigBuilder();
+            var defaults = new SubscriptionConfigBuilder()
+                .WithDefaultConcurrencyLimit(8);
 
             var subscriptionGroupFactory = new SubscriptionGroupFactory(
                 dispatcher,
