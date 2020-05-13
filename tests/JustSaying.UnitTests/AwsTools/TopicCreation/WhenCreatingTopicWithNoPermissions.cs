@@ -74,7 +74,7 @@ namespace JustSaying.UnitTests.AwsTools.TopicCreation
             await Assert.ThrowsAsync<InvalidOperationException>(() => topic.CreateAsync());
         }
 
-        private IAmazonSimpleNotificationService CreateSnsClient(bool exists)
+        private static IAmazonSimpleNotificationService CreateSnsClient(bool exists)
         {
             var client = Substitute.For<IAmazonSimpleNotificationService>();
 
