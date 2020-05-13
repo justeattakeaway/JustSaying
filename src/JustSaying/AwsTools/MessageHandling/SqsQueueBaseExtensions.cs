@@ -10,15 +10,7 @@ namespace JustSaying.AwsTools.MessageHandling
     {
         internal static IQueueMessageContext ToMessageContext(this ISqsQueue sqsQueue, Message message)
         {
-            var attributes = ExtractAttributes(message);
-            return new QueueMessageContext(message, sqsQueue, attributes);
-        }
-
-        private static MessageAttributes ExtractAttributes(Message message)
-        {
-            var t = message.Body;
-            return null;
-
+            return new QueueMessageContext(message, sqsQueue);
         }
     }
 }

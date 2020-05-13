@@ -124,7 +124,7 @@ namespace JustSaying.Messaging.Channels.Multiplexer
                         if (reader.TryRead(out IQueueMessageContext message))
                         {
                             any = true;
-                            await writer.WriteAsync(message, _stoppingToken);
+                            await writer.WriteAsync(message, _stoppingToken).ConfigureAwait(false);
                         }
                     }
 
@@ -150,7 +150,7 @@ namespace JustSaying.Messaging.Channels.Multiplexer
 
             while (true)
             {
-                bool couldWait = await _targetChannel.Reader.WaitToReadAsync(_stoppingToken);
+                bool couldWait = await _targetChannel.Reader.WaitToReadAsync(_stoppingToken).ConfigureAwait(false);;
                 if (!couldWait) break;
 
                 _stoppingToken.ThrowIfCancellationRequested();

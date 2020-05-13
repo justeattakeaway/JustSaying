@@ -338,7 +338,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 LoggerFactory.CreateLogger<MessageReceiveBuffer>());
         }
 
-        private IMultiplexerSubscriber CreateSubscriber(IMessageDispatcher dispatcher)
+        private static IMultiplexerSubscriber CreateSubscriber(IMessageDispatcher dispatcher)
         {
             return new MultiplexerSubscriber(dispatcher);
         }
