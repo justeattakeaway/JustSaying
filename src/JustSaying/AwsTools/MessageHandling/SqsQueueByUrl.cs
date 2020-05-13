@@ -4,13 +4,14 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
     public class SqsQueueByUrl : SqsQueueBase
     {
-        public SqsQueueByUrl(RegionEndpoint region, Uri queueUri, IAmazonSQS client)
-            : base(region, client)
+        public SqsQueueByUrl(RegionEndpoint region, Uri queueUri, IAmazonSQS client, ILoggerFactory loggerFactory)
+            : base(region, client, loggerFactory)
         {
             Uri = queueUri;
         }

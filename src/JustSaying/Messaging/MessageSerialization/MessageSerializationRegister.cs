@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using JustSaying.Messaging.Channels.Context;
 using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialization
@@ -8,23 +9,25 @@ namespace JustSaying.Messaging.MessageSerialization
     public class MessageSerializationRegister : IMessageSerializationRegister
     {
         private readonly IMessageSubjectProvider _messageSubjectProvider;
+        private readonly IMessageSerializationFactory _serializationFactory;
         private readonly IDictionary<Type, TypeSerializer> _map = new ConcurrentDictionary<Type, TypeSerializer>();
 
-        public MessageSerializationRegister(IMessageSubjectProvider messageSubjectProvider)
+        public MessageSerializationRegister(IMessageSubjectProvider messageSubjectProvider, IMessageSerializationFactory serializationFactory)
         {
             _messageSubjectProvider = messageSubjectProvider ?? throw new ArgumentNullException(nameof(messageSubjectProvider));
+            _serializationFactory = serializationFactory;
         }
 
-        public void AddSerializer<T>(IMessageSerializer serializer) where T : Message
+        public void AddSerializer<T>() where T : Message
         {
             var key = typeof(T);
             if (!_map.TryGetValue(key, out TypeSerializer typeSerializer))
             {
-                _map[key] = new TypeSerializer(typeof(T), serializer);
+                _map[key] = new TypeSerializer(typeof(T), _serializationFactory.GetSerializer<T>());
             }
         }
 
-        public Message DeserializeMessage(string body)
+        public (Message, MessageAttributes) DeserializeMessage(string body)
         {
             foreach (var pair in _map)
             {
@@ -43,8 +46,9 @@ namespace JustSaying.Messaging.MessageSerialization
                     continue;
                 }
 
-                IMessageSerializer messageSerializer = typeSerializer.Serializer;
-                return messageSerializer.Deserialize(body, matchedType);
+                var attributes = typeSerializer.Serializer.GetMessageAttributes(body);
+                var message = typeSerializer.Serializer.Deserialize(body, matchedType);
+                return (message, attributes);
             }
 
             // TODO Maybe we should log the body separately (at debug/trace?), rather than include it in the exception message. Then they're easier to filter.

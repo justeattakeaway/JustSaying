@@ -34,11 +34,13 @@ namespace JustSaying.IntegrationTests
                 .AddJustSaying(
                     (builder) =>
                     {
-                        builder.Client((options) => options.WithBasicCredentials("accessKey", "secretKey").WithServiceUri(TestEnvironment.SimulatorUrl))
-                               .Messaging((options) => options.WithRegions("eu-west-1"))
-                               .Publications((options) => options.WithQueue<QueueMessage>())
-                               .Subscriptions((options) => options.ForQueue<QueueMessage>())
-                               .Services((options) => options.WithMessageMonitoring(() => new MyMonitor()));
+                        builder.Client((options) =>
+                                options.WithBasicCredentials("accessKey", "secretKey")
+                                    .WithServiceUri(TestEnvironment.SimulatorUrl))
+                            .Messaging((options) => options.WithRegions("eu-west-1"))
+                            .Publications((options) => options.WithQueue<QueueMessage>())
+                            .Subscriptions((options) => options.ForQueue<QueueMessage>())
+                            .Services((options) => options.WithMessageMonitoring(() => new MyMonitor()));
                     })
                 .AddJustSayingHandler<QueueMessage, QueueHandler>();
 
@@ -50,7 +52,7 @@ namespace JustSaying.IntegrationTests
             using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
             {
                 // Act
-                listener.Start(source.Token);
+                _ = listener.Start(source.Token);
 
                 var message = new QueueMessage();
 
@@ -75,8 +77,7 @@ namespace JustSaying.IntegrationTests
                 .AddJustSaying(
                     (builder) =>
                     {
-                        builder.Client((options) => options.WithBasicCredentials("accessKey", "secretKey").WithServiceUri(TestEnvironment.SimulatorUrl))
-                               .Messaging((options) => options.WithRegions("eu-west-1"))
+                        builder.Messaging((options) => options.WithRegions("eu-west-1"))
                                .Publications((options) => options.WithTopic<TopicMessage>())
                                .Subscriptions((options) => options.ForTopic<TopicMessage>());
                     })
@@ -90,7 +91,7 @@ namespace JustSaying.IntegrationTests
             using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
             {
                 // Act
-                listener.Start(source.Token);
+                _ = listener.Start(source.Token);
 
                 var message = new TopicMessage();
 
@@ -134,7 +135,6 @@ namespace JustSaying.IntegrationTests
             var services = new ServiceCollection()
                 .AddLogging((p) => p.AddXUnit(OutputHelper))
                 .AddJustSaying()
-                .AddSingleton<IMessageBusConfigurationContributor, AwsContributor>()
                 .AddSingleton<IMessageBusConfigurationContributor, MessagingContributor>()
                 .AddSingleton<IMessageBusConfigurationContributor, QueueContributor>()
                 .AddSingleton<IMessageBusConfigurationContributor, RegionContributor>()
@@ -149,7 +149,7 @@ namespace JustSaying.IntegrationTests
             using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
             {
                 // Act
-                listener.Start(source.Token);
+                _ = listener.Start(source.Token);
 
                 var message = new QueueMessage();
 
@@ -162,16 +162,6 @@ namespace JustSaying.IntegrationTests
                 }
 
                 QueueHandler.MessageIds.ShouldContain(message.Id);
-            }
-        }
-
-        private sealed class AwsContributor : IMessageBusConfigurationContributor
-        {
-            public void Configure(MessagingBusBuilder builder)
-            {
-                builder.Client(
-                    (options) => options.WithSessionCredentials("accessKeyId", "secretKeyId", "token")
-                                        .WithServiceUri(TestEnvironment.SimulatorUrl));
             }
         }
 
@@ -240,6 +230,10 @@ namespace JustSaying.IntegrationTests
         private sealed class MyMonitor : IMessageMonitor
         {
             public void HandleException(Type messageType)
+            {
+            }
+
+            public void HandleError(Exception ex, Amazon.SQS.Model.Message message)
             {
             }
 

@@ -6,6 +6,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
@@ -35,7 +36,6 @@ namespace JustSaying
         private readonly IAwsClientFactoryProxy _awsClientFactoryProxy;
         protected internal IAmJustSaying Bus { get; set; }
         private SqsReadConfiguration _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic);
-        private IMessageSerializationFactory _serializationFactory;
         private readonly ILoggerFactory _loggerFactory;
 
         protected internal JustSayingFluently(
@@ -81,7 +81,7 @@ namespace JustSaying
 
             _subscriptionConfig.TopicName = GetOrUseTopicNamingConvention<T>(_subscriptionConfig.TopicName);
 
-            Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
+            Bus.SerializationRegister.AddSerializer<T>();
 
             foreach (var region in Bus.Config.Regions)
             {
@@ -134,8 +134,6 @@ namespace JustSaying
             var config = new SqsWriteConfiguration();
             configBuilder?.Invoke(config);
 
-            Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
-
             config.QueueName = GetOrUseQueueNamingConvention<T>(config.QueueName);
 
             foreach (var region in Bus.Config.Regions)
@@ -175,6 +173,7 @@ namespace JustSaying
         /// </summary>
         public void StartListening(CancellationToken cancellationToken = default)
         {
+            Bus.SetMessageBackoffStrategy(_subscriptionConfig.MessageBackoffStrategy);
             Bus.Start(cancellationToken);
             _log.LogInformation("Started listening for messages");
         }
@@ -183,6 +182,15 @@ namespace JustSaying
         /// Publish a message to the stack, asynchronously.
         /// </summary>
         /// <param name="message"></param>
+        /// <param name="cancellationToken"></param>
+        public Task PublishAsync(Message message, CancellationToken cancellationToken)
+            => PublishAsync(message, null, cancellationToken);
+
+        /// <summary>
+        /// Publish a message to the stack, asynchronously.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="metadata"></param>
         /// <param name="cancellationToken"></param>
         public virtual async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
@@ -193,12 +201,6 @@ namespace JustSaying
 
             await Bus.PublishAsync(message, metadata, cancellationToken)
                 .ConfigureAwait(false);
-        }
-
-        public IMayWantOptionalSettings WithSerializationFactory(IMessageSerializationFactory factory)
-        {
-            _serializationFactory = factory;
-            return this;
         }
 
         public IMayWantOptionalSettings WithMessageLockStoreOf(IMessageLockAsync messageLock)
@@ -242,19 +244,13 @@ namespace JustSaying
 
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message
         {
-            if (_serializationFactory == null)
-            {
-                throw new InvalidOperationException($"No {nameof(IMessageSerializationFactory)} has been configured.");
-            }
-
             _subscriptionConfig.TopicName = GetOrUseTopicNamingConvention<T>(_subscriptionConfig.TopicName);
             _subscriptionConfig.QueueName = GetOrUseQueueNamingConvention<T>(_subscriptionConfig.QueueName);
+            _subscriptionConfig.SubscriptionGroupName ??= _subscriptionConfig.QueueName;
 
             var thing = _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
                 ? PointToPointHandler<T>()
                 : TopicHandler<T>();
-
-            Bus.SerializationRegister.AddSerializer<T>(_serializationFactory.GetSerializer<T>());
 
             var resolutionContext = new HandlerResolutionContext(_subscriptionConfig.QueueName);
             var proposedHandler = handlerResolver.ResolveHandler<T>(resolutionContext);
@@ -264,10 +260,7 @@ namespace JustSaying
                 throw new HandlerNotRegisteredWithContainerException($"There is no handler for '{typeof(T)}' messages.");
             }
 
-            foreach (var region in Bus.Config.Regions)
-            {
-                Bus.AddMessageHandler(region, _subscriptionConfig.QueueName, () => handlerResolver.ResolveHandler<T>(resolutionContext));
-            }
+            Bus.AddMessageHandler(_subscriptionConfig.QueueName, () => handlerResolver.ResolveHandler<T>(resolutionContext));
 
             _log.LogInformation(
                 "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",
@@ -290,7 +283,7 @@ namespace JustSaying
                     _subscriptionConfig,
                     Bus.Config.MessageSubjectProvider).GetAwaiter().GetResult();
 
-                CreateSubscriptionListener<T>(region, queue);
+                CreateSubscriptionListener<T>(region, _subscriptionConfig.SubscriptionGroupName, queue);
 
                 _log.LogInformation(
                     "Created SQS topic subscription on topic '{TopicName}' and queue '{QueueName}'.",
@@ -310,53 +303,20 @@ namespace JustSaying
                 // TODO Make this async and remove GetAwaiter().GetResult() call
                 var queue = _amazonQueueCreator.EnsureQueueExistsAsync(region, _subscriptionConfig).GetAwaiter().GetResult();
 
-                CreateSubscriptionListener<T>(region, queue);
+                CreateSubscriptionListener<T>(region, _subscriptionConfig.SubscriptionGroupName, queue);
 
                 _log.LogInformation(
                     "Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",
                     typeof(T),
                     _subscriptionConfig.QueueName);
             }
-
             return this;
         }
 
-        protected INotificationSubscriber CreateSubscriber(SqsQueueBase queue)
-        {
-            return new SqsNotificationListener(
-                queue,
-                Bus.SerializationRegister,
-                Bus.Monitor,
-                _loggerFactory,
-                Bus.MessageContextAccessor,
-                _subscriptionConfig.OnError,
-                Bus.MessageLock,
-                _subscriptionConfig.MessageBackoffStrategy);
-        }
-
-        private void CreateSubscriptionListener<T>(string region, SqsQueueBase queue)
+        private void CreateSubscriptionListener<T>(string region, string subscriptionGroup, SqsQueueBase queue)
             where T : Message
         {
-            INotificationSubscriber subscriber = CreateSubscriber(queue);
-
-            subscriber.Subscribers.Add(new Subscriber(typeof(T)));
-
-            Bus.AddNotificationSubscriber(region, subscriber);
-
-            // TODO Concrete type check for backwards compatibility for now.
-            // Refactor the interface for v7 to allow this to be done against the interface.
-            if (subscriber is SqsNotificationListener sqsSubscriptionListener)
-            {
-                if (_subscriptionConfig.MaxAllowedMessagesInFlight.HasValue)
-                {
-                    sqsSubscriptionListener.WithMaximumConcurrentLimitOnMessagesInFlightOf(_subscriptionConfig.MaxAllowedMessagesInFlight.Value);
-                }
-
-                if (_subscriptionConfig.MessageProcessingStrategy != null)
-                {
-                    sqsSubscriptionListener.WithMessageProcessingStrategy(_subscriptionConfig.MessageProcessingStrategy);
-                }
-            }
+            Bus.AddQueue(region, subscriptionGroup, queue);
         }
 
         private void ConfigureSqsSubscriptionViaTopic()
@@ -370,7 +330,6 @@ namespace JustSaying
 
         private void ConfigureSqsSubscription<T>() where T : Message
         {
-            _subscriptionConfig.ValidateSqsConfiguration();
             _subscriptionConfig.QueueName = _subscriptionConfig.QueueName;
         }
 
@@ -426,14 +385,18 @@ namespace JustSaying
             return this;
         }
 
-        private  string GetOrUseTopicNamingConvention<T>(string topicName)
+        private string GetOrUseTopicNamingConvention<T>(string defaultTopicName)
         {
-            return string.IsNullOrWhiteSpace(topicName) ? Bus.Config.TopicNamingConvention.TopicName<T>() : topicName;
+            return string.IsNullOrWhiteSpace(defaultTopicName)
+                ? Bus.Config.TopicNamingConvention.TopicName<T>()
+                : defaultTopicName;
         }
 
-        private string GetOrUseQueueNamingConvention<T>(string queueName)
+        private string GetOrUseQueueNamingConvention<T>(string defaultQueueName)
         {
-            return string.IsNullOrWhiteSpace(queueName) ? Bus.Config.QueueNamingConvention.QueueName<T>() : queueName;
+            return string.IsNullOrWhiteSpace(defaultQueueName)
+                ? Bus.Config.QueueNamingConvention.QueueName<T>()
+                : defaultQueueName;
         }
     }
 }

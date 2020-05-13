@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;

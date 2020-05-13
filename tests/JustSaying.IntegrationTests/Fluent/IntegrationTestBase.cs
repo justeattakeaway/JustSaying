@@ -56,11 +56,11 @@ namespace JustSaying.IntegrationTests.Fluent
                     (builder, serviceProvider) =>
                     {
                         builder.Messaging((options) => options.WithRegion(RegionName))
-                               .Client((options) =>
-                                {
-                                    options.WithSessionCredentials(AccessKeyId, SecretAccessKey, SessionToken)
-                                           .WithServiceUri(ServiceUri);
-                                });
+                            .Client((options) =>
+                            {
+                                options.WithSessionCredentials(AccessKeyId, SecretAccessKey, SessionToken)
+                                    .WithServiceUri(ServiceUri);
+                            });
 
                         configure(builder, serviceProvider);
                     });
@@ -68,8 +68,7 @@ namespace JustSaying.IntegrationTests.Fluent
 
         protected virtual IAwsClientFactory CreateClientFactory()
         {
-            var credentials = new SessionAWSCredentials(AccessKeyId, SecretAccessKey, SessionToken);
-            return new DefaultAwsClientFactory(credentials) { ServiceUri = ServiceUri };
+            return new DefaultAwsClientFactory();
         }
 
         protected IHandlerAsync<T> CreateHandler<T>(TaskCompletionSource<object> completionSource)

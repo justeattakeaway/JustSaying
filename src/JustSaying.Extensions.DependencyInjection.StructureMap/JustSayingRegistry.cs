@@ -42,7 +42,8 @@ namespace JustSaying
                     (p) =>
                     {
                         var config = p.GetInstance<IMessagingConfig>();
-                        return new MessageSerializationRegister(config.MessageSubjectProvider);
+                        var serializerFactory = p.GetInstance<IMessageSerializationFactory>();
+                        return new MessageSerializationRegister(config.MessageSubjectProvider, serializerFactory);
                     })
                 .Singleton();
 

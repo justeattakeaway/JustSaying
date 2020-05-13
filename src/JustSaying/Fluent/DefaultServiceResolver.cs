@@ -45,7 +45,9 @@ namespace JustSaying.Fluent
             }
             else if (desiredType == typeof(IMessageSerializationRegister))
             {
-                return new MessageSerializationRegister(ResolveService<IMessageSubjectProvider>());
+                return new MessageSerializationRegister(
+                    ResolveService<IMessageSubjectProvider>(),
+                    ResolveService<IMessageSerializationFactory>());
             }
             else if (desiredType == typeof(IMessageSubjectProvider))
             {

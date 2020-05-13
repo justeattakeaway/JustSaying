@@ -7,12 +7,16 @@ using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging.Channels;
+using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -24,7 +28,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 {
     public class DummySqsQueue : SqsQueueBase
     {
-        public DummySqsQueue(Uri uri, IAmazonSQS client) : base(RegionEndpoint.EUWest1, client)
+        public DummySqsQueue(Uri uri, IAmazonSQS client, ILoggerFactory loggerFactory)
+            : base(RegionEndpoint.EUWest1, client, loggerFactory)
         {
             Uri = uri;
         }
@@ -38,8 +43,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
         private readonly IMessageMonitor _messageMonitor = Substitute.For<IMessageMonitor>();
-        private readonly Action<Exception, SQSMessage> _onError = Substitute.For<Action<Exception, SQSMessage>>();
-        private readonly HandlerMap _handlerMap = new HandlerMap();
+        private readonly HandlerMap _handlerMap = new HandlerMap(Substitute.For<IMessageMonitor>(), NullLoggerFactory.Instance);
         private readonly ILoggerFactory _loggerFactory = Substitute.For<ILoggerFactory>();
         private readonly ILogger _logger = Substitute.For<ILogger>();
         private readonly IMessageBackoffStrategy _messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
@@ -49,7 +53,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
         private SQSMessage _sqsMessage;
         private Message _typedMessage;
 
-        protected MessageDispatcher SystemUnderTest { get; private set; }
+        internal MessageDispatcher SystemUnderTest { get; private set; }
 
         public virtual async Task InitializeAsync()
         {
@@ -82,18 +86,20 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             };
 
             _loggerFactory.CreateLogger(Arg.Any<string>()).Returns(_logger);
-            _queue = new DummySqsQueue(new Uri(ExpectedQueueUrl), _amazonSqsClient);
-            _serializationRegister.DeserializeMessage(Arg.Any<string>()).Returns(_typedMessage);
+            _queue = new DummySqsQueue(new Uri(ExpectedQueueUrl), _amazonSqsClient, NullLoggerFactory.Instance);
+            _serializationRegister.DeserializeMessage(Arg.Any<string>()).Returns((_typedMessage, new MessageAttributes()));
         }
 
-        private async Task When() => await SystemUnderTest.DispatchMessage(_sqsMessage, CancellationToken.None);
+        private async Task When() => await SystemUnderTest
+            .DispatchMessageAsync(_queue.ToMessageContext(_sqsMessage), CancellationToken.None);
 
         private MessageDispatcher CreateSystemUnderTestAsync()
         {
             var dispatcher = new MessageDispatcher(
-                _queue, _serializationRegister,
-                _messageMonitor, _onError,
-                _handlerMap, _loggerFactory,
+                _serializationRegister,
+                _messageMonitor,
+                _handlerMap,
+                _loggerFactory,
                 _messageBackoffStrategy,
                 new MessageContextAccessor());
 
@@ -105,7 +111,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             protected override void Given()
             {
                 base.Given();
-                _handlerMap.Add(typeof(OrderAccepted), m => Task.FromResult(true));
+                _handlerMap.Add(_queue.QueueName, typeof(OrderAccepted), m => Task.FromResult(true));
             }
 
             [Fact]
@@ -131,7 +137,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             {
                 base.Given();
                 _messageBackoffStrategy.GetBackoffDuration(_typedMessage, 1, _expectedException).Returns(_expectedBackoffTimeSpan);
-                _handlerMap.Add(typeof(OrderAccepted), m => throw _expectedException);
+                _handlerMap.Add(_queue.QueueName, typeof(OrderAccepted), m => throw _expectedException);
                 _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString(CultureInfo.InvariantCulture));
             }
 
@@ -156,7 +162,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
                 _messageBackoffStrategy.GetBackoffDuration(_typedMessage, Arg.Any<int>()).Returns(TimeSpan.FromMinutes(4));
                 _amazonSqsClient.ChangeMessageVisibilityAsync(Arg.Any<ChangeMessageVisibilityRequest>()).Throws(new AmazonServiceException("Something gone wrong"));
 
-                _handlerMap.Add(typeof(OrderAccepted), m => Task.FromResult(false));
+                _handlerMap.Add(_queue.QueueName, typeof(OrderAccepted), m => Task.FromResult(false));
                 _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, "1");
             }
 

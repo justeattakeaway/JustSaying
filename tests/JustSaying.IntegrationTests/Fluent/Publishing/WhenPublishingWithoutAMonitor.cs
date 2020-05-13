@@ -71,7 +71,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
             IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
             using var source = new CancellationTokenSource(Timeout);
-            listener.Start(source.Token);
+            _ = listener.Start(source.Token);
 
             var message = new T();
 

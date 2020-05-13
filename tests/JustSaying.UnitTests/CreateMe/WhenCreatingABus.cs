@@ -44,18 +44,5 @@ namespace JustSaying.UnitTests.CreateMe
             // Enforced by the fact we can do other configurations on the bus.
             CreateMeABus.WithLogging(new LoggerFactory()).InRegion(_region).ConfigurePublisherWith(_config);
         }
-
-        [Fact]
-        public void ThenICanProvideCustomSerialization()
-        {
-            CreateMeABus.WithLogging(new LoggerFactory()).InRegion(_region).WithSerializationFactory(null);
-        }
-
-        [Fact]
-        public void CustomSerializationIsNotEnforced()
-        {
-            // Enforced by the fact we can do other configurations on the bus.
-            CreateMeABus.WithLogging(new LoggerFactory()).InRegion(_region).WithSerializationFactory(null);
-        }
     }
 }

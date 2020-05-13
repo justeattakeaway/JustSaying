@@ -1,16 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public abstract class SqsQueueBase
+    public abstract class SqsQueueBase : ISqsQueue
     {
         public string Arn { get; protected set; }
         public Uri Uri { get; protected set; }
@@ -24,13 +27,22 @@ namespace JustSaying.AwsTools.MessageHandling
         internal RedrivePolicy RedrivePolicy { get; set; }
         internal ServerSideEncryption ServerSideEncryption { get; set; }
         public string Policy { get; private set; }
+        public string RegionSystemName { get; }
 
-
-        protected SqsQueueBase(RegionEndpoint region, IAmazonSQS client)
+        protected SqsQueueBase(RegionEndpoint region, IAmazonSQS client, ILoggerFactory loggerFactory)
         {
+            if (loggerFactory == null)
+            {
+                throw new ArgumentNullException(nameof(loggerFactory));
+            }
+
             Region = region;
             Client = client;
+
+            Logger = loggerFactory.CreateLogger("JustSaying");
         }
+
+        protected ILogger Logger { get; }
 
         public abstract Task<bool> ExistsAsync();
 
@@ -108,6 +120,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     attributes.Add(JustSayingConstants.AttributeEncryptionKeyId, string.Empty);
                 }
+
                 var request = new SetQueueAttributesRequest
                 {
                     QueueUrl = Uri.AbsoluteUri,
@@ -156,6 +169,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 return null;
             }
+
             return RedrivePolicy.ConvertFromString(queueAttributes[JustSayingConstants.AttributeRedrivePolicy]);
         }
 
@@ -165,10 +179,74 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 return null;
             }
+
             return new ServerSideEncryption
             {
                 KmsMasterKeyId = queueAttributes[JustSayingConstants.AttributeEncryptionKeyId],
                 KmsDataKeyReusePeriodSeconds = queueAttributes[JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId]
+            };
+        }
+
+        public async Task<IList<Message>> GetMessagesAsync(
+            int maximumCount,
+            IEnumerable<string> requestMessageAttributeNames,
+            CancellationToken stoppingToken)
+        {
+            var request = new ReceiveMessageRequest
+            {
+                QueueUrl = Uri.AbsoluteUri,
+                MaxNumberOfMessages = maximumCount,
+                WaitTimeSeconds = 20,
+                AttributeNames = requestMessageAttributeNames.ToList()
+            };
+
+            ReceiveMessageResponse sqsMessageResponse =
+                await Client.ReceiveMessageAsync(request, stoppingToken).ConfigureAwait(false);
+
+            return sqsMessageResponse?.Messages;
+        }
+
+        public async Task DeleteMessageAsync(
+            string receiptHandle,
+            CancellationToken cancellationToken = default)
+        {
+            var deleteRequest = new DeleteMessageRequest
+            {
+                QueueUrl = Uri.AbsoluteUri,
+                ReceiptHandle = receiptHandle,
+            };
+
+            await Client.DeleteMessageAsync(deleteRequest, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task ChangeMessageVisibilityAsync(
+            string receiptHandle,
+            TimeSpan timeout,
+            CancellationToken cancellationToken = default)
+        {
+            var visibilityRequest = new ChangeMessageVisibilityRequest
+            {
+                QueueUrl = Uri.ToString(),
+                ReceiptHandle = receiptHandle,
+                VisibilityTimeout = (int)timeout.TotalSeconds,
+            };
+
+            await Client.ChangeMessageVisibilityAsync(visibilityRequest, cancellationToken).ConfigureAwait(false);
+        }
+
+        public object Interrogate()
+        {
+            return new
+            {
+                Arn,
+                QueueName,
+                Region,
+                Policy,
+                Uri,
+                DeliveryDelay,
+                ErrorQueue = ErrorQueue.QueueName,
+                VisibilityTimeout,
+                MessageRetentionPeriod,
             };
         }
     }

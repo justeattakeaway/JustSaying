@@ -10,5 +10,6 @@ namespace JustSaying
         public IMessageSubjectProvider MessageSubjectProvider { get; set; }
         public IQueueNamingConvention QueueNamingConvention { get; set; }
         public ITopicNamingConvention TopicNamingConvention { get; set; }
+        public IMessageSerializationFactory SerializationFactory { get; set; }
     }
 }

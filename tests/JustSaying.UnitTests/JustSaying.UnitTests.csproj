@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <NoWarn>$(NoWarn);CA1034;CA1051;CA1707;CA2000;CA2007</NoWarn>
     <TargetFramework>netcoreapp3.1</TargetFramework>
@@ -14,6 +14,7 @@
     <PackageReference Include="AWSSDK.SQS" Version="$(AwsSdkSqsVersion)" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(DotNetTestSdkVersion)" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
+    <PackageReference Include="Polly" Version="7.2.0" />
     <PackageReference Include="xunit" Version="$(XUnitVersion)" />
     <PackageReference Include="xunit.runner.visualstudio" Version="$(XUnitVersion)" />
   </ItemGroup>

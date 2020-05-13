@@ -42,7 +42,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 services,
                 async (publisher, listener, serviceProvider, cancellationToken) =>
                 {
-                    listener.Start(cancellationToken);
+                    _ = listener.Start(cancellationToken);
 
                     // Act
                     await publisher.PublishAsync(new MySqsTopicMessageForMultipleRegions(), cancellationToken);

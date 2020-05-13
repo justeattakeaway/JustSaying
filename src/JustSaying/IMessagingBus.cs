@@ -1,4 +1,5 @@
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace JustSaying
 {
@@ -8,9 +9,10 @@ namespace JustSaying
     public interface IMessagingBus
     {
         /// <summary>
-        /// Starts the message bus.
+        /// Starts the message bus as an asynchronous operation.
         /// </summary>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> which will stop the bus when signalled.</param>
-        void Start(CancellationToken cancellationToken);
+        /// <returns>A Task that completes when the bus is canceled</returns>
+        Task Start(CancellationToken cancellationToken);
     }
 }

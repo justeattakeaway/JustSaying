@@ -1,3 +1,4 @@
+using JustSaying.AwsTools;
 using JustSaying.Sample.Restaurant.Models;
 using JustSaying.Sample.Restaurant.OrderingApi.Handlers;
 using Microsoft.AspNetCore.Builder;
@@ -5,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
+using Serilog;
 
 namespace JustSaying.Sample.Restaurant.OrderingApi
 {
@@ -54,20 +56,23 @@ namespace JustSaying.Sample.Restaurant.OrderingApi
                     //  - a SNS topic of name `orderreadyevent`
                     //  - a SNS topic subscription on topic 'orderreadyevent' and queue 'orderreadyevent'
                     x.ForTopic<OrderReadyEvent>();
+                    x.ForTopic<OrderDeliveredEvent>();
                 });
                 config.Publications(x =>
                 {
                     // Creates the following if they do not already exist
                     //  - a SNS topic of name `orderplacedevent`
                     x.WithTopic<OrderPlacedEvent>();
+                    x.WithTopic<OrderOnItsWayEvent>();
                 });
             });
 
             // Added a message handler for message type for 'OrderReadyEvent' on topic 'orderreadyevent' and queue 'orderreadyevent'
             services.AddJustSayingHandler<OrderReadyEvent, OrderReadyEventHandler>();
+            services.AddJustSayingHandler<OrderDeliveredEvent, OrderDeliveredEventHandler>();
 
             // Add a background service that is listening for messages related to the above subscriptions
-            services.AddHostedService<Subscriber>();
+            services.AddHostedService<BusService>();
 
             services.AddSwaggerGen(c =>
             {
@@ -78,6 +83,8 @@ namespace JustSaying.Sample.Restaurant.OrderingApi
         public static void Configure(IApplicationBuilder app)
         {
             app.UseDeveloperExceptionPage();
+
+            app.UseSerilogRequestLogging();
 
             app.UseRouting();
             app.UseEndpoints((endpoints) => endpoints.MapDefaultControllerRoute());

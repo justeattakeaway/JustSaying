@@ -1,6 +1,7 @@
 using System;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 
 namespace JustSaying.Fluent
 {
@@ -13,67 +14,15 @@ namespace JustSaying.Fluent
         protected override SqsReadConfigurationBuilder Self => this;
 
         /// <summary>
-        /// Gets or sets the maximum number of messages that can be inflight.
-        /// </summary>
-        private int? MaximumAllowedMessagesInflight { get; set; }
-
-        /// <summary>
-        /// Gets or sets the error callback to use.
-        /// </summary>
-        private Action<Exception, Message> OnError { get; set; }
-
-        /// <summary>
         /// Gets or sets the topic source account Id to use.
         /// </summary>
         private string TopicSourceAccountId { get; set; }
 
-        /// <summary>
-        /// Configures an error handler to use.
-        /// </summary>
-        /// <param name="action">A delegate to a method to call when an error occurs.</param>
-        /// <returns>
-        /// The current <see cref="SqsReadConfigurationBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="action"/> is <see langword="null"/>.
-        /// </exception>
-        public SqsReadConfigurationBuilder WithErrorHandler(Action<Exception> action)
-        {
-            if (action == null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
+        private string SubscriptionGroupName { get; set; }
 
-            OnError = (exception, _) => action(exception);
-            return this;
-        }
-
-        /// <summary>
-        /// Configures an error handler to use.
-        /// </summary>
-        /// <param name="action">A delegate to a method to call when an error occurs.</param>
-        /// <returns>
-        /// The current <see cref="SqsReadConfigurationBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="action"/> is <see langword="null"/>.
-        /// </exception>
-        public SqsReadConfigurationBuilder WithErrorHandler(Action<Exception, Message> action)
+        public SqsReadConfigurationBuilder WithSubscriptionGroup(string subscriptionGroupName)
         {
-            OnError = action ?? throw new ArgumentNullException(nameof(action));
-            return this;
-        }
-
-        /// <summary>
-        /// Configures the maximum number of messages that can be inflight at any time.
-        /// </summary>
-        /// <param name="value">The value to use for maximum number of inflight messages.</param>
-        /// <returns>
-        /// The current <see cref="SqsReadConfigurationBuilder"/>.
-        /// </returns>
-        public SqsReadConfigurationBuilder WithMaximumMessagesInflight(int value)
-        {
-            MaximumAllowedMessagesInflight = value;
+            SubscriptionGroupName = subscriptionGroupName;
             return this;
         }
 
@@ -112,19 +61,14 @@ namespace JustSaying.Fluent
 
             base.Configure(config);
 
-            if (MaximumAllowedMessagesInflight.HasValue)
-            {
-                config.MaxAllowedMessagesInFlight = MaximumAllowedMessagesInflight.Value;
-            }
-
-            if (OnError != null)
-            {
-                config.OnError = OnError;
-            }
-
             if (TopicSourceAccountId != null)
             {
                 config.TopicSourceAccount = TopicSourceAccountId;
+            }
+
+            if (SubscriptionGroupName != null)
+            {
+                config.SubscriptionGroupName = SubscriptionGroupName;
             }
         }
     }
