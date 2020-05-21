@@ -9,12 +9,12 @@ using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.MultiplexerTests
 {
-    public class RoundRobinQueueMultiplexerTests
+    public class MergingMultiplexerTests
     {
         private readonly ITestOutputHelper _outputHelper;
         private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
 
-        public RoundRobinQueueMultiplexerTests(ITestOutputHelper outputHelper)
+        public MergingMultiplexerTests(ITestOutputHelper outputHelper)
         {
             _outputHelper = outputHelper;
         }
@@ -23,7 +23,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MultiplexerTests
         public void Starting_Twice_Returns_Same_Task()
         {
             // Arrange
-            using var multiplexer = new RoundRobinQueueMultiplexer(10, _outputHelper.ToLogger<RoundRobinQueueMultiplexer>());
+            using var multiplexer = new MergingMultiplexer(10, _outputHelper.ToLogger<MergingMultiplexer>());
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
@@ -40,7 +40,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MultiplexerTests
         public void Cannot_Add_Invalid_Reader()
         {
             // Arrange
-            using var multiplexer = new RoundRobinQueueMultiplexer(10, _outputHelper.ToLogger<RoundRobinQueueMultiplexer>());
+            using var multiplexer = new MergingMultiplexer(10, _outputHelper.ToLogger<MergingMultiplexer>());
 
             // Act and Assert
             Assert.Throws<ArgumentNullException>(() => multiplexer.ReadFrom(null));
@@ -50,7 +50,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MultiplexerTests
         public void Cannot_Get_Messages_Before_Started()
         {
             // Arrange
-            using var multiplexer = new RoundRobinQueueMultiplexer(10, _outputHelper.ToLogger<RoundRobinQueueMultiplexer>());
+            using var multiplexer = new MergingMultiplexer(10, _outputHelper.ToLogger<MergingMultiplexer>());
 
             // Act and Assert
             Assert.ThrowsAsync<InvalidOperationException>(async () =>
@@ -65,7 +65,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MultiplexerTests
         public async Task Reader_Completes_And_Is_Removed()
         {
             // Arrange
-            using var multiplexer = new RoundRobinQueueMultiplexer(10, _outputHelper.ToLogger<RoundRobinQueueMultiplexer>());
+            using var multiplexer = new MergingMultiplexer(10, _outputHelper.ToLogger<MergingMultiplexer>());
 
             var cts = new CancellationTokenSource();
 

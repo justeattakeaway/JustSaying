@@ -3,7 +3,6 @@ namespace JustSaying.Messaging.Interrogation
     /// <summary>
     /// Provides unstructured interrogation. Implementations of this interface should return an anonymous object that
     /// can be composed together into a root object.
-    /// serializable
     /// </summary>
     public interface IInterrogable
     {

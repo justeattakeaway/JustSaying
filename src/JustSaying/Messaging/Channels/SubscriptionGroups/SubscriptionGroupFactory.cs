@@ -91,9 +91,9 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
         private IMultiplexer CreateMultiplexer(int channelCapacity)
         {
-            return new RoundRobinQueueMultiplexer(
+            return new MergingMultiplexer(
                 channelCapacity,
-                _loggerFactory.CreateLogger<RoundRobinQueueMultiplexer>());
+                _loggerFactory.CreateLogger<MergingMultiplexer>());
         }
 
         private ICollection<IMultiplexerSubscriber> CreateSubscribers(int count)
