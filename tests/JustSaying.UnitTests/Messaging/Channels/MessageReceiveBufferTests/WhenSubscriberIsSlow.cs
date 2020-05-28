@@ -55,8 +55,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
             while (true)
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(100));
-                var couldWait = await SystemUnderTest.Reader.WaitToReadAsync();
-                if (!couldWait) break;
+                var couldRead = await SystemUnderTest.Reader.WaitToReadAsync();
+                if (!couldRead) break;
 
                 while (SystemUnderTest.Reader.TryRead(out var _))
                 {

@@ -173,7 +173,7 @@ namespace JustSaying
         /// </summary>
         public void StartListening(CancellationToken cancellationToken = default)
         {
-            Bus.SetMessageBackoffStrategy(_subscriptionConfig.MessageBackoffStrategy);
+            Bus.MessageBackoffStrategy = _subscriptionConfig.MessageBackoffStrategy;
             Bus.Start(cancellationToken);
             _log.LogInformation("Started listening for messages");
         }
@@ -385,18 +385,18 @@ namespace JustSaying
             return this;
         }
 
-        private string GetOrUseTopicNamingConvention<T>(string defaultTopicName)
+        private string GetOrUseTopicNamingConvention<T>(string overrideTopicName)
         {
-            return string.IsNullOrWhiteSpace(defaultTopicName)
+            return string.IsNullOrWhiteSpace(overrideTopicName)
                 ? Bus.Config.TopicNamingConvention.TopicName<T>()
-                : defaultTopicName;
+                : overrideTopicName;
         }
 
-        private string GetOrUseQueueNamingConvention<T>(string defaultQueueName)
+        private string GetOrUseQueueNamingConvention<T>(string overrideQueueName)
         {
-            return string.IsNullOrWhiteSpace(defaultQueueName)
+            return string.IsNullOrWhiteSpace(overrideQueueName)
                 ? Bus.Config.QueueNamingConvention.QueueName<T>()
-                : defaultQueueName;
+                : overrideQueueName;
         }
     }
 }

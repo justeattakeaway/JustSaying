@@ -36,6 +36,7 @@ namespace JustSaying
 
         private ISubscriptionGroupCollection SubscriptionGroups { get; set; }
         public IMessageSerializationRegister SerializationRegister { get; }
+        public IMessageBackoffStrategy MessageBackoffStrategy { get; set; }
 
         public IMessageLockAsync MessageLock
         {
@@ -45,13 +46,6 @@ namespace JustSaying
 
         public IMessageContextAccessor MessageContextAccessor { get; set; }
         public HandlerMap HandlerMap { get; private set; }
-
-        private IMessageBackoffStrategy _messageBackoffStrategy;
-
-        public void SetMessageBackoffStrategy(IMessageBackoffStrategy value)
-        {
-            _messageBackoffStrategy = value;
-        }
 
         private readonly ILogger _log;
 
@@ -155,7 +149,7 @@ namespace JustSaying
                 Monitor,
                 HandlerMap,
                 _loggerFactory,
-                _messageBackoffStrategy,
+                MessageBackoffStrategy,
                 MessageContextAccessor);
 
             var subscriptionGroupFactory = new SubscriptionGroupFactory(

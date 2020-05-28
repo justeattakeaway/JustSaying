@@ -10,9 +10,9 @@ using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    public class WhenListeningStartsAndStops : BaseSubscriptionBusTests
+    public class WhenListeningStartsAndStops : BaseSubscriptionGroupTests
     {
         private ISqsQueue _queue;
         private const string _messageContentsRunning = @"Message Contents Running";

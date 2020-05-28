@@ -190,7 +190,7 @@ namespace JustSaying.AwsTools.MessageHandling
         public async Task<IList<Message>> GetMessagesAsync(
             int maximumCount,
             IEnumerable<string> requestMessageAttributeNames,
-            CancellationToken stoppingToken)
+            CancellationToken cancellationToken)
         {
             var request = new ReceiveMessageRequest
             {
@@ -201,14 +201,14 @@ namespace JustSaying.AwsTools.MessageHandling
             };
 
             ReceiveMessageResponse sqsMessageResponse =
-                await Client.ReceiveMessageAsync(request, stoppingToken).ConfigureAwait(false);
+                await Client.ReceiveMessageAsync(request, cancellationToken).ConfigureAwait(false);
 
             return sqsMessageResponse?.Messages;
         }
 
         public async Task DeleteMessageAsync(
             string receiptHandle,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken)
         {
             var deleteRequest = new DeleteMessageRequest
             {
@@ -222,7 +222,7 @@ namespace JustSaying.AwsTools.MessageHandling
         public async Task ChangeMessageVisibilityAsync(
             string receiptHandle,
             TimeSpan timeout,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken)
         {
             var visibilityRequest = new ChangeMessageVisibilityRequest
             {

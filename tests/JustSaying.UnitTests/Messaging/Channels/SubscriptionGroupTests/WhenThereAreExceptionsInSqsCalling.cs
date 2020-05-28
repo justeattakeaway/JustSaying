@@ -10,9 +10,9 @@ using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    public class WhenThereAreExceptionsInSqsCalling : BaseSubscriptionBusTests
+    public class WhenThereAreExceptionsInSqsCalling : BaseSubscriptionGroupTests
     {
         private ISqsQueue _queue;
         private int _callCount;
@@ -58,7 +58,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
         }
 
-        // todo: this one fails because we haven't handled this error yet
         [Fact]
         public void QueueIsPolledMoreThanOnce()
         {

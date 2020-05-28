@@ -33,7 +33,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
         }
 
         [Fact]
-        public void Queue_Is_Filled()
+        public void Buffer_Is_Filled()
         {
             _callCount.ShouldBeGreaterThan(0);
         }

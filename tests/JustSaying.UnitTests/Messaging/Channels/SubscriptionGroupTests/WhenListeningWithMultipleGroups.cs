@@ -6,9 +6,9 @@ using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    public class WhenListeningWithMultipleGroups : BaseSubscriptionBusTests
+    public class WhenListeningWithMultipleGroups : BaseSubscriptionGroupTests
     {
         private readonly ISqsQueue _queueB;
         private readonly ISqsQueue _queueA;

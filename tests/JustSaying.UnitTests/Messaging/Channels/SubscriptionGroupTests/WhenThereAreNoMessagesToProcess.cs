@@ -10,9 +10,9 @@ using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    public class WhenThereAreNoMessagesToProcess : BaseSubscriptionBusTests
+    public class WhenThereAreNoMessagesToProcess : BaseSubscriptionGroupTests
     {
         private ISqsQueue _queue;
         private int _callCount = 0;

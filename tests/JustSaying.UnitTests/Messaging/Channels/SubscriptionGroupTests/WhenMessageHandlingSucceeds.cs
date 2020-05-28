@@ -7,9 +7,9 @@ using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    public class WhenMessageHandlingSucceeds : BaseSubscriptionBusTests
+    public class WhenMessageHandlingSucceeds : BaseSubscriptionGroupTests
     {
         private ISqsQueue _queue;
         private string _messageBody = "Expected Message Body";
@@ -35,7 +35,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
         [Fact]
         public void MessagesGetDeserializedByCorrectHandler()
         {
-            SerializationRegister.Received().DeserializeMessage(Arg.Is<string>(s => s ==_messageBody));
+            SerializationRegister.Received().DeserializeMessage(_messageBody);
         }
 
         [Fact]

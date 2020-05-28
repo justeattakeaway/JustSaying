@@ -10,9 +10,9 @@ using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    public class WhenThereAreExceptionsInMessageProcessing : BaseSubscriptionBusTests
+    public class WhenThereAreExceptionsInMessageProcessing : BaseSubscriptionGroupTests
     {
         private ISqsQueue _queue;
         private int _callCount;
@@ -24,6 +24,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
 
         protected override void Given()
         {
+            ConcurrencyLimit = 1;
             _queue = CreateSuccessfulTestQueue("TestQueue", () =>
             {
                 Interlocked.Increment(ref _callCount);
@@ -51,7 +52,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
         [Fact]
         public void TheListenerDoesNotDie()
         {
-            _callCount.ShouldBeGreaterThanOrEqualTo(3);
+            _callCount.ShouldBeGreaterThan(1);
         }
     }
 }

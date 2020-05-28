@@ -11,9 +11,9 @@ using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    public class WhenUsingSqsByName : BaseSubscriptionBusTests
+    public class WhenUsingSqsQueueByName : BaseSubscriptionGroupTests
     {
         private ISqsQueue _queue;
         private int _callCount = 0;
@@ -21,7 +21,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
         protected readonly string MessageTypeString = typeof(SimpleMessage).ToString();
         protected const string MessageBody = "object";
 
-        public WhenUsingSqsByName(ITestOutputHelper testOutputHelper)
+        public WhenUsingSqsQueueByName(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
         {
         }

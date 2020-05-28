@@ -53,9 +53,9 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
                 multiplexer.ReadFrom(receiveBuffer.Reader);
             }
 
-            foreach (IMultiplexerSubscriber consumer in subscribers)
+            foreach (IMultiplexerSubscriber subscriber in subscribers)
             {
-                consumer.Subscribe(multiplexer.GetMessagesAsync());
+                subscriber.Subscribe(multiplexer.GetMessagesAsync());
             }
 
             return new SubscriptionGroup(

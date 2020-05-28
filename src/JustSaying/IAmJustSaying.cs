@@ -20,7 +20,7 @@ namespace JustSaying
         // TODO - swap params
         void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message;
 
-        Task Start(CancellationToken cancellationToken);
+        Task Start(CancellationToken stoppingToken);
 
         IMessagingConfig Config { get; }
 
@@ -32,6 +32,6 @@ namespace JustSaying
 
         IMessageContextAccessor MessageContextAccessor { get; set; }
 
-        void SetMessageBackoffStrategy(IMessageBackoffStrategy value);
+        IMessageBackoffStrategy MessageBackoffStrategy { get; set; }
     }
 }

@@ -16,9 +16,9 @@ namespace JustSaying.UnitTests.Messaging.Policies
         public async Task PolicyBuilder_Async()
         {
             var called = false;
-            var noop = MiddlewareBuilder.BuildAsync<int, int>();
+            var noop = MiddlewareBuilder.BuildAsync<string, int>();
 
-            var result = await noop.RunAsync(1, async ct =>
+            var result = await noop.RunAsync("context", async ct =>
             {
                 called = true;
                 await Task.Delay(5, ct);
@@ -33,10 +33,10 @@ namespace JustSaying.UnitTests.Messaging.Policies
         public async Task MiddlewareBuilder_Error_Handler_Async()
         {
             var called = false;
-            var noop = MiddlewareBuilder.BuildAsync<int, int>(
-                _ => new ErrorHandlingMiddleware<int, int, InvalidOperationException>());
+            var noop = MiddlewareBuilder.BuildAsync<string, int>(
+                _ => new ErrorHandlingMiddleware<string, int, InvalidOperationException>());
 
-            var result = await noop.RunAsync(1, async ct =>
+            var result = await noop.RunAsync("context", async ct =>
             {
                 called = true;
                 await Task.Delay(5, ct);
@@ -56,21 +56,21 @@ namespace JustSaying.UnitTests.Messaging.Policies
                     exceptionsAllowedBeforeBreaking: 2,
                     durationOfBreak: TimeSpan.FromSeconds(1));
 
-            var policy = MiddlewareBuilder.BuildAsync<int, int>(
-                next => new PollyMiddleware<int, int>(next, pollyPolicy));
+            var policy = MiddlewareBuilder.BuildAsync<string, int>(
+                next => new PollyMiddleware<string, int>(next, pollyPolicy));
 
             var calledCount = 0;
-            await Assert.ThrowsAsync<CustomException>(async () => await policy.RunAsync(1, ct =>
+            await Assert.ThrowsAsync<CustomException>(async () => await policy.RunAsync("context", ct =>
             {
                 calledCount++;
                 throw new CustomException();
             }, CancellationToken.None));
-            await Assert.ThrowsAsync<CustomException>(async () => await policy.RunAsync(1, ct =>
+            await Assert.ThrowsAsync<CustomException>(async () => await policy.RunAsync("context", ct =>
             {
                 calledCount++;
                 throw new CustomException();
             }, CancellationToken.None));
-            await Assert.ThrowsAsync<BrokenCircuitException>(async () => await policy.RunAsync(1, ct =>
+            await Assert.ThrowsAsync<BrokenCircuitException>(async () => await policy.RunAsync("context", ct =>
             {
                 calledCount++;
                 throw new CustomException();

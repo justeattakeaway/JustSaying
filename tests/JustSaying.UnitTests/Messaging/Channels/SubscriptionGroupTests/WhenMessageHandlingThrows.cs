@@ -6,14 +6,15 @@ using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    public class WhenMessageHandlingFails : BaseSubscriptionBusTests
+    public class WhenMessageHandlingThrows : BaseSubscriptionGroupTests
     {
+        private bool _firstTime = true;
         private ISqsQueue _queue;
 
-        public WhenMessageHandlingFails(ITestOutputHelper testOutputHelper)
-            : base(testOutputHelper)
+        public WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper)
+            : base (testOutputHelper)
         {
         }
 
@@ -22,7 +23,19 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
             _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
 
             Queues.Add(_queue);
-            Handler.Handle(Arg.Any<SimpleMessage>()).ReturnsForAnyArgs(false);
+            Handler.Handle(Arg.Any<SimpleMessage>())
+                .Returns(_ => ExceptionOnFirstCall());
+        }
+
+        private bool ExceptionOnFirstCall()
+        {
+            if (_firstTime)
+            {
+                _firstTime = false;
+                throw new TestException("Thrown by test handler");
+            }
+
+            return false;
         }
 
         [Fact]
@@ -34,14 +47,13 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
         [Fact]
         public void FailedMessageIsNotRemovedFromQueue()
         {
-            // The un-handled one is however.
             _queue.DidNotReceiveWithAnyArgs().DeleteMessageAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]
-        public void ExceptionIsNotLoggedToMonitor()
+        public void ExceptionIsLoggedToMonitor()
         {
-            Monitor.DidNotReceiveWithAnyArgs().HandleException(Arg.Any<Type>());
+            Monitor.ReceivedWithAnyArgs().HandleException(Arg.Any<Type>());
         }
     }
 }

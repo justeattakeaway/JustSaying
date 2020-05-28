@@ -11,22 +11,23 @@ using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
-using JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests.Support;
+using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests.Support;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    public abstract class BaseSubscriptionBusTests : IAsyncLifetime
+    public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
     {
         protected IList<ISqsQueue> Queues;
         protected HandlerMap HandlerMap;
         protected IMessageMonitor Monitor;
         protected SimpleMessage DeserializedMessage;
         protected IMessageSerializationRegister SerializationRegister;
+        protected int ConcurrencyLimit = 8;
 
         protected IMessageLockAsync MessageLock
         {
@@ -43,7 +44,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
         protected ILoggerFactory LoggerFactory { get; }
         protected ILogger Logger { get; }
 
-        public BaseSubscriptionBusTests(ITestOutputHelper testOutputHelper)
+        public BaseSubscriptionGroupTests(ITestOutputHelper testOutputHelper)
         {
             LoggerFactory = testOutputHelper.ToLoggerFactory();
             Logger = LoggerFactory.CreateLogger(GetType());
@@ -112,7 +113,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriberBusTests
                 messageContextAccessor);
 
             var defaults = new SubscriptionConfigBuilder()
-                .WithDefaultConcurrencyLimit(8);
+                .WithDefaultConcurrencyLimit(ConcurrencyLimit);
 
             var subscriptionGroupFactory = new SubscriptionGroupFactory(
                 dispatcher,

@@ -20,13 +20,12 @@ namespace JustSaying.UnitTests.Messaging.Channels.MultiplexerTests
         }
 
         [Fact]
-        public void Starting_Twice_Returns_Same_Task()
+        public async Task Starting_Twice_Returns_Same_Task()
         {
             // Arrange
             using var multiplexer = new MergingMultiplexer(10, _outputHelper.ToLogger<MergingMultiplexer>());
 
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeoutPeriod);
 
             // Act
             Task completed1 = multiplexer.Run(cts.Token);
@@ -34,6 +33,9 @@ namespace JustSaying.UnitTests.Messaging.Channels.MultiplexerTests
 
             // Assert
             Assert.Equal(completed1, completed2);
+
+            cts.Cancel();
+            await completed1;
         }
 
         [Fact]
@@ -53,31 +55,69 @@ namespace JustSaying.UnitTests.Messaging.Channels.MultiplexerTests
             using var multiplexer = new MergingMultiplexer(10, _outputHelper.ToLogger<MergingMultiplexer>());
 
             // Act and Assert
-            Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            {
-                await foreach (var msg in multiplexer.GetMessagesAsync())
-                {
-                }
-            });
+            Assert.ThrowsAsync<InvalidOperationException>(async () => await ReadAllMessages(multiplexer));
         }
 
         [Fact]
-        public async Task Reader_Completes_And_Is_Removed()
+        public async Task When_Reader_Does_Not_Complete_Readers_Not_Completed()
         {
             // Arrange
             using var multiplexer = new MergingMultiplexer(10, _outputHelper.ToLogger<MergingMultiplexer>());
 
             var cts = new CancellationTokenSource();
 
-            var channel = Channel.CreateBounded<IQueueMessageContext>(10);
-            multiplexer.ReadFrom(channel);
+            var channel1 = Channel.CreateBounded<IQueueMessageContext>(10);
+            var channel2 = Channel.CreateBounded<IQueueMessageContext>(10);
+            multiplexer.ReadFrom(channel1);
+            multiplexer.ReadFrom(channel2);
 
             // Act
-            Task completed = multiplexer.Run(cts.Token);
-            channel.Writer.Complete();
+            await multiplexer.Run(cts.Token);
+            var multiplexerRunTask = ReadAllMessages(multiplexer);
+
+            channel1.Writer.Complete();
 
             // Assert
-            await completed;
+            var delay = Task.Delay(TimeoutPeriod);
+            var completedTask = await Task.WhenAny(multiplexerRunTask, delay);
+            Assert.Equal(delay, completedTask);
+
+            cts.Cancel();
+        }
+
+        [Fact]
+        public async Task When_Reader_Completes_When_All_Readers_Completed()
+        {
+            // Arrange
+            using var multiplexer = new MergingMultiplexer(10, _outputHelper.ToLogger<MergingMultiplexer>());
+
+            var cts = new CancellationTokenSource();
+
+            var channel1 = Channel.CreateBounded<IQueueMessageContext>(10);
+            var channel2 = Channel.CreateBounded<IQueueMessageContext>(10);
+            multiplexer.ReadFrom(channel1);
+            multiplexer.ReadFrom(channel2);
+
+            // Act
+            await multiplexer.Run(cts.Token);
+            var multiplexerRunTask = ReadAllMessages(multiplexer);
+            
+            channel1.Writer.Complete();
+            channel2.Writer.Complete();
+
+            // Assert
+            var delay = Task.Delay(TimeoutPeriod);
+            var completedTask = await Task.WhenAny(multiplexerRunTask, delay);
+            Assert.Equal(multiplexerRunTask, completedTask);
+
+            cts.Cancel();
+        }
+
+        private static async Task ReadAllMessages(IMultiplexer multiplexer)
+        {
+            await foreach (var _ in multiplexer.GetMessagesAsync())
+            {
+            }
         }
     }
 }

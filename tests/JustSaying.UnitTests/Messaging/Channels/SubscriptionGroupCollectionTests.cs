@@ -126,26 +126,6 @@ namespace JustSaying.UnitTests.Messaging.Channels
             return sqsQueueMock;
         }
 
-        private ISubscriptionGroupCollection CreateSubscriptionGroup(
-            IList<ISqsQueue> queues,
-            IMessageDispatcher dispatcher)
-        {
-            var defaults = new SubscriptionConfigBuilder()
-                .WithDefaultConcurrencyLimit(8);
-
-            var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
-            {
-                { "test",  new SubscriptionGroupConfigBuilder("test").AddQueues(queues) },
-            };
-
-            var consumerGroupFactory = new SubscriptionGroupFactory(
-                dispatcher,
-                MessageMonitor,
-                LoggerFactory);
-
-            return consumerGroupFactory.Create(defaults, settings);
-        }
-
         private class TestMessage : Amazon.SQS.Model.Message
         {
             public override string ToString()
