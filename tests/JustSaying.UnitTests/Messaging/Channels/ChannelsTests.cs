@@ -43,7 +43,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var sqsQueue = TestQueue();
             var buffer = CreateMessageReceiveBuffer(sqsQueue);
             IMessageDispatcher dispatcher = new FakeDispatcher();
-            IMultiplexerSubscriber multiplexerSubscriber = CreateSubscriber(dispatcher);
+            IMultiplexerSubscriber consumer1 = CreateSubscriber(dispatcher);
             IMultiplexer multiplexer = CreateMultiplexer();
 
             multiplexer.ReadFrom(buffer.Reader);
