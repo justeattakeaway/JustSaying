@@ -42,7 +42,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
             completionTasks.AddRange(_receiveBuffers.Select(buffer => buffer.Run(stoppingToken)));
             completionTasks.Add(_multiplexer.Run(stoppingToken));
-            completionTasks.AddRange(_subscribers.Select(consumer => consumer.Run(stoppingToken)));
+            completionTasks.AddRange(_subscribers.Select(subscriber => subscriber.Run(stoppingToken)));
 
             return Task.WhenAll(completionTasks);
         }
