@@ -53,7 +53,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
         private Task RunImpl(CancellationToken stoppingToken)
         {
-            IEnumerable<Task> completionTasks = _subscriptionGroups.Select(bus => bus.Run(stoppingToken)).ToList();
+            IEnumerable<Task> completionTasks = _subscriptionGroups.Select(group => group.Run(stoppingToken)).ToList();
 
             _logger.LogInformation("Subscription group collection successfully started");
 
