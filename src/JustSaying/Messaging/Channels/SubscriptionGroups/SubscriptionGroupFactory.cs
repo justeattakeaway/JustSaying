@@ -32,13 +32,13 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             SubscriptionConfigBuilder defaults,
             IDictionary<string, SubscriptionGroupConfigBuilder> consumerGroupSettings)
         {
-            List<ISubscriptionGroup> buses = consumerGroupSettings
+            List<ISubscriptionGroup> groups = consumerGroupSettings
                 .Values
                 .Select(builder => Create(defaults, builder.Build(defaults)))
                 .ToList();
 
             return new SubscriptionGroupCollection(
-                buses,
+                groups,
                 _loggerFactory.CreateLogger<SubscriptionGroupCollection>());
         }
 

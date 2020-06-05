@@ -47,7 +47,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             IMultiplexer multiplexer = CreateMultiplexer();
 
             multiplexer.ReadFrom(buffer.Reader);
-            multiplexerSubscriber.Subscribe(multiplexer.GetMessagesAsync());
+            consumer1.Subscribe(multiplexer.GetMessagesAsync());
 
             // need to start the multiplexer before calling Start
 
@@ -55,7 +55,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             cts.CancelAfter(TimeoutPeriod);
 
             var multiplexerCompletion = multiplexer.Run(cts.Token);
-            var consumer1Completion = multiplexerSubscriber.Run(cts.Token);
+            var consumer1Completion = consumer1.Run(cts.Token);
             var buffer1Completion = buffer.Run(cts.Token);
 
             await multiplexerCompletion;
@@ -105,14 +105,14 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var buffer2 = CreateMessageReceiveBuffer(sqsQueue2);
 
             IMessageDispatcher dispatcher = new FakeDispatcher();
-            IMultiplexerSubscriber multiplexerSubscriber = CreateSubscriber(dispatcher);
+            IMultiplexerSubscriber consumer1 = CreateSubscriber(dispatcher);
 
             IMultiplexer multiplexer = CreateMultiplexer();
 
             multiplexer.ReadFrom(buffer1.Reader);
             multiplexer.ReadFrom(buffer2.Reader);
 
-            multiplexerSubscriber.Subscribe(multiplexer.GetMessagesAsync());
+            consumer1.Subscribe(multiplexer.GetMessagesAsync());
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
@@ -120,7 +120,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var multiplexerCompletion = multiplexer.Run(cts.Token);
 
             // consumers
-            var consumer1Completion = multiplexerSubscriber.Run(cts.Token);
+            var consumer1Completion = consumer1.Run(cts.Token);
 
             var buffer1Completion = buffer1.Run(cts.Token);
             var buffer2Completion = buffer2.Run(cts.Token);
@@ -187,11 +187,11 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var sqsQueue = TestQueue(() => Interlocked.Increment(ref messagesFromQueue));
             IMessageReceiveBuffer buffer = CreateMessageReceiveBuffer(sqsQueue, bufferSize);
             IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
-            IMultiplexerSubscriber multiplexerSubscriber = CreateSubscriber(dispatcher);
+            IMultiplexerSubscriber consumer1 = CreateSubscriber(dispatcher);
             IMultiplexer multiplexer = CreateMultiplexer(channelCapacity);
 
             multiplexer.ReadFrom(buffer.Reader);
-            multiplexerSubscriber.Subscribe(multiplexer.GetMessagesAsync());
+            consumer1.Subscribe(multiplexer.GetMessagesAsync());
 
             // need to start the multiplexer before calling Messages
 
@@ -209,7 +209,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             messagesDispatched.ShouldBe(0);
 
             // Starting the consumer after the token is cancelled will not dispatch messages
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => multiplexerSubscriber.Run(cts.Token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1.Run(cts.Token));
 
             messagesFromQueue.ShouldBe(expectedReceiveFromQueueCount);
             messagesDispatched.ShouldBe(0);
