@@ -35,7 +35,14 @@ namespace JustSaying.UnitTests.Messaging.Channels.MultiplexerTests
             Assert.Equal(completed1, completed2);
 
             cts.Cancel();
-            await completed1;
+            try
+            {
+                await completed1;
+            }
+            catch (OperationCanceledException)
+            {
+                // Ignore
+            }
         }
 
         [Fact]
