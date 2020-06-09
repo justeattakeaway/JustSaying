@@ -35,7 +35,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             MessageMonitor = new LoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
         }
 
-        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
+        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(500);
 
         [Fact]
         public async Task QueueCanBeAssignedToOnePump()
