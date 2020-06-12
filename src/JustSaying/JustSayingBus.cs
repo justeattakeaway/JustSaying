@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -20,7 +21,7 @@ namespace JustSaying
     public sealed class JustSayingBus : IAmJustSaying, IAmJustInterrogating, IMessagingBus
     {
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _publishersByRegionAndType;
-        private readonly Dictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings;
+        private readonly ConcurrentDictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
 
         private string _previousActiveRegion;
 
@@ -34,13 +35,13 @@ namespace JustSaying
             set { _monitor = value ?? new NullOpMessageMonitor(); }
         }
 
-        private ISubscriptionGroupCollection SubscriptionGroups { get; set; }
+        private ISubscriptionGroup SubscriptionGroups { get; set; }
         public IMessageSerializationRegister SerializationRegister { get; }
         public IMessageBackoffStrategy MessageBackoffStrategy { get; set; }
 
         public IMessageLockAsync MessageLock
         {
-            get => HandlerMap?.MessageLock;
+            get => HandlerMap.MessageLock;
             set => HandlerMap.MessageLock = value;
         }
 
@@ -69,9 +70,6 @@ namespace JustSaying
             SerializationRegister = serializationRegister;
             _publishers = new HashSet<IPublisher>();
 
-            _subscriptionGroupSettings =
-                new Dictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
-
             HandlerMap = new HandlerMap(Monitor, _loggerFactory);
         }
 
@@ -83,12 +81,9 @@ namespace JustSaying
             if (string.IsNullOrWhiteSpace(subscriptionGroup))
                 throw new ArgumentNullException(nameof(subscriptionGroup));
 
-            if (!_subscriptionGroupSettings.TryGetValue(subscriptionGroup,
-                out SubscriptionGroupConfigBuilder builder))
-            {
-                builder = _subscriptionGroupSettings[subscriptionGroup] =
-                    new SubscriptionGroupConfigBuilder(subscriptionGroup);
-            }
+            SubscriptionGroupConfigBuilder builder = _subscriptionGroupSettings.GetOrAdd(
+                subscriptionGroup,
+                _ => new SubscriptionGroupConfigBuilder(subscriptionGroup));
 
             builder.AddQueue(queue);
         }
@@ -122,7 +117,7 @@ namespace JustSaying
         private Task _subscriberCompletionTask;
         private bool _subscriberStarted;
 
-        public Task Start(CancellationToken stoppingToken)
+        public Task StartAsync(CancellationToken stoppingToken)
         {
             if (stoppingToken.IsCancellationRequested) return Task.CompletedTask;
 
@@ -133,7 +128,7 @@ namespace JustSaying
                 {
                     if (!_subscriberStarted)
                     {
-                        _subscriberCompletionTask = RunImpl(stoppingToken);
+                        _subscriberCompletionTask = RunImplAsync(stoppingToken);
                         _subscriberStarted = true;
                     }
                 }
@@ -142,7 +137,7 @@ namespace JustSaying
             return _subscriberCompletionTask;
         }
 
-        private Task RunImpl(CancellationToken stoppingToken)
+        private Task RunImplAsync(CancellationToken stoppingToken)
         {
             var dispatcher = new MessageDispatcher(
                 SerializationRegister,
@@ -161,7 +156,7 @@ namespace JustSaying
 
             _log.LogInformation("Starting bus with settings: {@Response}", SubscriptionGroups.Interrogate());
 
-            return SubscriptionGroups.Run(stoppingToken);
+            return SubscriptionGroups.RunAsync(stoppingToken);
         }
 
         public Task PublishAsync(Message message, CancellationToken cancellationToken)

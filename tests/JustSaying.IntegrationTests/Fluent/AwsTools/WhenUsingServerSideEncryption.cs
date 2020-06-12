@@ -46,7 +46,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                 services,
                 async (publisher, listener, cancellationToken) =>
                 {
-                    _ = listener.Start(cancellationToken);
+                    _ = listener.StartAsync(cancellationToken);
 
                     // Act
                     await publisher.PublishAsync(message, cancellationToken);

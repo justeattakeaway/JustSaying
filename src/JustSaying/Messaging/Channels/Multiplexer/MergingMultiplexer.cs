@@ -35,7 +35,7 @@ namespace JustSaying.Messaging.Channels.Multiplexer
             _targetChannel = Channel.CreateBounded<IQueueMessageContext>(_channelCapacity);
         }
 
-        public Task Run(CancellationToken stoppingToken)
+        public Task RunAsync(CancellationToken stoppingToken)
         {
             if (!_started)
             {
@@ -44,7 +44,7 @@ namespace JustSaying.Messaging.Channels.Multiplexer
                     if (!_started)
                     {
                         _stoppingToken = stoppingToken;
-                        _completion = RunImpl();
+                        _completion = RunImplAsync();
                         _started = true;
                     }
                 }
@@ -53,7 +53,7 @@ namespace JustSaying.Messaging.Channels.Multiplexer
             return _completion;
         }
 
-        private async Task RunImpl()
+        private async Task RunImplAsync()
         {
             await Task.Yield();
 

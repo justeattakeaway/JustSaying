@@ -25,7 +25,7 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
         {
             _logger.LogInformation("Kitchen subscriber running");
 
-            _bus.Start(stoppingToken);
+            _bus.StartAsync(stoppingToken);
 
             return Task.CompletedTask;
         }

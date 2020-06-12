@@ -18,7 +18,7 @@ namespace JustSaying.Messaging.Channels.Multiplexer
         /// <param name="stoppingToken">Cancels the multiplexer and closes the
         /// <see cref="IAsyncEnumerable{IQueueMessageContext}"/> returned from <see cref="GetMessagesAsync"/></param>
         /// <returns>A Task that completes or throws when the multiplexer finishes</returns>
-        Task Run(CancellationToken stoppingToken);
+        Task RunAsync(CancellationToken stoppingToken);
         /// <summary>
         /// Adds a ChannelReader{IQueueMessageContext} to be multiplexed into the stream
         /// </summary>

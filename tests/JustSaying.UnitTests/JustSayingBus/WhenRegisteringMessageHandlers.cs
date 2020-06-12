@@ -39,7 +39,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
 
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => SystemUnderTest.Start(cts.Token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => SystemUnderTest.StartAsync(cts.Token));
         }
 
         [Fact]

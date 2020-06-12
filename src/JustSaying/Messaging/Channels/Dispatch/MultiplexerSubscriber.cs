@@ -21,7 +21,7 @@ namespace JustSaying.Messaging.Channels.Dispatch
             _messageSource = messageSource;
         }
 
-        public async Task Run(CancellationToken stoppingToken)
+        public async Task RunAsync(CancellationToken stoppingToken)
         {
             await foreach (IQueueMessageContext messageContext in _messageSource.WithCancellation(stoppingToken))
             {

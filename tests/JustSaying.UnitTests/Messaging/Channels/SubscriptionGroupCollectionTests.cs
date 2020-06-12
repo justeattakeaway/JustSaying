@@ -58,7 +58,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             cts.CancelAfter(TimeoutPeriod);
 
             // Act
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => bus.Start(cts.Token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => bus.StartAsync(cts.Token));
 
             // Assert
             handledBy1.Count.ShouldBeGreaterThan(0);

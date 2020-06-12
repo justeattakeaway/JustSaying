@@ -18,7 +18,7 @@ namespace JustSaying.Messaging.Channels.Receive
         /// <see cref="Reader"/></param>
         /// <returns>A <see cref="Task"/> that either completes or throws an
         /// <exception cref="System.OperationCanceledException"></exception> when the buffer is cancelled</returns>
-        Task Run(CancellationToken stoppingToken);
+        Task RunAsync(CancellationToken stoppingToken);
         /// <summary>
         /// A channel reader that provides asynchronous access to downloaded messages
         /// </summary>

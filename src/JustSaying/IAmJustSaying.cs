@@ -20,7 +20,7 @@ namespace JustSaying
         // TODO - swap params
         void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message;
 
-        Task Start(CancellationToken stoppingToken);
+        Task StartAsync(CancellationToken stoppingToken);
 
         IMessagingConfig Config { get; }
 

@@ -60,7 +60,7 @@ namespace JustSaying
             var message = new SimpleMessage();
 
             using var source = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-            _ = listener.Start(source.Token);
+            _ = listener.StartAsync(source.Token);
 
             // Act
             await publisher.PublishAsync(message, source.Token);

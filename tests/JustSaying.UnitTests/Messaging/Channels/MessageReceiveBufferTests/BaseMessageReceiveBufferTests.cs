@@ -71,7 +71,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
         {
             try
             {
-                await SystemUnderTest.Run(cancellationToken).ConfigureAwait(false);
+                await SystemUnderTest.RunAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             { }

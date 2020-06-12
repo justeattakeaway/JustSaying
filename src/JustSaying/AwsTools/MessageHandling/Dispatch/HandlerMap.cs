@@ -73,12 +73,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         /// <param name="handlerFunc">The provider of the handler to run for the queue/message type</param>
         public void Add(string queueName, Type messageType, HandlerFunc handlerFunc)
         {
-            // We don't throw here when a handler has already been added, because sometimes callers want safe idempotent behaviour
-            // e.g. when adding a handler for a queue who's name doesn't change between tenants.
-            if (!_handlers.ContainsKey((queueName, messageType)))
-            {
-                _handlers.Add((queueName, messageType), handlerFunc);
-            }
+            _handlers[(queueName, messageType)] = handlerFunc;
         }
 
         /// <summary>

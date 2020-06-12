@@ -57,7 +57,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 services,
                 async (publisher, listener, cancellationToken) =>
                 {
-                    _ = listener.Start(cancellationToken);
+                    _ = listener.StartAsync(cancellationToken);
 
                     // Publish the message with a long running handler
                     await publisher.PublishAsync(_messages[1]);

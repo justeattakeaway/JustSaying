@@ -54,9 +54,9 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
 
-            var multiplexerCompletion = multiplexer.Run(cts.Token);
-            var consumer1Completion = consumer1.Run(cts.Token);
-            var buffer1Completion = buffer.Run(cts.Token);
+            var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
+            var consumer1Completion = consumer1.RunAsync(cts.Token);
+            var buffer1Completion = buffer.RunAsync(cts.Token);
 
             await multiplexerCompletion;
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1Completion);
@@ -82,13 +82,13 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
 
-            var multiplexerCompletion = multiplexer.Run(cts.Token);
+            var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
 
             // consumers
-            var consumer1Completion = consumer1.Run(cts.Token);
-            var consumer2Completion = consumer2.Run(cts.Token);
+            var consumer1Completion = consumer1.RunAsync(cts.Token);
+            var consumer2Completion = consumer2.RunAsync(cts.Token);
 
-            var buffer1Completion = buffer.Run(cts.Token);
+            var buffer1Completion = buffer.RunAsync(cts.Token);
 
             await multiplexerCompletion;
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1Completion);
@@ -117,13 +117,13 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
 
-            var multiplexerCompletion = multiplexer.Run(cts.Token);
+            var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
 
             // consumers
-            var consumer1Completion = consumer1.Run(cts.Token);
+            var consumer1Completion = consumer1.RunAsync(cts.Token);
 
-            var buffer1Completion = buffer1.Run(cts.Token);
-            var buffer2Completion = buffer2.Run(cts.Token);
+            var buffer1Completion = buffer1.RunAsync(cts.Token);
+            var buffer2Completion = buffer2.RunAsync(cts.Token);
 
             await multiplexerCompletion;
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer1Completion);
@@ -156,14 +156,14 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
 
-            var multiplexerCompletion = multiplexer.Run(cts.Token);
+            var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
 
             // consumers
-            var consumer1Completion = consumer1.Run(cts.Token);
-            var consumer2Completion = consumer2.Run(cts.Token);
+            var consumer1Completion = consumer1.RunAsync(cts.Token);
+            var consumer2Completion = consumer2.RunAsync(cts.Token);
 
-            var buffer1Completion = buffer1.Run(cts.Token);
-            var buffer2Completion = buffer2.Run(cts.Token);
+            var buffer1Completion = buffer1.RunAsync(cts.Token);
+            var buffer2Completion = buffer2.RunAsync(cts.Token);
 
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer1Completion);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer2Completion);
@@ -199,8 +199,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             cts.CancelAfter(TimeSpan.FromSeconds(1));
 
             // Act and Assert
-            var multiplexerCompletion = multiplexer.Run(cts.Token);
-            var bufferCompletion = buffer.Run(cts.Token);
+            var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
+            var bufferCompletion = buffer.RunAsync(cts.Token);
 
             await multiplexerCompletion;
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => bufferCompletion);
@@ -209,7 +209,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             messagesDispatched.ShouldBe(0);
 
             // Starting the consumer after the token is cancelled will not dispatch messages
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1.Run(cts.Token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1.RunAsync(cts.Token));
 
             messagesFromQueue.ShouldBe(expectedReceiveFromQueueCount);
             messagesDispatched.ShouldBe(0);
@@ -229,7 +229,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
 
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => bus.Run(cts.Token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => bus.RunAsync(cts.Token));
         }
 
         [Fact]
@@ -254,7 +254,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             IMessageDispatcher dispatcher = new FakeDispatcher();
             var bus = CreateSubscriptionGroup(new[] { sqsQueue }, dispatcher);
 
-            var runTask = bus.Run(cts.Token);
+            var runTask = bus.RunAsync(cts.Token);
 
             cts.CancelAfter(TimeoutPeriod);
 
@@ -287,7 +287,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             var bus = CreateSubscriptionGroup(new[] { sqsQueue }, dispatcher);
 
-            var runTask = bus.Run(cts.Token);
+            var runTask = bus.RunAsync(cts.Token);
 
             cts.CancelAfter(TimeoutPeriod);
 
@@ -306,8 +306,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             var cts = new CancellationTokenSource(TimeoutPeriod);
 
-            var task1 = bus.Run(cts.Token);
-            var task2 = bus.Run(cts.Token);
+            var task1 = bus.RunAsync(cts.Token);
+            var task2 = bus.RunAsync(cts.Token);
 
             Assert.True(ReferenceEquals(task1, task2));
         }
@@ -350,7 +350,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             return new MultiplexerSubscriber(dispatcher);
         }
 
-        private ISubscriptionGroupCollection CreateSubscriptionGroup(
+        private ISubscriptionGroup CreateSubscriptionGroup(
             IList<ISqsQueue> queues,
             IMessageDispatcher dispatcher)
         {

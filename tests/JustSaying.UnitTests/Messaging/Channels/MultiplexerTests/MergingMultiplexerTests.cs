@@ -28,8 +28,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.MultiplexerTests
             var cts = new CancellationTokenSource();
 
             // Act
-            Task completed1 = multiplexer.Run(cts.Token);
-            Task completed2 = multiplexer.Run(cts.Token);
+            Task completed1 = multiplexer.RunAsync(cts.Token);
+            Task completed2 = multiplexer.RunAsync(cts.Token);
 
             // Assert
             Assert.Equal(completed1, completed2);
@@ -79,7 +79,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MultiplexerTests
             multiplexer.ReadFrom(channel2);
 
             // Act
-            await multiplexer.Run(cts.Token);
+            await multiplexer.RunAsync(cts.Token);
             var multiplexerRunTask = ReadAllMessages(multiplexer);
 
             channel1.Writer.Complete();
@@ -106,9 +106,9 @@ namespace JustSaying.UnitTests.Messaging.Channels.MultiplexerTests
             multiplexer.ReadFrom(channel2);
 
             // Act
-            await multiplexer.Run(cts.Token);
+            await multiplexer.RunAsync(cts.Token);
             var multiplexerRunTask = ReadAllMessages(multiplexer);
-            
+
             channel1.Writer.Complete();
             channel2.Writer.Complete();
 

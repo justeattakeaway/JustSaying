@@ -44,7 +44,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
 
-            var completion = SystemUnderTest.Run(cts.Token);
+            var completion = SystemUnderTest.RunAsync(cts.Token);
 
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
         }

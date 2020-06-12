@@ -37,7 +37,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected IHandlerAsync<SimpleMessage> Handler;
 
-        protected ISubscriptionGroupCollection SystemUnderTest { get; private set; }
+        protected ISubscriptionGroup SystemUnderTest { get; private set; }
 
         protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
 
@@ -87,7 +87,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             }
 
             var cts = new CancellationTokenSource();
-            var completion = SystemUnderTest.Run(cts.Token);
+            var completion = SystemUnderTest.RunAsync(cts.Token);
 
             // wait until it's done
             var doneOk = await TaskHelpers.WaitWithTimeoutAsync(doneSignal.Task);
@@ -99,7 +99,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             doneOk.ShouldBeTrue("Timeout occured before done signal");
         }
 
-        protected ISubscriptionGroupCollection CreateSystemUnderTest()
+        protected ISubscriptionGroup CreateSystemUnderTest()
         {
             var messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
             var messageContextAccessor = Substitute.For<IMessageContextAccessor>();

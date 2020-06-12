@@ -6,6 +6,6 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
     public interface ISubscriptionGroup : IInterrogable
     {
-        Task Run(CancellationToken stoppingToken);
+        Task RunAsync(CancellationToken stoppingToken);
     }
 }

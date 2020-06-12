@@ -17,7 +17,7 @@ namespace JustSaying.Messaging.Channels.Dispatch
         /// from the stream passed to <see cref="Subscribe"/></param>
         /// <returns>A Task that completes when the stream passed to <see cref="Subscribe"/> is closed or the
         /// <see cref="stoppingToken"/> is canceled</returns>
-        Task Run(CancellationToken stoppingToken);
+        Task RunAsync(CancellationToken stoppingToken);
 
         /// <summary>
         /// Provides the <see cref="IMultiplexerSubscriber"/> with a stream to read from.

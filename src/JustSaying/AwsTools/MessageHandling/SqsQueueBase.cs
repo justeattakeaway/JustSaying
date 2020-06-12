@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
@@ -185,53 +183,6 @@ namespace JustSaying.AwsTools.MessageHandling
                 KmsMasterKeyId = queueAttributes[JustSayingConstants.AttributeEncryptionKeyId],
                 KmsDataKeyReusePeriodSeconds = queueAttributes[JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId]
             };
-        }
-
-        public async Task<IList<Message>> GetMessagesAsync(
-            int maximumCount,
-            IEnumerable<string> requestMessageAttributeNames,
-            CancellationToken cancellationToken)
-        {
-            var request = new ReceiveMessageRequest
-            {
-                QueueUrl = Uri.AbsoluteUri,
-                MaxNumberOfMessages = maximumCount,
-                WaitTimeSeconds = 20,
-                AttributeNames = requestMessageAttributeNames.ToList()
-            };
-
-            ReceiveMessageResponse sqsMessageResponse =
-                await Client.ReceiveMessageAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return sqsMessageResponse?.Messages;
-        }
-
-        public async Task DeleteMessageAsync(
-            string receiptHandle,
-            CancellationToken cancellationToken)
-        {
-            var deleteRequest = new DeleteMessageRequest
-            {
-                QueueUrl = Uri.AbsoluteUri,
-                ReceiptHandle = receiptHandle,
-            };
-
-            await Client.DeleteMessageAsync(deleteRequest, cancellationToken).ConfigureAwait(false);
-        }
-
-        public async Task ChangeMessageVisibilityAsync(
-            string receiptHandle,
-            TimeSpan timeout,
-            CancellationToken cancellationToken)
-        {
-            var visibilityRequest = new ChangeMessageVisibilityRequest
-            {
-                QueueUrl = Uri.ToString(),
-                ReceiptHandle = receiptHandle,
-                VisibilityTimeout = (int)timeout.TotalSeconds,
-            };
-
-            await Client.ChangeMessageVisibilityAsync(visibilityRequest, cancellationToken).ConfigureAwait(false);
         }
 
         public object Interrogate()

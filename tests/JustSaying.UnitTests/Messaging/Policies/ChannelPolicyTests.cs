@@ -66,7 +66,7 @@ namespace JustSaying.UnitTests.Messaging.Policies
             cts.CancelAfter(TimeoutPeriod);
 
             // Act and Assert
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => collection.Run(cts.Token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => collection.RunAsync(cts.Token));
 
             queueCalledCount.ShouldBeGreaterThan(1);
             dispatchedMessageCount.ShouldBe(0);

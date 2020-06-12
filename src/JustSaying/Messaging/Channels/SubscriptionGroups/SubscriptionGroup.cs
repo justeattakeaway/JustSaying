@@ -31,7 +31,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             _logger = logger;
         }
 
-        public Task Run(CancellationToken stoppingToken)
+        public Task RunAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation(
                 "Starting up Subscription group with {ReceiveBuffferCount} receive buffers and {SubscriberCount} subscribers ",
@@ -40,9 +40,9 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
             var completionTasks = new List<Task>();
 
-            completionTasks.AddRange(_receiveBuffers.Select(buffer => buffer.Run(stoppingToken)));
-            completionTasks.Add(_multiplexer.Run(stoppingToken));
-            completionTasks.AddRange(_subscribers.Select(subscriber => subscriber.Run(stoppingToken)));
+            completionTasks.AddRange(_receiveBuffers.Select(buffer => buffer.RunAsync(stoppingToken)));
+            completionTasks.Add(_multiplexer.RunAsync(stoppingToken));
+            completionTasks.AddRange(_subscribers.Select(subscriber => subscriber.RunAsync(stoppingToken)));
 
             return Task.WhenAll(completionTasks);
         }

@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
-    public class SubscriptionGroupCollection : ISubscriptionGroupCollection
+    public class SubscriptionGroupCollection : ISubscriptionGroup
     {
         private readonly ILogger _logger;
         private readonly IList<ISubscriptionGroup> _subscriptionGroups;
@@ -23,7 +23,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         private bool _started;
         private readonly object _startLock = new object();
 
-        public Task Run(CancellationToken stoppingToken)
+        public Task RunAsync(CancellationToken stoppingToken)
         {
             if (stoppingToken.IsCancellationRequested) return Task.CompletedTask;
 
@@ -33,7 +33,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
                 {
                     if (!_started)
                     {
-                        _completion = RunImpl(stoppingToken);
+                        _completion = RunImplAsync(stoppingToken);
                         _started = true;
                     }
                 }
@@ -51,9 +51,9 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             };
         }
 
-        private Task RunImpl(CancellationToken stoppingToken)
+        private Task RunImplAsync(CancellationToken stoppingToken)
         {
-            IEnumerable<Task> completionTasks = _subscriptionGroups.Select(group => group.Run(stoppingToken)).ToList();
+            IEnumerable<Task> completionTasks = _subscriptionGroups.Select(group => group.RunAsync(stoppingToken)).ToList();
 
             _logger.LogInformation("Subscription group collection successfully started");
 
