@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using JustSaying.AwsTools.MessageHandling;
 using NSubstitute;
 using Shouldly;
 using Xunit;

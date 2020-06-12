@@ -110,46 +110,6 @@ namespace JustSaying.UnitTests.Messaging.Channels
             messagesDispatched.ShouldBe(0);
         }
 
-        [Fact]
-        public async Task Message_Processing_Throwing_Exceptions_Continues_To_Request_Messages()
-        {
-            // Arrange
-            int messagesRequested = 0;
-            int messagesDispatched = 0;
-
-            var sqsQueue1 = TestQueue(() => GetErrorMessages(() => messagesRequested++));
-
-            var queues = new List<ISqsQueue> { sqsQueue1 };
-            IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
-
-            var defaults = new SubscriptionConfigBuilder()
-                .WithDefaultConcurrencyLimit(1);
-            var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
-            {
-                { "test", new SubscriptionGroupConfigBuilder("test").AddQueues(queues) },
-            };
-
-            var subscriptionGroupFactory = new SubscriptionGroupFactory(
-                dispatcher,
-                MessageMonitor,
-                LoggerFactory);
-
-            SubscriptionGroupCollection collection = subscriptionGroupFactory.Create(defaults, settings);
-
-            var cts = new CancellationTokenSource();
-
-            // Act
-            var runTask = collection.Run(cts.Token);
-
-            cts.CancelAfter(TimeoutPeriod);
-
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => runTask);
-
-            // Assert
-            messagesRequested.ShouldBeGreaterThan(1);
-            messagesDispatched.ShouldBe(0);
-        }
-
         private static Task<IList<Message>> GetErrorMessages(Action onMessageRequested)
         {
             onMessageRequested();

@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
 
@@ -21,13 +21,13 @@ namespace JustSaying.Messaging.Channels.Context
         /// </summary>
         /// <param name="visibilityTimeout">How far into the future to prevent others from receiving this message.</param>
         /// <returns>A <see cref="Task"/> that completes when the update is completed</returns>
-        Task ChangeMessageVisibilityAsync(TimeSpan visibilityTimeout);
+        Task ChangeMessageVisibilityAsync(TimeSpan visibilityTimeout, CancellationToken cancellationToken);
 
         /// <summary>
         /// Deletes this message from SQS
         /// </summary>
         /// <returns>A <see cref="Task"/> that completes when the message is deleted</returns>
-        Task DeleteMessageFromQueueAsync();
+        Task DeleteMessageFromQueueAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// The full URI of the SQS queue that this message was received from.

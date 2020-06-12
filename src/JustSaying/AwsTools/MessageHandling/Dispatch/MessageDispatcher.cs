@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Runtime;
 using Amazon.SQS;
-using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
@@ -12,7 +11,6 @@ using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
-using SQSMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying.AwsTools.MessageHandling.Dispatch
 {
@@ -62,7 +60,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                     messageContext.Message.MessageId,
                     messageContext.Message.Body);
 
-                await messageContext.DeleteMessageFromQueueAsync().ConfigureAwait(false);
+                await messageContext.DeleteMessageFromQueueAsync(cancellationToken).ConfigureAwait(false);
                 _messagingMonitor.HandleError(ex, messageContext.Message);
 
                 return;
@@ -97,7 +95,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
 
                 if (handlingSucceeded)
                 {
-                    await messageContext.DeleteMessageFromQueueAsync().ConfigureAwait(false);
+                    await messageContext.DeleteMessageFromQueueAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
 #pragma warning disable CA1031
@@ -125,7 +123,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                 {
                     if (!handlingSucceeded && _messageBackoffStrategy != null)
                     {
-                        await UpdateMessageVisibilityTimeout(messageContext, typedMessage, lastException).ConfigureAwait(false);
+                        await UpdateMessageVisibilityTimeout(messageContext, typedMessage, lastException, cancellationToken).ConfigureAwait(false);
                     }
                 }
                 finally
@@ -165,7 +163,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
 
         }
 
-        private async Task UpdateMessageVisibilityTimeout(IQueueMessageContext messageContext, Message typedMessage, Exception lastException)
+        private async Task UpdateMessageVisibilityTimeout(IQueueMessageContext messageContext, Message typedMessage, Exception lastException, CancellationToken cancellationToken)
         {
             if (TryGetApproxReceiveCount(messageContext.Message.Attributes, out int approxReceiveCount))
             {
@@ -173,7 +171,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
 
                 try
                 {
-                    await messageContext.ChangeMessageVisibilityAsync(visibilityTimeout).ConfigureAwait(false);
+                    await messageContext.ChangeMessageVisibilityAsync(visibilityTimeout, cancellationToken).ConfigureAwait(false);
                 }
                 catch (AmazonServiceException ex)
                 {

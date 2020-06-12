@@ -15,7 +15,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return new QueueMessageContext(message, sqsQueue);
         }
 
-        public static async Task<IList<Message>> GetMessagesAsync(
+        internal static async Task<IList<Message>> GetMessagesAsync(
             this ISqsQueue sqsQueue,
             int maximumCount,
             IEnumerable<string> requestMessageAttributeNames,
@@ -35,7 +35,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return sqsMessageResponse?.Messages;
         }
 
-        public static async Task DeleteMessageAsync(
+        internal static async Task DeleteMessageAsync(
             this ISqsQueue sqsQueue,
             string receiptHandle,
             CancellationToken cancellationToken)
@@ -49,7 +49,7 @@ namespace JustSaying.AwsTools.MessageHandling
             await sqsQueue.Client.DeleteMessageAsync(deleteRequest, cancellationToken).ConfigureAwait(false);
         }
 
-        public static async Task ChangeMessageVisibilityAsync(
+        internal static async Task ChangeMessageVisibilityAsync(
             this ISqsQueue sqsQueue,
             string receiptHandle,
             TimeSpan timeout,
