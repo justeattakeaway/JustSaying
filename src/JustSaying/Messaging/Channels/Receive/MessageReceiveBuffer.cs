@@ -40,7 +40,6 @@ namespace JustSaying.Messaging.Channels.Receive
             ILogger<IMessageReceiveBuffer> logger,
             IMessageBackoffStrategy messageBackoffStrategy = null)
         {
-            _channel = Channel.CreateBounded<IQueueMessageContext>(bufferSize);
             _prefetch = prefetch;
             _bufferSize = bufferSize;
             _readTimeout = readTimeout;
@@ -49,6 +48,8 @@ namespace JustSaying.Messaging.Channels.Receive
             _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _backoffStrategyName = messageBackoffStrategy?.GetType()?.Name;
+
+            _channel = Channel.CreateBounded<IQueueMessageContext>(bufferSize);
 
             if (messageBackoffStrategy != null)
             {
@@ -75,7 +76,10 @@ namespace JustSaying.Messaging.Channels.Receive
                     using (_monitor.MeasureThrottle())
                     {
                         bool canWrite = await writer.WaitToWriteAsync(stoppingToken).ConfigureAwait(false);
-                        if (!canWrite) break;
+                        if (!canWrite)
+                        {
+                            break;
+                        }
                     }
 
                     IList<Message> messages;
@@ -83,7 +87,10 @@ namespace JustSaying.Messaging.Channels.Receive
                     {
                         messages = await GetMessagesAsync(_bufferSize, stoppingToken).ConfigureAwait(false);
 
-                        if (messages == null) continue;
+                        if (messages == null)
+                        {
+                            continue;
+                        }
                     }
 
                     foreach (Message message in messages)

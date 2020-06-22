@@ -28,7 +28,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
         }
 
-        public SubscriptionGroupCollection Create(
+        public ISubscriptionGroup Create(
             SubscriptionConfigBuilder defaults,
             IDictionary<string, SubscriptionGroupConfigBuilder> consumerGroupSettings)
         {

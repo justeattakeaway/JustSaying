@@ -50,13 +50,13 @@ namespace JustSaying.AwsTools.QueueCreation
                 throw new ConfigurationErrorsException("Invalid configuration. QueueName must be provided.");
             }
 
-            OnValidate();
+            OnValidating();
         }
 
         /// <summary>
-        /// OnValidate is called after the validation has successfully completed.
+        /// Allows a derived class to implement custom validation.
         /// </summary>
-        protected virtual void OnValidate()
+        protected virtual void OnValidating()
         {
         }
     }

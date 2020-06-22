@@ -47,36 +47,10 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                 return;
             }
 
-            Message typedMessage;
-            MessageAttributes attributes;
-            try
+            (bool success, Message typedMessage, MessageAttributes attributes) = await DeserializeMessage(messageContext, cancellationToken).ConfigureAwait(false);
+
+            if (!success)
             {
-                (typedMessage, attributes) = _serializationRegister.DeserializeMessage(messageContext.Message.Body);
-            }
-            catch (MessageFormatNotSupportedException ex)
-            {
-                _logger.LogTrace(
-                    "Could not handle message with Id '{MessageId}' because a deserializer for the content is not configured. Message body: '{MessageBody}'.",
-                    messageContext.Message.MessageId,
-                    messageContext.Message.Body);
-
-                await messageContext.DeleteMessageFromQueueAsync(cancellationToken).ConfigureAwait(false);
-                _messagingMonitor.HandleError(ex, messageContext.Message);
-
-                return;
-            }
-#pragma warning disable CA1031
-            catch (Exception ex)
-#pragma warning restore CA1031
-            {
-                _logger.LogError(
-                    ex,
-                    "Error deserializing message with Id '{MessageId}' and body '{MessageBody}'.",
-                    messageContext.Message.MessageId,
-                    messageContext.Message.Body);
-
-                _messagingMonitor.HandleError(ex, messageContext.Message);
-
                 return;
             }
 
@@ -130,6 +104,42 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                 {
                     _messageContextAccessor.MessageContext = null;
                 }
+            }
+        }
+
+        private async Task<(bool success, Message typedMessage, MessageAttributes attributes)>
+            DeserializeMessage(IQueueMessageContext messageContext, CancellationToken cancellationToken)
+        {
+            try
+            {
+                (Message typedMessage, MessageAttributes attributes) = _serializationRegister.DeserializeMessage(messageContext.Message.Body);
+                return (true, typedMessage, attributes);
+            }
+            catch (MessageFormatNotSupportedException ex)
+            {
+                _logger.LogTrace(
+                    "Could not handle message with Id '{MessageId}' because a deserializer for the content is not configured. Message body: '{MessageBody}'.",
+                    messageContext.Message.MessageId,
+                    messageContext.Message.Body);
+
+                await messageContext.DeleteMessageFromQueueAsync(cancellationToken).ConfigureAwait(false);
+                _messagingMonitor.HandleError(ex, messageContext.Message);
+
+                return (false, null, null);
+            }
+#pragma warning disable CA1031
+            catch (Exception ex)
+#pragma warning restore CA1031
+            {
+                _logger.LogError(
+                    ex,
+                    "Error deserializing message with Id '{MessageId}' and body '{MessageBody}'.",
+                    messageContext.Message.MessageId,
+                    messageContext.Message.Body);
+
+                _messagingMonitor.HandleError(ex, messageContext.Message);
+
+                return (false, null, null);
             }
         }
 

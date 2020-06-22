@@ -54,7 +54,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 MessageMonitor,
                 LoggerFactory);
 
-            SubscriptionGroupCollection collection = subscriptionGroupFactory.Create(defaults, settings);
+            ISubscriptionGroup collection = subscriptionGroupFactory.Create(defaults, settings);
 
             var cts = new CancellationTokenSource();
 
@@ -94,7 +94,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 MessageMonitor,
                 LoggerFactory);
 
-            SubscriptionGroupCollection collection = subscriptionGroupFactory.Create(defaults, settings);
+            ISubscriptionGroup collection = subscriptionGroupFactory.Create(defaults, settings);
 
             var cts = new CancellationTokenSource();
 

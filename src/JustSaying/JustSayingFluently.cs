@@ -246,6 +246,8 @@ namespace JustSaying
 
         public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message
         {
+            if (handlerResolver is null) throw new ArgumentNullException(nameof(handlerResolver));
+
             _subscriptionConfig.TopicName = GetOrUseTopicNamingConvention<T>(_subscriptionConfig.TopicName);
             _subscriptionConfig.QueueName = GetOrUseQueueNamingConvention<T>(_subscriptionConfig.QueueName);
             _subscriptionConfig.SubscriptionGroupName ??= _subscriptionConfig.QueueName;

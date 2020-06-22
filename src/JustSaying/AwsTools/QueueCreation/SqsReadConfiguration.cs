@@ -26,7 +26,7 @@ namespace JustSaying.AwsTools.QueueCreation
         public string FilterPolicy { get; set; }
         public string SubscriptionGroupName { get; set; }
 
-        protected override void OnValidate()
+        protected override void OnValidating()
         {
             if (SubscriptionType == SubscriptionType.ToTopic)
             {

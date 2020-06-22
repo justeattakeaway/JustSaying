@@ -60,7 +60,7 @@ namespace JustSaying.UnitTests.Messaging.Policies
                 MessageMonitor,
                 LoggerFactory);
 
-            SubscriptionGroupCollection collection = groupFactory.Create(config, settings);
+            ISubscriptionGroup collection = groupFactory.Create(config, settings);
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
+    /// <inheritdoc />
     internal class SubscriptionGroup : ISubscriptionGroup
     {
         private readonly ICollection<IMessageReceiveBuffer> _receiveBuffers;
@@ -17,6 +18,15 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         private readonly ICollection<IMultiplexerSubscriber> _subscribers;
         private readonly ILogger<SubscriptionGroup> _logger;
 
+        /// <summary>
+        /// Coordinates reading messages from a collection of <see cref="IMessageReceiveBuffer"/>
+        /// and dispatching using a collection of <see cref="IMultiplexerSubscriber"/>.
+        /// </summary>
+        /// <param name="settings">The <see cref="SubscriptionGroupSettings"/> to use.</param>
+        /// <param name="receiveBuffers">The collection of <see cref="IMessageReceiveBuffer"/> to read from.</param>
+        /// <param name="multiplexer">The <see cref="IMultiplexer"/> to aggregate all messages into one stream.</param>
+        /// <param name="subscribers">The collection of <see cref="IMultiplexerSubscriber"/> that will dispatch the messages</param>
+        /// <param name="logger">The <see cref="ILogger"/> to be used.</param>
         public SubscriptionGroup(
             SubscriptionGroupSettings settings,
             ICollection<IMessageReceiveBuffer> receiveBuffers,
@@ -31,6 +41,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             _logger = logger;
         }
 
+        /// <inheritdoc />
         public Task RunAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation(
@@ -47,6 +58,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             return Task.WhenAll(completionTasks);
         }
 
+        /// <inheritdoc />
         public object Interrogate()
         {
             return new

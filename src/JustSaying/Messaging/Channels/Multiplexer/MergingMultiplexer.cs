@@ -91,7 +91,7 @@ namespace JustSaying.Messaging.Channels.Multiplexer
             try
             {
                 if (_started)
-                    throw new InvalidOperationException("Cannot add readers once the multiplexer has started");
+                    throw new InvalidOperationException("Cannot add readers once the multiplexer has started.");
 
                 _readers.Add(reader);
             }
@@ -104,10 +104,7 @@ namespace JustSaying.Messaging.Channels.Multiplexer
         public async IAsyncEnumerable<IQueueMessageContext> GetMessagesAsync()
         {
             if (!_started)
-            {
-                throw new InvalidOperationException(
-                    "Multiplexer must be started before listening to messages");
-            }
+                throw new InvalidOperationException("Multiplexer must be started before listening to messages.");
 
             async IAsyncEnumerable<T> ReadAllAsync<T>(ChannelReader<T> reader)
             {
@@ -130,6 +127,8 @@ namespace JustSaying.Messaging.Channels.Multiplexer
         {
             _completion?.Dispose();
             _readersLock?.Dispose();
+
+            _completion = null;
         }
     }
 }

@@ -6,11 +6,17 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
+    /// <inheritdoc />
     public class SubscriptionGroupCollection : ISubscriptionGroup
     {
         private readonly ILogger _logger;
         private readonly IList<ISubscriptionGroup> _subscriptionGroups;
 
+        /// <summary>
+        /// Runs multiple <see cref="SubscriptionGroups"/>.
+        /// </summary>
+        /// <param name="subscriptionGroups">The collection of <see cref="SubscriptionGroups"/> to run.</param>
+        /// <param name="logger">The <see cref="ILogger"/> to use.</param>
         public SubscriptionGroupCollection(
             IList<ISubscriptionGroup> subscriptionGroups,
             ILogger<SubscriptionGroupCollection> logger)
@@ -23,6 +29,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         private bool _started;
         private readonly object _startLock = new object();
 
+        /// <inheritdoc />
         public Task RunAsync(CancellationToken stoppingToken)
         {
             if (stoppingToken.IsCancellationRequested) return Task.CompletedTask;
@@ -42,6 +49,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             return _completion;
         }
 
+        /// <inheritdoc />
         public object Interrogate()
         {
             IEnumerable<object> interrogationResponses = _subscriptionGroups.Select(group => group.Interrogate());
