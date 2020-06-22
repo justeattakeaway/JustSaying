@@ -53,8 +53,11 @@ namespace JustSaying.AwsTools.QueueCreation
             OnValidate();
         }
 
-        protected virtual void OnValidate() {
-
+        /// <summary>
+        /// OnValidate is called after the validation has successfully completed.
+        /// </summary>
+        protected virtual void OnValidate()
+        {
         }
     }
 }

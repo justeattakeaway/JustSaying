@@ -14,6 +14,9 @@ namespace JustSaying.Extensions
             ChannelWriter<T> output,
             CancellationToken stoppingToken)
         {
+            if (inputs is null) throw new ArgumentNullException(nameof(inputs));
+            if (output is null) throw new ArgumentNullException(nameof(output));
+        
             async IAsyncEnumerable<T> ReadAllAsync(ChannelReader<T> reader)
             {
                 if (reader == null) throw new ArgumentNullException(nameof(reader));

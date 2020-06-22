@@ -41,15 +41,8 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         /// <returns>Returns true if handler has been registered for the queue.</returns>
         public bool Contains(string queueName, Type messageType)
         {
-            if (queueName is null)
-            {
-                throw new ArgumentNullException(nameof(queueName));
-            }
-
-            if (messageType is null)
-            {
-                throw new ArgumentNullException(nameof(messageType));
-            }
+            if (queueName is null) throw new ArgumentNullException(nameof(queueName));
+            if (messageType is null) throw new ArgumentNullException(nameof(messageType));
 
             return _handlers.ContainsKey((queueName, messageType));
         }
@@ -83,22 +76,15 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         /// <typeparam name="T">The type of the message to handle on this queue.</typeparam>
         /// <param name="queueName">The queue to register the handler for.</param>
         /// <param name="futureHandler">The factory function to create handlers with.</param>
-        public void Add<T>(string queueName, Func<IHandlerAsync<T>> futureHandler) where T : Models.Message
+        public HandlerMap Add<T>(string queueName, Func<IHandlerAsync<T>> futureHandler) where T : Models.Message
         {
-            if (queueName is null)
-            {
-                throw new ArgumentNullException(nameof(queueName));
-            }
-
-            if (futureHandler is null)
-            {
-                throw new ArgumentNullException(nameof(futureHandler));
-            }
+            if (queueName is null) throw new ArgumentNullException(nameof(queueName));
+            if (futureHandler is null) throw new ArgumentNullException(nameof(futureHandler));
 
             var handlerWrapper = new MessageHandlerWrapper(MessageLock, _messageMonitor, _loggerFactory);
             var handlerFunc = handlerWrapper.WrapMessageHandler(futureHandler);
 
-            Add(queueName, typeof(T), handlerFunc);
+            return Add(queueName, typeof(T), handlerFunc);
         }
 
         /// <summary>
@@ -108,34 +94,28 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         /// <param name="queueName">The queue name to register the handler for.</param>
         /// <param name="messageType">The type of message to handle for this queue.</param>
         /// <param name="handlerFunc">The provider of the handler to run for the queue/message type.</param>
-        public void Add(string queueName, Type messageType, HandlerFunc handlerFunc)
+        public HandlerMap Add(string queueName, Type messageType, HandlerFunc handlerFunc)
         {
-            if (queueName is null)
-            {
-                throw new ArgumentNullException(nameof(queueName));
-            }
-
-            if (messageType is null)
-            {
-                throw new ArgumentNullException(nameof(messageType));
-            }
-
-            if (handlerFunc is null)
-            {
-                throw new ArgumentNullException(nameof(handlerFunc));
-            }
+            if (queueName is null) throw new ArgumentNullException(nameof(queueName));
+            if (messageType is null) throw new ArgumentNullException(nameof(messageType));
+            if (handlerFunc is null) throw new ArgumentNullException(nameof(handlerFunc));
 
             _handlers[(queueName, messageType)] = handlerFunc;
+
+            return this;
         }
 
         /// <summary>
         /// Gets a handler factory for a queue and message type.
         /// </summary>
-        /// <param name="queueName">The queue name to get the handler func for.</param>
-        /// <param name="messageType">The message type to get the handler func for.</param>
-        /// <returns></returns>
+        /// <param name="queueName">The queue name to get the handler function for.</param>
+        /// <param name="messageType">The message type to get the handler function for.</param>
+        /// <returns>The registered handler or null.</returns>
         public HandlerFunc Get(string queueName, Type messageType)
         {
+            if (queueName is null) throw new ArgumentNullException(nameof(queueName));
+            if (messageType is null) throw new ArgumentNullException(nameof(messageType));
+
             return _handlers.TryGetValue((queueName, messageType), out var handler) ? handler : null;
         }
     }

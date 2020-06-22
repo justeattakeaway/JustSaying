@@ -174,24 +174,26 @@ namespace JustSaying
         public void StartListening(CancellationToken cancellationToken = default)
         {
             Bus.MessageBackoffStrategy = _subscriptionConfig.MessageBackoffStrategy;
-            Bus.StartAsync(cancellationToken);
+            _ = Bus.StartAsync(cancellationToken);
             _log.LogInformation("Started listening for messages");
         }
 
         /// <summary>
         /// Publish a message to the stack, asynchronously.
         /// </summary>
-        /// <param name="message"></param>
-        /// <param name="cancellationToken"></param>
-        public Task PublishAsync(Message message, CancellationToken cancellationToken)
-            => PublishAsync(message, null, cancellationToken);
+        /// <param name="message">The message to publish.</param>
+        /// <param name="cancellationToken">A <see cref="CancellationToken" to cancel the operation./></param>
+        /// <returns>A <see cref="Task"/> that completes when the message has been published.</returns>
+        public async Task PublishAsync(Message message, CancellationToken cancellationToken)
+            => await PublishAsync(message, null, cancellationToken).ConfigureAwait(false);
 
         /// <summary>
         /// Publish a message to the stack, asynchronously.
         /// </summary>
-        /// <param name="message"></param>
-        /// <param name="metadata"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="message">The message to publish.</param>
+        /// <param name="metadata">The <see cref="PublishMetadata"/> for this operation.</param>
+        /// <param name="cancellationToken">A <see cref="CancellationToken" to cancel the operation./></param>
+        /// <returns>A <see cref="Task"/> that completes when the message has been published.</returns>
         public virtual async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
             if (Bus == null)

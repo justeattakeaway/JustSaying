@@ -1,16 +1,8 @@
-using System;
-using Amazon.SimpleNotificationService.Model;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageProcessingStrategies;
 
 namespace JustSaying.AwsTools.QueueCreation
 {
-    public enum SubscriptionType
-    {
-        ToTopic,
-        PointToPoint
-    };
-
     public class SqsReadConfiguration : SqsBasicConfiguration
     {
         public SqsReadConfiguration(SubscriptionType subscriptionType)

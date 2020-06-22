@@ -75,11 +75,8 @@ namespace JustSaying
 
         public void AddQueue(string region, string subscriptionGroup, ISqsQueue queue)
         {
-            if (string.IsNullOrWhiteSpace(region))
-                throw new ArgumentNullException(nameof(region));
-
-            if (string.IsNullOrWhiteSpace(subscriptionGroup))
-                throw new ArgumentNullException(nameof(subscriptionGroup));
+            if (string.IsNullOrWhiteSpace(region)) throw new ArgumentException("Cannot be null or empty.", nameof(region));
+            if (string.IsNullOrWhiteSpace(subscriptionGroup)) throw new ArgumentException("Cannot be null or empty.", nameof(subscriptionGroup));
 
             SubscriptionGroupConfigBuilder builder = _subscriptionGroupSettings.GetOrAdd(
                 subscriptionGroup,
@@ -159,8 +156,8 @@ namespace JustSaying
             return SubscriptionGroups.RunAsync(stoppingToken);
         }
 
-        public Task PublishAsync(Message message, CancellationToken cancellationToken)
-            => PublishAsync(message, null, cancellationToken);
+        public async Task PublishAsync(Message message, CancellationToken cancellationToken)
+            => await PublishAsync(message, null, cancellationToken).ConfigureAwait(false);
 
         public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {

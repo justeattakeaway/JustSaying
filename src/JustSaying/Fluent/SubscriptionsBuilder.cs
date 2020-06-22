@@ -26,7 +26,6 @@ namespace JustSaying.Fluent
 
         internal SubscriptionConfigBuilder Defaults = new SubscriptionConfigBuilder();
 
-
         /// <summary>
         /// Gets the configured subscription builders.
         /// </summary>
@@ -48,7 +47,7 @@ namespace JustSaying.Fluent
         public SubscriptionsBuilder WithDefaults(Action<SubscriptionConfigBuilder> configure)
         {
             if (configure == null) throw new ArgumentNullException(nameof(configure));
-            configure(default);
+            configure(Defaults);
             return this;
         }
 
@@ -99,10 +98,7 @@ namespace JustSaying.Fluent
         public SubscriptionsBuilder ForQueue<T>(Action<QueueSubscriptionBuilder<T>> configure)
             where T : Message
         {
-            if (configure == null)
-            {
-                throw new ArgumentNullException(nameof(configure));
-            }
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
 
             var builder = new QueueSubscriptionBuilder<T>();
 
@@ -157,10 +153,7 @@ namespace JustSaying.Fluent
         public SubscriptionsBuilder ForTopic<T>(Action<TopicSubscriptionBuilder<T>> configure)
             where T : Message
         {
-            if (configure == null)
-            {
-                throw new ArgumentNullException(nameof(configure));
-            }
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
 
             var builder = new TopicSubscriptionBuilder<T>();
 
@@ -194,11 +187,19 @@ namespace JustSaying.Fluent
             }
         }
 
+        /// <summary>
+        /// Adds or updates SubscriptionGroup configuration.
+        /// </summary>
+        /// <param name="groupName">The name of the group to update.</param>
+        /// <param name="action">The update action to apply to the configuration.</param>
+        /// <returns>
+        /// The current <see cref="SubscriptionsBuilder"/>.
+        /// </returns>
         public SubscriptionsBuilder WithSubscriptionGroup(
             string groupName,
             Action<SubscriptionGroupConfigBuilder> action)
         {
-            if (string.IsNullOrEmpty(groupName)) throw new ArgumentNullException(nameof(groupName));
+            if (string.IsNullOrEmpty(groupName)) throw new ArgumentException("Cannot be null or empty.", nameof(groupName));
             if (action == null) throw new ArgumentNullException(nameof(action));
 
             if (SubscriptionGroupSettings.TryGetValue(groupName, out var settings))
