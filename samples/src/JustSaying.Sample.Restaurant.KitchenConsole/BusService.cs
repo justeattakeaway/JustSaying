@@ -1,6 +1,5 @@
 using System.Threading;
 using System.Threading.Tasks;
-using JustSaying.Messaging;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -25,7 +24,7 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
         {
             _logger.LogInformation("Kitchen subscriber running");
 
-            _bus.StartAsync(stoppingToken);
+            _ = _bus.StartAsync(stoppingToken);
 
             return Task.CompletedTask;
         }

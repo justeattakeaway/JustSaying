@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.SQS;
+using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.AwsTools.MessageHandling;
@@ -21,23 +23,18 @@ namespace JustSaying.UnitTests.JustSayingBus
         protected override void Given()
         {
             base.Given();
+
+            var client1 = CreateSubstituteClient();
+            var client2 = CreateSubstituteClient();
+
             _queue1 = Substitute.For<ISqsQueue>();
             _queue1.QueueName.Returns("queue1");
-            _queue1
-                .GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
-                .Returns(new List<Message>
-                {
-                    new TestMessage(),
-                });
+
+            _queue1.Client.Returns(client1);
 
             _queue2 = Substitute.For<ISqsQueue>();
             _queue2.QueueName.Returns("queue2");
-            _queue2
-                .GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
-                .Returns(new List<Message>
-                {
-                    new TestMessage(),
-                });
+            _queue2.Client.Returns(client2);
         }
 
         protected override async Task WhenAsync()
@@ -56,10 +53,10 @@ namespace JustSaying.UnitTests.JustSayingBus
         }
 
         [Fact]
-        public void SubscribersStartedUp()
+        public async Task SubscribersStartedUp()
         {
-            _queue1.Received().GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
-            _queue2.Received().GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
+            await _queue1.Received().GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
+            await _queue2.Received().GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]
@@ -71,6 +68,22 @@ namespace JustSaying.UnitTests.JustSayingBus
             response.Subscribers.First(x => x.MessageType == typeof(OrderAccepted)).ShouldNotBe(null);
             response.Subscribers.First(x => x.MessageType == typeof(OrderRejected)).ShouldNotBe(null);
             response.Subscribers.First(x => x.MessageType == typeof(SimpleMessage)).ShouldNotBe(null);
+        }
+
+        private static IAmazonSQS CreateSubstituteClient()
+        {
+            var client = Substitute.For<IAmazonSQS>();
+            client
+                .ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
+                .Returns(new ReceiveMessageResponse
+                {
+                    Messages = new List<Message>
+                    {
+                        new TestMessage(),
+                    }
+                });
+
+            return client;
         }
 
         private class TestMessage : Message

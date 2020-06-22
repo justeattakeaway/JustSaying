@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
-using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
@@ -93,8 +92,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             map.Add("queue", typeof(SimpleMessage), fn1);
             map.Add("queue", typeof(SimpleMessage), fn2);
 
-            // First in wins
-            map.Get("queue", typeof(SimpleMessage)).ShouldBe(fn1);
+            // Last in wins
+            map.Get("queue", typeof(SimpleMessage)).ShouldBe(fn2);
         }
 
         [Fact]
@@ -109,8 +108,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             map.Add("queue", typeof(AnotherSimpleMessage), fn3);
             map.Add("queue", typeof(SimpleMessage), fn2);
 
-            // First in wins
-            map.Get("queue", typeof(SimpleMessage)).ShouldBe(fn1);
+            // Last in wins
+            map.Get("queue", typeof(SimpleMessage)).ShouldBe(fn2);
+            map.Get("queue", typeof(AnotherSimpleMessage)).ShouldBe(fn3);
         }
 
         [Fact]

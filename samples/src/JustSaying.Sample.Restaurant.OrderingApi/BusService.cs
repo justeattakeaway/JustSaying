@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -25,7 +24,7 @@ namespace JustSaying.Sample.Restaurant.OrderingApi
         {
             _logger.LogInformation("Ordering API subscriber running");
 
-            _bus.StartAsync(stoppingToken);
+            _ = _bus.StartAsync(stoppingToken);
 
             return Task.CompletedTask;
         }
