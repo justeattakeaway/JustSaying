@@ -12,7 +12,10 @@ namespace JustSaying.Messaging
 
         public PublishMetadata AddMessageAttribute(string key, IReadOnlyCollection<byte> data)
         {
-            if(data == null) throw new ArgumentNullException(nameof(data));
+            if (data == null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
 
             var mav = new MessageAttributeValue();
             mav.BinaryValue = data;

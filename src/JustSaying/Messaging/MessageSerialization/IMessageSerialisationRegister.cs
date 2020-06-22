@@ -9,7 +9,8 @@ namespace JustSaying.Messaging.MessageSerialization
         /// Deserializes a message.
         /// </summary>
         /// <param name="body">Message must always have Subject and Message properties</param>
-        /// <returns></returns>
+        /// <returns><see cref="JustSaying.Models.Message"/> and <see cref="MessageAttributes"/>
+        /// returned from the body of the SQS message.</returns>
         (Message, MessageAttributes) DeserializeMessage(string body);
 
         /// <summary>
@@ -21,9 +22,13 @@ namespace JustSaying.Messaging.MessageSerialization
         ///
         /// AWS SNS service adds these automatically, so for publishing to topics don't add these properties
         /// </param>
-        /// <returns></returns>
+        /// <returns>The serialized message for publishing.</returns>
         string Serialize(Message message, bool serializeForSnsPublishing);
 
+        /// <summary>
+        /// Register a serializer for the given type, if one does not already exist.
+        /// </summary>
+        /// <typeparam name="T">The type to register a serializer for.</typeparam>
         void AddSerializer<T>() where T : Message;
     }
 }

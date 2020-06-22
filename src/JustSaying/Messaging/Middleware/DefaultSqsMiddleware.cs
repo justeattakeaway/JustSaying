@@ -3,16 +3,22 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
-using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Channels.Context;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Middleware
 {
+    /// <summary>
+    /// The default middleware to use for the receive pipeline.
+    /// </summary>
     public class DefaultSqsMiddleware : MiddlewareBase<GetMessagesContext, IList<Message>>
     {
         private readonly ILogger<DefaultSqsMiddleware> _logger;
 
+        /// <summary>
+        /// Creates an instance of <see cref="DefaultSqsMiddleware"/>.
+        /// </summary>
+        /// <param name="logger">The <see cref="ILogger"/> to use.</param>
         public DefaultSqsMiddleware(ILogger<DefaultSqsMiddleware> logger)
         {
             _logger = logger;

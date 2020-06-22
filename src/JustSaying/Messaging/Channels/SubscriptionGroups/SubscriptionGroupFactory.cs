@@ -12,12 +12,21 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
+    /// <summary>
+    /// Handles creation of <see cref="ISubscriptionGroup"/>.
+    /// </summary>
     public class SubscriptionGroupFactory : ISubscriptionGroupFactory
     {
         private readonly IMessageDispatcher _messageDispatcher;
         private readonly IMessageMonitor _monitor;
         private readonly ILoggerFactory _loggerFactory;
 
+        /// <summary>
+        /// Creates an instance of <see cref="SubscriptionGroupFactory"/>.
+        /// </summary>
+        /// <param name="messageDispatcher">The <see cref="IMessageDispatcher"/> to use to dispatch messages.</param>
+        /// <param name="monitor">The <see cref="IMessageMonitor"/> used by the <see cref="IMessageReceiveBuffer"/>.</param>
+        /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to use.</param>
         public SubscriptionGroupFactory(
             IMessageDispatcher messageDispatcher,
             IMessageMonitor monitor,
@@ -28,6 +37,12 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
         }
 
+        /// <summary>
+        /// Creates a <see cref="ISubscriptionGroup"/> for the given configuration.
+        /// </summary>
+        /// <param name="defaults">The default values to use while building each <see cref="SubscriptionGroup"/>.</param>
+        /// <param name="subscriptionGroupSettings"></param>
+        /// <returns>An <see cref="ISubscriptionGroup"/> to run.</returns>
         public ISubscriptionGroup Create(
             SubscriptionConfigBuilder defaults,
             IDictionary<string, SubscriptionGroupConfigBuilder> consumerGroupSettings)

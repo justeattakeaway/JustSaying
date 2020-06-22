@@ -38,7 +38,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         /// </summary>
         /// <param name="queueName">The queue name to register the handler for.</param>
         /// <param name="messageType">The type of message to handle for this queue.</param>
-        /// <returns>Returns true if handler has been registered for the queue.</returns>
+        /// <returns>Returns true if the handler has been registered for the queue.</returns>
         public bool Contains(string queueName, Type messageType)
         {
             if (queueName is null) throw new ArgumentNullException(nameof(queueName));
@@ -48,7 +48,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         }
 
         /// <summary>
-        /// Types returns a unique list of types that are handled by all queues.
+        /// Gets a unique list of types that are handled by all queues.
         /// </summary>
         public IEnumerable<Type> Types
         {
@@ -65,7 +65,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         }
 
         /// <summary>
-        /// MessageLock assigns the <see cref="IMessageLockAsync"/> to be used by <see cref="MessageHandlerWrapper"/>.
+        /// Gets the <see cref="IMessageLockAsync"/> to be used by the <see cref="MessageHandlerWrapper"/>.
         /// </summary>
         public IMessageLockAsync MessageLock { get; set; }
 

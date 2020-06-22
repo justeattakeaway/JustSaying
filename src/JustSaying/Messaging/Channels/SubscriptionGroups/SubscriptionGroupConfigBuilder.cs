@@ -9,7 +9,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
     /// <summary>
     /// Configures overrides for a particular <see cref="ISubscriptionGroup"/>. At build time, defaults provided by
     /// <see cref="SubscriptionConfigBuilder"/> are combined with overrides set here to create a final configuration
-    /// that is inspectable via <see cref="IInterrogable"/>
+    /// that is inspectable via <see cref="IInterrogable"/>.
     /// </summary>
     public class SubscriptionGroupConfigBuilder
     {
@@ -23,9 +23,13 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
         private readonly string _groupName;
 
+        /// <summary>
+        /// Creates an instance of <see cref="SubscriptionGroupConfigBuilder"/>.
+        /// </summary>
+        /// <param name="groupName">The name of the SubscriptionGroup.</param>
         public SubscriptionGroupConfigBuilder(string groupName)
         {
-            _groupName = groupName;
+            _groupName = groupName ?? throw new ArgumentNullException(nameof(groupName));
             _sqsQueues = new List<ISqsQueue>();
         }
 
@@ -41,7 +45,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         }
 
         /// <summary>
-        /// Adds a collection of <see cref="ISqsQueue"/> to be consumed by this <see cref="ISubscriptionGroup"/>/
+        /// Adds a collection of <see cref="ISqsQueue"/> to be consumed by this <see cref="ISubscriptionGroup"/>.
         /// </summary>
         /// <param name="sqsQueues">The queues to be consumed, assumed to already be created and ready.</param>
         /// <returns>This builder object.</returns>
@@ -54,7 +58,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// <summary>
         /// Specifies the maximum number of messages that may be processed at once by this <see cref="ISubscriptionGroup"/>.
         /// </summary>
-        /// <param name="concurrencyLimit">The maximum number of messages to process at the same time</param>
+        /// <param name="concurrencyLimit">The maximum number of messages to process at the same time.</param>
         /// <returns>This builder object.</returns>
         public SubscriptionGroupConfigBuilder WithConcurrencyLimit(int concurrencyLimit)
         {
@@ -65,9 +69,9 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// <summary>
         /// Specifies the number of messages that will be buffered from SQS for each of the queues in this <see cref="ISubscriptionGroup"/>
         /// before waiting for them to drain into the <see cref="IMultiplexer"/>.
-        /// Note: This setting is per-queue. To set the shared buffer size for all queues, see <see cref="WithMultiplexerCapacity"/>
+        /// Note: This setting is per-queue. To set the shared buffer size for all queues, see <see cref="WithMultiplexerCapacity"/>.
         /// </summary>
-        /// <param name="bufferSize">The maximum number of messages for each queue to buffer</param>
+        /// <param name="bufferSize">The maximum number of messages for each queue to buffer.</param>
         /// <returns>This builder object.</returns>
         public SubscriptionGroupConfigBuilder WithBufferSize(int bufferSize)
         {
@@ -79,7 +83,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// Specifies the maximum amount of time to wait for messages to be available on each SQS queue in this
         /// <see cref="ISubscriptionGroup"/> before resetting the connection.
         /// </summary>
-        /// <param name="receiveBufferReadTimeout">The maximum amount of time to wait to read from each SQS queue</param>
+        /// <param name="receiveBufferReadTimeout">The maximum amount of time to wait to read from each SQS queue.</param>
         /// <returns>This builder object.</returns>
         public SubscriptionGroupConfigBuilder WithReceiveBufferReadTimeout(TimeSpan receiveBufferReadTimeout)
         {
@@ -89,9 +93,9 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
         /// <summary>
         /// Specifies the number of messages that may be buffered across all of the queues in this <see cref="ISubscriptionGroup"/>.
-        /// Note: This setting is shared across all queues in this group. For per-queue settings, see <see cref="WithBufferSize"/>
+        /// Note: This setting is shared across all queues in this group. For per-queue settings, see <see cref="WithBufferSize"/>.
         /// </summary>
-        /// <param name="multiplexerCapacity">The maximum multiplexer capacity</param>
+        /// <param name="multiplexerCapacity">The maximum multiplexer capacity.</param>
         /// <returns>This builder object.</returns>
         public SubscriptionGroupConfigBuilder WithMultiplexerCapacity(int multiplexerCapacity)
         {
@@ -100,9 +104,9 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         }
 
         /// <summary>
-        /// Specifies the number of messages to try and fetch from the SQS per attempt for each queue in this <see cref="ISubscriptionGroup"/>
+        /// Specifies the number of messages to try and fetch from the SQS per attempt for each queue in this <see cref="ISubscriptionGroup"/>.
         /// </summary>
-        /// <param name="prefetch">the number of messages to load per request</param>
+        /// <param name="prefetch">the number of messages to load per request.</param>
         /// <returns>This builder object.</returns>
         public SubscriptionGroupConfigBuilder WithPrefetch(int prefetch)
         {
@@ -114,12 +118,11 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// Given a set of defaults and overrides from this builder, builds a concrete <see cref="SubscriptionGroupSettings"/>
         /// that can be passed to an <see cref="ISubscriptionGroupFactory"/> to build an <see cref="ISubscriptionGroup"/>.
         /// </summary>
-        /// <param name="defaults"></param>
-        /// <returns></returns>
-        /// <exception cref="InvalidOperationException"></exception>
+        /// <param name="defaults">The default values to use if no override given.</param>
+        /// <returns>A <see cref="SubscriptionGroupSettings"/>.</returns>
         public SubscriptionGroupSettings Build(SubscriptionConfigBuilder defaults)
         {
-            if (defaults == null) throw new InvalidOperationException("Defaults must be set before building settings");
+            if (defaults == null) throw new InvalidOperationException("Defaults must be set before building settings.");
 
             return new SubscriptionGroupSettings(
                 _groupName,

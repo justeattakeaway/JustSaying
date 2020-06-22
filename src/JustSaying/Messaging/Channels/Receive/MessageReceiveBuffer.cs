@@ -85,7 +85,7 @@ namespace JustSaying.Messaging.Channels.Receive
                     IList<Message> messages;
                     using (_monitor.MeasureReceive(_sqsQueue.QueueName, _sqsQueue.RegionSystemName))
                     {
-                        messages = await GetMessagesAsync(_bufferSize, stoppingToken).ConfigureAwait(false);
+                        messages = await GetMessagesAsync(_prefetch, stoppingToken).ConfigureAwait(false);
 
                         if (messages == null)
                         {

@@ -14,12 +14,12 @@ namespace JustSaying.Messaging.Monitoring
             _messageMonitor = messageMonitor ?? throw new ArgumentNullException(nameof(messageMonitor));
             _onComplete = onComplete ?? throw new ArgumentNullException(nameof(onComplete));
 
-            _stopWatch = new Stopwatch();
-            _stopWatch.Start();
+            _stopWatch = Stopwatch.StartNew();
         }
 
         public void Dispose()
         {
+            _stopWatch.Stop();
             _onComplete(_stopWatch.Elapsed, _messageMonitor);
         }
     }

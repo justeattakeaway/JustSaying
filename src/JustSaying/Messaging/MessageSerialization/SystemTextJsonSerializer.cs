@@ -57,7 +57,9 @@ namespace JustSaying.Messaging.MessageSerialization
 
         public MessageAttributes GetMessageAttributes(string message)
         {
-            return null;
+            // todo: Implement in a future PR
+
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc />

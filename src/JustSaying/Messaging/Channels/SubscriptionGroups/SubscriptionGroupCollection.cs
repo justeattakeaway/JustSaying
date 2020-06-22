@@ -21,8 +21,8 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             IList<ISubscriptionGroup> subscriptionGroups,
             ILogger<SubscriptionGroupCollection> logger)
         {
-            _subscriptionGroups = subscriptionGroups;
-            _logger = logger;
+            _subscriptionGroups = subscriptionGroups ?? throw new System.ArgumentNullException(nameof(subscriptionGroups));
+            _logger = logger ?? throw new System.ArgumentNullException(nameof(logger));
         }
 
         private Task _completion;
@@ -32,7 +32,10 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// <inheritdoc />
         public Task RunAsync(CancellationToken stoppingToken)
         {
-            if (stoppingToken.IsCancellationRequested) return Task.CompletedTask;
+            if (stoppingToken.IsCancellationRequested)
+            {
+                return Task.CompletedTask;
+            }
 
             if (!_started)
             {

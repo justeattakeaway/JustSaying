@@ -20,8 +20,8 @@ namespace JustSaying.Messaging.MessageSerialization
 
         public void AddSerializer<T>() where T : Message
         {
-            var key = typeof(T);
-            if (!_map.TryGetValue(key, out TypeSerializer typeSerializer))
+            Type key = typeof(T);
+            if (!_map.ContainsKey(key))
             {
                 _map[key] = new TypeSerializer(typeof(T), _serializationFactory.GetSerializer<T>());
             }
