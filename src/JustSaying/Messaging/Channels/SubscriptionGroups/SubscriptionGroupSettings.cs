@@ -15,6 +15,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             int concurrencyLimit,
             int bufferSize,
             TimeSpan receiveBufferReadTimeout,
+            TimeSpan receiveMessagesWaitTime,
             int multiplexerCapacity,
             int prefetch,
             IReadOnlyCollection<ISqsQueue> queues)
@@ -22,6 +23,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             ConcurrencyLimit = concurrencyLimit;
             BufferSize = bufferSize;
             ReceiveBufferReadTimeout = receiveBufferReadTimeout;
+            ReceiveMessagesWaitTime = receiveMessagesWaitTime;
             MultiplexerCapacity = multiplexerCapacity;
             Prefetch = prefetch;
             Queues = queues;
@@ -43,6 +45,11 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// created <see cref="ISubscriptionGroup"/> before resetting the connection.
         /// </summary>
         public TimeSpan ReceiveBufferReadTimeout { get; }
+
+        /// <summary>
+        /// Gets the duration SQS will wait for a message before returning if there are no messages.
+        /// </summary>
+        public TimeSpan ReceiveMessagesWaitTime { get; }
 
         /// <summary>
         /// Gets the size of the shared buffer for all queues in the created <see cref="ISubscriptionGroup"/>.

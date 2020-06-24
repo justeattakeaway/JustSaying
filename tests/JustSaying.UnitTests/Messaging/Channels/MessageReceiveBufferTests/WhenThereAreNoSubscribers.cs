@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,7 +21,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
 
         protected override void Given()
         {
-            Queue.GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
+            Queue.GetMessagesAsync(Arg.Any<int>(), Arg.Any<TimeSpan>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
                 .Returns(_ =>
                 {
                     Interlocked.Increment(ref _callCount);

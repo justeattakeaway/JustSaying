@@ -17,6 +17,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         {
             DefaultBufferSize = MessageConstants.MaxAmazonMessageCap;
             DefaultReceiveBufferReadTimeout = TimeSpan.FromMinutes(5);
+            DefaultReceiveMessagesWaitTime = TimeSpan.FromSeconds(20);
             DefaultMultiplexerCapacity = 100;
             DefaultPrefetch = 10;
             DefaultConcurrencyLimit = Environment.ProcessorCount * MessageConstants.ParallelHandlerExecutionPerCore;
@@ -37,6 +38,11 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// <see cref="ISubscriptionGroup"/> before resetting the connection.
         /// </summary>
         public TimeSpan DefaultReceiveBufferReadTimeout { get; private set; }
+
+        /// <summary>
+        /// Gets the default duration SQS will wait for a message before returning if there are no messages.
+        /// </summary>
+        public TimeSpan DefaultReceiveMessagesWaitTime { get; private set; }
 
         /// <summary>
         /// Gets the default maximum number of messages that may be processed at once by a <see cref="ISubscriptionGroup"/>.
@@ -63,6 +69,18 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         public SubscriptionConfigBuilder WithDefaultReceiveBufferReadTimeout(TimeSpan receiveBufferReadTimeout)
         {
             DefaultReceiveBufferReadTimeout = receiveBufferReadTimeout;
+            return this;
+        }
+
+        /// <summary>
+        /// Specifies the default duration SQS will wait for a message before returning if there are no messages.
+        /// Defaults to 20 seconds, which is the maximum.
+        /// </summary>
+        /// <param name="waitTime">The maximum amount of time SQS should wait before returning.</param>
+        /// <returns>This builder object.</returns>
+        public SubscriptionConfigBuilder WithDefaultReceiveMessagesWaitTime(TimeSpan waitTime)
+        {
+            DefaultReceiveMessagesWaitTime = waitTime;
             return this;
         }
 
@@ -148,6 +166,16 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             if (DefaultReceiveBufferReadTimeout < TimeSpan.Zero)
             {
                 throw new InvalidOperationException($"{nameof(DefaultReceiveBufferReadTimeout)} cannot be negative.");
+            }
+
+            if (DefaultReceiveMessagesWaitTime < TimeSpan.Zero)
+            {
+                throw new InvalidOperationException($"{nameof(DefaultReceiveMessagesWaitTime)} cannot be negative.");
+            }
+
+            if (DefaultReceiveMessagesWaitTime > TimeSpan.FromSeconds(20))
+            {
+                throw new InvalidOperationException($"{nameof(DefaultReceiveMessagesWaitTime)} cannot be longer than 20 seconds.");
             }
 
             if (DefaultConcurrencyLimit < 0)

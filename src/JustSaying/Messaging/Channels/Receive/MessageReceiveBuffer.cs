@@ -20,6 +20,7 @@ namespace JustSaying.Messaging.Channels.Receive
         private readonly int _prefetch;
         private readonly int _bufferSize;
         private readonly TimeSpan _readTimeout;
+        private readonly TimeSpan _sqsWaitTime;
         private readonly ISqsQueue _sqsQueue;
         private readonly MiddlewareBase<GetMessagesContext, IList<Message>> _sqsMiddleware;
         private readonly IMessageMonitor _monitor;
@@ -34,6 +35,7 @@ namespace JustSaying.Messaging.Channels.Receive
             int prefetch,
             int bufferSize,
             TimeSpan readTimeout,
+            TimeSpan sqsWaitTime,
             ISqsQueue sqsQueue,
             MiddlewareBase<GetMessagesContext, IList<Message>> sqsMiddleware,
             IMessageMonitor monitor,
@@ -43,6 +45,7 @@ namespace JustSaying.Messaging.Channels.Receive
             _prefetch = prefetch;
             _bufferSize = bufferSize;
             _readTimeout = readTimeout;
+            _sqsWaitTime = sqsWaitTime;
             _sqsQueue = sqsQueue ?? throw new ArgumentNullException(nameof(sqsQueue));
             _sqsMiddleware = sqsMiddleware ?? throw new ArgumentNullException(nameof(sqsMiddleware));
             _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
@@ -133,7 +136,7 @@ namespace JustSaying.Messaging.Channels.Receive
                 messages = await _sqsMiddleware.RunAsync(context,
                         async ct =>
                             await _sqsQueue
-                                .GetMessagesAsync(count, _requestMessageAttributeNames, ct)
+                                .GetMessagesAsync(count, _sqsWaitTime, _requestMessageAttributeNames, ct)
                                 .ConfigureAwait(false),
                         linkedCts.Token)
                     .ConfigureAwait(false);

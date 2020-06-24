@@ -55,17 +55,17 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         }
 
         [Fact]
-        public void MessagesAreReceived()
+        public async Task MessagesAreReceived()
         {
-            _queue.Received()
-                .GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
+            await _queue.Received()
+                .GetMessagesAsync(Arg.Any<int>(), Arg.Any<TimeSpan>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]
-        public void TheMaxMessageAllowanceIsGrabbed()
+        public async Task TheMaxMessageAllowanceIsGrabbed()
         {
-            _queue.Received()
-                .GetMessagesAsync(Arg.Is<int>(count => count == _expectedMaxMessageCount), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
+            await _queue.Received()
+                .GetMessagesAsync(Arg.Is<int>(count => count == _expectedMaxMessageCount), Arg.Any<TimeSpan>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]

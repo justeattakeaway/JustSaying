@@ -325,7 +325,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             ISqsQueue sqsQueueMock = Substitute.For<ISqsQueue>();
             sqsQueueMock
-                .GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
+                .GetMessagesAsync(Arg.Any<int>(), Arg.Any<TimeSpan>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
                 .Returns(_ => GetMessages());
 
             return sqsQueueMock;
@@ -338,6 +338,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             return new MessageReceiveBuffer(
                 10,
                 bufferSize,
+                TimeSpan.FromSeconds(1),
                 TimeSpan.FromSeconds(1),
                 sqsQueue,
                 new DelegateMiddleware<GetMessagesContext, IList<Message>>(),

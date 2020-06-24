@@ -18,6 +18,7 @@ namespace JustSaying.AwsTools.MessageHandling
         internal static async Task<IList<Message>> GetMessagesAsync(
             this ISqsQueue sqsQueue,
             int maximumCount,
+            TimeSpan waitTime,
             IEnumerable<string> requestMessageAttributeNames,
             CancellationToken cancellationToken)
         {
@@ -25,7 +26,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 QueueUrl = sqsQueue.Uri.AbsoluteUri,
                 MaxNumberOfMessages = maximumCount,
-                WaitTimeSeconds = 20,
+                WaitTimeSeconds = (int)waitTime.TotalSeconds,
                 AttributeNames = requestMessageAttributeNames.ToList()
             };
 

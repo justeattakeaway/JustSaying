@@ -55,8 +55,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public async Task SubscribersStartedUp()
         {
-            await _queue1.Received().GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
-            await _queue2.Received().GetMessagesAsync(Arg.Any<int>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
+            await _queue1.Received().GetMessagesAsync(Arg.Any<int>(), Arg.Any<TimeSpan>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
+            await _queue2.Received().GetMessagesAsync(Arg.Any<int>(), Arg.Any<TimeSpan>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]

@@ -17,6 +17,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
         private int? _bufferSize;
         private TimeSpan? _receiveBufferReadTimeout;
+        private TimeSpan? _recieveMessagesWaitTime;
         private int? _concurrencyLimit;
         private int? _multiplexerCapacity;
         private int? _prefetch;
@@ -92,6 +93,17 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         }
 
         /// <summary>
+        /// Specifies the default duration SQS will wait for a message before returning if there are no messages.
+        /// </summary>
+        /// <param name="waitTime">The maximum amount of time SQS should wait before returning.</param>
+        /// <returns>This builder object.</returns>
+        public SubscriptionGroupConfigBuilder WithReceiveMessagesWaitTime(TimeSpan waitTime)
+        {
+            _recieveMessagesWaitTime = waitTime;
+            return this;
+        }
+
+        /// <summary>
         /// Specifies the number of messages that may be buffered across all of the queues in this <see cref="ISubscriptionGroup"/>.
         /// Note: This setting is shared across all queues in this group. For per-queue settings, see <see cref="WithBufferSize"/>.
         /// </summary>
@@ -129,6 +141,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
                 _concurrencyLimit ?? defaults.DefaultConcurrencyLimit,
                 _bufferSize ?? defaults.DefaultBufferSize,
                 _receiveBufferReadTimeout ?? defaults.DefaultReceiveBufferReadTimeout,
+                _recieveMessagesWaitTime ?? defaults.DefaultReceiveMessagesWaitTime,
                 _multiplexerCapacity ?? defaults.DefaultMultiplexerCapacity,
                 _prefetch ?? defaults.DefaultPrefetch,
                 _sqsQueues);
