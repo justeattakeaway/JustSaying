@@ -24,7 +24,7 @@ namespace JustSaying.Fluent
         /// </summary>
         internal MessagingBusBuilder Parent { get; }
 
-        internal SubscriptionConfigBuilder Defaults = new SubscriptionConfigBuilder();
+        internal SubscriptionGroupSettingsBuilder Defaults = new SubscriptionGroupSettingsBuilder();
 
         /// <summary>
         /// Gets the configured subscription builders.
@@ -44,7 +44,7 @@ namespace JustSaying.Fluent
         /// <exception cref="ArgumentNullException">
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
-        public SubscriptionsBuilder WithDefaults(Action<SubscriptionConfigBuilder> configure)
+        public SubscriptionsBuilder WithDefaults(Action<SubscriptionGroupSettingsBuilder> configure)
         {
             if (configure == null) throw new ArgumentNullException(nameof(configure));
             configure(Defaults);

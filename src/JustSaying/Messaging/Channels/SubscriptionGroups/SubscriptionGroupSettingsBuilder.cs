@@ -11,48 +11,48 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
     /// <summary>
     /// Configures the default settings for all subscription groups.
     /// </summary>
-    public class SubscriptionConfigBuilder
+    public class SubscriptionGroupSettingsBuilder : ISubscriptionGroupSettings
     {
-        public SubscriptionConfigBuilder()
+        public SubscriptionGroupSettingsBuilder()
         {
-            DefaultBufferSize = MessageConstants.MaxAmazonMessageCap;
-            DefaultReceiveBufferReadTimeout = TimeSpan.FromMinutes(5);
-            DefaultReceiveMessagesWaitTime = TimeSpan.FromSeconds(20);
-            DefaultMultiplexerCapacity = 100;
-            DefaultPrefetch = 10;
-            DefaultConcurrencyLimit = Environment.ProcessorCount * MessageConstants.ParallelHandlerExecutionPerCore;
+            BufferSize = MessageConstants.MaxAmazonMessageCap;
+            ReceiveBufferReadTimeout = TimeSpan.FromMinutes(5);
+            ReceiveMessagesWaitTime = TimeSpan.FromSeconds(20);
+            MultiplexerCapacity = 100;
+            Prefetch = 10;
+            ConcurrencyLimit = Environment.ProcessorCount * MessageConstants.ParallelHandlerExecutionPerCore;
         }
 
         /// <summary>
         /// Gets the default number of messages to try and fetch from SQS per attempt for each queue.
         /// </summary>
-        public int DefaultPrefetch { get; private set; }
+        public int Prefetch { get; private set; }
 
         /// <summary>
         /// Gets the default number of messages that will be buffered from SQS for each of the queues.
         /// </summary>
-        public int DefaultBufferSize { get; private set; }
+        public int BufferSize { get; private set; }
 
         /// <summary>
         /// Gets the default maximum amount of time to wait for messages to be available on each SQS queue in a
         /// <see cref="ISubscriptionGroup"/> before resetting the connection.
         /// </summary>
-        public TimeSpan DefaultReceiveBufferReadTimeout { get; private set; }
+        public TimeSpan ReceiveBufferReadTimeout { get; private set; }
 
         /// <summary>
         /// Gets the default duration SQS will wait for a message before returning if there are no messages.
         /// </summary>
-        public TimeSpan DefaultReceiveMessagesWaitTime { get; private set; }
+        public TimeSpan ReceiveMessagesWaitTime { get; private set; }
 
         /// <summary>
         /// Gets the default maximum number of messages that may be processed at once by a <see cref="ISubscriptionGroup"/>.
         /// </summary>
-        public int DefaultConcurrencyLimit { get; private set; }
+        public int ConcurrencyLimit { get; private set; }
 
         /// <summary>
         /// Gets the default number of messages that may be buffered across all of the queues in this <see cref="ISubscriptionGroup"/>.
         /// </summary>
-        public int DefaultMultiplexerCapacity { get; private set; }
+        public int MultiplexerCapacity { get; private set; }
 
         /// <summary>
         /// Gets the default <see cref="ReceiveMiddleware"/> to be used by the receive pipeline.
@@ -66,9 +66,9 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// </summary>
         /// <param name="receiveBufferReadTimeout">The maximum amount of time to wait to read from each SQS queue.</param>
         /// <returns>This builder object.</returns>
-        public SubscriptionConfigBuilder WithDefaultReceiveBufferReadTimeout(TimeSpan receiveBufferReadTimeout)
+        public SubscriptionGroupSettingsBuilder WithDefaultReceiveBufferReadTimeout(TimeSpan receiveBufferReadTimeout)
         {
-            DefaultReceiveBufferReadTimeout = receiveBufferReadTimeout;
+            ReceiveBufferReadTimeout = receiveBufferReadTimeout;
             return this;
         }
 
@@ -78,9 +78,9 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// </summary>
         /// <param name="waitTime">The maximum amount of time SQS should wait before returning.</param>
         /// <returns>This builder object.</returns>
-        public SubscriptionConfigBuilder WithDefaultReceiveMessagesWaitTime(TimeSpan waitTime)
+        public SubscriptionGroupSettingsBuilder WithDefaultReceiveMessagesWaitTime(TimeSpan waitTime)
         {
-            DefaultReceiveMessagesWaitTime = waitTime;
+            ReceiveMessagesWaitTime = waitTime;
             return this;
         }
 
@@ -91,9 +91,9 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// </summary>
         /// <param name="multiplexerCapacity">The maximum multiplexer capacity.</param>
         /// <returns>This builder object.</returns>
-        public SubscriptionConfigBuilder WithDefaultMultiplexerCapacity(int multiplexerCapacity)
+        public SubscriptionGroupSettingsBuilder WithDefaultMultiplexerCapacity(int multiplexerCapacity)
         {
-            DefaultMultiplexerCapacity = multiplexerCapacity;
+            MultiplexerCapacity = multiplexerCapacity;
             return this;
         }
 
@@ -103,9 +103,9 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// </summary>
         /// <param name="prefetch">the number of messages to load per request.</param>
         /// <returns>This builder object.</returns>
-        public SubscriptionConfigBuilder WithDefaultPrefetch(int prefetch)
+        public SubscriptionGroupSettingsBuilder WithDefaultPrefetch(int prefetch)
         {
-            DefaultPrefetch = prefetch;
+            Prefetch = prefetch;
             return this;
         }
 
@@ -115,9 +115,9 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// </summary>
         /// <param name="concurrencyLimit">The maximum number of messages to process at the same time.</param>
         /// <returns>This builder object.</returns>
-        public SubscriptionConfigBuilder WithDefaultConcurrencyLimit(int concurrencyLimit)
+        public SubscriptionGroupSettingsBuilder WithDefaultConcurrencyLimit(int concurrencyLimit)
         {
-            DefaultConcurrencyLimit = concurrencyLimit;
+            ConcurrencyLimit = concurrencyLimit;
             return this;
         }
 
@@ -128,9 +128,9 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// </summary>
         /// <param name="bufferSize">The maximum number of messages for each queue to buffer.</param>
         /// <returns>This builder object.</returns>
-        public SubscriptionConfigBuilder WithDefaultBufferSize(int bufferSize)
+        public SubscriptionGroupSettingsBuilder WithDefaultBufferSize(int bufferSize)
         {
-            DefaultBufferSize = bufferSize;
+            BufferSize = bufferSize;
             return this;
         }
 
@@ -141,57 +141,10 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// <param name="middleware">A <see cref="ReceiveMiddleware"/> that replaces the default middleware
         /// (see <see cref="DefaultSqsMiddleware"/>).</param>
         /// <returns>The builder object.</returns>
-        public SubscriptionConfigBuilder WithCustomMiddleware(ReceiveMiddleware middleware)
+        public SubscriptionGroupSettingsBuilder WithCustomMiddleware(ReceiveMiddleware middleware)
         {
             SqsMiddleware = middleware;
             return this;
-        }
-
-        /// <summary>
-        /// Perform validation for this <see cref="SubscriptionConfigBuilder"/>.
-        /// </summary>
-        public void Validate()
-        {
-            if (DefaultPrefetch < 0)
-            {
-                throw new InvalidOperationException($"{nameof(DefaultPrefetch)} cannot be negative.");
-            }
-            
-            if (DefaultPrefetch > MessageConstants.MaxAmazonMessageCap)
-            {
-                throw new InvalidOperationException(
-                    $"{nameof(DefaultPrefetch)} cannot be greater than {nameof(MessageConstants.MaxAmazonMessageCap)}.");
-            }
-
-            if (DefaultReceiveBufferReadTimeout < TimeSpan.Zero)
-            {
-                throw new InvalidOperationException($"{nameof(DefaultReceiveBufferReadTimeout)} cannot be negative.");
-            }
-
-            if (DefaultReceiveMessagesWaitTime < TimeSpan.Zero)
-            {
-                throw new InvalidOperationException($"{nameof(DefaultReceiveMessagesWaitTime)} cannot be negative.");
-            }
-
-            if (DefaultReceiveMessagesWaitTime > TimeSpan.FromSeconds(20))
-            {
-                throw new InvalidOperationException($"{nameof(DefaultReceiveMessagesWaitTime)} cannot be longer than 20 seconds.");
-            }
-
-            if (DefaultConcurrencyLimit < 0)
-            {
-                throw new InvalidOperationException($"{nameof(DefaultConcurrencyLimit)} cannot be negative.");
-            }
-
-            if (DefaultMultiplexerCapacity < 0)
-            {
-                throw new InvalidOperationException($"{nameof(DefaultMultiplexerCapacity)} cannot be negative.");
-            }
-
-            if (DefaultBufferSize < 0)
-            {
-                throw new InvalidOperationException($"{nameof(DefaultBufferSize)} cannot be negative.");
-            }
         }
     }
 }

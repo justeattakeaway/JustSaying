@@ -48,7 +48,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             Config = Substitute.For<IMessagingConfig>();
             Monitor = Substitute.For<IMessageMonitor>();
             LoggerFactory = Substitute.For<ILoggerFactory>();
-            Config.SubscriptionConfigDefaults = new SubscriptionConfigBuilder()
+            Config.SubscriptionGroupDefaultSettings = new SubscriptionGroupSettingsBuilder()
                 .WithDefaultConcurrencyLimit(8);
         }
 

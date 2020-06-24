@@ -149,7 +149,7 @@ namespace JustSaying
                 Monitor,
                 _loggerFactory);
 
-            SubscriptionGroups = subscriptionGroupFactory.Create(Config.SubscriptionConfigDefaults, _subscriptionGroupSettings);
+            SubscriptionGroups = subscriptionGroupFactory.Create(Config.SubscriptionGroupDefaultSettings, _subscriptionGroupSettings);
 
             _log.LogInformation("Starting bus with settings: {@Response}", SubscriptionGroups.Interrogate());
 

@@ -355,7 +355,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             IList<ISqsQueue> queues,
             IMessageDispatcher dispatcher)
         {
-            var defaults = new SubscriptionConfigBuilder();
+            var defaults = new SubscriptionGroupSettingsBuilder();
 
             var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
             {

@@ -9,6 +9,9 @@ using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
+using ReceiveMiddleware =
+    JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Channels.Context.GetMessagesContext,
+        System.Collections.Generic.IList<Amazon.SQS.Model.Message>>;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
@@ -44,12 +47,14 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// <param name="subscriptionGroupSettings"></param>
         /// <returns>An <see cref="ISubscriptionGroup"/> to run.</returns>
         public ISubscriptionGroup Create(
-            SubscriptionConfigBuilder defaults,
+            SubscriptionGroupSettingsBuilder defaults,
             IDictionary<string, SubscriptionGroupConfigBuilder> consumerGroupSettings)
         {
+            ReceiveMiddleware receiveMiddleware = defaults.SqsMiddleware ?? new DefaultSqsMiddleware(_loggerFactory.CreateLogger<DefaultSqsMiddleware>());
+
             List<ISubscriptionGroup> groups = consumerGroupSettings
                 .Values
-                .Select(builder => Create(defaults, builder.Build(defaults)))
+                .Select(builder => Create(receiveMiddleware, builder.Build(defaults)))
                 .ToList();
 
             return new SubscriptionGroupCollection(
@@ -57,10 +62,10 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
                 _loggerFactory.CreateLogger<SubscriptionGroupCollection>());
         }
 
-        private ISubscriptionGroup Create(SubscriptionConfigBuilder defaults, SubscriptionGroupSettings settings)
+        private ISubscriptionGroup Create(ReceiveMiddleware receiveMiddleware, SubscriptionGroupSettings settings)
         {
             IMultiplexer multiplexer = CreateMultiplexer(settings.MultiplexerCapacity);
-            ICollection<IMessageReceiveBuffer> receiveBuffers = CreateBuffers(defaults, settings);
+            ICollection<IMessageReceiveBuffer> receiveBuffers = CreateBuffers(receiveMiddleware, settings);
             ICollection<IMultiplexerSubscriber> subscribers = CreateSubscribers(settings.ConcurrencyLimit);
 
             foreach (IMessageReceiveBuffer receiveBuffer in receiveBuffers)
@@ -82,7 +87,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         }
 
         private ICollection<IMessageReceiveBuffer> CreateBuffers(
-            SubscriptionConfigBuilder defaults,
+            ReceiveMiddleware receiveMiddleware,
             SubscriptionGroupSettings subscriptionGroupSettings)
         {
             var buffers = new List<IMessageReceiveBuffer>();
@@ -95,7 +100,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
                     subscriptionGroupSettings.ReceiveBufferReadTimeout,
                     subscriptionGroupSettings.ReceiveMessagesWaitTime,
                     queue,
-                    defaults.SqsMiddleware ?? new DefaultSqsMiddleware(_loggerFactory.CreateLogger<DefaultSqsMiddleware>()),
+                    receiveMiddleware,
                     _monitor,
                     _loggerFactory.CreateLogger<MessageReceiveBuffer>());
 

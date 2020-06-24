@@ -22,7 +22,7 @@ namespace JustSaying
             MessageSubjectProvider = new NonGenericMessageSubjectProvider();
             TopicNamingConvention = new DefaultNamingConventions();
             QueueNamingConvention = new DefaultNamingConventions();
-            SubscriptionConfigDefaults = new SubscriptionConfigBuilder();
+            SubscriptionGroupDefaultSettings = new SubscriptionGroupSettingsBuilder();
         }
 
         public int PublishFailureReAttempts { get; set; }
@@ -34,7 +34,7 @@ namespace JustSaying
         public IMessageSubjectProvider MessageSubjectProvider { get; set; }
         public ITopicNamingConvention TopicNamingConvention { get; set; }
         public IQueueNamingConvention QueueNamingConvention { get; set; }
-        public SubscriptionConfigBuilder SubscriptionConfigDefaults { get; set; }
+        public SubscriptionGroupSettingsBuilder SubscriptionGroupDefaultSettings { get; set; }
 
         public virtual void Validate()
         {
@@ -65,7 +65,7 @@ namespace JustSaying
                 throw new InvalidOperationException($"Config cannot have a null for the {nameof(MessageSubjectProvider)} property.");
             }
 
-            SubscriptionConfigDefaults.Validate();
+            SubscriptionGroupDefaultSettings.Validate();
         }
     }
 }

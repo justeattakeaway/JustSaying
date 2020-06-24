@@ -42,7 +42,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var queues = new List<ISqsQueue> { sqsQueue1 };
             IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
 
-            var defaults = new SubscriptionConfigBuilder()
+            var defaults = new SubscriptionGroupSettingsBuilder()
                 .WithDefaultConcurrencyLimit(8);
             var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
             {
@@ -82,7 +82,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var queues = new List<ISqsQueue> { sqsQueue1 };
             IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
 
-            var defaults = new SubscriptionConfigBuilder()
+            var defaults = new SubscriptionGroupSettingsBuilder()
                 .WithDefaultConcurrencyLimit(1);
             var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
             {

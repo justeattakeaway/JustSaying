@@ -8,7 +8,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
     /// <summary>
     /// Configures overrides for a particular <see cref="ISubscriptionGroup"/>. At build time, defaults provided by
-    /// <see cref="SubscriptionConfigBuilder"/> are combined with overrides set here to create a final configuration
+    /// <see cref="SubscriptionGroupSettingsBuilder"/> are combined with overrides set here to create a final configuration
     /// that is inspectable via <see cref="IInterrogable"/>.
     /// </summary>
     public class SubscriptionGroupConfigBuilder
@@ -132,19 +132,23 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// </summary>
         /// <param name="defaults">The default values to use if no override given.</param>
         /// <returns>A <see cref="SubscriptionGroupSettings"/>.</returns>
-        public SubscriptionGroupSettings Build(SubscriptionConfigBuilder defaults)
+        public SubscriptionGroupSettings Build(SubscriptionGroupSettingsBuilder defaults)
         {
             if (defaults == null) throw new InvalidOperationException("Defaults must be set before building settings.");
 
-            return new SubscriptionGroupSettings(
+            var settings = new SubscriptionGroupSettings(
                 _groupName,
-                _concurrencyLimit ?? defaults.DefaultConcurrencyLimit,
-                _bufferSize ?? defaults.DefaultBufferSize,
-                _receiveBufferReadTimeout ?? defaults.DefaultReceiveBufferReadTimeout,
-                _recieveMessagesWaitTime ?? defaults.DefaultReceiveMessagesWaitTime,
-                _multiplexerCapacity ?? defaults.DefaultMultiplexerCapacity,
-                _prefetch ?? defaults.DefaultPrefetch,
+                _concurrencyLimit ?? defaults.ConcurrencyLimit,
+                _bufferSize ?? defaults.BufferSize,
+                _receiveBufferReadTimeout ?? defaults.ReceiveBufferReadTimeout,
+                _recieveMessagesWaitTime ?? defaults.ReceiveMessagesWaitTime,
+                _multiplexerCapacity ?? defaults.MultiplexerCapacity,
+                _prefetch ?? defaults.Prefetch,
                 _sqsQueues);
+
+            settings.Validate();
+
+            return settings;
         }
     }
 }

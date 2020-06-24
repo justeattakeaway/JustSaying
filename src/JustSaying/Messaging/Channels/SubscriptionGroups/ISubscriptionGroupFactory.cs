@@ -14,7 +14,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// <param name="subscriptionGroupSettings"></param>
         /// <returns>An <see cref="ISubscriptionGroup"/> to run.</returns>
         ISubscriptionGroup Create(
-            SubscriptionConfigBuilder defaults,
+            SubscriptionGroupSettingsBuilder defaults,
             IDictionary<string, SubscriptionGroupConfigBuilder> subscriptionGroupSettings);
     }
 }
