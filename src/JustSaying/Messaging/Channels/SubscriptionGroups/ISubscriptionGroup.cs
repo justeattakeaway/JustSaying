@@ -11,7 +11,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
     public interface ISubscriptionGroup : IInterrogable
     {
         /// <summary>
-        /// RunAsync
+        /// Runs the buffer, multiplexer and subscriber and will complete once all the tasks have completed.
         /// </summary>
         /// <param name="stoppingToken">A <see cref="CancellationToken"/> that will stop all running tasks.</param>
         /// <returns>A <see cref="Task"/> that will complete once all the running tasks have completed.</returns>

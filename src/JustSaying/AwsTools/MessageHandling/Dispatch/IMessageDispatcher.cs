@@ -14,7 +14,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         /// </summary>
         /// <param name="messageContext">A handle to the queue and message to dispatch.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> to stop processing the message dispatch.</param>
-        /// <returns></returns>
+        /// <returns>A <see cref="Task"/> that completes once the message has been dispatched.</returns>
         Task DispatchMessageAsync(IQueueMessageContext messageContext, CancellationToken cancellationToken);
     }
 }

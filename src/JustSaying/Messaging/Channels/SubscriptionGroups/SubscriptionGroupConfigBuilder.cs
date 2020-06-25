@@ -27,7 +27,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// <summary>
         /// Creates an instance of <see cref="SubscriptionGroupConfigBuilder"/>.
         /// </summary>
-        /// <param name="groupName">The name of the SubscriptionGroup.</param>
+        /// <param name="groupName">The name of the subscription group.</param>
         public SubscriptionGroupConfigBuilder(string groupName)
         {
             _groupName = groupName ?? throw new ArgumentNullException(nameof(groupName));

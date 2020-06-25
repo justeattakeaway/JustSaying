@@ -9,7 +9,7 @@ namespace JustSaying.Messaging.MessageSerialization
         /// Deserializes a message.
         /// </summary>
         /// <param name="body">Message must always have Subject and Message properties</param>
-        /// <returns><see cref="JustSaying.Models.Message"/> and <see cref="MessageAttributes"/>
+        /// <returns>The <see cref="JustSaying.Models.Message"/> and <see cref="MessageAttributes"/>
         /// returned from the body of the SQS message.</returns>
         (Message, MessageAttributes) DeserializeMessage(string body);
 

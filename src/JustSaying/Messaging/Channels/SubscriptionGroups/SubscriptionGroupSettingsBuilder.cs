@@ -111,7 +111,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
         /// <summary>
         /// Specifies the default maximum number of messages that may be processed at once by a <see cref="ISubscriptionGroup"/>.
-        /// Defaults to Environment.ProcessorCount * 4.
+        /// Defaults to <see cref="Environment.ProcessorCount"/> * 4.
         /// </summary>
         /// <param name="concurrencyLimit">The maximum number of messages to process at the same time.</param>
         /// <returns>This builder object.</returns>

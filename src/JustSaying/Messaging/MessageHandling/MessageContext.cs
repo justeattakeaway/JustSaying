@@ -13,7 +13,7 @@ namespace JustSaying.Messaging.MessageHandling
         /// Creates an instance of <see cref="MessageContext"/>.
         /// </summary>
         /// <param name="message">The <see cref="Amazon.SQS.Model.Message"/> currently being processed.</param>
-        /// <param name="queueUri">The Uri of the SQS queue the message is from.</param>
+        /// <param name="queueUri">The URI of the SQS queue the message is from.</param>
         /// <param name="messageAttributes">The <see cref="MessageAttributes"/> from the message.</param>
         public MessageContext(SQSMessage message, Uri queueUri, MessageAttributes messageAttributes)
         {

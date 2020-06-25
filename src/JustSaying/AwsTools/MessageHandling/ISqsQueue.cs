@@ -5,7 +5,7 @@ using JustSaying.Messaging.Interrogation;
 namespace JustSaying.AwsTools.MessageHandling
 {
     /// <summary>
-    /// Represents an Amazon SQS Queue
+    /// Represents an Amazon SQS Queue.
     /// </summary>
     public interface ISqsQueue : IInterrogable
     {

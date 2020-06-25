@@ -182,7 +182,7 @@ namespace JustSaying
         /// Publish a message to the stack, asynchronously.
         /// </summary>
         /// <param name="message">The message to publish.</param>
-        /// <param name="cancellationToken">A <see cref="CancellationToken" to cancel the operation./></param>
+        /// <param name="cancellationToken">A <see cref="CancellationToken"/> to cancel the operation.</param>
         /// <returns>A <see cref="Task"/> that completes when the message has been published.</returns>
         public async Task PublishAsync(Message message, CancellationToken cancellationToken)
             => await PublishAsync(message, null, cancellationToken).ConfigureAwait(false);
@@ -192,7 +192,7 @@ namespace JustSaying
         /// </summary>
         /// <param name="message">The message to publish.</param>
         /// <param name="metadata">The <see cref="PublishMetadata"/> for this operation.</param>
-        /// <param name="cancellationToken">A <see cref="CancellationToken" to cancel the operation./></param>
+        /// <param name="cancellationToken">A <see cref="CancellationToken"/> to cancel the operation.</param>
         /// <returns>A <see cref="Task"/> that completes when the message has been published.</returns>
         public virtual async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {

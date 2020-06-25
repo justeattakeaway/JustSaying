@@ -6,17 +6,17 @@ namespace JustSaying.Messaging.Channels.Context
     public sealed class GetMessagesContext
     {
         /// <summary>
-        /// The number of messages to get.
+        /// Gets the maximum number of messages to return from the queue.
         /// </summary>
         public int Count { get; set; }
 
         /// <summary>
-        /// The name of the SQS queue to get messages from.
+        /// Gets the name of the SQS queue to get messages from.
         /// </summary>
         public string QueueName { get; set; }
 
         /// <summary>
-        /// The region of the SQS queue.
+        /// Gets the region of the SQS queue.
         /// </summary>
         public string RegionName { get; set; }
     }

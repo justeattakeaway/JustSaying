@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace JustSaying.Messaging.Channels.Context
 {
     /// <summary>
-    /// A collection of <see cref="MessageAttributeValue"/> returned by <see cref="IMessageSerializationRegister"/>.
+    /// A collection of <see cref="MessageAttributeValue"/> values returned by <see cref="IMessageSerializationRegister"/>.
     /// </summary>
     public class MessageAttributes
     {

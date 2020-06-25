@@ -15,9 +15,9 @@ namespace JustSaying.Messaging.Channels.Receive
         /// Starts listening for messages and exposes them via the <see cref="Reader"/>.
         /// </summary>
         /// <param name="stoppingToken">A <see cref="CancellationToken"/> that will cancel the buffer and close the
-        /// <see cref="ChannelReader{IQueueMessageContext}}"/>.</param>
+        /// <see cref="ChannelReader{IQueueMessageContext}"/>.</param>
         /// <returns>A <see cref="Task"/> that either completes or throws an
-        /// <exception cref="System.OperationCanceledException"></exception> when the buffer is cancelled.</returns>
+        /// <see cref="System.OperationCanceledException"/> when the buffer is cancelled.</returns>
         Task RunAsync(CancellationToken stoppingToken);
 
         /// <summary>

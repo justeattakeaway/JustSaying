@@ -13,9 +13,9 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         private readonly IList<ISubscriptionGroup> _subscriptionGroups;
 
         /// <summary>
-        /// Runs multiple <see cref="SubscriptionGroups"/>.
+        /// Runs multiple instance of <see cref="SubscriptionGroup"/>.
         /// </summary>
-        /// <param name="subscriptionGroups">The collection of <see cref="SubscriptionGroups"/> to run.</param>
+        /// <param name="subscriptionGroups">The collection of <see cref="SubscriptionGroup"/> instances to run.</param>
         /// <param name="logger">The <see cref="ILogger"/> to use.</param>
         public SubscriptionGroupCollection(
             IList<ISubscriptionGroup> subscriptionGroups,
