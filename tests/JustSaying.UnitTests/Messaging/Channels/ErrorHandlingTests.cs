@@ -110,18 +110,28 @@ namespace JustSaying.UnitTests.Messaging.Channels
             messagesDispatched.ShouldBe(0);
         }
 
-        private static Task<IList<Message>> GetErrorMessages(Action onMessageRequested)
+        private static Task<List<Message>> GetErrorMessages(Action onMessageRequested)
         {
             onMessageRequested();
             throw new OperationCanceledException();
         }
 
-        private static ISqsQueue TestQueue(Func<Task<IList<Message>>> getMessages)
+        private static ISqsQueue TestQueue(Func<Task<List<Message>>> getMessages)
         {
             ISqsQueue sqsQueueMock = Substitute.For<ISqsQueue>();
+            sqsQueueMock.Uri.Returns(new Uri("http://test.com"));
             sqsQueueMock
-                .GetMessagesAsync(Arg.Any<int>(), Arg.Any<TimeSpan>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
-                .Returns(async _ => await getMessages());
+                .Client
+                .ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
+                .Returns(async _ =>
+                {
+                    List<Message> messages = await getMessages();
+
+                    return new ReceiveMessageResponse
+                    {
+                        Messages = messages,
+                    };
+                });
 
             return sqsQueueMock;
         }

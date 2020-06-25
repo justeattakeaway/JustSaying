@@ -74,7 +74,7 @@ namespace JustSaying.UnitTests.Messaging.Policies
 
         private static ISqsQueue TestQueue(Action spy = null)
         {
-            async Task<IList<Message>> GetMessages()
+            async Task<ReceiveMessageResponse> GetMessages()
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(5)).ConfigureAwait(false);
                 spy?.Invoke();
@@ -82,8 +82,10 @@ namespace JustSaying.UnitTests.Messaging.Policies
             }
 
             ISqsQueue sqsQueueMock = Substitute.For<ISqsQueue>();
+            sqsQueueMock.Uri.Returns(new Uri("http://test.com"));
             sqsQueueMock
-                .GetMessagesAsync(Arg.Any<int>(), Arg.Any<TimeSpan>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
+                .Client
+                .ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
                 .Returns(async _ => await GetMessages());
 
             return sqsQueueMock;

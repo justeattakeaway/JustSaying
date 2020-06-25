@@ -8,15 +8,27 @@ using JustSaying.Messaging.Channels.Context;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    internal static class SqsQueueBaseExtensions
+    internal class SqsQueueReader
     {
-        internal static IQueueMessageContext ToMessageContext(this ISqsQueue sqsQueue, Message message)
+        private readonly ISqsQueue _sqsQueue;
+
+        internal SqsQueueReader(ISqsQueue sqsQueue)
         {
-            return new QueueMessageContext(message, sqsQueue);
+            _sqsQueue = sqsQueue;
         }
 
-        internal static async Task<IList<Message>> GetMessagesAsync(
-            this ISqsQueue sqsQueue,
+        internal string QueueName => _sqsQueue.QueueName;
+
+        internal string RegionSystemName => _sqsQueue.RegionSystemName;
+
+        internal Uri Uri => _sqsQueue.Uri;
+
+        internal IQueueMessageContext ToMessageContext(Message message)
+        {
+            return new QueueMessageContext(message, this);
+        }
+
+        internal async Task<IList<Message>> GetMessagesAsync(
             int maximumCount,
             TimeSpan waitTime,
             IEnumerable<string> requestMessageAttributeNames,
@@ -24,46 +36,44 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             var request = new ReceiveMessageRequest
             {
-                QueueUrl = sqsQueue.Uri.AbsoluteUri,
+                QueueUrl = _sqsQueue.Uri.AbsoluteUri,
                 MaxNumberOfMessages = maximumCount,
                 WaitTimeSeconds = (int)waitTime.TotalSeconds,
                 AttributeNames = requestMessageAttributeNames.ToList()
             };
 
             ReceiveMessageResponse sqsMessageResponse =
-                await sqsQueue.Client.ReceiveMessageAsync(request, cancellationToken).ConfigureAwait(false);
+                await _sqsQueue.Client.ReceiveMessageAsync(request, cancellationToken).ConfigureAwait(false);
 
             return sqsMessageResponse?.Messages;
         }
 
-        internal static async Task DeleteMessageAsync(
-            this ISqsQueue sqsQueue,
+        internal async Task DeleteMessageAsync(
             string receiptHandle,
             CancellationToken cancellationToken)
         {
             var deleteRequest = new DeleteMessageRequest
             {
-                QueueUrl = sqsQueue.Uri.AbsoluteUri,
+                QueueUrl = _sqsQueue.Uri.AbsoluteUri,
                 ReceiptHandle = receiptHandle,
             };
 
-            await sqsQueue.Client.DeleteMessageAsync(deleteRequest, cancellationToken).ConfigureAwait(false);
+            await _sqsQueue.Client.DeleteMessageAsync(deleteRequest, cancellationToken).ConfigureAwait(false);
         }
 
-        internal static async Task ChangeMessageVisibilityAsync(
-            this ISqsQueue sqsQueue,
+        internal async Task ChangeMessageVisibilityAsync(
             string receiptHandle,
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
             var visibilityRequest = new ChangeMessageVisibilityRequest
             {
-                QueueUrl = sqsQueue.Uri.ToString(),
+                QueueUrl = _sqsQueue.Uri.ToString(),
                 ReceiptHandle = receiptHandle,
                 VisibilityTimeout = (int)timeout.TotalSeconds,
             };
 
-            await sqsQueue.Client.ChangeMessageVisibilityAsync(visibilityRequest, cancellationToken).ConfigureAwait(false);
+            await _sqsQueue.Client.ChangeMessageVisibilityAsync(visibilityRequest, cancellationToken).ConfigureAwait(false);
         }
     }
 }

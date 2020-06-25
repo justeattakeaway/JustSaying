@@ -21,7 +21,7 @@ namespace JustSaying.Messaging.Channels.Receive
         private readonly int _bufferSize;
         private readonly TimeSpan _readTimeout;
         private readonly TimeSpan _sqsWaitTime;
-        private readonly ISqsQueue _sqsQueue;
+        private readonly SqsQueueReader _sqsQueueReader;
         private readonly MiddlewareBase<GetMessagesContext, IList<Message>> _sqsMiddleware;
         private readonly IMessageMonitor _monitor;
         private readonly ILogger _logger;
@@ -46,7 +46,8 @@ namespace JustSaying.Messaging.Channels.Receive
             _bufferSize = bufferSize;
             _readTimeout = readTimeout;
             _sqsWaitTime = sqsWaitTime;
-            _sqsQueue = sqsQueue ?? throw new ArgumentNullException(nameof(sqsQueue));
+            if (sqsQueue == null) throw new ArgumentNullException(nameof(sqsQueue));
+            _sqsQueueReader = new SqsQueueReader(sqsQueue);
             _sqsMiddleware = sqsMiddleware ?? throw new ArgumentNullException(nameof(sqsMiddleware));
             _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -86,7 +87,7 @@ namespace JustSaying.Messaging.Channels.Receive
                     }
 
                     IList<Message> messages;
-                    using (_monitor.MeasureReceive(_sqsQueue.QueueName, _sqsQueue.RegionSystemName))
+                    using (_monitor.MeasureReceive(_sqsQueueReader.QueueName, _sqsQueueReader.RegionSystemName))
                     {
                         messages = await GetMessagesAsync(_prefetch, stoppingToken).ConfigureAwait(false);
 
@@ -98,7 +99,7 @@ namespace JustSaying.Messaging.Channels.Receive
 
                     foreach (Message message in messages)
                     {
-                        IQueueMessageContext messageContext = _sqsQueue.ToMessageContext(message);
+                        IQueueMessageContext messageContext = _sqsQueueReader.ToMessageContext(message);
                         await writer.WriteAsync(messageContext).ConfigureAwait(false);
                     }
                 }
@@ -106,7 +107,7 @@ namespace JustSaying.Messaging.Channels.Receive
             finally
             {
                 _logger.LogInformation("Receive buffer for queue {QueueName} has completed, shutting down channel",
-                    _sqsQueue.Uri);
+                    _sqsQueueReader.Uri);
                 writer.Complete();
             }
         }
@@ -127,15 +128,15 @@ namespace JustSaying.Messaging.Channels.Receive
                 var context = new GetMessagesContext
                 {
                     Count = count,
-                    QueueName = _sqsQueue.QueueName,
-                    RegionName = _sqsQueue.RegionSystemName,
+                    QueueName = _sqsQueueReader.QueueName,
+                    RegionName = _sqsQueueReader.RegionSystemName,
                 };
 
                 _requestMessageAttributeNames.Add("content");
 
                 messages = await _sqsMiddleware.RunAsync(context,
                         async ct =>
-                            await _sqsQueue
+                            await _sqsQueueReader
                                 .GetMessagesAsync(count, _sqsWaitTime, _requestMessageAttributeNames, ct)
                                 .ConfigureAwait(false),
                         linkedCts.Token)
@@ -147,14 +148,14 @@ namespace JustSaying.Messaging.Channels.Receive
                 {
                     _logger.LogInformation(
                         "Timed out while receiving messages from queue '{QueueName}' in region '{Region}'.",
-                        _sqsQueue.QueueName,
-                        _sqsQueue.RegionSystemName);
+                        _sqsQueueReader.QueueName,
+                        _sqsQueueReader.RegionSystemName);
                 }
             }
 
             stopwatch.Stop();
 
-            _monitor.ReceiveMessageTime(stopwatch.Elapsed, _sqsQueue.QueueName, _sqsQueue.RegionSystemName);
+            _monitor.ReceiveMessageTime(stopwatch.Elapsed, _sqsQueueReader.QueueName, _sqsQueueReader.RegionSystemName);
 
             return messages;
         }
@@ -164,8 +165,8 @@ namespace JustSaying.Messaging.Channels.Receive
             return new
             {
                 BufferSize = _bufferSize,
-                _sqsQueue.QueueName,
-                Region = _sqsQueue.RegionSystemName,
+                _sqsQueueReader.QueueName,
+                Region = _sqsQueueReader.RegionSystemName,
                 Prefetch = _prefetch,
                 BackoffStrategyName = _backoffStrategyName,
             };

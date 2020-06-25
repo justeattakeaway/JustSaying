@@ -32,6 +32,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             : base(RegionEndpoint.EUWest1, client, loggerFactory)
         {
             Uri = uri;
+            QueueName = "DummySqsQueue";
         }
 
         public override Task<bool> ExistsAsync() => Task.FromResult(true);
@@ -51,7 +52,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
         private DummySqsQueue _queue;
         private SQSMessage _sqsMessage;
-        private Message _typedMessage;
+        private Message _typedMessage = new SimpleMessage();
 
         internal MessageDispatcher SystemUnderTest { get; private set; }
 
@@ -90,8 +91,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             _serializationRegister.DeserializeMessage(Arg.Any<string>()).Returns((_typedMessage, new MessageAttributes()));
         }
 
-        private async Task When() => await SystemUnderTest
-            .DispatchMessageAsync(_queue.ToMessageContext(_sqsMessage), CancellationToken.None);
+        private async Task When()
+        {
+            var queueReader = new SqsQueueReader(_queue);
+            await SystemUnderTest.DispatchMessageAsync(queueReader.ToMessageContext(_sqsMessage), CancellationToken.None);
+        }
 
         private MessageDispatcher CreateSystemUnderTestAsync()
         {

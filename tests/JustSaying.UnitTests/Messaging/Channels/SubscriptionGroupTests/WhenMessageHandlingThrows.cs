@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
-using JustSaying.AwsTools.MessageHandling;
+using Amazon.SQS;
+using Amazon.SQS.Model;
 using JustSaying.TestingFramework;
 using NSubstitute;
 using Xunit;
@@ -11,7 +12,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
     public class WhenMessageHandlingThrows : BaseSubscriptionGroupTests
     {
         private bool _firstTime = true;
-        private ISqsQueue _queue;
+        private IAmazonSQS _sqsClient;
 
         public WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper)
             : base (testOutputHelper)
@@ -20,9 +21,10 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected override void Given()
         {
-            _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
+            var queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
+            _sqsClient = queue.Client;
 
-            Queues.Add(_queue);
+            Queues.Add(queue);
             Handler.Handle(Arg.Any<SimpleMessage>())
                 .Returns(_ => ExceptionOnFirstCall());
         }
@@ -47,7 +49,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         [Fact]
         public void FailedMessageIsNotRemovedFromQueue()
         {
-            _queue.DidNotReceiveWithAnyArgs().DeleteMessageAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+            _sqsClient.DidNotReceiveWithAnyArgs().DeleteMessageAsync(Arg.Any<DeleteMessageRequest>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]

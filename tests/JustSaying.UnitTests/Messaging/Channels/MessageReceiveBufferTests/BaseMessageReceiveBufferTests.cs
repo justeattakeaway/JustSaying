@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Channels.Context;
@@ -19,6 +20,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
 {
     public abstract class BaseMessageReceiveBufferTests : IAsyncLifetime
     {
+        protected IAmazonSQS SqsClient;
         protected ISqsQueue Queue;
         protected IMessageMonitor Monitor;
         protected readonly ILoggerFactory LoggerFactory;
@@ -42,7 +44,10 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
 
         private void GivenInternal()
         {
+            SqsClient = Substitute.For<IAmazonSQS>();
             Queue = Substitute.For<ISqsQueue>();
+            Queue.Uri.Returns(new Uri("http://test.com"));
+            Queue.Client.Returns(SqsClient);
             Monitor = Substitute.For<IMessageMonitor>();
             SqsMiddleware = new DelegateMiddleware<GetMessagesContext, IList<Amazon.SQS.Model.Message>>();
 

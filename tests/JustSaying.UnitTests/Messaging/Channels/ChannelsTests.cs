@@ -314,18 +314,24 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
         private static ISqsQueue TestQueue(Action spy = null)
         {
-            IList<Message> GetMessages()
+            ReceiveMessageResponse GetMessages()
             {
                 spy?.Invoke();
-                return new List<Message>
+                var messages = new List<Message>
                 {
                     new TestMessage(),
+                };
+
+                return new ReceiveMessageResponse
+                {
+                    Messages = messages,
                 };
             }
 
             ISqsQueue sqsQueueMock = Substitute.For<ISqsQueue>();
+            sqsQueueMock.Uri.Returns(new Uri("http://test.com"));
             sqsQueueMock
-                .GetMessagesAsync(Arg.Any<int>(), Arg.Any<TimeSpan>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
+                .Client.ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
                 .Returns(_ => GetMessages());
 
             return sqsQueueMock;

@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Amazon.SQS;
 using Amazon.SQS.Model;
-using JustSaying.AwsTools.MessageHandling;
 using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
@@ -11,7 +11,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
     public class WhenMessageHandlingSucceeds : BaseSubscriptionGroupTests
     {
-        private ISqsQueue _queue;
+        private IAmazonSQS _sqsClient;
         private string _messageBody = "Expected Message Body";
         private int _callCount = 0;
 
@@ -22,12 +22,13 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected override void Given()
         {
-            _queue = CreateSuccessfulTestQueue("TestQueue", () =>
+            var queue = CreateSuccessfulTestQueue("TestQueue", () =>
             {
                 return new List<Message> { new TestMessage { Body = _messageBody } };
             });
+            _sqsClient = queue.Client;
 
-            Queues.Add(_queue);
+            Queues.Add(queue);
             Handler.Handle(null)
                 .ReturnsForAnyArgs(true).AndDoes(ci => Interlocked.Increment(ref _callCount));
         }
@@ -47,7 +48,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         [Fact]
         public void AllMessagesAreClearedFromQueue()
         {
-            _queue.Received(_callCount).DeleteMessageAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+            _sqsClient.Received(_callCount).DeleteMessageAsync(Arg.Any<DeleteMessageRequest>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]

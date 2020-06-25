@@ -19,22 +19,26 @@ namespace JustSaying.UnitTests.JustSayingBus
     {
         private ISqsQueue _queue1;
         private ISqsQueue _queue2;
+        private IAmazonSQS _client1;
+        private IAmazonSQS _client2;
 
         protected override void Given()
         {
             base.Given();
 
-            var client1 = CreateSubstituteClient();
-            var client2 = CreateSubstituteClient();
+            _client1 = CreateSubstituteClient();
+            _client2 = CreateSubstituteClient();
 
             _queue1 = Substitute.For<ISqsQueue>();
             _queue1.QueueName.Returns("queue1");
+            _queue1.Uri.Returns(new Uri("http://test.com"));
 
-            _queue1.Client.Returns(client1);
+            _queue1.Client.Returns(_client1);
 
             _queue2 = Substitute.For<ISqsQueue>();
             _queue2.QueueName.Returns("queue2");
-            _queue2.Client.Returns(client2);
+            _queue2.Uri.Returns(new Uri("http://test.com"));
+            _queue2.Client.Returns(_client2);
         }
 
         protected override async Task WhenAsync()
@@ -55,8 +59,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public async Task SubscribersStartedUp()
         {
-            await _queue1.Received().GetMessagesAsync(Arg.Any<int>(), Arg.Any<TimeSpan>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
-            await _queue2.Received().GetMessagesAsync(Arg.Any<int>(), Arg.Any<TimeSpan>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
+            await _client1.Received().ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>());
+            await _client2.Received().ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]

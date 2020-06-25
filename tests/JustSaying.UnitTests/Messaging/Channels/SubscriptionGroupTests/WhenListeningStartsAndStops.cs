@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
@@ -20,6 +21,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         private int _expectedMaxMessageCount;
         private bool _running = false;
+        private IAmazonSQS _client;
 
         public WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
@@ -37,6 +39,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             var response2 = new List<Message> { new Message { Body = _messageContentsAfterStop } };
 
             _queue = CreateSuccessfulTestQueue("TestQueue", () => _running ? response1 : response2);
+            _client = _queue.Client;
 
             Queues.Add(_queue);
         }
@@ -57,15 +60,15 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         [Fact]
         public async Task MessagesAreReceived()
         {
-            await _queue.Received()
-                .GetMessagesAsync(Arg.Any<int>(), Arg.Any<TimeSpan>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
+            await _client.Received()
+                .ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]
         public async Task TheMaxMessageAllowanceIsGrabbed()
         {
-            await _queue.Received()
-                .GetMessagesAsync(Arg.Is<int>(count => count == _expectedMaxMessageCount), Arg.Any<TimeSpan>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>());
+            await _client.Received()
+                .ReceiveMessageAsync(Arg.Is<ReceiveMessageRequest>(request => request.MaxNumberOfMessages == _expectedMaxMessageCount), Arg.Any<CancellationToken>());
         }
 
         [Fact]

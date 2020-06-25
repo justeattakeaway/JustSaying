@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.SQS;
+using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels.Context;
@@ -135,19 +138,32 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected static ISqsQueue CreateSuccessfulTestQueue(string queueName, params Amazon.SQS.Model.Message[] messages)
         {
-            return CreateSuccessfulTestQueue(queueName, () => messages);
+            return CreateSuccessfulTestQueue(queueName, () => messages.ToList());
         }
 
-        protected static ISqsQueue CreateSuccessfulTestQueue(string queueName, Func<IList<Amazon.SQS.Model.Message>> getMessages)
+        protected static ISqsQueue CreateSuccessfulTestQueue(string queueName, Func<List<Amazon.SQS.Model.Message>> getMessages)
         {
             return CreateSuccessfulTestQueue(queueName, () => Task.FromResult(getMessages()));
         }
 
-        protected static ISqsQueue CreateSuccessfulTestQueue(string queueName, Func<Task<IList<Amazon.SQS.Model.Message>>> getMessages)
+        protected static ISqsQueue CreateSuccessfulTestQueue(string queueName, Func<Task<List<Amazon.SQS.Model.Message>>> getMessages)
         {
+            var client = Substitute.For<IAmazonSQS>();
+            client
+                .ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
+                .Returns(async _ =>
+                {
+                    var messages = await getMessages();
+
+                    return new ReceiveMessageResponse
+                    {
+                        Messages = messages,
+                    };
+                });
+
             var queue = Substitute.For<ISqsQueue>();
-            queue.GetMessagesAsync(Arg.Any<int>(), Arg.Any<TimeSpan>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
-                .Returns(_ => getMessages());
+
+            queue.Client.Returns(client);
             queue.Uri.Returns(new Uri("http://foo.com"));
             queue.QueueName.Returns(queueName);
 

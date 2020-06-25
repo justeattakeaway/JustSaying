@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using JustSaying.AwsTools.MessageHandling;
+using Amazon.SQS.Model;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -22,11 +22,12 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
 
         protected override void Given()
         {
-            Queue.GetMessagesAsync(Arg.Any<int>(), Arg.Any<TimeSpan>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
+            SqsClient.ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
                 .Returns(_ =>
                 {
                     Interlocked.Increment(ref _callCount);
-                    return new[] { new TestMessage() };
+                    var messages = new List<Message> { new TestMessage() };
+                    return new ReceiveMessageResponse { Messages = messages };
                 });
         }
 

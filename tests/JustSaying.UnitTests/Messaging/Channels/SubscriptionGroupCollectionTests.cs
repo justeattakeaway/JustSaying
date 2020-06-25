@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.SQS;
+using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
@@ -98,7 +98,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             string queueName,
             Action spy = null)
         {
-            IList<Amazon.SQS.Model.Message> GetMessages()
+            ReceiveMessageResponse GetMessages()
             {
                 spy?.Invoke();
                 var message = new TestJustSayingMessage
@@ -106,22 +106,24 @@ namespace JustSaying.UnitTests.Messaging.Channels
                     QueueName = queueName,
                 };
 
-                return new List<Amazon.SQS.Model.Message>
+                var messages = new List<Amazon.SQS.Model.Message>
                 {
                     new TestMessage { Body = messageSerializationRegister.Serialize(message, false) },
                 };
+
+                return new ReceiveMessageResponse { Messages = messages };
             }
 
-            ISqsQueue sqsQueueMock = Substitute.For<ISqsQueue>();
-            sqsQueueMock
-                .GetMessagesAsync(Arg.Any<int>(), Arg.Any<TimeSpan>(), Arg.Any<List<string>>(), Arg.Any<CancellationToken>())
+            IAmazonSQS sqsClientMock = Substitute.For<IAmazonSQS>();
+            sqsClientMock
+                .ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
                 .Returns(_ => GetMessages());
-            sqsQueueMock
-                .QueueName
-                .Returns(queueName);
-            sqsQueueMock
-                .Uri
-                .Returns(new Uri("http://foo.com"));
+
+            ISqsQueue sqsQueueMock = Substitute.For<ISqsQueue>();
+            sqsQueueMock.Uri.Returns(new Uri("http://test.com"));
+            sqsQueueMock.Client.Returns(sqsClientMock);
+            sqsQueueMock.QueueName.Returns(queueName);
+            sqsQueueMock.Uri.Returns(new Uri("http://foo.com"));
 
             return sqsQueueMock;
         }
