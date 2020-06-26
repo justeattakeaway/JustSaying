@@ -1,12 +1,24 @@
-﻿using System;
+using System;
 using JustSaying.Messaging.MessageProcessingStrategies;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
+    /// <summary>
+    /// Contains validation for <see cref="ISubscriptionGroupSettings"/>.
+    /// </summary>
     public static class SubscriptionGroupSettingsValidation
     {
+        /// <summary>
+        /// Runs validation on the given instance of <see cref="ISubscriptionGroupSettings"/>.
+        /// </summary>
+        /// <param name="settings"></param>
         public static void Validate(this ISubscriptionGroupSettings settings)
         {
+            if (settings is null)
+            {
+                throw new ArgumentNullException(nameof(settings));
+            }
+
             if (settings.Prefetch < 0)
             {
                 throw new InvalidOperationException($"{nameof(settings.Prefetch)} cannot be negative.");

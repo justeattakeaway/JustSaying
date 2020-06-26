@@ -1,7 +1,10 @@
-﻿using System;
+using System;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
+    /// <summary>
+    /// A common interface for default and override subscription group settings.
+    /// </summary>
     public interface ISubscriptionGroupSettings
     {
         /// <summary>
