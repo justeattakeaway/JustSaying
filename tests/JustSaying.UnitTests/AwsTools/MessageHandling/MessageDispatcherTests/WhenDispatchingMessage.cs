@@ -100,6 +100,37 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             return dispatcher;
         }
 
+        public class AndHandlerMapDoesNotHaveMatchingHandler : WhenDispatchingMessage
+        {
+            private const int ExpectedReceiveCount = 1;
+            private readonly TimeSpan _expectedBackoffTimeSpan = TimeSpan.FromMinutes(4);
+
+            protected override void Given()
+            {
+                base.Given();
+                _messageBackoffStrategy.GetBackoffDuration(_typedMessage, 1, null).Returns(_expectedBackoffTimeSpan);
+                _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString(CultureInfo.InvariantCulture));
+            }
+
+            [Fact]
+            public void ShouldDeserializeMessage()
+            {
+                _serializationRegister.Received(1).DeserializeMessage(Arg.Is<string>(x => x == _sqsMessage.Body));
+            }
+
+            [Fact]
+            public void ShouldLogError()
+            {
+                _logger.ReceivedWithAnyArgs().LogError(0, null, "msg");
+            }
+
+            [Fact]
+            public void ShouldUpdateMessageVisibility()
+            {
+                _amazonSqsClient.Received(1).ChangeMessageVisibilityAsync(Arg.Is<ChangeMessageVisibilityRequest>(x => x.QueueUrl == ExpectedQueueUrl && x.ReceiptHandle == _sqsMessage.ReceiptHandle && x.VisibilityTimeout == (int)_expectedBackoffTimeSpan.TotalSeconds));
+            }
+        }
+
         public class AndMessageProcessingSucceeds : WhenDispatchingMessage
         {
             protected override void Given()
