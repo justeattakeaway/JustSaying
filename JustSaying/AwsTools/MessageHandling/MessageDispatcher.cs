@@ -108,7 +108,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             if (handler == null)
             {
-                _log.LogError($"Handler for message of type '{message.GetType().FullName}' not found in handler map. Returning message to queue.");
+                _log.LogError("Handler for message of type '{MessageTypeName}' not found in handler map. Returning message to queue.", message.GetType().FullName);
                 // Return false so that we give other queue subscribers a chance to handle the message
                 return false;
             }
