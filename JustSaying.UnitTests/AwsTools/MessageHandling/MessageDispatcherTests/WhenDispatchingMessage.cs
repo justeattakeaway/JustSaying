@@ -10,6 +10,7 @@ using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Internal;
 using Newtonsoft.Json;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -66,6 +67,42 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
         protected override MessageDispatcher CreateSystemUnderTest()
         {
             return new MessageDispatcher(_queue, _serialisationRegister, _messageMonitor, _onError, _handlerMap, _loggerFactory, _messageBackoffStrategy);
+        }
+
+        public class AndHandlerMapDoesNotHaveMatchingHandler : WhenDispatchingMessage
+        {
+            private const int ExpectedReceiveCount = 1;
+            private readonly TimeSpan _expectedBackoffTimeSpan = TimeSpan.FromMinutes(4);
+
+            protected override void Given()
+            {
+                base.Given();
+                _messageBackoffStrategy.GetBackoffDuration(_typedMessage, 1, null).Returns(_expectedBackoffTimeSpan);
+                _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString());
+            }
+
+            [Fact]
+            public void ShouldDeserializeMessage()
+            {
+                _serialisationRegister.Received(1).DeserializeMessage(Arg.Is<string>(x => x == _sqsMessage.Body));
+            }
+
+            [Fact]
+            public void ShouldLogError()
+            {
+                _logger.Received().Log(
+                    LogLevel.Error,
+                    0,
+                    Arg.Is<FormattedLogValues>(x => x.ToString() == "Handler for message of type 'JustSaying.TestingFramework.OrderAccepted' not found in handler map. Returning message to queue."),
+                    null,
+                    Arg.Any<Func<object, Exception, string>>());
+            }
+
+            [Fact]
+            public void ShouldUpdateMessageVisibility()
+            {
+                _amazonSqsClient.Received(1).ChangeMessageVisibilityAsync(Arg.Is<ChangeMessageVisibilityRequest>(x => x.QueueUrl == ExpectedQueueUrl && x.ReceiptHandle == _sqsMessage.ReceiptHandle && x.VisibilityTimeout == (int)_expectedBackoffTimeSpan.TotalSeconds));
+            }
         }
 
         public class AndMessageProcessingSucceeds : WhenDispatchingMessage
