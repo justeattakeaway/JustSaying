@@ -90,12 +90,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             [Fact]
             public void ShouldLogError()
             {
-                _logger.Received().Log(
-                    LogLevel.Error,
-                    0,
-                    Arg.Is<FormattedLogValues>(x => x.ToString() == "Handler for message of type 'JustSaying.TestingFramework.OrderAccepted' not found in handler map. Returning message to queue."),
-                    null,
-                    Arg.Any<Func<object, Exception, string>>());
+                _logger.ReceivedWithAnyArgs().LogError(0, null, "msg");
             }
 
             [Fact]
