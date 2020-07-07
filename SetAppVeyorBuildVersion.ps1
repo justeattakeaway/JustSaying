@@ -33,7 +33,7 @@ else {
   }
 }
 
-if ($versionSuffix -ne $null) {
+if ($versionSuffix -ne $null -and $versionSuffix -ne "") {
   $version = "$versionPrefix-$versionSuffix"
 } else {
   $version = $versionPrefix
