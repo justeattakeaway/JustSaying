@@ -7,7 +7,7 @@
     <ProjectReference Include="..\..\src\JustSaying.Extensions.DependencyInjection.Microsoft\JustSaying.Extensions.DependencyInjection.Microsoft.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AutoFixture" Version="4.11.0" />
+    <PackageReference Include="AutoFixture" Version="4.13.0" />
     <PackageReference Include="MartinCostello.Logging.XUnit" Version="0.1.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.5" />
     <PackageReference Include="NSubstitute" Version="4.2.2" />

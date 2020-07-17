@@ -151,7 +151,8 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
 
             if (handler == null)
             {
-                return true;
+                _logger.LogError("Failed to dispatch. Handler for message of type '{MessageTypeName}' not found in handler map.", message.GetType().FullName);
+                return false;
             }
 
             var watch = System.Diagnostics.Stopwatch.StartNew();
