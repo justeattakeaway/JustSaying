@@ -35,7 +35,7 @@ namespace JustSaying.Fluent
             new Dictionary<string, SubscriptionGroupConfigBuilder>();
 
         /// <summary>
-        /// Configure the default settings for all subscription groups
+        /// Configure the default settings for all subscription groups.
         /// </summary>
         /// <param name="configure">A delegate that configures the default settings</param>
         /// <returns>
