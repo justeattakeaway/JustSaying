@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -9,39 +10,49 @@ namespace JustSaying.Extensions
 {
     public static class ChannelExtensions
     {
-        public static void Merge<T>(
+        public static Task Merge<T>(
             IEnumerable<ChannelReader<T>> inputs,
             ChannelWriter<T> output,
             CancellationToken stoppingToken)
         {
             if (inputs is null) throw new ArgumentNullException(nameof(inputs));
             if (output is null) throw new ArgumentNullException(nameof(output));
-        
-            async IAsyncEnumerable<T> ReadAllAsync(ChannelReader<T> reader)
-            {
-                if (reader == null) throw new ArgumentNullException(nameof(reader));
 
-                while (await reader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
+            return Task.Run(async () =>
                 {
-                    while (reader.TryRead(out T item))
-                    {
-                        yield return item;
-                    }
-                }
-            }
+                    await Task.WhenAll(inputs.Select(input => Redirect(input, output, stoppingToken))
+                            .ToArray())
+                        .ConfigureAwait(false);
 
-            Task.Run(async () =>
-                {
-                    async Task Redirect(ChannelReader<T> input)
-                    {
-                        await foreach (var item in ReadAllAsync(input))
-                            await output.WriteAsync(item, stoppingToken).ConfigureAwait(false);
-                    }
-
-                    await Task.WhenAll(inputs.Select(Redirect).ToArray()).ConfigureAwait(false);
                     output.Complete();
                 },
                 stoppingToken);
+        }
+
+        private static async Task Redirect<T>(
+            ChannelReader<T> input,
+            ChannelWriter<T> output,
+            CancellationToken stoppingToken)
+        {
+            await foreach (var item in ReadAllAsync(input, stoppingToken))
+            {
+                await output.WriteAsync(item, stoppingToken).ConfigureAwait(false);
+            }
+        }
+
+        private static async IAsyncEnumerable<T> ReadAllAsync<T>(
+            ChannelReader<T> reader,
+            [EnumeratorCancellation] CancellationToken stoppingToken)
+        {
+            if (reader == null) throw new ArgumentNullException(nameof(reader));
+
+            while (await reader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
+            {
+                while (reader.TryRead(out T item))
+                {
+                    yield return item;
+                }
+            }
         }
     }
 }
