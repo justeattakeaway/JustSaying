@@ -10,7 +10,7 @@ namespace JustSaying.Extensions
 {
     public static class ChannelExtensions
     {
-        public static Task Merge<T>(
+        public static Task MergeAsync<T>(
             IEnumerable<ChannelReader<T>> inputs,
             ChannelWriter<T> output,
             CancellationToken stoppingToken)
@@ -20,7 +20,7 @@ namespace JustSaying.Extensions
 
             return Task.Run(async () =>
                 {
-                    await Task.WhenAll(inputs.Select(input => Redirect(input, output, stoppingToken))
+                    await Task.WhenAll(inputs.Select(input => RedirectAsync(input, output, stoppingToken))
                             .ToArray())
                         .ConfigureAwait(false);
 
@@ -29,7 +29,7 @@ namespace JustSaying.Extensions
                 stoppingToken);
         }
 
-        private static async Task Redirect<T>(
+        private static async Task RedirectAsync<T>(
             ChannelReader<T> input,
             ChannelWriter<T> output,
             CancellationToken stoppingToken)
