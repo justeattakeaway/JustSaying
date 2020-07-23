@@ -37,7 +37,7 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Configure the default settings for all subscription groups.
         /// </summary>
-        /// <param name="configure">A delegate that configures the default settings</param>
+        /// <param name="configure">A delegate that configures the default settings.</param>
         /// <returns>
         /// The current <see cref="SubscriptionsBuilder"/>.
         /// </returns>
