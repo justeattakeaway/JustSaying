@@ -7,6 +7,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels.Context;
+using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
@@ -160,16 +161,16 @@ namespace JustSaying.Messaging.Channels.Receive
             return messages;
         }
 
-        public object Interrogate()
+        public InterrogationResult Interrogate()
         {
-            return new
+            return new InterrogationResult(new
             {
                 BufferSize = _bufferSize,
                 _sqsQueueReader.QueueName,
                 Region = _sqsQueueReader.RegionSystemName,
                 Prefetch = _prefetch,
                 BackoffStrategyName = _backoffStrategyName,
-            };
+            });
         }
     }
 }

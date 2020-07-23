@@ -44,13 +44,13 @@ namespace JustSaying.AwsTools.MessageHandling
             _log = loggerFactory.CreateLogger("JustSaying");
         }
 
-        public object Interrogate()
+        public InterrogationResult Interrogate()
         {
-            return new
+            return new InterrogationResult(new
             {
                 Arn,
                 TopicName
-            };
+            });
         }
 
         public async Task EnsurePolicyIsUpdatedAsync(IReadOnlyCollection<string> config)

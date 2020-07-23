@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using JustSaying.Messaging.Channels.Dispatch;
 using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Interrogation;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
@@ -59,15 +60,15 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         }
 
         /// <inheritdoc />
-        public object Interrogate()
+        public InterrogationResult Interrogate()
         {
-            return new
+            return new InterrogationResult(new
             {
                 _settings.Name,
                 ConcurrencyLimit = _subscribers.Count,
                 Multiplexer = _multiplexer.Interrogate(),
                 ReceiveBuffers = _receiveBuffers.Select(rb => rb.Interrogate()).ToArray(),
-            };
+            });
         }
     }
 }

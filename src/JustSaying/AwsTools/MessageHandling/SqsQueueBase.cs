@@ -7,6 +7,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Extensions;
+using JustSaying.Messaging.Interrogation;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
@@ -185,9 +186,9 @@ namespace JustSaying.AwsTools.MessageHandling
             };
         }
 
-        public object Interrogate()
+        public InterrogationResult Interrogate()
         {
-            return new
+            return new InterrogationResult(new
             {
                 Arn,
                 QueueName,
@@ -198,7 +199,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 ErrorQueue = ErrorQueue.QueueName,
                 VisibilityTimeout,
                 MessageRetentionPeriod,
-            };
+            });
         }
     }
 }

@@ -10,6 +10,6 @@ namespace JustSaying.Messaging.Interrogation
         /// Interrogates the implementation so that callers can understand the state of the component
         /// </summary>
         /// <returns>An anonymous object with the runtime state of the component</returns>
-        object Interrogate();
+        InterrogationResult Interrogate();
     }
 }
