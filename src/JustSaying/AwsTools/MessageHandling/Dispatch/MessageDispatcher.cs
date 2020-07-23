@@ -40,14 +40,17 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             _messageContextAccessor = messageContextAccessor;
         }
 
-        public async Task DispatchMessageAsync(IQueueMessageContext messageContext, CancellationToken cancellationToken)
+        public async Task DispatchMessageAsync(
+            IQueueMessageContext messageContext,
+            CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested)
             {
                 return;
             }
 
-            (bool success, Message typedMessage, MessageAttributes attributes) = await DeserializeMessage(messageContext, cancellationToken).ConfigureAwait(false);
+            (bool success, Message typedMessage, MessageAttributes attributes) =
+                await DeserializeMessage(messageContext, cancellationToken).ConfigureAwait(false);
 
             if (!success)
             {
@@ -64,7 +67,8 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                     _messageContextAccessor.MessageContext =
                         new MessageContext(messageContext.Message, messageContext.QueueUri, attributes);
 
-                    handlingSucceeded = await CallMessageHandler(messageContext.QueueName, typedMessage).ConfigureAwait(false);
+                    handlingSucceeded = await CallMessageHandler(messageContext.QueueName, typedMessage)
+                        .ConfigureAwait(false);
                 }
 
                 if (handlingSucceeded)
@@ -97,7 +101,10 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                 {
                     if (!handlingSucceeded && _messageBackoffStrategy != null)
                     {
-                        await UpdateMessageVisibilityTimeout(messageContext, typedMessage, lastException, cancellationToken).ConfigureAwait(false);
+                        await UpdateMessageVisibilityTimeout(messageContext,
+                            typedMessage,
+                            lastException,
+                            cancellationToken).ConfigureAwait(false);
                     }
                 }
                 finally
@@ -112,7 +119,8 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         {
             try
             {
-                (Message typedMessage, MessageAttributes attributes) = _serializationRegister.DeserializeMessage(messageContext.Message.Body);
+                (Message typedMessage, MessageAttributes attributes) =
+                    _serializationRegister.DeserializeMessage(messageContext.Message.Body);
                 return (true, typedMessage, attributes);
             }
             catch (MessageFormatNotSupportedException ex)
@@ -151,7 +159,9 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
 
             if (handler == null)
             {
-                _logger.LogError("Failed to dispatch. Handler for message of type '{MessageTypeName}' not found in handler map.", message.GetType().FullName);
+                _logger.LogError(
+                    "Failed to dispatch. Handler for message of type '{MessageTypeName}' not found in handler map.",
+                    message.GetType().FullName);
                 return false;
             }
 
@@ -159,30 +169,56 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
 
             using (_messagingMonitor.MeasureHandler())
             {
-                var handlerSucceeded = await handler(message).ConfigureAwait(false);
+                bool handlerSucceeded = false;
+                try
+                {
+                    handlerSucceeded = await handler(message).ConfigureAwait(false);
+                }
+                finally
+                {
+                    watch.Stop();
 
-                watch.Stop();
-
-                _logger.LogTrace(
-                    "Handled message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}.",
-                    message.Id,
-                    messageType,
-                    watch.Elapsed);
+                    var logMessage =
+                        "{Status} handling message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}ms.";
+                    if (handlerSucceeded)
+                    {
+                        _logger.LogInformation(logMessage,
+                            "Succeeded",
+                            message.Id,
+                            messageType,
+                            watch.ElapsedMilliseconds);
+                    }
+                    else
+                    {
+                        _logger.LogWarning(logMessage,
+                            "Failed",
+                            message.Id,
+                            messageType,
+                            watch.ElapsedMilliseconds);
+                    }
+                }
 
                 return handlerSucceeded;
             }
-
         }
 
-        private async Task UpdateMessageVisibilityTimeout(IQueueMessageContext messageContext, Message typedMessage, Exception lastException, CancellationToken cancellationToken)
+        private async Task UpdateMessageVisibilityTimeout(
+            IQueueMessageContext messageContext,
+            Message typedMessage,
+            Exception lastException,
+            CancellationToken cancellationToken)
         {
             if (TryGetApproxReceiveCount(messageContext.Message.Attributes, out int approxReceiveCount))
             {
-                var visibilityTimeout = _messageBackoffStrategy.GetBackoffDuration(typedMessage, approxReceiveCount, lastException);
+                var visibilityTimeout =
+                    _messageBackoffStrategy.GetBackoffDuration(typedMessage,
+                        approxReceiveCount,
+                        lastException);
 
                 try
                 {
-                    await messageContext.ChangeMessageVisibilityAsync(visibilityTimeout, cancellationToken).ConfigureAwait(false);
+                    await messageContext.ChangeMessageVisibilityAsync(visibilityTimeout, cancellationToken)
+                        .ConfigureAwait(false);
                 }
                 catch (AmazonServiceException ex)
                 {
@@ -197,12 +233,15 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             }
         }
 
-        private static bool TryGetApproxReceiveCount(IDictionary<string, string> attributes, out int approxReceiveCount)
+        private static bool TryGetApproxReceiveCount(
+            IDictionary<string, string> attributes,
+            out int approxReceiveCount)
         {
             approxReceiveCount = 0;
 
-            return attributes.TryGetValue(MessageSystemAttributeName.ApproximateReceiveCount, out string rawApproxReceiveCount) &&
-                   int.TryParse(rawApproxReceiveCount, out approxReceiveCount);
+            return attributes.TryGetValue(MessageSystemAttributeName.ApproximateReceiveCount,
+                    out string rawApproxReceiveCount) &&
+                int.TryParse(rawApproxReceiveCount, out approxReceiveCount);
         }
     }
 }

@@ -49,8 +49,6 @@ namespace JustSaying.UnitTests.Messaging.Channels
             multiplexer.ReadFrom(buffer.Reader);
             consumer1.Subscribe(multiplexer.GetMessagesAsync());
 
-            // need to start the multiplexer before calling Start
-
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
 

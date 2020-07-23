@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace JustSaying.Messaging.Middleware
 {
@@ -14,8 +15,11 @@ namespace JustSaying.Messaging.Middleware
         /// <param name="middleware">The instances of <see cref="MiddlewareBase{TContext, TOut}"/> to add to the
         /// returned composite <see cref="MiddlewareBase{TContext, TOut}"/>.</param>
         /// <returns>A composite <see cref="MiddlewareBase{TContext, TOut}"/>.</returns>
-        public static MiddlewareBase<TContext, TOut> BuildAsync<TContext, TOut>(params Func<MiddlewareBase<TContext, TOut>, MiddlewareBase<TContext, TOut>>[] middleware)
+        public static MiddlewareBase<TContext, TOut> BuildAsync<TContext, TOut>(
+            params Func<MiddlewareBase<TContext, TOut>, MiddlewareBase<TContext, TOut>>[] middleware)
         {
+            if (middleware == null) throw new ArgumentNullException(nameof(middleware));
+
             MiddlewareBase<TContext, TOut> policy = new DelegateMiddleware<TContext, TOut>();
             return policy.WithAsync(middleware);
         }
@@ -28,10 +32,15 @@ namespace JustSaying.Messaging.Middleware
         /// <param name="middleware">The instances of <see cref="MiddlewareBase{TContext, TOut}"/> to add to the
         /// returned composite <see cref="MiddlewareBase{TContext, TOut}"/>.</param>
         /// <returns>A composite <see cref="MiddlewareBase{TContext, TOut}"/>.</returns>
-        public static MiddlewareBase<TIn, TOut> WithAsync<TIn, TOut>(this MiddlewareBase<TIn, TOut> inner, params Func<MiddlewareBase<TIn, TOut>, MiddlewareBase<TIn, TOut>>[] middleware)
+        public static MiddlewareBase<TIn, TOut> WithAsync<TIn, TOut>(
+            this MiddlewareBase<TIn, TOut> inner,
+            params Func<MiddlewareBase<TIn, TOut>, MiddlewareBase<TIn, TOut>>[] middleware)
         {
-            var policy = inner;
+            if (inner == null) throw new ArgumentNullException(nameof(inner));
+            if (middleware == null) throw new ArgumentNullException(nameof(middleware));
+            if (middleware.Any(x => x == null)) throw new ArgumentException("All provided middlewares should be non-null");
 
+            var policy = inner;
             foreach (var m in middleware)
             {
                 policy = m(policy);
