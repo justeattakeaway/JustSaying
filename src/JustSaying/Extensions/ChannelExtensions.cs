@@ -31,6 +31,7 @@ namespace JustSaying.Extensions
                     catch (Exception ex)
                     {
                         output.Complete(ex);
+                        throw;
                     }
                 },
                 stoppingToken);
