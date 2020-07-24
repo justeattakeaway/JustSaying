@@ -31,7 +31,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         protected override void Given()
         {
             // we expect to get max 10 messages per batch
-            _expectedMaxMessageCount = MessageConstants.MaxAmazonMessageCap;
+            _expectedMaxMessageCount = MessageDefaults.MaxAmazonMessageCap;
 
             Logger.LogInformation("Expected max message count is {MaxMessageCount}", _expectedMaxMessageCount);
 

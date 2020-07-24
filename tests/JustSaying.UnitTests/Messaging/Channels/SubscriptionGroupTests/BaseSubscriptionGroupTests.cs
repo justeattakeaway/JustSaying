@@ -71,7 +71,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             HandlerMap = new HandlerMap(Monitor, LoggerFactory);
 
             DeserializedMessage = new SimpleMessage { RaisingComponent = "Component" };
-            SerializationRegister.DeserializeMessage(Arg.Any<string>()).Returns((DeserializedMessage, new MessageAttributes()));
+            SerializationRegister.DeserializeMessage(Arg.Any<string>())
+                .Returns(new MessageWithAttributes(DeserializedMessage, new MessageAttributes()));
 
             Given();
         }

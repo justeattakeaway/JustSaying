@@ -27,7 +27,7 @@ namespace JustSaying.Messaging.MessageSerialization
             }
         }
 
-        public (Message, MessageAttributes) DeserializeMessage(string body)
+        public MessageWithAttributes DeserializeMessage(string body)
         {
             foreach (var pair in _map)
             {
@@ -48,7 +48,7 @@ namespace JustSaying.Messaging.MessageSerialization
 
                 var attributes = typeSerializer.Serializer.GetMessageAttributes(body);
                 var message = typeSerializer.Serializer.Deserialize(body, matchedType);
-                return (message, attributes);
+                return new MessageWithAttributes(message, attributes);
             }
 
             // TODO Maybe we should log the body separately (at debug/trace?), rather than include it in the exception message. Then they're easier to filter.

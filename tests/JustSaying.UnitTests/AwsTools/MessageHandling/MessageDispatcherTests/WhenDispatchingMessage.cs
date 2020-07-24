@@ -87,8 +87,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             };
 
             _loggerFactory.CreateLogger(Arg.Any<string>()).Returns(_logger);
-            _queue = new DummySqsQueue(new Uri(ExpectedQueueUrl), _amazonSqsClient, NullLoggerFactory.Instance);
-            _serializationRegister.DeserializeMessage(Arg.Any<string>()).Returns((_typedMessage, new MessageAttributes()));
+            _queue = new DummySqsQueue(new Uri(ExpectedQueueUrl),
+                _amazonSqsClient,
+                NullLoggerFactory.Instance);
+            _serializationRegister.DeserializeMessage(Arg.Any<string>())
+                .Returns(new MessageWithAttributes(_typedMessage, new MessageAttributes()));
         }
 
         private async Task When()

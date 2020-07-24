@@ -15,12 +15,12 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
     {
         public SubscriptionGroupSettingsBuilder()
         {
-            BufferSize = MessageConstants.MaxAmazonMessageCap;
+            BufferSize = MessageDefaults.MaxAmazonMessageCap;
             ReceiveBufferReadTimeout = TimeSpan.FromMinutes(5);
             ReceiveMessagesWaitTime = TimeSpan.FromSeconds(20);
             MultiplexerCapacity = 100;
             Prefetch = 10;
-            ConcurrencyLimit = Environment.ProcessorCount * MessageConstants.ParallelHandlerExecutionPerCore;
+            ConcurrencyLimit = Environment.ProcessorCount * MessageDefaults.ParallelHandlerExecutionPerCore;
         }
 
         /// <summary>

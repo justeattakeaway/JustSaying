@@ -24,10 +24,10 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
                 throw new InvalidOperationException($"{nameof(settings.Prefetch)} cannot be negative.");
             }
 
-            if (settings.Prefetch > MessageConstants.MaxAmazonMessageCap)
+            if (settings.Prefetch > MessageDefaults.MaxAmazonMessageCap)
             {
                 throw new InvalidOperationException(
-                    $"{nameof(settings.Prefetch)} cannot be greater than {nameof(MessageConstants.MaxAmazonMessageCap)}.");
+                    $"{nameof(settings.Prefetch)} cannot be greater than {nameof(MessageDefaults.MaxAmazonMessageCap)}.");
             }
 
             if (settings.ReceiveBufferReadTimeout < TimeSpan.Zero)

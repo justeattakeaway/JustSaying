@@ -33,7 +33,7 @@ namespace JustSaying.Messaging.MessageHandling
         public Uri QueueUri { get; }
 
         /// <summary>
-        /// Gets a collection of <see cref="MessageAttributeValue"/>'s that were sent with this message
+        /// Gets a collection of <see cref="MessageAttributeValue"/>'s that were sent with this message.
         /// </summary>
         public MessageAttributes MessageAttributes { get; }
     }

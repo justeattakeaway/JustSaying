@@ -120,9 +120,8 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         {
             try
             {
-                (Message typedMessage, MessageAttributes attributes) =
-                    _serializationRegister.DeserializeMessage(messageContext.Message.Body);
-                return (true, typedMessage, attributes);
+                var messageWithAttributes = _serializationRegister.DeserializeMessage(messageContext.Message.Body);
+                return (true, messageWithAttributes.Message, messageWithAttributes.MessageAttributes);
             }
             catch (MessageFormatNotSupportedException ex)
             {
