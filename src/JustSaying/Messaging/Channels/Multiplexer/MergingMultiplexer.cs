@@ -66,7 +66,7 @@ namespace JustSaying.Messaging.Channels.Multiplexer
                     "Starting up channel multiplexer with a queue capacity of {Capacity}",
                     _channelCapacity);
 
-                var _ = ChannelExtensions.MergeAsync(_readers, _targetChannel.Writer, _stoppingToken);
+                _ = ChannelExtensions.MergeAsync(_readers, _targetChannel.Writer, _stoppingToken);
             }
             finally
             {

@@ -20,11 +20,18 @@ namespace JustSaying.Extensions
 
             return Task.Run(async () =>
                 {
-                    await Task.WhenAll(inputs.Select(input => RedirectAsync(input, output, stoppingToken))
-                            .ToArray())
-                        .ConfigureAwait(false);
+                    try
+                    {
+                        await Task.WhenAll(inputs.Select(input => RedirectAsync(input, output, stoppingToken))
+                                .ToArray())
+                            .ConfigureAwait(false);
 
-                    output.Complete();
+                        output.Complete();
+                    }
+                    catch (Exception ex)
+                    {
+                        output.Complete(ex);
+                    }
                 },
                 stoppingToken);
         }

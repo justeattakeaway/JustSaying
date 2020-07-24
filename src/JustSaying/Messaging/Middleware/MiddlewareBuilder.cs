@@ -38,7 +38,7 @@ namespace JustSaying.Messaging.Middleware
         {
             if (inner == null) throw new ArgumentNullException(nameof(inner));
             if (middleware == null) throw new ArgumentNullException(nameof(middleware));
-            if (middleware.Any(x => x == null)) throw new ArgumentException("All provided middlewares should be non-null");
+            if (middleware.Any(x => x == null)) throw new ArgumentException("All provided middlewares should be non-null", nameof(middleware));
 
             var policy = inner;
             foreach (var m in middleware)

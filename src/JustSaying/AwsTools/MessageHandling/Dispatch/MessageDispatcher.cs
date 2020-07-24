@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Runtime;
@@ -241,7 +242,10 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
 
             return attributes.TryGetValue(MessageSystemAttributeName.ApproximateReceiveCount,
                     out string rawApproxReceiveCount) &&
-                int.TryParse(rawApproxReceiveCount, out approxReceiveCount);
+                int.TryParse(rawApproxReceiveCount,
+                    NumberStyles.Integer,
+                    CultureInfo.InvariantCulture,
+                    out approxReceiveCount);
         }
     }
 }
