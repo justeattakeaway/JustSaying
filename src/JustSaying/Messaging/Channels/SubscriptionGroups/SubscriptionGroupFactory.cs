@@ -16,13 +16,14 @@ using ReceiveMiddleware =
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
     /// <summary>
-    /// Handles creation of <see cref="ISubscriptionGroup"/>.
+    /// Builds <see cref="ISubscriptionGroup"/>'s from the various components required.
     /// </summary>
     public class SubscriptionGroupFactory : ISubscriptionGroupFactory
     {
         private readonly IMessageDispatcher _messageDispatcher;
         private readonly IMessageMonitor _monitor;
         private readonly ILoggerFactory _loggerFactory;
+        private ReceiveMiddleware _defaultSqsMiddleware;
 
         /// <summary>
         /// Creates an instance of <see cref="SubscriptionGroupFactory"/>.
@@ -38,6 +39,8 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             _messageDispatcher = messageDispatcher;
             _monitor = monitor;
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _defaultSqsMiddleware =
+                new DefaultSqsMiddleware(_loggerFactory.CreateLogger<DefaultSqsMiddleware>());
         }
 
         /// <summary>
@@ -50,7 +53,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             SubscriptionGroupSettingsBuilder defaults,
             IDictionary<string, SubscriptionGroupConfigBuilder> consumerGroupSettings)
         {
-            ReceiveMiddleware receiveMiddleware = defaults.SqsMiddleware ?? new DefaultSqsMiddleware(_loggerFactory.CreateLogger<DefaultSqsMiddleware>());
+            ReceiveMiddleware receiveMiddleware = defaults.SqsMiddleware ?? _defaultSqsMiddleware;
 
             List<ISubscriptionGroup> groups = consumerGroupSettings
                 .Values

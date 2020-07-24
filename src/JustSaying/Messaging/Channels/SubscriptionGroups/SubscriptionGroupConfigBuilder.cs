@@ -9,7 +9,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
     /// <summary>
     /// Configures overrides for a particular <see cref="ISubscriptionGroup"/>. At build time, defaults provided by
     /// <see cref="SubscriptionGroupSettingsBuilder"/> are combined with overrides set here to create a final configuration
-    /// that is inspectable via <see cref="IInterrogable"/>.
+    /// that can be inspected via <see cref="IInterrogable"/>.
     /// </summary>
     public class SubscriptionGroupConfigBuilder
     {
