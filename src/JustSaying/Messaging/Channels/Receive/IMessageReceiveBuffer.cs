@@ -12,7 +12,7 @@ namespace JustSaying.Messaging.Channels.Receive
     internal interface IMessageReceiveBuffer : IInterrogable
     {
         /// <summary>
-        /// Starts listening for messages and exposes them via the <see cref="Reader"/>.
+        /// Starts listening for messages and exposes them via <see cref="Reader"/>.
         /// </summary>
         /// <param name="stoppingToken">A <see cref="CancellationToken"/> that will cancel the buffer and close the
         /// <see cref="ChannelReader{IQueueMessageContext}"/>.</param>

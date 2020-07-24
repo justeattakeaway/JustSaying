@@ -13,7 +13,8 @@ namespace JustSaying.Messaging.Channels.Multiplexer
     internal interface IMultiplexer : IInterrogable
     {
         /// <summary>
-        /// Begins reading from the ChannelReaders passed in from <see cref="ReadFrom"/>.
+        /// Begins reading from instances of <see cref="ChannelReader{IQueueMessageContext}"/> passed in from <see cref="ReadFrom"/>
+        /// and makes the interleaved result available from <see cref="GetMessagesAsync"/>.
         /// </summary>
         /// <param name="stoppingToken">Cancels the multiplexer and closes the
         /// <see cref="IAsyncEnumerable{IQueueMessageContext}"/> returned from <see cref="GetMessagesAsync"/>.</param>

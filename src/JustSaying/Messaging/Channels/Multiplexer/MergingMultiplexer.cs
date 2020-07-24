@@ -109,8 +109,6 @@ namespace JustSaying.Messaging.Channels.Multiplexer
 
             async IAsyncEnumerable<T> ReadAllAsync<T>(ChannelReader<T> reader)
             {
-                if (reader == null) throw new ArgumentNullException(nameof(reader));
-
                 while (await reader.WaitToReadAsync(_stoppingToken).ConfigureAwait(false))
                 {
                     while (reader.TryRead(out T item))
