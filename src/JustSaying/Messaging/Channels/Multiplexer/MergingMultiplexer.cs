@@ -5,6 +5,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using JustSaying.Extensions;
 using JustSaying.Messaging.Channels.Context;
+using JustSaying.Messaging.Interrogation;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels.Multiplexer
@@ -73,13 +74,13 @@ namespace JustSaying.Messaging.Channels.Multiplexer
             }
         }
 
-        public object Interrogate()
+        public InterrogationResult Interrogate()
         {
-            return new
+            return new InterrogationResult(new
             {
                 ChannelCapacity = _channelCapacity,
                 ReaderCount = _readers.Count,
-            };
+            });
         }
 
         public void ReadFrom(ChannelReader<IQueueMessageContext> reader)

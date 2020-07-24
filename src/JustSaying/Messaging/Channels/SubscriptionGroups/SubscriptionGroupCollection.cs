@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using JustSaying.Messaging.Interrogation;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
@@ -53,13 +54,13 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         }
 
         /// <inheritdoc />
-        public object Interrogate()
+        public InterrogationResult Interrogate()
         {
             IEnumerable<object> interrogationResponses = _subscriptionGroups.Select(group => group.Interrogate());
-            return new
+            return new InterrogationResult(new
             {
                 SubscriptionGroups = interrogationResponses.ToArray(),
-            };
+            });
         }
 
         private Task RunImplAsync(CancellationToken stoppingToken)
