@@ -11,7 +11,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// <summary>
         /// Runs validation on the given instance of <see cref="ISubscriptionGroupSettings"/>.
         /// </summary>
-        /// <param name="settings"></param>
+        /// <param name="settings">The settings to validate</param>
         public static void Validate(this ISubscriptionGroupSettings settings)
         {
             if (settings is null)
