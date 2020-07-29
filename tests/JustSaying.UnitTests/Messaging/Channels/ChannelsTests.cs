@@ -259,7 +259,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => runTask);
 
             callCountBeforeCancelled.ShouldBeGreaterThan(0);
-            callCountAfterCancelled.ShouldBe(0);
+            callCountAfterCancelled.ShouldBeLessThanOrEqualTo(1);
         }
 
         [Fact]
@@ -312,8 +312,10 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
         private static ISqsQueue TestQueue(Action spy = null)
         {
-            ReceiveMessageResponse GetMessages()
+            async Task<ReceiveMessageResponse> GetMessages()
             {
+                await Task.Delay(100);
+
                 spy?.Invoke();
                 var messages = new List<Message>
                 {
@@ -324,6 +326,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 {
                     Messages = messages,
                 };
+
             }
 
             ISqsQueue sqsQueueMock = Substitute.For<ISqsQueue>();
