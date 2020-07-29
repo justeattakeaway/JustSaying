@@ -51,11 +51,11 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// <returns>An <see cref="ISubscriptionGroup"/> to run.</returns>
         public ISubscriptionGroup Create(
             SubscriptionGroupSettingsBuilder defaults,
-            IDictionary<string, SubscriptionGroupConfigBuilder> consumerGroupSettings)
+            IDictionary<string, SubscriptionGroupConfigBuilder> subscriptionGroupSettings)
         {
             ReceiveMiddleware receiveMiddleware = defaults.SqsMiddleware ?? _defaultSqsMiddleware;
 
-            List<ISubscriptionGroup> groups = consumerGroupSettings
+            List<ISubscriptionGroup> groups = subscriptionGroupSettings
                 .Values
                 .Select(builder => Create(receiveMiddleware, builder.Build(defaults)))
                 .ToList();

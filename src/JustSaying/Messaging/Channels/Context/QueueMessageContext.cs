@@ -7,7 +7,7 @@ using JustSaying.AwsTools.MessageHandling;
 namespace JustSaying.Messaging.Channels.Context
 {
     /// <inheritdoc />
-    public class QueueMessageContext : IQueueMessageContext
+    public sealed class QueueMessageContext : IQueueMessageContext
     {
         private readonly SqsQueueReader _queueReader;
 
@@ -15,7 +15,7 @@ namespace JustSaying.Messaging.Channels.Context
         /// A handle for a given message to be deleted from the queue it was read from.
         /// </summary>
         /// <param name="message">The <see cref="Amazon.SQS.Model.Message"/> to be handled.</param>
-        /// <param name="sqsQueue">The <see cref="ISqsQueue"/> the message was read from.</param>
+        /// <param name="queueReader"></param>
         internal QueueMessageContext(Message message, SqsQueueReader queueReader)
         {
             Message = message ?? throw new ArgumentNullException(nameof(message));

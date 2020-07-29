@@ -66,7 +66,8 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// </summary>
         /// <param name="receiveBufferReadTimeout">The maximum amount of time to wait to read from each SQS queue.</param>
         /// <returns>This builder object.</returns>
-        public SubscriptionGroupSettingsBuilder WithDefaultReceiveBufferReadTimeout(TimeSpan receiveBufferReadTimeout)
+        public SubscriptionGroupSettingsBuilder WithDefaultReceiveBufferReadTimeout(
+            TimeSpan receiveBufferReadTimeout)
         {
             ReceiveBufferReadTimeout = receiveBufferReadTimeout;
             return this;
@@ -111,7 +112,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
         /// <summary>
         /// Specifies the default maximum number of messages that may be processed at once by a <see cref="ISubscriptionGroup"/>.
-        /// Defaults to <see cref="Environment.ProcessorCount"/> * 4.
+        /// Defaults to 4 times the value of <see cref="Environment.ProcessorCount"/>.
         /// </summary>
         /// <param name="concurrencyLimit">The maximum number of messages to process at the same time.</param>
         /// <returns>This builder object.</returns>
