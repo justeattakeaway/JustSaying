@@ -314,7 +314,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             async Task<ReceiveMessageResponse> GetMessages()
             {
-                await Task.Delay(100);
+                await Task.Delay(50);
 
                 spy?.Invoke();
                 var messages = new List<Message>
