@@ -71,15 +71,16 @@ namespace JustSaying.Messaging.MessageSerialization
                 var propData = prop.Value;
                 if (propData == null) continue;
 
-                var dataType = propData.Type;
+                var dataType = propData["Type"].ToString();
+                var dataValue = propData["Value"].ToString();
 
-                var isString = propData.Type == JTokenType.String;
+                var isString = dataType == "StringValue";
 
                 var mav = new MessageAttributeValue
                 {
-                    DataType = dataType.ToString(),
-                    StringValue = isString ? propData.Value<string>() : null,
-                    BinaryValue = !isString ? Convert.FromBase64String(propData.Value<string>()) : null
+                    DataType = dataType,
+                    StringValue = isString ? dataValue : null,
+                    BinaryValue = !isString ? Convert.FromBase64String(dataValue) : null
                 };
                 dict.Add(prop.Name, mav);
             }

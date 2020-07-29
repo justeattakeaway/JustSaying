@@ -68,7 +68,8 @@ namespace JustSaying.IntegrationTests.Fluent
 
         protected virtual IAwsClientFactory CreateClientFactory()
         {
-            return new DefaultAwsClientFactory();
+            var credentials = new SessionAWSCredentials(AccessKeyId, SecretAccessKey, SessionToken);
+            return new DefaultAwsClientFactory(credentials) { ServiceUri = ServiceUri };
         }
 
         protected IHandlerAsync<T> CreateHandler<T>(TaskCompletionSource<object> completionSource)

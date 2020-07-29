@@ -292,5 +292,13 @@ namespace JustSaying
                 await PublishAsync(publisher, message, metadata, attemptCount, cancellationToken).ConfigureAwait(false);
             }
         }
+
+        public InterrogationResult Interrogate()
+        {
+            return new InterrogationResult(new
+            {
+                SubscriptionGroups = SubscriptionGroups.Interrogate()
+            });
+        }
     }
 }

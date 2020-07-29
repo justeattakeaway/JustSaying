@@ -77,9 +77,13 @@ namespace JustSaying.IntegrationTests
                 .AddJustSaying(
                     (builder) =>
                     {
-                        builder.Messaging((options) => options.WithRegions("eu-west-1"))
-                               .Publications((options) => options.WithTopic<TopicMessage>())
-                               .Subscriptions((options) => options.ForTopic<TopicMessage>());
+                        builder
+                            .Client((options) =>
+                                options.WithBasicCredentials("accessKey", "secretKey")
+                                    .WithServiceUri(TestEnvironment.SimulatorUrl))
+                            .Messaging((options) => options.WithRegions("eu-west-1"))
+                            .Publications((options) => options.WithTopic<TopicMessage>())
+                            .Subscriptions((options) => options.ForTopic<TopicMessage>());
                     })
                 .AddJustSayingHandler<TopicMessage, TopicHandler>();
 
@@ -135,6 +139,7 @@ namespace JustSaying.IntegrationTests
             var services = new ServiceCollection()
                 .AddLogging((p) => p.AddXUnit(OutputHelper))
                 .AddJustSaying()
+                .AddSingleton<IMessageBusConfigurationContributor, AwsContributor>()
                 .AddSingleton<IMessageBusConfigurationContributor, MessagingContributor>()
                 .AddSingleton<IMessageBusConfigurationContributor, QueueContributor>()
                 .AddSingleton<IMessageBusConfigurationContributor, RegionContributor>()
@@ -165,6 +170,16 @@ namespace JustSaying.IntegrationTests
             }
         }
 
+        private sealed class AwsContributor : IMessageBusConfigurationContributor
+        {
+            public void Configure(MessagingBusBuilder builder)
+            {
+                builder.Client(
+                    (options) => options.WithSessionCredentials("accessKeyId", "secretKeyId", "token")
+                        .WithServiceUri(TestEnvironment.SimulatorUrl));
+            }
+        }
+
         private sealed class MessagingContributor : IMessageBusConfigurationContributor
         {
             public MessagingContributor(IServiceProvider serviceProvider)
@@ -176,7 +191,8 @@ namespace JustSaying.IntegrationTests
 
             public void Configure(MessagingBusBuilder builder)
             {
-                builder.Services((p) => p.WithMessageMonitoring(ServiceProvider.GetRequiredService<MyMonitor>));
+                builder.Services(
+                    (p) => p.WithMessageMonitoring(ServiceProvider.GetRequiredService<MyMonitor>));
             }
         }
 
@@ -185,7 +201,7 @@ namespace JustSaying.IntegrationTests
             public void Configure(MessagingBusBuilder builder)
             {
                 builder.Publications((p) => p.WithQueue<QueueMessage>())
-                       .Subscriptions((p) => p.ForQueue<QueueMessage>());
+                    .Subscriptions((p) => p.ForQueue<QueueMessage>());
             }
         }
 
@@ -198,8 +214,7 @@ namespace JustSaying.IntegrationTests
         }
 
         private sealed class QueueMessage : Message
-        {
-        }
+        { }
 
         private sealed class QueueHandler : IHandlerAsync<QueueMessage>
         {
@@ -213,8 +228,7 @@ namespace JustSaying.IntegrationTests
         }
 
         private sealed class TopicMessage : Message
-        {
-        }
+        { }
 
         private sealed class TopicHandler : IHandlerAsync<TopicMessage>
         {
@@ -230,36 +244,28 @@ namespace JustSaying.IntegrationTests
         private sealed class MyMonitor : IMessageMonitor
         {
             public void HandleException(Type messageType)
-            {
-            }
+            { }
 
             public void HandleError(Exception ex, Amazon.SQS.Model.Message message)
-            {
-            }
+            { }
 
             public void HandleThrottlingTime(TimeSpan duration)
-            {
-            }
+            { }
 
             public void HandleTime(TimeSpan duration)
-            {
-            }
+            { }
 
             public void IncrementThrottlingStatistic()
-            {
-            }
+            { }
 
             public void IssuePublishingMessage()
-            {
-            }
+            { }
 
             public void PublishMessageTime(TimeSpan duration)
-            {
-            }
+            { }
 
             public void ReceiveMessageTime(TimeSpan duration, string queueName, string region)
-            {
-            }
+            { }
         }
     }
 }

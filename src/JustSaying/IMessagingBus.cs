@@ -1,12 +1,13 @@
 using System.Threading;
 using System.Threading.Tasks;
+using JustSaying.Messaging.Interrogation;
 
 namespace JustSaying
 {
     /// <summary>
     /// Defines a messaging bus.
     /// </summary>
-    public interface IMessagingBus
+    public interface IMessagingBus : IInterrogable
     {
         /// <summary>
         /// Starts the message bus as an asynchronous operation.
