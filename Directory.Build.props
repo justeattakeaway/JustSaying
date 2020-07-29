@@ -2,9 +2,8 @@
   <PropertyGroup>
     <AnalyzersPackageVersion>3.0.0</AnalyzersPackageVersion>
     <DotNetTestSdkVersion>16.6.1</DotNetTestSdkVersion>
-    <MicrosoftExtensionsDependencyInjectionVersion>3.1.5</MicrosoftExtensionsDependencyInjectionVersion>
+    <MicrosoftExtensionsDependencyInjectionVersion>3.1.6</MicrosoftExtensionsDependencyInjectionVersion>
     <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
-    <XUnitVersion>2.4.1</XUnitVersion>
   </PropertyGroup>
   <PropertyGroup>
     <AwsSdkSnsVersion>3.3.101.122</AwsSdkSnsVersion>
@@ -14,7 +13,7 @@
     <PackageReference Include="coverlet.msbuild" Version="2.9.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
-    <PackageReference Include="ReportGenerator" Version="4.6.1" PrivateAssets="All" />
+    <PackageReference Include="ReportGenerator" Version="4.6.2" PrivateAssets="All" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
