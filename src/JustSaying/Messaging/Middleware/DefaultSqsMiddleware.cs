@@ -37,7 +37,7 @@ namespace JustSaying.Messaging.Middleware
                     "Polled for messages on queue '{QueueName}' in region '{Region}', and received {MessageCount} messages.",
                     context.QueueName,
                     context.RegionName,
-                    context.Count);
+                    results.Count);
 
                 return results;
             }

@@ -32,6 +32,8 @@ namespace JustSaying.Messaging.Channels.Receive
 
         public ChannelReader<IQueueMessageContext> Reader => _channel.Reader;
 
+        public string QueueName => _sqsQueueReader.QueueName;
+
         public MessageReceiveBuffer(
             int prefetch,
             int bufferSize,

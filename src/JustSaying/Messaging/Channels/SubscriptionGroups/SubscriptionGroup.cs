@@ -45,10 +45,14 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// <inheritdoc />
         public Task RunAsync(CancellationToken stoppingToken)
         {
+            var receiveBufferQueueNames = string.Join(",", _receiveBuffers.Select(rb => rb.QueueName));
+
             _logger.LogInformation(
-                "Starting up Subscription group with {ReceiveBuffferCount} receive buffers and {SubscriberCount} subscribers.",
-                _subscribers.Count,
-                _receiveBuffers.Count);
+                "Starting up SubscriptionGroup {SubscriptionGroupName} for queues [{Queues}] with {ReceiveBuffferCount} receive buffers and {SubscriberCount} subscribers.",
+                _settings.Name,
+                receiveBufferQueueNames,
+                _receiveBuffers.Count,
+                _subscribers.Count);
 
             var completionTasks = new List<Task>();
 

@@ -24,5 +24,7 @@ namespace JustSaying.Messaging.Channels.Receive
         /// Gets a channel reader that provides asynchronous access to received messages.
         /// </summary>
         ChannelReader<IQueueMessageContext> Reader { get; }
+
+        string QueueName { get; }
     }
 }

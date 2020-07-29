@@ -28,7 +28,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             MessageMonitor = new LoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
         }
 
-        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
 
         [Fact]
         public async Task Add_Different_Handler_Per_Queue()
@@ -78,7 +78,10 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             var config = Substitute.For<IMessagingConfig>();
             config.SubscriptionGroupDefaultSettings = new SubscriptionGroupSettingsBuilder()
-                .WithDefaultConcurrencyLimit(9); // Need this as we want the config to be stable
+                .WithDefaultMultiplexerCapacity(1)
+                .WithDefaultPrefetch(1)
+                .WithDefaultBufferSize(1)
+                .WithDefaultConcurrencyLimit(1); // Need this as we want the config to be stable
             var serializationRegister = new MessageSerializationRegister(
                 new NonGenericMessageSubjectProvider(),
                 new NewtonsoftSerializationFactory());
@@ -106,7 +109,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
                     QueueName = queueName,
                 };
 
-                var messages = new List<Amazon.SQS.Model.Message>
+                var messages = new List<Message>
                 {
                     new TestMessage { Body = messageSerializationRegister.Serialize(message, false) },
                 };
@@ -128,7 +131,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             return sqsQueueMock;
         }
 
-        private class TestMessage : Amazon.SQS.Model.Message
+        private class TestMessage : Message
         {
             public override string ToString()
             {
