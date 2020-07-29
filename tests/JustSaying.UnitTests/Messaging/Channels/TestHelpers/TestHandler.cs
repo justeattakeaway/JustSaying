@@ -13,10 +13,12 @@ namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers
             _spy = spy;
         }
 
-        public Task<bool> Handle(T testMessage)
+        public async Task<bool> Handle(T testMessage)
         {
             _spy?.Invoke(testMessage);
-            return Task.FromResult(true);
+
+            await Task.Delay(100);
+            return true;
         }
     }
 }
