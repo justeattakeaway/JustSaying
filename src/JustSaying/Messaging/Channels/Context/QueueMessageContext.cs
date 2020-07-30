@@ -15,7 +15,7 @@ namespace JustSaying.Messaging.Channels.Context
         /// A handle for a given message to be deleted from the queue it was read from.
         /// </summary>
         /// <param name="message">The <see cref="Amazon.SQS.Model.Message"/> to be handled.</param>
-        /// <param name="queueReader"></param>
+        /// <param name="queueReader">The <see cref="SqsQueueReader"/> the message was read from.</param>
         internal QueueMessageContext(Message message, SqsQueueReader queueReader)
         {
             Message = message ?? throw new ArgumentNullException(nameof(message));
