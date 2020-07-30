@@ -6,10 +6,20 @@ namespace JustSaying.TestingFramework
 {
     public static class Patiently
     {
-        public static async Task AssertThatAsync(Func<bool> func)
-            => await AssertThatAsync(func, 5.Seconds()).ConfigureAwait(false);
+        public static async Task AssertThatAsync(
+            Func<bool> func,
+            [System.Runtime.CompilerServices.CallerMemberName]
+            string memberName = "")
+            => await AssertThatAsyncInner(func, 5.Seconds(), memberName).ConfigureAwait(false);
 
-        public static async Task AssertThatAsync(Func<bool> func, TimeSpan timeout)
+        public static async Task AssertThatAsync(
+            Func<bool> func,
+            TimeSpan timeout,
+            [System.Runtime.CompilerServices.CallerMemberName]
+            string memberName = "")
+            => await AssertThatAsyncInner(func, timeout, memberName).ConfigureAwait(false);
+
+        private static async Task AssertThatAsyncInner(Func<bool> func, TimeSpan timeout, string description)
         {
             var started = DateTime.Now;
             var timeoutAt = DateTime.Now + timeout;
@@ -24,7 +34,7 @@ namespace JustSaying.TestingFramework
 
                 // TODO Use ITestOutputHelper
                 Console.WriteLine(
-                    $"Waiting for {(DateTime.Now - started).TotalMilliseconds} ms - Still Checking.");
+                    $"Waiting for {(DateTime.Now - started).TotalMilliseconds} ms - Still waiting for {description}.");
             } while (DateTime.Now < timeoutAt);
 
             func.Invoke().ShouldBeTrue();
