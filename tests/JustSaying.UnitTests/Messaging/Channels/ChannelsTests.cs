@@ -194,7 +194,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             // need to start the multiplexer before calling Messages
 
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromSeconds(1));
+            cts.CancelAfter(TimeSpan.FromSeconds(2));
 
             // Act and Assert
             var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
