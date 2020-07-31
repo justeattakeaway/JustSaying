@@ -39,6 +39,8 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         [AwsFact]
         public async Task Then_The_Attributes_Are_Returned()
         {
+            OutputHelper.WriteLine($"Running {nameof(Then_The_Attributes_Are_Returned)} test");
+
             // Arrange
             var handler = new SimpleMessageWithStringAttributesHandler(new MessageContextAccessor());
 
