@@ -2,7 +2,7 @@ name: .NET Core
 
 on:
   push:
-    branches: [ master ]
+    branches: [ justsaying-channel ]
   pull_request:
     branches: [ master ]
 
