@@ -1,0 +1,49 @@
+name: .NET Core
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.302
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+    - name: Test
+      run: |
+        dotnet test --no-restore --verbosity normal -c Release  ./tests/JustSaying.UnitTests/JustSaying.UnitTests.csproj
+        dotnet test --no-restore --verbosity normal -c Release ./tests/JustSaying.Extensions.DependencyInjection.StructureMap.Tests/JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj
+    - name: Integration Test
+      run: |
+        goaws_tag=latest
+        docker pull pafortin/goaws:$goaws_tag
+        docker run -d --name goaws -p 4100:4100 pafortin/goaws:$goaws_tag
+        export AWS_SERVICE_URL="http://localhost:4100"
+        dotnet test --no-restore --verbosity normal ./tests/JustSaying.IntegrationTests/JustSaying.IntegrationTests.csproj
+    - name: Pack
+      run: |
+        dotnet pack --no-restore --verbosity normal -c Release ./src/JustSaying/JustSaying.csproj
+        dotnet pack --no-restore --verbosity normal -c Release ./src/JustSaying.Models/JustSaying.Models.csproj
+        dotnet pack --no-restore --verbosity normal -c Release ./src/JustSaying.Extensions.DependencyInjection.Microsoft/JustSaying.Extensions.DependencyInjection.Microsoft.csproj
+        dotnet pack --no-restore --verbosity normal -c Release ./src/JustSaying.Extensions.DependencyInjection.StructureMap/JustSaying.Extensions.DependencyInjection.StructureMap.csproj
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: NuGet Packages
+        path: |
+          ./src/JustSaying/bin/Release/*.nupkg
+          ./src/JustSaying.Models/bin/Release/*.nupkg
+          ./src/JustSaying.Extensions.DependencyInjection.Microsoft/bin/Release/*.nupkg
+          ./src/JustSaying.Extensions.DependencyInjection.StructureMap/bin/Release/*.nupkg
