@@ -42,7 +42,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
                     var queue = new SqsQueueByName(Region, UniqueName, client, 0, loggerFactory);
 
-                    await Patiently.AssertThatAsync(() => queue.ExistsAsync(), 60.Seconds());
+                    await Patiently.AssertThatAsync(OutputHelper, () => queue.ExistsAsync(), 60.Seconds());
 
                     dynamic policyJson = JObject.Parse(queue.Policy);
 

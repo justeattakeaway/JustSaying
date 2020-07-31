@@ -58,7 +58,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                         .AddMessageAttribute("binarycontent", Encoding.UTF8.GetBytes("somebinarydata"));
                     await publisher.PublishAsync(new SimpleMessage(), metadata, cancellationToken);
 
-                    await Patiently.AssertThatAsync(() => handler.HandledMessages.Count > 0, TimeSpan.FromSeconds(5));
+                    await Patiently.AssertThatAsync(OutputHelper, () => handler.HandledMessages.Count > 0, TimeSpan.FromSeconds(5));
 
                     handler.HandledMessages.Count.ShouldBe(1);
                     handler.HandledMessages[0].context.MessageAttributes.Get("content").StringValue.ShouldBe("somecontent");
