@@ -51,7 +51,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                                     c.WithSubscriptionGroup("group")))))
                 .AddSingleton(_handler);
 
-            var baseSleep = TestEnvironment.IsSimulatorConfigured ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(2);
+            var baseSleep = TimeSpan.FromSeconds(2);
 
             await WhenAsync(
                 services,
