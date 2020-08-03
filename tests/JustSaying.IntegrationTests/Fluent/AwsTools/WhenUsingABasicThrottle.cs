@@ -103,7 +103,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                    .ReturnsForAnyArgs(true)
                    .AndDoes((_) => Interlocked.Increment(ref count));
 
-            IServiceCollection services = GivenJustSaying()
+            IServiceCollection services = GivenJustSaying(LogLevel.Warning)
                 .ConfigureJustSaying((builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
                 .AddSingleton(handler);
 
