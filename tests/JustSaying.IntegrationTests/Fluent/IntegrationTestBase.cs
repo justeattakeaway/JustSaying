@@ -40,7 +40,7 @@ namespace JustSaying.IntegrationTests.Fluent
 
         protected virtual TimeSpan Timeout => TimeSpan.FromSeconds(Debugger.IsAttached ? 60 : 20);
 
-        protected virtual string UniqueName { get; } = $"{DateTime.UtcNow.Ticks}-integration-tests";
+        protected virtual string UniqueName { get; } = $"{Guid.NewGuid():N}-integration-tests";
 
         protected IServiceCollection GivenJustSaying()
             => Given((_) => { });
