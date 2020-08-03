@@ -29,7 +29,6 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
         [AwsTheory]
         [InlineData(100)]
         [InlineData(1000)]
-        [InlineData(10000)]
         public async Task Messages_Are_Throttled_But_Still_Delivered(int throttleMessageCount)
         {
             // Arrange
