@@ -21,7 +21,7 @@ namespace JustSaying
     public sealed class JustSayingBus : IAmJustSaying, IAmJustInterrogating, IMessagingBus
     {
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _publishersByRegionAndType;
-        private readonly ConcurrentDictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
+        private ConcurrentDictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
 
         private string _previousActiveRegion;
 
@@ -83,6 +83,11 @@ namespace JustSaying
                 _ => new SubscriptionGroupConfigBuilder(subscriptionGroup));
 
             builder.AddQueue(queue);
+        }
+
+        public void SetGroupSettings(IDictionary<string, SubscriptionGroupConfigBuilder> settings)
+        {
+            _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(settings);
         }
 
         public void AddMessageHandler<T>(string queueName, Func<IHandlerAsync<T>> futureHandler) where T : Message

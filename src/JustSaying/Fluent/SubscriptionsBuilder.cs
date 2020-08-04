@@ -181,6 +181,8 @@ namespace JustSaying.Fluent
                 throw new InvalidOperationException($"No {nameof(IHandlerResolver)} is registered.");
             }
 
+            bus.Bus.SetGroupSettings(SubscriptionGroupSettings);
+
             foreach (ISubscriptionBuilder<Message> builder in Subscriptions)
             {
                 builder.Configure(bus, resolver);

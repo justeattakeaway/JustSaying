@@ -77,7 +77,9 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
                         config.Subscriptions(x =>
                         {
                             x.WithSubscriptionGroup("GroupA",
-                                c => c.WithPrefetch(10));
+                                c => c.WithPrefetch(10)
+                                    .WithMultiplexerCapacity(10)
+                                    .WithConcurrencyLimit(5));
 
                             // Creates the following if they do not already exist
                             //  - a SQS queue of name `orderplacedevent`
@@ -90,7 +92,6 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
                             x.ForTopic<OrderOnItsWayEvent>(c =>
                                 c.WithReadConfiguration(rc =>
                                     rc.WithSubscriptionGroup("GroupB")));
-
                         });
 
                         config.Publications(x =>
@@ -98,6 +99,7 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
                             // Creates the following if they do not already exist
                             //  - a SNS topic of name `orderreadyevent`
                             x.WithTopic<OrderReadyEvent>();
+                            x.WithTopic<OrderDeliveredEvent>();
                         });
                     });
 

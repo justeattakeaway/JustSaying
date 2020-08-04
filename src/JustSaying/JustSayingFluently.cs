@@ -76,6 +76,8 @@ namespace JustSaying
             _log.LogInformation("Adding SNS publisher for message type '{MessageType}'.",
                 typeof(T));
 
+            _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic);
+
             var snsWriteConfig = new SnsWriteConfiguration();
             configBuilder?.Invoke(snsWriteConfig);
 
@@ -219,7 +221,7 @@ namespace JustSaying
 
         public IFluentSubscription ConfigureSubscriptionWith(Action<SqsReadConfiguration> configBuilder)
         {
-            configBuilder(_subscriptionConfig);
+            configBuilder?.Invoke(_subscriptionConfig);
             return this;
         }
 

@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
@@ -19,6 +21,8 @@ namespace JustSaying
 
         // TODO - swap params
         void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message;
+
+        void SetGroupSettings(IDictionary<string, SubscriptionGroupConfigBuilder> settings);
 
         Task StartAsync(CancellationToken stoppingToken);
 
