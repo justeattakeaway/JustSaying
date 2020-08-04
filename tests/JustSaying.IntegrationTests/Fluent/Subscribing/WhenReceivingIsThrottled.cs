@@ -50,7 +50,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                                 .WithReadConfiguration(c =>
                                     c.WithSubscriptionGroup("group")))))
                 .AddSingleton(_handler);
- 
+
             var baseSleep = TimeSpan.FromSeconds(2);
 
             await WhenAsync(
