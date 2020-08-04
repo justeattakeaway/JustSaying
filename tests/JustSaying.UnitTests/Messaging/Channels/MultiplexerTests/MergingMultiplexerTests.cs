@@ -12,7 +12,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MultiplexerTests
     public class MergingMultiplexerTests
     {
         private readonly ITestOutputHelper _outputHelper;
-        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
+        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
 
         public MergingMultiplexerTests(ITestOutputHelper outputHelper)
         {
