@@ -45,7 +45,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     (builder) => builder.Subscriptions(
                         (options) => options
                             .WithSubscriptionGroup("group", groupConfig =>
-                                groupConfig.WithConcurrencyLimit(1))
+                                groupConfig.WithConcurrencyLimit(10))
                             .ForQueue<SimpleMessage>((queue) => queue.WithName(UniqueName)
                                 .WithReadConfiguration(c =>
                                     c.WithSubscriptionGroup("group")))))
