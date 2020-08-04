@@ -12,18 +12,10 @@ namespace JustSaying.AwsTools.MessageHandling
     public abstract class SqsQueueByNameBase : SqsQueueBase
     {
         protected SqsQueueByNameBase(RegionEndpoint region, string queueName, IAmazonSQS client, ILoggerFactory loggerFactory)
-            : base(region, client)
+            : base(region, client, loggerFactory)
         {
-            if (loggerFactory == null)
-            {
-                throw new ArgumentNullException(nameof(loggerFactory));
-            }
-
             QueueName = queueName;
-            Logger = loggerFactory.CreateLogger("JustSaying");
         }
-
-        protected ILogger Logger { get; }
 
         public override async Task<bool> ExistsAsync()
         {

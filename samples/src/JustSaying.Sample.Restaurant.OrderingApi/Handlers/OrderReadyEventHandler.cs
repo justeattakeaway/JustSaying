@@ -1,4 +1,7 @@
+using System;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Sample.Restaurant.Models;
 using Microsoft.Extensions.Logging;
@@ -7,19 +10,30 @@ namespace JustSaying.Sample.Restaurant.OrderingApi.Handlers
 {
     public class OrderReadyEventHandler : IHandlerAsync<OrderReadyEvent>
     {
-        private readonly ILogger<OrderReadyEventHandler> _log;
+        private readonly ILogger<OrderReadyEventHandler> _logger;
+        private readonly IMessagePublisher _publisher;
 
-        public OrderReadyEventHandler(ILogger<OrderReadyEventHandler> log)
+        public OrderReadyEventHandler(ILogger<OrderReadyEventHandler> logger, IMessagePublisher publisher)
         {
-            _log = log;
+            _logger = logger;
+            _publisher = publisher;
         }
 
-        public Task<bool> Handle(OrderReadyEvent message)
+        public async Task<bool> Handle(OrderReadyEvent message)
         {
-            _log.LogInformation("Order {orderId} ready", message.OrderId);
+            _logger.LogInformation("Order {orderId} ready", message.OrderId);
 
             // This is where you would actually handle the order placement
             // Intentionally left empty for the sake of this being a sample application
+
+            await Task.Delay(RandomNumberGenerator.GetInt32(50, 100));
+
+            var orderOnItsWayEvent = new OrderOnItsWayEvent()
+            {
+                OrderId = message.OrderId
+            };
+
+            await _publisher.PublishAsync(orderOnItsWayEvent);
 
             // Returning true would indicate:
             //   The message was handled successfully
@@ -28,7 +42,7 @@ namespace JustSaying.Sample.Restaurant.OrderingApi.Handlers
             //   The message was not handled successfully
             //   The message handling should be retried (configured by default)
             //   The message should be moved to the error queue if all retries fail
-            return Task.FromResult(true);
+            return true;
         }
     }
 }

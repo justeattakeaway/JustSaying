@@ -9,7 +9,9 @@ namespace JustSaying.UnitTests.Messaging.Serialization.SerializationRegister
     public class WhenAddingASerializerTwice : XBehaviourTest<MessageSerializationRegister>
     {
         protected override MessageSerializationRegister CreateSystemUnderTest() =>
-            new MessageSerializationRegister(new NonGenericMessageSubjectProvider());
+            new MessageSerializationRegister(
+                new NonGenericMessageSubjectProvider(),
+                new NewtonsoftSerializationFactory());
 
         protected override void Given()
         {
@@ -18,8 +20,8 @@ namespace JustSaying.UnitTests.Messaging.Serialization.SerializationRegister
 
         protected override void WhenAction()
         {
-            SystemUnderTest.AddSerializer<Message>(Substitute.For<IMessageSerializer>());
-            SystemUnderTest.AddSerializer<Message>(Substitute.For<IMessageSerializer>());
+            SystemUnderTest.AddSerializer<Message>();
+            SystemUnderTest.AddSerializer<Message>();
         }
 
         [Fact]

@@ -1,39 +1,31 @@
 using System;
 using System.Threading.Tasks;
 using Shouldly;
+using Xunit.Abstractions;
 
 namespace JustSaying.TestingFramework
 {
     public static class Patiently
     {
-        public static async Task AssertThatAsync(Func<bool> func)
-            => await AssertThatAsync(func, 5.Seconds()).ConfigureAwait(false);
+        public static async Task AssertThatAsync(
+            ITestOutputHelper output,
+            Func<bool> func,
+            [System.Runtime.CompilerServices.CallerMemberName]
+            string memberName = "")
+            => await AssertThatAsyncInner(output, func, 5.Seconds(), memberName).ConfigureAwait(false);
 
-        public static async Task AssertThatAsync(Func<bool> func, TimeSpan timeout)
-        {
-            var started = DateTime.Now;
-            var timeoutAt = DateTime.Now + timeout;
-            do
-            {
-                if (func.Invoke())
-                {
-                    return;
-                }
+        public static async Task AssertThatAsync(
+            ITestOutputHelper output,
+            Func<bool> func,
+            TimeSpan timeout,
+            [System.Runtime.CompilerServices.CallerMemberName]
+            string memberName = "")
+            => await AssertThatAsyncInner(output, func, timeout, memberName).ConfigureAwait(false);
 
-                await Task.Delay(50.Milliseconds()).ConfigureAwait(false);
+        public static async Task AssertThatAsync(ITestOutputHelper output, Func<Task<bool>> func) =>
+            await AssertThatAsync(output, func, 5.Seconds()).ConfigureAwait(false);
 
-                // TODO Use ITestOutputHelper
-                Console.WriteLine(
-                    $"Waiting for {(DateTime.Now - started).TotalMilliseconds} ms - Still Checking.");
-            } while (DateTime.Now < timeoutAt);
-
-            func.Invoke().ShouldBeTrue();
-        }
-
-        public static async Task AssertThatAsync(Func<Task<bool>> func) =>
-            await AssertThatAsync(func, 5.Seconds()).ConfigureAwait(false);
-
-        public static async Task AssertThatAsync(Func<Task<bool>> func, TimeSpan timeout)
+        public static async Task AssertThatAsync(ITestOutputHelper output, Func<Task<bool>> func, TimeSpan timeout)
         {
             var started = DateTime.Now;
             var timeoutAt = DateTime.Now + timeout;
@@ -47,12 +39,33 @@ namespace JustSaying.TestingFramework
                 await Task.Delay(50.Milliseconds()).ConfigureAwait(false);
 
                 // TODO Use ITestOutputHelper
-                Console.WriteLine(
+                output.WriteLine(
                     $"Waiting for {(DateTime.Now - started).TotalMilliseconds} ms - Still Checking.");
             } while (DateTime.Now < timeoutAt);
 
             var result = await func.Invoke().ConfigureAwait(false);
             result.ShouldBeTrue();
+        }
+
+        private static async Task AssertThatAsyncInner(ITestOutputHelper output, Func<bool> func, TimeSpan timeout, string description)
+        {
+            var started = DateTime.Now;
+            var timeoutAt = DateTime.Now + timeout;
+            do
+            {
+                if (func.Invoke())
+                {
+                    return;
+                }
+
+                await Task.Delay(50.Milliseconds()).ConfigureAwait(false);
+
+                // TODO Use ITestOutputHelper
+                output.WriteLine(
+                    $"Waiting for {(DateTime.Now - started).TotalMilliseconds} ms - Still waiting for {description}.");
+            } while (DateTime.Now < timeoutAt);
+
+            func.Invoke().ShouldBeTrue();
         }
     }
 

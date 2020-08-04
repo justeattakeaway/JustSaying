@@ -1,12 +1,16 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
@@ -16,91 +20,88 @@ namespace JustSaying
 {
     public sealed class JustSayingBus : IAmJustSaying, IAmJustInterrogating, IMessagingBus
     {
-        private readonly Dictionary<string, Dictionary<string, INotificationSubscriber>> _subscribersByRegionAndQueue;
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _publishersByRegionAndType;
+        private ConcurrentDictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
 
         private string _previousActiveRegion;
 
         public IMessagingConfig Config { get; private set; }
 
         private IMessageMonitor _monitor;
+
         public IMessageMonitor Monitor
         {
             get { return _monitor; }
             set { _monitor = value ?? new NullOpMessageMonitor(); }
         }
-        public IMessageSerializationRegister SerializationRegister { get; private set; }
-        public IMessageLockAsync MessageLock { get; set; }
+
+        private ISubscriptionGroup SubscriptionGroups { get; set; }
+        public IMessageSerializationRegister SerializationRegister { get; }
+        public IMessageBackoffStrategy MessageBackoffStrategy { get; set; }
+
+        public IMessageLockAsync MessageLock
+        {
+            get => HandlerMap.MessageLock;
+            set => HandlerMap.MessageLock = value;
+        }
+
         public IMessageContextAccessor MessageContextAccessor { get; set; }
+        public HandlerMap HandlerMap { get; private set; }
 
         private readonly ILogger _log;
 
         private readonly object _syncRoot = new object();
         private readonly ICollection<IPublisher> _publishers;
-        private readonly ICollection<ISubscriber> _subscribers;
+        private readonly ILoggerFactory _loggerFactory;
 
-        public JustSayingBus(IMessagingConfig config, IMessageSerializationRegister serializationRegister, ILoggerFactory loggerFactory)
+        public JustSayingBus(
+            IMessagingConfig config,
+            IMessageSerializationRegister serializationRegister,
+            ILoggerFactory loggerFactory)
         {
-            _log = loggerFactory.CreateLogger("JustSaying");
+            _loggerFactory = loggerFactory;
+            _log = _loggerFactory.CreateLogger("JustSaying");
 
             Config = config;
             Monitor = new NullOpMessageMonitor();
             MessageContextAccessor = new MessageContextAccessor();
 
-            _subscribersByRegionAndQueue = new Dictionary<string, Dictionary<string, INotificationSubscriber>>();
             _publishersByRegionAndType = new Dictionary<string, Dictionary<Type, IMessagePublisher>>();
             SerializationRegister = serializationRegister;
             _publishers = new HashSet<IPublisher>();
-            _subscribers = new HashSet<ISubscriber>();
+
+            HandlerMap = new HandlerMap(Monitor, _loggerFactory);
         }
 
-        public void AddNotificationSubscriber(string region, INotificationSubscriber subscriber)
+        public void AddQueue(string region, string subscriptionGroup, ISqsQueue queue)
         {
-            if (string.IsNullOrWhiteSpace(region))
-            {
-                throw new ArgumentNullException(nameof(region));
-            }
+            if (string.IsNullOrWhiteSpace(region)) throw new ArgumentException("Cannot be null or empty.", nameof(region));
+            if (string.IsNullOrWhiteSpace(subscriptionGroup)) throw new ArgumentException("Cannot be null or empty.", nameof(subscriptionGroup));
 
-            if (!_subscribersByRegionAndQueue.TryGetValue(region, out var subscribersForRegion))
-            {
-                subscribersForRegion = new Dictionary<string, INotificationSubscriber>();
-                _subscribersByRegionAndQueue.Add(region, subscribersForRegion);
-            }
+            SubscriptionGroupConfigBuilder builder = _subscriptionGroupSettings.GetOrAdd(
+                subscriptionGroup,
+                _ => new SubscriptionGroupConfigBuilder(subscriptionGroup));
 
-            if (subscribersForRegion.ContainsKey(subscriber.Queue))
-            {
-                // TODO - no, we don't need to create a new notification subscriber per queue
-                // JustSaying is creating subscribers per-topic per-region, but
-                // we want to have that per-queue per-region, not
-                // per-topic per-region.
-                // Just re-use existing subscriber instead.
-                return;
-            }
-            subscribersForRegion[subscriber.Queue] = subscriber;
-
-            AddSubscribersToInterrogationResponse(subscriber);
+            builder.AddQueue(queue);
         }
 
-        private void AddSubscribersToInterrogationResponse(INotificationSubscriberInterrogation interrogationSubscribers)
+        public void SetGroupSettings(IDictionary<string, SubscriptionGroupConfigBuilder> settings)
         {
-            foreach (var subscriber in interrogationSubscribers.Subscribers)
-            {
-                _subscribers.Add(subscriber);
-            }
+            _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(settings);
         }
 
-        public void AddMessageHandler<T>(string region, string queue, Func<IHandlerAsync<T>> futureHandler) where T : Message
+        public void AddMessageHandler<T>(string queueName, Func<IHandlerAsync<T>> futureHandler) where T : Message
         {
-            var subscribersByRegion = _subscribersByRegionAndQueue[region];
-            var subscriber = subscribersByRegion[queue];
-            subscriber.AddMessageHandler(futureHandler);
+            SerializationRegister.AddSerializer<T>();
+            HandlerMap.Add(queueName, futureHandler);
         }
 
         public void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message
         {
             if (Config.PublishFailureReAttempts == 0)
             {
-                _log.LogWarning("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages.");
+                _log.LogWarning(
+                    "You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages.");
             }
 
             if (!_publishersByRegionAndType.TryGetValue(region, out var publishersByType))
@@ -115,29 +116,53 @@ namespace JustSaying
             publishersByType[topicType] = messagePublisher;
         }
 
-        public void Start(CancellationToken cancellationToken = default)
+        private Task _subscriberCompletionTask;
+        private bool _subscriberStarted;
+
+        public Task StartAsync(CancellationToken stoppingToken)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return;
-            }
+            if (stoppingToken.IsCancellationRequested) return Task.CompletedTask;
 
-            lock (_syncRoot)
+            // Double check lock to ensure single-start
+            if (!_subscriberStarted)
             {
-                foreach (var regionSubscriber in _subscribersByRegionAndQueue)
+                lock (_syncRoot)
                 {
-                    foreach (var queueSubscriber in regionSubscriber.Value)
+                    if (!_subscriberStarted)
                     {
-                        if (queueSubscriber.Value.IsListening)
-                        {
-                            continue;
-                        }
-
-                        queueSubscriber.Value.Listen(cancellationToken);
+                        _subscriberCompletionTask = RunImplAsync(stoppingToken);
+                        _subscriberStarted = true;
                     }
                 }
             }
+
+            return _subscriberCompletionTask;
         }
+
+        private Task RunImplAsync(CancellationToken stoppingToken)
+        {
+            var dispatcher = new MessageDispatcher(
+                SerializationRegister,
+                Monitor,
+                HandlerMap,
+                _loggerFactory,
+                MessageBackoffStrategy,
+                MessageContextAccessor);
+
+            var subscriptionGroupFactory = new SubscriptionGroupFactory(
+                dispatcher,
+                Monitor,
+                _loggerFactory);
+
+            SubscriptionGroups = subscriptionGroupFactory.Create(Config.SubscriptionGroupDefaultSettings, _subscriptionGroupSettings);
+
+            _log.LogInformation("Starting bus with settings: {@Response}", SubscriptionGroups.Interrogate());
+
+            return SubscriptionGroups.RunAsync(stoppingToken);
+        }
+
+        public async Task PublishAsync(Message message, CancellationToken cancellationToken)
+            => await PublishAsync(message, null, cancellationToken).ConfigureAwait(false);
 
         public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
@@ -148,7 +173,8 @@ namespace JustSaying
 
         public IInterrogationResponse WhatDoIHave()
         {
-            return new InterrogationResponse(Config.Regions, _subscribers, _publishers);
+            var handlers = HandlerMap.Types.Select(t => new Subscriber(t));
+            return new InterrogationResponse(Config.Regions, handlers, _publishers);
         }
 
         private IMessagePublisher GetActivePublisherForMessage(Message message)
@@ -162,11 +188,14 @@ namespace JustSaying
 
             string activeRegion = GetActiveRegionWithChangeLog();
 
-            var publishersForRegionFound = _publishersByRegionAndType.TryGetValue(activeRegion, out var publishersForRegion);
+            var publishersForRegionFound =
+                _publishersByRegionAndType.TryGetValue(activeRegion, out var publishersForRegion);
             if (!publishersForRegionFound)
             {
-                _log.LogError("Error publishing message. No publishers registered for active region '{Region}'.", activeRegion);
-                throw new InvalidOperationException($"Error publishing message. No publishers registered for active region '{activeRegion}'.");
+                _log.LogError("Error publishing message. No publishers registered for active region '{Region}'.",
+                    activeRegion);
+                throw new InvalidOperationException(
+                    $"Error publishing message. No publishers registered for active region '{activeRegion}'.");
             }
 
             var messageType = message.GetType();
@@ -179,7 +208,8 @@ namespace JustSaying
                     messageType,
                     activeRegion);
 
-                throw new InvalidOperationException($"Error publishing message, no publishers registered for message type '{messageType}' in active region '{activeRegion}'.");
+                throw new InvalidOperationException(
+                    $"Error publishing message, no publishers registered for message type '{messageType}' in active region '{activeRegion}'.");
             }
 
             return publisher;
@@ -198,8 +228,10 @@ namespace JustSaying
                 }
                 else
                 {
-                    _log.LogInformation("Active region for publishing has been changed to '{Region}', was '{PreviousRegion}'.",
-                        currentActiveRegion, _previousActiveRegion);
+                    _log.LogInformation(
+                        "Active region for publishing has been changed to '{Region}', was '{PreviousRegion}'.",
+                        currentActiveRegion,
+                        _previousActiveRegion);
                 }
 
                 _previousActiveRegion = currentActiveRegion;
@@ -228,13 +260,11 @@ namespace JustSaying
             attemptCount++;
             try
             {
-                var watch = Stopwatch.StartNew();
-
-                await publisher.PublishAsync(message, metadata, cancellationToken)
-                    .ConfigureAwait(false);
-
-                watch.Stop();
-                Monitor.PublishMessageTime(watch.Elapsed);
+                using (Monitor.MeasurePublish())
+                {
+                    await publisher.PublishAsync(message, metadata, cancellationToken)
+                        .ConfigureAwait(false);
+                }
             }
             catch (Exception ex)
             {
@@ -260,11 +290,20 @@ namespace JustSaying
                     attemptCount,
                     Config.PublishFailureReAttempts);
 
-                var delayForAttempt = TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
+                var delayForAttempt =
+                    TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
                 await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);
 
                 await PublishAsync(publisher, message, metadata, attemptCount, cancellationToken).ConfigureAwait(false);
             }
+        }
+
+        public InterrogationResult Interrogate()
+        {
+            return new InterrogationResult(new
+            {
+                SubscriptionGroups = SubscriptionGroups.Interrogate()
+            });
         }
     }
 }

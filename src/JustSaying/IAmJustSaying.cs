@@ -1,7 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
@@ -10,14 +15,16 @@ namespace JustSaying
 {
     public interface IAmJustSaying : IMessagePublisher
     {
-        void AddNotificationSubscriber(string region, INotificationSubscriber subscriber);
+        void AddQueue(string region, string subscriptionGroup, ISqsQueue queue);
 
-        void AddMessageHandler<T>(string region, string queueName, Func<IHandlerAsync<T>> handler) where T : Message;
+        void AddMessageHandler<T>(string queue, Func<IHandlerAsync<T>> handler) where T : Message;
 
         // TODO - swap params
         void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message;
 
-        void Start(CancellationToken cancellationToken = default);
+        void SetGroupSettings(IDictionary<string, SubscriptionGroupConfigBuilder> settings);
+
+        Task StartAsync(CancellationToken stoppingToken);
 
         IMessagingConfig Config { get; }
 
@@ -28,5 +35,7 @@ namespace JustSaying
         IMessageLockAsync MessageLock { get; set; }
 
         IMessageContextAccessor MessageContextAccessor { get; set; }
+
+        IMessageBackoffStrategy MessageBackoffStrategy { get; set; }
     }
 }

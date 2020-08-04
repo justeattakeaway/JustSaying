@@ -29,7 +29,6 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
         [AwsTheory]
         [InlineData(100)]
         [InlineData(1000)]
-        [InlineData(10000)]
         public async Task Messages_Are_Throttled_But_Still_Delivered(int throttleMessageCount)
         {
             // Arrange
@@ -104,7 +103,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                    .ReturnsForAnyArgs(true)
                    .AndDoes((_) => Interlocked.Increment(ref count));
 
-            IServiceCollection services = GivenJustSaying()
+            IServiceCollection services = GivenJustSaying(LogLevel.Warning)
                 .ConfigureJustSaying((builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
                 .AddSingleton(handler);
 
@@ -118,7 +117,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                     var stopwatch = Stopwatch.StartNew();
                     var delay = IsSimulator ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(5);
 
-                    listener.Start(cancellationToken);
+                    _ = listener.StartAsync(cancellationToken);
 
                     do
                     {

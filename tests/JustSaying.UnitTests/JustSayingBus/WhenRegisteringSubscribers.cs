@@ -1,59 +1,66 @@
-using System.Collections.ObjectModel;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using JustSaying.Messaging;
-using JustSaying.Messaging.Interrogation;
+using Amazon.SQS;
+using Amazon.SQS.Model;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.AwsTools.MessageHandling;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Message = Amazon.SQS.Model.Message;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
     public class WhenRegisteringSubscribers : GivenAServiceBus
     {
-        private INotificationSubscriber _subscriber1;
-        private INotificationSubscriber _subscriber2;
+        private ISqsQueue _queue1;
+        private ISqsQueue _queue2;
+        private IAmazonSQS _client1;
+        private IAmazonSQS _client2;
 
         protected override void Given()
         {
             base.Given();
-            _subscriber1 = Substitute.For<INotificationSubscriber>();
-            _subscriber1.Queue.Returns("queue1");
-            _subscriber1.Subscribers.Returns(new Collection<ISubscriber>
-            {
-                new Subscriber(typeof (OrderAccepted)),
-                new Subscriber(typeof (OrderRejected))
-            });
-            _subscriber2 = Substitute.For<INotificationSubscriber>();
-            _subscriber2.Queue.Returns("queue2");
-            _subscriber2.Subscribers.Returns(new Collection<ISubscriber> { new Subscriber(typeof(SimpleMessage)) });
+
+            _client1 = CreateSubstituteClient();
+            _client2 = CreateSubstituteClient();
+
+            _queue1 = Substitute.For<ISqsQueue>();
+            _queue1.QueueName.Returns("queue1");
+            _queue1.Uri.Returns(new Uri("http://test.com"));
+
+            _queue1.Client.Returns(_client1);
+
+            _queue2 = Substitute.For<ISqsQueue>();
+            _queue2.QueueName.Returns("queue2");
+            _queue2.Uri.Returns(new Uri("http://test.com"));
+            _queue2.Client.Returns(_client2);
         }
 
-        protected override Task WhenAsync()
+        protected override async Task WhenAsync()
         {
-            SystemUnderTest.AddNotificationSubscriber("region1", _subscriber1);
-            SystemUnderTest.AddNotificationSubscriber("region1", _subscriber2);
-            SystemUnderTest.Start();
+            SystemUnderTest.AddMessageHandler(_queue1.QueueName, () => new InspectableHandler<OrderAccepted>());
+            SystemUnderTest.AddMessageHandler(_queue1.QueueName, () => new InspectableHandler<OrderRejected>());
+            SystemUnderTest.AddMessageHandler(_queue1.QueueName, () => new InspectableHandler<SimpleMessage>());
 
-            return Task.CompletedTask;
+            SystemUnderTest.AddQueue("region1", typeof(TestMessage).FullName, _queue1);
+            SystemUnderTest.AddQueue("region1", typeof(TestMessage).FullName, _queue2);
+
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeoutPeriod);
+
+           await Assert.ThrowsAnyAsync<OperationCanceledException>(() => SystemUnderTest.StartAsync(cts.Token));
         }
 
         [Fact]
-        public void SubscribersStartedUp()
+        public async Task SubscribersStartedUp()
         {
-            _subscriber1.Received().Listen(default);
-            _subscriber2.Received().Listen(default);
-        }
-
-        [Fact]
-        public void CallingStartTwiceDoesNotStartListeningTwice()
-        {
-            _subscriber1.IsListening.Returns(true);
-            _subscriber2.IsListening.Returns(true);
-            SystemUnderTest.Start();
-            _subscriber1.Received(1).Listen(default);
-            _subscriber2.Received(1).Listen(default);
+            await _client1.Received().ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>());
+            await _client2.Received().ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]
@@ -65,6 +72,26 @@ namespace JustSaying.UnitTests.JustSayingBus
             response.Subscribers.First(x => x.MessageType == typeof(OrderAccepted)).ShouldNotBe(null);
             response.Subscribers.First(x => x.MessageType == typeof(OrderRejected)).ShouldNotBe(null);
             response.Subscribers.First(x => x.MessageType == typeof(SimpleMessage)).ShouldNotBe(null);
+        }
+
+        private static IAmazonSQS CreateSubstituteClient()
+        {
+            var client = Substitute.For<IAmazonSQS>();
+            client
+                .ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
+                .Returns(new ReceiveMessageResponse
+                {
+                    Messages = new List<Message>
+                    {
+                        new TestMessage(),
+                    }
+                });
+
+            return client;
+        }
+
+        private class TestMessage : Message
+        {
         }
     }
 }

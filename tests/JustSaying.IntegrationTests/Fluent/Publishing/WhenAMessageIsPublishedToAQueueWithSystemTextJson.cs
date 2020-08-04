@@ -43,7 +43,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                 services,
                 async (publisher, listener, cancellationToken) =>
                 {
-                    listener.Start(cancellationToken);
+                    _ = listener.StartAsync(cancellationToken);
 
                     // Act
                     await publisher.PublishAsync(message, cancellationToken);

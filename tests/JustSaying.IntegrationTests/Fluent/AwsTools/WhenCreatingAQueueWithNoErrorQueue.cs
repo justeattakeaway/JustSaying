@@ -36,7 +36,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
 
             // Assert
             await Patiently.AssertThatAsync(
-                async () => !await queue.ErrorQueue.ExistsAsync());
+                OutputHelper, async () => !await queue.ErrorQueue.ExistsAsync());
         }
     }
 }

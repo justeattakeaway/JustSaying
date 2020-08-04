@@ -45,10 +45,12 @@ namespace JustSaying
                     registry.AddJustSaying(
                         (builder) =>
                         {
-                            builder.Client((options) => options.WithBasicCredentials("accessKey", "secretKey").WithServiceUri(TestEnvironment.SimulatorUrl))
-                                   .Messaging((options) => options.WithRegions("eu-west-1"))
-                                   .Publications((options) => options.WithQueue<SimpleMessage>())
-                                   .Subscriptions((options) => options.ForQueue<SimpleMessage>());
+                            builder.Client((options) =>
+                                    options.WithBasicCredentials("accessKey", "secretKey")
+                                        .WithServiceUri(TestEnvironment.SimulatorUrl))
+                                .Messaging((options) => options.WithRegions("eu-west-1"))
+                                .Publications((options) => options.WithQueue<SimpleMessage>())
+                                .Subscriptions((options) => options.ForQueue<SimpleMessage>());
                         });
                 });
 
@@ -58,7 +60,7 @@ namespace JustSaying
             var message = new SimpleMessage();
 
             using var source = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-            listener.Start(source.Token);
+            _ = listener.StartAsync(source.Token);
 
             // Act
             await publisher.PublishAsync(message, source.Token);

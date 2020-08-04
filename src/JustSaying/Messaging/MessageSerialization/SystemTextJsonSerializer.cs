@@ -1,5 +1,6 @@
 using System;
 using System.Text.Json;
+using JustSaying.Messaging.Channels.Context;
 using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialization
@@ -52,6 +53,14 @@ namespace JustSaying.Messaging.MessageSerialization
 
                 return subject;
             }
+        }
+
+        public MessageAttributes GetMessageAttributes(string message)
+        {
+            // todo: Implement in a future PR
+            // https://github.com/justeat/JustSaying/issues/723
+
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc />

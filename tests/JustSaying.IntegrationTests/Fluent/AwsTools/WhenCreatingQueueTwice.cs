@@ -26,7 +26,8 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
             IAwsClientFactory clientFactory = CreateClientFactory();
 
             var subjectProvider = new NonGenericMessageSubjectProvider();
-            var serializationRegister = new MessageSerializationRegister(subjectProvider);
+            var serializerFactor = new NewtonsoftSerializationFactory();
+            var serializationRegister = new MessageSerializationRegister(subjectProvider, serializerFactor);
 
             var client = clientFactory.GetSnsClient(Region);
 

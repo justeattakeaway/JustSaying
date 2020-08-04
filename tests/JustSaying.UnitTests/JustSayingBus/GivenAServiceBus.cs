@@ -1,5 +1,8 @@
 using System;
 using System.Threading.Tasks;
+using JustSaying.Messaging.Channels;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -17,6 +20,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         protected Exception ThrownException { get; private set; }
 
         protected JustSaying.JustSayingBus SystemUnderTest { get; private set; }
+
+        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
 
         public virtual async Task InitializeAsync()
         {
@@ -43,13 +48,19 @@ namespace JustSaying.UnitTests.JustSayingBus
             Config = Substitute.For<IMessagingConfig>();
             Monitor = Substitute.For<IMessageMonitor>();
             LoggerFactory = Substitute.For<ILoggerFactory>();
+            Config.SubscriptionGroupDefaultSettings = new SubscriptionGroupSettingsBuilder()
+                .WithDefaultConcurrencyLimit(8);
         }
 
         protected abstract Task WhenAsync();
 
         private JustSaying.JustSayingBus CreateSystemUnderTest()
         {
-            return new JustSaying.JustSayingBus(Config, null, LoggerFactory)
+            var subjectProvider = new GenericMessageSubjectProvider();
+            var serializerFactory = new NewtonsoftSerializationFactory();
+            return new JustSaying.JustSayingBus(Config,
+                new MessageSerializationRegister(subjectProvider, serializerFactory),
+                LoggerFactory)
             {
                 Monitor = Monitor
             };

@@ -1,0 +1,38 @@
+{
+  "SubscriptionGroups": [
+    {
+      "Name": "queueA",
+      "ConcurrencyLimit": 1,
+      "Multiplexer": {
+        "ChannelCapacity": 30,
+        "ReaderCount": 1
+      },
+      "ReceiveBuffers": [
+        {
+          "BufferSize": 20,
+          "QueueName": "TestQueueA",
+          "Region": "",
+          "Prefetch": 5,
+          "BackoffStrategyName": null
+        }
+      ]
+    },
+    {
+      "Name": "queueB",
+      "ConcurrencyLimit": 8,
+      "Multiplexer": {
+        "ChannelCapacity": 100,
+        "ReaderCount": 1
+      },
+      "ReceiveBuffers": [
+        {
+          "BufferSize": 10,
+          "QueueName": "TestQueueB",
+          "Region": "",
+          "Prefetch": 10,
+          "BackoffStrategyName": null
+        }
+      ]
+    }
+  ]
+}

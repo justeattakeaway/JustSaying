@@ -40,27 +40,27 @@ namespace JustSaying.IntegrationTests.Fluent
 
         protected virtual TimeSpan Timeout => TimeSpan.FromSeconds(Debugger.IsAttached ? 60 : 20);
 
-        protected virtual string UniqueName { get; } = $"{DateTime.UtcNow.Ticks}-integration-tests";
+        protected virtual string UniqueName { get; } = $"{Guid.NewGuid():N}-integration-tests";
 
-        protected IServiceCollection GivenJustSaying()
-            => Given((_) => { });
+        protected IServiceCollection GivenJustSaying(LogLevel? levelOverride = null)
+            => Given((_) => { }, levelOverride);
 
-        protected IServiceCollection Given(Action<MessagingBusBuilder> configure)
-            => Given((builder, _) => configure(builder));
+        protected IServiceCollection Given(Action<MessagingBusBuilder> configure, LogLevel? levelOverride = null)
+            => Given((builder, _) => configure(builder), levelOverride);
 
-        protected IServiceCollection Given(Action<MessagingBusBuilder, IServiceProvider> configure)
+        protected IServiceCollection Given(Action<MessagingBusBuilder, IServiceProvider> configure, LogLevel? levelOverride = null)
         {
             return new ServiceCollection()
-                .AddLogging((p) => p.AddXUnit(OutputHelper).SetMinimumLevel(LogLevel.Debug))
+                .AddLogging((p) => p.AddXUnit(OutputHelper).SetMinimumLevel(levelOverride ?? LogLevel.Debug))
                 .AddJustSaying(
                     (builder, serviceProvider) =>
                     {
                         builder.Messaging((options) => options.WithRegion(RegionName))
-                               .Client((options) =>
-                                {
-                                    options.WithSessionCredentials(AccessKeyId, SecretAccessKey, SessionToken)
-                                           .WithServiceUri(ServiceUri);
-                                });
+                            .Client((options) =>
+                            {
+                                options.WithSessionCredentials(AccessKeyId, SecretAccessKey, SessionToken)
+                                    .WithServiceUri(ServiceUri);
+                            });
 
                         configure(builder, serviceProvider);
                     });

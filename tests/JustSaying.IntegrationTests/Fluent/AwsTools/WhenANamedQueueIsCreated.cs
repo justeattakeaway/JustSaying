@@ -35,7 +35,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
             await queue.CreateAsync(new SqsBasicConfiguration());
 
             // Assert
-            await Patiently.AssertThatAsync(
+            await Patiently.AssertThatAsync(OutputHelper,
                 async () => await queue.ErrorQueue.ExistsAsync(),
                 40.Seconds());
         }

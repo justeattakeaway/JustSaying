@@ -34,11 +34,13 @@ namespace JustSaying.IntegrationTests
                 .AddJustSaying(
                     (builder) =>
                     {
-                        builder.Client((options) => options.WithBasicCredentials("accessKey", "secretKey").WithServiceUri(TestEnvironment.SimulatorUrl))
-                               .Messaging((options) => options.WithRegions("eu-west-1"))
-                               .Publications((options) => options.WithQueue<QueueMessage>())
-                               .Subscriptions((options) => options.ForQueue<QueueMessage>())
-                               .Services((options) => options.WithMessageMonitoring(() => new MyMonitor()));
+                        builder.Client((options) =>
+                                options.WithBasicCredentials("accessKey", "secretKey")
+                                    .WithServiceUri(TestEnvironment.SimulatorUrl))
+                            .Messaging((options) => options.WithRegions("eu-west-1"))
+                            .Publications((options) => options.WithQueue<QueueMessage>())
+                            .Subscriptions((options) => options.ForQueue<QueueMessage>())
+                            .Services((options) => options.WithMessageMonitoring(() => new MyMonitor()));
                     })
                 .AddJustSayingHandler<QueueMessage, QueueHandler>();
 
@@ -50,7 +52,7 @@ namespace JustSaying.IntegrationTests
             using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
             {
                 // Act
-                listener.Start(source.Token);
+                _ = listener.StartAsync(source.Token);
 
                 var message = new QueueMessage();
 
@@ -75,10 +77,13 @@ namespace JustSaying.IntegrationTests
                 .AddJustSaying(
                     (builder) =>
                     {
-                        builder.Client((options) => options.WithBasicCredentials("accessKey", "secretKey").WithServiceUri(TestEnvironment.SimulatorUrl))
-                               .Messaging((options) => options.WithRegions("eu-west-1"))
-                               .Publications((options) => options.WithTopic<TopicMessage>())
-                               .Subscriptions((options) => options.ForTopic<TopicMessage>());
+                        builder
+                            .Client((options) =>
+                                options.WithBasicCredentials("accessKey", "secretKey")
+                                    .WithServiceUri(TestEnvironment.SimulatorUrl))
+                            .Messaging((options) => options.WithRegions("eu-west-1"))
+                            .Publications((options) => options.WithTopic<TopicMessage>())
+                            .Subscriptions((options) => options.ForTopic<TopicMessage>());
                     })
                 .AddJustSayingHandler<TopicMessage, TopicHandler>();
 
@@ -90,7 +95,7 @@ namespace JustSaying.IntegrationTests
             using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
             {
                 // Act
-                listener.Start(source.Token);
+                _ = listener.StartAsync(source.Token);
 
                 var message = new TopicMessage();
 
@@ -123,7 +128,7 @@ namespace JustSaying.IntegrationTests
             using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
             {
                 // Act
-                listener.Start(source.Token);
+                listener.StartAsync(source.Token);
             }
         }
 
@@ -149,7 +154,7 @@ namespace JustSaying.IntegrationTests
             using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
             {
                 // Act
-                listener.Start(source.Token);
+                _ = listener.StartAsync(source.Token);
 
                 var message = new QueueMessage();
 
@@ -171,7 +176,7 @@ namespace JustSaying.IntegrationTests
             {
                 builder.Client(
                     (options) => options.WithSessionCredentials("accessKeyId", "secretKeyId", "token")
-                                        .WithServiceUri(TestEnvironment.SimulatorUrl));
+                        .WithServiceUri(TestEnvironment.SimulatorUrl));
             }
         }
 
@@ -186,7 +191,8 @@ namespace JustSaying.IntegrationTests
 
             public void Configure(MessagingBusBuilder builder)
             {
-                builder.Services((p) => p.WithMessageMonitoring(ServiceProvider.GetRequiredService<MyMonitor>));
+                builder.Services(
+                    (p) => p.WithMessageMonitoring(ServiceProvider.GetRequiredService<MyMonitor>));
             }
         }
 
@@ -195,7 +201,7 @@ namespace JustSaying.IntegrationTests
             public void Configure(MessagingBusBuilder builder)
             {
                 builder.Publications((p) => p.WithQueue<QueueMessage>())
-                       .Subscriptions((p) => p.ForQueue<QueueMessage>());
+                    .Subscriptions((p) => p.ForQueue<QueueMessage>());
             }
         }
 
@@ -208,8 +214,7 @@ namespace JustSaying.IntegrationTests
         }
 
         private sealed class QueueMessage : Message
-        {
-        }
+        { }
 
         private sealed class QueueHandler : IHandlerAsync<QueueMessage>
         {
@@ -223,8 +228,7 @@ namespace JustSaying.IntegrationTests
         }
 
         private sealed class TopicMessage : Message
-        {
-        }
+        { }
 
         private sealed class TopicHandler : IHandlerAsync<TopicMessage>
         {
@@ -240,32 +244,28 @@ namespace JustSaying.IntegrationTests
         private sealed class MyMonitor : IMessageMonitor
         {
             public void HandleException(Type messageType)
-            {
-            }
+            { }
+
+            public void HandleError(Exception ex, Amazon.SQS.Model.Message message)
+            { }
 
             public void HandleThrottlingTime(TimeSpan duration)
-            {
-            }
+            { }
 
             public void HandleTime(TimeSpan duration)
-            {
-            }
+            { }
 
             public void IncrementThrottlingStatistic()
-            {
-            }
+            { }
 
             public void IssuePublishingMessage()
-            {
-            }
+            { }
 
             public void PublishMessageTime(TimeSpan duration)
-            {
-            }
+            { }
 
             public void ReceiveMessageTime(TimeSpan duration, string queueName, string region)
-            {
-            }
+            { }
         }
     }
 }

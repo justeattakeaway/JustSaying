@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Models;
 
 namespace JustSaying.Fluent
@@ -23,10 +24,32 @@ namespace JustSaying.Fluent
         /// </summary>
         internal MessagingBusBuilder Parent { get; }
 
+        internal SubscriptionGroupSettingsBuilder Defaults = new SubscriptionGroupSettingsBuilder();
+
         /// <summary>
         /// Gets the configured subscription builders.
         /// </summary>
         private IList<ISubscriptionBuilder<Message>> Subscriptions { get; } = new List<ISubscriptionBuilder<Message>>();
+
+        private IDictionary<string, SubscriptionGroupConfigBuilder> SubscriptionGroupSettings { get; } =
+            new Dictionary<string, SubscriptionGroupConfigBuilder>();
+
+        /// <summary>
+        /// Configure the default settings for all subscription groups.
+        /// </summary>
+        /// <param name="configure">A delegate that configures the default settings.</param>
+        /// <returns>
+        /// The current <see cref="SubscriptionsBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        public SubscriptionsBuilder WithDefaults(Action<SubscriptionGroupSettingsBuilder> configure)
+        {
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
+            configure(Defaults);
+            return this;
+        }
 
         /// <summary>
         /// Configures a queue subscription for the default queue.
@@ -75,10 +98,7 @@ namespace JustSaying.Fluent
         public SubscriptionsBuilder ForQueue<T>(Action<QueueSubscriptionBuilder<T>> configure)
             where T : Message
         {
-            if (configure == null)
-            {
-                throw new ArgumentNullException(nameof(configure));
-            }
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
 
             var builder = new QueueSubscriptionBuilder<T>();
 
@@ -133,10 +153,7 @@ namespace JustSaying.Fluent
         public SubscriptionsBuilder ForTopic<T>(Action<TopicSubscriptionBuilder<T>> configure)
             where T : Message
         {
-            if (configure == null)
-            {
-                throw new ArgumentNullException(nameof(configure));
-            }
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
 
             var builder = new TopicSubscriptionBuilder<T>();
 
@@ -156,17 +173,49 @@ namespace JustSaying.Fluent
         /// </exception>
         internal void Configure(JustSayingFluently bus)
         {
-            var resolver = Parent.ServicesBuilder?.HandlerResolver?.Invoke() ?? Parent.ServiceResolver.ResolveService<IHandlerResolver>();
+            var resolver = Parent.ServicesBuilder?.HandlerResolver?.Invoke() ??
+                Parent.ServiceResolver.ResolveService<IHandlerResolver>();
 
             if (resolver == null)
             {
                 throw new InvalidOperationException($"No {nameof(IHandlerResolver)} is registered.");
             }
 
+            bus.Bus.SetGroupSettings(SubscriptionGroupSettings);
+
             foreach (ISubscriptionBuilder<Message> builder in Subscriptions)
             {
                 builder.Configure(bus, resolver);
             }
+        }
+
+        /// <summary>
+        /// Adds or updates SubscriptionGroup configuration.
+        /// </summary>
+        /// <param name="groupName">The name of the group to update.</param>
+        /// <param name="action">The update action to apply to the configuration.</param>
+        /// <returns>
+        /// The current <see cref="SubscriptionsBuilder"/>.
+        /// </returns>
+        public SubscriptionsBuilder WithSubscriptionGroup(
+            string groupName,
+            Action<SubscriptionGroupConfigBuilder> action)
+        {
+            if (string.IsNullOrEmpty(groupName)) throw new ArgumentException("Cannot be null or empty.", nameof(groupName));
+            if (action == null) throw new ArgumentNullException(nameof(action));
+
+            if (SubscriptionGroupSettings.TryGetValue(groupName, out var settings))
+            {
+                action.Invoke(settings);
+            }
+            else
+            {
+                var newSettings = new SubscriptionGroupConfigBuilder(groupName);
+                action.Invoke(newSettings);
+                SubscriptionGroupSettings.Add(groupName, newSettings);
+            }
+
+            return this;
         }
     }
 }

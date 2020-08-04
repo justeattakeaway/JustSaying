@@ -71,7 +71,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
             IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
             using var source = new CancellationTokenSource(Timeout);
-            listener.Start(source.Token);
+            _ = listener.StartAsync(source.Token);
 
             var message = new T();
 
@@ -79,7 +79,14 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
             await publisher.PublishAsync(message, source.Token);
 
             // Assert
-            completionSource.Task.Wait(source.Token);
+            try
+            {
+                completionSource.Task.Wait(source.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // Ignore
+            }
 
             await handler.Received(1).Handle(Arg.Is<T>((p) => p.UniqueKey() == message.UniqueKey()));
         }

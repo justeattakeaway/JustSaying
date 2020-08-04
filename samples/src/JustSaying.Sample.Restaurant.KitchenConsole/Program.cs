@@ -1,10 +1,11 @@
 using System;
 using System.Threading.Tasks;
+using JustSaying.Sample.Restaurant.KitchenConsole.Handlers;
 using JustSaying.Sample.Restaurant.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace JustSaying.Sample.Restaurant.KitchenConsole
 {
@@ -12,8 +13,30 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
     {
         public static async Task Main()
         {
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .MinimumLevel.Debug()
+                .Enrich.WithProperty("AppName", nameof(KitchenConsole))
+                .CreateLogger();
+
             Console.Title = "KitchenConsole";
 
+            try
+            {
+                await Run();
+            }
+            catch (Exception e)
+            {
+                Log.Fatal(e, "Error occurred during startup: {Message}", e.Message);
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
+        }
+
+        private static async Task Run()
+        {
             await new HostBuilder()
                 .ConfigureAppConfiguration((hostContext, config) =>
                 {
@@ -21,63 +44,75 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
                     config.AddJsonFile($"appsettings.{hostContext.HostingEnvironment.EnvironmentName}.json", optional: true);
                     config.AddEnvironmentVariables();
                 })
-               .ConfigureLogging(loggingBuilder => loggingBuilder.AddConsole())
-               .ConfigureServices((hostContext, services) =>
-               {
-                   var configuration = hostContext.Configuration;
-                   services.AddJustSaying(config =>
-                   {
-                       config.Client(x =>
-                       {
-                           if (configuration.HasAWSServiceUrl())
-                           {
-                               // The AWS client SDK allows specifying a custom HTTP endpoint.
-                               // For testing purposes it is useful to specify a value that
-                               // points to a docker image such as `p4tin/goaws` or `localstack/localstack`
-                               x.WithServiceUri(configuration.GetAWSServiceUri())
-                                .WithAnonymousCredentials();
-                           }
-                           else
-                           {
-                               // The real AWS environment will require some means of authentication
-                               //x.WithBasicCredentials("###", "###");
-                               //x.WithSessionCredentials("###", "###", "###");
-                           }
-                       });
+                .UseSerilog()
+                .ConfigureServices((hostContext, services) =>
+                {
+                    var configuration = hostContext.Configuration;
+                    services.AddJustSaying(config =>
+                    {
+                        config.Client(x =>
+                        {
+                            if (configuration.HasAWSServiceUrl())
+                            {
+                                // The AWS client SDK allows specifying a custom HTTP endpoint.
+                                // For testing purposes it is useful to specify a value that
+                                // points to a docker image such as `p4tin/goaws` or `localstack/localstack`
+                                x.WithServiceUri(configuration.GetAWSServiceUri())
+                                 .WithAnonymousCredentials();
+                            }
+                            else
+                            {
+                                // The real AWS environment will require some means of authentication
+                                //x.WithBasicCredentials("###", "###");
+                                //x.WithSessionCredentials("###", "###", "###");
+                            }
+                        });
 
-                       config.Messaging(x =>
-                       {
-                           // Configures which AWS Region to operate in
-                           x.WithRegion(configuration.GetAWSRegion());
-                       });
+                        config.Messaging(x =>
+                        {
+                            // Configures which AWS Region to operate in
+                            x.WithRegion(configuration.GetAWSRegion());
+                        });
 
-                       config.Subscriptions(x =>
-                       {
-                           // Creates the following if they do not already exist
-                           //  - a SQS queue of name `orderplacedevent`
-                           //  - a SQS queue of name `orderplacedevent_error`
-                           //  - a SNS topic of name `orderplacedevent`
-                           //  - a SNS topic subscription on topic 'orderplacedevent' and queue 'orderplacedevent'
-                           x.ForTopic<OrderPlacedEvent>();
-                       });
+                        config.Subscriptions(x =>
+                        {
+                            x.WithSubscriptionGroup("GroupA",
+                                c => c.WithPrefetch(10)
+                                    .WithMultiplexerCapacity(10)
+                                    .WithConcurrencyLimit(5));
 
-                       config.Publications(x =>
-                       {
-                           // Creates the following if they do not already exist
-                           //  - a SNS topic of name `orderreadyevent`
-                           x.WithTopic<OrderReadyEvent>();
-                       });
-                   });
+                            // Creates the following if they do not already exist
+                            //  - a SQS queue of name `orderplacedevent`
+                            //  - a SQS queue of name `orderplacedevent_error`
+                            //  - a SNS topic of name `orderplacedevent`
+                            //  - a SNS topic subscription on topic 'orderplacedevent' and queue 'orderplacedevent'
+                            x.ForTopic<OrderPlacedEvent>(c =>
+                                c.WithReadConfiguration(rc  =>
+                                    rc.WithSubscriptionGroup("GroupA")));
+                            x.ForTopic<OrderOnItsWayEvent>(c =>
+                                c.WithReadConfiguration(rc =>
+                                    rc.WithSubscriptionGroup("GroupB")));
+                        });
 
-                   // Added a message handler for message type for 'OrderPlacedEvent' on topic 'orderplacedevent' and queue 'orderplacedevent'
-                   services.AddJustSayingHandler<OrderPlacedEvent, OrderPlacedEventHandler>();
+                        config.Publications(x =>
+                        {
+                            // Creates the following if they do not already exist
+                            //  - a SNS topic of name `orderreadyevent`
+                            x.WithTopic<OrderReadyEvent>();
+                            x.WithTopic<OrderDeliveredEvent>();
+                        });
+                    });
 
-                   // Add a background service that is listening for messages related to the above subscriptions
-                   services.AddHostedService<Subscriber>();
-               })
-              .UseConsoleLifetime()
-              .Build()
-              .RunAsync();
+                    // Added a message handler for message type for 'OrderPlacedEvent' on topic 'orderplacedevent' and queue 'orderplacedevent'
+                    services.AddJustSayingHandler<OrderPlacedEvent, OrderPlacedEventHandler>();
+                    services.AddJustSayingHandler<OrderOnItsWayEvent, OrderOnItsWayEventHandler>();
+
+                    // Add a background service that is listening for messages related to the above subscriptions
+                    services.AddHostedService<Subscriber>();
+                })
+                .UseConsoleLifetime()
+                .Build()
+                .RunAsync();
         }
     }
 }

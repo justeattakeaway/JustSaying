@@ -1,4 +1,5 @@
 using System;
+using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;

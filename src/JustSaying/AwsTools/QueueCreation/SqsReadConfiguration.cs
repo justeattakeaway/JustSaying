@@ -1,10 +1,8 @@
-using System;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageProcessingStrategies;
 
 namespace JustSaying.AwsTools.QueueCreation
 {
-    public enum SubscriptionType { ToTopic, PointToPoint };
-
     public class SqsReadConfiguration : SqsBasicConfiguration
     {
         public SqsReadConfiguration(SubscriptionType subscriptionType)
@@ -14,48 +12,61 @@ namespace JustSaying.AwsTools.QueueCreation
             ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod;
             VisibilityTimeout = JustSayingConstants.DefaultVisibilityTimeout;
             RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
+            SubscriptionConfig = new SubscriptionGroupSettingsBuilder();
         }
 
+        public SubscriptionGroupSettingsBuilder SubscriptionConfig { get; private set; }
         public SubscriptionType SubscriptionType { get; private set; }
 
-        public string QueueName { get; set; }
         public string TopicName { get; set; }
         public string PublishEndpoint { get; set; }
 
-        public int? MaxAllowedMessagesInFlight { get; set; }
-        public IMessageProcessingStrategy MessageProcessingStrategy { get; set; }
-        public Action<Exception, Amazon.SQS.Model.Message> OnError { get; set; }
         public string TopicSourceAccount { get; set; }
         public IMessageBackoffStrategy MessageBackoffStrategy { get; set; }
         public string FilterPolicy { get; set; }
+        public string SubscriptionGroupName { get; set; }
 
-        public override void Validate()
+        protected override void OnValidating()
         {
-            ValidateSqsConfiguration();
-            ValidateSnsConfiguration();
-        }
-
-        public void ValidateSqsConfiguration()
-        {
-            base.Validate();
-
-            if (MaxAllowedMessagesInFlight.HasValue && MessageProcessingStrategy != null)
+            if (SubscriptionType == SubscriptionType.ToTopic)
             {
-                throw new ConfigurationErrorsException("You have provided both 'maxAllowedMessagesInFlight' and 'messageProcessingStrategy' - these settings are mutually exclusive.");
+                if (string.IsNullOrWhiteSpace(TopicName))
+                {
+                    throw new ConfigurationErrorsException("Invalid configuration. Topic name must be provided.");
+                }
+
+                if (PublishEndpoint == null)
+                {
+                    throw new ConfigurationErrorsException("You must provide a value for PublishEndpoint.");
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(SubscriptionGroupName))
+            {
+                throw new ConfigurationErrorsException("You must provide a name for the subscription group");
             }
         }
 
-        private void ValidateSnsConfiguration()
+        public SqsReadConfiguration Copy()
         {
-            if (string.IsNullOrWhiteSpace(TopicName))
+            return new SqsReadConfiguration(SubscriptionType)
             {
-                throw new ConfigurationErrorsException("Invalid configuration. Topic name must be provided.");
-            }
-
-            if (PublishEndpoint == null)
-            {
-                throw new ConfigurationErrorsException("You must provide a value for PublishEndpoint.");
-            }
+                SubscriptionConfig = SubscriptionConfig,
+                FilterPolicy = FilterPolicy,
+                PublishEndpoint = PublishEndpoint,
+                TopicName = TopicName,
+                MessageBackoffStrategy = MessageBackoffStrategy,
+                TopicSourceAccount = TopicSourceAccount,
+                DeliveryDelay = DeliveryDelay,
+                MessageRetention = MessageRetention,
+                SubscriptionGroupName = SubscriptionGroupName,
+                QueueName = QueueName,
+                VisibilityTimeout = VisibilityTimeout,
+                ErrorQueueOptOut = ErrorQueueOptOut,
+                ErrorQueueRetentionPeriod = ErrorQueueRetentionPeriod,
+                ServerSideEncryption = ServerSideEncryption,
+                RetryCountBeforeSendingToErrorQueue = RetryCountBeforeSendingToErrorQueue
+            };
         }
     }
 }
