@@ -21,6 +21,6 @@ namespace JustSaying.Messaging.Interrogation
         /// It should only be used for diagnostic purposes.</remarks>
         public object Data { get; }
 
-        internal static InterrogationResult Empty => new InterrogationResult(new {});
+        internal static InterrogationResult Empty { get; } = new InterrogationResult(new {});
     }
 }
