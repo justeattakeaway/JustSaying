@@ -21,7 +21,9 @@ namespace JustSaying
     public sealed class JustSayingBus : IAmJustSaying, IMessagingBus
     {
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _publishersByRegionAndType;
-        private ConcurrentDictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
+
+        private ConcurrentDictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings;
+        private SubscriptionGroupSettingsBuilder _defaultSubscriptionGroupSettings;
 
         private string _previousActiveRegion;
 
@@ -68,6 +70,9 @@ namespace JustSaying
             _publishersByRegionAndType = new Dictionary<string, Dictionary<Type, IMessagePublisher>>();
             SerializationRegister = serializationRegister;
 
+            _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
+            _defaultSubscriptionGroupSettings = new SubscriptionGroupSettingsBuilder();
+
             HandlerMap = new HandlerMap(Monitor, _loggerFactory);
         }
 
@@ -83,7 +88,9 @@ namespace JustSaying
             builder.AddQueue(queue);
         }
 
-        public void SetGroupSettings(IDictionary<string, SubscriptionGroupConfigBuilder> settings)
+        public void SetGroupSettings(
+            SubscriptionGroupSettingsBuilder defaults,
+            IDictionary<string, SubscriptionGroupConfigBuilder> settings)
         {
             _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(settings);
         }
@@ -151,7 +158,7 @@ namespace JustSaying
                 Monitor,
                 _loggerFactory);
 
-            SubscriptionGroups = subscriptionGroupFactory.Create(Config.SubscriptionGroupDefaultSettings, _subscriptionGroupSettings);
+            SubscriptionGroups = subscriptionGroupFactory.Create(_defaultSubscriptionGroupSettings, _subscriptionGroupSettings);
 
             _log.LogInformation("Starting bus with settings: {@Response}", SubscriptionGroups.Interrogate());
 

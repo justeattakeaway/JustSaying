@@ -77,11 +77,6 @@ namespace JustSaying.UnitTests.Messaging.Channels
         private JustSaying.JustSayingBus CreateBus()
         {
             var config = Substitute.For<IMessagingConfig>();
-            config.SubscriptionGroupDefaultSettings = new SubscriptionGroupSettingsBuilder()
-                .WithDefaultMultiplexerCapacity(1)
-                .WithDefaultPrefetch(1)
-                .WithDefaultBufferSize(1)
-                .WithDefaultConcurrencyLimit(1); // Need this as we want the config to be stable
             var serializationRegister = new MessageSerializationRegister(
                 new NonGenericMessageSubjectProvider(),
                 new NewtonsoftSerializationFactory());
@@ -90,6 +85,14 @@ namespace JustSaying.UnitTests.Messaging.Channels
             {
                 Monitor = MessageMonitor,
             };
+
+            var defaultSubscriptionSettings = new SubscriptionGroupSettingsBuilder()
+                .WithDefaultMultiplexerCapacity(1)
+                .WithDefaultPrefetch(1)
+                .WithDefaultBufferSize(1)
+                .WithDefaultConcurrencyLimit(1); // N
+
+            bus.SetGroupSettings(defaultSubscriptionSettings, new Dictionary<string, SubscriptionGroupConfigBuilder>());
 
             bus.SerializationRegister.AddSerializer<TestJustSayingMessage>();
 

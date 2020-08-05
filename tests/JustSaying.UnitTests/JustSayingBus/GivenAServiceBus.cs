@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
@@ -48,8 +49,6 @@ namespace JustSaying.UnitTests.JustSayingBus
             Config = Substitute.For<IMessagingConfig>();
             Monitor = Substitute.For<IMessageMonitor>();
             LoggerFactory = Substitute.For<ILoggerFactory>();
-            Config.SubscriptionGroupDefaultSettings = new SubscriptionGroupSettingsBuilder()
-                .WithDefaultConcurrencyLimit(8);
         }
 
         protected abstract Task WhenAsync();
@@ -58,12 +57,18 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             var subjectProvider = new GenericMessageSubjectProvider();
             var serializerFactory = new NewtonsoftSerializationFactory();
-            return new JustSaying.JustSayingBus(Config,
+            var bus = new JustSaying.JustSayingBus(Config,
                 new MessageSerializationRegister(subjectProvider, serializerFactory),
                 LoggerFactory)
             {
                 Monitor = Monitor
             };
+
+            bus.SetGroupSettings(new SubscriptionGroupSettingsBuilder()
+                    .WithDefaultConcurrencyLimit(8),
+                new Dictionary<string, SubscriptionGroupConfigBuilder>());
+
+            return bus;
         }
 
         public void RecordAnyExceptionsThrown()
