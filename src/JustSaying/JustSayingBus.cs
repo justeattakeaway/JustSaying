@@ -18,7 +18,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying
 {
-    public sealed class  JustSayingBus : IAmJustSaying, IMessagingBus
+    public sealed class JustSayingBus : IAmJustSaying, IMessagingBus
     {
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _publishersByRegionAndType;
         private ConcurrentDictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
