@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.Models;
+using Newtonsoft.Json;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -37,10 +38,13 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public void AndInterrogationShowsNonDuplicatedPublishers()
         {
-            var response = SystemUnderTest.WhatDoIHave();
+            dynamic response = SystemUnderTest.Interrogate();
 
-            response.Publishers.Count().ShouldBe(1);
-            response.Publishers.First(x => x.MessageType == typeof(Message)).ShouldNotBe(null);
+            string[] publishedTypes = response.Data.PublishedMessageTypes;
+
+            // This has a ':' prefix because the interrogation adds the region at the start.
+            // The queues are faked out here so there's no region.
+            publishedTypes.ShouldContain($":{nameof(Message)}");
         }
     }
 }

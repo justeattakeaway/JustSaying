@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
+using Newtonsoft.Json;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -51,11 +52,14 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public void AndInterrogationShowsPublishersHaveBeenSet()
         {
-            var response = SystemUnderTest.WhatDoIHave();
+            dynamic response = SystemUnderTest.Interrogate();
 
-            response.Publishers.Count().ShouldBe(2);
-            response.Publishers.First(x => x.MessageType == typeof(OrderAccepted)).ShouldNotBe(null);
-            response.Publishers.First(x => x.MessageType == typeof(OrderRejected)).ShouldNotBe(null);
+            string[] publishedTypes = response.Data.PublishedMessageTypes;
+
+            // These have a ':' prefix because the interrogation adds the region at the start.
+            // The queues are faked out here so there's no region.
+            publishedTypes.ShouldContain($":{nameof(OrderAccepted)}");
+            publishedTypes.ShouldContain($":{nameof(OrderRejected)}");
         }
     }
 }

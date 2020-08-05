@@ -56,10 +56,9 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// <inheritdoc />
         public InterrogationResult Interrogate()
         {
-            IEnumerable<object> interrogationResponses = _subscriptionGroups.Select(group => group.Interrogate());
             return new InterrogationResult(new
             {
-                SubscriptionGroups = interrogationResponses.ToArray(),
+                Groups = _subscriptionGroups.Select(group => group.Interrogate()).ToArray(),
             });
         }
 

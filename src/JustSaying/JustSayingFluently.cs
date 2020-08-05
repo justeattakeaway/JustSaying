@@ -28,8 +28,7 @@ namespace JustSaying
         IHaveFulfilledSubscriptionRequirements,
         IHaveFulfilledPublishRequirements,
         IMayWantOptionalSettings,
-        IMayWantARegionPicker,
-        IAmJustInterrogating
+        IMayWantARegionPicker
     {
         private readonly ILogger _log;
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
@@ -378,11 +377,6 @@ namespace JustSaying
         {
             Bus.Config.GetActiveRegion = getActiveRegion;
             return this;
-        }
-
-        public IInterrogationResponse WhatDoIHave()
-        {
-            return (Bus as IAmJustInterrogating)?.WhatDoIHave();
         }
 
         public IMayWantOptionalSettings WithAwsClientFactory(Func<IAwsClientFactory> awsClientFactory)

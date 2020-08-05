@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.Channels.Context;
+using JustSaying.Messaging.Interrogation;
 
 namespace JustSaying.AwsTools.MessageHandling.Dispatch
 {

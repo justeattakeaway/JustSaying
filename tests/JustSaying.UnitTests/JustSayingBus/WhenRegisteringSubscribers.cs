@@ -8,6 +8,7 @@ using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.AwsTools.MessageHandling;
+using Newtonsoft.Json;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -47,8 +48,8 @@ namespace JustSaying.UnitTests.JustSayingBus
             SystemUnderTest.AddMessageHandler(_queue1.QueueName, () => new InspectableHandler<OrderRejected>());
             SystemUnderTest.AddMessageHandler(_queue1.QueueName, () => new InspectableHandler<SimpleMessage>());
 
-            SystemUnderTest.AddQueue("region1", typeof(TestMessage).FullName, _queue1);
-            SystemUnderTest.AddQueue("region1", typeof(TestMessage).FullName, _queue2);
+            SystemUnderTest.AddQueue("region1", "groupA", _queue1);
+            SystemUnderTest.AddQueue("region1", "groupB", _queue2);
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
@@ -66,12 +67,16 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public void AndInterrogationShowsPublishersHaveBeenSet()
         {
-            var response = SystemUnderTest.WhatDoIHave();
+            dynamic response = SystemUnderTest.Interrogate();
 
-            response.Subscribers.Count().ShouldBe(3);
-            response.Subscribers.First(x => x.MessageType == typeof(OrderAccepted)).ShouldNotBe(null);
-            response.Subscribers.First(x => x.MessageType == typeof(OrderRejected)).ShouldNotBe(null);
-            response.Subscribers.First(x => x.MessageType == typeof(SimpleMessage)).ShouldNotBe(null);
+            string[] handledTypes = response.Data.HandledMessageTypes;
+
+            handledTypes.ShouldBe(new[]
+            {
+                typeof(OrderAccepted).FullName,
+                typeof(OrderRejected).FullName,
+                typeof(SimpleMessage).FullName
+            });
         }
 
         private static IAmazonSQS CreateSubstituteClient()
