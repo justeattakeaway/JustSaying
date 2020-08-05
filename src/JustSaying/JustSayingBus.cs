@@ -92,6 +92,7 @@ namespace JustSaying
             SubscriptionGroupSettingsBuilder defaults,
             IDictionary<string, SubscriptionGroupConfigBuilder> settings)
         {
+            _defaultSubscriptionGroupSettings = defaults;
             _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(settings);
         }
 

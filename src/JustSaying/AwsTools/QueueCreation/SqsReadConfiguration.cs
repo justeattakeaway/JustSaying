@@ -12,10 +12,8 @@ namespace JustSaying.AwsTools.QueueCreation
             ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod;
             VisibilityTimeout = JustSayingConstants.DefaultVisibilityTimeout;
             RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
-            SubscriptionConfig = new SubscriptionGroupSettingsBuilder();
         }
 
-        public SubscriptionGroupSettingsBuilder SubscriptionConfig { get; private set; }
         public SubscriptionType SubscriptionType { get; private set; }
 
         public string TopicName { get; set; }
@@ -45,28 +43,6 @@ namespace JustSaying.AwsTools.QueueCreation
             {
                 throw new ConfigurationErrorsException("You must provide a name for the subscription group");
             }
-        }
-
-        public SqsReadConfiguration Copy()
-        {
-            return new SqsReadConfiguration(SubscriptionType)
-            {
-                SubscriptionConfig = SubscriptionConfig,
-                FilterPolicy = FilterPolicy,
-                PublishEndpoint = PublishEndpoint,
-                TopicName = TopicName,
-                MessageBackoffStrategy = MessageBackoffStrategy,
-                TopicSourceAccount = TopicSourceAccount,
-                DeliveryDelay = DeliveryDelay,
-                MessageRetention = MessageRetention,
-                SubscriptionGroupName = SubscriptionGroupName,
-                QueueName = QueueName,
-                VisibilityTimeout = VisibilityTimeout,
-                ErrorQueueOptOut = ErrorQueueOptOut,
-                ErrorQueueRetentionPeriod = ErrorQueueRetentionPeriod,
-                ServerSideEncryption = ServerSideEncryption,
-                RetryCountBeforeSendingToErrorQueue = RetryCountBeforeSendingToErrorQueue
-            };
         }
     }
 }

@@ -7,7 +7,7 @@
     "Groups": [
       {
         "Name": "integrationTestQueueName",
-        "ConcurrencyLimit": 48,
+        "ConcurrencyLimit": 10,
         "Multiplexer": {
           "ChannelCapacity": 100,
           "ReaderCount": 1
