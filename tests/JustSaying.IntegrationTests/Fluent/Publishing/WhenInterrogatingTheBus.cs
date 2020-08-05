@@ -41,7 +41,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
 
                     var combined = string.Join($"{Environment.NewLine}{Environment.NewLine}",
                         listenerJson, publisherJson)
-                        .Replace(UniqueName, "integrationTestQueueName", StringComparison.InvariantCulture);
+                        .Replace(UniqueName, "integrationTestQueueName", StringComparison.Ordinal);
 
                     combined.ShouldMatchApproved(opt =>
                         opt.WithFilenameGenerator(
