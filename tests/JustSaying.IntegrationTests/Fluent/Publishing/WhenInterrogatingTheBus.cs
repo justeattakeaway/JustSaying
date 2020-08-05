@@ -50,7 +50,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
 
                     completionSource.SetResult(null);
 
-                    return Task.FromResult(true);
+                    return Task.CompletedTask;
                 });
         }
     }
