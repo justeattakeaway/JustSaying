@@ -140,7 +140,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public virtual InterrogationResult Interrogate()
         {
-            return new InterrogationResult(new {});
+            return new InterrogationResult(InterrogationResult.Empty);
         }
     }
 }
