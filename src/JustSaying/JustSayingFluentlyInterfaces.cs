@@ -28,7 +28,6 @@ namespace JustSaying
     {
         IMayWantARegionPicker WithFailoverRegion(string region);
     }
- 
     public interface IMayWantARegionPicker : IMayWantAFailoverRegion
     {
         IMayWantOptionalSettings WithActiveRegion(Func<string> getActiveRegion);
