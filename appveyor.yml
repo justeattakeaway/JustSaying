@@ -11,7 +11,7 @@ environment:
   MINVERBUILDMETADATA: build.%APPVEYOR_BUILD_NUMBER%
 
 build_script:
-  - ps: .\Build.ps1
+  - pwsh: .\Build.ps1
 
 after_build:
     - "SET PATH=C:\\Python34;C:\\Python34\\Scripts;%PATH%"

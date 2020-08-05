@@ -11,8 +11,6 @@ export PATH="$DOTNET_INSTALL_DIR:$PATH"
 dotnet_version=$(dotnet --version)
 
 if [ "$dotnet_version" != "$CLI_VERSION" ]; then
-    # Install 2.2 until https://github.com/adamralph/minver/pull/287 is released
-    curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version "2.2.402" --install-dir "$DOTNET_INSTALL_DIR"
     curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version "$CLI_VERSION" --install-dir "$DOTNET_INSTALL_DIR"
 fi
 

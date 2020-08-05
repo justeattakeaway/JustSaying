@@ -1,5 +1,5 @@
 <Project>
-    <Target Name="AppVeyorPR" AfterTargets="MinVer" Condition="'$(APPVEYOR_PULL_REQUEST_NUMBER)' != ''" >
+    <Target Name="AppVeyorPR" AfterTargets="MinVer" Condition="'$(APPVEYOR_PULL_REQUEST_NUMBER)' != '' AND '$(MinVerSkip)' != 'true' " >
         <PropertyGroup>
             <PackageVersion>$(MinVerMajor).$(MinVerMinor).$(MinVerPatch)-pr.$(APPVEYOR_PULL_REQUEST_NUMBER)</PackageVersion>
             <PackageVersion Condition="'$(MinVerPreRelease)' != ''">$(PackageVersion).$(MinVerPreRelease)</PackageVersion>
@@ -7,7 +7,7 @@
             <Version>$(PackageVersion)</Version>
         </PropertyGroup>
     </Target>
-    <Target Name="AppVeyorFileVersion" AfterTargets="MinVer">
+    <Target Name="AppVeyorFileVersion" AfterTargets="MinVer" Condition=" '$(MinVerSkip)' != 'true' ">
         <PropertyGroup>
             <APPVEYOR_BUILD_NUMBER Condition="'$(APPVEYOR_BUILD_NUMBER)' == ''">0</APPVEYOR_BUILD_NUMBER>
             <FileVersion>$(MinVerMajor).$(MinVerMinor).$(MinVerPatch).$(APPVEYOR_BUILD_NUMBER)</FileVersion>
