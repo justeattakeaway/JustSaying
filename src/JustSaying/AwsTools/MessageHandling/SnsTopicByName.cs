@@ -44,7 +44,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _log = loggerFactory.CreateLogger("JustSaying");
         }
 
-        public InterrogationResult Interrogate()
+        public override InterrogationResult Interrogate()
         {
             return new InterrogationResult(new
             {

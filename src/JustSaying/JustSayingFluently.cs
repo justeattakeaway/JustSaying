@@ -398,5 +398,10 @@ namespace JustSaying
                 ? Bus.Config.QueueNamingConvention.QueueName<T>()
                 : overrideQueueName;
         }
+
+        public InterrogationResult Interrogate()
+        {
+            return Bus.Interrogate();
+        }
     }
 }

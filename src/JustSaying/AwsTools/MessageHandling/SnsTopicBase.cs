@@ -9,6 +9,7 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
@@ -16,7 +17,7 @@ using MessageAttributeValue = Amazon.SimpleNotificationService.Model.MessageAttr
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public abstract class SnsTopicBase : IMessagePublisher
+    public abstract class SnsTopicBase : IMessagePublisher, IInterrogable
     {
         private readonly IMessageSerializationRegister _serializationRegister; // ToDo: Grrr...why is this here even. GET OUT!
         private readonly IMessageSubjectProvider _messageSubjectProvider;
@@ -135,6 +136,11 @@ namespace JustSaying.AwsTools.MessageHandling
                 BinaryValue = binaryValueStream,
                 DataType = value.DataType
             };
+        }
+
+        public virtual InterrogationResult Interrogate()
+        {
+            return new InterrogationResult(new {});
         }
     }
 }
