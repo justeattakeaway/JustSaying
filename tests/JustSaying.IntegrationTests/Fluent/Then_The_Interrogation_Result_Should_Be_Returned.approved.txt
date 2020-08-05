@@ -1,0 +1,35 @@
+{
+  "HandledMessageTypes": [
+    "JustSaying.TestingFramework.SimpleMessage"
+  ],
+  "PublishedMessageTypes": [],
+  "SubscriptionGroups": {
+    "Groups": [
+      {
+        "Name": "integrationTestQueueName",
+        "ConcurrencyLimit": 48,
+        "Multiplexer": {
+          "ChannelCapacity": 100,
+          "ReaderCount": 1
+        },
+        "ReceiveBuffers": [
+          {
+            "BufferSize": 10,
+            "QueueName": "integrationTestQueueName",
+            "Region": null,
+            "Prefetch": 10,
+            "BackoffStrategyName": null
+          }
+        ]
+      }
+    ]
+  }
+}
+
+{
+  "HandledMessageTypes": [],
+  "PublishedMessageTypes": [
+    "eu-west-1:SimpleMessage"
+  ],
+  "SubscriptionGroups": null
+}
