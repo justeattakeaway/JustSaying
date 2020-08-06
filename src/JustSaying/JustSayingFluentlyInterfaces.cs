@@ -10,47 +10,8 @@ using JustSaying.Models;
 
 namespace JustSaying
 {
-
-    public interface IMayWantOptionalSettings : IMayWantMonitoring,
-        IMayWantMessageLockStore,
-        IMayWantAFailoverRegion,
-        IMayWantAwsClientFactory,
-        IMayWantMessageContextAccessor
-    {
-    }
-
-    public interface IMayWantAwsClientFactory
-    {
-        IMayWantOptionalSettings WithAwsClientFactory(Func<IAwsClientFactory> awsClientFactory);
-    }
-
-    public interface IMayWantAFailoverRegion
-    {
-        IMayWantARegionPicker WithFailoverRegion(string region);
-    }
-    public interface IMayWantARegionPicker : IMayWantAFailoverRegion
-    {
-        IMayWantOptionalSettings WithActiveRegion(Func<string> getActiveRegion);
-    }
-
-    public interface IMayWantMonitoring : IAmJustSayingFluently
-    {
-        IMayWantOptionalSettings WithMonitoring(IMessageMonitor messageMonitor);
-    }
-
-    public interface IMayWantMessageLockStore : IAmJustSayingFluently
-    {
-        IMayWantOptionalSettings WithMessageLockStoreOf(IMessageLockAsync messageLock);
-    }
-
-    public interface IMayWantMessageContextAccessor : IAmJustSayingFluently
-    {
-        IMayWantOptionalSettings WithMessageContextAccessor(IMessageContextAccessor messageContextAccessor);
-    }
-
     public interface IAmJustSayingFluently : IMessagePublisher
     {
-        IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder);
         IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>() where T : Message;
         IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>(Action<SnsWriteConfiguration> config) where T : Message;
         IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsWriteConfiguration> config) where T : Message;

@@ -256,7 +256,7 @@ namespace JustSaying
 
             if (ServicesBuilder?.MessageContextAccessor != null)
             {
-                fluent.WithMessageContextAccessor(ServicesBuilder.MessageContextAccessor());
+                bus.MessageContextAccessor = ServicesBuilder.MessageContextAccessor();
             }
 
             if (SubscriptionBuilder != null)
@@ -309,12 +309,12 @@ namespace JustSaying
             IMessageMonitor messageMonitor = CreateMessageMonitor();
             IMessageContextAccessor messageContextAccessor = CreateMessageContextAccessor();
 
-            fluent.WithMonitoring(messageMonitor)
-                .WithMessageContextAccessor(messageContextAccessor);
+            bus.Monitor = messageMonitor;
+            bus.MessageContextAccessor = messageContextAccessor;
 
             if (ServicesBuilder?.MessageLock != null)
             {
-                fluent.WithMessageLockStoreOf(ServicesBuilder.MessageLock());
+                bus.MessageLock = ServicesBuilder.MessageLock();
             }
 
             return fluent;

@@ -26,9 +26,7 @@ namespace JustSaying
     /// </summary>
     public class JustSayingFluently : ISubscriberIntoQueue,
         IHaveFulfilledSubscriptionRequirements,
-        IHaveFulfilledPublishRequirements,
-        IMayWantOptionalSettings,
-        IMayWantARegionPicker
+        IHaveFulfilledPublishRequirements
     {
         private readonly ILogger _log;
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
@@ -206,18 +204,6 @@ namespace JustSaying
                 .ConfigureAwait(false);
         }
 
-        public IMayWantOptionalSettings WithMessageLockStoreOf(IMessageLockAsync messageLock)
-        {
-            Bus.MessageLock = messageLock;
-            return this;
-        }
-
-        public IMayWantOptionalSettings WithMessageContextAccessor(IMessageContextAccessor messageContextAccessor)
-        {
-            Bus.MessageContextAccessor = messageContextAccessor;
-            return this;
-        }
-
         public IFluentSubscription ConfigureSubscriptionWith(Action<SqsReadConfiguration> configBuilder)
         {
             configBuilder?.Invoke(_subscriptionConfig);
@@ -278,7 +264,11 @@ namespace JustSaying
 
         private IHaveFulfilledSubscriptionRequirements TopicHandler<T>() where T : Message
         {
-            ConfigureSqsSubscriptionViaTopic();
+            _subscriptionConfig.PublishEndpoint = _subscriptionConfig.TopicName;
+            _subscriptionConfig.TopicName = _subscriptionConfig.TopicName;
+            _subscriptionConfig.QueueName = _subscriptionConfig.QueueName;
+
+            _subscriptionConfig.Validate();
 
             foreach (string region in Bus.Config.Regions)
             {
@@ -288,7 +278,7 @@ namespace JustSaying
                     _subscriptionConfig,
                     Bus.Config.MessageSubjectProvider).GetAwaiter().GetResult();
 
-                CreateSubscriptionListener<T>(region, _subscriptionConfig.SubscriptionGroupName, queue);
+                Bus.AddQueue(region,  _subscriptionConfig.SubscriptionGroupName, queue);
 
                 _log.LogInformation(
                     "Created SQS topic subscription on topic '{TopicName}' and queue '{QueueName}'.",
@@ -301,14 +291,14 @@ namespace JustSaying
 
         private IHaveFulfilledSubscriptionRequirements PointToPointHandler<T>() where T : Message
         {
-            ConfigureSqsSubscription<T>();
+            _subscriptionConfig.QueueName = _subscriptionConfig.QueueName;
 
             foreach (var region in Bus.Config.Regions)
             {
                 // TODO Make this async and remove GetAwaiter().GetResult() call
                 var queue = _amazonQueueCreator.EnsureQueueExistsAsync(region, _subscriptionConfig).GetAwaiter().GetResult();
 
-                CreateSubscriptionListener<T>(region, _subscriptionConfig.SubscriptionGroupName, queue);
+                Bus.AddQueue(region, _subscriptionConfig.SubscriptionGroupName, queue);
 
                 _log.LogInformation(
                     "Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",
@@ -318,72 +308,6 @@ namespace JustSaying
             return this;
         }
 
-        private void CreateSubscriptionListener<T>(string region, string subscriptionGroup, SqsQueueBase queue)
-            where T : Message
-        {
-            Bus.AddQueue(region, subscriptionGroup, queue);
-        }
-
-        private void ConfigureSqsSubscriptionViaTopic()
-        {
-            _subscriptionConfig.PublishEndpoint = _subscriptionConfig.TopicName;
-            _subscriptionConfig.TopicName = _subscriptionConfig.TopicName;
-            _subscriptionConfig.QueueName = _subscriptionConfig.QueueName;
-
-            _subscriptionConfig.Validate();
-        }
-
-        private void ConfigureSqsSubscription<T>() where T : Message
-        {
-            _subscriptionConfig.QueueName = _subscriptionConfig.QueueName;
-        }
-
-        /// <summary>
-        /// Provide your own monitoring implementation
-        /// </summary>
-        /// <param name="messageMonitor">Monitoring class to be used</param>
-        /// <returns></returns>
-        public IMayWantOptionalSettings WithMonitoring(IMessageMonitor messageMonitor)
-        {
-            Bus.Monitor = messageMonitor;
-            return this;
-        }
-
-        public IHaveFulfilledPublishRequirements ConfigurePublisherWith(Action<IPublishConfiguration> confBuilder)
-        {
-            confBuilder(Bus.Config);
-            Bus.Config.Validate();
-
-            return this;
-        }
-
-        public IMayWantARegionPicker WithFailoverRegion(string region)
-        {
-            Bus.Config.Regions.Add(region);
-            return this;
-        }
-
-        public IMayWantARegionPicker WithFailoverRegions(params string[] regions)
-        {
-            foreach (var region in regions)
-            {
-                Bus.Config.Regions.Add(region);
-            }
-            Bus.Config.Validate();
-            return this;
-        }
-
-        public IMayWantOptionalSettings WithActiveRegion(Func<string> getActiveRegion)
-        {
-            Bus.Config.GetActiveRegion = getActiveRegion;
-            return this;
-        }
-
-        public IMayWantOptionalSettings WithAwsClientFactory(Func<IAwsClientFactory> awsClientFactory)
-        {
-            _awsClientFactoryProxy.SetAwsClientFactory(awsClientFactory);
-            return this;
-        }
 
         private string GetOrUseTopicNamingConvention<T>(string overrideTopicName)
         {
