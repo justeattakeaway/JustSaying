@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using JustSaying.Fluent;
 using JustSaying.Messaging;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
@@ -25,11 +26,8 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
 
             var services = GivenJustSaying()
                 .ConfigureJustSaying(
-                    (builder) =>
-                    {
-                        builder.WithLoopbackTopic<SimpleMessage>(UniqueName)
-                               .Services((configure) => configure.WithSystemTextJson());
-                    })
+                    (builder) => builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
+                .AddSingleton<SystemTextJsonSerializationFactory>()
                 .AddSingleton(handler);
 
             string content = Guid.NewGuid().ToString();

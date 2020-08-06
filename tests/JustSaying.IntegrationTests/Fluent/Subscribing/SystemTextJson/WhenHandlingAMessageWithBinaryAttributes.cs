@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using JustSaying.IntegrationTests.Fluent;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -46,8 +47,8 @@ namespace JustSaying.Fluent.Subscribing.SystemTextJson
 
             var services = GivenJustSaying()
                 .ConfigureJustSaying((builder) => builder
-                    .WithLoopbackTopic<SimpleMessage>(UniqueName)
-                    .Services(s => s.WithSystemTextJson()))
+                    .WithLoopbackTopic<SimpleMessage>(UniqueName))
+                .AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>()
                 .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
             await WhenAsync(

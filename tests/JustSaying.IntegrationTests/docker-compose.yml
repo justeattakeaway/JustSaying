@@ -2,6 +2,7 @@ version: "2"
 services:
   goaws:
     container_name: goaws
+    restart: unless-stopped
     image: pafortin/goaws
     ports:
       - 4100:4100

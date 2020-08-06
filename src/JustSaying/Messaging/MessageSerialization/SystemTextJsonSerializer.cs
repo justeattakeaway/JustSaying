@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Models;
@@ -57,10 +58,30 @@ namespace JustSaying.Messaging.MessageSerialization
 
         public MessageAttributes GetMessageAttributes(string message)
         {
-            // todo: Implement in a future PR
-            // https://github.com/justeat/JustSaying/issues/723
+            var jsonDocument = JsonDocument.Parse(message);
 
-            throw new NotImplementedException();
+            if (!jsonDocument.RootElement.TryGetProperty("MessageAttributes", out var attributesElement))
+            {
+                return new MessageAttributes();
+            }
+
+            var attributes = new Dictionary<string, MessageAttributeValue>();
+            foreach(var obj in attributesElement.EnumerateObject())
+            {
+                var dataType = obj.Value.GetProperty("Type").GetString();
+                var dataValue = obj.Value.GetProperty("Value").GetString();
+
+                var isString = dataType == "StringValue";
+
+                attributes.Add(obj.Name, new MessageAttributeValue()
+                {
+                    DataType = dataType,
+                    StringValue = isString ? dataValue : null,
+                    BinaryValue = !isString ? Convert.FromBase64String(dataValue) : null
+                });
+            }
+
+            return new MessageAttributes(attributes);
         }
 
         /// <inheritdoc />
