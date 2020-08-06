@@ -22,7 +22,7 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected JustSaying.JustSayingBus SystemUnderTest { get; private set; }
 
-        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
+        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
 
         public virtual async Task InitializeAsync()
         {
