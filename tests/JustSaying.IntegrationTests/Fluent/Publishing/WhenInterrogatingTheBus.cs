@@ -13,6 +13,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
     {
         public WhenInterrogatingTheBus(ITestOutputHelper outputHelper) : base(outputHelper)
         { }
+
         [AwsFact]
         public async Task Then_The_Interrogation_Result_Should_Be_Returned()
         {
