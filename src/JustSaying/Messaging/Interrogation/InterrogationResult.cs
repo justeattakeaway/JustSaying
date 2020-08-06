@@ -20,5 +20,7 @@ namespace JustSaying.Messaging.Interrogation
         /// <remarks>This property is intentionally untyped, because it is unstructured and subject to change.
         /// It should only be used for diagnostic purposes.</remarks>
         public object Data { get; }
+
+        internal static InterrogationResult Empty { get; } = new InterrogationResult(new {});
     }
 }

@@ -22,7 +22,9 @@ namespace JustSaying
         // TODO - swap params
         void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message;
 
-        void SetGroupSettings(IDictionary<string, SubscriptionGroupConfigBuilder> settings);
+        void SetGroupSettings(
+            SubscriptionGroupSettingsBuilder defaults,
+            IDictionary<string, SubscriptionGroupConfigBuilder> settings);
 
         Task StartAsync(CancellationToken stoppingToken);
 

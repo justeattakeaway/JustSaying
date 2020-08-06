@@ -18,10 +18,12 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying
 {
-    public sealed class JustSayingBus : IAmJustSaying, IAmJustInterrogating, IMessagingBus
+    public sealed class JustSayingBus : IAmJustSaying, IMessagingBus
     {
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _publishersByRegionAndType;
-        private ConcurrentDictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
+
+        private ConcurrentDictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings;
+        private SubscriptionGroupSettingsBuilder _defaultSubscriptionGroupSettings;
 
         private string _previousActiveRegion;
 
@@ -51,7 +53,6 @@ namespace JustSaying
         private readonly ILogger _log;
 
         private readonly object _syncRoot = new object();
-        private readonly ICollection<IPublisher> _publishers;
         private readonly ILoggerFactory _loggerFactory;
 
         public JustSayingBus(
@@ -68,7 +69,9 @@ namespace JustSaying
 
             _publishersByRegionAndType = new Dictionary<string, Dictionary<Type, IMessagePublisher>>();
             SerializationRegister = serializationRegister;
-            _publishers = new HashSet<IPublisher>();
+
+            _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
+            _defaultSubscriptionGroupSettings = new SubscriptionGroupSettingsBuilder();
 
             HandlerMap = new HandlerMap(Monitor, _loggerFactory);
         }
@@ -85,8 +88,11 @@ namespace JustSaying
             builder.AddQueue(queue);
         }
 
-        public void SetGroupSettings(IDictionary<string, SubscriptionGroupConfigBuilder> settings)
+        public void SetGroupSettings(
+            SubscriptionGroupSettingsBuilder defaults,
+            IDictionary<string, SubscriptionGroupConfigBuilder> settings)
         {
+            _defaultSubscriptionGroupSettings = defaults;
             _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(settings);
         }
 
@@ -111,7 +117,6 @@ namespace JustSaying
             }
 
             var topicType = typeof(T);
-            _publishers.Add(new Publisher(topicType));
 
             publishersByType[topicType] = messagePublisher;
         }
@@ -154,7 +159,7 @@ namespace JustSaying
                 Monitor,
                 _loggerFactory);
 
-            SubscriptionGroups = subscriptionGroupFactory.Create(Config.SubscriptionGroupDefaultSettings, _subscriptionGroupSettings);
+            SubscriptionGroups = subscriptionGroupFactory.Create(_defaultSubscriptionGroupSettings, _subscriptionGroupSettings);
 
             _log.LogInformation("Starting bus with settings: {@Response}", SubscriptionGroups.Interrogate());
 
@@ -169,12 +174,6 @@ namespace JustSaying
             var publisher = GetActivePublisherForMessage(message);
             await PublishAsync(publisher, message, metadata, 0, cancellationToken)
                 .ConfigureAwait(false);
-        }
-
-        public IInterrogationResponse WhatDoIHave()
-        {
-            var handlers = HandlerMap.Types.Select(t => new Subscriber(t));
-            return new InterrogationResponse(Config.Regions, handlers, _publishers);
         }
 
         private IMessagePublisher GetActivePublisherForMessage(Message message)
@@ -300,9 +299,17 @@ namespace JustSaying
 
         public InterrogationResult Interrogate()
         {
+            var publisherDescriptions =
+                _publishersByRegionAndType.SelectMany(publishersByType =>
+                    publishersByType.Value.Select(publisher =>
+                        $"{publishersByType.Key}:{publisher.Key.Name}"))
+                    .ToArray();
+
             return new InterrogationResult(new
             {
-                SubscriptionGroups = SubscriptionGroups.Interrogate()
+                HandledMessageTypes = HandlerMap?.Types.Select(x => x.FullName).ToArray(),
+                PublishedMessageTypes = publisherDescriptions,
+                SubscriptionGroups = SubscriptionGroups?.Interrogate()
             });
         }
     }

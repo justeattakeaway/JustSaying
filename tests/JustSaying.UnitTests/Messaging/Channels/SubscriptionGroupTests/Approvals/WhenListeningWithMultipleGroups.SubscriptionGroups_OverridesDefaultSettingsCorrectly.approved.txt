@@ -1,5 +1,5 @@
 {
-  "SubscriptionGroups": [
+  "Groups": [
     {
       "Name": "queueA",
       "ConcurrencyLimit": 1,

@@ -28,8 +28,7 @@ namespace JustSaying
         IHaveFulfilledSubscriptionRequirements,
         IHaveFulfilledPublishRequirements,
         IMayWantOptionalSettings,
-        IMayWantARegionPicker,
-        IAmJustInterrogating
+        IMayWantARegionPicker
     {
         private readonly ILogger _log;
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
@@ -380,11 +379,6 @@ namespace JustSaying
             return this;
         }
 
-        public IInterrogationResponse WhatDoIHave()
-        {
-            return (Bus as IAmJustInterrogating)?.WhatDoIHave();
-        }
-
         public IMayWantOptionalSettings WithAwsClientFactory(Func<IAwsClientFactory> awsClientFactory)
         {
             _awsClientFactoryProxy.SetAwsClientFactory(awsClientFactory);
@@ -403,6 +397,11 @@ namespace JustSaying
             return string.IsNullOrWhiteSpace(overrideQueueName)
                 ? Bus.Config.QueueNamingConvention.QueueName<T>()
                 : overrideQueueName;
+        }
+
+        public InterrogationResult Interrogate()
+        {
+            return Bus.Interrogate();
         }
     }
 }
