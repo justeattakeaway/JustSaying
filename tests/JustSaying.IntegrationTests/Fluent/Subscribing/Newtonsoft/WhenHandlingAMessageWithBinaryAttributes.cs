@@ -1,28 +1,28 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
-using System.Transactions;
+using JustSaying.IntegrationTests.Fluent;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 using Shouldly;
-using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.Subscribing
+namespace JustSaying.Fluent.Subscribing.Newtonsoft
 {
-    public class WhenHandlingAMessageWithStringAttributes : IntegrationTestBase
+    public class WhenHandlingAMessageWithBinaryAttributes : IntegrationTestBase
     {
-        public WhenHandlingAMessageWithStringAttributes(ITestOutputHelper outputHelper) : base(outputHelper)
+        public WhenHandlingAMessageWithBinaryAttributes(ITestOutputHelper outputHelper) : base(outputHelper)
         { }
 
-        public class SimpleMessageWithStringAttributesHandler : IHandlerAsync<SimpleMessage>
+        public class SimpleMessageWithBinaryAttributesHandler : IHandlerAsync<SimpleMessage>
         {
             private readonly IMessageContextAccessor _contextAccessor;
 
-            public SimpleMessageWithStringAttributesHandler(IMessageContextAccessor contextAccessor)
+            public SimpleMessageWithBinaryAttributesHandler(IMessageContextAccessor contextAccessor)
             {
                 _contextAccessor = contextAccessor;
                 HandledMessages = new List<(MessageContext, SimpleMessage)>();
@@ -42,7 +42,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
             OutputHelper.WriteLine($"Running {nameof(Then_The_Attributes_Are_Returned)} test");
 
             // Arrange
-            var handler = new SimpleMessageWithStringAttributesHandler(new MessageContextAccessor());
+            var handler = new SimpleMessageWithBinaryAttributesHandler(new MessageContextAccessor());
 
             var services = GivenJustSaying()
                 .ConfigureJustSaying((builder) => builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
@@ -56,15 +56,17 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
                     // Act
                     var metadata = new PublishMetadata()
-                        .AddMessageAttribute("content1", "somecontent")
-                        .AddMessageAttribute("content2", "somemorecontent");
+                        .AddMessageAttribute("content", "somecontent")
+                        .AddMessageAttribute("binarycontent", Encoding.UTF8.GetBytes("somebinarydata"));
                     await publisher.PublishAsync(new SimpleMessage(), metadata, cancellationToken);
 
                     await Patiently.AssertThatAsync(OutputHelper, () => handler.HandledMessages.Count > 0, TimeSpan.FromSeconds(5));
 
                     handler.HandledMessages.Count.ShouldBe(1);
-                    handler.HandledMessages[0].context.MessageAttributes.Get("content1").StringValue.ShouldBe("somecontent");
-                    handler.HandledMessages[0].context.MessageAttributes.Get("content2").StringValue.ShouldBe("somemorecontent");
+                    handler.HandledMessages[0].context.MessageAttributes.Get("content").StringValue.ShouldBe("somecontent");
+
+                    var binaryData = handler.HandledMessages[0].context.MessageAttributes.Get("binarycontent").BinaryValue;
+                    Encoding.UTF8.GetString(binaryData.ToArray()).ShouldBe("somebinarydata");
                 });
         }
     }
