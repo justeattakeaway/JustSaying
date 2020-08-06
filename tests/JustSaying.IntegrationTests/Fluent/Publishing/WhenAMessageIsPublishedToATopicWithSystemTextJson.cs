@@ -27,7 +27,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
             var services = GivenJustSaying()
                 .ConfigureJustSaying(
                     (builder) => builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
-                .AddSingleton<SystemTextJsonSerializationFactory>()
+                .AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>()
                 .AddSingleton(handler);
 
             string content = Guid.NewGuid().ToString();
