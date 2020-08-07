@@ -100,15 +100,15 @@ namespace JustSaying.Fluent
         /// <inheritdoc />
         void ISubscriptionBuilder<T>.Configure(JustSayingFluently bus, IHandlerResolver resolver)
         {
-            var topic = bus.WithSqsTopicSubscriber()
-                           .IntoQueue(TopicName);
-
-            if (ConfigureReads != null)
+            var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic)
             {
-                topic.ConfigureSubscriptionWith(ConfigureReads);
-            }
+                TopicName = (TopicName ?? string.Empty).ToLowerInvariant(),
+                QueueName = TopicName
+            };
 
-            topic.WithMessageHandler<T>(resolver);
+            ConfigureReads?.Invoke(subscriptionConfig);
+
+            bus.WithMessageHandler<T>(subscriptionConfig, resolver);
         }
     }
 }

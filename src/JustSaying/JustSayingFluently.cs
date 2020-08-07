@@ -24,7 +24,7 @@ namespace JustSaying
     /// 3. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc // ToDo: Shouldn't be enforced in base! Is a JE concern.
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class JustSayingFluently : ISubscriberIntoQueue,
+    public class JustSayingFluently :
         IHaveFulfilledSubscriptionRequirements,
         IHaveFulfilledPublishRequirements
     {
@@ -177,73 +177,29 @@ namespace JustSaying
             _log.LogInformation("Started listening for messages");
         }
 
-        /// <summary>
-        /// Publish a message to the stack, asynchronously.
-        /// </summary>
-        /// <param name="message">The message to publish.</param>
-        /// <param name="cancellationToken">A <see cref="CancellationToken"/> to cancel the operation.</param>
-        /// <returns>A <see cref="Task"/> that completes when the message has been published.</returns>
-        public async Task PublishAsync(Message message, CancellationToken cancellationToken)
-            => await PublishAsync(message, null, cancellationToken).ConfigureAwait(false);
-
-        /// <summary>
-        /// Publish a message to the stack, asynchronously.
-        /// </summary>
-        /// <param name="message">The message to publish.</param>
-        /// <param name="metadata">The <see cref="PublishMetadata"/> for this operation.</param>
-        /// <param name="cancellationToken">A <see cref="CancellationToken"/> to cancel the operation.</param>
-        /// <returns>A <see cref="Task"/> that completes when the message has been published.</returns>
-        public virtual async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
-        {
-            if (Bus == null)
-            {
-                throw new InvalidOperationException("You must register for message publication before publishing a message");
-            }
-
-            await Bus.PublishAsync(message, metadata, cancellationToken)
-                .ConfigureAwait(false);
-        }
-
         public IFluentSubscription ConfigureSubscriptionWith(Action<SqsReadConfiguration> configBuilder)
         {
             configBuilder?.Invoke(_subscriptionConfig);
             return this;
         }
 
-        public ISubscriberIntoQueue WithSqsTopicSubscriber(string topicName = null)
-        {
-            _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic)
-            {
-                TopicName = (topicName ?? string.Empty).ToLowerInvariant()
-            };
-            return this;
-        }
-
-        public ISubscriberIntoQueue WithSqsPointToPointSubscriber()
-        {
-            _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.PointToPoint);
-            return this;
-        }
-
-        public IFluentSubscription IntoQueue(string queueName)
-        {
-            _subscriptionConfig.QueueName = queueName;
-            return this;
-        }
-
-        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(IHandlerResolver handlerResolver) where T : Message
+        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(
+            SqsReadConfiguration subscriptionConfig,
+            IHandlerResolver handlerResolver)
+            where T : Message
         {
             if (handlerResolver is null) throw new ArgumentNullException(nameof(handlerResolver));
+            if (subscriptionConfig is null) throw new ArgumentNullException(nameof(subscriptionConfig));
 
-            _subscriptionConfig.TopicName = GetOrUseTopicNamingConvention<T>(_subscriptionConfig.TopicName);
-            _subscriptionConfig.QueueName = GetOrUseQueueNamingConvention<T>(_subscriptionConfig.QueueName);
-            _subscriptionConfig.SubscriptionGroupName ??= _subscriptionConfig.QueueName;
+            subscriptionConfig.TopicName = GetOrUseTopicNamingConvention<T>(subscriptionConfig.TopicName);
+            subscriptionConfig.QueueName = GetOrUseQueueNamingConvention<T>(subscriptionConfig.QueueName);
+            subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
 
-            var thing = _subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
-                ? PointToPointHandler<T>()
-                : TopicHandler<T>();
+            var thing = subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
+                ? PointToPointHandler<T>(subscriptionConfig)
+                : TopicHandler<T>(subscriptionConfig);
 
-            var resolutionContext = new HandlerResolutionContext(_subscriptionConfig.QueueName);
+            var resolutionContext = new HandlerResolutionContext(subscriptionConfig.QueueName);
             var proposedHandler = handlerResolver.ResolveHandler<T>(resolutionContext);
 
             if (proposedHandler == null)
@@ -251,59 +207,59 @@ namespace JustSaying
                 throw new HandlerNotRegisteredWithContainerException($"There is no handler for '{typeof(T)}' messages.");
             }
 
-            Bus.AddMessageHandler(_subscriptionConfig.QueueName, () => handlerResolver.ResolveHandler<T>(resolutionContext));
+            Bus.AddMessageHandler(subscriptionConfig.QueueName, () => handlerResolver.ResolveHandler<T>(resolutionContext));
 
             _log.LogInformation(
                 "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",
                 typeof(T),
-                _subscriptionConfig.TopicName,
-                _subscriptionConfig.QueueName);
+                subscriptionConfig.TopicName,
+                subscriptionConfig.QueueName);
 
             return thing;
         }
 
-        private IHaveFulfilledSubscriptionRequirements TopicHandler<T>() where T : Message
+        private IHaveFulfilledSubscriptionRequirements TopicHandler<T>(
+            SqsReadConfiguration subscriptionConfig) where T : Message
         {
-            _subscriptionConfig.PublishEndpoint = _subscriptionConfig.TopicName;
-            _subscriptionConfig.TopicName = _subscriptionConfig.TopicName;
-            _subscriptionConfig.QueueName = _subscriptionConfig.QueueName;
+            subscriptionConfig.PublishEndpoint = subscriptionConfig.TopicName;
+            subscriptionConfig.TopicName = subscriptionConfig.TopicName;
+            subscriptionConfig.QueueName = subscriptionConfig.QueueName;
 
-            _subscriptionConfig.Validate();
+            subscriptionConfig.Validate();
 
             foreach (string region in Bus.Config.Regions)
             {
                 // TODO Make this async and remove GetAwaiter().GetResult() call
                 var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribedAsync(
                     region, Bus.SerializationRegister,
-                    _subscriptionConfig,
+                    subscriptionConfig,
                     Bus.Config.MessageSubjectProvider).GetAwaiter().GetResult();
 
-                Bus.AddQueue(region,  _subscriptionConfig.SubscriptionGroupName, queue);
+                Bus.AddQueue(region,  subscriptionConfig.SubscriptionGroupName, queue);
 
                 _log.LogInformation(
                     "Created SQS topic subscription on topic '{TopicName}' and queue '{QueueName}'.",
-                    _subscriptionConfig.TopicName,
-                    _subscriptionConfig.QueueName);
+                    subscriptionConfig.TopicName,
+                    subscriptionConfig.QueueName);
             }
 
             return this;
         }
 
-        private IHaveFulfilledSubscriptionRequirements PointToPointHandler<T>() where T : Message
+        private IHaveFulfilledSubscriptionRequirements PointToPointHandler<T>(
+            SqsReadConfiguration subscriptionConfig) where T : Message
         {
-            _subscriptionConfig.QueueName = _subscriptionConfig.QueueName;
-
             foreach (var region in Bus.Config.Regions)
             {
                 // TODO Make this async and remove GetAwaiter().GetResult() call
-                var queue = _amazonQueueCreator.EnsureQueueExistsAsync(region, _subscriptionConfig).GetAwaiter().GetResult();
+                var queue = _amazonQueueCreator.EnsureQueueExistsAsync(region, subscriptionConfig).GetAwaiter().GetResult();
 
-                Bus.AddQueue(region, _subscriptionConfig.SubscriptionGroupName, queue);
+                Bus.AddQueue(region, subscriptionConfig.SubscriptionGroupName, queue);
 
                 _log.LogInformation(
                     "Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",
                     typeof(T),
-                    _subscriptionConfig.QueueName);
+                    subscriptionConfig.QueueName);
             }
             return this;
         }
