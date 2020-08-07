@@ -102,7 +102,6 @@ namespace JustSaying.Fluent
         {
             var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic)
             {
-                TopicName = (TopicName ?? string.Empty).ToLowerInvariant(),
                 QueueName = TopicName
             };
 
