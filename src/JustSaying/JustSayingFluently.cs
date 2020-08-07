@@ -12,6 +12,7 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
+using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying
@@ -24,15 +25,12 @@ namespace JustSaying
     /// 3. Set subscribers - WithSqsTopicSubscriber() / WithSnsTopicSubscriber() etc // ToDo: Shouldn't be enforced in base! Is a JE concern.
     /// 3. Set Handlers - WithTopicMessageHandler()
     /// </summary>
-    public class JustSayingFluently :
-        IHaveFulfilledSubscriptionRequirements,
-        IHaveFulfilledPublishRequirements
+    public class JustSayingFluently
     {
         private readonly ILogger _log;
         private readonly IVerifyAmazonQueues _amazonQueueCreator;
         private readonly IAwsClientFactoryProxy _awsClientFactoryProxy;
         protected internal IAmJustSaying Bus { get; set; }
-        private SqsReadConfiguration _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic);
         private readonly ILoggerFactory _loggerFactory;
 
         protected internal JustSayingFluently(
@@ -48,37 +46,27 @@ namespace JustSaying
             _awsClientFactoryProxy = awsClientFactoryProxy;
         }
 
-        /// <summary>
-        /// Register for publishing messages to SNS
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>() where T : Message
-        {
-            return WithSnsMessagePublisher<T>(null);
-        }
 
         /// <summary>
         /// Register for publishing messages to SNS
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>(Action<SnsWriteConfiguration> configBuilder) where T : Message
+        public JustSayingFluently WithSnsMessagePublisher<T>(SqsReadConfiguration subscriptionConfig, Action<SnsWriteConfiguration> configBuilder) where T : Message
         {
-            return AddSnsMessagePublisher<T>(configBuilder);
+            return AddSnsMessagePublisher<T>(subscriptionConfig, configBuilder);
         }
 
-        private IHaveFulfilledPublishRequirements AddSnsMessagePublisher<T>(Action<SnsWriteConfiguration> configBuilder) where T : Message
+        private JustSayingFluently AddSnsMessagePublisher<T>(SqsReadConfiguration subscriptionConfig, Action<SnsWriteConfiguration> configBuilder) where T : Message
         {
             _log.LogInformation("Adding SNS publisher for message type '{MessageType}'.",
                 typeof(T));
 
-            _subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic);
-
             var snsWriteConfig = new SnsWriteConfiguration();
             configBuilder?.Invoke(snsWriteConfig);
 
-            _subscriptionConfig.TopicName = GetOrUseTopicNamingConvention<T>(_subscriptionConfig.TopicName);
+            subscriptionConfig.TopicName =
+                Bus.Config.TopicNamingConvention.Apply<T>(subscriptionConfig.TopicName);
 
             Bus.SerializationRegister.AddSerializer<T>();
 
@@ -86,7 +74,7 @@ namespace JustSaying
             {
                 // TODO pass region down into topic creation for when we have foreign topics so we can generate the arn
                 var eventPublisher = new SnsTopicByName(
-                    _subscriptionConfig.TopicName,
+                    subscriptionConfig.TopicName,
                     _awsClientFactoryProxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
                     Bus.SerializationRegister,
                     _loggerFactory, snsWriteConfig,
@@ -103,7 +91,7 @@ namespace JustSaying
             }
 
             _log.LogInformation("Created SNS topic publisher on topic '{TopicName}' for message type '{MessageType}'.",
-                _subscriptionConfig.TopicName, typeof(T));
+                subscriptionConfig.TopicName, typeof(T));
 
             return this;
         }
@@ -125,7 +113,7 @@ namespace JustSaying
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsWriteConfiguration> configBuilder) where T : Message
+        public JustSayingFluently WithSqsMessagePublisher<T>(Action<SqsWriteConfiguration> configBuilder) where T : Message
         {
             _log.LogInformation("Adding SQS publisher for message type '{MessageType}'.",
                 typeof(T));
@@ -133,7 +121,7 @@ namespace JustSaying
             var config = new SqsWriteConfiguration();
             configBuilder?.Invoke(config);
 
-            config.QueueName = GetOrUseQueueNamingConvention<T>(config.QueueName);
+            config.QueueName = Bus.Config.QueueNamingConvention.Apply<T>(config.QueueName);
 
             foreach (var region in Bus.Config.Regions)
             {
@@ -167,23 +155,7 @@ namespace JustSaying
             return this;
         }
 
-        /// <summary>
-        /// I'm done setting up. Fire up listening on this baby...
-        /// </summary>
-        public void StartListening(CancellationToken cancellationToken = default)
-        {
-            Bus.MessageBackoffStrategy = _subscriptionConfig.MessageBackoffStrategy;
-            _ = Bus.StartAsync(cancellationToken);
-            _log.LogInformation("Started listening for messages");
-        }
-
-        public IFluentSubscription ConfigureSubscriptionWith(Action<SqsReadConfiguration> configBuilder)
-        {
-            configBuilder?.Invoke(_subscriptionConfig);
-            return this;
-        }
-
-        public IHaveFulfilledSubscriptionRequirements WithMessageHandler<T>(
+        public JustSayingFluently WithMessageHandler<T>(
             SqsReadConfiguration subscriptionConfig,
             IHandlerResolver handlerResolver)
             where T : Message
@@ -191,8 +163,10 @@ namespace JustSaying
             if (handlerResolver is null) throw new ArgumentNullException(nameof(handlerResolver));
             if (subscriptionConfig is null) throw new ArgumentNullException(nameof(subscriptionConfig));
 
-            subscriptionConfig.TopicName = GetOrUseTopicNamingConvention<T>(subscriptionConfig.TopicName);
-            subscriptionConfig.QueueName = GetOrUseQueueNamingConvention<T>(subscriptionConfig.QueueName);
+            subscriptionConfig.TopicName =
+                Bus.Config.TopicNamingConvention.Apply<T>(subscriptionConfig.TopicName);
+            subscriptionConfig.QueueName =
+                Bus.Config.QueueNamingConvention.Apply<T>(subscriptionConfig.QueueName);
             subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
 
             var thing = subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
@@ -218,7 +192,7 @@ namespace JustSaying
             return thing;
         }
 
-        private IHaveFulfilledSubscriptionRequirements TopicHandler<T>(
+        private JustSayingFluently TopicHandler<T>(
             SqsReadConfiguration subscriptionConfig) where T : Message
         {
             subscriptionConfig.PublishEndpoint = subscriptionConfig.TopicName;
@@ -246,7 +220,7 @@ namespace JustSaying
             return this;
         }
 
-        private IHaveFulfilledSubscriptionRequirements PointToPointHandler<T>(
+        private JustSayingFluently PointToPointHandler<T>(
             SqsReadConfiguration subscriptionConfig) where T : Message
         {
             foreach (var region in Bus.Config.Regions)
@@ -264,20 +238,6 @@ namespace JustSaying
             return this;
         }
 
-
-        private string GetOrUseTopicNamingConvention<T>(string overrideTopicName)
-        {
-            return string.IsNullOrWhiteSpace(overrideTopicName)
-                ? Bus.Config.TopicNamingConvention.TopicName<T>()
-                : overrideTopicName;
-        }
-
-        private string GetOrUseQueueNamingConvention<T>(string overrideQueueName)
-        {
-            return string.IsNullOrWhiteSpace(overrideQueueName)
-                ? Bus.Config.QueueNamingConvention.QueueName<T>()
-                : overrideQueueName;
-        }
 
         public InterrogationResult Interrogate()
         {

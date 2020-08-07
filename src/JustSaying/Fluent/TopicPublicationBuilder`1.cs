@@ -69,7 +69,8 @@ namespace JustSaying.Fluent
         /// <inheritdoc />
         void IPublicationBuilder<T>.Configure(JustSayingFluently bus)
         {
-            bus.WithSnsMessagePublisher<T>(ConfigureWrites);
+            var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic);
+            bus.WithSnsMessagePublisher<T>(subscriptionConfig, ConfigureWrites);
         }
     }
 }

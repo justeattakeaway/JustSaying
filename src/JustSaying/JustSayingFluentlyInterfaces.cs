@@ -12,10 +12,6 @@ namespace JustSaying
 {
     public interface IAmJustSayingFluently
     {
-        IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>() where T : Message;
-        IHaveFulfilledPublishRequirements WithSnsMessagePublisher<T>(Action<SnsWriteConfiguration> config) where T : Message;
-        IHaveFulfilledPublishRequirements WithSqsMessagePublisher<T>(Action<SqsWriteConfiguration> config) where T : Message;
-
         void StartListening(CancellationToken cancellationToken = default);
     }
 
