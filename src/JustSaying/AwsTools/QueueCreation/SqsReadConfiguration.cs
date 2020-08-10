@@ -1,5 +1,6 @@
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageProcessingStrategies;
+using JustSaying.Naming;
 
 namespace JustSaying.AwsTools.QueueCreation
 {
@@ -23,6 +24,12 @@ namespace JustSaying.AwsTools.QueueCreation
         public IMessageBackoffStrategy MessageBackoffStrategy { get; set; }
         public string FilterPolicy { get; set; }
         public string SubscriptionGroupName { get; set; }
+
+        public void ApplyTopicNamingConvention<T>(ITopicNamingConvention namingConvention)
+        {
+            TopicName = namingConvention.Apply<T>(TopicName);
+        }
+
 
         protected override void OnValidating()
         {

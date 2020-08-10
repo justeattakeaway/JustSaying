@@ -54,19 +54,13 @@ namespace JustSaying
         /// <returns></returns>
         public JustSayingFluently WithSnsMessagePublisher<T>(SqsReadConfiguration subscriptionConfig, Action<SnsWriteConfiguration> configBuilder) where T : Message
         {
-            return AddSnsMessagePublisher<T>(subscriptionConfig, configBuilder);
-        }
-
-        private JustSayingFluently AddSnsMessagePublisher<T>(SqsReadConfiguration subscriptionConfig, Action<SnsWriteConfiguration> configBuilder) where T : Message
-        {
             _log.LogInformation("Adding SNS publisher for message type '{MessageType}'.",
                 typeof(T));
 
             var snsWriteConfig = new SnsWriteConfiguration();
             configBuilder?.Invoke(snsWriteConfig);
 
-            subscriptionConfig.TopicName =
-                Bus.Config.TopicNamingConvention.Apply<T>(subscriptionConfig.TopicName);
+            subscriptionConfig.ApplyTopicNamingConvention<T>(Bus.Config.TopicNamingConvention);
 
             Bus.SerializationRegister.AddSerializer<T>();
 
@@ -83,7 +77,14 @@ namespace JustSaying
                     MessageResponseLogger = Bus.Config.MessageResponseLogger
                 };
 
-                CreatePublisher(eventPublisher, snsWriteConfig);
+                if (snsWriteConfig.Encryption != null)
+                {
+                    eventPublisher.CreateWithEncryptionAsync(snsWriteConfig.Encryption).GetAwaiter().GetResult();
+                }
+                else
+                {
+                    eventPublisher.CreateAsync().GetAwaiter().GetResult();
+                }
 
                 eventPublisher.EnsurePolicyIsUpdatedAsync(Bus.Config.AdditionalSubscriberAccounts).GetAwaiter().GetResult();
 
@@ -94,18 +95,6 @@ namespace JustSaying
                 subscriptionConfig.TopicName, typeof(T));
 
             return this;
-        }
-
-        private static void CreatePublisher(SnsTopicByName eventPublisher, SnsWriteConfiguration snsWriteConfig)
-        {
-            if (snsWriteConfig.Encryption != null)
-            {
-                eventPublisher.CreateWithEncryptionAsync(snsWriteConfig.Encryption).GetAwaiter().GetResult();
-            }
-            else
-            {
-                eventPublisher.CreateAsync().GetAwaiter().GetResult();
-            }
         }
 
         /// <summary>
@@ -121,7 +110,7 @@ namespace JustSaying
             var config = new SqsWriteConfiguration();
             configBuilder?.Invoke(config);
 
-            config.QueueName = Bus.Config.QueueNamingConvention.Apply<T>(config.QueueName);
+            config.ApplyQueueNamingConvention<T>(Bus.Config.QueueNamingConvention);
 
             foreach (var region in Bus.Config.Regions)
             {
@@ -155,7 +144,7 @@ namespace JustSaying
             return this;
         }
 
-        public JustSayingFluently WithMessageHandler<T>(
+        public void WithMessageHandler<T>(
             SqsReadConfiguration subscriptionConfig,
             IHandlerResolver handlerResolver)
             where T : Message
@@ -163,15 +152,48 @@ namespace JustSaying
             if (handlerResolver is null) throw new ArgumentNullException(nameof(handlerResolver));
             if (subscriptionConfig is null) throw new ArgumentNullException(nameof(subscriptionConfig));
 
-            subscriptionConfig.TopicName =
-                Bus.Config.TopicNamingConvention.Apply<T>(subscriptionConfig.TopicName);
-            subscriptionConfig.QueueName =
-                Bus.Config.QueueNamingConvention.Apply<T>(subscriptionConfig.QueueName);
+            subscriptionConfig.ApplyTopicNamingConvention<T>(Bus.Config.TopicNamingConvention);
+            subscriptionConfig.ApplyQueueNamingConvention<T>(Bus.Config.QueueNamingConvention);
+
             subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
 
-            var thing = subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint
-                ? PointToPointHandler<T>(subscriptionConfig)
-                : TopicHandler<T>(subscriptionConfig);
+            if (subscriptionConfig.SubscriptionType == SubscriptionType.PointToPoint)
+            {
+                foreach (var region in Bus.Config.Regions)
+                {
+                    // TODO Make this async and remove GetAwaiter().GetResult() call
+                    var queue = _amazonQueueCreator.EnsureQueueExistsAsync(region, subscriptionConfig)
+                        .GetAwaiter().GetResult();
+
+                    Bus.AddQueue(region, subscriptionConfig.SubscriptionGroupName, queue);
+
+                    _log.LogInformation(
+                        "Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",
+                        typeof(T),
+                        subscriptionConfig.QueueName);
+                }
+            }
+            else if(subscriptionConfig.SubscriptionType == SubscriptionType.ToTopic)
+            {
+                subscriptionConfig.PublishEndpoint = subscriptionConfig.TopicName;
+                subscriptionConfig.Validate();
+
+                foreach (string region in Bus.Config.Regions)
+                {
+                    // TODO Make this async and remove GetAwaiter().GetResult() call
+                    var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribedAsync(
+                        region, Bus.SerializationRegister,
+                        subscriptionConfig,
+                        Bus.Config.MessageSubjectProvider).GetAwaiter().GetResult();
+
+                    Bus.AddQueue(region,  subscriptionConfig.SubscriptionGroupName, queue);
+
+                    _log.LogInformation(
+                        "Created SQS topic subscription on topic '{TopicName}' and queue '{QueueName}'.",
+                        subscriptionConfig.TopicName,
+                        subscriptionConfig.QueueName);
+                }
+            }
 
             var resolutionContext = new HandlerResolutionContext(subscriptionConfig.QueueName);
             var proposedHandler = handlerResolver.ResolveHandler<T>(resolutionContext);
@@ -188,56 +210,7 @@ namespace JustSaying
                 typeof(T),
                 subscriptionConfig.TopicName,
                 subscriptionConfig.QueueName);
-
-            return thing;
         }
-
-        private JustSayingFluently TopicHandler<T>(
-            SqsReadConfiguration subscriptionConfig) where T : Message
-        {
-            subscriptionConfig.PublishEndpoint = subscriptionConfig.TopicName;
-            subscriptionConfig.TopicName = subscriptionConfig.TopicName;
-            subscriptionConfig.QueueName = subscriptionConfig.QueueName;
-
-            subscriptionConfig.Validate();
-
-            foreach (string region in Bus.Config.Regions)
-            {
-                // TODO Make this async and remove GetAwaiter().GetResult() call
-                var queue = _amazonQueueCreator.EnsureTopicExistsWithQueueSubscribedAsync(
-                    region, Bus.SerializationRegister,
-                    subscriptionConfig,
-                    Bus.Config.MessageSubjectProvider).GetAwaiter().GetResult();
-
-                Bus.AddQueue(region,  subscriptionConfig.SubscriptionGroupName, queue);
-
-                _log.LogInformation(
-                    "Created SQS topic subscription on topic '{TopicName}' and queue '{QueueName}'.",
-                    subscriptionConfig.TopicName,
-                    subscriptionConfig.QueueName);
-            }
-
-            return this;
-        }
-
-        private JustSayingFluently PointToPointHandler<T>(
-            SqsReadConfiguration subscriptionConfig) where T : Message
-        {
-            foreach (var region in Bus.Config.Regions)
-            {
-                // TODO Make this async and remove GetAwaiter().GetResult() call
-                var queue = _amazonQueueCreator.EnsureQueueExistsAsync(region, subscriptionConfig).GetAwaiter().GetResult();
-
-                Bus.AddQueue(region, subscriptionConfig.SubscriptionGroupName, queue);
-
-                _log.LogInformation(
-                    "Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",
-                    typeof(T),
-                    subscriptionConfig.QueueName);
-            }
-            return this;
-        }
-
 
         public InterrogationResult Interrogate()
         {
