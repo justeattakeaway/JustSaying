@@ -16,13 +16,15 @@ namespace JustSaying.Fluent
         where T : Message
     {
         /// <summary>
-        /// Configures the subscription for the <see cref="JustSayingFluently"/>.
+        /// Configures the subscriptions for the <see cref="JustSayingBus"/>.
         /// </summary>
-        /// <param name="bus">The <see cref="JustSayingFluently"/> to configure the subscription for.</param>
-        /// <param name="resolver"></param>
-        /// <param name="creator"></param>
-        /// <param name="loggerFactory"></param>
-        /// <param name="proxy"></param>
+        /// <param name="bus">The <see cref="JustSayingBus"/> to configure subscriptions for.</param>
+        /// <param name="resolver">The <see cref="IHandlerResolver"/> to resolve handlers from.</param>
+        /// <param name="creator">The <see cref="IVerifyAmazonQueues"/> to use to create queues with.</param>
+        /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> logger factory to use.</param>
+        /// <exception cref="InvalidOperationException">
+        /// No instance of <see cref="IHandlerResolver"/> could be resolved.
+        /// </exception>
         Task ConfigureAsync(
             JustSayingBus bus,
             IHandlerResolver resolver,

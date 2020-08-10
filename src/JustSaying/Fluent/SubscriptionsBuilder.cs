@@ -62,9 +62,6 @@ namespace JustSaying.Fluent
         /// <returns>
         /// The current <see cref="SubscriptionsBuilder"/>.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="configure"/> is <see langword="null"/>.
-        /// </exception>
         public SubscriptionsBuilder ForQueue<T>()
             where T : Message
         {
@@ -80,7 +77,7 @@ namespace JustSaying.Fluent
         /// The current <see cref="SubscriptionsBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
         public SubscriptionsBuilder ForQueue<T>(string name)
             where T : Message
@@ -135,7 +132,7 @@ namespace JustSaying.Fluent
         /// The current <see cref="SubscriptionsBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
         public SubscriptionsBuilder ForTopic<T>(string name)
             where T : Message
@@ -159,7 +156,7 @@ namespace JustSaying.Fluent
         {
             if (configure == null) throw new ArgumentNullException(nameof(configure));
 
-            var builder = new TopicSubscriptionBuilder<T>(this);
+            var builder = new TopicSubscriptionBuilder<T>();
 
             configure(builder);
 
@@ -169,12 +166,11 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Configures the subscriptions for the <see cref="JustSayingFluently"/>.
+        /// Configures the subscriptions for the <see cref="JustSayingBus"/>.
         /// </summary>
-        /// <param name="bus">The <see cref="JustSayingFluently"/> to configure subscriptions for.</param>
-        /// <param name="proxy"></param>
-        /// <param name="creator"></param>
-        /// <param name="loggerFactory"></param>
+        /// <param name="bus">The <see cref="JustSayingBus"/> to configure subscriptions for.</param>
+        /// <param name="creator">The <see cref="IVerifyAmazonQueues"/>to use to create queues with.</param>
+        /// <param name="loggerFactory">The <see cref="ILoggerFactory"/>logger factory to use.</param>
         /// <exception cref="InvalidOperationException">
         /// No instance of <see cref="IHandlerResolver"/> could be resolved.
         /// </exception>

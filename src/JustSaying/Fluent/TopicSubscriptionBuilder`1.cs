@@ -20,12 +20,9 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Initializes a new instance of the <see cref="TopicSubscriptionBuilder{T}"/> class.
         /// </summary>
-        internal TopicSubscriptionBuilder(SubscriptionsBuilder parent)
+        internal TopicSubscriptionBuilder()
         {
-            Parent = parent;
         }
-
-        internal SubscriptionsBuilder Parent { get; }
 
         /// <summary>
         /// Gets or sets the topic name.

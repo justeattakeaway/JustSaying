@@ -16,7 +16,7 @@ namespace JustSaying.Fluent
         where T : Message
     {
         /// <summary>
-        /// Configures the publication for the <see cref="JustSayingFluently"/>.
+        /// Configures the publication for the <see cref="JustSayingBus"/>.
         /// </summary>
         Task ConfigureAsync(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory);
     }
