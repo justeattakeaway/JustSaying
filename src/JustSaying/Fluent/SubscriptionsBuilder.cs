@@ -179,7 +179,6 @@ namespace JustSaying.Fluent
         /// </exception>
         internal void Configure(
             JustSayingBus bus,
-            IAwsClientFactoryProxy proxy,
             IVerifyAmazonQueues creator,
             ILoggerFactory loggerFactory)
         {
@@ -197,7 +196,7 @@ namespace JustSaying.Fluent
 
             foreach (ISubscriptionBuilder<Message> builder in Subscriptions)
             {
-                builder.Configure(bus, resolver, proxy, creator, loggerFactory);
+                builder.Configure(bus, resolver, creator, loggerFactory);
             }
         }
 

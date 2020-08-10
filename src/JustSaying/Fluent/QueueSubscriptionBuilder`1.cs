@@ -104,7 +104,6 @@ namespace JustSaying.Fluent
         void ISubscriptionBuilder<T>.Configure(
             JustSayingBus bus,
             IHandlerResolver resolver,
-            IAwsClientFactoryProxy proxy,
             IVerifyAmazonQueues creator,
             ILoggerFactory loggerFactory)
         {

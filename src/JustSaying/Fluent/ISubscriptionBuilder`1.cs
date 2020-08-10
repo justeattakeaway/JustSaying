@@ -25,7 +25,6 @@ namespace JustSaying.Fluent
         void Configure(
             JustSayingBus bus,
             IHandlerResolver resolver,
-            IAwsClientFactoryProxy proxy,
             IVerifyAmazonQueues creator,
             ILoggerFactory loggerFactory);
     }

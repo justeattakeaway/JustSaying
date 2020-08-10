@@ -225,15 +225,15 @@ namespace JustSaying
             ILoggerFactory loggerFactory =
                 ServicesBuilder?.LoggerFactory?.Invoke() ?? ServiceResolver.ResolveService<ILoggerFactory>();
 
-            JustSayingBus publisher = CreateBus(config, loggerFactory);
-            var (fluent, proxy, creator) = CreateFluent(publisher, loggerFactory);
+            JustSayingBus bus = CreateBus(config, loggerFactory);
+            IAwsClientFactoryProxy proxy = CreateFactoryProxy();
 
             if (PublicationsBuilder != null)
             {
-                PublicationsBuilder.Configure(fluent);
+                PublicationsBuilder.Configure(bus, proxy, loggerFactory);
             }
 
-            return publisher;
+            return bus;
         }
 
         /// <summary>
@@ -252,7 +252,7 @@ namespace JustSaying
                 ServicesBuilder?.LoggerFactory?.Invoke() ?? ServiceResolver.ResolveService<ILoggerFactory>();
 
             JustSayingBus bus = CreateBus(config, loggerFactory);
-            var (fluent, proxy, creator) = CreateFluent(bus, loggerFactory);
+            IVerifyAmazonQueues creator = CreateQueueCreator(loggerFactory);
 
             if (ServicesBuilder?.MessageContextAccessor != null)
             {
@@ -261,7 +261,7 @@ namespace JustSaying
 
             if (SubscriptionBuilder != null)
             {
-                SubscriptionBuilder.Configure(bus, proxy, creator, loggerFactory);
+                SubscriptionBuilder.Configure(bus, creator, loggerFactory);
             }
 
             return bus;
@@ -308,13 +308,12 @@ namespace JustSaying
             return ServicesBuilder?.MessageContextAccessor?.Invoke() ?? ServiceResolver.ResolveService<IMessageContextAccessor>();
         }
 
-        private (JustSayingFluently, IAwsClientFactoryProxy proxy, IVerifyAmazonQueues queueCreator)
-            CreateFluent(JustSayingBus bus, ILoggerFactory loggerFactory)
+        private IVerifyAmazonQueues CreateQueueCreator(ILoggerFactory loggerFactory)
         {
             IAwsClientFactoryProxy proxy = CreateFactoryProxy();
             IVerifyAmazonQueues queueCreator = new AmazonQueueCreator(proxy, loggerFactory);
 
-            return (new JustSayingFluently(bus, queueCreator, proxy, loggerFactory), proxy, queueCreator);
+            return queueCreator;
         }
     }
 }

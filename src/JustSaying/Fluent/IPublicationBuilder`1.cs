@@ -1,4 +1,7 @@
+using JustSaying.AwsTools;
+using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Models;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent
 {
@@ -14,6 +17,6 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Configures the publication for the <see cref="JustSayingFluently"/>.
         /// </summary>
-        void Configure(JustSayingFluently bus);
+        void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory);
     }
 }

@@ -1,6 +1,10 @@
 using System;
+using Amazon;
+using JustSaying.AwsTools;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Models;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent
 {
@@ -67,10 +71,51 @@ namespace JustSaying.Fluent
         }
 
         /// <inheritdoc />
-        void IPublicationBuilder<T>.Configure(JustSayingFluently bus)
+        void IPublicationBuilder<T>.Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
         {
-            var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic);
-            bus.WithSnsMessagePublisher<T>(subscriptionConfig, ConfigureWrites);
+            var logger = loggerFactory.CreateLogger<TopicPublicationBuilder<T>>();
+
+            logger.LogInformation("Adding SNS publisher for message type '{MessageType}'.",
+                typeof(T));
+
+            var config = bus.Config;
+
+            var readConfiguration = new SqsReadConfiguration(SubscriptionType.ToTopic);
+            var writeConfiguration = new SnsWriteConfiguration();
+            ConfigureWrites?.Invoke(writeConfiguration);
+            readConfiguration.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
+
+            bus.SerializationRegister.AddSerializer<T>();
+
+            foreach (var region in config.Regions)
+            {
+                // TODO pass region down into topic creation for when we have foreign topics so we can generate the arn
+                var eventPublisher = new SnsTopicByName(
+                    readConfiguration.TopicName,
+                    proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
+                    bus.SerializationRegister,
+                    loggerFactory, writeConfiguration,
+                    config.MessageSubjectProvider)
+                {
+                    MessageResponseLogger = config.MessageResponseLogger
+                };
+
+                if (writeConfiguration.Encryption != null)
+                {
+                    eventPublisher.CreateWithEncryptionAsync(writeConfiguration.Encryption).GetAwaiter().GetResult();
+                }
+                else
+                {
+                    eventPublisher.CreateAsync().GetAwaiter().GetResult();
+                }
+
+                eventPublisher.EnsurePolicyIsUpdatedAsync(config.AdditionalSubscriberAccounts).GetAwaiter().GetResult();
+
+                bus.AddMessagePublisher<T>(eventPublisher, region);
+            }
+
+            logger.LogInformation("Created SNS topic publisher on topic '{TopicName}' for message type '{MessageType}'.",
+                readConfiguration.TopicName, typeof(T));
         }
     }
 }

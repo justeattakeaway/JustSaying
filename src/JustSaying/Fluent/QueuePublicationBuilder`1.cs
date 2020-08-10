@@ -1,6 +1,10 @@
 using System;
+using Amazon;
+using JustSaying.AwsTools;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Models;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent
 {
@@ -67,9 +71,47 @@ namespace JustSaying.Fluent
         }
 
         /// <inheritdoc />
-        void IPublicationBuilder<T>.Configure(JustSayingFluently bus)
+        void IPublicationBuilder<T>.Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
         {
-            bus.WithSqsMessagePublisher<T>(ConfigureWrites);
+            var logger = loggerFactory.CreateLogger<QueuePublicationBuilder<T>>();
+
+            logger.LogInformation("Adding SQS publisher for message type '{MessageType}'.",
+                typeof(T));
+
+            var config = bus.Config;
+
+            var writeConfiguration = new SqsWriteConfiguration();
+            ConfigureWrites?.Invoke(writeConfiguration);
+            writeConfiguration.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
+
+            foreach (var region in config.Regions)
+            {
+                var regionEndpoint = RegionEndpoint.GetBySystemName(region);
+                var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
+
+                var eventPublisher = new SqsPublisher(
+                    regionEndpoint,
+                    writeConfiguration.QueueName,
+                    sqsClient,
+                    writeConfiguration.RetryCountBeforeSendingToErrorQueue,
+                    bus.SerializationRegister,
+                    loggerFactory)
+                {
+                    MessageResponseLogger = config.MessageResponseLogger
+                };
+
+                if (!eventPublisher.ExistsAsync().GetAwaiter().GetResult())
+                {
+                    eventPublisher.CreateAsync(writeConfiguration).GetAwaiter().GetResult();
+                }
+
+                bus.AddMessagePublisher<T>(eventPublisher, region);
+            }
+
+            logger.LogInformation(
+                "Created SQS publisher for message type '{MessageType}' on queue '{QueueName}'.",
+                typeof(T),
+                writeConfiguration.QueueName);
         }
     }
 }
