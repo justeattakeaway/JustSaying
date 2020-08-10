@@ -1,4 +1,7 @@
+using JustSaying.AwsTools;
+using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Models;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent
 {
@@ -15,6 +18,15 @@ namespace JustSaying.Fluent
         /// Configures the subscription for the <see cref="JustSayingFluently"/>.
         /// </summary>
         /// <param name="bus">The <see cref="JustSayingFluently"/> to configure the subscription for.</param>
-        void Configure(JustSayingFluently bus, IHandlerResolver resolver);
+        /// <param name="resolver"></param>
+        /// <param name="proxy"></param>
+        /// <param name="creator"></param>
+        /// <param name="loggerFactory"></param>
+        void Configure(
+            JustSayingBus bus,
+            IHandlerResolver resolver,
+            IAwsClientFactoryProxy proxy,
+            IVerifyAmazonQueues creator,
+            ILoggerFactory loggerFactory);
     }
 }

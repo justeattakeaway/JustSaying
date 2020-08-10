@@ -226,7 +226,7 @@ namespace JustSaying
                 ServicesBuilder?.LoggerFactory?.Invoke() ?? ServiceResolver.ResolveService<ILoggerFactory>();
 
             JustSayingBus publisher = CreateBus(config, loggerFactory);
-            JustSayingFluently fluent = CreateFluent(publisher, loggerFactory);
+            var (fluent, proxy, creator) = CreateFluent(publisher, loggerFactory);
 
             if (PublicationsBuilder != null)
             {
@@ -252,7 +252,7 @@ namespace JustSaying
                 ServicesBuilder?.LoggerFactory?.Invoke() ?? ServiceResolver.ResolveService<ILoggerFactory>();
 
             JustSayingBus bus = CreateBus(config, loggerFactory);
-            JustSayingFluently fluent = CreateFluent(bus, loggerFactory);
+            var (fluent, proxy, creator) = CreateFluent(bus, loggerFactory);
 
             if (ServicesBuilder?.MessageContextAccessor != null)
             {
@@ -261,7 +261,7 @@ namespace JustSaying
 
             if (SubscriptionBuilder != null)
             {
-                SubscriptionBuilder.Configure(fluent);
+                SubscriptionBuilder.Configure(bus, proxy, creator, loggerFactory);
             }
 
             return bus;
@@ -272,7 +272,16 @@ namespace JustSaying
             IMessageSerializationRegister register =
                 ServicesBuilder?.SerializationRegister?.Invoke() ?? ServiceResolver.ResolveService<IMessageSerializationRegister>();
 
-            return new JustSayingBus(config, register, loggerFactory);
+            var bus =  new JustSayingBus(config, register, loggerFactory);
+
+            bus.Monitor = CreateMessageMonitor();
+            bus.MessageContextAccessor = CreateMessageContextAccessor();
+            if (ServicesBuilder?.MessageLock != null)
+            {
+                bus.MessageLock = ServicesBuilder.MessageLock();
+            }
+
+            return bus;
         }
 
         private IMessagingConfig CreateConfig()
@@ -299,25 +308,13 @@ namespace JustSaying
             return ServicesBuilder?.MessageContextAccessor?.Invoke() ?? ServiceResolver.ResolveService<IMessageContextAccessor>();
         }
 
-        private JustSayingFluently CreateFluent(JustSayingBus bus, ILoggerFactory loggerFactory)
+        private (JustSayingFluently, IAwsClientFactoryProxy proxy, IVerifyAmazonQueues queueCreator)
+            CreateFluent(JustSayingBus bus, ILoggerFactory loggerFactory)
         {
             IAwsClientFactoryProxy proxy = CreateFactoryProxy();
             IVerifyAmazonQueues queueCreator = new AmazonQueueCreator(proxy, loggerFactory);
 
-            var fluent = new JustSayingFluently(bus, queueCreator, proxy, loggerFactory);
-
-            IMessageMonitor messageMonitor = CreateMessageMonitor();
-            IMessageContextAccessor messageContextAccessor = CreateMessageContextAccessor();
-
-            bus.Monitor = messageMonitor;
-            bus.MessageContextAccessor = messageContextAccessor;
-
-            if (ServicesBuilder?.MessageLock != null)
-            {
-                bus.MessageLock = ServicesBuilder.MessageLock();
-            }
-
-            return fluent;
+            return (new JustSayingFluently(bus, queueCreator, proxy, loggerFactory), proxy, queueCreator);
         }
     }
 }

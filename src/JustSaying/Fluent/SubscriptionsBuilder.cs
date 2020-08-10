@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using JustSaying.AwsTools;
+using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Models;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent
 {
@@ -155,7 +158,7 @@ namespace JustSaying.Fluent
         {
             if (configure == null) throw new ArgumentNullException(nameof(configure));
 
-            var builder = new TopicSubscriptionBuilder<T>();
+            var builder = new TopicSubscriptionBuilder<T>(this);
 
             configure(builder);
 
@@ -168,10 +171,17 @@ namespace JustSaying.Fluent
         /// Configures the subscriptions for the <see cref="JustSayingFluently"/>.
         /// </summary>
         /// <param name="bus">The <see cref="JustSayingFluently"/> to configure subscriptions for.</param>
+        /// <param name="proxy"></param>
+        /// <param name="creator"></param>
+        /// <param name="loggerFactory"></param>
         /// <exception cref="InvalidOperationException">
         /// No instance of <see cref="IHandlerResolver"/> could be resolved.
         /// </exception>
-        internal void Configure(JustSayingFluently bus)
+        internal void Configure(
+            JustSayingBus bus,
+            IAwsClientFactoryProxy proxy,
+            IVerifyAmazonQueues creator,
+            ILoggerFactory loggerFactory)
         {
             var resolver = Parent.ServicesBuilder?.HandlerResolver?.Invoke() ??
                 Parent.ServiceResolver.ResolveService<IHandlerResolver>();
@@ -183,11 +193,11 @@ namespace JustSaying.Fluent
 
             Defaults.Validate();
 
-            bus.Bus.SetGroupSettings(Defaults, SubscriptionGroupSettings);
+            bus.SetGroupSettings(Defaults, SubscriptionGroupSettings);
 
             foreach (ISubscriptionBuilder<Message> builder in Subscriptions)
             {
-                builder.Configure(bus, resolver);
+                builder.Configure(bus, resolver, proxy, creator, loggerFactory);
             }
         }
 
