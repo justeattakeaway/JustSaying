@@ -103,7 +103,9 @@ namespace JustSaying.Messaging.Channels.Receive
                     foreach (Message message in messages)
                     {
                         IQueueMessageContext messageContext = _sqsQueueReader.ToMessageContext(message);
-                        await writer.WriteAsync(messageContext, stoppingToken).ConfigureAwait(false);
+
+                        // Complete all messages in the batch, rather than observing the CancellationToken to stop
+                        await writer.WriteAsync(messageContext, CancellationToken.None).ConfigureAwait(false);
                     }
                 }
             }
