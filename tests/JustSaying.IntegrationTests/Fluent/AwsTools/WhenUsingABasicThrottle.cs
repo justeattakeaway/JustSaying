@@ -52,16 +52,15 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                 if (!IsSimulator)
                 {
                     // Wait for up to 60 secs for queue creation to be guaranteed completed by AWS
-                    using (var cts = new CancellationTokenSource(TimeSpan.FromMinutes(1)))
-                    {
-                        while (!cts.IsCancellationRequested)
-                        {
-                            await Task.Delay(TimeSpan.FromSeconds(2));
+                    using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(1));
 
-                            if (await queue.ExistsAsync())
-                            {
-                                break;
-                            }
+                    while (!cts.IsCancellationRequested)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(2));
+
+                        if (await queue.ExistsAsync())
+                        {
+                            break;
                         }
                     }
                 }
@@ -78,7 +77,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
             {
                 var entries = new List<SendMessageBatchRequestEntry>();
 
-                for (var j = 0; j < 10; j++)
+                for (int j = 0; j < 10; j++)
                 {
                     var batchEntry = new SendMessageBatchRequestEntry
                     {
@@ -121,7 +120,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
 
                     do
                     {
-                        await Task.Delay(delay);
+                        await Task.Delay(delay, cancellationToken);
 
                         OutputHelper.WriteLine($"{DateTime.Now} - Handled {count} messages. Waiting for completion.");
                     }

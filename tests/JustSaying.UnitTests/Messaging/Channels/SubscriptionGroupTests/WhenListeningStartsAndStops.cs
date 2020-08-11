@@ -16,11 +16,13 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
     public class WhenListeningStartsAndStops : BaseSubscriptionGroupTests
     {
         private ISqsQueue _queue;
+#pragma warning disable IDE1006
         private const string _messageContentsRunning = @"Message Contents Running";
         private const string _messageContentsAfterStop = @"Message Contents After Stop";
+#pragma warning restore IDE1006
 
         private int _expectedMaxMessageCount;
-        private bool _running = false;
+        private bool _running;
         private IAmazonSQS _client;
 
         public WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper)

@@ -56,7 +56,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     {
                         var sqsClient = clientFactory.GetSqsClient(region);
 
-                        var response = await sqsClient.GetQueueUrlAsync(UniqueName).ConfigureAwait(false);
+                        var response = await sqsClient.GetQueueUrlAsync(UniqueName, cancellationToken).ConfigureAwait(false);
 
                         response.ShouldNotBeNull();
                         response.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
@@ -69,7 +69,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
                         do
                         {
-                            var topicsResponse = await snsClient.ListTopicsAsync(nextToken).ConfigureAwait(false);
+                            var topicsResponse = await snsClient.ListTopicsAsync(nextToken, cancellationToken).ConfigureAwait(false);
                             nextToken = topicsResponse.NextToken;
                             topics.AddRange(topicsResponse.Topics);
                         }

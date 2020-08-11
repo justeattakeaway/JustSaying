@@ -28,7 +28,7 @@ namespace JustSaying.Messaging.Channels.Receive
         private readonly ILogger _logger;
 
         private readonly List<string> _requestMessageAttributeNames = new List<string>();
-        private string _backoffStrategyName;
+        private readonly string _backoffStrategyName;
 
         public ChannelReader<IQueueMessageContext> Reader => _channel.Reader;
 
@@ -103,7 +103,9 @@ namespace JustSaying.Messaging.Channels.Receive
                     foreach (Message message in messages)
                     {
                         IQueueMessageContext messageContext = _sqsQueueReader.ToMessageContext(message);
-                        await writer.WriteAsync(messageContext).ConfigureAwait(false);
+
+                        // Complete all messages in the batch, rather than observing the CancellationToken to stop
+                        await writer.WriteAsync(messageContext, CancellationToken.None).ConfigureAwait(false);
                     }
                 }
             }

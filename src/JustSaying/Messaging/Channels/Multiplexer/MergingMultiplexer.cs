@@ -14,7 +14,7 @@ namespace JustSaying.Messaging.Channels.Multiplexer
     {
         private readonly ILogger<MergingMultiplexer> _logger;
 
-        private bool _started = false;
+        private bool _started;
         private CancellationToken _stoppingToken;
         private Task _completion;
 
@@ -118,7 +118,7 @@ namespace JustSaying.Messaging.Channels.Multiplexer
                 }
             }
 
-            await foreach (var msg in ReadAllAsync<IQueueMessageContext>(_targetChannel.Reader))
+            await foreach (IQueueMessageContext msg in ReadAllAsync(_targetChannel.Reader))
                 yield return msg;
         }
 

@@ -42,7 +42,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     // Act
                     await publisher.PublishAsync(message, cancellationToken);
                     await publisher.PublishAsync(message, cancellationToken);
-                    await Task.Delay(5.Seconds());
+                    await Task.Delay(5.Seconds(), cancellationToken);
 
                     // Assert
                     handler.NumberOfTimesIHaveBeenCalledForMessage(message.UniqueKey()).ShouldBe(1);
@@ -82,7 +82,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
             public Task ReleaseLockAsync(string key)
             {
-                _store.Remove(key, out var _);
+                _ = _store.Remove(key, out _);
                 return Task.CompletedTask;
             }
         }
