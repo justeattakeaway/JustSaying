@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
@@ -177,7 +178,7 @@ namespace JustSaying.Fluent
         /// <exception cref="InvalidOperationException">
         /// No instance of <see cref="IHandlerResolver"/> could be resolved.
         /// </exception>
-        internal void Configure(
+        internal async Task ConfigureAsync(
             JustSayingBus bus,
             IVerifyAmazonQueues creator,
             ILoggerFactory loggerFactory)
@@ -196,7 +197,7 @@ namespace JustSaying.Fluent
 
             foreach (ISubscriptionBuilder<Message> builder in Subscriptions)
             {
-                builder.Configure(bus, resolver, creator, loggerFactory);
+                await builder.ConfigureAsync(bus, resolver, creator, loggerFactory).ConfigureAwait(false);
             }
         }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
@@ -216,7 +217,7 @@ namespace JustSaying
         /// <returns>
         /// The created instance of <see cref="IMessagePublisher"/>
         /// </returns>
-        public IMessagePublisher BuildPublisher()
+        public async Task<IMessagePublisher> BuildPublisherAsync()
         {
             IMessagingConfig config = CreateConfig();
 
@@ -230,7 +231,7 @@ namespace JustSaying
 
             if (PublicationsBuilder != null)
             {
-                PublicationsBuilder.Configure(bus, proxy, loggerFactory);
+                await PublicationsBuilder.Configure(bus, proxy, loggerFactory).ConfigureAwait(true);
             }
 
             return bus;
@@ -242,7 +243,7 @@ namespace JustSaying
         /// <returns>
         /// The created instance of <see cref="IMessagingBus"/>
         /// </returns>
-        public IMessagingBus BuildSubscribers()
+        public async Task<IMessagingBus> BuildSubscribersAsync()
         {
             IMessagingConfig config = CreateConfig();
 
@@ -261,7 +262,7 @@ namespace JustSaying
 
             if (SubscriptionBuilder != null)
             {
-                SubscriptionBuilder.Configure(bus, creator, loggerFactory);
+                await SubscriptionBuilder.ConfigureAsync(bus, creator, loggerFactory).ConfigureAwait(false);
             }
 
             return bus;

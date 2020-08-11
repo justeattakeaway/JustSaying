@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Models;
@@ -19,10 +20,10 @@ namespace JustSaying.Fluent
         /// </summary>
         /// <param name="bus">The <see cref="JustSayingFluently"/> to configure the subscription for.</param>
         /// <param name="resolver"></param>
-        /// <param name="proxy"></param>
         /// <param name="creator"></param>
         /// <param name="loggerFactory"></param>
-        void Configure(
+        /// <param name="proxy"></param>
+        Task ConfigureAsync(
             JustSayingBus bus,
             IHandlerResolver resolver,
             IVerifyAmazonQueues creator,

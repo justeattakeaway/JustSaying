@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Models;
@@ -139,11 +140,11 @@ namespace JustSaying.Fluent
         /// Configures the publications for the <see cref="JustSayingFluently"/>.
         /// </summary>
         /// <param name="bus">The <see cref="JustSayingFluently"/> to configure publications for.</param>
-        internal void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
+        internal async Task Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
         {
             foreach (IPublicationBuilder<Message> builder in Publications)
             {
-                builder.Configure(bus, proxy, loggerFactory);
+                await builder.ConfigureAsync(bus, proxy, loggerFactory).ConfigureAwait(false);
             }
         }
     }

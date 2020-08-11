@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
@@ -71,7 +72,7 @@ namespace JustSaying.Fluent
         }
 
         /// <inheritdoc />
-        void IPublicationBuilder<T>.Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
+        async Task IPublicationBuilder<T>.ConfigureAsync(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
         {
             var logger = loggerFactory.CreateLogger<QueuePublicationBuilder<T>>();
 
@@ -100,9 +101,9 @@ namespace JustSaying.Fluent
                     MessageResponseLogger = config.MessageResponseLogger
                 };
 
-                if (!eventPublisher.ExistsAsync().GetAwaiter().GetResult())
+                if (!await eventPublisher.ExistsAsync().ConfigureAwait(false))
                 {
-                    eventPublisher.CreateAsync(writeConfiguration).GetAwaiter().GetResult();
+                    await eventPublisher.CreateAsync(writeConfiguration).ConfigureAwait(false);
                 }
 
                 bus.AddMessagePublisher<T>(eventPublisher, region);

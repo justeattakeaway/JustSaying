@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
@@ -71,7 +72,7 @@ namespace JustSaying.Fluent
         }
 
         /// <inheritdoc />
-        void IPublicationBuilder<T>.Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
+        async Task IPublicationBuilder<T>.ConfigureAsync(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
         {
             var logger = loggerFactory.CreateLogger<TopicPublicationBuilder<T>>();
 
@@ -102,14 +103,14 @@ namespace JustSaying.Fluent
 
                 if (writeConfiguration.Encryption != null)
                 {
-                    eventPublisher.CreateWithEncryptionAsync(writeConfiguration.Encryption).GetAwaiter().GetResult();
+                    await eventPublisher.CreateWithEncryptionAsync(writeConfiguration.Encryption).ConfigureAwait(false);
                 }
                 else
                 {
-                    eventPublisher.CreateAsync().GetAwaiter().GetResult();
+                    await eventPublisher.CreateAsync().ConfigureAwait(false);
                 }
 
-                eventPublisher.EnsurePolicyIsUpdatedAsync(config.AdditionalSubscriberAccounts).GetAwaiter().GetResult();
+                await eventPublisher.EnsurePolicyIsUpdatedAsync(config.AdditionalSubscriberAccounts).ConfigureAwait(false);
 
                 bus.AddMessagePublisher<T>(eventPublisher, region);
             }

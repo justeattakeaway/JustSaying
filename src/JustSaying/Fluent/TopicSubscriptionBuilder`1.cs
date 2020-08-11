@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Extensions;
@@ -103,7 +104,7 @@ namespace JustSaying.Fluent
         }
 
         /// <inheritdoc />
-        void ISubscriptionBuilder<T>.Configure(
+        async Task ISubscriptionBuilder<T>.ConfigureAsync(
             JustSayingBus bus,
             IHandlerResolver resolver,
             IVerifyAmazonQueues creator,
@@ -128,10 +129,10 @@ namespace JustSaying.Fluent
 
             foreach (var region in config.Regions)
             {
-                var queue = creator.EnsureTopicExistsWithQueueSubscribedAsync(
+                var queue = await creator.EnsureTopicExistsWithQueueSubscribedAsync(
                     region, bus.SerializationRegister,
                     subscriptionConfig,
-                    config.MessageSubjectProvider).GetAwaiter().GetResult();
+                    config.MessageSubjectProvider).ConfigureAwait(false);
 
                 bus.AddQueue(region,  subscriptionConfig.SubscriptionGroupName, queue);
 

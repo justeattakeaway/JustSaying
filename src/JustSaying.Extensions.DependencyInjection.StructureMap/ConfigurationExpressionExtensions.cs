@@ -129,7 +129,7 @@ namespace StructureMap
                     (context) =>
                     {
                         var builder = context.GetInstance<MessagingBusBuilder>();
-                        return builder.BuildPublisher();
+                        return builder.BuildPublisherAsync().GetAwaiter().GetResult();
                     });
 
             registry
@@ -140,7 +140,7 @@ namespace StructureMap
                     (context) =>
                     {
                         var builder = context.GetInstance<MessagingBusBuilder>();
-                        return builder.BuildSubscribers();
+                        return builder.BuildSubscribersAsync().GetAwaiter().GetResult();
                     });
         }
     }
