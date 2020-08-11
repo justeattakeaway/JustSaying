@@ -16,7 +16,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
     public class WhenUsingSqsQueueByName : BaseSubscriptionGroupTests
     {
         private ISqsQueue _queue;
-        private int _callCount = 0;
+        private int _callCount;
         private IAmazonSQS _client;
         protected readonly string MessageTypeString = typeof(SimpleMessage).ToString();
         protected const string MessageBody = "object";

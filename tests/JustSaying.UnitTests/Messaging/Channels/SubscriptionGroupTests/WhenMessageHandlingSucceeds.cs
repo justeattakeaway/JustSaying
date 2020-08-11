@@ -13,7 +13,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
     {
         private IAmazonSQS _sqsClient;
         private string _messageBody = "Expected Message Body";
-        private int _callCount = 0;
+        private int _callCount;
 
         public WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)

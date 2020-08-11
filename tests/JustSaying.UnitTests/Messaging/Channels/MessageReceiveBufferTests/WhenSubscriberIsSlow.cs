@@ -12,7 +12,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
 {
     public class WhenSubscriberIsSlow : BaseMessageReceiveBufferTests
     {
-        private int _callCount = 0;
+        private int _callCount;
         private Task<int> SubscriberTask;
 
         public WhenSubscriberIsSlow(ITestOutputHelper testOutputHelper)

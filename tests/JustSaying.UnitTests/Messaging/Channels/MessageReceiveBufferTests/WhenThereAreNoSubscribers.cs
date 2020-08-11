@@ -11,7 +11,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
 {
     public class WhenThereAreNoSubscribers : BaseMessageReceiveBufferTests
     {
-        private int _callCount = 0;
+        private int _callCount;
 
         public WhenThereAreNoSubscribers(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)

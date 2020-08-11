@@ -42,7 +42,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
                     var client = clientFactory.GetSqsClient(Region);
 
-                    var response = await client.GetQueueUrlAsync(UniqueName).ConfigureAwait(false);
+                    var response = await client.GetQueueUrlAsync(UniqueName, cancellationToken).ConfigureAwait(false);
 
                     response.ShouldNotBeNull();
                     response.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
