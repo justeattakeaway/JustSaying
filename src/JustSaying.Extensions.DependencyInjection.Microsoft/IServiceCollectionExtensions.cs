@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using JustSaying;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
@@ -165,14 +166,16 @@ namespace Microsoft.Extensions.DependencyInjection
                 (serviceProvider) =>
                 {
                     var builder = serviceProvider.GetRequiredService<MessagingBusBuilder>();
-                    return builder.BuildPublisherAsync().GetAwaiter().GetResult();
+                    return Task.Run(() => builder.BuildPublisherAsync())
+                        .GetAwaiter().GetResult();
                 });
 
             services.TryAddSingleton(
                 (serviceProvider) =>
                 {
                     var builder = serviceProvider.GetRequiredService<MessagingBusBuilder>();
-                    return builder.BuildSubscribersAsync().GetAwaiter().GetResult();
+                    return Task.Run(() => builder.BuildSubscribersAsync())
+                        .GetAwaiter().GetResult();
                 });
 
             services.AddSingleton<DefaultNamingConventions>();
