@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Transactions;
+using JustSaying.IntegrationTests.Fluent;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
@@ -11,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.Subscribing
+namespace JustSaying.Fluent.Subscribing.Newtonsoft
 {
     public class WhenHandlingAMessageWithBinaryAttributes : IntegrationTestBase
     {

@@ -1,17 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Transactions;
+using JustSaying.IntegrationTests.Fluent;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 using Shouldly;
-using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.Subscribing
+namespace JustSaying.Fluent.Subscribing.Newtonsoft
 {
     public class WhenHandlingAMessageWithStringAttributes : IntegrationTestBase
     {
