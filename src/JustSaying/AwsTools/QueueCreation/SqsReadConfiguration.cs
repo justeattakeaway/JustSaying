@@ -30,14 +30,14 @@ namespace JustSaying.AwsTools.QueueCreation
             TopicName = namingConvention.Apply<T>(TopicName);
         }
 
-
         protected override void OnValidating()
         {
             if (SubscriptionType == SubscriptionType.ToTopic)
             {
                 if (string.IsNullOrWhiteSpace(TopicName))
                 {
-                    throw new ConfigurationErrorsException("Invalid configuration. Topic name must be provided.");
+                    throw new ConfigurationErrorsException(
+                        "Invalid configuration. Topic name must be provided.");
                 }
 
                 if (PublishEndpoint == null)

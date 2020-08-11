@@ -22,8 +22,7 @@ namespace JustSaying.Fluent
         /// Initializes a new instance of the <see cref="TopicPublicationBuilder{T}"/> class.
         /// </summary>
         internal TopicPublicationBuilder()
-        {
-        }
+        { }
 
         /// <summary>
         /// Gets or sets a delegate to a method to use to configure SNS writes.
@@ -40,7 +39,8 @@ namespace JustSaying.Fluent
         /// <exception cref="ArgumentNullException">
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
-        public TopicPublicationBuilder<T> WithWriteConfiguration(Action<SnsWriteConfigurationBuilder> configure)
+        public TopicPublicationBuilder<T> WithWriteConfiguration(
+            Action<SnsWriteConfigurationBuilder> configure)
         {
             if (configure == null)
             {
@@ -72,7 +72,10 @@ namespace JustSaying.Fluent
         }
 
         /// <inheritdoc />
-        async Task IPublicationBuilder<T>.ConfigureAsync(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
+        async Task IPublicationBuilder<T>.ConfigureAsync(
+            JustSayingBus bus,
+            IAwsClientFactoryProxy proxy,
+            ILoggerFactory loggerFactory)
         {
             var logger = loggerFactory.CreateLogger<TopicPublicationBuilder<T>>();
 
@@ -95,7 +98,8 @@ namespace JustSaying.Fluent
                     readConfiguration.TopicName,
                     proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
                     bus.SerializationRegister,
-                    loggerFactory, writeConfiguration,
+                    loggerFactory,
+                    writeConfiguration,
                     config.MessageSubjectProvider)
                 {
                     MessageResponseLogger = config.MessageResponseLogger
@@ -103,20 +107,24 @@ namespace JustSaying.Fluent
 
                 if (writeConfiguration.Encryption != null)
                 {
-                    await eventPublisher.CreateWithEncryptionAsync(writeConfiguration.Encryption).ConfigureAwait(false);
+                    await eventPublisher.CreateWithEncryptionAsync(writeConfiguration.Encryption)
+                        .ConfigureAwait(false);
                 }
                 else
                 {
                     await eventPublisher.CreateAsync().ConfigureAwait(false);
                 }
 
-                await eventPublisher.EnsurePolicyIsUpdatedAsync(config.AdditionalSubscriberAccounts).ConfigureAwait(false);
+                await eventPublisher.EnsurePolicyIsUpdatedAsync(config.AdditionalSubscriberAccounts)
+                    .ConfigureAwait(false);
 
                 bus.AddMessagePublisher<T>(eventPublisher, region);
             }
 
-            logger.LogInformation("Created SNS topic publisher on topic '{TopicName}' for message type '{MessageType}'.",
-                readConfiguration.TopicName, typeof(T));
+            logger.LogInformation(
+                "Created SNS topic publisher on topic '{TopicName}' for message type '{MessageType}'.",
+                readConfiguration.TopicName,
+                typeof(T));
         }
     }
 }

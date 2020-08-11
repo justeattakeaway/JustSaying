@@ -231,7 +231,7 @@ namespace JustSaying
 
             if (PublicationsBuilder != null)
             {
-                await PublicationsBuilder.Configure(bus, proxy, loggerFactory).ConfigureAwait(true);
+                await PublicationsBuilder.ConfigureAsync(bus, proxy, loggerFactory).ConfigureAwait(true);
             }
 
             return bus;
