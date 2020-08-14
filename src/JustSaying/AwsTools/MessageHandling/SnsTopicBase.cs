@@ -80,9 +80,10 @@ namespace JustSaying.AwsTools.MessageHandling
             }
 
             _logger.LogInformation(
-                "Published message with subject '{MessageSubject}' and content '{MessageBody}'.",
+                "Published message: '{SnsSubject}' with content {SnsMessage} and request Id '{SnsRequestId}'",
                 request.Subject,
-                request.Message);
+                request.Message,
+                response?.ResponseMetadata?.RequestId);
 
             if (MessageResponseLogger != null)
             {
