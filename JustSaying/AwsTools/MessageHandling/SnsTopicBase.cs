@@ -44,7 +44,7 @@ namespace JustSaying.AwsTools.MessageHandling
         }
 
         public abstract Task<bool> ExistsAsync();
-        
+
         public Task PublishAsync(Message message) => PublishAsync(message, CancellationToken.None);
 
         public async Task PublishAsync(Message message, CancellationToken cancellationToken)
@@ -54,7 +54,11 @@ namespace JustSaying.AwsTools.MessageHandling
             try
             {
                 var response = await Client.PublishAsync(request, cancellationToken).ConfigureAwait(false);
-                _eventLog.LogInformation($"Published message: '{request.Subject}' with content {request.Message}");
+                _eventLog.LogInformation(
+                    "Published message: '{Subject}' with content {Message} and request Id '{SnsRequestId}'",
+                    request.Subject,
+                    request.Message,
+                    response?.ResponseMetadata?.RequestId);
 
                 MessageResponseLogger?.Invoke(new MessageResponse
                 {
@@ -92,7 +96,7 @@ namespace JustSaying.AwsTools.MessageHandling
                         DataType = source.Value.DataType
                     };
                 });
-            
+
             return new PublishRequest
             {
                 TopicArn = Arn,
