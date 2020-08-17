@@ -55,7 +55,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 var response = await Client.PublishAsync(request, cancellationToken).ConfigureAwait(false);
                 _eventLog.LogInformation(
-                    "Published message: '{Subject}' with content {Message} and request Id '{SnsRequestId}'",
+                    "Published message: '{SnsSubject}' with content {SnsMessage} and request Id '{SnsRequestId}'",
                     request.Subject,
                     request.Message,
                     response?.ResponseMetadata?.RequestId);
