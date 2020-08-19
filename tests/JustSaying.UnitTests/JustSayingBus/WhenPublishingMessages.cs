@@ -5,6 +5,7 @@ using JustSaying.Messaging;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using NSubstitute;
+using Shouldly;
 using Xunit;
 
 namespace JustSaying.UnitTests.JustSayingBus
@@ -16,6 +17,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         protected override async Task WhenAsync()
         {
             SystemUnderTest.AddMessagePublisher<SimpleMessage>(_publisher, string.Empty);
+            await SystemUnderTest.StartAsync(CancellationToken.None);
 
             await SystemUnderTest.PublishAsync(new SimpleMessage());
         }
@@ -26,6 +28,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             _publisher.Received().PublishAsync(Arg.Any<Message>(),
                 Arg.Any<PublishMetadata>(), Arg.Any<CancellationToken>());
         }
+
 
         [Fact]
         public void PublishMessageTimeStatsSent()

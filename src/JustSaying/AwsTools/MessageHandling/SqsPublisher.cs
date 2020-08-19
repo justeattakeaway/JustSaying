@@ -34,6 +34,12 @@ namespace JustSaying.AwsTools.MessageHandling
             _serializationRegister = serializationRegister;
         }
 
+        // TODO: This type shouldn't be an IMessagePublisher
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+
         public async Task PublishAsync(Message message, CancellationToken cancellationToken)
             => await PublishAsync(message, null, cancellationToken).ConfigureAwait(false);
 

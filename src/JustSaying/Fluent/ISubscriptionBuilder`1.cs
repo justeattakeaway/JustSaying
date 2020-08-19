@@ -26,7 +26,7 @@ namespace JustSaying.Fluent
         /// <exception cref="InvalidOperationException">
         /// No instance of <see cref="IHandlerResolver"/> could be resolved.
         /// </exception>
-        Task ConfigureAsync(
+        void Configure(
             JustSayingBus bus,
             IHandlerResolver resolver,
             IVerifyAmazonQueues creator,

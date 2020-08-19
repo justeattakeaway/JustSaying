@@ -6,12 +6,12 @@ namespace JustSaying.AwsTools.QueueCreation
 {
     public interface IVerifyAmazonQueues
     {
-        Task<SqsQueueByName> EnsureTopicExistsWithQueueSubscribedAsync(
+        QueueWithAsyncStartup<SqsQueueByName> EnsureTopicExistsWithQueueSubscribed(
             string region,
             IMessageSerializationRegister serializationRegister,
             SqsReadConfiguration queueConfig,
             IMessageSubjectProvider messageSubjectProvider);
 
-        Task<SqsQueueByName> EnsureQueueExistsAsync(string region, SqsReadConfiguration queueConfig);
+        QueueWithAsyncStartup<SqsQueueByName> EnsureQueueExists(string region, SqsReadConfiguration queueConfig);
     }
 }

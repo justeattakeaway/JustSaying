@@ -101,7 +101,7 @@ namespace JustSaying.Fluent
         }
 
         /// <inheritdoc />
-        async Task ISubscriptionBuilder<T>.ConfigureAsync(
+        void ISubscriptionBuilder<T>.Configure(
             JustSayingBus bus,
             IHandlerResolver resolver,
             IVerifyAmazonQueues creator,
@@ -126,12 +126,13 @@ namespace JustSaying.Fluent
 
             foreach (var region in config.Regions)
             {
-                var queue = await creator.EnsureTopicExistsWithQueueSubscribedAsync(
+                var queueWithStartup = creator.EnsureTopicExistsWithQueueSubscribed(
                     region, bus.SerializationRegister,
                     subscriptionConfig,
-                    config.MessageSubjectProvider).ConfigureAwait(false);
+                    config.MessageSubjectProvider);
+                bus.AddStartupTask(queueWithStartup.StartupTask);
 
-                bus.AddQueue(region,  subscriptionConfig.SubscriptionGroupName, queue);
+                bus.AddQueue(region,  subscriptionConfig.SubscriptionGroupName, queueWithStartup.Queue);
 
                 logger.LogInformation(
                     "Created SQS topic subscription on topic '{TopicName}' and queue '{QueueName}'.",

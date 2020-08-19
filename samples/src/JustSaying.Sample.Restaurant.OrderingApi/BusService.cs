@@ -20,13 +20,11 @@ namespace JustSaying.Sample.Restaurant.OrderingApi
             _logger = logger;
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("Ordering API subscriber running");
 
-            _ = _bus.StartAsync(stoppingToken);
-
-            return Task.CompletedTask;
+            await _bus.StartAsync(stoppingToken);
         }
     }
 }

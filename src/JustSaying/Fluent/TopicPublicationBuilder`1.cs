@@ -72,7 +72,7 @@ namespace JustSaying.Fluent
         }
 
         /// <inheritdoc />
-        async Task IPublicationBuilder<T>.ConfigureAsync(
+        void IPublicationBuilder<T>.Configure(
             JustSayingBus bus,
             IAwsClientFactoryProxy proxy,
             ILoggerFactory loggerFactory)
@@ -105,18 +105,23 @@ namespace JustSaying.Fluent
                     MessageResponseLogger = config.MessageResponseLogger
                 };
 
-                if (writeConfiguration.Encryption != null)
+                async Task StartupTask()
                 {
-                    await eventPublisher.CreateWithEncryptionAsync(writeConfiguration.Encryption)
+                    if (writeConfiguration.Encryption != null)
+                    {
+                        await eventPublisher.CreateWithEncryptionAsync(writeConfiguration.Encryption)
+                            .ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await eventPublisher.CreateAsync().ConfigureAwait(false);
+                    }
+
+                    await eventPublisher.EnsurePolicyIsUpdatedAsync(config.AdditionalSubscriberAccounts)
                         .ConfigureAwait(false);
                 }
-                else
-                {
-                    await eventPublisher.CreateAsync().ConfigureAwait(false);
-                }
 
-                await eventPublisher.EnsurePolicyIsUpdatedAsync(config.AdditionalSubscriberAccounts)
-                    .ConfigureAwait(false);
+                bus.AddStartupTask(StartupTask());
 
                 bus.AddMessagePublisher<T>(eventPublisher, region);
             }

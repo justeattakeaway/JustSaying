@@ -8,6 +8,7 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -58,7 +59,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             cts.CancelAfter(TimeoutPeriod);
 
             // Act
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => bus.StartAsync(cts.Token));
+            await bus.StartAsync(cts.Token);
+            await cts.Token.WaitForCancellation();
 
             // Assert
             handledBy1.Count.ShouldBeGreaterThan(0);

@@ -72,7 +72,10 @@ namespace JustSaying.Fluent
         }
 
         /// <inheritdoc />
-        async Task IPublicationBuilder<T>.ConfigureAsync(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
+        void IPublicationBuilder<T>.Configure(
+            JustSayingBus bus,
+            IAwsClientFactoryProxy proxy,
+            ILoggerFactory loggerFactory)
         {
             var logger = loggerFactory.CreateLogger<QueuePublicationBuilder<T>>();
 
@@ -101,10 +104,16 @@ namespace JustSaying.Fluent
                     MessageResponseLogger = config.MessageResponseLogger
                 };
 
-                if (!await eventPublisher.ExistsAsync().ConfigureAwait(false))
+                async Task StartupTask()
                 {
-                    await eventPublisher.CreateAsync(writeConfiguration).ConfigureAwait(false);
+                    logger.LogInformation("Beginning startup task to ensure queue {QueueName} exists", eventPublisher.QueueName);
+                    if (!await eventPublisher.ExistsAsync().ConfigureAwait(false))
+                    {
+                        await eventPublisher.CreateAsync(writeConfiguration).ConfigureAwait(false);
+                    }
                 }
+
+                bus.AddStartupTask(StartupTask());
 
                 bus.AddMessagePublisher<T>(eventPublisher, region);
             }

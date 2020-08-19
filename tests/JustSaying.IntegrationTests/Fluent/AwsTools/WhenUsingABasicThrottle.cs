@@ -116,7 +116,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                     var stopwatch = Stopwatch.StartNew();
                     var delay = IsSimulator ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(5);
 
-                    _ = listener.StartAsync(cancellationToken);
+                    await listener.StartAsync(cancellationToken);
 
                     do
                     {

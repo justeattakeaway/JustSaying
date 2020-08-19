@@ -174,7 +174,7 @@ namespace JustSaying.Fluent
         /// <exception cref="InvalidOperationException">
         /// No instance of <see cref="IHandlerResolver"/> could be resolved.
         /// </exception>
-        internal async Task ConfigureAsync(
+        internal void Configure(
             JustSayingBus bus,
             IVerifyAmazonQueues creator,
             ILoggerFactory loggerFactory)
@@ -193,7 +193,7 @@ namespace JustSaying.Fluent
 
             foreach (ISubscriptionBuilder<Message> builder in Subscriptions)
             {
-                await builder.ConfigureAsync(bus, resolver, creator, loggerFactory).ConfigureAwait(false);
+                builder.Configure(bus, resolver, creator, loggerFactory);
             }
         }
 

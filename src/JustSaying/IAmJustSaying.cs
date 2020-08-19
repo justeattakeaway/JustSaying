@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
@@ -13,7 +11,7 @@ using JustSaying.Models;
 
 namespace JustSaying
 {
-    public interface IAmJustSaying : IMessagePublisher
+    public interface IAmJustSaying : IStartable, IMessagePublisher
     {
         void AddQueue(string region, string subscriptionGroup, ISqsQueue queue);
 
@@ -25,8 +23,6 @@ namespace JustSaying
         void SetGroupSettings(
             SubscriptionGroupSettingsBuilder defaults,
             IDictionary<string, SubscriptionGroupConfigBuilder> settings);
-
-        Task StartAsync(CancellationToken stoppingToken);
 
         IMessagingConfig Config { get; }
 

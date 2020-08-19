@@ -136,11 +136,11 @@ namespace JustSaying.Fluent
         /// <param name="bus">The <see cref="JustSayingBus"/> to configure subscriptions for.</param>
         /// <param name="proxy">The <see cref="IAwsClientFactoryProxy"/> to use to create SQS/SNS clients with.</param>
         /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> logger factory to use.</param>
-        internal async Task ConfigureAsync(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
+        internal void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
         {
             foreach (IPublicationBuilder<Message> builder in Publications)
             {
-                await builder.ConfigureAsync(bus, proxy, loggerFactory).ConfigureAwait(false);
+                builder.Configure(bus, proxy, loggerFactory);
             }
         }
     }

@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Monitoring;
@@ -15,6 +16,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         protected override async Task WhenAsync()
         {
             SystemUnderTest.AddMessagePublisher<SimpleMessage>(_publisher, string.Empty);
+            await SystemUnderTest.StartAsync(CancellationToken.None);
             await SystemUnderTest.PublishAsync(new SimpleMessage());
         }
 

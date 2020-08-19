@@ -52,7 +52,8 @@ namespace JustSaying.Fluent.Subscribing.Newtonsoft
                 services,
                 async (publisher, listener, serviceProvider, cancellationToken) =>
                 {
-                    _ = listener.StartAsync(cancellationToken);
+                    await listener.StartAsync(cancellationToken);
+                    await publisher.StartAsync(cancellationToken);
 
                     // Act
                     var metadata = new PublishMetadata()

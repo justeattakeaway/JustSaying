@@ -166,16 +166,14 @@ namespace Microsoft.Extensions.DependencyInjection
                 (serviceProvider) =>
                 {
                     var builder = serviceProvider.GetRequiredService<MessagingBusBuilder>();
-                    return Task.Run(() => builder.BuildPublisherAsync())
-                        .GetAwaiter().GetResult();
+                    return builder.BuildPublisher();
                 });
 
             services.TryAddSingleton(
                 (serviceProvider) =>
                 {
                     var builder = serviceProvider.GetRequiredService<MessagingBusBuilder>();
-                    return Task.Run(() => builder.BuildSubscribersAsync())
-                        .GetAwaiter().GetResult();
+                    return builder.BuildSubscribers();
                 });
 
             services.AddSingleton<DefaultNamingConventions>();

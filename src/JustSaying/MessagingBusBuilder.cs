@@ -217,7 +217,7 @@ namespace JustSaying
         /// <returns>
         /// The created instance of <see cref="IMessagePublisher"/>
         /// </returns>
-        public async Task<IMessagePublisher> BuildPublisherAsync()
+        public IMessagePublisher BuildPublisher()
         {
             IMessagingConfig config = CreateConfig();
 
@@ -231,7 +231,7 @@ namespace JustSaying
 
             if (PublicationsBuilder != null)
             {
-                await PublicationsBuilder.ConfigureAsync(bus, proxy, loggerFactory).ConfigureAwait(true);
+                PublicationsBuilder.Configure(bus, proxy, loggerFactory);
             }
 
             return bus;
@@ -243,7 +243,7 @@ namespace JustSaying
         /// <returns>
         /// The created instance of <see cref="IMessagingBus"/>
         /// </returns>
-        public async Task<IMessagingBus> BuildSubscribersAsync()
+        public IMessagingBus BuildSubscribers()
         {
             IMessagingConfig config = CreateConfig();
 
@@ -262,7 +262,7 @@ namespace JustSaying
 
             if (SubscriptionBuilder != null)
             {
-                await SubscriptionBuilder.ConfigureAsync(bus, creator, loggerFactory).ConfigureAwait(false);
+                SubscriptionBuilder.Configure(bus, creator, loggerFactory);
             }
 
             return bus;

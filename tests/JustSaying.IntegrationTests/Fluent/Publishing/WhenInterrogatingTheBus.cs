@@ -31,9 +31,10 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                 .AddSingleton(handler);
 
             await WhenAsync(
-                services, (publisher, listener, cancellationToken) =>
+                services,
+                async (publisher, listener, cancellationToken) =>
                 {
-                    _ = listener.StartAsync(cancellationToken);
+                    await listener.StartAsync(cancellationToken);
 
                     var listenerJson = JsonConvert.SerializeObject(listener.Interrogate(), Formatting.Indented);
                     var publisherJson = JsonConvert.SerializeObject(publisher.Interrogate(), Formatting.Indented);
@@ -48,8 +49,6 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                                 $"{nameof(Then_The_Interrogation_Result_Should_Be_Returned)}.{type}.{extension}"));
 
                     completionSource.SetResult(null);
-
-                    return Task.CompletedTask;
                 });
         }
     }

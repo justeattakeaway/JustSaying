@@ -34,7 +34,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 services,
                 async (publisher, listener, serviceProvider, cancellationToken) =>
                 {
-                    _ = listener.StartAsync(cancellationToken);
+                    await listener.StartAsync(cancellationToken);
 
                     var clientFactory = serviceProvider.GetRequiredService<MessagingBusBuilder>().BuildClientFactory();
                     var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
