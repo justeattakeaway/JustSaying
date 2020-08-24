@@ -6,7 +6,7 @@ namespace JustSaying.AwsTools.MessageHandling
     /// Represents an <see cref="ISqsQueue"/> with an associated startup task that must be run before
     /// the queue is ready to be used.
     /// </summary>
-    /// <typeparam name="TQueue"></typeparam>
+    /// <typeparam name="TQueue">The type of the SQS queue.</typeparam>
     public class QueueWithAsyncStartup<TQueue> where TQueue : ISqsQueue
     {
         /// <summary>
