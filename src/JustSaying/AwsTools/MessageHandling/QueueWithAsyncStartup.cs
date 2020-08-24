@@ -13,7 +13,7 @@ namespace JustSaying.AwsTools.MessageHandling
         /// Creates an instance of <see cref="QueueWithAsyncStartup{TQueue}"/> for which the <see cref="TQueue"/>
         /// is already ready, and doesn't need to be initialised.
         /// </summary>
-        /// <param name="queue"></param>
+        /// <param name="queue">The queue that is ready.</param>
         public QueueWithAsyncStartup(TQueue queue)
         {
             StartupTask = Task.CompletedTask;
