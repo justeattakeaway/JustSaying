@@ -23,9 +23,6 @@ namespace JustSaying.Fluent
         /// <param name="resolver">The <see cref="IHandlerResolver"/> to resolve handlers from.</param>
         /// <param name="creator">The <see cref="IVerifyAmazonQueues"/> to use to create queues with.</param>
         /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> logger factory to use.</param>
-        /// <exception cref="InvalidOperationException">
-        /// No instance of <see cref="IHandlerResolver"/> could be resolved.
-        /// </exception>
         void Configure(
             JustSayingBus bus,
             IHandlerResolver resolver,
