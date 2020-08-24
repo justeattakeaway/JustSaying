@@ -17,9 +17,7 @@ namespace JustSaying.Messaging.Monitoring
             _logger = logger;
             _message = message;
             _args = args;
-            _watch = new Stopwatch();
-
-            _watch.Start();
+            _watch = Stopwatch.StartNew();
         }
 
         public void Dispose()
