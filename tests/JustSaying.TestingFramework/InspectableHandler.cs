@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 
-namespace JustSaying.UnitTests.AwsTools.MessageHandling
+namespace JustSaying.TestingFramework
 {
     public class InspectableHandler<T> : IHandlerAsync<T>
     {

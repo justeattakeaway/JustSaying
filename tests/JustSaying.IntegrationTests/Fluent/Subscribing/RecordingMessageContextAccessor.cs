@@ -20,7 +20,11 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
             get => _inner.MessageContext;
             set
             {
-                _valuesWritten.Add(value);
+                if (value != null)
+                {
+                    _valuesWritten.Add(value);
+                }
+
                 _inner.MessageContext = value;
             }
         }
