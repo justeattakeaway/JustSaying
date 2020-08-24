@@ -36,6 +36,7 @@ namespace JustSaying.AwsTools.MessageHandling
         /// A <see cref="Task"/> that must be run before the queue is ready.
         /// </summary>
         public Task StartupTask { get; }
+
         /// <summary>
         /// An <see cref="ISqsQueue"/> that will be ready when the <see cref="StartupTask"/>
         /// has been awaited.
