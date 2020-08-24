@@ -28,8 +28,6 @@ namespace JustSaying.UnitTests.JustSayingBus
             _publisher.Received().PublishAsync(Arg.Any<Message>(),
                 Arg.Any<PublishMetadata>(), Arg.Any<CancellationToken>());
         }
-
-
         [Fact]
         public void PublishMessageTimeStatsSent()
         {
