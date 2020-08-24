@@ -16,7 +16,7 @@ using Message = Amazon.SQS.Model.Message;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
-    public class WhenRegisteringSubscribers : GivenAServiceBus
+    public sealed class WhenRegisteringSubscribers : GivenAServiceBus, IDisposable
     {
         private ISqsQueue _queue1;
         private ISqsQueue _queue2;
@@ -100,6 +100,13 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         private class TestMessage : Message
         {
+        }
+
+        public void Dispose()
+        {
+            _client1?.Dispose();
+            _client2?.Dispose();
+            _cts?.Dispose();
         }
     }
 }
