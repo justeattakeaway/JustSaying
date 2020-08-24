@@ -19,7 +19,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying
 {
-    public sealed class JustSayingBus : IAmJustSaying, IMessagingBus, IDisposable
+    public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposable
     {
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _publishersByRegionAndType;
 

@@ -55,7 +55,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     // Assert
                     await future.DoneSignal;
 
-                    accessor.ValuesWritten.Count.ShouldBeGreaterThan(1);
+                    accessor.ValuesWritten.Count.ShouldBe(1);
                 });
         }
     }
