@@ -40,7 +40,12 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
             }
 
-            return await base.CreateAsync(queueConfig, attempt).ConfigureAwait(false);
+            using (Logger.Time("Creating queue {QueueName} attempt number {AttemptNumber}",
+                queueConfig.QueueName,
+                attempt))
+            {
+                return await base.CreateAsync(queueConfig, attempt).ConfigureAwait(false);
+            }
         }
 
         private static bool NeedErrorQueue(SqsBasicConfiguration queueConfig)

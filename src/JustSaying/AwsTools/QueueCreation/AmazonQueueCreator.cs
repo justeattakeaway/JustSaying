@@ -73,6 +73,7 @@ namespace JustSaying.AwsTools.QueueCreation
                 }
             }
 
+            // This StartupTask is intentionally not awaited, as it will be run when the bus is started.
             return new QueueWithAsyncStartup<SqsQueueByName>(StartupTask(), queueWithStartup.Queue);
         }
 
@@ -96,6 +97,7 @@ namespace JustSaying.AwsTools.QueueCreation
 
             var startupTask = queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig);
 
+            // This startupTask is intentionally not awaited, as it will be run when the bus is started.
             return new QueueWithAsyncStartup<SqsQueueByName>(startupTask, queue);
         }
 

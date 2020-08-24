@@ -4,6 +4,7 @@ using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Extensions;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -22,8 +23,7 @@ namespace JustSaying.Fluent
         /// Initializes a new instance of the <see cref="QueuePublicationBuilder{T}"/> class.
         /// </summary>
         internal QueuePublicationBuilder()
-        {
-        }
+        { }
 
         /// <summary>
         /// Gets or sets a delegate to a method to use to configure SQS writes.
@@ -40,7 +40,8 @@ namespace JustSaying.Fluent
         /// <exception cref="ArgumentNullException">
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
-        public QueuePublicationBuilder<T> WithWriteConfiguration(Action<SqsWriteConfigurationBuilder> configure)
+        public QueuePublicationBuilder<T> WithWriteConfiguration(
+            Action<SqsWriteConfigurationBuilder> configure)
         {
             if (configure == null)
             {
@@ -106,7 +107,6 @@ namespace JustSaying.Fluent
 
                 async Task StartupTask()
                 {
-                    logger.LogInformation("Beginning startup task to ensure queue {QueueName} exists", eventPublisher.QueueName);
                     if (!await eventPublisher.ExistsAsync().ConfigureAwait(false))
                     {
                         await eventPublisher.CreateAsync(writeConfiguration).ConfigureAwait(false);

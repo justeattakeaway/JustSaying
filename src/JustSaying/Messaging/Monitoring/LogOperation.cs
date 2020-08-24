@@ -22,7 +22,9 @@ namespace JustSaying.Messaging.Monitoring
 
         public void Dispose()
         {
-            var args = _args.Concat(new object[] { _watch.ElapsedMilliseconds }).ToArray();
+            _watch.Stop();
+
+            var args = _args.Concat(new object[] { _watch.Elapsed }).ToArray();
 
             _logger.LogInformation($"{_message} completed in {{Duration}}ms", args);
         }
