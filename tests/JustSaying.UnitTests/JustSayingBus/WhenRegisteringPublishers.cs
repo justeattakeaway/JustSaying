@@ -24,6 +24,8 @@ namespace JustSaying.UnitTests.JustSayingBus
             SystemUnderTest.AddMessagePublisher<OrderAccepted>(_publisher, string.Empty);
             SystemUnderTest.AddMessagePublisher<OrderRejected>(_publisher, string.Empty);
 
+            await SystemUnderTest.StartAsync(CancellationToken.None);
+
             await SystemUnderTest.PublishAsync(new OrderAccepted());
             await SystemUnderTest.PublishAsync(new OrderRejected());
             await SystemUnderTest.PublishAsync(new OrderRejected());

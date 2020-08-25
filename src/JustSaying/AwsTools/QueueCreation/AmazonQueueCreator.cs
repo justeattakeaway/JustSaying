@@ -23,7 +23,7 @@ namespace JustSaying.AwsTools.QueueCreation
             _loggerFactory = loggerFactory;
         }
 
-        public async Task<SqsQueueByName> EnsureTopicExistsWithQueueSubscribedAsync(
+        public QueueWithAsyncStartup<SqsQueueByName> EnsureTopicExistsWithQueueSubscribed(
             string region,
             IMessageSerializationRegister serializationRegister,
             SqsReadConfiguration queueConfig,
@@ -33,26 +33,48 @@ namespace JustSaying.AwsTools.QueueCreation
             var sqsClient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
             var snsClient = _awsClientFactory.GetAwsClientFactory().GetSnsClient(regionEndpoint);
 
-            var queue = await EnsureQueueExistsAsync(region, queueConfig).ConfigureAwait(false);
+            var queueWithStartup = EnsureQueueExists(region, queueConfig);
 
-            if (TopicExistsInAnotherAccount(queueConfig))
+            async Task StartupTask()
             {
-                var arnProvider = new ForeignTopicArnProvider(regionEndpoint, queueConfig.TopicSourceAccount, queueConfig.PublishEndpoint);
+                await queueWithStartup.StartupTask.ConfigureAwait(false);
+                var queue = queueWithStartup.Queue;
+                if (TopicExistsInAnotherAccount(queueConfig))
+                {
+                    var arnProvider = new ForeignTopicArnProvider(regionEndpoint,
+                        queueConfig.TopicSourceAccount,
+                        queueConfig.PublishEndpoint);
 
-                var topicArn = await arnProvider.GetArnAsync().ConfigureAwait(false);
-                await SubscribeQueueAndApplyFilterPolicyAsync(snsClient, topicArn, sqsClient, queue.Uri, queueConfig.FilterPolicy).ConfigureAwait(false);
+                    var topicArn = await arnProvider.GetArnAsync().ConfigureAwait(false);
+                    await SubscribeQueueAndApplyFilterPolicyAsync(snsClient,
+                        topicArn,
+                        sqsClient,
+                        queue.Uri,
+                        queueConfig.FilterPolicy).ConfigureAwait(false);
+                }
+                else
+                {
+                    var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint,
+                        snsClient,
+                        serializationRegister,
+                        _loggerFactory,
+                        messageSubjectProvider);
+                    await eventTopic.CreateAsync().ConfigureAwait(false);
+
+                    await SubscribeQueueAndApplyFilterPolicyAsync(snsClient,
+                        eventTopic.Arn,
+                        sqsClient,
+                        queue.Uri,
+                        queueConfig.FilterPolicy).ConfigureAwait(false);
+
+                    await SqsPolicy
+                        .SaveAsync(eventTopic.Arn, queue.Arn, queue.Uri, sqsClient)
+                        .ConfigureAwait(false);
+                }
             }
-            else
-            {
-                var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsClient, serializationRegister, _loggerFactory, messageSubjectProvider);
-                await eventTopic.CreateAsync().ConfigureAwait(false);
 
-                await SubscribeQueueAndApplyFilterPolicyAsync(snsClient, eventTopic.Arn, sqsClient, queue.Uri, queueConfig.FilterPolicy).ConfigureAwait(false);
-
-                await SqsPolicy.SaveAsync(eventTopic.Arn, queue.Arn, queue.Uri, sqsClient).ConfigureAwait(false);
-            }
-
-            return queue;
+            // This StartupTask is intentionally not awaited, as it will be run when the bus is started.
+            return new QueueWithAsyncStartup<SqsQueueByName>(StartupTask(), queueWithStartup.Queue);
         }
 
         private static bool TopicExistsInAnotherAccount(SqsReadConfiguration queueConfig)
@@ -60,20 +82,23 @@ namespace JustSaying.AwsTools.QueueCreation
             return !string.IsNullOrWhiteSpace(queueConfig.TopicSourceAccount);
         }
 
-        public async Task<SqsQueueByName> EnsureQueueExistsAsync(string region, SqsReadConfiguration queueConfig)
+        public QueueWithAsyncStartup<SqsQueueByName> EnsureQueueExists(string region, SqsReadConfiguration queueConfig)
         {
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);
             var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
             var queue = _queueCache.TryGetFromCache(region, queueConfig.QueueName);
             if (queue != null)
             {
-                return queue;
+                return new QueueWithAsyncStartup<SqsQueueByName>(queue);
             }
             queue = new SqsQueueByName(regionEndpoint, queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue, _loggerFactory);
-            await queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig).ConfigureAwait(false);
 
             _queueCache.AddToCache(region, queue.QueueName, queue);
-            return queue;
+
+            var startupTask = queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig);
+
+            // This startupTask is intentionally not awaited, as it will be run when the bus is started.
+            return new QueueWithAsyncStartup<SqsQueueByName>(startupTask, queue);
         }
 
         private static async Task SubscribeQueueAndApplyFilterPolicyAsync(

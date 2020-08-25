@@ -1,6 +1,12 @@
 using System;
+using System.Threading.Tasks;
+using Amazon;
+using JustSaying.AwsTools;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Extensions;
 using JustSaying.Models;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent
 {
@@ -17,8 +23,7 @@ namespace JustSaying.Fluent
         /// Initializes a new instance of the <see cref="QueuePublicationBuilder{T}"/> class.
         /// </summary>
         internal QueuePublicationBuilder()
-        {
-        }
+        { }
 
         /// <summary>
         /// Gets or sets a delegate to a method to use to configure SQS writes.
@@ -35,7 +40,8 @@ namespace JustSaying.Fluent
         /// <exception cref="ArgumentNullException">
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
-        public QueuePublicationBuilder<T> WithWriteConfiguration(Action<SqsWriteConfigurationBuilder> configure)
+        public QueuePublicationBuilder<T> WithWriteConfiguration(
+            Action<SqsWriteConfigurationBuilder> configure)
         {
             if (configure == null)
             {
@@ -67,9 +73,55 @@ namespace JustSaying.Fluent
         }
 
         /// <inheritdoc />
-        void IPublicationBuilder<T>.Configure(JustSayingFluently bus)
+        void IPublicationBuilder<T>.Configure(
+            JustSayingBus bus,
+            IAwsClientFactoryProxy proxy,
+            ILoggerFactory loggerFactory)
         {
-            bus.WithSqsMessagePublisher<T>(ConfigureWrites);
+            var logger = loggerFactory.CreateLogger<QueuePublicationBuilder<T>>();
+
+            logger.LogInformation("Adding SQS publisher for message type '{MessageType}'.",
+                typeof(T));
+
+            var config = bus.Config;
+
+            var writeConfiguration = new SqsWriteConfiguration();
+            ConfigureWrites?.Invoke(writeConfiguration);
+            writeConfiguration.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
+
+            foreach (var region in config.Regions)
+            {
+                var regionEndpoint = RegionEndpoint.GetBySystemName(region);
+                var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
+
+                var eventPublisher = new SqsPublisher(
+                    regionEndpoint,
+                    writeConfiguration.QueueName,
+                    sqsClient,
+                    writeConfiguration.RetryCountBeforeSendingToErrorQueue,
+                    bus.SerializationRegister,
+                    loggerFactory)
+                {
+                    MessageResponseLogger = config.MessageResponseLogger
+                };
+
+                async Task StartupTask()
+                {
+                    if (!await eventPublisher.ExistsAsync().ConfigureAwait(false))
+                    {
+                        await eventPublisher.CreateAsync(writeConfiguration).ConfigureAwait(false);
+                    }
+                }
+
+                bus.AddStartupTask(StartupTask());
+
+                bus.AddMessagePublisher<T>(eventPublisher, region);
+            }
+
+            logger.LogInformation(
+                "Created SQS publisher for message type '{MessageType}' on queue '{QueueName}'.",
+                typeof(T),
+                writeConfiguration.QueueName);
         }
     }
 }

@@ -46,7 +46,8 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 services,
                 async (publisher, listener, cancellationToken) =>
                 {
-                    _ = listener.StartAsync(cancellationToken);
+                    await listener.StartAsync(cancellationToken);
+                    await publisher.StartAsync(cancellationToken);
 
                     // Act
                     await publisher.PublishAsync(message, cancellationToken);
@@ -54,7 +55,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     // Assert
                     await future.DoneSignal;
 
-                    accessor.ValuesWritten.Count.ShouldBeGreaterThan(1);
+                    accessor.ValuesWritten.Count.ShouldBe(1);
                 });
         }
     }

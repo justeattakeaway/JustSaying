@@ -52,6 +52,11 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public abstract Task<bool> ExistsAsync();
 
+        // TODO: This type shouldn't be an IMessagePublisher
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
 
         public Task PublishAsync(Message message, CancellationToken cancellationToken)
             => PublishAsync(message, null, cancellationToken);

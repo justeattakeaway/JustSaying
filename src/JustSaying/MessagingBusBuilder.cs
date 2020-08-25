@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
@@ -225,15 +226,15 @@ namespace JustSaying
             ILoggerFactory loggerFactory =
                 ServicesBuilder?.LoggerFactory?.Invoke() ?? ServiceResolver.ResolveService<ILoggerFactory>();
 
-            JustSayingBus publisher = CreateBus(config, loggerFactory);
-            JustSayingFluently fluent = CreateFluent(publisher, loggerFactory);
+            JustSayingBus bus = CreateBus(config, loggerFactory);
+            IAwsClientFactoryProxy proxy = CreateFactoryProxy();
 
             if (PublicationsBuilder != null)
             {
-                PublicationsBuilder.Configure(fluent);
+                PublicationsBuilder.Configure(bus, proxy, loggerFactory);
             }
 
-            return publisher;
+            return bus;
         }
 
         /// <summary>
@@ -252,16 +253,16 @@ namespace JustSaying
                 ServicesBuilder?.LoggerFactory?.Invoke() ?? ServiceResolver.ResolveService<ILoggerFactory>();
 
             JustSayingBus bus = CreateBus(config, loggerFactory);
-            JustSayingFluently fluent = CreateFluent(bus, loggerFactory);
+            IVerifyAmazonQueues creator = CreateQueueCreator(loggerFactory);
 
             if (ServicesBuilder?.MessageContextAccessor != null)
             {
-                fluent.WithMessageContextAccessor(ServicesBuilder.MessageContextAccessor());
+                bus.MessageContextAccessor = ServicesBuilder.MessageContextAccessor();
             }
 
             if (SubscriptionBuilder != null)
             {
-                SubscriptionBuilder.Configure(fluent);
+                SubscriptionBuilder.Configure(bus, creator, loggerFactory);
             }
 
             return bus;
@@ -272,7 +273,16 @@ namespace JustSaying
             IMessageSerializationRegister register =
                 ServicesBuilder?.SerializationRegister?.Invoke() ?? ServiceResolver.ResolveService<IMessageSerializationRegister>();
 
-            return new JustSayingBus(config, register, loggerFactory);
+            var bus =  new JustSayingBus(config, register, loggerFactory);
+
+            bus.Monitor = CreateMessageMonitor();
+            bus.MessageContextAccessor = CreateMessageContextAccessor();
+            if (ServicesBuilder?.MessageLock != null)
+            {
+                bus.MessageLock = ServicesBuilder.MessageLock();
+            }
+
+            return bus;
         }
 
         private IMessagingConfig CreateConfig()
@@ -299,25 +309,12 @@ namespace JustSaying
             return ServicesBuilder?.MessageContextAccessor?.Invoke() ?? ServiceResolver.ResolveService<IMessageContextAccessor>();
         }
 
-        private JustSayingFluently CreateFluent(JustSayingBus bus, ILoggerFactory loggerFactory)
+        private IVerifyAmazonQueues CreateQueueCreator(ILoggerFactory loggerFactory)
         {
             IAwsClientFactoryProxy proxy = CreateFactoryProxy();
             IVerifyAmazonQueues queueCreator = new AmazonQueueCreator(proxy, loggerFactory);
 
-            var fluent = new JustSayingFluently(bus, queueCreator, proxy, loggerFactory);
-
-            IMessageMonitor messageMonitor = CreateMessageMonitor();
-            IMessageContextAccessor messageContextAccessor = CreateMessageContextAccessor();
-
-            fluent.WithMonitoring(messageMonitor)
-                .WithMessageContextAccessor(messageContextAccessor);
-
-            if (ServicesBuilder?.MessageLock != null)
-            {
-                fluent.WithMessageLockStoreOf(ServicesBuilder.MessageLock());
-            }
-
-            return fluent;
+            return queueCreator;
         }
     }
 }

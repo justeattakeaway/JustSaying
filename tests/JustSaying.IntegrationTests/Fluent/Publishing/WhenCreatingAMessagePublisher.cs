@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
@@ -26,6 +27,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
 
             // Act - Force queue creation
             IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+            await publisher.StartAsync(CancellationToken.None);
 
             // Assert
             var client = CreateClientFactory().GetSqsClient(Region);

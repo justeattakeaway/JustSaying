@@ -1,4 +1,8 @@
+using System.Threading.Tasks;
+using JustSaying.AwsTools;
+using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Models;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent
 {
@@ -12,8 +16,11 @@ namespace JustSaying.Fluent
         where T : Message
     {
         /// <summary>
-        /// Configures the publication for the <see cref="JustSayingFluently"/>.
+        /// Configures the publication for the <see cref="JustSayingBus"/>.
         /// </summary>
-        void Configure(JustSayingFluently bus);
+        /// <param name="bus">The <see cref="JustSayingBus"/> to configure subscriptions for.</param>
+        /// <param name="proxy">The <see cref="IAwsClientFactoryProxy"/> to use to create SQS/SNS clients with.</param>
+        /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> logger factory to use.</param>
+        void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory);
     }
 }

@@ -5,6 +5,7 @@ using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
@@ -19,8 +20,6 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public override async Task<bool> ExistsAsync()
         {
-            Logger.LogInformation("Checking if queue '{QueueName}' exists.", QueueName);
-
             if (string.IsNullOrWhiteSpace(QueueName))
             {
                 return false;
@@ -30,7 +29,10 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                result = await Client.GetQueueUrlAsync(QueueName).ConfigureAwait(false);
+                using (Logger.Time("Checking if queue '{QueueName}' exists", QueueName))
+                {
+                    result = await Client.GetQueueUrlAsync(QueueName).ConfigureAwait(false);
+                }
             }
             catch (QueueDoesNotExistException)
             {

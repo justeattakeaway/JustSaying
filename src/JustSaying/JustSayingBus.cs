@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Interrogation;
@@ -18,7 +19,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying
 {
-    public sealed class JustSayingBus : IAmJustSaying, IMessagingBus
+    public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposable
     {
         private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _publishersByRegionAndType;
 
@@ -52,7 +53,8 @@ namespace JustSaying
 
         private readonly ILogger _log;
 
-        private readonly object _syncRoot = new object();
+        private readonly SemaphoreSlim _startLock = new SemaphoreSlim(1, 1);
+
         private readonly ILoggerFactory _loggerFactory;
 
         public JustSayingBus(
@@ -61,6 +63,7 @@ namespace JustSaying
             ILoggerFactory loggerFactory)
         {
             _loggerFactory = loggerFactory;
+            _startupTasks = new List<Task>();
             _log = _loggerFactory.CreateLogger("JustSaying");
 
             Config = config;
@@ -86,6 +89,11 @@ namespace JustSaying
                 _ => new SubscriptionGroupConfigBuilder(subscriptionGroup));
 
             builder.AddQueue(queue);
+        }
+
+        internal void AddStartupTask(Task task)
+        {
+            _startupTasks.Add(task);
         }
 
         public void SetGroupSettings(
@@ -121,30 +129,46 @@ namespace JustSaying
             publishersByType[topicType] = messagePublisher;
         }
 
+        private bool _busStarted;
         private Task _subscriberCompletionTask;
-        private bool _subscriberStarted;
+        private readonly List<Task> _startupTasks;
 
-        public Task StartAsync(CancellationToken stoppingToken)
+        public async Task StartAsync(CancellationToken stoppingToken)
         {
-            if (stoppingToken.IsCancellationRequested) return Task.CompletedTask;
+            if (stoppingToken.IsCancellationRequested) return;
 
             // Double check lock to ensure single-start
-            if (!_subscriberStarted)
+            if (!_busStarted)
             {
-                lock (_syncRoot)
+                await _startLock.WaitAsync(stoppingToken).ConfigureAwait(false);
+                try
                 {
-                    if (!_subscriberStarted)
+                    if (!_busStarted)
                     {
-                        _subscriberCompletionTask = RunImplAsync(stoppingToken);
-                        _subscriberStarted = true;
+                        using (_log.Time("Starting bus"))
+                        {
+                            // We want consumers to wait for the startup tasks, but not the run
+                            using (_log.Time("Running startup tasks"))
+                            {
+                                foreach (var startupTask in _startupTasks)
+                                {
+                                    await startupTask.ConfigureAwait(false);
+                                }
+                            }
+
+                            _subscriberCompletionTask = RunImplAsync(stoppingToken);
+                            _busStarted = true;
+                        }
                     }
                 }
+                finally
+                {
+                    _startLock.Release();
+                }
             }
-
-            return _subscriberCompletionTask;
         }
 
-        private Task RunImplAsync(CancellationToken stoppingToken)
+        private async Task RunImplAsync(CancellationToken stoppingToken)
         {
             var dispatcher = new MessageDispatcher(
                 SerializationRegister,
@@ -163,7 +187,7 @@ namespace JustSaying
 
             _log.LogInformation("Starting bus with settings: {@Response}", SubscriptionGroups.Interrogate());
 
-            return SubscriptionGroups.RunAsync(stoppingToken);
+            await SubscriptionGroups.RunAsync(stoppingToken).ConfigureAwait(false);
         }
 
         public async Task PublishAsync(Message message, CancellationToken cancellationToken)
@@ -171,7 +195,12 @@ namespace JustSaying
 
         public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
-            var publisher = GetActivePublisherForMessage(message);
+            if (!_busStarted)
+            {
+                throw new InvalidOperationException("Bus must be started before publishing messages.");
+            }
+
+            IMessagePublisher publisher = GetActivePublisherForMessage(message);
             await PublishAsync(publisher, message, metadata, 0, cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -180,7 +209,7 @@ namespace JustSaying
         {
             if (_publishersByRegionAndType.Count == 0)
             {
-                var errorMessage = "Error publishing message, no publishers registered.";
+                var errorMessage = "Error publishing message, no publishers registered. Has the bus been started?";
                 _log.LogError(errorMessage);
                 throw new InvalidOperationException(errorMessage);
             }
@@ -311,6 +340,13 @@ namespace JustSaying
                 PublishedMessageTypes = publisherDescriptions,
                 SubscriptionGroups = SubscriptionGroups?.Interrogate()
             });
+        }
+
+        public void Dispose()
+        {
+            _startLock?.Dispose();
+            _loggerFactory?.Dispose();
+            _subscriberCompletionTask?.Dispose();
         }
     }
 }

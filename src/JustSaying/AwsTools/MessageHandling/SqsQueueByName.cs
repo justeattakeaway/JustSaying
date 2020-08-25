@@ -26,18 +26,26 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             if (NeedErrorQueue(queueConfig))
             {
-                var exisits = await ErrorQueue.ExistsAsync().ConfigureAwait(false);
-                if (!exisits)
+                var exists = await ErrorQueue.ExistsAsync().ConfigureAwait(false);
+                if (!exists)
                 {
-                    await ErrorQueue.CreateAsync(new SqsBasicConfiguration
+                    using (Logger.Time("Creating error queue {QueueName}", ErrorQueue.QueueName))
                     {
-                        ErrorQueueRetentionPeriod = queueConfig.ErrorQueueRetentionPeriod,
-                        ErrorQueueOptOut = true
-                    }).ConfigureAwait(false);
+                        await ErrorQueue.CreateAsync(new SqsBasicConfiguration
+                        {
+                            ErrorQueueRetentionPeriod = queueConfig.ErrorQueueRetentionPeriod,
+                            ErrorQueueOptOut = true
+                        }).ConfigureAwait(false);
+                    }
                 }
             }
 
-            return await base.CreateAsync(queueConfig, attempt).ConfigureAwait(false);
+            using (Logger.Time("Creating queue {QueueName} attempt number {AttemptNumber}",
+                queueConfig.QueueName,
+                attempt))
+            {
+                return await base.CreateAsync(queueConfig, attempt).ConfigureAwait(false);
+            }
         }
 
         private static bool NeedErrorQueue(SqsBasicConfiguration queueConfig)

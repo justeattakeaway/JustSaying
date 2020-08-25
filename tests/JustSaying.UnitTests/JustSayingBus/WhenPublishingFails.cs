@@ -31,6 +31,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             SystemUnderTest.AddMessagePublisher<SimpleMessage>(_publisher, string.Empty);
 
+           await SystemUnderTest.StartAsync(CancellationToken.None);
+
             await SystemUnderTest.PublishAsync(new SimpleMessage());
         }
 

@@ -16,12 +16,13 @@ using Message = Amazon.SQS.Model.Message;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
-    public class WhenRegisteringSubscribers : GivenAServiceBus
+    public sealed class WhenRegisteringSubscribers : GivenAServiceBus, IDisposable
     {
         private ISqsQueue _queue1;
         private ISqsQueue _queue2;
         private IAmazonSQS _client1;
         private IAmazonSQS _client2;
+        private CancellationTokenSource _cts;
 
         protected override void Given()
         {
@@ -51,15 +52,17 @@ namespace JustSaying.UnitTests.JustSayingBus
             SystemUnderTest.AddQueue("region1", "groupA", _queue1);
             SystemUnderTest.AddQueue("region1", "groupB", _queue2);
 
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeoutPeriod);
+            _cts = new CancellationTokenSource();
+            _cts.CancelAfter(TimeoutPeriod);
 
-           await Assert.ThrowsAnyAsync<OperationCanceledException>(() => SystemUnderTest.StartAsync(cts.Token));
+            await SystemUnderTest.StartAsync(_cts.Token);
         }
 
         [Fact]
         public async Task SubscribersStartedUp()
         {
+            await _cts.Token.WaitForCancellation();
+
             await _client1.Received().ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>());
             await _client2.Received().ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>());
         }
@@ -97,6 +100,13 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         private class TestMessage : Message
         {
+        }
+
+        public void Dispose()
+        {
+            _client1?.Dispose();
+            _client2?.Dispose();
+            _cts?.Dispose();
         }
     }
 }

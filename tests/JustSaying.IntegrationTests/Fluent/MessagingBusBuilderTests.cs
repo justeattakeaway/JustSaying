@@ -52,7 +52,8 @@ namespace JustSaying.IntegrationTests
             using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
             {
                 // Act
-                _ = listener.StartAsync(source.Token);
+                await listener.StartAsync(source.Token);
+                await publisher.StartAsync(source.Token);
 
                 var message = new QueueMessage();
 
@@ -95,7 +96,8 @@ namespace JustSaying.IntegrationTests
             using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
             {
                 // Act
-                _ = listener.StartAsync(source.Token);
+                await listener.StartAsync(source.Token);
+                await publisher.StartAsync(source.Token);
 
                 var message = new TopicMessage();
 
@@ -112,7 +114,7 @@ namespace JustSaying.IntegrationTests
         }
 
         [AwsFact]
-        public void Can_Create_Messaging_Bus()
+        public async Task Can_Create_Messaging_Bus()
         {
             // Arrange
             var services = new ServiceCollection()
@@ -128,7 +130,8 @@ namespace JustSaying.IntegrationTests
             using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
             {
                 // Act
-                listener.StartAsync(source.Token);
+                await listener.StartAsync(source.Token);
+                await publisher.StartAsync(source.Token);
             }
         }
 
@@ -154,7 +157,8 @@ namespace JustSaying.IntegrationTests
             using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
             {
                 // Act
-                _ = listener.StartAsync(source.Token);
+                await listener.StartAsync(source.Token);
+                await publisher.StartAsync(source.Token);
 
                 var message = new QueueMessage();
 

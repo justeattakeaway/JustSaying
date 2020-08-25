@@ -1,7 +1,10 @@
 using System;
+using System.Threading.Tasks;
+using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Extensions;
 using JustSaying.Models;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent
 {
@@ -98,17 +101,59 @@ namespace JustSaying.Fluent
         }
 
         /// <inheritdoc />
-        void ISubscriptionBuilder<T>.Configure(JustSayingFluently bus, IHandlerResolver resolver)
+        void ISubscriptionBuilder<T>.Configure(
+            JustSayingBus bus,
+            IHandlerResolver resolver,
+            IVerifyAmazonQueues creator,
+            ILoggerFactory loggerFactory)
         {
-            var topic = bus.WithSqsTopicSubscriber()
-                           .IntoQueue(TopicName);
+            var logger = loggerFactory.CreateLogger<TopicSubscriptionBuilder<T>>();
 
-            if (ConfigureReads != null)
+            var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic)
             {
-                topic.ConfigureSubscriptionWith(ConfigureReads);
+                QueueName = TopicName
+            };
+
+            ConfigureReads?.Invoke(subscriptionConfig);
+
+            var config = bus.Config;
+
+            subscriptionConfig.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
+            subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
+            subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
+            subscriptionConfig.PublishEndpoint = subscriptionConfig.TopicName;
+            subscriptionConfig.Validate();
+
+            foreach (var region in config.Regions)
+            {
+                var queueWithStartup = creator.EnsureTopicExistsWithQueueSubscribed(
+                    region, bus.SerializationRegister,
+                    subscriptionConfig,
+                    config.MessageSubjectProvider);
+                bus.AddStartupTask(queueWithStartup.StartupTask);
+
+                bus.AddQueue(region,  subscriptionConfig.SubscriptionGroupName, queueWithStartup.Queue);
+
+                logger.LogInformation(
+                    "Created SQS topic subscription on topic '{TopicName}' and queue '{QueueName}'.",
+                    subscriptionConfig.TopicName,
+                    subscriptionConfig.QueueName);;
             }
 
-            topic.WithMessageHandler<T>(resolver);
+            var resolutionContext = new HandlerResolutionContext(subscriptionConfig.QueueName);
+            var proposedHandler = resolver.ResolveHandler<T>(resolutionContext);
+            if (proposedHandler == null)
+            {
+                throw new HandlerNotRegisteredWithContainerException($"There is no handler for '{typeof(T)}' messages.");
+            }
+
+            bus.AddMessageHandler(subscriptionConfig.QueueName, () => resolver.ResolveHandler<T>(resolutionContext));
+
+            logger.LogInformation(
+                "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",
+                typeof(T),
+                subscriptionConfig.TopicName,
+                subscriptionConfig.QueueName);
         }
     }
 }

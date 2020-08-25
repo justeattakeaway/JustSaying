@@ -48,7 +48,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                     builder.Messaging(
                         (config) => config.WithPublishFailureBackoff(TimeSpan.FromMilliseconds(1))
                                           .WithPublishFailureReattempts(1));
-                    
+
                     builder.Subscriptions(
                         (subscription) => subscription.ForTopic<SimpleMessage>(
                             (topic) => topic.WithName(UniqueName)));
@@ -71,7 +71,9 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
             IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
             using var source = new CancellationTokenSource(Timeout);
-            _ = listener.StartAsync(source.Token);
+            await listener.StartAsync(source.Token);
+            await publisher.StartAsync(source.Token);
+
 
             var message = new T();
 

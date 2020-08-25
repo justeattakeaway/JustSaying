@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JustSaying.TestingFramework
@@ -28,6 +29,13 @@ namespace JustSaying.TestingFramework
                 await Task.Delay(DelaySendMillis).ConfigureAwait(false);
                 doneSignal.SetResult(null);
             });
+        }
+
+        public static Task WaitForCancellation(this CancellationToken cancellationToken)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            cancellationToken.Register(() => tcs.SetResult(true));
+            return tcs.Task;
         }
     }
 }

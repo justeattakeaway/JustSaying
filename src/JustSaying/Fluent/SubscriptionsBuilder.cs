@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using JustSaying.AwsTools;
+using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Models;
+using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent
 {
@@ -58,9 +62,6 @@ namespace JustSaying.Fluent
         /// <returns>
         /// The current <see cref="SubscriptionsBuilder"/>.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="configure"/> is <see langword="null"/>.
-        /// </exception>
         public SubscriptionsBuilder ForQueue<T>()
             where T : Message
         {
@@ -76,7 +77,7 @@ namespace JustSaying.Fluent
         /// The current <see cref="SubscriptionsBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
         public SubscriptionsBuilder ForQueue<T>(string name)
             where T : Message
@@ -131,7 +132,7 @@ namespace JustSaying.Fluent
         /// The current <see cref="SubscriptionsBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
         public SubscriptionsBuilder ForTopic<T>(string name)
             where T : Message
@@ -165,13 +166,18 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Configures the subscriptions for the <see cref="JustSayingFluently"/>.
+        /// Configures the subscriptions for the <see cref="JustSayingBus"/>.
         /// </summary>
-        /// <param name="bus">The <see cref="JustSayingFluently"/> to configure subscriptions for.</param>
+        /// <param name="bus">The <see cref="JustSayingBus"/> to configure subscriptions for.</param>
+        /// <param name="creator">The <see cref="IVerifyAmazonQueues"/>to use to create queues with.</param>
+        /// <param name="loggerFactory">The <see cref="ILoggerFactory"/>logger factory to use.</param>
         /// <exception cref="InvalidOperationException">
         /// No instance of <see cref="IHandlerResolver"/> could be resolved.
         /// </exception>
-        internal void Configure(JustSayingFluently bus)
+        internal void Configure(
+            JustSayingBus bus,
+            IVerifyAmazonQueues creator,
+            ILoggerFactory loggerFactory)
         {
             var resolver = Parent.ServicesBuilder?.HandlerResolver?.Invoke() ??
                 Parent.ServiceResolver.ResolveService<IHandlerResolver>();
@@ -183,11 +189,11 @@ namespace JustSaying.Fluent
 
             Defaults.Validate();
 
-            bus.Bus.SetGroupSettings(Defaults, SubscriptionGroupSettings);
+            bus.SetGroupSettings(Defaults, SubscriptionGroupSettings);
 
             foreach (ISubscriptionBuilder<Message> builder in Subscriptions)
             {
-                builder.Configure(bus, resolver);
+                builder.Configure(bus, resolver, creator, loggerFactory);
             }
         }
 

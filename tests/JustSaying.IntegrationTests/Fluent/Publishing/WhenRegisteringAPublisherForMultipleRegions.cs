@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SimpleNotificationService.Model;
@@ -37,6 +38,8 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
 
             // Act
             var publisher = serviceProvider.GetService<IMessagePublisher>();
+            await publisher.StartAsync(CancellationToken.None);
+
             await publisher.PublishAsync(new MyMessageForMultipleRegions());
 
             // Assert
