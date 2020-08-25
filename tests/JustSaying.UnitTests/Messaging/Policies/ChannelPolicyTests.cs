@@ -31,7 +31,7 @@ namespace JustSaying.UnitTests.Messaging.Policies
             MessageMonitor = new LoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
         }
 
-        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
+        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
 
         [Fact]
         public async Task ErrorHandlingAroundSqs()
