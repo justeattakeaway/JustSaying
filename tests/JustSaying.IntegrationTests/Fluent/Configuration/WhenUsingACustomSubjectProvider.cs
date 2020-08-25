@@ -44,7 +44,7 @@ namespace JustSaying.Fluent.Configuration
                 Id = id
             };
 
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
 
             await WhenAsync(
                 services,
@@ -65,23 +65,21 @@ namespace JustSaying.Fluent.Configuration
                     string subject = json.Subject;
                     subject.ShouldBe(subject);
                 });
-
-            cts.Dispose();
-        }
-    }
-
-    public class ConstantSubjectProvider : IMessageSubjectProvider
-    {
-        private readonly string _subject;
-
-        public ConstantSubjectProvider(string subject)
-        {
-            _subject = subject;
         }
 
-        public string GetSubjectForType(Type messageType)
+        public class ConstantSubjectProvider : IMessageSubjectProvider
         {
-            return _subject;
+            private readonly string _subject;
+
+            public ConstantSubjectProvider(string subject)
+            {
+                _subject = subject;
+            }
+
+            public string GetSubjectForType(Type messageType)
+            {
+                return _subject;
+            }
         }
     }
 }
