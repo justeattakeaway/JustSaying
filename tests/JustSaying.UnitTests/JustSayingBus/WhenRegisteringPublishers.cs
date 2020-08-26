@@ -56,8 +56,8 @@ namespace JustSaying.UnitTests.JustSayingBus
 
             string[] publishedTypes = response.Data.PublishedMessageTypes;
 
-            publishedTypes.ShouldContain($"{nameof(OrderAccepted)}");
-            publishedTypes.ShouldContain($"{nameof(OrderRejected)}");
+            publishedTypes.ShouldContain(nameof(OrderAccepted));
+            publishedTypes.ShouldContain(nameof(OrderRejected));
         }
     }
 }

@@ -42,7 +42,7 @@ namespace JustSaying.UnitTests.JustSayingBus
 
             string[] publishedTypes = response.Data.PublishedMessageTypes;
 
-            publishedTypes.ShouldContain($"{nameof(Message)}");
+            publishedTypes.ShouldContain(nameof(Message));
         }
     }
 }
