@@ -46,7 +46,7 @@ namespace StructureMap
 
             if (string.IsNullOrWhiteSpace(region))
             {
-                throw new ArgumentNullException(nameof(region));
+                throw new ArgumentException("region must not be null or empty" ,nameof(region));
             }
 
             registry.AddJustSaying(

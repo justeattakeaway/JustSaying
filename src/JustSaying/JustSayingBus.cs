@@ -83,7 +83,7 @@ namespace JustSaying
             if (string.IsNullOrWhiteSpace(subscriptionGroup))
                 throw new ArgumentException("Cannot be null or empty.", nameof(subscriptionGroup));
 
-            if(queue == null)
+            if (queue == null)
                 throw new ArgumentNullException(nameof(queue));
 
             SubscriptionGroupConfigBuilder builder = _subscriptionGroupSettings.GetOrAdd(
@@ -286,7 +286,7 @@ namespace JustSaying
         {
             var publisherDescriptions =
                 _publishersByType.Select(publisher =>
-                    $"{publisher.Key.Name}").ToArray();
+                    publisher.Key.Name).ToArray();
 
             return new InterrogationResult(new
             {
