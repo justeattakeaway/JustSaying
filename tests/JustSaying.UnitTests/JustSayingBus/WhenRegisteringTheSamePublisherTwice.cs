@@ -22,8 +22,8 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override Task WhenAsync()
         {
-            SystemUnderTest.AddMessagePublisher<Message>(_publisher, string.Empty);
-            SystemUnderTest.AddMessagePublisher<Message>(_publisher, string.Empty);
+            SystemUnderTest.AddMessagePublisher<Message>(_publisher);
+            SystemUnderTest.AddMessagePublisher<Message>(_publisher);
 
             return Task.CompletedTask;
         }
@@ -42,9 +42,7 @@ namespace JustSaying.UnitTests.JustSayingBus
 
             string[] publishedTypes = response.Data.PublishedMessageTypes;
 
-            // This has a ':' prefix because the interrogation adds the region at the start.
-            // The queues are faked out here so there's no region.
-            publishedTypes.ShouldContain($":{nameof(Message)}");
+            publishedTypes.ShouldContain($"{nameof(Message)}");
         }
     }
 }

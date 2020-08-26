@@ -22,8 +22,7 @@ namespace JustSaying.Fluent
         /// Initializes a new instance of the <see cref="QueueSubscriptionBuilder{T}"/> class.
         /// </summary>
         internal QueueSubscriptionBuilder()
-        {
-        }
+        { }
 
         /// <summary>
         /// Gets or sets the queue name.
@@ -70,7 +69,8 @@ namespace JustSaying.Fluent
         /// <exception cref="ArgumentNullException">
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
-        public QueueSubscriptionBuilder<T> WithReadConfiguration(Action<SqsReadConfigurationBuilder> configure)
+        public QueueSubscriptionBuilder<T> WithReadConfiguration(
+            Action<SqsReadConfigurationBuilder> configure)
         {
             if (configure == null)
             {
@@ -124,27 +124,27 @@ namespace JustSaying.Fluent
             subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
             subscriptionConfig.Validate();
 
-            foreach (var region in config.Regions)
-            {
-                var queue = creator.EnsureQueueExists(region, subscriptionConfig);
-                bus.AddStartupTask(queue.Queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(subscriptionConfig));
+            var queue = creator.EnsureQueueExists(config.Region, subscriptionConfig);
+            bus.AddStartupTask(
+                queue.Queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(subscriptionConfig));
 
-                bus.AddQueue(region, subscriptionConfig.SubscriptionGroupName, queue.Queue);
+            bus.AddQueue(subscriptionConfig.SubscriptionGroupName, queue.Queue);
 
-                logger.LogInformation(
-                    "Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",
-                    typeof(T),
-                    subscriptionConfig.QueueName);
-            }
+            logger.LogInformation(
+                "Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",
+                typeof(T),
+                subscriptionConfig.QueueName);
 
             var resolutionContext = new HandlerResolutionContext(subscriptionConfig.QueueName);
             var proposedHandler = resolver.ResolveHandler<T>(resolutionContext);
             if (proposedHandler == null)
             {
-                throw new HandlerNotRegisteredWithContainerException($"There is no handler for '{typeof(T)}' messages.");
+                throw new HandlerNotRegisteredWithContainerException(
+                    $"There is no handler for '{typeof(T)}' messages.");
             }
 
-            bus.AddMessageHandler(subscriptionConfig.QueueName, () => resolver.ResolveHandler<T>(resolutionContext));
+            bus.AddMessageHandler(subscriptionConfig.QueueName,
+                () => resolver.ResolveHandler<T>(resolutionContext));
 
             logger.LogInformation(
                 "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",

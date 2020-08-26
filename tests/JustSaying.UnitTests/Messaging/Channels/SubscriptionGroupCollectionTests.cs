@@ -37,7 +37,6 @@ namespace JustSaying.UnitTests.Messaging.Channels
             // Arrange
             string group1 = "group1";
             string group2 = "group2";
-            string region = "region";
             string queueName1 = "queue1";
             string queueName2 = "queue2";
 
@@ -46,8 +45,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             ISqsQueue queue1 = TestQueue(bus.SerializationRegister, queueName1);
             ISqsQueue queue2 = TestQueue(bus.SerializationRegister, queueName2);
 
-            bus.AddQueue(region, group1, queue1);
-            bus.AddQueue(region, group2, queue2);
+            bus.AddQueue(group1, queue1);
+            bus.AddQueue(group2, queue2);
 
             var handledBy1 = new List<TestJustSayingMessage>();
             var handledBy2 = new List<TestJustSayingMessage>();

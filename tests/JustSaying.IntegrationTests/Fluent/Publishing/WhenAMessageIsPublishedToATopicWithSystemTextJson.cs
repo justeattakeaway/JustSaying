@@ -2,10 +2,12 @@ using System;
 using System.Threading.Tasks;
 using JustSaying.Fluent;
 using JustSaying.Messaging;
+using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
+using Shouldly;
 using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing
@@ -21,14 +23,13 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
         public async Task Then_The_Message_Is_Handled()
         {
             // Arrange
-            var completionSource = new TaskCompletionSource<object>();
-            var handler = CreateHandler<SimpleMessage>(completionSource);
+            var handler = new InspectableHandler<SimpleMessage>();
 
             var services = GivenJustSaying()
                 .ConfigureJustSaying(
                     (builder) => builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
                 .AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>()
-                .AddSingleton(handler);
+                .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
             string content = Guid.NewGuid().ToString();
 
@@ -48,9 +49,9 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                     await publisher.PublishAsync(message, cancellationToken);
 
                     // Assert
-                    completionSource.Task.Wait(cancellationToken);
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
 
-                    await handler.Received().Handle(Arg.Is<SimpleMessage>((m) => m.Content == content));
+                    handler.ReceivedMessages.ShouldHaveSingleItem().Content.ShouldBe(content);
                 });
         }
     }

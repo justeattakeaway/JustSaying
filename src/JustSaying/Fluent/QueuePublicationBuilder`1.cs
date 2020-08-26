@@ -89,34 +89,31 @@ namespace JustSaying.Fluent
             ConfigureWrites?.Invoke(writeConfiguration);
             writeConfiguration.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
 
-            foreach (var region in config.Regions)
+            var regionEndpoint = RegionEndpoint.GetBySystemName(config.Region);
+            var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
+
+            var eventPublisher = new SqsPublisher(
+                regionEndpoint,
+                writeConfiguration.QueueName,
+                sqsClient,
+                writeConfiguration.RetryCountBeforeSendingToErrorQueue,
+                bus.SerializationRegister,
+                loggerFactory)
             {
-                var regionEndpoint = RegionEndpoint.GetBySystemName(region);
-                var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
+                MessageResponseLogger = config.MessageResponseLogger
+            };
 
-                var eventPublisher = new SqsPublisher(
-                    regionEndpoint,
-                    writeConfiguration.QueueName,
-                    sqsClient,
-                    writeConfiguration.RetryCountBeforeSendingToErrorQueue,
-                    bus.SerializationRegister,
-                    loggerFactory)
+            async Task StartupTask()
+            {
+                if (!await eventPublisher.ExistsAsync().ConfigureAwait(false))
                 {
-                    MessageResponseLogger = config.MessageResponseLogger
-                };
-
-                async Task StartupTask()
-                {
-                    if (!await eventPublisher.ExistsAsync().ConfigureAwait(false))
-                    {
-                        await eventPublisher.CreateAsync(writeConfiguration).ConfigureAwait(false);
-                    }
+                    await eventPublisher.CreateAsync(writeConfiguration).ConfigureAwait(false);
                 }
-
-                bus.AddStartupTask(StartupTask());
-
-                bus.AddMessagePublisher<T>(eventPublisher, region);
             }
+
+            bus.AddStartupTask(StartupTask());
+
+            bus.AddMessagePublisher<T>(eventPublisher);
 
             logger.LogInformation(
                 "Created SQS publisher for message type '{MessageType}' on queue '{QueueName}'.",

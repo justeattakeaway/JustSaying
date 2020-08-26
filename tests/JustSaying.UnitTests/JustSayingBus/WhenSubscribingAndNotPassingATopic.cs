@@ -15,14 +15,14 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override Task WhenAsync()
         {
-            SystemUnderTest.AddQueue(" ", " ", null);
+            SystemUnderTest.AddQueue("test", null);
             return Task.CompletedTask;
         }
 
         [Fact]
         public void ArgExceptionThrown()
         {
-            ((ArgumentException)ThrownException).ParamName.ShouldBe("region");
+            ((ArgumentException)ThrownException).ParamName.ShouldBe("queue");
         }
     }
 }

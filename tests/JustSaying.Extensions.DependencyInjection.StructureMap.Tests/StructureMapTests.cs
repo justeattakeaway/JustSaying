@@ -48,7 +48,7 @@ namespace JustSaying
                             builder.Client((options) =>
                                     options.WithBasicCredentials("accessKey", "secretKey")
                                         .WithServiceUri(TestEnvironment.SimulatorUrl))
-                                .Messaging((options) => options.WithRegions("eu-west-1"))
+                                .Messaging((options) => options.WithRegion("eu-west-1"))
                                 .Publications((options) => options.WithQueue<SimpleMessage>())
                                 .Subscriptions((options) => options.ForQueue<SimpleMessage>());
                         });

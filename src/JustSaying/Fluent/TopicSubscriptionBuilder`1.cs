@@ -21,8 +21,7 @@ namespace JustSaying.Fluent
         /// Initializes a new instance of the <see cref="TopicSubscriptionBuilder{T}"/> class.
         /// </summary>
         internal TopicSubscriptionBuilder()
-        {
-        }
+        { }
 
         /// <summary>
         /// Gets or sets the topic name.
@@ -69,7 +68,8 @@ namespace JustSaying.Fluent
         /// <exception cref="ArgumentNullException">
         /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
-        public TopicSubscriptionBuilder<T> WithReadConfiguration(Action<SqsReadConfigurationBuilder> configure)
+        public TopicSubscriptionBuilder<T> WithReadConfiguration(
+            Action<SqsReadConfigurationBuilder> configure)
         {
             if (configure == null)
             {
@@ -124,30 +124,30 @@ namespace JustSaying.Fluent
             subscriptionConfig.PublishEndpoint = subscriptionConfig.TopicName;
             subscriptionConfig.Validate();
 
-            foreach (var region in config.Regions)
-            {
-                var queueWithStartup = creator.EnsureTopicExistsWithQueueSubscribed(
-                    region, bus.SerializationRegister,
-                    subscriptionConfig,
-                    config.MessageSubjectProvider);
-                bus.AddStartupTask(queueWithStartup.StartupTask);
+            var queueWithStartup = creator.EnsureTopicExistsWithQueueSubscribed(
+                config.Region,
+                bus.SerializationRegister,
+                subscriptionConfig,
+                config.MessageSubjectProvider);
+            bus.AddStartupTask(queueWithStartup.StartupTask);
 
-                bus.AddQueue(region,  subscriptionConfig.SubscriptionGroupName, queueWithStartup.Queue);
+            bus.AddQueue(subscriptionConfig.SubscriptionGroupName, queueWithStartup.Queue);
 
-                logger.LogInformation(
-                    "Created SQS topic subscription on topic '{TopicName}' and queue '{QueueName}'.",
-                    subscriptionConfig.TopicName,
-                    subscriptionConfig.QueueName);;
-            }
+            logger.LogInformation(
+                "Created SQS topic subscription on topic '{TopicName}' and queue '{QueueName}'.",
+                subscriptionConfig.TopicName,
+                subscriptionConfig.QueueName);
 
             var resolutionContext = new HandlerResolutionContext(subscriptionConfig.QueueName);
             var proposedHandler = resolver.ResolveHandler<T>(resolutionContext);
             if (proposedHandler == null)
             {
-                throw new HandlerNotRegisteredWithContainerException($"There is no handler for '{typeof(T)}' messages.");
+                throw new HandlerNotRegisteredWithContainerException(
+                    $"There is no handler for '{typeof(T)}' messages.");
             }
 
-            bus.AddMessageHandler(subscriptionConfig.QueueName, () => resolver.ResolveHandler<T>(resolutionContext));
+            bus.AddMessageHandler(subscriptionConfig.QueueName,
+                () => resolver.ResolveHandler<T>(resolutionContext));
 
             logger.LogInformation(
                 "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",

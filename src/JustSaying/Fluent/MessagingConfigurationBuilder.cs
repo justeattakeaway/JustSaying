@@ -47,14 +47,9 @@ namespace JustSaying.Fluent
         private int? PublishFailureReAttempts { get; set; }
 
         /// <summary>
-        /// Gets or sets the optional value to use for <see cref="IMessagingConfig.GetActiveRegion"/>
+        /// Gets or sets the optional value to use for <see cref="IMessagingConfig.Region"/>
         /// </summary>
-        private Func<string> GetActiveRegion { get; set; }
-
-        /// <summary>
-        /// Gets or sets the optional value to use for <see cref="IMessagingConfig.Regions"/>
-        /// </summary>
-        private List<string> Regions { get; set; }
+        private string Region { get; set; }
 
         /// <summary>
         /// Gets or sets the optional value to use for <see cref="IMessagingConfig.MessageSubjectProvider"/>
@@ -71,61 +66,6 @@ namespace JustSaying.Fluent
         /// </summary>
         private IQueueNamingConvention QueueNamingConvention { get; set; }
 
-        /// <summary>
-        /// Specifies the active AWS region to use.
-        /// </summary>
-        /// <param name="region">The active AWS region to use.</param>
-        /// <returns>
-        /// The current <see cref="MessagingConfigurationBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="region"/> is <see cref="null"/>.
-        /// </exception>
-        public MessagingConfigurationBuilder WithActiveRegion(RegionEndpoint region)
-        {
-            if (region == null)
-            {
-                throw new ArgumentNullException(nameof(region));
-            }
-
-            return WithActiveRegion(region.SystemName);
-        }
-
-        /// <summary>
-        /// Specifies the active AWS region to use.
-        /// </summary>
-        /// <param name="region">The active AWS region to use.</param>
-        /// <returns>
-        /// The current <see cref="MessagingConfigurationBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="region"/> is <see cref="null"/>.
-        /// </exception>
-        public MessagingConfigurationBuilder WithActiveRegion(string region)
-        {
-            if (region == null)
-            {
-                throw new ArgumentNullException(nameof(region));
-            }
-
-            return WithActiveRegion(() => region);
-        }
-
-        /// <summary>
-        /// Specifies a delegate which evaluates the current active AWS region to use.
-        /// </summary>
-        /// <param name="evaluator">A delegate to a method with evaluates the active AWS region to use.</param>
-        /// <returns>
-        /// The current <see cref="MessagingConfigurationBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="evaluator"/> is <see cref="null"/>.
-        /// </exception>
-        public MessagingConfigurationBuilder WithActiveRegion(Func<string> evaluator)
-        {
-            GetActiveRegion = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
-            return this;
-        }
 
         /// <summary>
         /// Specifies additional subscriber account(s) to use.
@@ -245,39 +185,6 @@ namespace JustSaying.Fluent
             return this;
         }
 
-        /// <summary>
-        /// Specifies the AWS region(s) to use.
-        /// </summary>
-        /// <param name="regions">The AWS region(s) to use.</param>
-        /// <returns>
-        /// The current <see cref="MessagingConfigurationBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="regions"/> is <see cref="null"/>.
-        /// </exception>
-        public MessagingConfigurationBuilder WithRegions(params string[] regions)
-            => WithRegions(regions as IEnumerable<string>);
-
-        /// <summary>
-        /// Specifies the AWS region(s) to use.
-        /// </summary>
-        /// <param name="regions">The AWS region(s) to use.</param>
-        /// <returns>
-        /// The current <see cref="MessagingConfigurationBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="regions"/> is <see cref="null"/>.
-        /// </exception>
-        public MessagingConfigurationBuilder WithRegions(IEnumerable<string> regions)
-        {
-            if (regions == null)
-            {
-                throw new ArgumentNullException(nameof(regions));
-            }
-
-            Regions = new List<string>(regions);
-            return this;
-        }
 
         /// <summary>
         /// Specifies an AWS region to use.
@@ -291,20 +198,7 @@ namespace JustSaying.Fluent
         /// </exception>
         public MessagingConfigurationBuilder WithRegion(string region)
         {
-            if (region == null)
-            {
-                throw new ArgumentNullException(nameof(region));
-            }
-
-            if (Regions == null)
-            {
-                Regions = new List<string>();
-            }
-
-            if (!Regions.Contains(region))
-            {
-                Regions.Add(region);
-            }
+            Region = region ?? throw new ArgumentNullException(nameof(region));
 
             return this;
         }
@@ -329,39 +223,6 @@ namespace JustSaying.Fluent
             return WithRegion(region.SystemName);
         }
 
-        /// <summary>
-        /// Specifies the AWS region(s) to use.
-        /// </summary>
-        /// <param name="regions">The AWS region(s) to use.</param>
-        /// <returns>
-        /// The current <see cref="MessagingConfigurationBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="regions"/> is <see cref="null"/>.
-        /// </exception>
-        public MessagingConfigurationBuilder WithRegions(params RegionEndpoint[] regions)
-            => WithRegions(regions as IEnumerable<RegionEndpoint>);
-
-        /// <summary>
-        /// Specifies the AWS region(s) to use.
-        /// </summary>
-        /// <param name="regions">The AWS region(s) to use.</param>
-        /// <returns>
-        /// The current <see cref="MessagingConfigurationBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="regions"/> is <see cref="null"/>.
-        /// </exception>
-        public MessagingConfigurationBuilder WithRegions(IEnumerable<RegionEndpoint> regions)
-        {
-            if (regions == null)
-            {
-                throw new ArgumentNullException(nameof(regions));
-            }
-
-            Regions = new List<string>(regions.Select((p) => p.SystemName).Distinct(StringComparer.Ordinal));
-            return this;
-        }
 
         /// <summary>
         /// Specifies the <see cref="ITopicNamingConvention"/> to use.
@@ -435,25 +296,14 @@ namespace JustSaying.Fluent
         {
             var config = BusBuilder.ServiceResolver.ResolveService<IMessagingConfig>();
 
-            if (Regions?.Count > 0)
+            if (Region != null)
             {
-                foreach (string region in Regions)
-                {
-                    if (!config.Regions.Contains(region))
-                    {
-                        config.Regions.Add(region);
-                    }
-                }
+                config.Region = Region;
             }
 
             if (AdditionalSubscriberAccounts?.Count > 0)
             {
                 config.AdditionalSubscriberAccounts = AdditionalSubscriberAccounts;
-            }
-
-            if (GetActiveRegion != null)
-            {
-                config.GetActiveRegion = GetActiveRegion;
             }
 
             if (MessageResponseLogger != null)

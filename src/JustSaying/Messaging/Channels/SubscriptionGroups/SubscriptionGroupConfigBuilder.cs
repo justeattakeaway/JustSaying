@@ -41,6 +41,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// <returns>This builder object.</returns>
         public SubscriptionGroupConfigBuilder AddQueue(ISqsQueue sqsQueue)
         {
+            if(sqsQueue == null) throw new ArgumentNullException(nameof(sqsQueue));
             _sqsQueues.Add(sqsQueue);
             return this;
         }
@@ -52,6 +53,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// <returns>This builder object.</returns>
         public SubscriptionGroupConfigBuilder AddQueues(IEnumerable<ISqsQueue> sqsQueues)
         {
+            if(sqsQueues == null) throw new ArgumentNullException(nameof(sqsQueues));
             _sqsQueues.AddRange(sqsQueues);
             return this;
         }
