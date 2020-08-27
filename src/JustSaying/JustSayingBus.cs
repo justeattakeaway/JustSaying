@@ -21,10 +21,17 @@ namespace JustSaying
 {
     public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposable
     {
-        private readonly Dictionary<Type, IMessagePublisher> _publishersByType;
+        private readonly ILogger _log;
+        private readonly ILoggerFactory _loggerFactory;
+
+        private readonly SemaphoreSlim _startLock = new SemaphoreSlim(1, 1);
+        private bool _busStarted;
+        private readonly List<Task> _startupTasks;
+        private CancellationToken _stoppingToken;
 
         private ConcurrentDictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings;
         private SubscriptionGroupSettingsBuilder _defaultSubscriptionGroupSettings;
+        private readonly Dictionary<Type, IMessagePublisher> _publishersByType;
 
         public IMessagingConfig Config { get; }
 
@@ -47,13 +54,10 @@ namespace JustSaying
         }
 
         public IMessageContextAccessor MessageContextAccessor { get; set; }
+
         public HandlerMap HandlerMap { get; }
 
-        private readonly ILogger _log;
-
-        private readonly SemaphoreSlim _startLock = new SemaphoreSlim(1, 1);
-
-        private readonly ILoggerFactory _loggerFactory;
+        public Task Completion { get; private set; }
 
         public JustSayingBus(
             IMessagingConfig config,
@@ -67,15 +71,14 @@ namespace JustSaying
             Config = config;
             Monitor = new NullOpMessageMonitor();
             MessageContextAccessor = new MessageContextAccessor();
+            SerializationRegister = serializationRegister;
+            HandlerMap = new HandlerMap(Monitor, _loggerFactory);
 
             _publishersByType = new Dictionary<Type, IMessagePublisher>();
-            SerializationRegister = serializationRegister;
-
             _subscriptionGroupSettings =
                 new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
             _defaultSubscriptionGroupSettings = new SubscriptionGroupSettingsBuilder();
 
-            HandlerMap = new HandlerMap(Monitor, _loggerFactory);
         }
 
         public void AddQueue(string subscriptionGroup, ISqsQueue queue)
@@ -125,12 +128,11 @@ namespace JustSaying
             _publishersByType[typeof(T)] = messagePublisher;
         }
 
-        private bool _busStarted;
-        private Task _subscriberCompletionTask;
-        private readonly List<Task> _startupTasks;
 
         public async Task StartAsync(CancellationToken stoppingToken)
         {
+            _stoppingToken = stoppingToken;
+
             if (stoppingToken.IsCancellationRequested) return;
 
             // Double check lock to ensure single-start
@@ -152,7 +154,7 @@ namespace JustSaying
                                 }
                             }
 
-                            _subscriberCompletionTask = RunImplAsync(stoppingToken);
+                            Completion = RunImplAsync(stoppingToken);
                             _busStarted = true;
                         }
                     }
@@ -185,7 +187,14 @@ namespace JustSaying
 
             _log.LogInformation("Starting bus with settings: {@Response}", SubscriptionGroups.Interrogate());
 
-            await SubscriptionGroups.RunAsync(stoppingToken).ConfigureAwait(false);
+            try
+            {
+                await SubscriptionGroups.RunAsync(stoppingToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // Don't bubble cancellation up
+            }
         }
 
         public async Task PublishAsync(Message message, CancellationToken cancellationToken)
@@ -201,12 +210,12 @@ namespace JustSaying
                 throw new InvalidOperationException("Bus must be started before publishing messages.");
             }
 
-            IMessagePublisher publisher = GetActivePublisherForMessage(message);
+            IMessagePublisher publisher = GetPublisherForMessage(message);
             await PublishAsync(publisher, message, metadata, 0, cancellationToken)
                 .ConfigureAwait(false);
         }
 
-        private IMessagePublisher GetActivePublisherForMessage(Message message)
+        private IMessagePublisher GetPublisherForMessage(Message message)
         {
             if (_publishersByType.Count == 0)
             {
@@ -301,7 +310,6 @@ namespace JustSaying
         {
             _startLock?.Dispose();
             _loggerFactory?.Dispose();
-            _subscriberCompletionTask?.Dispose();
         }
     }
 }

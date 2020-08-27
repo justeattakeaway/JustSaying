@@ -54,12 +54,12 @@ namespace JustSaying.UnitTests.Messaging.Channels
             bus.AddMessageHandler(queueName1, () => new TestHandler<TestJustSayingMessage>(x => handledBy1.Add(x)));
             bus.AddMessageHandler(queueName2, () => new TestHandler<TestJustSayingMessage>(x => handledBy2.Add(x)));
 
-            var cts = new CancellationTokenSource();
+            using var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
 
             // Act
             await bus.StartAsync(cts.Token);
-            await cts.Token.WaitForCancellation();
+            await bus.Completion;
 
             // Assert
             handledBy1.Count.ShouldBeGreaterThan(0);
@@ -73,6 +73,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             {
                 message.QueueName.ShouldBe(queueName2);
             }
+
+            bus.Dispose();
         }
 
         private JustSaying.JustSayingBus CreateBus()
