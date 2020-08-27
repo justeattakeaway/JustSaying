@@ -137,17 +137,17 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             };
         }
 
-        protected static ISqsQueue CreateSuccessfulTestQueue(string queueName, params Amazon.SQS.Model.Message[] messages)
+        protected static ISqsQueue CreateSuccessfulTestQueue(string queueName, params Message[] messages)
         {
             return CreateSuccessfulTestQueue(queueName, () => messages.ToList());
         }
 
-        protected static ISqsQueue CreateSuccessfulTestQueue(string queueName, Func<List<Amazon.SQS.Model.Message>> getMessages)
+        protected static ISqsQueue CreateSuccessfulTestQueue(string queueName, Func<List<Message>> getMessages)
         {
             return CreateSuccessfulTestQueue(queueName, () => Task.FromResult(getMessages()));
         }
 
-        protected static ISqsQueue CreateSuccessfulTestQueue(string queueName, Func<Task<List<Amazon.SQS.Model.Message>>> getMessages)
+        protected static ISqsQueue CreateSuccessfulTestQueue(string queueName, Func<Task<List<Message>>> getMessages)
         {
             var client = Substitute.For<IAmazonSQS>();
             client
@@ -178,7 +178,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             return Task.CompletedTask;
         }
 
-        protected class TestMessage : Amazon.SQS.Model.Message
+        protected class TestMessage : Message
         {
         }
     }

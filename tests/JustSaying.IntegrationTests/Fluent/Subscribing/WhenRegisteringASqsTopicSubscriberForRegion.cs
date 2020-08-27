@@ -74,7 +74,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
                     topics
                         .Select((p) => p.TopicArn)
-                        .Count((p) => p.EndsWith(":MySqsTopicMessageForMultipleRegions",
+                        .Count((p) => p.EndsWith($":{nameof(MySqsTopicMessageForRegion)}",
                             StringComparison.OrdinalIgnoreCase))
                         .ShouldBe(1);
                 });

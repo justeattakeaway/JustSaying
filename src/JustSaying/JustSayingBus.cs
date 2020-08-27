@@ -27,7 +27,6 @@ namespace JustSaying
         private readonly SemaphoreSlim _startLock = new SemaphoreSlim(1, 1);
         private bool _busStarted;
         private readonly List<Task> _startupTasks;
-        private CancellationToken _stoppingToken;
 
         private ConcurrentDictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings;
         private SubscriptionGroupSettingsBuilder _defaultSubscriptionGroupSettings;
@@ -131,8 +130,6 @@ namespace JustSaying
 
         public async Task StartAsync(CancellationToken stoppingToken)
         {
-            _stoppingToken = stoppingToken;
-
             if (stoppingToken.IsCancellationRequested) return;
 
             // Double check lock to ensure single-start
@@ -146,7 +143,7 @@ namespace JustSaying
                         using (_log.Time("Starting bus"))
                         {
                             // We want consumers to wait for the startup tasks, but not the run
-                            using (_log.Time("Running startup tasks"))
+                            using (_log.Time("Running {TaskCount} startup tasks", _startupTasks.Count))
                             {
                                 foreach (var startupTask in _startupTasks)
                                 {

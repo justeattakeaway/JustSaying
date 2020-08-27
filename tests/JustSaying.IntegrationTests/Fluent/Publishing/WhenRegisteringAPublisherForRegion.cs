@@ -56,7 +56,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
 
             topics
                 .Select((p) => p.TopicArn)
-                .Count((p) => p.EndsWith(":MyMessageForMultipleRegions", StringComparison.OrdinalIgnoreCase))
+                .Count((p) => p.EndsWith($":{nameof(MyMessageForRegion)}", StringComparison.OrdinalIgnoreCase))
                 .ShouldBe(1);
         }
 

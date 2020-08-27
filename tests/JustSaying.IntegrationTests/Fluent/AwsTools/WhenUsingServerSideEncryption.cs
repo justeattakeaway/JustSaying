@@ -1,9 +1,12 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
+using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
+using Shouldly;
 using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools
@@ -19,8 +22,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
         public async Task Then_The_Message_Is_Handled()
         {
             // Arrange
-            var completionSource = new TaskCompletionSource<object>();
-            var handler = CreateHandler<SimpleMessage>(completionSource);
+            var handler = new InspectableHandler<SimpleMessage>();
 
             string masterKeyId = "alias/aws/sqs";
 
@@ -33,7 +35,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                     (builder) => builder.Subscriptions((options) => options.ForQueue<SimpleMessage>(
                         (queue) => queue.WithName(UniqueName).WithReadConfiguration(
                             (config) => config.WithEncryption(masterKeyId)))))
-                .AddSingleton(handler);
+                .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
             string content = Guid.NewGuid().ToString();
 
@@ -53,9 +55,8 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                     await publisher.PublishAsync(message, cancellationToken);
 
                     // Assert
-                    completionSource.Task.Wait(cancellationToken);
-
-                    await handler.Received().Handle(Arg.Is<SimpleMessage>((m) => m.Content == content));
+                    await Patiently.AssertThatAsync(OutputHelper,
+                        () => handler.ReceivedMessages.Any(msg => msg.Content == content));
                 });
         }
     }

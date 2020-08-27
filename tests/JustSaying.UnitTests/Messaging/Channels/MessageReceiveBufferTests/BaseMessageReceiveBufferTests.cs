@@ -60,14 +60,11 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
         // Default implementation
         private async Task WhenInternalAsync()
         {
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromSeconds(1));
-
             await WhenAsync();
 
             // wait until it's done
-            var doneOk = await TaskHelpers.WaitWithTimeoutAsync(
-                StartAndCatch(cts.Token));
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            var doneOk = await TaskHelpers.WaitWithTimeoutAsync(StartAndCatch(cts.Token));
 
             doneOk.ShouldBeTrue("Timeout occured before done signal");
         }

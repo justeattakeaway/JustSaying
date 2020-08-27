@@ -176,25 +176,24 @@ namespace JustSaying.UnitTests.Messaging.Channels
             // Arrange
             int messagesFromQueue = 0;
             int messagesDispatched = 0;
-            int bufferSize = 5;
-            int channelCapacity = 10;
+            int receivebufferSize = 5;
+            int multiplexerCapacity = 10;
 
             // plus one "in flight" between buffer and multiplexer
-            int expectedReceiveFromQueueCount = bufferSize + channelCapacity + 1;
+            int expectedReceiveFromQueueCount = receivebufferSize + multiplexerCapacity + 1;
 
             var sqsQueue = TestQueue(() => Interlocked.Increment(ref messagesFromQueue));
-            IMessageReceiveBuffer buffer = CreateMessageReceiveBuffer(sqsQueue, bufferSize);
+            IMessageReceiveBuffer buffer = CreateMessageReceiveBuffer(sqsQueue, receivebufferSize);
             IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
             IMultiplexerSubscriber consumer1 = CreateSubscriber(dispatcher);
-            IMultiplexer multiplexer = CreateMultiplexer(channelCapacity);
+            IMultiplexer multiplexer = CreateMultiplexer(multiplexerCapacity);
 
             multiplexer.ReadFrom(buffer.Reader);
             consumer1.Subscribe(multiplexer.GetMessagesAsync());
 
             // need to start the multiplexer before calling Messages
 
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromSeconds(2));
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
 
             // Act and Assert
             var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
@@ -202,6 +201,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             await multiplexerCompletion;
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => bufferCompletion);
+
+            await Task.Delay(TimeSpan.FromSeconds(1));
 
             messagesFromQueue.ShouldBe(expectedReceiveFromQueueCount);
             messagesDispatched.ShouldBe(0);
