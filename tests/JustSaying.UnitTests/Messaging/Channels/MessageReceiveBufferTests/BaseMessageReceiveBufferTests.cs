@@ -63,7 +63,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
             await WhenAsync();
 
             // wait until it's done
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
             var doneOk = await TaskHelpers.WaitWithTimeoutAsync(StartAndCatch(cts.Token));
 
             doneOk.ShouldBeTrue("Timeout occured before done signal");
