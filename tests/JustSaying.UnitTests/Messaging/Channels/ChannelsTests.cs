@@ -12,6 +12,7 @@ using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -31,9 +32,12 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
         public ChannelsTests(ITestOutputHelper testOutputHelper)
         {
+            OutputHelper = testOutputHelper;
             LoggerFactory = testOutputHelper.ToLoggerFactory();
             MessageMonitor = new LoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
         }
+
+        public ITestOutputHelper OutputHelper { get; set; }
 
         private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(500);
 
@@ -184,7 +188,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             var sqsQueue = TestQueue(() => Interlocked.Increment(ref messagesFromQueue));
             IMessageReceiveBuffer buffer = CreateMessageReceiveBuffer(sqsQueue, receivebufferSize);
-            IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
+            IMessageDispatcher dispatcher =
+                new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
             IMultiplexerSubscriber consumer1 = CreateSubscriber(dispatcher);
             IMultiplexer multiplexer = CreateMultiplexer(multiplexerCapacity);
 
@@ -204,14 +209,26 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             await Task.Delay(TimeSpan.FromSeconds(1));
 
-            messagesFromQueue.ShouldBe(expectedReceiveFromQueueCount);
-            messagesDispatched.ShouldBe(0);
+            await Patiently.AssertThatAsync(OutputHelper,
+                () =>
+                {
+                    messagesFromQueue.ShouldBe(expectedReceiveFromQueueCount);
+                    messagesDispatched.ShouldBe(0);
+
+                    return true;
+                });
 
             // Starting the consumer after the token is cancelled will not dispatch messages
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1.RunAsync(cts.Token));
 
-            messagesFromQueue.ShouldBe(expectedReceiveFromQueueCount);
-            messagesDispatched.ShouldBe(0);
+            await Patiently.AssertThatAsync(OutputHelper,
+                () =>
+                {
+                    messagesFromQueue.ShouldBe(expectedReceiveFromQueueCount);
+                    messagesDispatched.ShouldBe(0);
+
+                    return true;
+                });
         }
 
         [Fact]

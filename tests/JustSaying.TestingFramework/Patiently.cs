@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Shouldly;
 using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace JustSaying.TestingFramework
 {
@@ -31,10 +32,17 @@ namespace JustSaying.TestingFramework
             var timeoutAt = DateTime.Now + timeout;
             do
             {
-                if (await func.Invoke().ConfigureAwait(false))
+                try
                 {
-                    return;
+                    if (await func.Invoke().ConfigureAwait(false))
+                    {
+                        return;
+                    }
                 }
+                catch (ShouldAssertException)
+                { }
+                catch (XunitException)
+                { }
 
                 await Task.Delay(50.Milliseconds()).ConfigureAwait(false);
 

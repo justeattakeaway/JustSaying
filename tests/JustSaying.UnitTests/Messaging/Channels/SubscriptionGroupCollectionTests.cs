@@ -48,11 +48,11 @@ namespace JustSaying.UnitTests.Messaging.Channels
             bus.AddQueue(group1, queue1);
             bus.AddQueue(group2, queue2);
 
-            var handledBy1 = new List<TestJustSayingMessage>();
-            var handledBy2 = new List<TestJustSayingMessage>();
+            var handler1 = new InspectableHandler<TestJustSayingMessage>();
+            var handler2 = new InspectableHandler<TestJustSayingMessage>();
 
-            bus.AddMessageHandler(queueName1, () => new TestHandler<TestJustSayingMessage>(x => handledBy1.Add(x)));
-            bus.AddMessageHandler(queueName2, () => new TestHandler<TestJustSayingMessage>(x => handledBy2.Add(x)));
+            bus.AddMessageHandler(queueName1, () => handler1);
+            bus.AddMessageHandler(queueName2, () => handler2);
 
             using var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
@@ -62,14 +62,14 @@ namespace JustSaying.UnitTests.Messaging.Channels
             await bus.Completion;
 
             // Assert
-            handledBy1.Count.ShouldBeGreaterThan(0);
-            foreach (var message in handledBy1)
+            handler1.ReceivedMessages.Count.ShouldBeGreaterThan(0);
+            foreach (var message in handler1.ReceivedMessages)
             {
                 message.QueueName.ShouldBe(queueName1);
             }
 
-            handledBy2.Count.ShouldBeGreaterThan(0);
-            foreach (var message in handledBy2)
+            handler2.ReceivedMessages.Count.ShouldBeGreaterThan(0);
+            foreach (var message in handler2.ReceivedMessages)
             {
                 message.QueueName.ShouldBe(queueName2);
             }
