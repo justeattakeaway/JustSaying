@@ -180,8 +180,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             // Arrange
             int messagesFromQueue = 0;
             int messagesDispatched = 0;
-            int receivebufferSize = 5;
-            int multiplexerCapacity = 10;
+            int receivebufferSize = 2;
+            int multiplexerCapacity = 2;
 
             // plus one "in flight" between buffer and multiplexer
             int expectedReceiveFromQueueCount = receivebufferSize + multiplexerCapacity + 1;
