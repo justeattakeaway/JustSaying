@@ -48,7 +48,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
             Queue = Substitute.For<ISqsQueue>();
             Queue.Uri.Returns(new Uri("http://test.com"));
             Queue.Client.Returns(SqsClient);
-            Monitor = Substitute.For<IMessageMonitor>();
+            Monitor = new TestingFramework.LoggingMonitor(LoggerFactory.CreateLogger("Monitor"));
             SqsMiddleware = new DelegateMiddleware<GetMessagesContext, IList<Amazon.SQS.Model.Message>>();
 
             Given();
