@@ -42,7 +42,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected ISubscriptionGroup SystemUnderTest { get; private set; }
 
-        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
+        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(500);
 
         protected ILoggerFactory LoggerFactory { get; }
         protected ILogger Logger { get; }
