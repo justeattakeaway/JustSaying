@@ -1,0 +1,49 @@
+@startuml SinglePublisher_MultipleSubscribers
+
+title PubSub using JustSaying and AWS SNS/SQS
+hide footbox
+skinparam BackgroundColor #EEEBDC
+skinparam BoxPadding 20
+skinparam ParticipantPadding 20
+
+box "Publishing\nApplication" #lightgrey
+    participant Publisher order 1
+end box
+box "AWS" #orange
+    participant "AWS SNS Topic" as SNS_Publisher order 2
+    participant "AWS SQS Queue #1" as SQS_Subscriber1 order 3
+    participant "AWS SQS Queue #2" as SQS_Subscriber2 order 4
+end box
+box "Subscribing\nApplication #1" #lightgrey
+    participant "Subscriber" as Subscriber_1 order 5
+end box
+box "Subscribing\nApplication #2" #lightgrey
+    participant "Subscriber" as Subscriber_2 order 6
+end box
+
+== Publishing ==
+group publishing
+    Publisher-[#Green]>SNS_Publisher: Publish message to SNS Topic
+    SNS_Publisher-[#gray]>SQS_Subscriber1: Deliver message to SQS Queue
+    SNS_Publisher-[#gray]>SQS_Subscriber2: Deliver message to SQS Queue
+    return ok
+end
+
+== Polling ==
+group subscriber polling
+    SQS_Subscriber1<[#Green]-Subscriber_1: List messages
+    return Message returned
+end 
+group subscriber polling
+    SQS_Subscriber2<[#Green]-Subscriber_2: List messages
+    return Message returned
+end 
+
+== Acknowledging ==
+group subscriber acknowledging
+    SQS_Subscriber1<-[#Green]-Subscriber_1 !! : Delete message
+end 
+group subscriber acknowledging
+    SQS_Subscriber2<-[#Green]-Subscriber_2 !! : Delete message
+end 
+@enduml
