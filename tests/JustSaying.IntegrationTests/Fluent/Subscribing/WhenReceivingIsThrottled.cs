@@ -24,7 +24,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
             int waitOthers = 100;
             int waitOne = TestEnvironment.IsSimulatorConfigured ? waitOthers : 3_600_000;
 
-            for (int i = 1; i <= 100; i++)
+            for (int i = 1; i <= 30; i++)
             {
                 _ids.Add(i, Guid.NewGuid());
                 _messages.Add(i, new SimpleMessage() { Id = _ids[i] });
@@ -51,7 +51,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                                     c.WithSubscriptionGroup("group")))))
                 .AddSingleton(_handler);
 
-            var baseSleep = TimeSpan.FromSeconds(2);
+            var baseSleep = TimeSpan.FromMilliseconds(500);
 
             await WhenAsync(
                 services,
@@ -67,19 +67,19 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     await Task.Delay(baseSleep, cancellationToken);
 
                     // Publish the rest of the messages except the last one.
-                    for (int i = 2; i <= 98; i++)
+                    for (int i = 2; i < 29; i++)
                     {
                         await publisher.PublishAsync(_messages[i], cancellationToken);
                     }
 
                     // Publish the last message after a couple of seconds to guarantee it was scheduled after all the rest
                     await Task.Delay(baseSleep, cancellationToken);
-                    await publisher.PublishAsync(_messages[100], cancellationToken);
+                    await publisher.PublishAsync(_messages[30], cancellationToken);
 
                     // Wait for a reasonble time before asserting whether the last message has been scheduled.
                     await Task.Delay(baseSleep, cancellationToken);
 
-                    Received.InOrder(() => _handler.Handle(Arg.Is<SimpleMessage>((p) => p.Id == _ids[100])));
+                    Received.InOrder(() => _handler.Handle(Arg.Is<SimpleMessage>((p) => p.Id == _ids[30])));
                 });
         }
 

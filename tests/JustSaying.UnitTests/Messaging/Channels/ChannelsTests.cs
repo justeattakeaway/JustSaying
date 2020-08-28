@@ -81,8 +81,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
             consumer1.Subscribe(multiplexer.GetMessagesAsync());
             consumer2.Subscribe(multiplexer.GetMessagesAsync());
 
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeoutPeriod);
+            using var cts = new CancellationTokenSource(TimeoutPeriod);
 
             var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
 

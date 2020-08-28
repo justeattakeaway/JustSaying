@@ -37,7 +37,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
                     // Act
                     await publisher.PublishAsync(message, cancellationToken);
-                    await Task.Delay(5.Seconds(), cancellationToken);
+                    await Task.Delay(1.Seconds(), cancellationToken);
 
                     // Assert
                     handler1.NumberOfTimesIHaveBeenCalledForMessage(message.UniqueKey()).ShouldBe(1);

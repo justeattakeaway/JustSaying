@@ -37,8 +37,12 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
                     Arg.Any<ReceiveMessageRequest>(),
                     Arg.Any<CancellationToken>())
                 .Returns(
-                    x => Task.FromResult(response),
-                    x => Task.FromResult(new ReceiveMessageResponse()));
+                    x => response,
+                    async x =>
+                    {
+                        await Task.Delay(30);
+                        return new ReceiveMessageResponse();
+                    });
 
             _client.GetQueueUrlAsync(Arg.Any<string>())
                 .Returns(x =>
@@ -73,8 +77,9 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             Handler.Received().Handle(DeserializedMessage);
         }
 
-        protected static ReceiveMessageResponse GenerateResponseMessage(string messageType, Guid messageId)
+        protected static async Task<ReceiveMessageResponse> GenerateResponseMessage(string messageType, Guid messageId)
         {
+            await Task.Delay(30);
             return new ReceiveMessageResponse
             {
                 Messages = new List<Message>

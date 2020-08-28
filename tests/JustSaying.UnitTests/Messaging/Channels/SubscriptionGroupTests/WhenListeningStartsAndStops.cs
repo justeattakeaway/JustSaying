@@ -6,6 +6,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
+using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
@@ -48,12 +49,15 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected override async Task WhenAsync()
         {
+            foreach (var queue in Queues)
+            {
+                HandlerMap.Add(queue.QueueName, typeof(SimpleMessage), msg => Task.FromResult(true));
+            }
+
             _running = true;
-            var cts = new CancellationTokenSource();
+            var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
 
             var completion = SystemUnderTest.RunAsync(cts.Token);
-
-            cts.CancelAfter(TimeoutPeriod.Subtract(TimeSpan.FromMilliseconds(500)));
 
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
             _running = false;

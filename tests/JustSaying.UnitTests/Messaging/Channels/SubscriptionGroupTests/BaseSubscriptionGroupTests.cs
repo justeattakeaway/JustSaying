@@ -42,7 +42,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected ISubscriptionGroup SystemUnderTest { get; private set; }
 
-        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
+        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
 
         protected ILoggerFactory LoggerFactory { get; }
         protected ILogger Logger { get; }
@@ -90,7 +90,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
                 HandlerMap.Add(queue.QueueName, typeof(SimpleMessage), msg => signallingHandler.Handle(msg as SimpleMessage));
             }
 
-            var cts = new CancellationTokenSource();
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
             var completion = SystemUnderTest.RunAsync(cts.Token);
 
             // wait until it's done
@@ -154,6 +154,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
                 .ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
                 .Returns(async _ =>
                 {
+                    Thread.Sleep(30);
                     var messages = await getMessages();
 
                     return new ReceiveMessageResponse

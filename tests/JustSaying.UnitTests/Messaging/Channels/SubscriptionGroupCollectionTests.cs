@@ -109,6 +109,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             ReceiveMessageResponse GetMessages()
             {
+                Thread.Sleep(30);
                 spy?.Invoke();
                 var message = new TestJustSayingMessage
                 {

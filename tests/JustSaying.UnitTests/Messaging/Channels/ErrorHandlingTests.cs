@@ -113,7 +113,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
         private static Task<List<Message>> GetErrorMessages(Action onMessageRequested)
         {
             onMessageRequested();
-            throw new OperationCanceledException();
+            throw new Exception();
         }
 
         private static ISqsQueue TestQueue(Func<Task<List<Message>>> getMessages)
