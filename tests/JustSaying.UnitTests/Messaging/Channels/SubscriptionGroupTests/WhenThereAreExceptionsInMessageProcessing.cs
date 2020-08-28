@@ -34,9 +34,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             Queues.Add(_queue);
             Handler.Handle(null).ReturnsForAnyArgs(true);
 
-            SerializationRegister
-                .DeserializeMessage(Arg.Any<string>())
-                .Returns(x => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing"));
+            SerializationRegister.DefaultDeserializedMessage = () =>
+                throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
         }
 
         protected override async Task WhenAsync()

@@ -4,6 +4,7 @@ using System.Threading;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using NSubstitute;
+using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -36,13 +37,14 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         [Fact]
         public void MessagesGetDeserializedByCorrectHandler()
         {
-            SerializationRegister.Received().DeserializeMessage(_messageBody);
+            SerializationRegister.ReceivedDeserializationRequests.ShouldAllBe(
+                msg => msg == _messageBody);
         }
 
         [Fact]
         public void ProcessingIsPassedToTheHandlerForCorrectMessage()
         {
-            Handler.Received().Handle(DeserializedMessage);
+            Handler.Received().Handle(SerializationRegister.DefaultDeserializedMessage());
         }
 
         [Fact]

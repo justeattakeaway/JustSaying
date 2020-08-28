@@ -7,7 +7,6 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
-using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
@@ -15,6 +14,7 @@ using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests.Support;
+using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
@@ -28,8 +28,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         protected IList<ISqsQueue> Queues;
         protected HandlerMap HandlerMap;
         protected IMessageMonitor Monitor;
-        protected SimpleMessage DeserializedMessage;
-        protected IMessageSerializationRegister SerializationRegister;
+        protected FakeSerializationRegister SerializationRegister;
         protected int ConcurrencyLimit = 8;
 
         protected IMessageLockAsync MessageLock
@@ -67,12 +66,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             Queues = new List<ISqsQueue>();
             Handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
             Monitor = Substitute.For<IMessageMonitor>();
-            SerializationRegister = Substitute.For<IMessageSerializationRegister>();
+            SerializationRegister = new FakeSerializationRegister();
             HandlerMap = new HandlerMap(Monitor, LoggerFactory);
-
-            DeserializedMessage = new SimpleMessage { RaisingComponent = "Component" };
-            SerializationRegister.DeserializeMessage(Arg.Any<string>())
-                .Returns(new MessageWithAttributes(DeserializedMessage, new MessageAttributes()));
 
             Given();
         }

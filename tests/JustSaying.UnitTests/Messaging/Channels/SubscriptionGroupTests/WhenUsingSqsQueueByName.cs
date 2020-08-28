@@ -74,7 +74,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         [Fact]
         public void HandlerReceivesMessage()
         {
-            Handler.Received().Handle(DeserializedMessage);
+            Handler.Received().Handle(SerializationRegister.DefaultDeserializedMessage());
         }
 
         protected static async Task<ReceiveMessageResponse> GenerateResponseMessage(string messageType, Guid messageId)

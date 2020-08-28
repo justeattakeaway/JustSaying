@@ -9,6 +9,7 @@ using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -80,11 +81,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         [Fact]
         public void MessageIsProcessed()
         {
-            SerializationRegister.Received()
-                .DeserializeMessage(_messageContentsRunning);
-
-            SerializationRegister.DidNotReceive()
-                .DeserializeMessage(_messageContentsAfterStop);
+            SerializationRegister.ReceivedDeserializationRequests.ShouldContain(_messageContentsRunning);
+            SerializationRegister.ReceivedDeserializationRequests.ShouldNotContain(_messageContentsAfterStop);
         }
     }
 }

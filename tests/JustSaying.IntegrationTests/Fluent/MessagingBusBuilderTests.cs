@@ -49,24 +49,21 @@ namespace JustSaying.IntegrationTests
             IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
             IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
-            using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
-            {
-                // Act
-                await listener.StartAsync(source.Token);
-                await publisher.StartAsync(source.Token);
+            using var source = new CancellationTokenSource(TimeSpan.FromSeconds(20));
 
-                var message = new QueueMessage();
+            // Act
+            await listener.StartAsync(source.Token);
+            await publisher.StartAsync(source.Token);
 
-                await publisher.PublishAsync(message, source.Token);
+            var message = new QueueMessage();
 
-                // Assert
-                while (!source.IsCancellationRequested && !QueueHandler.MessageIds.Contains(message.Id))
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(0.2), source.Token);
-                }
+            await publisher.PublishAsync(message, source.Token);
 
-                QueueHandler.MessageIds.ShouldContain(message.Id);
-            }
+            // Assert
+            await Patiently.AssertThatAsync(OutputHelper,
+                () => QueueHandler.MessageIds.Contains(message.Id));
+
+            QueueHandler.MessageIds.ShouldContain(message.Id);
         }
 
         [AwsFact]

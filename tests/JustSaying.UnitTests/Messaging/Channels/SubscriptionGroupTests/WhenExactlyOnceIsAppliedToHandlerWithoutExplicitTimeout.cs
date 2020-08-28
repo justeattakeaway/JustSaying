@@ -62,7 +62,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         [Fact]
         public void MessageIsLocked()
         {
-            var messageId = DeserializedMessage.Id.ToString();
+            var messageId = SerializationRegister.DefaultDeserializedMessage().Id.ToString();
 
             MessageLock.Received().TryAquireLockAsync(
                 Arg.Is<string>(a => a.Contains(messageId, StringComparison.OrdinalIgnoreCase)),
