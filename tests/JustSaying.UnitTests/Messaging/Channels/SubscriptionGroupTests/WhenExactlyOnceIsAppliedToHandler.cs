@@ -48,7 +48,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         {
             HandlerMap.Add(_queue.QueueName, () => Handler);
 
-            using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
 
             var completion = SystemUnderTest.RunAsync(cts.Token);
 
