@@ -1,3 +1,4 @@
+#pragma warning disable 618
 using System;
 using System.Threading.Tasks;
 using Amazon.Auth.AccessControlPolicy;
