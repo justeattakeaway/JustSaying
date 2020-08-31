@@ -1,46 +1,47 @@
-#pragma warning disable 618
 using System;
 using System.Threading.Tasks;
-using Amazon.Auth.AccessControlPolicy;
-using Amazon.Auth.AccessControlPolicy.ActionIdentifiers;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public class SqsPolicy
+    internal static class SqsPolicy
     {
-        private readonly string _policy;
-        public SqsPolicy(string policy)
+        internal static async Task SaveAsync(SqsPolicyDetails policyDetails, IAmazonSQS client)
         {
-            _policy = policy;
-        }
+            var topicArnWildcard = CreateTopicArnWildcard(policyDetails.SourceArn);
 
-        public static async Task SaveAsync(string sourceArn, string queueArn, Uri queueUri, IAmazonSQS client)
-        {
-            var topicArnWildcard = CreateTopicArnWildcard(sourceArn);
-            ActionIdentifier[] actions = { SQSActionIdentifiers.SendMessage };
+            var policyJson = $@"{{
+    ""Version"" : ""2012-10-17"",
+    ""Statement"" : [
+        {{
+            ""Sid"" : ""{Guid.NewGuid().ToString().Replace("-", "")}"",
+            ""Effect"" : ""Allow"",
+            ""Principal"" : {{
+                ""AWS"" : ""*""
+            }},
+            ""Action""    : ""sqs:SendMessage"",
+            ""Resource""  : ""{policyDetails.QueueArn}"",
+            ""Condition"" : {{
+                ""ArnLike"" : {{
+                    ""aws:SourceArn"" : ""{topicArnWildcard}""
+                }}
+            }}
+        }}
+    ]
+}}";
 
-            var sqsPolicy = new Policy()
-                .WithStatements(new Statement(Statement.StatementEffect.Allow)
-                    .WithPrincipals(Principal.AllUsers)
-                    .WithResources(new Resource(queueArn))
-                    .WithConditions(ConditionFactory.NewSourceArnCondition(topicArnWildcard))
-                    .WithActionIdentifiers(actions));
             var setQueueAttributesRequest = new SetQueueAttributesRequest
             {
-                QueueUrl = queueUri.AbsoluteUri,
+                QueueUrl = policyDetails.QueueUri.AbsoluteUri,
                 Attributes =
                 {
-                    ["Policy"] = sqsPolicy.ToJson()
+                    ["Policy"] = policyJson
                 }
             };
 
             await client.SetQueueAttributesAsync(setQueueAttributesRequest).ConfigureAwait(false);
         }
-
-
-        public override string ToString() => _policy;
 
         private static string CreateTopicArnWildcard(string topicArn)
         {
