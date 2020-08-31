@@ -67,8 +67,14 @@ namespace JustSaying.AwsTools.QueueCreation
                         queue.Uri,
                         queueConfig.FilterPolicy).ConfigureAwait(false);
 
+                    var sqsDetails = new SqsPolicyDetails
+                    {
+                        SourceArn = eventTopic.Arn,
+                        QueueArn = queue.Arn,
+                        QueueUri = queue.Uri
+                    };
                     await SqsPolicy
-                        .SaveAsync(eventTopic.Arn, queue.Arn, queue.Uri, sqsClient)
+                        .SaveAsync(sqsDetails, sqsClient)
                         .ConfigureAwait(false);
                 }
             }
