@@ -42,12 +42,14 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         protected ISubscriptionGroup SystemUnderTest { get; private set; }
 
         protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(500);
+        private ITestOutputHelper _outputHelper;
 
         protected ILoggerFactory LoggerFactory { get; }
         protected ILogger Logger { get; }
 
         public BaseSubscriptionGroupTests(ITestOutputHelper testOutputHelper)
         {
+            _outputHelper = testOutputHelper;
             LoggerFactory = testOutputHelper.ToLoggerFactory();
             Logger = LoggerFactory.CreateLogger(GetType());
         }
@@ -88,14 +90,14 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
             var completion = SystemUnderTest.RunAsync(cts.Token);
 
-            // wait until it's done
-            var doneOk = await TaskHelpers.WaitWithTimeoutAsync(doneSignal.Task);
+            await Patiently.AssertThatAsync(_outputHelper, async () =>
+            {
+                await doneSignal.Task;
+                return true;
+            });
 
             cts.Cancel();
-
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
-
-            doneOk.ShouldBeTrue("Timeout occured before done signal");
         }
 
         protected ISubscriptionGroup CreateSystemUnderTest()

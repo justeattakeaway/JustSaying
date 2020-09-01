@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using JustSaying.TestingFramework;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -30,7 +31,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             _sqsClient = queue.Client;
 
             Queues.Add(queue);
-            Handler.Handle(null)
+            Handler.Handle(new SimpleMessage())
                 .ReturnsForAnyArgs(true).AndDoes(ci => Interlocked.Increment(ref _callCount));
         }
 
