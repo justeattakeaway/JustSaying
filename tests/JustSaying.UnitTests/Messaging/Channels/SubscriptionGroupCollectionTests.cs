@@ -97,8 +97,6 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             bus.SetGroupSettings(defaultSubscriptionSettings, new Dictionary<string, SubscriptionGroupConfigBuilder>());
 
-            bus.SerializationRegister.AddSerializer<TestJustSayingMessage>();
-
             return bus;
         }
 
