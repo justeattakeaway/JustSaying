@@ -1,10 +1,12 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests.Support;
+using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -30,14 +32,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
             Queues.Add(_queue);
 
-            var messageLockResponse = new MessageLockResponse
-            {
-                DoIHaveExclusiveLock = true
-            };
-
-            MessageLock = Substitute.For<IMessageLockAsync>();
-            MessageLock.TryAquireLockAsync(Arg.Any<string>(), Arg.Any<TimeSpan>())
-                .Returns(messageLockResponse);
+            MessageLock = new FakeMessageLock();
 
             _handler = new ExactlyOnceSignallingHandler(_tcs);
             Handler = _handler;
@@ -64,9 +59,11 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         {
             var messageId = SerializationRegister.DefaultDeserializedMessage().Id.ToString();
 
-            MessageLock.Received().TryAquireLockAsync(
-                Arg.Is<string>(a => a.Contains(messageId, StringComparison.OrdinalIgnoreCase)),
-                TimeSpan.FromSeconds(_maximumTimeout));
+            var tempLockRequests = MessageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
+            tempLockRequests.Count().ShouldBeGreaterThan(0);
+            tempLockRequests.ShouldAllBe(pair =>
+                pair.key.Contains(messageId, StringComparison.OrdinalIgnoreCase) &&
+                pair.howLong == TimeSpan.FromSeconds(_maximumTimeout));
         }
 
         [Fact]

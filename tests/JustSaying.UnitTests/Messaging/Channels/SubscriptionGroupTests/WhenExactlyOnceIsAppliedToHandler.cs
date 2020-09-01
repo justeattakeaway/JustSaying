@@ -1,10 +1,12 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests.Support;
+using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -15,15 +17,14 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
     public class WhenExactlyOnceIsAppliedToHandler : BaseSubscriptionGroupTests
     {
         private ISqsQueue _queue;
-        private int _expectedTimeout = 5;
+        private readonly int _expectedTimeout = 5;
         private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
 
         private ExplicitExactlyOnceSignallingHandler _handler;
 
         public WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
-        {
-        }
+        { }
 
         protected override void Given()
         {
@@ -36,9 +37,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
                 DoIHaveExclusiveLock = true
             };
 
-            MessageLock = Substitute.For<IMessageLockAsync>();
-            MessageLock.TryAquireLockAsync(Arg.Any<string>(), Arg.Any<TimeSpan>())
-                .Returns(messageLockResponse);
+            MessageLock = new FakeMessageLock();
 
             _handler = new ExplicitExactlyOnceSignallingHandler(_tcs);
             Handler = _handler;
@@ -65,13 +64,15 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         }
 
         [Fact]
-        public async Task MessageIsLocked()
+        public void MessageIsLocked()
         {
             var messageId = SerializationRegister.DefaultDeserializedMessage().Id.ToString();
 
-            await MessageLock.Received().TryAquireLockAsync(
-                Arg.Is<string>(a => a.Contains(messageId, StringComparison.OrdinalIgnoreCase)),
-                TimeSpan.FromSeconds(_expectedTimeout));
+            var tempLockRequests = MessageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
+            tempLockRequests.Count().ShouldBeGreaterThan(0);
+            tempLockRequests.ShouldAllBe(pair =>
+                pair.key.Contains(messageId, StringComparison.OrdinalIgnoreCase) &&
+                pair.howLong == TimeSpan.FromSeconds(_expectedTimeout));
         }
     }
 }

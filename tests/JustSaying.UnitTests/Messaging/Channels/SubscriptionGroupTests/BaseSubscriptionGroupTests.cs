@@ -31,9 +31,9 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         protected FakeSerializationRegister SerializationRegister;
         protected int ConcurrencyLimit = 8;
 
-        protected IMessageLockAsync MessageLock
+        protected FakeMessageLock MessageLock
         {
-            get => HandlerMap.MessageLock;
+            get => (FakeMessageLock) HandlerMap.MessageLock;
             set => HandlerMap.MessageLock = value;
         }
 
