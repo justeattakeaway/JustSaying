@@ -93,7 +93,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 .WithDefaultMultiplexerCapacity(1)
                 .WithDefaultPrefetch(1)
                 .WithDefaultBufferSize(1)
-                .WithDefaultConcurrencyLimit(1); // N
+                .WithDefaultConcurrencyLimit(1);
 
             bus.SetGroupSettings(defaultSubscriptionSettings, new Dictionary<string, SubscriptionGroupConfigBuilder>());
 
