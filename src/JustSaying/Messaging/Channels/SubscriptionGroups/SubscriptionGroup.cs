@@ -56,8 +56,8 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
             var completionTasks = new List<Task>();
 
-            completionTasks.AddRange(_subscribers.Select(subscriber => subscriber.RunAsync(stoppingToken)));
             completionTasks.Add(_multiplexer.RunAsync(stoppingToken));
+            completionTasks.AddRange(_subscribers.Select(subscriber => subscriber.RunAsync(stoppingToken)));
             completionTasks.AddRange(_receiveBuffers.Select(buffer => buffer.RunAsync(stoppingToken)));
 
             return Task.WhenAll(completionTasks);
