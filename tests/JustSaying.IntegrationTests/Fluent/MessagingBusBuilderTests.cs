@@ -61,9 +61,9 @@ namespace JustSaying.IntegrationTests
 
             // Assert
             await Patiently.AssertThatAsync(OutputHelper,
-                () => QueueHandler.MessageIds.Contains(message.Id));
+                () => QueueHandler.MessageIds.ShouldContain(message.Id));
 
-            QueueHandler.MessageIds.ShouldContain(message.Id);
+
         }
 
         [AwsFact]

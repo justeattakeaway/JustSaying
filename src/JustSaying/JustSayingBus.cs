@@ -77,16 +77,19 @@ namespace JustSaying
             _subscriptionGroupSettings =
                 new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
             _defaultSubscriptionGroupSettings = new SubscriptionGroupSettingsBuilder();
-
         }
 
         public void AddQueue(string subscriptionGroup, ISqsQueue queue)
         {
             if (string.IsNullOrWhiteSpace(subscriptionGroup))
+            {
                 throw new ArgumentException("Cannot be null or empty.", nameof(subscriptionGroup));
+            }
 
             if (queue == null)
+            {
                 throw new ArgumentNullException(nameof(queue));
+            }
 
             SubscriptionGroupConfigBuilder builder = _subscriptionGroupSettings.GetOrAdd(
                 subscriptionGroup,
@@ -190,7 +193,7 @@ namespace JustSaying
             }
             catch (OperationCanceledException)
             {
-                // Don't bubble cancellation up
+                // Don't bubble cancellation up to Completion task
             }
         }
 

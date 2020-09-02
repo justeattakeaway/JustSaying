@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Shouldly;
 using Xunit.Abstractions;
@@ -8,6 +9,19 @@ namespace JustSaying.TestingFramework
 {
     public static class Patiently
     {
+        public static async Task AssertThatAsync(
+            ITestOutputHelper output,
+            Action func,
+            [System.Runtime.CompilerServices.CallerMemberName]
+            string memberName = "")
+            => await AssertThatAsync(output,
+                () =>
+                {
+                    func();
+                    return true;
+                },
+                memberName).ConfigureAwait(false);
+
         public static async Task AssertThatAsync(
             ITestOutputHelper output,
             Func<bool> func,
@@ -26,7 +40,10 @@ namespace JustSaying.TestingFramework
         public static async Task AssertThatAsync(ITestOutputHelper output, Func<Task<bool>> func) =>
             await AssertThatAsync(output, func, 5.Seconds()).ConfigureAwait(false);
 
-        public static async Task AssertThatAsync(ITestOutputHelper output, Func<Task<bool>> func, TimeSpan timeout)
+        public static async Task AssertThatAsync(
+            ITestOutputHelper output,
+            Func<Task<bool>> func,
+            TimeSpan timeout)
         {
             var started = DateTime.Now;
             var timeoutAt = DateTime.Now + timeout;
@@ -55,23 +72,31 @@ namespace JustSaying.TestingFramework
             result.ShouldBeTrue();
         }
 
-        private static async Task AssertThatAsyncInner(ITestOutputHelper output, Func<bool> func, TimeSpan timeout, string description)
+        private static async Task AssertThatAsyncInner(
+            ITestOutputHelper output,
+            Func<bool> func,
+            TimeSpan timeout,
+            string description)
         {
-            var started = DateTime.Now;
-            var timeoutAt = DateTime.Now + timeout;
+            var watch = new Stopwatch();
+            watch.Start();
             do
             {
-                if (func.Invoke())
+                try
                 {
-                    return;
+                    if (func.Invoke())
+                    {
+                        return;
+                    }
                 }
+                catch (XunitException)
+                { }
 
                 await Task.Delay(50.Milliseconds()).ConfigureAwait(false);
 
-                // TODO Use ITestOutputHelper
                 output.WriteLine(
-                    $"Waiting for {(DateTime.Now - started).TotalMilliseconds} ms - Still waiting for {description}.");
-            } while (DateTime.Now < timeoutAt);
+                    $"Waiting for {watch.Elapsed.TotalMilliseconds} ms - Still waiting for {description}.");
+            } while (watch.Elapsed < timeout);
 
             func.Invoke().ShouldBeTrue();
         }
