@@ -127,7 +127,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             }
             catch (MessageFormatNotSupportedException ex)
             {
-                _logger.LogTrace(
+                _logger.LogTrace(ex,
                     "Could not handle message with Id '{MessageId}' because a deserializer for the content is not configured. Message body: '{MessageBody}'.",
                     messageContext.Message.MessageId,
                     messageContext.Message.Body);
