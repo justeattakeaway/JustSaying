@@ -49,6 +49,16 @@ jobs:
         file: ./artifacts/coverage.cobertura.xml
         flags: ${{ matrix.os_name }}
 
+    - name: Run integration tests
+      if: ${{ runner.os == 'linux' }}
+      run: |
+        goaws_tag=latest
+        docker pull pafortin/goaws:$goaws_tag
+        docker run -d --name goaws -p 4100:4100 pafortin/goaws:$goaws_tag
+        export AWS_SERVICE_URL="http://localhost:4100"
+        
+        dotnet test ./tests/JustSaying.IntegrationTests/JustSaying.IntegrationTests.csproj --configuration Release --logger:GitHubActions || exit 1
+
     - name: Publish NuGet packages
       uses: actions/upload-artifact@v1
       with:
