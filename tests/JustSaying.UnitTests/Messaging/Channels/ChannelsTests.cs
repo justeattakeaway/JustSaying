@@ -39,7 +39,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
         public ITestOutputHelper OutputHelper { get; set; }
 
-        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
 
         [Fact]
         public async Task QueueCanBeAssignedToOnePump()
@@ -317,14 +317,16 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             var queue = TestQueue();
             var dispatcher = new FakeDispatcher();
-            var bus = CreateSubscriptionGroup(new[] { queue }, dispatcher);
+            var group = CreateSubscriptionGroup(new[] { queue }, dispatcher);
 
-            var cts = new CancellationTokenSource(TimeoutPeriod);
+            var cts = new CancellationTokenSource();
 
-            var task1 = bus.RunAsync(cts.Token);
-            var task2 = bus.RunAsync(cts.Token);
+            var task1 = group.RunAsync(cts.Token);
+            var task2 = group.RunAsync(cts.Token);
 
             Assert.True(ReferenceEquals(task1, task2));
+
+            cts.Cancel();
         }
 
         private static ISqsQueue TestQueue(Action spy = null)
