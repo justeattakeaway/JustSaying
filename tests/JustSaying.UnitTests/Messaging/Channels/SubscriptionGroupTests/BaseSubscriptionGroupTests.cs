@@ -151,8 +151,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
                 .ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
                 .Returns(async _ =>
                 {
-                    Thread.Sleep(30);
                     var messages = await getMessages();
+                    await Task.Delay(30);
 
                     return new ReceiveMessageResponse
                     {
