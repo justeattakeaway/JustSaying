@@ -76,8 +76,8 @@ namespace JustSaying.UnitTests.Messaging.Policies
         {
             async Task<ReceiveMessageResponse> GetMessages()
             {
-                await Task.Delay(TimeSpan.FromMilliseconds(5)).ConfigureAwait(false);
                 spy?.Invoke();
+                await Task.Delay(TimeSpan.FromMilliseconds(5)).ConfigureAwait(false);
                 throw new InvalidOperationException();
             }
 

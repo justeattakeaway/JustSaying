@@ -42,17 +42,17 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             JustSaying.JustSayingBus bus = CreateBus();
 
-            ISqsQueue queue1 = TestQueue(bus.SerializationRegister, queueName1);
-            ISqsQueue queue2 = TestQueue(bus.SerializationRegister, queueName2);
-
-            bus.AddQueue(group1, queue1);
-            bus.AddQueue(group2, queue2);
-
             var handler1 = new InspectableHandler<TestJustSayingMessage>();
             var handler2 = new InspectableHandler<TestJustSayingMessage>();
 
             bus.AddMessageHandler(queueName1, () => handler1);
             bus.AddMessageHandler(queueName2, () => handler2);
+
+            ISqsQueue queue1 = TestQueue(bus.SerializationRegister, queueName1);
+            ISqsQueue queue2 = TestQueue(bus.SerializationRegister, queueName2);
+
+            bus.AddQueue(group1, queue1);
+            bus.AddQueue(group2, queue2);
 
             using var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
