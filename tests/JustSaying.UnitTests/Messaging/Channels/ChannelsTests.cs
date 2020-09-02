@@ -370,9 +370,10 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 LoggerFactory.CreateLogger<MessageReceiveBuffer>());
         }
 
-        private static IMultiplexerSubscriber CreateSubscriber(IMessageDispatcher dispatcher)
+        private IMultiplexerSubscriber CreateSubscriber(IMessageDispatcher dispatcher)
         {
-            return new MultiplexerSubscriber(dispatcher);
+            return new MultiplexerSubscriber(dispatcher, Guid.NewGuid().ToString(),
+                LoggerFactory.CreateLogger<MultiplexerSubscriber>());
         }
 
         private ISubscriptionGroup CreateSubscriptionGroup(
