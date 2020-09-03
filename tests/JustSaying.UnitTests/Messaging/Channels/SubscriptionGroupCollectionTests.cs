@@ -105,10 +105,10 @@ namespace JustSaying.UnitTests.Messaging.Channels
             string queueName,
             Action spy = null)
         {
-            ReceiveMessageResponse GetMessages()
+            async Task<ReceiveMessageResponse> GetMessages()
             {
-                Thread.Sleep(30);
                 spy?.Invoke();
+                await Task.Delay(30);
                 var message = new TestJustSayingMessage
                 {
                     QueueName = queueName,

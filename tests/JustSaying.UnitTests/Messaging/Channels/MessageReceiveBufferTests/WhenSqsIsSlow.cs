@@ -23,11 +23,9 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
 
         private int _callCount;
         private readonly MessageReceiveBuffer _messageReceiveBuffer;
-        private readonly ITestOutputHelper _outputHelper;
 
         public WhenSqsIsSlow(ITestOutputHelper testOutputHelper)
         {
-            _outputHelper = testOutputHelper;
             var loggerFactory = testOutputHelper.ToLoggerFactory();
 
             MiddlewareBase<GetMessagesContext, IList<Message>> sqsMiddleware =
@@ -98,7 +96,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
 
             // Make sure that number makes sense
             messagesRead.ShouldBeGreaterThan(0);
-            messagesRead.ShouldBe(_callCount);
+            messagesRead.ShouldBeLessThanOrEqualTo(_callCount);
         }
     }
 }

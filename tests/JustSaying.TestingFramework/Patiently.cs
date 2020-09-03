@@ -45,8 +45,8 @@ namespace JustSaying.TestingFramework
             Func<Task<bool>> func,
             TimeSpan timeout)
         {
-            var started = DateTime.Now;
-            var timeoutAt = DateTime.Now + timeout;
+            var watch = new Stopwatch();
+            watch.Start();
             do
             {
                 try
@@ -63,10 +63,9 @@ namespace JustSaying.TestingFramework
 
                 await Task.Delay(50.Milliseconds()).ConfigureAwait(false);
 
-                // TODO Use ITestOutputHelper
                 output.WriteLine(
-                    $"Waiting for {(DateTime.Now - started).TotalMilliseconds} ms - Still Checking.");
-            } while (DateTime.Now < timeoutAt);
+                    $"Waiting for {watch.Elapsed.TotalMilliseconds} ms - Still Checking.");
+            } while (watch.Elapsed < timeout);
 
             var result = await func.Invoke().ConfigureAwait(false);
             result.ShouldBeTrue();
@@ -89,6 +88,8 @@ namespace JustSaying.TestingFramework
                         return;
                     }
                 }
+                catch (ShouldAssertException)
+                { }
                 catch (XunitException)
                 { }
 

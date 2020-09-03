@@ -4,6 +4,8 @@ using JustSaying.Messaging.MessageHandling;
 
 namespace JustSaying.TestingFramework
 {
+
+
     public class InspectableHandler<T> : IHandlerAsync<T>
     {
         public InspectableHandler()
@@ -12,6 +14,7 @@ namespace JustSaying.TestingFramework
         }
 
         public IList<T> ReceivedMessages { get; }
+
         public Task<bool> Handle(T message)
         {
             ReceivedMessages.Add(message);
