@@ -79,6 +79,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     // Wait for a reasonble time before asserting whether the last message has been scheduled.
                     await Task.Delay(baseSleep * 2, cancellationToken);
 
+                    handler.ReceivedMessages.Count.ShouldBeGreaterThan(10);
                     handler.ReceivedMessages.ShouldBeInOrder(SortDirection.Ascending);
                 });
         }
