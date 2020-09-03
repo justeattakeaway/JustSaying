@@ -56,9 +56,11 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             }
 
             _running = true;
-            var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+            var cts = new CancellationTokenSource();
 
             var completion = SystemUnderTest.RunAsync(cts.Token);
+
+            cts.CancelAfter(TimeSpan.FromSeconds(2));
 
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
             _running = false;

@@ -197,16 +197,16 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             // need to start the multiplexer before calling Messages
 
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            using var cts = new CancellationTokenSource();
 
             // Act and Assert
             var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
             var bufferCompletion = buffer.RunAsync(cts.Token);
 
+            cts.CancelAfter(TimeSpan.FromSeconds(3));
+
             await multiplexerCompletion;
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => bufferCompletion);
-
-            await Task.Delay(TimeSpan.FromSeconds(1));
 
             await Patiently.AssertThatAsync(OutputHelper,
                 () =>
