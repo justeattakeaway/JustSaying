@@ -34,6 +34,8 @@ namespace JustSaying.IntegrationTests
         [AwsFact]
         public async Task Can_Create_Messaging_Bus_Fluently_For_A_Queue()
         {
+            var queueName = Guid.NewGuid().ToString();
+
             // Arrange
             var services = new ServiceCollection()
                 .AddLogging((p) => p.AddXUnit(OutputHelper))
@@ -44,8 +46,8 @@ namespace JustSaying.IntegrationTests
                                 options.WithBasicCredentials("accessKey", "secretKey")
                                     .WithServiceUri(TestEnvironment.SimulatorUrl))
                             .Messaging((options) => options.WithRegion("eu-west-1"))
-                            .Publications((options) => options.WithQueue<QueueMessage>())
-                            .Subscriptions((options) => options.ForQueue<QueueMessage>())
+                            .Publications((options) => options.WithQueue<QueueMessage>(queueName))
+                            .Subscriptions((options) => options.ForQueue<QueueMessage>(queueName))
                             .Services((options) => options.WithMessageMonitoring(() => new MyMonitor()));
                     })
                 .AddSingleton<IMessageStore<QueueMessage>, QueueStore>()
@@ -76,6 +78,8 @@ namespace JustSaying.IntegrationTests
         [AwsFact]
         public async Task Can_Create_Messaging_Bus_Fluently_For_A_Topic()
         {
+            var topicName = Guid.NewGuid().ToString();
+
             // Arrange
             var services = new ServiceCollection()
                 .AddLogging((p) => p.AddXUnit(OutputHelper))
@@ -88,7 +92,7 @@ namespace JustSaying.IntegrationTests
                                     .WithServiceUri(TestEnvironment.SimulatorUrl))
                             .Messaging((options) => options.WithRegion("eu-west-1"))
                             .Publications((options) => options.WithTopic<TopicMessage>())
-                            .Subscriptions((options) => options.ForTopic<TopicMessage>());
+                            .Subscriptions((options) => options.ForTopic<TopicMessage>(topicName));
                     })
                 .AddSingleton<IMessageStore<TopicMessage>, TestMessageStore<TopicMessage>>()
                 .AddJustSayingHandler<TopicMessage, MessageStoringHandler<TopicMessage>>();
@@ -207,10 +211,12 @@ namespace JustSaying.IntegrationTests
 
         private sealed class QueueContributor : IMessageBusConfigurationContributor
         {
+            public string QueueName { get; } = Guid.NewGuid().ToString();
+
             public void Configure(MessagingBusBuilder builder)
             {
-                builder.Publications((p) => p.WithQueue<QueueMessage>())
-                    .Subscriptions((p) => p.ForQueue<QueueMessage>());
+                builder.Publications((p) => p.WithQueue<QueueMessage>(QueueName))
+                    .Subscriptions((p) => p.ForQueue<QueueMessage>(QueueName));
             }
         }
 
