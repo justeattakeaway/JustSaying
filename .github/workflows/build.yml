@@ -57,7 +57,7 @@ jobs:
         docker run -d --name goaws -p 4100:4100 pafortin/goaws:$goaws_tag
         export AWS_SERVICE_URL="http://localhost:4100"
         
-        dotnet test ./tests/JustSaying.IntegrationTests/JustSaying.IntegrationTests.csproj --configuration Release --logger:GitHubActions || exit 1
+        dotnet test ./tests/JustSaying.IntegrationTests/JustSaying.IntegrationTests.csproj --configuration Release --logger:"GitHubActions;report-warnings=false" || exit 1
 
     - name: Publish NuGet packages
       uses: actions/upload-artifact@v1
