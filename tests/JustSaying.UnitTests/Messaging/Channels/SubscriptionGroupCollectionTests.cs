@@ -22,14 +22,15 @@ namespace JustSaying.UnitTests.Messaging.Channels
     {
         private ILoggerFactory LoggerFactory { get; }
         private IMessageMonitor MessageMonitor { get; }
+        private ITestOutputHelper _outputHelper;
+
 
         public SubscriptionGroupCollectionTests(ITestOutputHelper testOutputHelper)
         {
+            _outputHelper = testOutputHelper;
             LoggerFactory = testOutputHelper.ToLoggerFactory();
             MessageMonitor = new LoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
         }
-
-        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
 
         [Fact]
         public async Task Add_Different_Handler_Per_Queue()
@@ -55,20 +56,25 @@ namespace JustSaying.UnitTests.Messaging.Channels
             bus.AddQueue(group2, queue2);
 
             using var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeoutPeriod);
 
             // Act
             await bus.StartAsync(cts.Token);
+
+            await Patiently.AssertThatAsync(_outputHelper,
+                () =>
+                {
+                    handler1.ReceivedMessages.Count.ShouldBeGreaterThan(0);
+                    handler2.ReceivedMessages.Count.ShouldBeGreaterThan(0);
+                });
+
+            cts.Cancel();
             await bus.Completion;
 
-            // Assert
-            handler1.ReceivedMessages.Count.ShouldBeGreaterThan(0);
             foreach (var message in handler1.ReceivedMessages)
             {
                 message.QueueName.ShouldBe(queueName1);
             }
 
-            handler2.ReceivedMessages.Count.ShouldBeGreaterThan(0);
             foreach (var message in handler2.ReceivedMessages)
             {
                 message.QueueName.ShouldBe(queueName2);
