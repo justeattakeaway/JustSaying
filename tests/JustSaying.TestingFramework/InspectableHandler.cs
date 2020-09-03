@@ -15,7 +15,7 @@ namespace JustSaying.TestingFramework
 
         public IList<T> ReceivedMessages { get; }
 
-        public Task<bool> Handle(T message)
+        public virtual Task<bool> Handle(T message)
         {
             ReceivedMessages.Add(message);
             return Task.FromResult(true);
