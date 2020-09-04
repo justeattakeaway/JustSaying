@@ -19,8 +19,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         public WhenThereAreExceptionsInMessageProcessing(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
-        {
-        }
+        { }
 
         protected override void Given()
         {
@@ -41,20 +40,11 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
                 throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
         }
 
-        protected override async Task WhenAsync()
-        {
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeoutPeriod);
-
-            var completion = SystemUnderTest.RunAsync(cts.Token);
-
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
-        }
-
         [Fact]
-        public void TheListenerDoesNotDie()
+        public async Task TheListenerDoesNotDie()
         {
-            _callCount.ShouldBeGreaterThan(1);
+            await Patiently.AssertThatAsync(OutputHelper,
+                () => _callCount.ShouldBeGreaterThan(1));
         }
     }
 }

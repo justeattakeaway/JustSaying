@@ -39,7 +39,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected ISubscriptionGroup SystemUnderTest { get; private set; }
 
-        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(500);
+        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(2);
 
         protected ILoggerFactory LoggerFactory { get; }
         protected ILogger Logger { get; }
@@ -76,7 +76,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         // Default implementation
         protected virtual async Task WhenAsync()
         {
-
             foreach (ISqsQueue queue in Queues)
             {
                 HandlerMap.Add(queue.QueueName,
@@ -88,7 +87,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             var completion = SystemUnderTest.RunAsync(cts.Token);
 
             await Patiently.AssertThatAsync(OutputHelper,
-                () => Handler.ReceivedMessages.Any());
+                () => Handler.ReceivedMessages.Any() || cts.IsCancellationRequested);
 
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
         }
