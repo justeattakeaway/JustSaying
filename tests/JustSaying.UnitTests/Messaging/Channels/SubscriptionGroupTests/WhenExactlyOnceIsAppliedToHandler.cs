@@ -14,13 +14,16 @@ using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
+    [ExactlyOnce(TimeOut = 5)]
+    public class ExactlyOnceHandler : InspectableHandler<SimpleMessage>
+    {
+
+    }
+
     public class WhenExactlyOnceIsAppliedToHandler : BaseSubscriptionGroupTests
     {
         private ISqsQueue _queue;
         private readonly int _expectedTimeout = 5;
-        private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
-
-        private ExplicitExactlyOnceSignallingHandler _handler;
 
         public WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
@@ -28,19 +31,13 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected override void Given()
         {
+            Handler = new ExactlyOnceHandler();
+
             _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
 
             Queues.Add(_queue);
 
-            var messageLockResponse = new MessageLockResponse
-            {
-                DoIHaveExclusiveLock = true
-            };
-
             MessageLock = new FakeMessageLock();
-
-            _handler = new ExplicitExactlyOnceSignallingHandler(_tcs);
-            Handler = _handler;
         }
 
         protected override async Task WhenAsync()
@@ -52,7 +49,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             var completion = SystemUnderTest.RunAsync(cts.Token);
 
             // wait until it's done
-            await TaskHelpers.WaitWithTimeoutAsync(_tcs.Task);
+            await Patiently.AssertThatAsync(OutputHelper,
+                () => Handler.ReceivedMessages.Any());
 
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
         }
@@ -60,7 +58,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         [Fact]
         public void ProcessingIsPassedToTheHandler()
         {
-            _handler.HandleWasCalled.ShouldBeTrue();
+            Handler.ReceivedMessages.ShouldNotBeEmpty();
         }
 
         [Fact]

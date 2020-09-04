@@ -27,8 +27,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         protected TrackingLoggingMonitor Monitor;
         protected FakeSerializationRegister SerializationRegister;
         protected int ConcurrencyLimit = 8;
-        private readonly ITestOutputHelper _outputHelper;
 
+        public ITestOutputHelper OutputHelper { get; }
         protected FakeMessageLock MessageLock
         {
             get => (FakeMessageLock) HandlerMap.MessageLock;
@@ -46,7 +46,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         public BaseSubscriptionGroupTests(ITestOutputHelper testOutputHelper)
         {
-            _outputHelper = testOutputHelper;
+            OutputHelper = testOutputHelper;
             LoggerFactory = testOutputHelper.ToLoggerFactory();
             Logger = LoggerFactory.CreateLogger(GetType());
         }
@@ -89,7 +89,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
             var completion = SystemUnderTest.RunAsync(cts.Token);
 
-            await Patiently.AssertThatAsync(_outputHelper,
+            await Patiently.AssertThatAsync(OutputHelper,
                 async () =>
                 {
                     await doneSignal.Task;
