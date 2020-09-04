@@ -76,30 +76,24 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         // Default implementation
         protected virtual async Task WhenAsync()
         {
-            var doneSignal = new TaskCompletionSource<object>();
-            var signallingHandler = new SignallingHandler<SimpleMessage>(doneSignal, Handler);
 
             foreach (ISqsQueue queue in Queues)
             {
                 HandlerMap.Add(queue.QueueName,
                     typeof(SimpleMessage),
-                    msg => signallingHandler.Handle(msg as SimpleMessage));
+                    msg => Handler.Handle(msg as SimpleMessage));
             }
 
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
             var completion = SystemUnderTest.RunAsync(cts.Token);
 
             await Patiently.AssertThatAsync(OutputHelper,
-                async () =>
-                {
-                    await doneSignal.Task;
-                    return true;
-                });
+                () => Handler.ReceivedMessages.Any());
 
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
         }
 
-        protected ISubscriptionGroup CreateSystemUnderTest()
+        private ISubscriptionGroup CreateSystemUnderTest()
         {
             var messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
             var messageContextAccessor = Substitute.For<IMessageContextAccessor>();
