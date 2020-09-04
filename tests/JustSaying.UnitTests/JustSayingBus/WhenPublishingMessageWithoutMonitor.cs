@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -36,8 +37,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public void SettingANewMonitorIsAccepted()
         {
-            SystemUnderTest.Monitor = new CustomMonitor();
-            SystemUnderTest.Monitor.ShouldBeAssignableTo<CustomMonitor>();
+            SystemUnderTest.Monitor = new TrackingLoggingMonitor(NullLogger.Instance);
+            SystemUnderTest.Monitor.ShouldBeAssignableTo<TrackingLoggingMonitor>();
         }
     }
 }

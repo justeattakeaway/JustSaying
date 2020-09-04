@@ -11,7 +11,7 @@
         {
           "BufferSize": 20,
           "QueueName": "TestQueueA",
-          "Region": "",
+          "Region": "fake-region",
           "Prefetch": 5,
           "BackoffStrategyName": null
         }
@@ -28,7 +28,7 @@
         {
           "BufferSize": 10,
           "QueueName": "TestQueueB",
-          "Region": "",
+          "Region": "fake-region",
           "Prefetch": 10,
           "BackoffStrategyName": null
         }

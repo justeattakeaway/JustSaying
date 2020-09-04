@@ -4,6 +4,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.TestingFramework;
 using NSubstitute;
+using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -11,7 +12,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
     public class WhenMessageHandlingFails : BaseSubscriptionGroupTests
     {
-        private IAmazonSQS _sqsClient;
+        private FakeAmazonSqs _sqsClient;
 
         public WhenMessageHandlingFails(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
@@ -21,29 +22,28 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         protected override void Given()
         {
             var queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
-            _sqsClient = queue.Client;
+            _sqsClient = queue.FakeClient;
 
             Queues.Add(queue);
-            Handler.Handle(Arg.Any<SimpleMessage>()).ReturnsForAnyArgs(false);
+            Handler.ShouldSucceed = false;
         }
 
         [Fact]
         public void MessageHandlerWasCalled()
         {
-            Handler.ReceivedWithAnyArgs().Handle(Arg.Any<SimpleMessage>());
+            Handler.ReceivedMessages.ShouldNotBeEmpty();
         }
 
         [Fact]
         public void FailedMessageIsNotRemovedFromQueue()
         {
-            // The un-handled one is however.
-            _sqsClient.DidNotReceiveWithAnyArgs().DeleteMessageAsync(Arg.Any<DeleteMessageRequest>(), Arg.Any<CancellationToken>());
+            _sqsClient.DeleteMessageRequests.ShouldBeEmpty();
         }
 
         [Fact]
         public void ExceptionIsNotLoggedToMonitor()
         {
-            Monitor.DidNotReceiveWithAnyArgs().HandleException(Arg.Any<Type>());
+            Monitor.HandledExceptions.ShouldBeEmpty();
         }
     }
 }

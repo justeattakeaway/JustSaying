@@ -13,26 +13,20 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
     public class WhenMessageHandlingSucceeds : BaseSubscriptionGroupTests
     {
-        private IAmazonSQS _sqsClient;
+        private FakeAmazonSqs _sqsClient;
         private string _messageBody = "Expected Message Body";
-        private int _callCount;
 
         public WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
-        {
-        }
+        { }
 
         protected override void Given()
         {
-            var queue = CreateSuccessfulTestQueue("TestQueue", () =>
-            {
-                return new List<Message> { new TestMessage { Body = _messageBody } };
-            });
-            _sqsClient = queue.Client;
+            var queue = CreateSuccessfulTestQueue("TestQueue",
+                () => new List<Message> { new TestMessage { Body = _messageBody } });
+            _sqsClient = queue.FakeClient;
 
             Queues.Add(queue);
-            Handler.Handle(new SimpleMessage())
-                .ReturnsForAnyArgs(true).AndDoes(ci => Interlocked.Increment(ref _callCount));
         }
 
         [Fact]
@@ -45,25 +39,29 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         [Fact]
         public void ProcessingIsPassedToTheHandlerForCorrectMessage()
         {
-            Handler.Received().Handle(SerializationRegister.DefaultDeserializedMessage());
+            Handler.ReceivedMessages.ShouldContain(SerializationRegister.DefaultDeserializedMessage());
         }
 
         [Fact]
         public void AllMessagesAreClearedFromQueue()
         {
-            _sqsClient.Received(_callCount).DeleteMessageAsync(Arg.Any<DeleteMessageRequest>(), Arg.Any<CancellationToken>());
+            var numberOfMessagesHandled = Handler.ReceivedMessages.Count;
+            _sqsClient.DeleteMessageRequests.Count.ShouldBe(numberOfMessagesHandled);
         }
 
         [Fact]
         public void ReceiveMessageTimeStatsSent()
         {
-            Monitor.Received().ReceiveMessageTime(Arg.Any<TimeSpan>(), Arg.Any<string>(), Arg.Any<string>());
+            var numberOfMessagesHandled = Handler.ReceivedMessages.Count;
+
+            // The receive buffer might receive messages that aren't handled before shutdown
+            Monitor.ReceiveMessageTimes.Count.ShouldBeGreaterThanOrEqualTo(numberOfMessagesHandled);
         }
 
         [Fact]
         public void ExceptionIsNotLoggedToMonitor()
         {
-            Monitor.DidNotReceiveWithAnyArgs().HandleException(Arg.Any<Type>());
+            Monitor.HandledExceptions.ShouldBeEmpty();
         }
     }
 }

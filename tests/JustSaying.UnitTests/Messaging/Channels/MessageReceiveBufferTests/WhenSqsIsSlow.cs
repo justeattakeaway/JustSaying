@@ -34,7 +34,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
             var queue = Substitute.For<ISqsQueue>();
             queue.Uri.Returns(new Uri("http://test.com"));
             queue.Client.Returns(sqsClient);
-            var monitor = new TestingFramework.LoggingMonitor(
+            var monitor = new TestingFramework.TrackingLoggingMonitor(
                 loggerFactory.CreateLogger("Monitor"));
 
             sqsClient.ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())

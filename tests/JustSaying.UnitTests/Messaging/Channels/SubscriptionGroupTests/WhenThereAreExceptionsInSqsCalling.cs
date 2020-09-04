@@ -24,19 +24,14 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected override void Given()
         {
-            _queue = CreateSuccessfulTestQueue("TestQueue", async () => await ExceptionOnFirstCall());
-            _queue
-                .RegionSystemName
-                .Returns("RegionSystemName");
-
+            _queue = CreateSuccessfulTestQueue("TestQueue", ExceptionOnFirstCall);
             Queues.Add(_queue);
-            Handler.Handle(null).ReturnsForAnyArgs(true);
 
             SerializationRegister.DefaultDeserializedMessage =
                 () => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
         }
 
-        private Task<List<Message>> ExceptionOnFirstCall()
+        private IEnumerable<Message> ExceptionOnFirstCall()
         {
             _callCount++;
             if (_callCount == 1)
@@ -44,7 +39,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
                 throw new TestException("testing the failure on first call");
             }
 
-            return Task.FromResult(new List<Message>());
+            return new List<Message>();
         }
 
         protected override async Task WhenAsync()

@@ -34,7 +34,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             OutputHelper = testOutputHelper;
             LoggerFactory = testOutputHelper.ToLoggerFactory();
-            MessageMonitor = new LoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
+            MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
         }
 
         public ITestOutputHelper OutputHelper { get; set; }

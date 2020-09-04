@@ -5,7 +5,7 @@ using JustSaying.TestingFramework;
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests.Support
 {
     [ExactlyOnce]
-    public class ExactlyOnceSignallingHandler : IHandlerAsync<SimpleMessage>
+    public class ExactlyOnceSignallingHandler : InspectableHandler<SimpleMessage>
     {
         private readonly TaskCompletionSource<object> _doneSignal;
 
@@ -14,7 +14,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests.Support
             _doneSignal = doneSignal;
         }
 
-        public Task<bool> Handle(SimpleMessage message)
+        public override Task<bool> Handle(SimpleMessage message)
         {
             HandleWasCalled = true;
             TaskHelpers.DelaySendDone(_doneSignal);

@@ -29,10 +29,6 @@ namespace JustSaying.Messaging.MessageSerialization
 
         public MessageWithAttributes DeserializeMessage(string body)
         {
-            if (string.IsNullOrWhiteSpace(body))
-            {
-                throw new MessageFormatNotSupportedException("Message body cannot be null or white space");
-            }
 
             foreach (var pair in _map)
             {

@@ -7,6 +7,8 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.TestingFramework;
+using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -27,7 +29,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
         public ErrorHandlingTests(ITestOutputHelper testOutputHelper)
         {
             LoggerFactory = testOutputHelper.ToLoggerFactory();
-            MessageMonitor = new LoggingMonitor(LoggerFactory.CreateLogger(nameof(IMessageMonitor)));
+            MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
         }
 
         [Fact]
@@ -110,30 +112,19 @@ namespace JustSaying.UnitTests.Messaging.Channels
             messagesDispatched.ShouldBe(0);
         }
 
-        private static Task<List<Message>> GetErrorMessages(Action onMessageRequested)
+        private static IEnumerable<ReceiveMessageResponse> GetErrorMessages(Action onMessageRequested)
         {
             onMessageRequested();
             throw new Exception();
         }
 
-        private static ISqsQueue TestQueue(Func<Task<List<Message>>> getMessages)
+        private static ISqsQueue TestQueue(Func<IEnumerable<ReceiveMessageResponse>> getMessages)
         {
-            ISqsQueue sqsQueueMock = Substitute.For<ISqsQueue>();
-            sqsQueueMock.Uri.Returns(new Uri("http://test.com"));
-            sqsQueueMock
-                .Client
-                .ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
-                .Returns(async _ =>
-                {
-                    List<Message> messages = await getMessages();
+            var fakeSqs = new FakeAmazonSqs(getMessages);
+            var fakeQueue =
+                new FakeSqsQueue("test-queue", "fake-region", new Uri("http://test.com"), fakeSqs);
 
-                    return new ReceiveMessageResponse
-                    {
-                        Messages = messages,
-                    };
-                });
-
-            return sqsQueueMock;
+            return fakeQueue;
         }
     }
 }

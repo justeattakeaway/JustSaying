@@ -25,14 +25,17 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         protected override void Given()
         {
             ConcurrencyLimit = 1;
-            _queue = CreateSuccessfulTestQueue("TestQueue", () =>
-            {
-                Interlocked.Increment(ref _callCount);
-                return new List<Message> { new TestMessage() };
-            });
+            _queue = CreateSuccessfulTestQueue("TestQueue",
+                EnumerableExtensions.GenerateInfinite(() =>
+                {
+                    Interlocked.Increment(ref _callCount);
+                    return new ReceiveMessageResponse()
+                    {
+                        Messages = new List<Message> { new TestMessage() }
+                    };
+                }));
 
             Queues.Add(_queue);
-            Handler.Handle(null).ReturnsForAnyArgs(true);
 
             SerializationRegister.DefaultDeserializedMessage = () =>
                 throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
