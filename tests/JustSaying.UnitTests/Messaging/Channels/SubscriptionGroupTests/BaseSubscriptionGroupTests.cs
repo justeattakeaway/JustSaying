@@ -96,7 +96,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
                     return true;
                 });
 
-            cts.Cancel();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
         }
 

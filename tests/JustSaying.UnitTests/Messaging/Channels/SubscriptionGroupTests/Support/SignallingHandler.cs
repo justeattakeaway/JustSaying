@@ -23,7 +23,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests.Support
             }
             finally
             {
-                TaskHelpers.DelaySendDone(_doneSignal);
+                _doneSignal.SetResult(true);
             }
         }
     }
