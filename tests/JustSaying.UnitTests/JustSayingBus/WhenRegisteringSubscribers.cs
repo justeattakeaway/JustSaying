@@ -86,13 +86,14 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         private static FakeAmazonSqs CreateSubstituteClient()
         {
-            return new FakeAmazonSqs(() => new[] { new ReceiveMessageResponse()
-            {
-                Messages = new List<Message>()
+            return new FakeAmazonSqs(() =>
+                new ReceiveMessageResponse()
                 {
-                    new TestMessage()
-                }
-            }, });
+                    Messages = new List<Message>()
+                    {
+                        new TestMessage()
+                    }
+                }.Infinite());
         }
 
         private class TestMessage : Message
