@@ -54,7 +54,6 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             Config = Substitute.For<IMessagingConfig>();
             Monitor = Substitute.For<IMessageMonitor>();
-            LoggerFactory = Substitute.For<ILoggerFactory>();
         }
 
         protected abstract Task WhenAsync();

@@ -46,12 +46,13 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
             var completion = SystemUnderTest.RunAsync(cts.Token);
 
-            cts.CancelAfter(TimeoutPeriod);
-
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
 
             // wait until it's done
             await TaskHelpers.WaitWithTimeoutAsync(_tcs.Task);
+
+            cts.Cancel();
+
         }
 
         [Fact]

@@ -28,11 +28,13 @@ namespace JustSaying.UnitTests.Messaging.Policies
 
         public ChannelPolicyTests(ITestOutputHelper testOutputHelper)
         {
+            _outputHelper = testOutputHelper;
             LoggerFactory = testOutputHelper.ToLoggerFactory();
             MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
         }
 
         private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
+        private ITestOutputHelper _outputHelper;
 
         [Fact]
         public async Task ErrorHandlingAroundSqs()
@@ -64,13 +66,17 @@ namespace JustSaying.UnitTests.Messaging.Policies
             ISubscriptionGroup collection = groupFactory.Create(config, settings);
 
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeoutPeriod);
 
+            await Patiently.AssertThatAsync(_outputHelper,
+                () =>
+                {
+                    queueCalledCount.ShouldBeGreaterThan(1);
+                    dispatchedMessageCount.ShouldBe(0);
+                });
+
+            cts.Cancel();
             // Act and Assert
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => collection.RunAsync(cts.Token));
-
-            queueCalledCount.ShouldBeGreaterThan(1);
-            dispatchedMessageCount.ShouldBe(0);
         }
 
         private static ISqsQueue TestQueue(Action spy = null)
