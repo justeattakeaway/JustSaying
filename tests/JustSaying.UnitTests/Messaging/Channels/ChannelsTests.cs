@@ -39,7 +39,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
         public ITestOutputHelper OutputHelper { get; set; }
 
-        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
+        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(5);
 
         [Fact]
         public async Task QueueCanBeAssignedToOnePump()
@@ -60,7 +60,13 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var consumer1Completion = consumer1.RunAsync(cts.Token);
             var buffer1Completion = buffer.RunAsync(cts.Token);
 
-            await multiplexerCompletion;
+            try
+            {
+                await multiplexerCompletion;
+            }
+            catch (OperationCanceledException)
+            { }
+
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1Completion);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer1Completion);
         }
@@ -91,7 +97,11 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             var buffer1Completion = buffer.RunAsync(cts.Token);
 
-            await multiplexerCompletion;
+            try
+            {
+                await multiplexerCompletion;
+            } catch(OperationCanceledException) {}
+
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1Completion);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer2Completion);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer1Completion);
@@ -126,7 +136,10 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var buffer1Completion = buffer1.RunAsync(cts.Token);
             var buffer2Completion = buffer2.RunAsync(cts.Token);
 
-            await multiplexerCompletion;
+            try
+            {
+                await multiplexerCompletion;
+            } catch(OperationCanceledException) {}
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer1Completion);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer2Completion);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1Completion);
@@ -170,7 +183,10 @@ namespace JustSaying.UnitTests.Messaging.Channels
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer2Completion);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1Completion);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer2Completion);
-            await multiplexerCompletion;
+            try
+            {
+                await multiplexerCompletion;
+            } catch(OperationCanceledException) {}
         }
 
         [Fact]
