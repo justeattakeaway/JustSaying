@@ -7,6 +7,7 @@ using JustSaying.TestingFramework;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -17,7 +18,9 @@ namespace JustSaying.UnitTests.JustSayingBus
         protected override async Task WhenAsync()
         {
             SystemUnderTest.AddMessagePublisher<SimpleMessage>(_publisher);
-            await SystemUnderTest.StartAsync(CancellationToken.None);
+
+            var cts = new CancellationTokenSource(TimeoutPeriod);
+            await SystemUnderTest.StartAsync(cts.Token);
 
             await SystemUnderTest.PublishAsync(new SimpleMessage());
         }
@@ -33,5 +36,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             Monitor.Received(1).PublishMessageTime(Arg.Any<TimeSpan>());
         }
+
+        public WhenPublishingMessages(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
     }
 }

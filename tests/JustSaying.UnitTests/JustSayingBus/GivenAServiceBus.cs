@@ -8,6 +8,7 @@ using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -23,6 +24,11 @@ namespace JustSaying.UnitTests.JustSayingBus
         protected JustSaying.JustSayingBus SystemUnderTest { get; private set; }
 
         protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
+
+        public GivenAServiceBus(ITestOutputHelper outputHelper)
+        {
+            LoggerFactory = outputHelper.ToLoggerFactory();
+        }
 
         public virtual async Task InitializeAsync()
         {
@@ -55,9 +61,9 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         private JustSaying.JustSayingBus CreateSystemUnderTest()
         {
-            var fakeSerializerRegister = new FakeSerializationRegister();
+            var serializerRegister = new FakeSerializationRegister();
             var bus = new JustSaying.JustSayingBus(Config,
-                fakeSerializerRegister,
+                serializerRegister,
                 LoggerFactory)
             {
                 Monitor = Monitor

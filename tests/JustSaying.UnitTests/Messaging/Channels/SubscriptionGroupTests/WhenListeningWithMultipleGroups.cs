@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
@@ -15,8 +16,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         public WhenListeningWithMultipleGroups(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
         {
-            _queueA = CreateSuccessfulTestQueue("TestQueueA", new TestMessage());
-            _queueB = CreateSuccessfulTestQueue("TestQueueB", new TestMessage());
+            _queueA = CreateSuccessfulTestQueue("EC159934-A30E-45B0-9186-78853F7D3BED", new TestMessage());
+            _queueB = CreateSuccessfulTestQueue("C7506B3F-81DA-4898-82A5-C0293523592A", new TestMessage());
         }
 
         protected override Dictionary<string, SubscriptionGroupConfigBuilder> SetupBusConfig()

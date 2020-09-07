@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -44,5 +45,8 @@ namespace JustSaying.UnitTests.JustSayingBus
 
             publishedTypes.ShouldContain(nameof(Message));
         }
+
+        public WhenRegisteringTheSamePublisherTwice(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
     }
 }

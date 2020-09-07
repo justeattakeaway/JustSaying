@@ -28,7 +28,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected override void Given()
         {
-            _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
+            _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage());
 
             Queues.Add(_queue);
 

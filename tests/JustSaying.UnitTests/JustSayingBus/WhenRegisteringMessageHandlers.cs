@@ -7,6 +7,7 @@ using JustSaying.Models;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -34,9 +35,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             SystemUnderTest.AddMessageHandler(_queue.QueueName, _futureHandler1);
             SystemUnderTest.AddMessageHandler(_queue.QueueName, _futureHandler2);
 
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeoutPeriod);
-
+            var cts = new CancellationTokenSource(TimeoutPeriod);
             await SystemUnderTest.StartAsync(cts.Token);
         }
 
@@ -48,5 +47,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         }
 
         public class Message2 : Message { }
+
+        public WhenRegisteringMessageHandlers(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
     }
 }

@@ -6,6 +6,7 @@ using JustSaying.Models;
 using JustSaying.TestingFramework;
 using NSubstitute;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -23,7 +24,8 @@ namespace JustSaying.UnitTests.JustSayingBus
             RecordAnyExceptionsThrown();
 
             _publisher.When(x => x.PublishAsync(Arg.Any<Message>(),
-                    Arg.Any<PublishMetadata>(), Arg.Any<CancellationToken>()))
+                    Arg.Any<PublishMetadata>(),
+                    Arg.Any<CancellationToken>()))
                 .Do(x => { throw new TestException("Thrown by test WhenPublishingFails"); });
         }
 
@@ -31,9 +33,10 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             SystemUnderTest.AddMessagePublisher<SimpleMessage>(_publisher);
 
-           await SystemUnderTest.StartAsync(CancellationToken.None);
+            var cts = new CancellationTokenSource(TimeoutPeriod);
+            await SystemUnderTest.StartAsync(cts.Token);
 
-            await SystemUnderTest.PublishAsync(new SimpleMessage());
+            await SystemUnderTest.PublishAsync(new SimpleMessage(), cts.Token);
         }
 
         [Fact]
@@ -41,7 +44,10 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             _publisher
                 .Received(PublishAttempts)
-                .PublishAsync(Arg.Any<Message>(), Arg.Any<PublishMetadata>(), CancellationToken.None);
+                .PublishAsync(Arg.Any<Message>(), Arg.Any<PublishMetadata>(), Arg.Any<CancellationToken>());
         }
+
+        public WhenPublishingFails(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
     }
 }

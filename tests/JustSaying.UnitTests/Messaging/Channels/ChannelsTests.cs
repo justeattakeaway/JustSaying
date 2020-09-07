@@ -205,7 +205,11 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             cts.CancelAfter(TimeSpan.FromSeconds(3));
 
-            await multiplexerCompletion;
+            try
+            {
+                await multiplexerCompletion;
+            } catch(OperationCanceledException) {}
+
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => bufferCompletion);
 
             await Patiently.AssertThatAsync(OutputHelper,

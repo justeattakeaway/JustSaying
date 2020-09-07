@@ -1,17 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.TestingFramework;
-using JustSaying.UnitTests.AwsTools.MessageHandling;
-using Newtonsoft.Json;
+using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 using Message = Amazon.SQS.Model.Message;
 
 namespace JustSaying.UnitTests.JustSayingBus
@@ -20,8 +19,8 @@ namespace JustSaying.UnitTests.JustSayingBus
     {
         private ISqsQueue _queue1;
         private ISqsQueue _queue2;
-        private IAmazonSQS _client1;
-        private IAmazonSQS _client2;
+        private FakeAmazonSqs _client1;
+        private FakeAmazonSqs _client2;
         private CancellationTokenSource _cts;
 
         protected override void Given()
@@ -45,9 +44,12 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override async Task WhenAsync()
         {
-            SystemUnderTest.AddMessageHandler(_queue1.QueueName, () => new InspectableHandler<OrderAccepted>());
-            SystemUnderTest.AddMessageHandler(_queue1.QueueName, () => new InspectableHandler<OrderRejected>());
-            SystemUnderTest.AddMessageHandler(_queue1.QueueName, () => new InspectableHandler<SimpleMessage>());
+            SystemUnderTest.AddMessageHandler(_queue1.QueueName,
+                () => new InspectableHandler<OrderAccepted>());
+            SystemUnderTest.AddMessageHandler(_queue1.QueueName,
+                () => new InspectableHandler<OrderRejected>());
+            SystemUnderTest.AddMessageHandler(_queue1.QueueName,
+                () => new InspectableHandler<SimpleMessage>());
 
             SystemUnderTest.AddQueue("groupA", _queue1);
             SystemUnderTest.AddQueue("groupB", _queue2);
@@ -63,8 +65,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             await _cts.Token.WaitForCancellation();
 
-            await _client1.Received().ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>());
-            await _client2.Received().ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>());
+            _client1.ReceiveMessageRequests.Count.ShouldBeGreaterThan(0);
+            _client2.ReceiveMessageRequests.Count.ShouldBeGreaterThan(0);
         }
 
         [Fact]
@@ -82,24 +84,23 @@ namespace JustSaying.UnitTests.JustSayingBus
             });
         }
 
-        private static IAmazonSQS CreateSubstituteClient()
+        private static FakeAmazonSqs CreateSubstituteClient()
         {
-            var client = Substitute.For<IAmazonSQS>();
-            client
-                .ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
-                .Returns(new ReceiveMessageResponse
+            return new FakeAmazonSqs(() => new[] { new ReceiveMessageResponse()
+            {
+                Messages = new List<Message>()
                 {
-                    Messages = new List<Message>
-                    {
-                        new TestMessage(),
-                    }
-                });
-
-            return client;
+                    new TestMessage()
+                }
+            }, });
         }
 
         private class TestMessage : Message
         {
+            public TestMessage()
+            {
+                Body = "TestMesage";
+            }
         }
 
         public void Dispose()
@@ -108,5 +109,8 @@ namespace JustSaying.UnitTests.JustSayingBus
             _client2?.Dispose();
             _cts?.Dispose();
         }
+
+        public WhenRegisteringSubscribers(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
     }
 }

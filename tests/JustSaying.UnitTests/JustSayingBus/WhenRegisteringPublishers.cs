@@ -6,6 +6,7 @@ using JustSaying.TestingFramework;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -24,7 +25,8 @@ namespace JustSaying.UnitTests.JustSayingBus
             SystemUnderTest.AddMessagePublisher<OrderAccepted>(_publisher);
             SystemUnderTest.AddMessagePublisher<OrderRejected>(_publisher);
 
-            await SystemUnderTest.StartAsync(CancellationToken.None);
+            var cts = new CancellationTokenSource(TimeoutPeriod);
+            await SystemUnderTest.StartAsync(cts.Token);
 
             await SystemUnderTest.PublishAsync(new OrderAccepted());
             await SystemUnderTest.PublishAsync(new OrderRejected());
@@ -59,5 +61,8 @@ namespace JustSaying.UnitTests.JustSayingBus
             publishedTypes.ShouldContain(nameof(OrderAccepted));
             publishedTypes.ShouldContain(nameof(OrderRejected));
         }
+
+        public WhenRegisteringPublishers(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
     }
 }

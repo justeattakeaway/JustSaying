@@ -81,7 +81,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
                     msg => Handler.Handle(msg as SimpleMessage));
             }
 
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
             var completion = SystemUnderTest.RunAsync(cts.Token);
 
             await Patiently.AssertThatAsync(OutputHelper,
@@ -94,6 +94,9 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         {
             var messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
             var messageContextAccessor = Substitute.For<IMessageContextAccessor>();
+
+            Logger.LogInformation("Creating MessageDispatcher with serialization register type {Type}",
+                SerializationRegister.GetType().FullName);
 
             var dispatcher = new MessageDispatcher(
                 SerializationRegister,

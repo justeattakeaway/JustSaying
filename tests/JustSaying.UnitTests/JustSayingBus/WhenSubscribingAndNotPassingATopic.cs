@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -24,5 +25,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             ((ArgumentException)ThrownException).ParamName.ShouldBe("queue");
         }
+
+        public WhenSubscribingAndNotPassingATopic(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
     }
 }

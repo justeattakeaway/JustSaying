@@ -41,7 +41,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             var response1 = new List<Message> { new Message { Body = AttributeMessageContentsRunning } };
             var response2 = new List<Message> { new Message { Body = AttributeMessageContentsAfterStop } };
 
-            _queue = CreateSuccessfulTestQueue("TestQueue", () => _running ? response1 : response2);
+            _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), () => _running ? response1 : response2);
             _client = _queue.FakeClient;
 
             Queues.Add(_queue);
