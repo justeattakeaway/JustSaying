@@ -119,6 +119,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
         private static IEnumerable<ReceiveMessageResponse> GetErrorMessages(Action onMessageRequested)
         {
+            Thread.Sleep(500);
             onMessageRequested();
             throw new Exception();
         }

@@ -55,7 +55,7 @@ namespace JustSaying.UnitTests.JustSayingBus
             SystemUnderTest.AddQueue("groupB", _queue2);
 
             _cts = new CancellationTokenSource();
-            _cts.CancelAfter(TimeoutPeriod);
+            _cts.CancelAfter(TimeSpan.FromSeconds(5));
 
             await SystemUnderTest.StartAsync(_cts.Token);
         }
