@@ -23,9 +23,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
         public ILoggerFactory LoggerFactory { get; }
         private IMessageMonitor MessageMonitor { get; }
 
-
-        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
-        private ITestOutputHelper _outputHelper;
+        private readonly ITestOutputHelper _outputHelper;
 
         public ErrorHandlingTests(ITestOutputHelper testOutputHelper)
         {
@@ -41,7 +39,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             int messagesRequested = 0;
             int messagesDispatched = 0;
 
-            var sqsQueue1 = TestQueue(() => GetErrorMessages(() => messagesRequested++));
+            var sqsQueue1 = TestQueue(() =>
+                GetErrorMessages(() => Interlocked.Increment(ref messagesRequested)));
 
             var queues = new List<ISqsQueue> { sqsQueue1 };
             IMessageDispatcher dispatcher =
@@ -61,7 +60,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             ISubscriptionGroup collection = subscriptionGroupFactory.Create(defaults, settings);
 
-            var cts = new CancellationTokenSource();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
             // Act
             var runTask = collection.RunAsync(cts.Token);
@@ -73,7 +72,6 @@ namespace JustSaying.UnitTests.Messaging.Channels
                     messagesDispatched.ShouldBe(0);
                 });
 
-            cts.Cancel();
         }
 
         [Fact]
@@ -103,11 +101,10 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             ISubscriptionGroup collection = subscriptionGroupFactory.Create(defaults, settings);
 
-            var cts = new CancellationTokenSource();
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
             // Act
             var runTask = collection.RunAsync(cts.Token);
-
 
             await Patiently.AssertThatAsync(_outputHelper,
                 () =>
@@ -116,7 +113,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
                     messagesDispatched.ShouldBe(0);
                 });
 
-            cts.Cancel();
+            await Assert.ThrowsAsync<OperationCanceledException>(() => runTask);
         }
 
         private static IEnumerable<ReceiveMessageResponse> GetErrorMessages(Action onMessageRequested)

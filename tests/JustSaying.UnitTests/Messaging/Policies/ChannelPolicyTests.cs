@@ -26,8 +26,6 @@ namespace JustSaying.UnitTests.Messaging.Policies
         private IMessageMonitor MessageMonitor { get; }
         private readonly ITestOutputHelper _outputHelper;
 
-
-
         public ChannelPolicyTests(ITestOutputHelper testOutputHelper)
         {
             _outputHelper = testOutputHelper;

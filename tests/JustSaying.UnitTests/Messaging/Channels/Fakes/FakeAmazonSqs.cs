@@ -244,7 +244,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             _getMessagesEnumerator ??= _getMessages().GetEnumerator();
             _getMessagesEnumerator.MoveNext();
 
-            await Task.Delay(30, cancellationToken);
+            await Task.Delay(50, cancellationToken);
             return new ReceiveMessageResponse()
             {
                 Messages = _getMessagesEnumerator.Current.Messages
