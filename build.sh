@@ -23,6 +23,6 @@ fi
 
 dotnet build ./JustSaying.sln --output $artifacts --configuration $configuration || exit 1
 
-dotnet test ./tests/JustSaying.UnitTests/JustSaying.UnitTests.csproj --output $artifacts --configuration $configuration '--logger:Console;verbosity=detailed;noprogress=true' || exit 1
+dotnet test ./tests/JustSaying.UnitTests/JustSaying.UnitTests.csproj --output $artifacts --configuration $configuration '--logger:Console;verbosity=normal;noprogress=true' || exit 1
 dotnet test ./tests/JustSaying.Extensions.DependencyInjection.StructureMap.Tests/JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj --output $artifacts --configuration $configuration '--logger:Console;noprogress=true' || exit 1
 dotnet test ./tests/JustSaying.IntegrationTests/JustSaying.IntegrationTests.csproj --output $artifacts --configuration $configuration '--logger:Console;verbosity=normal;noprogress=true' || exit 1

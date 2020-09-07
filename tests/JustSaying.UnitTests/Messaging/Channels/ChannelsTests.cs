@@ -39,7 +39,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
         public ITestOutputHelper OutputHelper { get; set; }
 
-        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(3);
 
         [Fact]
         public async Task QueueCanBeAssignedToOnePump()
