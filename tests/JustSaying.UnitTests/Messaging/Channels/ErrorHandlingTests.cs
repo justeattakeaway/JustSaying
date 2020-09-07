@@ -25,9 +25,11 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
 
         protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(100);
+        private ITestOutputHelper _outputHelper;
 
         public ErrorHandlingTests(ITestOutputHelper testOutputHelper)
         {
+            _outputHelper = testOutputHelper;
             LoggerFactory = testOutputHelper.ToLoggerFactory();
             MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
         }
@@ -42,7 +44,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var sqsQueue1 = TestQueue(() => GetErrorMessages(() => messagesRequested++));
 
             var queues = new List<ISqsQueue> { sqsQueue1 };
-            IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
+            IMessageDispatcher dispatcher =
+                new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
 
             var defaults = new SubscriptionGroupSettingsBuilder()
                 .WithDefaultConcurrencyLimit(8);
@@ -63,13 +66,14 @@ namespace JustSaying.UnitTests.Messaging.Channels
             // Act
             var runTask = collection.RunAsync(cts.Token);
 
-            cts.CancelAfter(TimeoutPeriod);
+            await Patiently.AssertThatAsync(_outputHelper,
+                () =>
+                {
+                    messagesRequested.ShouldBeGreaterThan(1);
+                    messagesDispatched.ShouldBe(0);
+                });
 
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => runTask);
-
-            // Assert
-            messagesRequested.ShouldBeGreaterThan(1);
-            messagesDispatched.ShouldBe(0);
+            cts.Cancel();
         }
 
         [Fact]
@@ -82,7 +86,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var sqsQueue1 = TestQueue(() => GetErrorMessages(() => messagesRequested++));
 
             var queues = new List<ISqsQueue> { sqsQueue1 };
-            IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
+            IMessageDispatcher dispatcher =
+                new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
 
             var defaults = new SubscriptionGroupSettingsBuilder()
                 .WithDefaultConcurrencyLimit(1);
@@ -103,13 +108,15 @@ namespace JustSaying.UnitTests.Messaging.Channels
             // Act
             var runTask = collection.RunAsync(cts.Token);
 
-            cts.CancelAfter(TimeoutPeriod);
 
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => runTask);
+            await Patiently.AssertThatAsync(_outputHelper,
+                () =>
+                {
+                    messagesRequested.ShouldBeGreaterThan(1);
+                    messagesDispatched.ShouldBe(0);
+                });
 
-            // Assert
-            messagesRequested.ShouldBeGreaterThan(1);
-            messagesDispatched.ShouldBe(0);
+            cts.Cancel();
         }
 
         private static IEnumerable<ReceiveMessageResponse> GetErrorMessages(Action onMessageRequested)

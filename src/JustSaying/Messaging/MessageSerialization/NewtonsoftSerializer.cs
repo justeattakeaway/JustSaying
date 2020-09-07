@@ -90,6 +90,7 @@ namespace JustSaying.Messaging.MessageSerialization
 
         public string GetMessageSubject(string sqsMessage)
         {
+            if (sqsMessage == null) return null;
             var body = JObject.Parse(sqsMessage);
             return body.Value<string>("Subject") ?? string.Empty;
         }

@@ -122,6 +122,8 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         {
             try
             {
+                _logger.LogDebug("Attempting to deserialize message with serialization register {Type}",
+                    _serializationRegister.GetType().FullName);
                 var messageWithAttributes = _serializationRegister.DeserializeMessage(messageContext.Message.Body);
                 return (true, messageWithAttributes.Message, messageWithAttributes.MessageAttributes);
             }
