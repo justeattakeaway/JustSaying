@@ -60,7 +60,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             ISubscriptionGroup collection = subscriptionGroupFactory.Create(defaults, settings);
 
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
 
             // Act
             var runTask = collection.RunAsync(cts.Token);
@@ -72,6 +72,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
                     messagesDispatched.ShouldBe(0);
                 });
 
+            await Assert.ThrowsAsync<OperationCanceledException>(() => runTask);
         }
 
         [Fact]
