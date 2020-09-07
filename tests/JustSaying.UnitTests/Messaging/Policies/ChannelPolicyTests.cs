@@ -24,6 +24,8 @@ namespace JustSaying.UnitTests.Messaging.Policies
     {
         private ILoggerFactory LoggerFactory { get; }
         private IMessageMonitor MessageMonitor { get; }
+        private readonly ITestOutputHelper _outputHelper;
+
 
 
         public ChannelPolicyTests(ITestOutputHelper testOutputHelper)
@@ -32,9 +34,6 @@ namespace JustSaying.UnitTests.Messaging.Policies
             LoggerFactory = testOutputHelper.ToLoggerFactory();
             MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
         }
-
-        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
-        private ITestOutputHelper _outputHelper;
 
         [Fact]
         public async Task ErrorHandlingAroundSqs()
