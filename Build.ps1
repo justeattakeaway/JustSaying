@@ -5,7 +5,7 @@ param(
     [Parameter(Mandatory = $false)][string] $VersionSuffix = "",
     [Parameter(Mandatory = $false)][string] $OutputPath = "",
     [Parameter(Mandatory = $false)][switch] $SkipTests,
-    [Parameter(Mandatory = $false)][switch] $EnableIntegrationTests
+    [Parameter(Mandatory = $false)][Boolean] $EnableIntegrationTests
 )
 
 $ErrorActionPreference = "Stop"
@@ -72,7 +72,7 @@ if ($installDotNetSdk -eq $true) {
             mkdir $env:DOTNET_INSTALL_DIR | Out-Null
         }
         [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor "Tls12"
-        
+
         if (($PSVersionTable.PSVersion.Major -ge 6) -And !$IsWindows) {
             $installScript = Join-Path $env:DOTNET_INSTALL_DIR "install.sh"
             Invoke-WebRequest "https://dot.net/v1/dotnet-install.sh" -OutFile $installScript -UseBasicParsing
@@ -132,12 +132,12 @@ function DotNetTest {
     $dotNetTestExitCode = $LASTEXITCODE
 
     if ((Test-Path $coverageOutput)) {
-      & $dotnet `
-          $reportGeneratorPath `
-          `"-reports:$coverageOutput`" `
-          `"-targetdir:$reportOutput`" `
-          -reporttypes:HTML `
-          -verbosity:Warning
+        & $dotnet `
+            $reportGeneratorPath `
+            `"-reports:$coverageOutput`" `
+            `"-targetdir:$reportOutput`" `
+            -reporttypes:HTML `
+            -verbosity:Warning
     }
 
     if ($dotNetTestExitCode -ne 0) {
