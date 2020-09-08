@@ -42,14 +42,9 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             return new List<Message>();
         }
 
-        protected override async Task WhenAsync()
+        protected override bool Until()
         {
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeoutPeriod);
-
-            var completion = SystemUnderTest.RunAsync(cts.Token);
-
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
+            return _callCount > 1;
         }
 
         [Fact]

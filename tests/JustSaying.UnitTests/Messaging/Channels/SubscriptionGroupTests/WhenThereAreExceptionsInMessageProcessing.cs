@@ -40,6 +40,11 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
                 throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
         }
 
+        protected override bool Until()
+        {
+            return _callCount > 1;
+        }
+
         [Fact]
         public async Task TheListenerDoesNotDie()
         {

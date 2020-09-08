@@ -11,7 +11,6 @@ using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
-using NSubstitute;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
@@ -40,11 +39,17 @@ namespace JustSaying.UnitTests.Messaging.Channels
             int messagesDispatched = 0;
 
             var sqsQueue1 = TestQueue(() =>
-                GetErrorMessages(() => Interlocked.Increment(ref messagesRequested)));
+                GetErrorMessages(() =>
+                {
+                    Interlocked.Increment(ref messagesRequested);
+                }));
 
             var queues = new List<ISqsQueue> { sqsQueue1 };
             IMessageDispatcher dispatcher =
-                new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
+                new FakeDispatcher(() =>
+                {
+                    Interlocked.Increment(ref messagesDispatched);
+                });
 
             var defaults = new SubscriptionGroupSettingsBuilder()
                 .WithDefaultConcurrencyLimit(8);
@@ -60,7 +65,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             ISubscriptionGroup collection = subscriptionGroupFactory.Create(defaults, settings);
 
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+            var cts = new CancellationTokenSource();
 
             // Act
             var runTask = collection.RunAsync(cts.Token);
@@ -68,11 +73,12 @@ namespace JustSaying.UnitTests.Messaging.Channels
             await Patiently.AssertThatAsync(_outputHelper,
                 () =>
                 {
-                    messagesRequested.ShouldBeGreaterThan(1);
-                    messagesDispatched.ShouldBe(0);
+                    messagesRequested.ShouldBeGreaterThan(1, $"but was {messagesRequested}");
+                    messagesDispatched.ShouldBe(0, $"but was {messagesDispatched}");
                 });
 
-            await Assert.ThrowsAsync<OperationCanceledException>(() => runTask);
+            cts.Cancel();
+            await runTask.HandleCancellation();
         }
 
         [Fact]
@@ -102,7 +108,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             ISubscriptionGroup collection = subscriptionGroupFactory.Create(defaults, settings);
 
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var cts = new CancellationTokenSource();
 
             // Act
             var runTask = collection.RunAsync(cts.Token);
@@ -114,12 +120,12 @@ namespace JustSaying.UnitTests.Messaging.Channels
                     messagesDispatched.ShouldBe(0);
                 });
 
-            await Assert.ThrowsAsync<OperationCanceledException>(() => runTask);
+            cts.Cancel();
+            await runTask.HandleCancellation();
         }
 
         private static IEnumerable<ReceiveMessageResponse> GetErrorMessages(Action onMessageRequested)
         {
-            Thread.Sleep(500);
             onMessageRequested();
             throw new Exception();
         }
@@ -128,7 +134,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             var fakeSqs = new FakeAmazonSqs(getMessages);
             var fakeQueue =
-                new FakeSqsQueue("test-queue", "fake-region", new Uri("http://test.com"), fakeSqs);
+                new FakeSqsQueue("test-queue",  fakeSqs);
 
             return fakeQueue;
         }

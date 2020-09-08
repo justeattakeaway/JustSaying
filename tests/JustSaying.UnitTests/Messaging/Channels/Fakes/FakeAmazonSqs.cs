@@ -239,12 +239,13 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             ReceiveMessageRequest request,
             CancellationToken cancellationToken = new CancellationToken())
         {
+            await Task.Delay(50, cancellationToken);
+
             ReceiveMessageRequests.Add(request);
 
             _getMessagesEnumerator ??= _getMessages().GetEnumerator();
             _getMessagesEnumerator.MoveNext();
 
-            await Task.Delay(50, cancellationToken);
             return new ReceiveMessageResponse()
             {
                 Messages = _getMessagesEnumerator.Current.Messages

@@ -7,11 +7,11 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
     public class FakeSqsQueue : ISqsQueue
     {
-        public FakeSqsQueue(string queueName, string regionSystemName, Uri uri, IAmazonSQS client)
+        public FakeSqsQueue(string queueName, IAmazonSQS client)
         {
             QueueName = queueName;
-            RegionSystemName = regionSystemName;
-            Uri = uri;
+            RegionSystemName = "fake-region";
+            Uri = new Uri("http://test.com");
             Client = client;
         }
 

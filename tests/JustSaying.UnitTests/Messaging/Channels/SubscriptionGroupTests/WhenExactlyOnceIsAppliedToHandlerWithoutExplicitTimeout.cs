@@ -18,7 +18,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
     {
         private ISqsQueue _queue;
         private readonly int _maximumTimeout = (int)TimeSpan.MaxValue.TotalSeconds;
-        private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
         private ExactlyOnceSignallingHandler _handler;
 
         public WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper testOutputHelper)
@@ -34,7 +33,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
             MessageLock = new FakeMessageLock();
 
-            _handler = new ExactlyOnceSignallingHandler(_tcs);
+            _handler = new ExactlyOnceSignallingHandler();
             Handler = _handler;
         }
 
@@ -46,12 +45,11 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
             var completion = SystemUnderTest.RunAsync(cts.Token);
 
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
-
-            // wait until it's done
-            await TaskHelpers.WaitWithTimeoutAsync(_tcs.Task);
+            await Patiently.AssertThatAsync(OutputHelper,
+                () => Handler.ReceivedMessages.Any());
 
             cts.Cancel();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
 
         }
 
@@ -65,12 +63,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             tempLockRequests.ShouldAllBe(pair =>
                 pair.key.Contains(messageId, StringComparison.OrdinalIgnoreCase) &&
                 pair.howLong == TimeSpan.FromSeconds(_maximumTimeout));
-        }
-
-        [Fact]
-        public void ProcessingIsPassedToTheHandler()
-        {
-            _handler.HandleWasCalled.ShouldBeTrue();
         }
     }
 }

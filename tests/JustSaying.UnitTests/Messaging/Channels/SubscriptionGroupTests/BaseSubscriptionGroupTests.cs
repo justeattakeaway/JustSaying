@@ -81,13 +81,20 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
                     msg => Handler.Handle(msg as SimpleMessage));
             }
 
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
             var completion = SystemUnderTest.RunAsync(cts.Token);
 
             await Patiently.AssertThatAsync(OutputHelper,
-                () => Handler.ReceivedMessages.Any() || cts.IsCancellationRequested);
+                () => Until() || cts.IsCancellationRequested);
 
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
+            cts.Cancel();
+            await completion.HandleCancellation();
+        }
+
+        protected virtual bool Until()
+        {
+            OutputHelper.WriteLine("Checking if handler has received any messages");
+            return Handler.ReceivedMessages.Any();
         }
 
         private ISubscriptionGroup CreateSystemUnderTest()
@@ -150,8 +157,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             var fakeClient = new FakeAmazonSqs(getMessages);
 
             var sqsQueue = new FakeSqsQueue(queueName,
-                "fake-region",
-                new Uri("http://foo.com"),
                 fakeClient);
 
             return sqsQueue;
