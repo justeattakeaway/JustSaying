@@ -35,8 +35,18 @@ jobs:
         uses: actions/setup-dotnet@v1
 
       - name: Build, Test and Package
+        if: ${{ runner.os != 'linux' }}
         shell: pwsh
-        run: ./Build.ps1 -EnableIntegrationTests ${{ runner.os == 'linux' }}
+        run: ./Build.ps1
+        env:
+          DOTNET_CLI_TELEMETRY_OPTOUT: true
+          DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+          NUGET_XMLDOC_MODE: skip
+
+      - name: Build, Test, IntegrationTest and Package
+        if: ${{ runner.os == 'linux' }}
+        shell: pwsh
+        run: ./Build.ps1 -EnableIntegrationTests
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: true
           DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true

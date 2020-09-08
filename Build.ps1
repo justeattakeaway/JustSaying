@@ -5,7 +5,7 @@ param(
     [Parameter(Mandatory = $false)][string] $VersionSuffix = "",
     [Parameter(Mandatory = $false)][string] $OutputPath = "",
     [Parameter(Mandatory = $false)][switch] $SkipTests,
-    [Parameter(Mandatory = $false)][Boolean] $EnableIntegrationTests
+    [Parameter(Mandatory = $false)][switch] $EnableIntegrationTests
 )
 
 $ErrorActionPreference = "Stop"
@@ -132,12 +132,12 @@ function DotNetTest {
     $dotNetTestExitCode = $LASTEXITCODE
 
     if ((Test-Path $coverageOutput)) {
-        & $dotnet `
-            $reportGeneratorPath `
-            `"-reports:$coverageOutput`" `
-            `"-targetdir:$reportOutput`" `
-            -reporttypes:HTML `
-            -verbosity:Warning
+      & $dotnet `
+          $reportGeneratorPath `
+          `"-reports:$coverageOutput`" `
+          `"-targetdir:$reportOutput`" `
+          -reporttypes:HTML `
+          -verbosity:Warning
     }
 
     if ($dotNetTestExitCode -ne 0) {
