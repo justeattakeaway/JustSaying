@@ -2,10 +2,10 @@ name: build
 
 on:
   push:
-    branches: [ master ]
-    tags: [ v* ]
+    branches: [master]
+    tags: [v*]
   pull_request:
-    branches: [ master ]
+    branches: [master]
   workflow_dispatch:
 
 jobs:
@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ macos-latest, ubuntu-latest, windows-latest ]
+        os: [macos-latest, ubuntu-latest, windows-latest]
         include:
           - os: macos-latest
             os_name: macos
@@ -26,45 +26,44 @@ jobs:
             os_name: windows
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-    - name: Checkout code
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v1
 
-    - name: Setup .NET Core SDK
-      uses: actions/setup-dotnet@v1
+      - name: Build, Test and Package
+        shell: pwsh
+        run: ./Build.ps1
+        env:
+          DOTNET_CLI_TELEMETRY_OPTOUT: true
+          DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+          NUGET_XMLDOC_MODE: skip
 
-    - name: Build, Test and Package
-      shell: pwsh
-      run: ./Build.ps1
-      env:
-        DOTNET_CLI_TELEMETRY_OPTOUT: true
-        DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
-        NUGET_XMLDOC_MODE: skip
+      - name: Run integration tests
+        if: ${{ runner.os == 'linux' }}
+        run: |
+          goaws_tag=latest
+          docker pull pafortin/goaws:$goaws_tag
+          docker run -d --name goaws -p 4100:4100 pafortin/goaws:$goaws_tag
+          export AWS_SERVICE_URL="http://localhost:4100"
 
-    - uses: codecov/codecov-action@v1
-      name: Upload coverage to Codecov
-      with:
-        file: ./artifacts/coverage.cobertura.xml
-        flags: ${{ matrix.os_name }}
+          dotnet test ./tests/JustSaying.IntegrationTests/JustSaying.IntegrationTests.csproj --configuration Release --logger:"GitHubActions;report-warnings=false" || exit 1
 
-    - name: Run integration tests
-      if: ${{ runner.os == 'linux' }}
-      run: |
-        goaws_tag=latest
-        docker pull pafortin/goaws:$goaws_tag
-        docker run -d --name goaws -p 4100:4100 pafortin/goaws:$goaws_tag
-        export AWS_SERVICE_URL="http://localhost:4100"
-        
-        dotnet test ./tests/JustSaying.IntegrationTests/JustSaying.IntegrationTests.csproj --configuration Release --logger:"GitHubActions;report-warnings=false" || exit 1
+      - uses: codecov/codecov-action@v1
+        name: Upload coverage to Codecov
+        with:
+          file: ./artifacts/coverage.cobertura.xml
+          flags: ${{ matrix.os_name }}
 
-    - name: Publish NuGet packages
-      uses: actions/upload-artifact@v1
-      with:
-        name: packages-${{ matrix.os_name }}
-        path: ./artifacts/packages
+      - name: Publish NuGet packages
+        uses: actions/upload-artifact@v1
+        with:
+          name: packages-${{ matrix.os_name }}
+          path: ./artifacts/packages
 
-    - name: Push NuGet packages to NuGet.org
-      run: dotnet nuget push "artifacts\packages\*.nupkg" --api-key ${{ secrets.NUGET_TOKEN }} --skip-duplicate --source https://api.nuget.org/v3/index.json
-      if: ${{ github.repository_owner == 'justeat' && startsWith(github.ref, 'refs/tags/v') && runner.os == 'Windows' }}
+      - name: Push NuGet packages to NuGet.org
+        run: dotnet nuget push "artifacts\packages\*.nupkg" --api-key ${{ secrets.NUGET_TOKEN }} --skip-duplicate --source https://api.nuget.org/v3/index.json
+        if: ${{ github.repository_owner == 'justeat' && startsWith(github.ref, 'refs/tags/v') && runner.os == 'Windows' }}
