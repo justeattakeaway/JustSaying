@@ -55,7 +55,7 @@ jobs:
       - uses: codecov/codecov-action@v1
         name: Upload coverage to Codecov
         with:
-          file: ./artifacts/coverage.cobertura.xml
+          file: ./artifacts/coverage.json
           flags: ${{ matrix.os_name }}
 
       - name: Publish NuGet packages
