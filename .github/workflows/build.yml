@@ -36,21 +36,11 @@ jobs:
 
       - name: Build, Test and Package
         shell: pwsh
-        run: ./Build.ps1
+        run: ./Build.ps1 -EnableIntegrationTests ${{ runner.os == 'linux' }}
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: true
           DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
           NUGET_XMLDOC_MODE: skip
-
-      - name: Run integration tests
-        if: ${{ runner.os == 'linux' }}
-        run: |
-          goaws_tag=latest
-          docker pull pafortin/goaws:$goaws_tag
-          docker run -d --name goaws -p 4100:4100 pafortin/goaws:$goaws_tag
-          export AWS_SERVICE_URL="http://localhost:4100"
-
-          dotnet test ./tests/JustSaying.IntegrationTests/JustSaying.IntegrationTests.csproj --configuration Release --logger:"GitHubActions;report-warnings=false" || exit 1
 
       - uses: codecov/codecov-action@v1
         name: Upload coverage to Codecov
