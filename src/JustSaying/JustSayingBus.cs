@@ -193,6 +193,8 @@ namespace JustSaying
             }
             catch (OperationCanceledException)
             {
+                _log.LogDebug("Suppressed an exception of type {ExceptionType} which likely" +
+                    "means the bus is shutting down.", typeof(OperationCanceledException));
                 // Don't bubble cancellation up to Completion task
             }
         }

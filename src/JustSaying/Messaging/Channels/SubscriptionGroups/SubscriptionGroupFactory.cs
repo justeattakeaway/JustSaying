@@ -126,9 +126,9 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             var logger = _loggerFactory.CreateLogger<MultiplexerSubscriber>();
 
             return Enumerable.Range(0, settings.ConcurrencyLimit)
-                .Select(num => (IMultiplexerSubscriber) new MultiplexerSubscriber(
+                .Select(index => (IMultiplexerSubscriber) new MultiplexerSubscriber(
                     _messageDispatcher,
-                    $"{settings.Name}-subscriber-{num}",
+                    $"{settings.Name}-subscriber-{index}",
                     logger))
                 .ToList();
         }
