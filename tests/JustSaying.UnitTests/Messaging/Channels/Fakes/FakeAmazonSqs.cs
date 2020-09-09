@@ -325,5 +325,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         {
             return Task.FromResult(new UntagQueueResponse());
         }
+
+        public ISQSPaginatorFactory Paginators { get; set; }
     }
 }
