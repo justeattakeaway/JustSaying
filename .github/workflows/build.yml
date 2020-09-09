@@ -65,14 +65,14 @@ jobs:
           name: packages-${{ matrix.os_name }}
           path: ./artifacts/packages
 
-      - name: Authenticate with github packages
+      - name: Authenticate with GitHub Packages
         uses: actions/setup-dotnet@v1
         with:
           source-url: https://nuget.pkg.github.com/justeat/index.json
         env:
           NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
-      - name: Publish pre-release NuGet packages to GitHub packages
+      - name: Publish pre-release NuGet packages to GitHub Packages
         run: dotnet nuget push "artifacts\packages\*.nupkg" --skip-duplicate --no-symbols true
         if: ${{ github.repository_owner == 'justeat' && github.ref == 'refs/heads/master' && runner.os == 'Windows' }}
 
