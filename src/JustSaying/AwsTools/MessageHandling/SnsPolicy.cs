@@ -1,54 +1,56 @@
-using System.Collections.Generic;
-using System.Linq;
+using System;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Amazon.Auth.AccessControlPolicy;
-using Amazon.Auth.AccessControlPolicy.ActionIdentifiers;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public class SnsPolicy
+    internal static class SnsPolicy
     {
-        private readonly IReadOnlyCollection<string> _accountIds;
-
-        public SnsPolicy(IReadOnlyCollection<string> accountIds)
+        internal static async Task SaveAsync(SnsPolicyDetails policyDetails, IAmazonSimpleNotificationService client)
         {
-            _accountIds = accountIds;
-        }
-
-        public async Task SaveAsync(string sourceArn, IAmazonSimpleNotificationService client)
-        {
-            ActionIdentifier[] actions = { SNSActionIdentifiers.Subscribe };
-
-            var snsPolicy = new Policy()
-                .WithStatements(GetDefaultStatement(sourceArn))
-                .WithStatements(new Statement(Statement.StatementEffect.Allow)
-                    .WithPrincipals(_accountIds.Select(a => new Principal(a)).ToArray())
-                    .WithResources(new Resource(sourceArn))
-                    .WithActionIdentifiers(actions));
-            var attributeValue = snsPolicy.ToJson();
-            var setQueueAttributesRequest = new SetTopicAttributesRequest(sourceArn, "Policy", attributeValue);
+            var sourceAccountId = ExtractSourceAccountId(policyDetails.SourceArn);
+            var policyJson = $@"{{
+    ""Version"" : ""2012-10-17"",
+    ""Statement"" : [
+        {{
+            ""Sid"" : ""{Guid.NewGuid().ToString().Replace("-", "")}"",
+            ""Effect"" : ""Allow"",
+            ""Principal"" : {{
+                ""AWS"" : ""*""
+            }},
+            ""Action""    : [
+                ""sns:GetTopicAttributes"",
+                ""sns:SetTopicAttributes"",
+                ""sns:AddPermission"",
+                ""sns:RemovePermission"",
+                ""sns:DeleteTopic"",
+                ""sns:Subscribe"",
+                ""sns:Publish""
+            ],
+            ""Resource""  : ""{policyDetails.SourceArn}"",
+            ""Condition"" : {{
+                ""StringEquals"" : {{
+                    ""AWS:SourceOwner"" : ""{sourceAccountId}""
+                }}
+            }}
+        }},
+        {{
+            ""Sid"" : ""{Guid.NewGuid().ToString().Replace("-", "")}"",
+            ""Effect"" : ""Allow"",
+            ""Principal"" : {{
+                ""AWS"" : {JsonSerializer.Serialize(policyDetails.AccountIds)}
+            }},
+            ""Action""    : ""sns:Subscribe"",
+            ""Resource""  : ""{policyDetails.SourceArn}""
+        }}
+    ]
+}}";
+            var setQueueAttributesRequest = new SetTopicAttributesRequest(policyDetails.SourceArn, "Policy", policyJson);
 
             await client.SetTopicAttributesAsync(setQueueAttributesRequest).ConfigureAwait(false);
-        }
-
-        private static Statement GetDefaultStatement(string sourceArn)
-        {
-            var sourceAccountId = ExtractSourceAccountId(sourceArn);
-            return new Statement(Statement.StatementEffect.Allow)
-                .WithPrincipals(Principal.AllUsers)
-                .WithActionIdentifiers(
-                    SNSActionIdentifiers.GetTopicAttributes,
-                    SNSActionIdentifiers.SetTopicAttributes,
-                    SNSActionIdentifiers.AddPermission,
-                    SNSActionIdentifiers.RemovePermission,
-                    SNSActionIdentifiers.DeleteTopic,
-                    SNSActionIdentifiers.Subscribe,
-                    SNSActionIdentifiers.Publish)
-                .WithResources(new Resource(sourceArn))
-                .WithConditions(new Condition("StringEquals", "AWS:SourceOwner", sourceAccountId));
         }
 
         private static string ExtractSourceAccountId(string sourceArn)

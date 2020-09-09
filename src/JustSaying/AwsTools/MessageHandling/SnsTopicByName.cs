@@ -53,12 +53,16 @@ namespace JustSaying.AwsTools.MessageHandling
             });
         }
 
-        public async Task EnsurePolicyIsUpdatedAsync(IReadOnlyCollection<string> config)
+        public async Task EnsurePolicyIsUpdatedAsync(IReadOnlyCollection<string> additionalSubscriberAccounts)
         {
-            if (config.Any())
+            if (additionalSubscriberAccounts.Any())
             {
-                var policy = new SnsPolicy(config);
-                await policy.SaveAsync(Arn, Client).ConfigureAwait(false);
+                var policyDetails = new SnsPolicyDetails
+                {
+                    AccountIds = additionalSubscriberAccounts,
+                    SourceArn = Arn
+                };
+                await SnsPolicy.SaveAsync(policyDetails, Client).ConfigureAwait(false);
             }
         }
 
