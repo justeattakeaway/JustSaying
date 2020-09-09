@@ -39,8 +39,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         public IClientConfig Config { get; }
 
-        public ISQSPaginatorFactory Paginators { get; }
-
         public Task<string> AuthorizeS3ToSendMessageAsync(string queueUrl, string bucket)
         {
             return Task.FromResult("");
