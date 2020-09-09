@@ -67,7 +67,7 @@ jobs:
 
       - name: Publish pre-release NuGet packages to Github packages
         run: dotnet nuget push "artifacts\packages\*.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate  --source https://nuget.pkg.github.com/justeat/index.json
-        if: ${{ runner.os == 'Windows' }}
+        if: ${{ github.repository_owner == 'justeat' && runner.os == 'Windows' }}
 
       - name: Push NuGet packages to NuGet.org
         run: dotnet nuget push "artifacts\packages\*.nupkg" --api-key ${{ secrets.NUGET_TOKEN }} --skip-duplicate --source https://api.nuget.org/v3/index.json
