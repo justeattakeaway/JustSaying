@@ -65,7 +65,7 @@ jobs:
           name: packages-${{ matrix.os_name }}
           path: ./artifacts/packages
 
-      - name: Publish pre-release NuGet packages to Github packages
+      - name: Publish pre-release NuGet packages to GitHub packages
         run: dotnet nuget push "artifacts\packages\*.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate  --source https://nuget.pkg.github.com/justeat/index.json
         if: ${{ github.repository_owner == 'justeat' && runner.os == 'Windows' }}
 
