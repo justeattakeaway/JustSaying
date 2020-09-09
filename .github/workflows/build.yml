@@ -67,6 +67,7 @@ jobs:
 
       - name: Authenticate with GitHub Packages
         uses: actions/setup-dotnet@v1
+        if: ${{ github.repository_owner == 'justeat' && github.ref == 'refs/heads/master' && runner.os == 'Windows' }}
         with:
           source-url: https://nuget.pkg.github.com/justeat/index.json
         env:
