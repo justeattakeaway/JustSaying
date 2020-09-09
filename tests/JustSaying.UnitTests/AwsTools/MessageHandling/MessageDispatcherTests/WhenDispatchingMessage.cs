@@ -21,6 +21,7 @@ using Newtonsoft.Json;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
+using Xunit.Abstractions;
 using Message = JustSaying.Models.Message;
 using SQSMessage = Amazon.SQS.Model.Message;
 
@@ -45,8 +46,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
         private readonly IMessageMonitor _messageMonitor = Substitute.For<IMessageMonitor>();
         private readonly HandlerMap _handlerMap = new HandlerMap(Substitute.For<IMessageMonitor>(), NullLoggerFactory.Instance);
-        private readonly ILoggerFactory _loggerFactory = Substitute.For<ILoggerFactory>();
-        private readonly ILogger _logger = Substitute.For<ILogger>();
+        private readonly ILoggerFactory _loggerFactory;
         private readonly IMessageBackoffStrategy _messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
         private IAmazonSQS _amazonSqsClient = Substitute.For<IAmazonSQS>();
 
@@ -55,6 +55,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
         private Message _typedMessage = new SimpleMessage();
 
         internal MessageDispatcher SystemUnderTest { get; private set; }
+
+        public WhenDispatchingMessage(ITestOutputHelper outputHelper)
+        {
+            _loggerFactory = outputHelper.ToLoggerFactory();
+        }
 
         public virtual async Task InitializeAsync()
         {
@@ -86,10 +91,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
                 ReceiptHandle = "i_am_receipt_handle"
             };
 
-            _loggerFactory.CreateLogger(Arg.Any<string>()).Returns(_logger);
             _queue = new DummySqsQueue(new Uri(ExpectedQueueUrl),
-                _amazonSqsClient,
-                NullLoggerFactory.Instance);
+                _amazonSqsClient, _loggerFactory);
             _serializationRegister.DeserializeMessage(Arg.Any<string>())
                 .Returns(new MessageWithAttributes(_typedMessage, new MessageAttributes()));
         }
@@ -132,16 +135,13 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             }
 
             [Fact]
-            public void ShouldLogError()
-            {
-                _logger.ReceivedWithAnyArgs().LogError(0, null, "msg");
-            }
-
-            [Fact]
             public void ShouldUpdateMessageVisibility()
             {
                 _amazonSqsClient.Received(1).ChangeMessageVisibilityAsync(Arg.Is<ChangeMessageVisibilityRequest>(x => x.QueueUrl == ExpectedQueueUrl && x.ReceiptHandle == _sqsMessage.ReceiptHandle && x.VisibilityTimeout == (int)_expectedBackoffTimeSpan.TotalSeconds));
             }
+
+            public AndHandlerMapDoesNotHaveMatchingHandler(ITestOutputHelper outputHelper) : base(outputHelper)
+            { }
         }
 
         public class AndMessageProcessingSucceeds : WhenDispatchingMessage
@@ -163,6 +163,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             {
                 _amazonSqsClient.Received(1).DeleteMessageAsync(Arg.Is<DeleteMessageRequest>(x => x.QueueUrl == ExpectedQueueUrl && x.ReceiptHandle == _sqsMessage.ReceiptHandle));
             }
+
+            public AndMessageProcessingSucceeds(ITestOutputHelper outputHelper) : base(outputHelper)
+            { }
         }
 
         public class AndMessageProcessingFails : WhenDispatchingMessage
@@ -190,25 +193,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             {
                 _amazonSqsClient.Received(1).ChangeMessageVisibilityAsync(Arg.Is<ChangeMessageVisibilityRequest>(x => x.QueueUrl == ExpectedQueueUrl && x.ReceiptHandle == _sqsMessage.ReceiptHandle && x.VisibilityTimeout == (int)_expectedBackoffTimeSpan.TotalSeconds));
             }
-        }
 
-        public class AndUpdatingMessageVisibilityErrors : WhenDispatchingMessage
-        {
-            protected override void Given()
-            {
-                base.Given();
-                _messageBackoffStrategy.GetBackoffDuration(_typedMessage, Arg.Any<int>()).Returns(TimeSpan.FromMinutes(4));
-                _amazonSqsClient.ChangeMessageVisibilityAsync(Arg.Any<ChangeMessageVisibilityRequest>()).Throws(new AmazonServiceException("Something gone wrong"));
-
-                _handlerMap.Add(_queue.QueueName, typeof(OrderAccepted), m => Task.FromResult(false));
-                _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, "1");
-            }
-
-            [Fact]
-            public void ShouldLogException()
-            {
-                _logger.ReceivedWithAnyArgs().LogError(0, null, "msg");
-            }
+            public AndMessageProcessingFails(ITestOutputHelper outputHelper) : base(outputHelper)
+            { }
         }
     }
 }

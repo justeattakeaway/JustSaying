@@ -1,8 +1,10 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -15,8 +17,10 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override async Task WhenAsync()
         {
-            SystemUnderTest.AddMessagePublisher<SimpleMessage>(_publisher, string.Empty);
-            await SystemUnderTest.StartAsync(CancellationToken.None);
+            SystemUnderTest.AddMessagePublisher<SimpleMessage>(_publisher);
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            await SystemUnderTest.StartAsync(cts.Token);
             await SystemUnderTest.PublishAsync(new SimpleMessage());
         }
 
@@ -36,8 +40,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public void SettingANewMonitorIsAccepted()
         {
-            SystemUnderTest.Monitor = new CustomMonitor();
-            SystemUnderTest.Monitor.ShouldBeAssignableTo<CustomMonitor>();
+            SystemUnderTest.Monitor = new TrackingLoggingMonitor(NullLogger.Instance);
+            SystemUnderTest.Monitor.ShouldBeAssignableTo<TrackingLoggingMonitor>();
         }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
@@ -69,7 +70,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         {
             IMultiplexer multiplexer = CreateMultiplexer(settings.MultiplexerCapacity);
             ICollection<IMessageReceiveBuffer> receiveBuffers = CreateBuffers(receiveMiddleware, settings);
-            ICollection<IMultiplexerSubscriber> subscribers = CreateSubscribers(settings.ConcurrencyLimit);
+            ICollection<IMultiplexerSubscriber> subscribers = CreateSubscribers(settings);
 
             foreach (IMessageReceiveBuffer receiveBuffer in receiveBuffers)
             {
@@ -120,10 +121,15 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
                 _loggerFactory.CreateLogger<MergingMultiplexer>());
         }
 
-        private ICollection<IMultiplexerSubscriber> CreateSubscribers(int count)
+        private ICollection<IMultiplexerSubscriber> CreateSubscribers(SubscriptionGroupSettings settings)
         {
-            return Enumerable.Range(0, count)
-                .Select(x => (IMultiplexerSubscriber)new MultiplexerSubscriber(_messageDispatcher))
+            var logger = _loggerFactory.CreateLogger<MultiplexerSubscriber>();
+
+            return Enumerable.Range(0, settings.ConcurrencyLimit)
+                .Select(index => (IMultiplexerSubscriber) new MultiplexerSubscriber(
+                    _messageDispatcher,
+                    $"{settings.Name}-subscriber-{index}",
+                    logger))
                 .ToList();
         }
     }

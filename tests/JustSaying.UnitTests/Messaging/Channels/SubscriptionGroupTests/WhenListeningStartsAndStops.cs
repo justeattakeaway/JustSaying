@@ -5,9 +5,12 @@ using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.MessageProcessingStrategies;
+using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -15,15 +18,13 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
     public class WhenListeningStartsAndStops : BaseSubscriptionGroupTests
     {
-        private ISqsQueue _queue;
-#pragma warning disable IDE1006
-        private const string _messageContentsRunning = @"Message Contents Running";
-        private const string _messageContentsAfterStop = @"Message Contents After Stop";
-#pragma warning restore IDE1006
+        private const string AttributeMessageContentsRunning = @"Message Contents Running";
+        private const string AttributeMessageContentsAfterStop = @"Message Contents After Stop";
 
         private int _expectedMaxMessageCount;
         private bool _running;
-        private IAmazonSQS _client;
+        private FakeSqsQueue _queue;
+        private FakeAmazonSqs _client;
 
         public WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
@@ -37,11 +38,11 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
             Logger.LogInformation("Expected max message count is {MaxMessageCount}", _expectedMaxMessageCount);
 
-            var response1 = new List<Message> { new Message { Body = _messageContentsRunning } };
-            var response2 = new List<Message> { new Message { Body = _messageContentsAfterStop } };
+            var response1 = new List<Message> { new Message { Body = AttributeMessageContentsRunning } };
+            var response2 = new List<Message> { new Message { Body = AttributeMessageContentsAfterStop } };
 
-            _queue = CreateSuccessfulTestQueue("TestQueue", () => _running ? response1 : response2);
-            _client = _queue.Client;
+            _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), () => _running ? response1 : response2);
+            _client = _queue.FakeClient;
 
             Queues.Add(_queue);
         }
@@ -49,38 +50,29 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         protected override async Task WhenAsync()
         {
             _running = true;
-            var cts = new CancellationTokenSource();
 
-            var completion = SystemUnderTest.RunAsync(cts.Token);
+            await base.WhenAsync();
 
-            cts.CancelAfter(TimeoutPeriod.Subtract(TimeSpan.FromMilliseconds(500)));
-
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
             _running = false;
         }
 
         [Fact]
-        public async Task MessagesAreReceived()
+        public void MessagesAreReceived()
         {
-            await _client.Received()
-                .ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>());
+            _client.ReceiveMessageRequests.ShouldNotBeEmpty();
         }
 
         [Fact]
-        public async Task TheMaxMessageAllowanceIsGrabbed()
+        public void TheMaxMessageAllowanceIsGrabbed()
         {
-            await _client.Received()
-                .ReceiveMessageAsync(Arg.Is<ReceiveMessageRequest>(request => request.MaxNumberOfMessages == _expectedMaxMessageCount), Arg.Any<CancellationToken>());
+            _client.ReceiveMessageRequests.ShouldAllBe(req => req.MaxNumberOfMessages == _expectedMaxMessageCount);
         }
 
         [Fact]
         public void MessageIsProcessed()
         {
-            SerializationRegister.Received()
-                .DeserializeMessage(_messageContentsRunning);
-
-            SerializationRegister.DidNotReceive()
-                .DeserializeMessage(_messageContentsAfterStop);
+            SerializationRegister.ReceivedDeserializationRequests.ShouldContain(AttributeMessageContentsRunning);
+            SerializationRegister.ReceivedDeserializationRequests.ShouldNotContain(AttributeMessageContentsAfterStop);
         }
     }
 }

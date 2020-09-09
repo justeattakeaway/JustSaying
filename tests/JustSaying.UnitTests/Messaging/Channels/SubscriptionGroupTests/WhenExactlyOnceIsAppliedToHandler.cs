@@ -1,10 +1,12 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests.Support;
+using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -12,49 +14,45 @@ using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
+    [ExactlyOnce(TimeOut = 5)]
+    public class ExactlyOnceHandler : InspectableHandler<SimpleMessage>
+    {
+
+    }
+
     public class WhenExactlyOnceIsAppliedToHandler : BaseSubscriptionGroupTests
     {
         private ISqsQueue _queue;
-        private int _expectedTimeout = 5;
-        private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
-
-        private ExplicitExactlyOnceSignallingHandler _handler;
+        private readonly int _expectedTimeout = 5;
 
         public WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
-        {
-        }
+        { }
 
         protected override void Given()
         {
+            Handler = new ExactlyOnceHandler();
+
             _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
 
             Queues.Add(_queue);
 
-            var messageLockResponse = new MessageLockResponse
-            {
-                DoIHaveExclusiveLock = true
-            };
-
-            MessageLock = Substitute.For<IMessageLockAsync>();
-            MessageLock.TryAquireLockAsync(Arg.Any<string>(), Arg.Any<TimeSpan>())
-                .Returns(messageLockResponse);
-
-            _handler = new ExplicitExactlyOnceSignallingHandler(_tcs);
-            Handler = _handler;
+            MessageLock = new FakeMessageLock();
         }
 
         protected override async Task WhenAsync()
         {
             HandlerMap.Add(_queue.QueueName, () => Handler);
 
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromMilliseconds(100));
+            using var cts = new CancellationTokenSource();
 
             var completion = SystemUnderTest.RunAsync(cts.Token);
 
             // wait until it's done
-            await TaskHelpers.WaitWithTimeoutAsync(_tcs.Task);
+            await Patiently.AssertThatAsync(OutputHelper,
+                () => Handler.ReceivedMessages.Any());
+
+            cts.Cancel();
 
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
         }
@@ -62,17 +60,19 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         [Fact]
         public void ProcessingIsPassedToTheHandler()
         {
-            _handler.HandleWasCalled.ShouldBeTrue();
+            Handler.ReceivedMessages.ShouldNotBeEmpty();
         }
 
         [Fact]
-        public async Task MessageIsLocked()
+        public void MessageIsLocked()
         {
-            var messageId = DeserializedMessage.Id.ToString();
+            var messageId = SerializationRegister.DefaultDeserializedMessage().Id.ToString();
 
-            await MessageLock.Received().TryAquireLockAsync(
-                Arg.Is<string>(a => a.Contains(messageId, StringComparison.OrdinalIgnoreCase)),
-                TimeSpan.FromSeconds(_expectedTimeout));
+            var tempLockRequests = MessageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
+            tempLockRequests.Count().ShouldBeGreaterThan(0);
+            tempLockRequests.ShouldAllBe(pair =>
+                pair.key.Contains(messageId, StringComparison.OrdinalIgnoreCase) &&
+                pair.howLong == TimeSpan.FromSeconds(_expectedTimeout));
         }
     }
 }

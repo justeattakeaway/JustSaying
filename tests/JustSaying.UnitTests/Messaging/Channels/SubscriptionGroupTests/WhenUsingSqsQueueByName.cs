@@ -1,79 +1,60 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Linq;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.TestingFramework;
-using NSubstitute;
+using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    public class WhenUsingSqsQueueByName : BaseSubscriptionGroupTests
+    public sealed class WhenUsingSqsQueueByName : BaseSubscriptionGroupTests, IDisposable
     {
         private ISqsQueue _queue;
-        private int _callCount;
         private IAmazonSQS _client;
-        protected readonly string MessageTypeString = typeof(SimpleMessage).ToString();
-        protected const string MessageBody = "object";
+        readonly string MessageTypeString = typeof(SimpleMessage).ToString();
+        const string MessageBody = "object";
 
         public WhenUsingSqsQueueByName(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
-        {
-        }
+        { }
 
         protected override void Given()
         {
             int retryCount = 1;
 
-            _client = Substitute.For<IAmazonSQS>();
-            var response = GenerateResponseMessage(MessageTypeString, Guid.NewGuid());
+            _client = new FakeAmazonSqs(() =>
+            {
+                return new[] { GenerateResponseMessages(MessageTypeString, Guid.NewGuid()) }
+                    .Concat(new ReceiveMessageResponse().Infinite());
+            });
 
-            _client.ReceiveMessageAsync(
-                    Arg.Any<ReceiveMessageRequest>(),
-                    Arg.Any<CancellationToken>())
-                .Returns(
-                    x => Task.FromResult(response),
-                    x => Task.FromResult(new ReceiveMessageResponse()));
-
-            _client.GetQueueUrlAsync(Arg.Any<string>())
-                .Returns(x =>
-                {
-                    if (x.Arg<string>() == "some-queue-name")
-                        return new GetQueueUrlResponse
-                        {
-                            QueueUrl = "https://testqueues.com/some-queue-name"
-                        };
-                    throw new QueueDoesNotExistException("some-queue-name not found");
-                });
-
-            _client.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>())
-                .Returns(new GetQueueAttributesResponse()
-                {
-                    Attributes = new Dictionary<string, string> { { "QueueArn", "something:some-queue-name" } }
-                });
-
-            var queue = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name", _client, retryCount, LoggerFactory);
+            var queue = new SqsQueueByName(RegionEndpoint.EUWest1,
+                "some-queue-name",
+                _client,
+                retryCount,
+                LoggerFactory);
             queue.ExistsAsync().Wait();
 
             _queue = queue;
 
             Queues.Add(_queue);
-            Handler.Handle(null)
-                .ReturnsForAnyArgs(true).AndDoes(ci => Interlocked.Increment(ref _callCount));
         }
 
         [Fact]
         public void HandlerReceivesMessage()
         {
-            Handler.Received().Handle(DeserializedMessage);
+            Handler.ReceivedMessages.Contains(SerializationRegister.DefaultDeserializedMessage())
+                .ShouldBeTrue();
         }
 
-        protected static ReceiveMessageResponse GenerateResponseMessage(string messageType, Guid messageId)
+        private static ReceiveMessageResponse GenerateResponseMessages(
+            string messageType,
+            Guid messageId)
         {
             return new ReceiveMessageResponse
             {
@@ -87,15 +68,21 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
                     new Message
                     {
                         MessageId = messageId.ToString(),
-                        Body = "{\"Subject\":\"SOME_UNKNOWN_MESSAGE\"," + "\"Message\":\"SOME_RANDOM_MESSAGE\"}"
+                        Body = "{\"Subject\":\"SOME_UNKNOWN_MESSAGE\"," +
+                            "\"Message\":\"SOME_RANDOM_MESSAGE\"}"
                     }
                 }
             };
         }
 
-        protected static string SqsMessageBody(string messageType)
+        private static string SqsMessageBody(string messageType)
         {
             return "{\"Subject\":\"" + messageType + "\"," + "\"Message\":\"" + MessageBody + "\"}";
+        }
+
+        public void Dispose()
+        {
+            _client.Dispose();
         }
     }
 }

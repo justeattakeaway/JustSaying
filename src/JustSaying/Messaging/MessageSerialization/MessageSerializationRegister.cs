@@ -29,6 +29,7 @@ namespace JustSaying.Messaging.MessageSerialization
 
         public MessageWithAttributes DeserializeMessage(string body)
         {
+
             foreach (var pair in _map)
             {
                 TypeSerializer typeSerializer = pair.Value;

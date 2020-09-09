@@ -4,6 +4,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.Channels.Multiplexer;
+using JustSaying.TestingFramework;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -113,10 +114,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MultiplexerTests
             channel2.Writer.Complete();
 
             // Assert
-            var delay = Task.Delay(TimeoutPeriod);
-            var completedTask = await Task.WhenAny(multiplexerRunTask, delay);
-            Assert.Equal(multiplexerRunTask, completedTask);
-
+            await Patiently.AssertThatAsync(_outputHelper, () => multiplexerRunTask.IsCompletedSuccessfully);
             cts.Cancel();
         }
 

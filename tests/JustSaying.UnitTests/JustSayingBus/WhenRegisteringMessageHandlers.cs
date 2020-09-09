@@ -7,6 +7,7 @@ using JustSaying.Models;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -15,7 +16,6 @@ namespace JustSaying.UnitTests.JustSayingBus
         private ISqsQueue _queue;
         private IHandlerAsync<Message> _handler1;
         private IHandlerAsync<Message2> _handler2;
-        private string _region;
         private Func<IHandlerAsync<Message>> _futureHandler1;
         private Func<IHandlerAsync<Message2>> _futureHandler2;
 
@@ -27,18 +27,15 @@ namespace JustSaying.UnitTests.JustSayingBus
             _queue = Substitute.For<ISqsQueue>();
             _handler1 = Substitute.For<IHandlerAsync<Message>>();
             _handler2 = Substitute.For<IHandlerAsync<Message2>>();
-            _region = "west-1";
         }
 
         protected override async Task WhenAsync()
         {
-            SystemUnderTest.AddQueue(_region, typeof(Message).FullName, _queue);
+            SystemUnderTest.AddQueue(typeof(Message).FullName, _queue);
             SystemUnderTest.AddMessageHandler(_queue.QueueName, _futureHandler1);
             SystemUnderTest.AddMessageHandler(_queue.QueueName, _futureHandler2);
 
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeoutPeriod);
-
+            var cts = new CancellationTokenSource(TimeoutPeriod);
             await SystemUnderTest.StartAsync(cts.Token);
         }
 
@@ -50,5 +47,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         }
 
         public class Message2 : Message { }
+
+        public WhenRegisteringMessageHandlers(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
     }
 }

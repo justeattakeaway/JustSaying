@@ -12,6 +12,7 @@ using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -31,11 +32,14 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
         public ChannelsTests(ITestOutputHelper testOutputHelper)
         {
+            OutputHelper = testOutputHelper;
             LoggerFactory = testOutputHelper.ToLoggerFactory();
-            MessageMonitor = new LoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
+            MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
         }
 
-        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(500);
+        public TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
+
+        public ITestOutputHelper OutputHelper { get; set; }
 
         [Fact]
         public async Task QueueCanBeAssignedToOnePump()
@@ -50,13 +54,14 @@ namespace JustSaying.UnitTests.Messaging.Channels
             consumer1.Subscribe(multiplexer.GetMessagesAsync());
 
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeoutPeriod);
 
             var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
             var consumer1Completion = consumer1.RunAsync(cts.Token);
             var buffer1Completion = buffer.RunAsync(cts.Token);
 
-            await multiplexerCompletion;
+            cts.Cancel();
+
+            await multiplexerCompletion.HandleCancellation();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1Completion);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer1Completion);
         }
@@ -77,18 +82,15 @@ namespace JustSaying.UnitTests.Messaging.Channels
             consumer1.Subscribe(multiplexer.GetMessagesAsync());
             consumer2.Subscribe(multiplexer.GetMessagesAsync());
 
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeoutPeriod);
-
-            var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
+            using var cts = new CancellationTokenSource(TimeoutPeriod);
 
             // consumers
+            var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
             var consumer1Completion = consumer1.RunAsync(cts.Token);
             var consumer2Completion = consumer2.RunAsync(cts.Token);
-
             var buffer1Completion = buffer.RunAsync(cts.Token);
 
-            await multiplexerCompletion;
+            await multiplexerCompletion.HandleCancellation();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1Completion);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer2Completion);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer1Completion);
@@ -115,15 +117,14 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
 
-            var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
 
             // consumers
+            var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
             var consumer1Completion = consumer1.RunAsync(cts.Token);
-
             var buffer1Completion = buffer1.RunAsync(cts.Token);
             var buffer2Completion = buffer2.RunAsync(cts.Token);
 
-            await multiplexerCompletion;
+            await multiplexerCompletion.HandleCancellation();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer1Completion);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer2Completion);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1Completion);
@@ -152,7 +153,6 @@ namespace JustSaying.UnitTests.Messaging.Channels
             consumer2.Subscribe(multiplexer.GetMessagesAsync());
 
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeoutPeriod);
 
             var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
 
@@ -163,11 +163,13 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var buffer1Completion = buffer1.RunAsync(cts.Token);
             var buffer2Completion = buffer2.RunAsync(cts.Token);
 
+            cts.Cancel();
+
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer1Completion);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer2Completion);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1Completion);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer2Completion);
-            await multiplexerCompletion;
+            await multiplexerCompletion.HandleCancellation();
         }
 
         [Fact]
@@ -176,41 +178,56 @@ namespace JustSaying.UnitTests.Messaging.Channels
             // Arrange
             int messagesFromQueue = 0;
             int messagesDispatched = 0;
-            int bufferSize = 5;
-            int channelCapacity = 10;
+            int receivebufferSize = 2;
+            int multiplexerCapacity = 2;
 
             // plus one "in flight" between buffer and multiplexer
-            int expectedReceiveFromQueueCount = bufferSize + channelCapacity + 1;
+            int expectedReceiveFromQueueCount = receivebufferSize + multiplexerCapacity + 1;
 
             var sqsQueue = TestQueue(() => Interlocked.Increment(ref messagesFromQueue));
-            IMessageReceiveBuffer buffer = CreateMessageReceiveBuffer(sqsQueue, bufferSize);
-            IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
+            IMessageReceiveBuffer buffer = CreateMessageReceiveBuffer(sqsQueue, receivebufferSize);
+            IMessageDispatcher dispatcher =
+                new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
             IMultiplexerSubscriber consumer1 = CreateSubscriber(dispatcher);
-            IMultiplexer multiplexer = CreateMultiplexer(channelCapacity);
+            IMultiplexer multiplexer = CreateMultiplexer(multiplexerCapacity);
 
             multiplexer.ReadFrom(buffer.Reader);
             consumer1.Subscribe(multiplexer.GetMessagesAsync());
 
             // need to start the multiplexer before calling Messages
 
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromSeconds(2));
+            using var cts = new CancellationTokenSource();
 
             // Act and Assert
             var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
             var bufferCompletion = buffer.RunAsync(cts.Token);
 
-            await multiplexerCompletion;
+            cts.CancelAfter(TimeSpan.FromSeconds(3));
+
+            await multiplexerCompletion.HandleCancellation();
+
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => bufferCompletion);
 
-            messagesFromQueue.ShouldBe(expectedReceiveFromQueueCount);
-            messagesDispatched.ShouldBe(0);
+            await Patiently.AssertThatAsync(OutputHelper,
+                () =>
+                {
+                    messagesFromQueue.ShouldBe(expectedReceiveFromQueueCount);
+                    messagesDispatched.ShouldBe(0);
+
+                    return true;
+                });
 
             // Starting the consumer after the token is cancelled will not dispatch messages
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1.RunAsync(cts.Token));
 
-            messagesFromQueue.ShouldBe(expectedReceiveFromQueueCount);
-            messagesDispatched.ShouldBe(0);
+            await Patiently.AssertThatAsync(OutputHelper,
+                () =>
+                {
+                    messagesFromQueue.ShouldBe(expectedReceiveFromQueueCount);
+                    messagesDispatched.ShouldBe(0);
+
+                    return true;
+                });
         }
 
         [Fact]
@@ -229,6 +246,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => bus.RunAsync(cts.Token));
         }
+
 
         [Fact]
         public async Task Sqs_Queue_Is_Not_Polled_After_Cancellation()
@@ -300,14 +318,16 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             var queue = TestQueue();
             var dispatcher = new FakeDispatcher();
-            var bus = CreateSubscriptionGroup(new[] { queue }, dispatcher);
+            var group = CreateSubscriptionGroup(new[] { queue }, dispatcher);
 
-            var cts = new CancellationTokenSource(TimeoutPeriod);
+            var cts = new CancellationTokenSource();
 
-            var task1 = bus.RunAsync(cts.Token);
-            var task2 = bus.RunAsync(cts.Token);
+            var task1 = group.RunAsync(cts.Token);
+            var task2 = group.RunAsync(cts.Token);
 
             Assert.True(ReferenceEquals(task1, task2));
+
+            cts.Cancel();
         }
 
         private static ISqsQueue TestQueue(Action spy = null)
@@ -353,9 +373,10 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 LoggerFactory.CreateLogger<MessageReceiveBuffer>());
         }
 
-        private static IMultiplexerSubscriber CreateSubscriber(IMessageDispatcher dispatcher)
+        private IMultiplexerSubscriber CreateSubscriber(IMessageDispatcher dispatcher)
         {
-            return new MultiplexerSubscriber(dispatcher);
+            return new MultiplexerSubscriber(dispatcher, Guid.NewGuid().ToString(),
+                LoggerFactory.CreateLogger<MultiplexerSubscriber>());
         }
 
         private ISubscriptionGroup CreateSubscriptionGroup(

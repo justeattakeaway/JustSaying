@@ -91,40 +91,37 @@ namespace JustSaying.Fluent
 
             bus.SerializationRegister.AddSerializer<T>();
 
-            foreach (var region in config.Regions)
+            // TODO pass region down into topic creation for when we have foreign topics so we can generate the arn
+            var eventPublisher = new SnsTopicByName(
+                readConfiguration.TopicName,
+                proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(config.Region)),
+                bus.SerializationRegister,
+                loggerFactory,
+                writeConfiguration,
+                config.MessageSubjectProvider)
             {
-                // TODO pass region down into topic creation for when we have foreign topics so we can generate the arn
-                var eventPublisher = new SnsTopicByName(
-                    readConfiguration.TopicName,
-                    proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
-                    bus.SerializationRegister,
-                    loggerFactory,
-                    writeConfiguration,
-                    config.MessageSubjectProvider)
-                {
-                    MessageResponseLogger = config.MessageResponseLogger
-                };
+                MessageResponseLogger = config.MessageResponseLogger
+            };
 
-                async Task StartupTask()
+            async Task StartupTask()
+            {
+                if (writeConfiguration.Encryption != null)
                 {
-                    if (writeConfiguration.Encryption != null)
-                    {
-                        await eventPublisher.CreateWithEncryptionAsync(writeConfiguration.Encryption)
-                            .ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        await eventPublisher.CreateAsync().ConfigureAwait(false);
-                    }
-
-                    await eventPublisher.EnsurePolicyIsUpdatedAsync(config.AdditionalSubscriberAccounts)
+                    await eventPublisher.CreateWithEncryptionAsync(writeConfiguration.Encryption)
                         .ConfigureAwait(false);
                 }
+                else
+                {
+                    await eventPublisher.CreateAsync().ConfigureAwait(false);
+                }
 
-                bus.AddStartupTask(StartupTask());
-
-                bus.AddMessagePublisher<T>(eventPublisher, region);
+                await eventPublisher.EnsurePolicyIsUpdatedAsync(config.AdditionalSubscriberAccounts)
+                    .ConfigureAwait(false);
             }
+
+            bus.AddStartupTask(StartupTask());
+
+            bus.AddMessagePublisher<T>(eventPublisher);
 
             logger.LogInformation(
                 "Created SNS topic publisher on topic '{TopicName}' for message type '{MessageType}'.",

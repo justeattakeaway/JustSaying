@@ -6,6 +6,7 @@ using JustSaying.TestingFramework;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -21,10 +22,11 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override async Task WhenAsync()
         {
-            SystemUnderTest.AddMessagePublisher<OrderAccepted>(_publisher, string.Empty);
-            SystemUnderTest.AddMessagePublisher<OrderRejected>(_publisher, string.Empty);
+            SystemUnderTest.AddMessagePublisher<OrderAccepted>(_publisher);
+            SystemUnderTest.AddMessagePublisher<OrderRejected>(_publisher);
 
-            await SystemUnderTest.StartAsync(CancellationToken.None);
+            var cts = new CancellationTokenSource(TimeoutPeriod);
+            await SystemUnderTest.StartAsync(cts.Token);
 
             await SystemUnderTest.PublishAsync(new OrderAccepted());
             await SystemUnderTest.PublishAsync(new OrderRejected());
@@ -56,10 +58,11 @@ namespace JustSaying.UnitTests.JustSayingBus
 
             string[] publishedTypes = response.Data.PublishedMessageTypes;
 
-            // These have a ':' prefix because the interrogation adds the region at the start.
-            // The queues are faked out here so there's no region.
-            publishedTypes.ShouldContain($":{nameof(OrderAccepted)}");
-            publishedTypes.ShouldContain($":{nameof(OrderRejected)}");
+            publishedTypes.ShouldContain(nameof(OrderAccepted));
+            publishedTypes.ShouldContain(nameof(OrderRejected));
         }
+
+        public WhenRegisteringPublishers(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
     }
 }

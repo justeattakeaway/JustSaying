@@ -123,7 +123,6 @@ namespace JustSaying.Messaging.Channels.Receive
 
             using var receiveTimeout = new CancellationTokenSource(_readTimeout);
             IList<Message> messages;
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
             try
             {
@@ -157,10 +156,6 @@ namespace JustSaying.Messaging.Channels.Receive
                         _sqsQueueReader.RegionSystemName);
                 }
             }
-
-            stopwatch.Stop();
-
-            _monitor.ReceiveMessageTime(stopwatch.Elapsed, _sqsQueueReader.QueueName, _sqsQueueReader.RegionSystemName);
 
             return messages;
         }

@@ -25,9 +25,17 @@ namespace JustSaying.IntegrationTests
 
         private ITestOutputHelper OutputHelper { get; }
 
+        private class QueueStore : TestMessageStore<QueueMessage>
+        {
+            public QueueStore(ILogger<TestMessageStore<QueueMessage>> logger) : base(logger)
+            { }
+        }
+
         [AwsFact]
         public async Task Can_Create_Messaging_Bus_Fluently_For_A_Queue()
         {
+            var queueName = Guid.NewGuid().ToString();
+
             // Arrange
             var services = new ServiceCollection()
                 .AddLogging((p) => p.AddXUnit(OutputHelper))
@@ -37,41 +45,41 @@ namespace JustSaying.IntegrationTests
                         builder.Client((options) =>
                                 options.WithBasicCredentials("accessKey", "secretKey")
                                     .WithServiceUri(TestEnvironment.SimulatorUrl))
-                            .Messaging((options) => options.WithRegions("eu-west-1"))
-                            .Publications((options) => options.WithQueue<QueueMessage>())
-                            .Subscriptions((options) => options.ForQueue<QueueMessage>())
+                            .Messaging((options) => options.WithRegion("eu-west-1"))
+                            .Publications((options) => options.WithQueue<QueueMessage>(queueName))
+                            .Subscriptions((options) => options.ForQueue<QueueMessage>(queueName))
                             .Services((options) => options.WithMessageMonitoring(() => new MyMonitor()));
                     })
-                .AddJustSayingHandler<QueueMessage, QueueHandler>();
+                .AddSingleton<IMessageStore<QueueMessage>, QueueStore>()
+                .AddJustSayingHandler<QueueMessage, MessageStoringHandler<QueueMessage>>();
 
             IServiceProvider serviceProvider = services.BuildServiceProvider();
 
             IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
             IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
-            using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
-            {
-                // Act
-                await listener.StartAsync(source.Token);
-                await publisher.StartAsync(source.Token);
+            using var source = new CancellationTokenSource(TimeSpan.FromSeconds(20));
 
-                var message = new QueueMessage();
+            // Act
+            await listener.StartAsync(source.Token);
+            await publisher.StartAsync(source.Token);
 
-                await publisher.PublishAsync(message, source.Token);
+            var message = new QueueMessage();
 
-                // Assert
-                while (!source.IsCancellationRequested && !QueueHandler.MessageIds.Contains(message.Id))
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(0.2), source.Token);
-                }
+            await publisher.PublishAsync(message, source.Token);
 
-                QueueHandler.MessageIds.ShouldContain(message.Id);
-            }
+            var store = serviceProvider.GetRequiredService<IMessageStore<QueueMessage>>();
+
+            // Assert
+            await Patiently.AssertThatAsync(OutputHelper,
+                () => store.Messages.Any(msg => msg.Id == message.Id));
         }
 
         [AwsFact]
         public async Task Can_Create_Messaging_Bus_Fluently_For_A_Topic()
         {
+            var topicName = Guid.NewGuid().ToString();
+
             // Arrange
             var services = new ServiceCollection()
                 .AddLogging((p) => p.AddXUnit(OutputHelper))
@@ -82,11 +90,12 @@ namespace JustSaying.IntegrationTests
                             .Client((options) =>
                                 options.WithBasicCredentials("accessKey", "secretKey")
                                     .WithServiceUri(TestEnvironment.SimulatorUrl))
-                            .Messaging((options) => options.WithRegions("eu-west-1"))
+                            .Messaging((options) => options.WithRegion("eu-west-1"))
                             .Publications((options) => options.WithTopic<TopicMessage>())
-                            .Subscriptions((options) => options.ForTopic<TopicMessage>());
+                            .Subscriptions((options) => options.ForTopic<TopicMessage>(topicName));
                     })
-                .AddJustSayingHandler<TopicMessage, TopicHandler>();
+                .AddSingleton<IMessageStore<TopicMessage>, TestMessageStore<TopicMessage>>()
+                .AddJustSayingHandler<TopicMessage, MessageStoringHandler<TopicMessage>>();
 
             IServiceProvider serviceProvider = services.BuildServiceProvider();
 
@@ -103,13 +112,10 @@ namespace JustSaying.IntegrationTests
 
                 await publisher.PublishAsync(message, source.Token);
 
-                // Assert
-                while (!source.IsCancellationRequested && !TopicHandler.MessageIds.Contains(message.Id))
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(0.2), source.Token);
-                }
+                var store = serviceProvider.GetService<IMessageStore<TopicMessage>>();
 
-                TopicHandler.MessageIds.ShouldContain(message.Id);
+                await Patiently.AssertThatAsync(OutputHelper,
+                    () => store.Messages.Any(msg => msg.Id == message.Id));
             }
         }
 
@@ -120,7 +126,7 @@ namespace JustSaying.IntegrationTests
             var services = new ServiceCollection()
                 .AddLogging((p) => p.AddXUnit(OutputHelper))
                 .AddJustSaying("eu-west-1")
-                .AddJustSayingHandler<QueueMessage, QueueHandler>();
+                .AddJustSayingHandler<QueueMessage, InspectableHandler<QueueMessage>>();
 
             IServiceProvider serviceProvider = services.BuildServiceProvider();
 
@@ -146,7 +152,8 @@ namespace JustSaying.IntegrationTests
                 .AddSingleton<IMessageBusConfigurationContributor, MessagingContributor>()
                 .AddSingleton<IMessageBusConfigurationContributor, QueueContributor>()
                 .AddSingleton<IMessageBusConfigurationContributor, RegionContributor>()
-                .AddJustSayingHandler<QueueMessage, QueueHandler>()
+                .AddJustSayingHandler<QueueMessage, MessageStoringHandler<QueueMessage>>()
+                .AddSingleton<IMessageStore<QueueMessage>, TestMessageStore<QueueMessage>>()
                 .AddSingleton<MyMonitor>();
 
             IServiceProvider serviceProvider = services.BuildServiceProvider();
@@ -165,12 +172,14 @@ namespace JustSaying.IntegrationTests
                 await publisher.PublishAsync(message, source.Token);
 
                 // Assert
-                while (!source.IsCancellationRequested && !QueueHandler.MessageIds.Contains(message.Id))
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(0.2), source.Token);
-                }
+                var messageStore = serviceProvider.GetService<IMessageStore<QueueMessage>>();
 
-                QueueHandler.MessageIds.ShouldContain(message.Id);
+                await Patiently.AssertThatAsync(OutputHelper,
+                    () =>
+                    {
+                        messageStore.Messages.ShouldContain(msg =>
+                            msg.Id.Equals(message.Id));
+                    });
             }
         }
 
@@ -202,10 +211,12 @@ namespace JustSaying.IntegrationTests
 
         private sealed class QueueContributor : IMessageBusConfigurationContributor
         {
+            public string QueueName { get; } = Guid.NewGuid().ToString();
+
             public void Configure(MessagingBusBuilder builder)
             {
-                builder.Publications((p) => p.WithQueue<QueueMessage>())
-                    .Subscriptions((p) => p.ForQueue<QueueMessage>());
+                builder.Publications((p) => p.WithQueue<QueueMessage>(QueueName))
+                    .Subscriptions((p) => p.ForQueue<QueueMessage>(QueueName));
             }
         }
 
@@ -220,30 +231,9 @@ namespace JustSaying.IntegrationTests
         private sealed class QueueMessage : Message
         { }
 
-        private sealed class QueueHandler : IHandlerAsync<QueueMessage>
-        {
-            internal static ConcurrentBag<Guid> MessageIds { get; } = new ConcurrentBag<Guid>();
-
-            public Task<bool> Handle(QueueMessage message)
-            {
-                MessageIds.Add(message.Id);
-                return Task.FromResult(true);
-            }
-        }
-
         private sealed class TopicMessage : Message
         { }
 
-        private sealed class TopicHandler : IHandlerAsync<TopicMessage>
-        {
-            internal static ConcurrentBag<Guid> MessageIds { get; } = new ConcurrentBag<Guid>();
-
-            public Task<bool> Handle(TopicMessage message)
-            {
-                MessageIds.Add(message.Id);
-                return Task.FromResult(true);
-            }
-        }
 
         private sealed class MyMonitor : IMessageMonitor
         {

@@ -8,7 +8,9 @@ using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels;
+using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using JustSaying.UnitTests.Messaging.Policies.ExamplePolicies;
 using Microsoft.Extensions.Logging;
@@ -23,18 +25,17 @@ namespace JustSaying.UnitTests.Messaging.Policies
     {
         private ILoggerFactory LoggerFactory { get; }
         private IMessageMonitor MessageMonitor { get; }
-
+        private readonly ITestOutputHelper _outputHelper;
 
         public ChannelPolicyTests(ITestOutputHelper testOutputHelper)
         {
+            _outputHelper = testOutputHelper;
             LoggerFactory = testOutputHelper.ToLoggerFactory();
-            MessageMonitor = new LoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
+            MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
         }
 
-        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
-
         [Fact]
-        public async Task ErrorHandlingAroundSqs()
+        public async Task ErrorHandlingAroundSqs_WithCustomPolicy_CanSwallowExceptions()
         {
             // Arrange
             int queueCalledCount = 0;
@@ -63,32 +64,33 @@ namespace JustSaying.UnitTests.Messaging.Policies
             ISubscriptionGroup collection = groupFactory.Create(config, settings);
 
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeoutPeriod);
+            var completion = collection.RunAsync(cts.Token);
 
+            await Patiently.AssertThatAsync(_outputHelper,
+                () =>
+                {
+                    queueCalledCount.ShouldBeGreaterThan(1);
+                    dispatchedMessageCount.ShouldBe(0);
+                });
+
+            cts.Cancel();
             // Act and Assert
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => collection.RunAsync(cts.Token));
 
-            queueCalledCount.ShouldBeGreaterThan(1);
-            dispatchedMessageCount.ShouldBe(0);
+            await completion.HandleCancellation();
         }
 
         private static ISqsQueue TestQueue(Action spy = null)
         {
-            async Task<ReceiveMessageResponse> GetMessages()
+            ReceiveMessageResponse GetMessages()
             {
-                await Task.Delay(TimeSpan.FromMilliseconds(5)).ConfigureAwait(false);
                 spy?.Invoke();
                 throw new InvalidOperationException();
             }
 
-            ISqsQueue sqsQueueMock = Substitute.For<ISqsQueue>();
-            sqsQueueMock.Uri.Returns(new Uri("http://test.com"));
-            sqsQueueMock
-                .Client
-                .ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
-                .Returns(async _ => await GetMessages());
+            var sqs = new FakeAmazonSqs(() => GetMessages().Infinite());
+            var queue = new FakeSqsQueue("test-queue", sqs);
 
-            return sqsQueueMock;
+            return queue;
         }
     }
 }

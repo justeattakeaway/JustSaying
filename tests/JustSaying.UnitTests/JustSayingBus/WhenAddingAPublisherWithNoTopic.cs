@@ -4,6 +4,7 @@ using JustSaying.TestingFramework;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -16,7 +17,7 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override Task WhenAsync()
         {
-            SystemUnderTest.AddMessagePublisher<SimpleMessage>(Substitute.For<IMessagePublisher>(), string.Empty);
+            SystemUnderTest.AddMessagePublisher<SimpleMessage>(Substitute.For<IMessagePublisher>());
 
             return Task.CompletedTask;
         }
@@ -26,5 +27,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             ThrownException.ShouldNotBeNull();
         }
+
+        public WhenAddingAPublisherWithNoTopic(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
     }
 }

@@ -3,21 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
-using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
-using JustSaying.Messaging.MessageSerialization;
-using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
-using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests.Support;
+using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -27,28 +22,29 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
     {
         protected IList<ISqsQueue> Queues;
         protected HandlerMap HandlerMap;
-        protected IMessageMonitor Monitor;
-        protected SimpleMessage DeserializedMessage;
-        protected IMessageSerializationRegister SerializationRegister;
+        protected TrackingLoggingMonitor Monitor;
+        protected FakeSerializationRegister SerializationRegister;
         protected int ConcurrencyLimit = 8;
 
-        protected IMessageLockAsync MessageLock
+        public ITestOutputHelper OutputHelper { get; }
+        protected FakeMessageLock MessageLock
         {
-            get => HandlerMap.MessageLock;
+            get => (FakeMessageLock) HandlerMap.MessageLock;
             set => HandlerMap.MessageLock = value;
         }
 
-        protected IHandlerAsync<SimpleMessage> Handler;
+        protected InspectableHandler<SimpleMessage> Handler;
 
         protected ISubscriptionGroup SystemUnderTest { get; private set; }
 
-        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
+        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(2);
 
         protected ILoggerFactory LoggerFactory { get; }
         protected ILogger Logger { get; }
 
         public BaseSubscriptionGroupTests(ITestOutputHelper testOutputHelper)
         {
+            OutputHelper = testOutputHelper;
             LoggerFactory = testOutputHelper.ToLoggerFactory();
             Logger = LoggerFactory.CreateLogger(GetType());
         }
@@ -65,14 +61,10 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         private void GivenInternal()
         {
             Queues = new List<ISqsQueue>();
-            Handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
-            Monitor = Substitute.For<IMessageMonitor>();
-            SerializationRegister = Substitute.For<IMessageSerializationRegister>();
+            Handler = new InspectableHandler<SimpleMessage>();
+            Monitor = new TrackingLoggingMonitor(Logger);
+            SerializationRegister = new FakeSerializationRegister();
             HandlerMap = new HandlerMap(Monitor, LoggerFactory);
-
-            DeserializedMessage = new SimpleMessage { RaisingComponent = "Component" };
-            SerializationRegister.DeserializeMessage(Arg.Any<string>())
-                .Returns(new MessageWithAttributes(DeserializedMessage, new MessageAttributes()));
 
             Given();
         }
@@ -82,31 +74,36 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         // Default implementation
         protected virtual async Task WhenAsync()
         {
-            var doneSignal = new TaskCompletionSource<object>();
-            var signallingHandler = new SignallingHandler<SimpleMessage>(doneSignal, Handler);
-
             foreach (ISqsQueue queue in Queues)
             {
-                HandlerMap.Add(queue.QueueName, typeof(SimpleMessage), msg => signallingHandler.Handle(msg as SimpleMessage));
+                HandlerMap.Add(queue.QueueName,
+                    typeof(SimpleMessage),
+                    msg => Handler.Handle(msg as SimpleMessage));
             }
 
-            var cts = new CancellationTokenSource();
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
             var completion = SystemUnderTest.RunAsync(cts.Token);
 
-            // wait until it's done
-            var doneOk = await TaskHelpers.WaitWithTimeoutAsync(doneSignal.Task);
+            await Patiently.AssertThatAsync(OutputHelper,
+                () => Until() || cts.IsCancellationRequested);
 
             cts.Cancel();
-
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
-
-            doneOk.ShouldBeTrue("Timeout occured before done signal");
+            await completion.HandleCancellation();
         }
 
-        protected ISubscriptionGroup CreateSystemUnderTest()
+        protected virtual bool Until()
+        {
+            OutputHelper.WriteLine("Checking if handler has received any messages");
+            return Handler.ReceivedMessages.Any();
+        }
+
+        private ISubscriptionGroup CreateSystemUnderTest()
         {
             var messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
             var messageContextAccessor = Substitute.For<IMessageContextAccessor>();
+
+            Logger.LogInformation("Creating MessageDispatcher with serialization register type {Type}",
+                SerializationRegister.GetType().FullName);
 
             var dispatcher = new MessageDispatcher(
                 SerializationRegister,
@@ -137,38 +134,32 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             };
         }
 
-        protected static ISqsQueue CreateSuccessfulTestQueue(string queueName, params Amazon.SQS.Model.Message[] messages)
+        protected static FakeSqsQueue CreateSuccessfulTestQueue(string queueName, params Message[] messages)
         {
-            return CreateSuccessfulTestQueue(queueName, () => messages.ToList());
+            return CreateSuccessfulTestQueue(queueName, messages.ToList);
         }
 
-        protected static ISqsQueue CreateSuccessfulTestQueue(string queueName, Func<List<Amazon.SQS.Model.Message>> getMessages)
+        protected static FakeSqsQueue CreateSuccessfulTestQueue(
+            string queueName,
+            Func<IEnumerable<Message>> getMessages)
         {
-            return CreateSuccessfulTestQueue(queueName, () => Task.FromResult(getMessages()));
-        }
-
-        protected static ISqsQueue CreateSuccessfulTestQueue(string queueName, Func<Task<List<Amazon.SQS.Model.Message>>> getMessages)
-        {
-            var client = Substitute.For<IAmazonSQS>();
-            client
-                .ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
-                .Returns(async _ =>
+            return CreateSuccessfulTestQueue(queueName,
+                () => new ReceiveMessageResponse()
                 {
-                    var messages = await getMessages();
+                    Messages = getMessages().ToList()
+                }.Infinite());
+        }
 
-                    return new ReceiveMessageResponse
-                    {
-                        Messages = messages,
-                    };
-                });
+        protected static FakeSqsQueue CreateSuccessfulTestQueue(
+            string queueName,
+            Func<IEnumerable<ReceiveMessageResponse>> getMessages)
+        {
+            var fakeClient = new FakeAmazonSqs(getMessages);
 
-            var queue = Substitute.For<ISqsQueue>();
+            var sqsQueue = new FakeSqsQueue(queueName,
+                fakeClient);
 
-            queue.Client.Returns(client);
-            queue.Uri.Returns(new Uri("http://foo.com"));
-            queue.QueueName.Returns(queueName);
-
-            return queue;
+            return sqsQueue;
         }
 
         public Task DisposeAsync()
@@ -178,8 +169,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             return Task.CompletedTask;
         }
 
-        protected class TestMessage : Amazon.SQS.Model.Message
-        {
-        }
+        protected class TestMessage : Message
+        { }
     }
 }

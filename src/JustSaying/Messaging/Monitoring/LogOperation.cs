@@ -26,7 +26,7 @@ namespace JustSaying.Messaging.Monitoring
 
             var args = _args.Concat(new object[] { _watch.Elapsed }).ToArray();
 
-            _logger.LogInformation($"{_message} completed in {{Duration}}ms", args);
+            _logger.LogInformation($"{_message} completed in {{Duration}}", args);
         }
     }
 }

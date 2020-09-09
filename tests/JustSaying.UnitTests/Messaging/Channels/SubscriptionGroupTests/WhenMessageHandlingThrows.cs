@@ -1,9 +1,6 @@
-using System;
-using System.Threading;
-using Amazon.SQS;
-using Amazon.SQS.Model;
+using System.Linq;
 using JustSaying.TestingFramework;
-using NSubstitute;
+using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -12,50 +9,45 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
     public class WhenMessageHandlingThrows : BaseSubscriptionGroupTests
     {
         private bool _firstTime = true;
-        private IAmazonSQS _sqsClient;
+        private FakeAmazonSqs _sqsClient;
 
         public WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper)
-            : base (testOutputHelper)
-        {
-        }
+            : base(testOutputHelper)
+        { }
 
         protected override void Given()
         {
             var queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
-            _sqsClient = queue.Client;
+            _sqsClient = queue.FakeClient;
 
             Queues.Add(queue);
-            Handler.Handle(Arg.Any<SimpleMessage>())
-                .Returns(_ => ExceptionOnFirstCall());
-        }
 
-        private bool ExceptionOnFirstCall()
-        {
-            if (_firstTime)
+            Handler.OnHandle = (msg) =>
             {
+                if (!_firstTime) return;
+
                 _firstTime = false;
                 throw new TestException("Thrown by test handler");
-            }
-
-            return false;
+            };
         }
 
         [Fact]
         public void MessageHandlerWasCalled()
         {
-            Handler.ReceivedWithAnyArgs().Handle(Arg.Any<SimpleMessage>());
+            Handler.ReceivedMessages.Any(msg => msg.GetType() == typeof(SimpleMessage)).ShouldBeTrue();
         }
 
         [Fact]
         public void FailedMessageIsNotRemovedFromQueue()
         {
-            _sqsClient.DidNotReceiveWithAnyArgs().DeleteMessageAsync(Arg.Any<DeleteMessageRequest>(), Arg.Any<CancellationToken>());
+            var numberHandled = Handler.ReceivedMessages.Count;
+            _sqsClient.DeleteMessageRequests.Count.ShouldBe(numberHandled - 1);
         }
 
         [Fact]
         public void ExceptionIsLoggedToMonitor()
         {
-            Monitor.ReceivedWithAnyArgs().HandleException(Arg.Any<Type>());
+            Monitor.HandledExceptions.ShouldNotBeEmpty();
         }
     }
 }

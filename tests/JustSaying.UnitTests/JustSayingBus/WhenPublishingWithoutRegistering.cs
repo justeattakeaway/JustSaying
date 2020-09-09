@@ -5,6 +5,7 @@ using JustSaying.Models;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -26,5 +27,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             ThrownException.ShouldBeAssignableTo<InvalidOperationException>();
         }
+
+        public WhenPublishingWithoutRegistering(ITestOutputHelper outputHelper) : base(outputHelper)
+        { }
     }
 }

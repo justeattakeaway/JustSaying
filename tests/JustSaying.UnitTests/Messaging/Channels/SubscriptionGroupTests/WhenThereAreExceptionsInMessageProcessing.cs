@@ -19,40 +19,37 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         public WhenThereAreExceptionsInMessageProcessing(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
-        {
-        }
+        { }
 
         protected override void Given()
         {
             ConcurrencyLimit = 1;
-            _queue = CreateSuccessfulTestQueue("TestQueue", () =>
-            {
-                Interlocked.Increment(ref _callCount);
-                return new List<Message> { new TestMessage() };
-            });
+            _queue = CreateSuccessfulTestQueue("TestQueue",
+                EnumerableExtensions.GenerateInfinite(() =>
+                {
+                    Interlocked.Increment(ref _callCount);
+                    return new ReceiveMessageResponse()
+                    {
+                        Messages = new List<Message> { new TestMessage() }
+                    };
+                }));
 
             Queues.Add(_queue);
-            Handler.Handle(null).ReturnsForAnyArgs(true);
 
-            SerializationRegister
-                .DeserializeMessage(Arg.Any<string>())
-                .Returns(x => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing"));
+            SerializationRegister.DefaultDeserializedMessage = () =>
+                throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
         }
 
-        protected override async Task WhenAsync()
+        protected override bool Until()
         {
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeoutPeriod);
-
-            var completion = SystemUnderTest.RunAsync(cts.Token);
-
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
+            return _callCount > 1;
         }
 
         [Fact]
-        public void TheListenerDoesNotDie()
+        public async Task TheListenerDoesNotDie()
         {
-            _callCount.ShouldBeGreaterThan(1);
+            await Patiently.AssertThatAsync(OutputHelper,
+                () => _callCount.ShouldBeGreaterThan(1));
         }
     }
 }

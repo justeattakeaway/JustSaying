@@ -22,14 +22,15 @@ namespace JustSaying.UnitTests.Messaging.Channels
     {
         private ILoggerFactory LoggerFactory { get; }
         private IMessageMonitor MessageMonitor { get; }
+        private ITestOutputHelper _outputHelper;
+
 
         public SubscriptionGroupCollectionTests(ITestOutputHelper testOutputHelper)
         {
+            _outputHelper = testOutputHelper;
             LoggerFactory = testOutputHelper.ToLoggerFactory();
-            MessageMonitor = new LoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
+            MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
         }
-
-        private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
 
         [Fact]
         public async Task Add_Different_Handler_Per_Queue()
@@ -37,43 +38,49 @@ namespace JustSaying.UnitTests.Messaging.Channels
             // Arrange
             string group1 = "group1";
             string group2 = "group2";
-            string region = "region";
             string queueName1 = "queue1";
             string queueName2 = "queue2";
 
             JustSaying.JustSayingBus bus = CreateBus();
 
+            var handler1 = new InspectableHandler<TestJustSayingMessage>();
+            var handler2 = new InspectableHandler<TestJustSayingMessage>();
+
+            bus.AddMessageHandler(queueName1, () => handler1);
+            bus.AddMessageHandler(queueName2, () => handler2);
+
             ISqsQueue queue1 = TestQueue(bus.SerializationRegister, queueName1);
             ISqsQueue queue2 = TestQueue(bus.SerializationRegister, queueName2);
 
-            bus.AddQueue(region, group1, queue1);
-            bus.AddQueue(region, group2, queue2);
+            bus.AddQueue(group1, queue1);
+            bus.AddQueue(group2, queue2);
 
-            var handledBy1 = new List<TestJustSayingMessage>();
-            var handledBy2 = new List<TestJustSayingMessage>();
-
-            bus.AddMessageHandler(queueName1, () => new TestHandler<TestJustSayingMessage>(x => handledBy1.Add(x)));
-            bus.AddMessageHandler(queueName2, () => new TestHandler<TestJustSayingMessage>(x => handledBy2.Add(x)));
-
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeoutPeriod);
+            using var cts = new CancellationTokenSource();
 
             // Act
             await bus.StartAsync(cts.Token);
-            await cts.Token.WaitForCancellation();
 
-            // Assert
-            handledBy1.Count.ShouldBeGreaterThan(0);
-            foreach (var message in handledBy1)
+            await Patiently.AssertThatAsync(_outputHelper,
+                () =>
+                {
+                    handler1.ReceivedMessages.Count.ShouldBeGreaterThan(0);
+                    handler2.ReceivedMessages.Count.ShouldBeGreaterThan(0);
+                });
+
+            cts.Cancel();
+            await bus.Completion;
+
+            foreach (var message in handler1.ReceivedMessages)
             {
                 message.QueueName.ShouldBe(queueName1);
             }
 
-            handledBy2.Count.ShouldBeGreaterThan(0);
-            foreach (var message in handledBy2)
+            foreach (var message in handler2.ReceivedMessages)
             {
                 message.QueueName.ShouldBe(queueName2);
             }
+
+            bus.Dispose();
         }
 
         private JustSaying.JustSayingBus CreateBus()
@@ -92,11 +99,9 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 .WithDefaultMultiplexerCapacity(1)
                 .WithDefaultPrefetch(1)
                 .WithDefaultBufferSize(1)
-                .WithDefaultConcurrencyLimit(1); // N
+                .WithDefaultConcurrencyLimit(1);
 
             bus.SetGroupSettings(defaultSubscriptionSettings, new Dictionary<string, SubscriptionGroupConfigBuilder>());
-
-            bus.SerializationRegister.AddSerializer<TestJustSayingMessage>();
 
             return bus;
         }
@@ -106,9 +111,10 @@ namespace JustSaying.UnitTests.Messaging.Channels
             string queueName,
             Action spy = null)
         {
-            ReceiveMessageResponse GetMessages()
+            async Task<ReceiveMessageResponse> GetMessages()
             {
                 spy?.Invoke();
+                await Task.Delay(30);
                 var message = new TestJustSayingMessage
                 {
                     QueueName = queueName,

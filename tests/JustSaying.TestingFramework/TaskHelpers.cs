@@ -37,5 +37,15 @@ namespace JustSaying.TestingFramework
             cancellationToken.Register(() => tcs.SetResult(true));
             return tcs.Task;
         }
+
+        public static async Task HandleCancellation(this Task task)
+        {
+            try
+            {
+                await task.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            { }
+        }
     }
 }

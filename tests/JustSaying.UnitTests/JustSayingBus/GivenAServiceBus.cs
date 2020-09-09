@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.JustSayingBus
 {
@@ -23,6 +24,11 @@ namespace JustSaying.UnitTests.JustSayingBus
         protected JustSaying.JustSayingBus SystemUnderTest { get; private set; }
 
         protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
+
+        public GivenAServiceBus(ITestOutputHelper outputHelper)
+        {
+            LoggerFactory = outputHelper.ToLoggerFactory();
+        }
 
         public virtual async Task InitializeAsync()
         {
@@ -48,17 +54,15 @@ namespace JustSaying.UnitTests.JustSayingBus
         {
             Config = Substitute.For<IMessagingConfig>();
             Monitor = Substitute.For<IMessageMonitor>();
-            LoggerFactory = Substitute.For<ILoggerFactory>();
         }
 
         protected abstract Task WhenAsync();
 
         private JustSaying.JustSayingBus CreateSystemUnderTest()
         {
-            var subjectProvider = new GenericMessageSubjectProvider();
-            var serializerFactory = new NewtonsoftSerializationFactory();
+            var serializerRegister = new FakeSerializationRegister();
             var bus = new JustSaying.JustSayingBus(Config,
-                new MessageSerializationRegister(subjectProvider, serializerFactory),
+                serializerRegister,
                 LoggerFactory)
             {
                 Monitor = Monitor

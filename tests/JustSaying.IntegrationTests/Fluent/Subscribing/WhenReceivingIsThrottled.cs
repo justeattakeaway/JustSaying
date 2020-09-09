@@ -1,57 +1,58 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.Linq;
 using System.Threading.Tasks;
-using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
-using NSubstitute;
+using Shouldly;
 using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing
 {
+    /// <summary>
+    /// This test ensures that when one messages takes a long time, other messages will still be able to
+    /// be processed, and will not consume more concurrency than is available. That means that with a maximum
+    /// concurrency of 2, the long running handler will consume one slot, and every other message will be
+    /// processed in order in the other slot. The result should be exactly in-order delivery for this test.
+    /// </summary>
     public sealed class WhenReceivingIsThrottled : IntegrationTestBase
     {
-        private readonly IHandlerAsync<SimpleMessage> _handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
-        private readonly Dictionary<int, Guid> _ids = new Dictionary<int, Guid>();
-        private readonly Dictionary<int, SimpleMessage> _messages = new Dictionary<int, SimpleMessage>();
-
         public WhenReceivingIsThrottled(ITestOutputHelper outputHelper)
             : base(outputHelper)
         {
-            // First handler takes ages all the others take 100 ms
-            int waitOthers = 100;
-            int waitOne = TestEnvironment.IsSimulatorConfigured ? waitOthers : 3_600_000;
-
-            for (int i = 1; i <= 100; i++)
-            {
-                _ids.Add(i, Guid.NewGuid());
-                _messages.Add(i, new SimpleMessage() { Id = _ids[i] });
-
-                SetUpHandler(_ids[i], i, waitMilliseconds: i == 1 ? waitOne : waitOthers);
-            }
         }
 
         [AwsFact]
         public async Task Then_The_Messages_Are_Handled_With_Throttle()
         {
+            // First handler takes ages all the others take 50 ms
+            int waitOthers = 50;
+            int waitOne = 3_600_000;
+
+            var messagesToSend = Enumerable.Range(0, 30)
+                .Select(i => new WaitingMessage(i, TimeSpan.FromMilliseconds(i == 0 ? waitOne : waitOthers)))
+                .ToList();
+
+            var handler = new InspectableWaitingHandler(OutputHelper);
+
             // Arrange
             var services = GivenJustSaying()
                 .ConfigureJustSaying((builder) => builder.Client((client) => client.WithAnonymousCredentials()))
                 .ConfigureJustSaying((builder) => builder.Messaging((options) => options.WithPublishFailureBackoff(TimeSpan.FromMilliseconds(1))))
-                .ConfigureJustSaying((builder) => builder.Publications((options) => options.WithQueue<SimpleMessage>(UniqueName)))
+                .ConfigureJustSaying((builder) => builder.Publications((options) => options.WithQueue<WaitingMessage>(UniqueName)))
                 .ConfigureJustSaying(
                     (builder) => builder.Subscriptions(
                         (options) => options
                             .WithSubscriptionGroup("group", groupConfig =>
-                                groupConfig.WithConcurrencyLimit(10))
-                            .ForQueue<SimpleMessage>((queue) => queue.WithName(UniqueName)
+                                groupConfig.WithConcurrencyLimit(2))
+                            .ForQueue<WaitingMessage>((queue) => queue.WithName(UniqueName)
                                 .WithReadConfiguration(c =>
                                     c.WithSubscriptionGroup("group")))))
-                .AddSingleton(_handler);
+                .AddSingleton<IHandlerAsync<WaitingMessage>>(handler);
 
-            var baseSleep = TimeSpan.FromSeconds(2);
+            var baseSleep = TimeSpan.FromMilliseconds(500);
 
             await WhenAsync(
                 services,
@@ -61,38 +62,63 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     await publisher.StartAsync(cancellationToken);
 
                     // Publish the message with a long running handler
-                    await publisher.PublishAsync(_messages[1], cancellationToken);
+                    await publisher.PublishAsync(messagesToSend.First(), cancellationToken);
 
                     // Give some time to AWS to schedule the first long running message
                     await Task.Delay(baseSleep, cancellationToken);
 
-                    // Publish the rest of the messages except the last one.
-                    for (int i = 2; i <= 98; i++)
+                    foreach (var msg in messagesToSend.Skip(1).SkipLast(1))
                     {
-                        await publisher.PublishAsync(_messages[i], cancellationToken);
+                        await publisher.PublishAsync(msg, cancellationToken);
                     }
 
                     // Publish the last message after a couple of seconds to guarantee it was scheduled after all the rest
                     await Task.Delay(baseSleep, cancellationToken);
-                    await publisher.PublishAsync(_messages[100], cancellationToken);
+                    await publisher.PublishAsync(messagesToSend.Last(), cancellationToken);
 
                     // Wait for a reasonble time before asserting whether the last message has been scheduled.
-                    await Task.Delay(baseSleep, cancellationToken);
+                    await Task.Delay(baseSleep * 2, cancellationToken);
 
-                    Received.InOrder(() => _handler.Handle(Arg.Is<SimpleMessage>((p) => p.Id == _ids[100])));
+                    handler.ReceivedMessages.Count.ShouldBeGreaterThan(10);
+                    handler.ReceivedMessages.ShouldBeInOrder(SortDirection.Ascending);
                 });
         }
 
-        private void SetUpHandler(Guid id, int number, int waitMilliseconds)
+        private class WaitingMessage : Message, IComparable<WaitingMessage>
         {
-            _handler
-                .When((handler) => handler.Handle(Arg.Is<SimpleMessage>(y => y.Id == id)))
-                .Do(
-                    (_) =>
-                    {
-                        OutputHelper.WriteLine($"Running task {number}.");
-                        Thread.Sleep(waitMilliseconds);
-                    });
+            public WaitingMessage(int order, TimeSpan timeToWait)
+            {
+                Order = order;
+                TimeToWait = timeToWait;
+            }
+
+            public TimeSpan TimeToWait { get; }
+            public int Order { get; }
+
+            public int CompareTo(WaitingMessage other)
+            {
+                if (ReferenceEquals(this, other)) return 0;
+                if (ReferenceEquals(null, other)) return 1;
+                return Order.CompareTo(other.Order);
+            }
+        }
+
+        private class InspectableWaitingHandler : InspectableHandler<WaitingMessage>
+        {
+            private readonly ITestOutputHelper _output;
+
+            public InspectableWaitingHandler(ITestOutputHelper testOutputHelper)
+            {
+                _output = testOutputHelper;
+            }
+
+            public override async Task<bool> Handle(WaitingMessage message)
+            {
+                await base.Handle(message);
+                _output.WriteLine($"Running task {message.Order} which will wait for {message.TimeToWait.TotalMilliseconds}ms");
+                await Task.Delay(message.TimeToWait);
+                return true;
+            }
         }
     }
 }

@@ -122,12 +122,14 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         {
             try
             {
+                _logger.LogDebug("Attempting to deserialize message with serialization register {Type}",
+                    _serializationRegister.GetType().FullName);
                 var messageWithAttributes = _serializationRegister.DeserializeMessage(messageContext.Message.Body);
                 return (true, messageWithAttributes.Message, messageWithAttributes.MessageAttributes);
             }
             catch (MessageFormatNotSupportedException ex)
             {
-                _logger.LogTrace(
+                _logger.LogTrace(ex,
                     "Could not handle message with Id '{MessageId}' because a deserializer for the content is not configured. Message body: '{MessageBody}'.",
                     messageContext.Message.MessageId,
                     messageContext.Message.Body);

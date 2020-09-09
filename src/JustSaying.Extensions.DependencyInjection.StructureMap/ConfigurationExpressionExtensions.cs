@@ -33,25 +33,25 @@ namespace StructureMap
         /// Adds JustSaying services to the registry.
         /// </summary>
         /// <param name="registry">The <see cref="ConfigurationExpression"/> to add JustSaying services to.</param>
-        /// <param name="regions">The AWS region(s) to configure.</param>
+        /// <param name="region">The AWS region to configure.</param>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="registry"/> or <paramref name="regions"/> is <see langword="null"/>.
+        /// <paramref name="registry"/> or <paramref name="region"/> is <see langword="null"/>.
         /// </exception>
-        public static void AddJustSaying(this ConfigurationExpression registry, params string[] regions)
+        public static void AddJustSaying(this ConfigurationExpression registry, string region)
         {
             if (registry == null)
             {
                 throw new ArgumentNullException(nameof(registry));
             }
 
-            if (regions == null)
+            if (string.IsNullOrWhiteSpace(region))
             {
-                throw new ArgumentNullException(nameof(regions));
+                throw new ArgumentException("region must not be null or empty" ,nameof(region));
             }
 
             registry.AddJustSaying(
                 (builder) => builder.Messaging(
-                    (options) => options.WithRegions(regions)));
+                    (options) => options.WithRegion(region)));
         }
 
         /// <summary>

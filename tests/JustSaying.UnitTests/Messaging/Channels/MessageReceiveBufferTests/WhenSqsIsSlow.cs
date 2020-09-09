@@ -2,7 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.SQS;
 using Amazon.SQS.Model;
+using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.Channels.Context;
+using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Middleware;
+using JustSaying.TestingFramework;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -10,19 +17,27 @@ using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
 {
-    public class WhenSqsIsSlow : BaseMessageReceiveBufferTests
+    public class WhenSqsIsSlow
     {
+        protected class TestMessage : Message { }
+
         private int _callCount;
-        private Task<int> SubscriberTask;
+        private readonly MessageReceiveBuffer _messageReceiveBuffer;
 
         public WhenSqsIsSlow(ITestOutputHelper testOutputHelper)
-            : base(testOutputHelper)
         {
-        }
+            var loggerFactory = testOutputHelper.ToLoggerFactory();
 
-        protected override void Given()
-        {
-            SqsClient.ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
+            MiddlewareBase<GetMessagesContext, IList<Message>> sqsMiddleware =
+                new DelegateMiddleware<GetMessagesContext, IList<Message>>();
+            var sqsClient = Substitute.For<IAmazonSQS>();
+            var queue = Substitute.For<ISqsQueue>();
+            queue.Uri.Returns(new Uri("http://test.com"));
+            queue.Client.Returns(sqsClient);
+            var monitor = new TestingFramework.TrackingLoggingMonitor(
+                loggerFactory.CreateLogger("Monitor"));
+
+            sqsClient.ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
                 .Returns(_ =>
                 {
                     Thread.Sleep(TimeSpan.FromMilliseconds(100));
@@ -30,25 +45,16 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
                     var messages = new List<Message> { new TestMessage() };
                     return new ReceiveMessageResponse { Messages = messages };
                 });
-        }
 
-        protected override Task WhenAsync()
-        {
-            SubscriberTask = Messages();
-            return Task.CompletedTask;
-        }
-
-        [Fact]
-        public async Task Subscriber_Task_Completes()
-        {
-            await SubscriberTask;
-        }
-
-        [Fact]
-        public async Task All_Messages_Are_Processed()
-        {
-            var messagesHandled = await SubscriberTask;
-            messagesHandled.ShouldBe(_callCount);
+            _messageReceiveBuffer = new MessageReceiveBuffer(
+                10,
+                10,
+                TimeSpan.FromSeconds(1),
+                TimeSpan.FromSeconds(1),
+                queue,
+                sqsMiddleware,
+                monitor,
+                loggerFactory.CreateLogger<IMessageReceiveBuffer>());
         }
 
         protected async Task<int> Messages()
@@ -57,16 +63,40 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
 
             while (true)
             {
-                var couldRead = await SystemUnderTest.Reader.WaitToReadAsync();
+                var couldRead = await _messageReceiveBuffer.Reader.WaitToReadAsync();
                 if (!couldRead) break;
 
-                while (SystemUnderTest.Reader.TryRead(out var _))
+                while (_messageReceiveBuffer.Reader.TryRead(out var _))
                 {
                     messagesProcessed++;
                 }
             }
 
             return messagesProcessed;
+        }
+
+        [Fact]
+        public async Task All_Messages_Are_Processed()
+        {
+            using var cts = new CancellationTokenSource();
+            var _ = _messageReceiveBuffer.RunAsync(cts.Token);
+            var readTask = Messages();
+
+            // Read messages for a while
+            await Task.Delay(TimeSpan.FromSeconds(2));
+
+            // Cancel token
+            cts.Cancel();
+
+            // Ensure buffer completes
+            await _messageReceiveBuffer.Reader.Completion;
+
+            // Get the number of messages we read
+            var messagesRead = await readTask;
+
+            // Make sure that number makes sense
+            messagesRead.ShouldBeGreaterThan(0);
+            messagesRead.ShouldBeLessThanOrEqualTo(_callCount);
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
@@ -7,6 +8,7 @@ using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using Shouldly;
 using StructureMap;
 using Xunit.Abstractions;
 
@@ -25,12 +27,7 @@ namespace JustSaying
         public async Task Can_Create_Messaging_Bus_Fluently_For_A_Queue()
         {
             // Arrange
-            var completionSource = new TaskCompletionSource<object>();
-            var handler = Substitute.For<IHandlerAsync<SimpleMessage>>();
-
-            handler.Handle(Arg.Any<SimpleMessage>())
-                   .Returns(true)
-                   .AndDoes((_) => completionSource.SetResult(null));
+            var handler = new InspectableHandler<SimpleMessage>();
 
             using var container = new Container(
                 (registry) =>
@@ -48,7 +45,7 @@ namespace JustSaying
                             builder.Client((options) =>
                                     options.WithBasicCredentials("accessKey", "secretKey")
                                         .WithServiceUri(TestEnvironment.SimulatorUrl))
-                                .Messaging((options) => options.WithRegions("eu-west-1"))
+                                .Messaging((options) => options.WithRegion("eu-west-1"))
                                 .Publications((options) => options.WithQueue<SimpleMessage>())
                                 .Subscriptions((options) => options.ForQueue<SimpleMessage>());
                         });
@@ -65,10 +62,12 @@ namespace JustSaying
 
             // Act
             await publisher.PublishAsync(message, source.Token);
-            completionSource.Task.Wait(source.Token);
+
+            await Patiently.AssertThatAsync(OutputHelper,
+                () => handler.ReceivedMessages.Any());
 
             // Assert
-            await handler.Received().Handle(Arg.Any<SimpleMessage>());
+            handler.ReceivedMessages.ShouldContain(x => x.GetType() == typeof(SimpleMessage));
         }
     }
 }

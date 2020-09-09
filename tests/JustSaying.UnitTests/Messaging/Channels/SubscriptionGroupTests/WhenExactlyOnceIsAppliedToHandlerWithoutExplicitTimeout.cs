@@ -1,10 +1,12 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests.Support;
+using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -16,7 +18,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
     {
         private ISqsQueue _queue;
         private readonly int _maximumTimeout = (int)TimeSpan.MaxValue.TotalSeconds;
-        private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
         private ExactlyOnceSignallingHandler _handler;
 
         public WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper testOutputHelper)
@@ -26,20 +27,13 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected override void Given()
         {
-            _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
+            _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage());
 
             Queues.Add(_queue);
 
-            var messageLockResponse = new MessageLockResponse
-            {
-                DoIHaveExclusiveLock = true
-            };
+            MessageLock = new FakeMessageLock();
 
-            MessageLock = Substitute.For<IMessageLockAsync>();
-            MessageLock.TryAquireLockAsync(Arg.Any<string>(), Arg.Any<TimeSpan>())
-                .Returns(messageLockResponse);
-
-            _handler = new ExactlyOnceSignallingHandler(_tcs);
+            _handler = new ExactlyOnceSignallingHandler();
             Handler = _handler;
         }
 
@@ -48,30 +42,27 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             HandlerMap.Add(_queue.QueueName, () => Handler);
 
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeoutPeriod);
 
             var completion = SystemUnderTest.RunAsync(cts.Token);
 
+            await Patiently.AssertThatAsync(OutputHelper,
+                () => Handler.ReceivedMessages.Any());
+
+            cts.Cancel();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
 
-            // wait until it's done
-            await TaskHelpers.WaitWithTimeoutAsync(_tcs.Task);
         }
 
         [Fact]
         public void MessageIsLocked()
         {
-            var messageId = DeserializedMessage.Id.ToString();
+            var messageId = SerializationRegister.DefaultDeserializedMessage().Id.ToString();
 
-            MessageLock.Received().TryAquireLockAsync(
-                Arg.Is<string>(a => a.Contains(messageId, StringComparison.OrdinalIgnoreCase)),
-                TimeSpan.FromSeconds(_maximumTimeout));
-        }
-
-        [Fact]
-        public void ProcessingIsPassedToTheHandler()
-        {
-            _handler.HandleWasCalled.ShouldBeTrue();
+            var tempLockRequests = MessageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
+            tempLockRequests.Count().ShouldBeGreaterThan(0);
+            tempLockRequests.ShouldAllBe(pair =>
+                pair.key.Contains(messageId, StringComparison.OrdinalIgnoreCase) &&
+                pair.howLong == TimeSpan.FromSeconds(_maximumTimeout));
         }
     }
 }

@@ -21,14 +21,18 @@ namespace JustSaying
 {
     public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposable
     {
-        private readonly Dictionary<string, Dictionary<Type, IMessagePublisher>> _publishersByRegionAndType;
+        private readonly ILogger _log;
+        private readonly ILoggerFactory _loggerFactory;
+
+        private readonly SemaphoreSlim _startLock = new SemaphoreSlim(1, 1);
+        private bool _busStarted;
+        private readonly List<Task> _startupTasks;
 
         private ConcurrentDictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings;
         private SubscriptionGroupSettingsBuilder _defaultSubscriptionGroupSettings;
+        private readonly Dictionary<Type, IMessagePublisher> _publishersByType;
 
-        private string _previousActiveRegion;
-
-        public IMessagingConfig Config { get; private set; }
+        public IMessagingConfig Config { get; }
 
         private IMessageMonitor _monitor;
 
@@ -49,13 +53,10 @@ namespace JustSaying
         }
 
         public IMessageContextAccessor MessageContextAccessor { get; set; }
-        public HandlerMap HandlerMap { get; private set; }
 
-        private readonly ILogger _log;
+        public HandlerMap HandlerMap { get; }
 
-        private readonly SemaphoreSlim _startLock = new SemaphoreSlim(1, 1);
-
-        private readonly ILoggerFactory _loggerFactory;
+        public Task Completion { get; private set; }
 
         public JustSayingBus(
             IMessagingConfig config,
@@ -69,20 +70,26 @@ namespace JustSaying
             Config = config;
             Monitor = new NullOpMessageMonitor();
             MessageContextAccessor = new MessageContextAccessor();
-
-            _publishersByRegionAndType = new Dictionary<string, Dictionary<Type, IMessagePublisher>>();
             SerializationRegister = serializationRegister;
-
-            _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
-            _defaultSubscriptionGroupSettings = new SubscriptionGroupSettingsBuilder();
-
             HandlerMap = new HandlerMap(Monitor, _loggerFactory);
+
+            _publishersByType = new Dictionary<Type, IMessagePublisher>();
+            _subscriptionGroupSettings =
+                new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
+            _defaultSubscriptionGroupSettings = new SubscriptionGroupSettingsBuilder();
         }
 
-        public void AddQueue(string region, string subscriptionGroup, ISqsQueue queue)
+        public void AddQueue(string subscriptionGroup, ISqsQueue queue)
         {
-            if (string.IsNullOrWhiteSpace(region)) throw new ArgumentException("Cannot be null or empty.", nameof(region));
-            if (string.IsNullOrWhiteSpace(subscriptionGroup)) throw new ArgumentException("Cannot be null or empty.", nameof(subscriptionGroup));
+            if (string.IsNullOrWhiteSpace(subscriptionGroup))
+            {
+                throw new ArgumentException("Cannot be null or empty.", nameof(subscriptionGroup));
+            }
+
+            if (queue == null)
+            {
+                throw new ArgumentNullException(nameof(queue));
+            }
 
             SubscriptionGroupConfigBuilder builder = _subscriptionGroupSettings.GetOrAdd(
                 subscriptionGroup,
@@ -101,16 +108,18 @@ namespace JustSaying
             IDictionary<string, SubscriptionGroupConfigBuilder> settings)
         {
             _defaultSubscriptionGroupSettings = defaults;
-            _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(settings);
+            _subscriptionGroupSettings =
+                new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(settings);
         }
 
-        public void AddMessageHandler<T>(string queueName, Func<IHandlerAsync<T>> futureHandler) where T : Message
+        public void AddMessageHandler<T>(string queueName, Func<IHandlerAsync<T>> futureHandler)
+            where T : Message
         {
             SerializationRegister.AddSerializer<T>();
             HandlerMap.Add(queueName, futureHandler);
         }
 
-        public void AddMessagePublisher<T>(IMessagePublisher messagePublisher, string region) where T : Message
+        public void AddMessagePublisher<T>(IMessagePublisher messagePublisher) where T : Message
         {
             if (Config.PublishFailureReAttempts == 0)
             {
@@ -118,20 +127,9 @@ namespace JustSaying
                     "You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages.");
             }
 
-            if (!_publishersByRegionAndType.TryGetValue(region, out var publishersByType))
-            {
-                publishersByType = new Dictionary<Type, IMessagePublisher>();
-                _publishersByRegionAndType.Add(region, publishersByType);
-            }
-
-            var topicType = typeof(T);
-
-            publishersByType[topicType] = messagePublisher;
+            _publishersByType[typeof(T)] = messagePublisher;
         }
 
-        private bool _busStarted;
-        private Task _subscriberCompletionTask;
-        private readonly List<Task> _startupTasks;
 
         public async Task StartAsync(CancellationToken stoppingToken)
         {
@@ -148,7 +146,7 @@ namespace JustSaying
                         using (_log.Time("Starting bus"))
                         {
                             // We want consumers to wait for the startup tasks, but not the run
-                            using (_log.Time("Running startup tasks"))
+                            using (_log.Time("Running {TaskCount} startup tasks", _startupTasks.Count))
                             {
                                 foreach (var startupTask in _startupTasks)
                                 {
@@ -156,7 +154,7 @@ namespace JustSaying
                                 }
                             }
 
-                            _subscriberCompletionTask = RunImplAsync(stoppingToken);
+                            Completion = RunImplAsync(stoppingToken);
                             _busStarted = true;
                         }
                     }
@@ -183,99 +181,67 @@ namespace JustSaying
                 Monitor,
                 _loggerFactory);
 
-            SubscriptionGroups = subscriptionGroupFactory.Create(_defaultSubscriptionGroupSettings, _subscriptionGroupSettings);
+            SubscriptionGroups =
+                subscriptionGroupFactory.Create(_defaultSubscriptionGroupSettings,
+                    _subscriptionGroupSettings);
 
             _log.LogInformation("Starting bus with settings: {@Response}", SubscriptionGroups.Interrogate());
 
-            await SubscriptionGroups.RunAsync(stoppingToken).ConfigureAwait(false);
+            try
+            {
+                await SubscriptionGroups.RunAsync(stoppingToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                _log.LogDebug("Suppressed an exception of type {ExceptionType} which likely" +
+                    "means the bus is shutting down.", typeof(OperationCanceledException).Name);
+                // Don't bubble cancellation up to Completion task
+            }
         }
 
         public async Task PublishAsync(Message message, CancellationToken cancellationToken)
             => await PublishAsync(message, null, cancellationToken).ConfigureAwait(false);
 
-        public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
+        public async Task PublishAsync(
+            Message message,
+            PublishMetadata metadata,
+            CancellationToken cancellationToken)
         {
             if (!_busStarted)
             {
                 throw new InvalidOperationException("Bus must be started before publishing messages.");
             }
 
-            IMessagePublisher publisher = GetActivePublisherForMessage(message);
+            IMessagePublisher publisher = GetPublisherForMessage(message);
             await PublishAsync(publisher, message, metadata, 0, cancellationToken)
                 .ConfigureAwait(false);
         }
 
-        private IMessagePublisher GetActivePublisherForMessage(Message message)
+        private IMessagePublisher GetPublisherForMessage(Message message)
         {
-            if (_publishersByRegionAndType.Count == 0)
+            if (_publishersByType.Count == 0)
             {
-                var errorMessage = "Error publishing message, no publishers registered. Has the bus been started?";
+                var errorMessage =
+                    "Error publishing message, no publishers registered. Has the bus been started?";
                 _log.LogError(errorMessage);
                 throw new InvalidOperationException(errorMessage);
             }
 
-            string activeRegion = GetActiveRegionWithChangeLog();
-
-            var publishersForRegionFound =
-                _publishersByRegionAndType.TryGetValue(activeRegion, out var publishersForRegion);
-            if (!publishersForRegionFound)
-            {
-                _log.LogError("Error publishing message. No publishers registered for active region '{Region}'.",
-                    activeRegion);
-                throw new InvalidOperationException(
-                    $"Error publishing message. No publishers registered for active region '{activeRegion}'.");
-            }
-
             var messageType = message.GetType();
-            var publisherFound = publishersForRegion.TryGetValue(messageType, out var publisher);
 
-            if (!publisherFound)
+            var publishersFound =
+                _publishersByType.TryGetValue(messageType, out var publisher);
+            if (!publishersFound)
             {
                 _log.LogError(
-                    "Error publishing message. No publishers registered for message type '{MessageType}' in active region '{Region}'.",
-                    messageType,
-                    activeRegion);
+                    "Error publishing message. No publishers registered for message type '{MessageType}'.",
+                    messageType);
 
                 throw new InvalidOperationException(
-                    $"Error publishing message, no publishers registered for message type '{messageType}' in active region '{activeRegion}'.");
+                    $"Error publishing message, no publishers registered for message type '{messageType}'.");
             }
 
             return publisher;
-        }
-
-        private string GetActiveRegionWithChangeLog()
-        {
-            string currentActiveRegion = GetActiveRegion();
-
-            if (!string.Equals(_previousActiveRegion, currentActiveRegion, StringComparison.Ordinal))
-            {
-                if (_previousActiveRegion == null)
-                {
-                    _log.LogInformation("Active region for publishing has been initialized to '{Region}'.",
-                        currentActiveRegion);
-                }
-                else
-                {
-                    _log.LogInformation(
-                        "Active region for publishing has been changed to '{Region}', was '{PreviousRegion}'.",
-                        currentActiveRegion,
-                        _previousActiveRegion);
-                }
-
-                _previousActiveRegion = currentActiveRegion;
-            }
-
-            return currentActiveRegion;
-        }
-
-        private string GetActiveRegion()
-        {
-            if (Config.GetActiveRegion != null)
-            {
-                return Config.GetActiveRegion();
-            }
-
-            return Config.Regions.First();
         }
 
         private async Task PublishAsync(
@@ -322,20 +288,20 @@ namespace JustSaying
                     TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
                 await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);
 
-                await PublishAsync(publisher, message, metadata, attemptCount, cancellationToken).ConfigureAwait(false);
+                await PublishAsync(publisher, message, metadata, attemptCount, cancellationToken)
+                    .ConfigureAwait(false);
             }
         }
 
         public InterrogationResult Interrogate()
         {
             var publisherDescriptions =
-                _publishersByRegionAndType.SelectMany(publishersByType =>
-                    publishersByType.Value.Select(publisher =>
-                        $"{publishersByType.Key}:{publisher.Key.Name}"))
-                    .ToArray();
+                _publishersByType.Select(publisher =>
+                    publisher.Key.Name).ToArray();
 
             return new InterrogationResult(new
             {
+                Config.Region,
                 HandledMessageTypes = HandlerMap?.Types.Select(x => x.FullName).ToArray(),
                 PublishedMessageTypes = publisherDescriptions,
                 SubscriptionGroups = SubscriptionGroups?.Interrogate()
@@ -346,7 +312,6 @@ namespace JustSaying
         {
             _startLock?.Dispose();
             _loggerFactory?.Dispose();
-            _subscriberCompletionTask?.Dispose();
         }
     }
 }

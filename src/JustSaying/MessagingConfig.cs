@@ -18,7 +18,6 @@ namespace JustSaying
             PublishFailureReAttempts = JustSayingConstants.DefaultPublisherRetryCount;
             PublishFailureBackoff = JustSayingConstants.DefaultPublisherRetryInterval;
             AdditionalSubscriberAccounts = new List<string>();
-            Regions = new List<string>();
             MessageSubjectProvider = new NonGenericMessageSubjectProvider();
             TopicNamingConvention = new DefaultNamingConventions();
             QueueNamingConvention = new DefaultNamingConventions();
@@ -28,34 +27,16 @@ namespace JustSaying
         public TimeSpan PublishFailureBackoff { get; set; }
         public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
         public IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
-        public IList<string> Regions { get; }
-        public Func<string> GetActiveRegion { get; set; }
+        public string Region { get; set; }
         public IMessageSubjectProvider MessageSubjectProvider { get; set; }
         public ITopicNamingConvention TopicNamingConvention { get; set; }
         public IQueueNamingConvention QueueNamingConvention { get; set; }
 
         public virtual void Validate()
         {
-            if (!Regions.Any())
+            if (string.IsNullOrWhiteSpace(Region))
             {
-                throw new InvalidOperationException($"Config needs values for the {nameof(Regions)} property.");
-            }
-
-            if (Regions.Any(string.IsNullOrWhiteSpace))
-            {
-                throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(Regions)} property.");
-            }
-
-            var duplicateRegions = Regions
-                .GroupBy(x => x)
-                .Where(y => y.Count() > 1)
-                .Select(r => r.Key)
-                .ToList();
-
-            if (duplicateRegions.Count > 0)
-            {
-                var regionsText = string.Join(",", duplicateRegions);
-                throw new InvalidOperationException($"Config has duplicates in {nameof(Regions)} for '{regionsText}'.");
+                throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(Region)} property.");
             }
 
             if (MessageSubjectProvider == null)
