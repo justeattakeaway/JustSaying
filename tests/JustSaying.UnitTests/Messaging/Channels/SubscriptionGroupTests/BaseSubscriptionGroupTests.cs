@@ -27,12 +27,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         protected int ConcurrencyLimit = 8;
 
         public ITestOutputHelper OutputHelper { get; }
-        protected FakeMessageLock MessageLock
-        {
-            get => (FakeMessageLock) HandlerMap.MessageLock;
-            set => HandlerMap.MessageLock = value;
-        }
-
+        
         protected InspectableHandler<SimpleMessage> Handler;
 
         protected ISubscriptionGroup SystemUnderTest { get; private set; }

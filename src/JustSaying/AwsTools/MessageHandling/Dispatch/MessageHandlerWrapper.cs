@@ -10,15 +10,12 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
     internal sealed class MessageHandlerWrapper
     {
         private readonly IMessageMonitor _messagingMonitor;
-        private readonly IMessageLockAsync _messageLock;
         private readonly ILoggerFactory _loggerFactory;
 
         public MessageHandlerWrapper(
-            IMessageLockAsync messageLock,
             IMessageMonitor messagingMonitor,
             ILoggerFactory loggerFactory)
         {
-            _messageLock = messageLock;
             _messagingMonitor = messagingMonitor;
             _loggerFactory = loggerFactory;
         }
@@ -28,32 +25,10 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             return async message =>
             {
                 var handler = futureHandler();
-                handler = MaybeWrapWithExactlyOnce(handler);
                 handler = MaybeWrapWithStopwatch(handler);
 
                 return await handler.Handle((T)message).ConfigureAwait(false);
             };
-        }
-
-        private IHandlerAsync<T> MaybeWrapWithExactlyOnce<T>(IHandlerAsync<T> handler) where T : Message
-        {
-            var handlerType = handler.GetType();
-            var exactlyOnceMetadata = new ExactlyOnceReader(handlerType);
-            if (!exactlyOnceMetadata.Enabled)
-            {
-                return handler;
-            }
-
-            if (_messageLock == null)
-            {
-                throw new Exception("IMessageLock is null. You need to specify an implementation for IMessageLock.");
-            }
-
-            var handlerName = handlerType.FullName.ToLowerInvariant();
-            var timeout = TimeSpan.FromSeconds(exactlyOnceMetadata.GetTimeOut());
-            var logger = _loggerFactory.CreateLogger<ExactlyOnceHandler<T>>();
-
-            return new ExactlyOnceHandler<T>(handler, _messageLock, timeout, handlerName, logger);
         }
 
         private IHandlerAsync<T> MaybeWrapWithStopwatch<T>(IHandlerAsync<T> handler) where T : Message

@@ -277,11 +277,7 @@ namespace JustSaying
 
             bus.Monitor = CreateMessageMonitor();
             bus.MessageContextAccessor = CreateMessageContextAccessor();
-            if (ServicesBuilder?.MessageLock != null)
-            {
-                bus.MessageLock = ServicesBuilder.MessageLock();
-            }
-
+            
             return bus;
         }
 

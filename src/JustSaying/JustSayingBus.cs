@@ -46,12 +46,6 @@ namespace JustSaying
         public IMessageSerializationRegister SerializationRegister { get; }
         public IMessageBackoffStrategy MessageBackoffStrategy { get; set; }
 
-        public IMessageLockAsync MessageLock
-        {
-            get => HandlerMap.MessageLock;
-            set => HandlerMap.MessageLock = value;
-        }
-
         public IMessageContextAccessor MessageContextAccessor { get; set; }
 
         public HandlerMap HandlerMap { get; }

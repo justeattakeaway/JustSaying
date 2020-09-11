@@ -1,16 +1,15 @@
 using System.Threading.Tasks;
-using JustSaying.IntegrationTests.TestHandlers;
-using JustSaying.Messaging;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing
 {
-    public class WhenTwoDifferentHandlersHandleAnExactlyOnceMessage : IntegrationTestBase
+    public class WhenTwoDifferentHandlersHandleAMessage : IntegrationTestBase
     {
-        public WhenTwoDifferentHandlersHandleAnExactlyOnceMessage(ITestOutputHelper outputHelper)
+        public WhenTwoDifferentHandlersHandleAMessage(ITestOutputHelper outputHelper)
             : base(outputHelper)
         {
         }
@@ -19,8 +18,11 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         public async Task Then_Both_Handlers_Receive_The_Message()
         {
             // Arrange
-            var handler1 = new ExactlyOnceHandlerNoTimeout();
-            var handler2 = new ExactlyOnceHandlerNoTimeout();
+            var nullStoreLogger = NullLogger<TestMessageStore<SimpleMessage>>.Instance;
+            var nullHandlerLogger = NullLogger<MessageStoringHandler<SimpleMessage>>.Instance;
+
+            var handler1 = new MessageStoringHandler<SimpleMessage>(new TestMessageStore<SimpleMessage>(nullStoreLogger), nullHandlerLogger);
+            var handler2 = new MessageStoringHandler<SimpleMessage>(new TestMessageStore<SimpleMessage>(nullStoreLogger), nullHandlerLogger);
 
             var services = GivenJustSaying()
                 .ConfigureJustSaying((builder) => builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
@@ -40,8 +42,8 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     await Task.Delay(1.Seconds(), cancellationToken);
 
                     // Assert
-                    handler1.NumberOfTimesIHaveBeenCalledForMessage(message.UniqueKey()).ShouldBe(1);
-                    handler2.NumberOfTimesIHaveBeenCalledForMessage(message.UniqueKey()).ShouldBe(1);
+                    handler1.MessageStore.Messages.ShouldHaveSingleItem().UniqueKey().ShouldBe(message.UniqueKey());
+                    handler2.MessageStore.Messages.ShouldHaveSingleItem().UniqueKey().ShouldBe(message.UniqueKey());
                 });
         }
     }

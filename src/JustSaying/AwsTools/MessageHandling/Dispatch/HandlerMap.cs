@@ -65,11 +65,6 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         }
 
         /// <summary>
-        /// Gets the <see cref="IMessageLockAsync"/> to be used by the <see cref="MessageHandlerWrapper"/>.
-        /// </summary>
-        public IMessageLockAsync MessageLock { get; set; }
-
-        /// <summary>
         /// Adds a handler to be executed when a message arrives in a queue.
         /// If the handler is already registered for a queue, it will not be added again.
         /// </summary>
@@ -81,7 +76,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             if (queueName is null) throw new ArgumentNullException(nameof(queueName));
             if (futureHandler is null) throw new ArgumentNullException(nameof(futureHandler));
 
-            var handlerWrapper = new MessageHandlerWrapper(MessageLock, _messageMonitor, _loggerFactory);
+            var handlerWrapper = new MessageHandlerWrapper(_messageMonitor, _loggerFactory);
             var handlerFunc = handlerWrapper.WrapMessageHandler(futureHandler);
 
             return Add(queueName, typeof(T), handlerFunc);

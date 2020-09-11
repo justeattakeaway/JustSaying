@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.Logging;
@@ -30,7 +29,6 @@ namespace JustSaying.TestingFramework
     {
         private readonly ILogger<MessageStoringHandler<T>> _logger;
         public IMessageStore<T> MessageStore { get; }
-
 
         public MessageStoringHandler(IMessageStore<T> store, ILogger<MessageStoringHandler<T>> logger)
         {

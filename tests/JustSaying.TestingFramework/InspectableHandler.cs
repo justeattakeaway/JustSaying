@@ -5,8 +5,6 @@ using JustSaying.Messaging.MessageHandling;
 
 namespace JustSaying.TestingFramework
 {
-
-
     public class InspectableHandler<T> : IHandlerAsync<T>
     {
         public InspectableHandler()
