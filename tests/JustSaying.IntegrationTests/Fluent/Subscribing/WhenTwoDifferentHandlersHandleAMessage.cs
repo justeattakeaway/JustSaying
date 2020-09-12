@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using Xunit.Abstractions;
 
@@ -18,11 +17,8 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         public async Task Then_Both_Handlers_Receive_The_Message()
         {
             // Arrange
-            var nullStoreLogger = NullLogger<TestMessageStore<SimpleMessage>>.Instance;
-            var nullHandlerLogger = NullLogger<MessageStoringHandler<SimpleMessage>>.Instance;
-
-            var handler1 = new MessageStoringHandler<SimpleMessage>(new TestMessageStore<SimpleMessage>(nullStoreLogger), nullHandlerLogger);
-            var handler2 = new MessageStoringHandler<SimpleMessage>(new TestMessageStore<SimpleMessage>(nullStoreLogger), nullHandlerLogger);
+            var handler1 = new InspectableHandler<SimpleMessage>();
+            var handler2 = new InspectableHandler<SimpleMessage>();
 
             var services = GivenJustSaying()
                 .ConfigureJustSaying((builder) => builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
@@ -42,8 +38,8 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     await Task.Delay(1.Seconds(), cancellationToken);
 
                     // Assert
-                    handler1.MessageStore.Messages.ShouldHaveSingleItem().UniqueKey().ShouldBe(message.UniqueKey());
-                    handler2.MessageStore.Messages.ShouldHaveSingleItem().UniqueKey().ShouldBe(message.UniqueKey());
+                    handler1.ReceivedMessages.ShouldHaveSingleItem().UniqueKey().ShouldBe(message.UniqueKey());
+                    handler2.ReceivedMessages.ShouldHaveSingleItem().UniqueKey().ShouldBe(message.UniqueKey());
                 });
         }
     }
