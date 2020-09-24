@@ -161,6 +161,8 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         {
             var messageType = message.GetType();
 
+
+
             var handler = _handlerMap.Get(queueName, messageType);
 
             if (handler == null)

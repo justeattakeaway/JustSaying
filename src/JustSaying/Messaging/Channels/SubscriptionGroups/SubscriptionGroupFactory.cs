@@ -41,7 +41,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             _monitor = monitor;
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _defaultSqsMiddleware =
-                new DefaultSqsMiddleware(_loggerFactory.CreateLogger<DefaultSqsMiddleware>());
+                new DefaultReceiveMessagesMiddleware(_loggerFactory.CreateLogger<DefaultReceiveMessagesMiddleware>());
         }
 
         /// <summary>
@@ -123,10 +123,10 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
         private ICollection<IMultiplexerSubscriber> CreateSubscribers(SubscriptionGroupSettings settings)
         {
-            var logger = _loggerFactory.CreateLogger<MultiplexerSubscriber>();
+            var logger = _loggerFactory.CreateLogger<DispatchingMultiplexerSubscriber>();
 
             return Enumerable.Range(0, settings.ConcurrencyLimit)
-                .Select(index => (IMultiplexerSubscriber) new MultiplexerSubscriber(
+                .Select(index => (IMultiplexerSubscriber) new DispatchingMultiplexerSubscriber(
                     _messageDispatcher,
                     $"{settings.Name}-subscriber-{index}",
                     logger))

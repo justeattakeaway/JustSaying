@@ -8,17 +8,17 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Channels.Dispatch
 {
-    internal class MultiplexerSubscriber : IMultiplexerSubscriber
+    internal class DispatchingMultiplexerSubscriber : IMultiplexerSubscriber
     {
         private IAsyncEnumerable<IQueueMessageContext> _messageSource;
         private readonly IMessageDispatcher _dispatcher;
         private readonly string _subscriberId;
-        private readonly ILogger<MultiplexerSubscriber> _logger;
+        private readonly ILogger<DispatchingMultiplexerSubscriber> _logger;
 
-        public MultiplexerSubscriber(
+        public DispatchingMultiplexerSubscriber(
             IMessageDispatcher dispatcher,
             string subscriberId,
-            ILogger<MultiplexerSubscriber> logger)
+            ILogger<DispatchingMultiplexerSubscriber> logger)
         {
             _dispatcher = dispatcher;
             _subscriberId = subscriberId;
@@ -34,7 +34,9 @@ namespace JustSaying.Messaging.Channels.Dispatch
         {
             await Task.Yield();
 
-            _logger.LogDebug("Starting up MultiplexerSubscriber {SubscriberId}", _subscriberId);
+            _logger.LogDebug("Starting up {StartupType} {SubscriberId}",
+                nameof(DispatchingMultiplexerSubscriber),
+                _subscriberId);
 
             await foreach (IQueueMessageContext messageContext in _messageSource.WithCancellation(
                 stoppingToken))

@@ -375,8 +375,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
         private IMultiplexerSubscriber CreateSubscriber(IMessageDispatcher dispatcher)
         {
-            return new MultiplexerSubscriber(dispatcher, Guid.NewGuid().ToString(),
-                LoggerFactory.CreateLogger<MultiplexerSubscriber>());
+            return new DispatchingMultiplexerSubscriber(dispatcher, Guid.NewGuid().ToString(),
+                LoggerFactory.CreateLogger<DispatchingMultiplexerSubscriber>());
         }
 
         private ISubscriptionGroup CreateSubscriptionGroup(

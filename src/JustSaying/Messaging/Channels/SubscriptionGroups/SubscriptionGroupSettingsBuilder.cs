@@ -137,10 +137,10 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
         /// <summary>
         /// Overrides the default middleware used by the receive pipeline, which performs some default error handling
-        /// (see <see cref="DefaultSqsMiddleware"/>).
+        /// (see <see cref="DefaultReceiveMessagesMiddleware"/>).
         /// </summary>
         /// <param name="middleware">A <see cref="ReceiveMiddleware"/> that replaces the default middleware
-        /// (see <see cref="DefaultSqsMiddleware"/>).</param>
+        /// (see <see cref="DefaultReceiveMessagesMiddleware"/>).</param>
         /// <returns>The builder object.</returns>
         public SubscriptionGroupSettingsBuilder WithCustomMiddleware(ReceiveMiddleware middleware)
         {
