@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
@@ -37,6 +38,10 @@ namespace JustSaying.AwsTools.MessageHandling
                             ErrorQueueOptOut = true
                         }).ConfigureAwait(false);
                     }
+                }
+                else
+                {
+                    Logger.LogInformation("Error Queue {QueueName} already exists, skipping", ErrorQueue.QueueName);
                 }
             }
 
@@ -87,6 +92,8 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public async Task EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(SqsBasicConfiguration queueConfig)
         {
+            if (queueConfig == null) throw new ArgumentNullException(nameof(queueConfig));
+
             var exists = await ExistsAsync().ConfigureAwait(false);
             if (!exists)
             {

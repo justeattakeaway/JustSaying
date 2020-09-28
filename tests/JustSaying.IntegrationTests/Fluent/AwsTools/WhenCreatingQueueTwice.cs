@@ -6,6 +6,7 @@ using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using Shouldly;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools
@@ -38,9 +39,9 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                 loggerFactory,
                 subjectProvider);
 
-            // Act and Assert
-            (await topic.CreateAsync()).ShouldBeTrue();
-            (await topic.CreateAsync()).ShouldBeTrue();
+            // Shouldn't throw
+            await topic.CreateAsync();
+            await topic.CreateAsync();
 
             topic.Arn.ShouldNotBeNull();
             topic.Arn.ShouldEndWith(topic.TopicName);

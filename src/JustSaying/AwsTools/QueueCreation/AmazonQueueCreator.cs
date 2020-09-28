@@ -13,7 +13,6 @@ namespace JustSaying.AwsTools.QueueCreation
     {
         private readonly IAwsClientFactoryProxy _awsClientFactory;
         private readonly ILoggerFactory _loggerFactory;
-        private readonly RegionResourceCache<SqsQueueByName> _queueCache = new RegionResourceCache<SqsQueueByName>();
 
         private const string EmptyFilterPolicy = "{}";
 
@@ -92,14 +91,8 @@ namespace JustSaying.AwsTools.QueueCreation
         {
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);
             var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
-            var queue = _queueCache.TryGetFromCache(region, queueConfig.QueueName);
-            if (queue != null)
-            {
-                return new QueueWithAsyncStartup<SqsQueueByName>(queue);
-            }
-            queue = new SqsQueueByName(regionEndpoint, queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue, _loggerFactory);
 
-            _queueCache.AddToCache(region, queue.QueueName, queue);
+            var queue = new SqsQueueByName(regionEndpoint, queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue, _loggerFactory);
 
             var startupTask = queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig);
 
@@ -111,6 +104,11 @@ namespace JustSaying.AwsTools.QueueCreation
             IAmazonSimpleNotificationService amazonSimpleNotificationService,
             string topicArn, IAmazonSQS amazonSQS, Uri queueUrl, string filterPolicy)
         {
+            if(amazonSimpleNotificationService == null) throw new ArgumentNullException(nameof(amazonSimpleNotificationService));
+            if (amazonSQS == null) throw new ArgumentNullException(nameof(amazonSQS));
+            if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
+            if (string.IsNullOrEmpty(topicArn)) throw new ArgumentException("topicArn cannot be null or empty", nameof(topicArn));
+
             var subscriptionArn = await amazonSimpleNotificationService.SubscribeQueueAsync(topicArn, amazonSQS, queueUrl.AbsoluteUri)
                 .ConfigureAwait(false);
 
