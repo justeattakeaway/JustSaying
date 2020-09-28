@@ -43,7 +43,7 @@ namespace JustSaying.UnitTests.AwsTools.TopicCreation
                 subjectProvider);
 
             // Act
-            await Assert.ThrowsAsync<Exception>(async () => await topic.CreateAsync());
+            await topic.CreateAsync();
 
             // Assert
             topic.Arn.ShouldNotBeNull();
