@@ -20,6 +20,7 @@ namespace JustSaying.TestingFramework
             HandledThrottlingTime = new List<TimeSpan>();
             PublishMessageTimes = new List<TimeSpan>();
             ReceiveMessageTimes = new List<(TimeSpan duration, string queue, string region)>();
+            HandledMessages = new List<Models.Message>();
         }
 
         public IList<Type> HandledExceptions { get; }
@@ -27,6 +28,7 @@ namespace JustSaying.TestingFramework
         public IList<TimeSpan> HandledTimes { get; }
         public IList<TimeSpan> HandledThrottlingTime { get; }
         public IList<TimeSpan> PublishMessageTimes { get; }
+        public IList<Models.Message> HandledMessages { get; }
         public IList<(TimeSpan duration, string queue, string region)> ReceiveMessageTimes { get; }
         public int IssuesPublishingMessage { get; private set; }
         public int ThrottlingStatisticIncrements { get; private set; }
@@ -53,6 +55,12 @@ namespace JustSaying.TestingFramework
         {
             IssuesPublishingMessage++;
             _logger.LogInformation("Problem during publish");
+        }
+
+        public void Handled(Models.Message message)
+        {
+            HandledMessages.Add(message);
+            _logger.LogInformation("Handled message of type {MessageType}");
         }
 
         public void IncrementThrottlingStatistic()

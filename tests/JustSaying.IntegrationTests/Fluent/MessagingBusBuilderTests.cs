@@ -249,6 +249,9 @@ namespace JustSaying.IntegrationTests
             public void HandleTime(TimeSpan duration)
             { }
 
+            public void Handled(Message message)
+            { }
+
             public void IncrementThrottlingStatistic()
             { }
 

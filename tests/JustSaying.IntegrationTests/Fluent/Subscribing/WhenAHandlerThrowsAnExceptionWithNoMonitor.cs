@@ -79,6 +79,10 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         {
         }
 
+        public void Handled(Models.Message message)
+        {
+        }
+
         public void IncrementThrottlingStatistic()
         {
         }
