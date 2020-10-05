@@ -12,6 +12,7 @@ namespace JustSaying.Messaging.Monitoring
         public void HandleTime(TimeSpan duration) { }
 
         public void IssuePublishingMessage() { }
+        public void Handled(Models.Message message) { }
 
         public void IncrementThrottlingStatistic() { }
 

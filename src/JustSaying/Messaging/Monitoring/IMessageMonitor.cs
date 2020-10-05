@@ -9,6 +9,7 @@ namespace JustSaying.Messaging.Monitoring
         void HandleError(Exception ex, Message message);
         void HandleTime(TimeSpan duration);
         void IssuePublishingMessage();
+        void Handled(JustSaying.Models.Message message);
         void IncrementThrottlingStatistic();
         void HandleThrottlingTime(TimeSpan duration);
         void PublishMessageTime(TimeSpan duration);

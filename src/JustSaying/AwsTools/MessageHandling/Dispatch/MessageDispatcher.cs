@@ -102,6 +102,8 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             {
                 try
                 {
+                    _messagingMonitor.Handled(typedMessage);
+
                     if (!handlingSucceeded && _messageBackoffStrategy != null)
                     {
                         await UpdateMessageVisibilityTimeout(messageContext,
