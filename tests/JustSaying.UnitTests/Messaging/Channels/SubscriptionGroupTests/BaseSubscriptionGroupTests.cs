@@ -9,6 +9,7 @@ using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
+using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
@@ -62,7 +63,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         {
             Queues = new List<ISqsQueue>();
             Handler = new InspectableHandler<SimpleMessage>();
-            Monitor = new TrackingLoggingMonitor(Logger);
+            Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
             SerializationRegister = new FakeSerializationRegister();
             HandlerMap = new HandlerMap(Monitor, LoggerFactory);
 

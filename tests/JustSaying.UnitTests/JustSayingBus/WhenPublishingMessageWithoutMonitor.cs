@@ -40,7 +40,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public void SettingANewMonitorIsAccepted()
         {
-            SystemUnderTest.Monitor = new TrackingLoggingMonitor(NullLogger.Instance);
+            SystemUnderTest.Monitor = new TrackingLoggingMonitor(NullLogger<IMessageMonitor>.Instance);
             SystemUnderTest.Monitor.ShouldBeAssignableTo<TrackingLoggingMonitor>();
         }
     }

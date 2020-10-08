@@ -11,7 +11,7 @@ namespace JustSaying.TestingFramework
     {
         private readonly ILogger _logger;
 
-        public TrackingLoggingMonitor(ILogger logger)
+        public TrackingLoggingMonitor(ILogger<IMessageMonitor> logger)
         {
             _logger = logger;
             HandledExceptions = new List<Type>();

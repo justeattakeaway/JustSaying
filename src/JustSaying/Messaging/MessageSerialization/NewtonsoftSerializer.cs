@@ -74,7 +74,7 @@ namespace JustSaying.Messaging.MessageSerialization
                 var dataType = propData["Type"].ToString();
                 var dataValue = propData["Value"].ToString();
 
-                var isString = dataType == "StringValue";
+                var isString = dataType == "String";
 
                 var mav = new MessageAttributeValue
                 {
