@@ -53,17 +53,21 @@ namespace JustSaying.Fluent.Configuration
                     await listener.StartAsync(cancellationToken);
                     await publisher.StartAsync(cancellationToken);
 
-                    // Let's send an OrderPlaced, but the subject will be SimpleMessage
+                    // Let's send an OrderPlaced, but the subject will be a guid
                     // because of the custom subject provider
                     await publisher.PublishAsync(message, cancellationToken);
 
-                    await cts.Token.WaitForCancellation();
+                    await Patiently.AssertThatAsync(OutputHelper,
+                        () =>
+                        {
+                            var receivedMessage = handler.ReceivedMessages.ShouldHaveSingleItem();
+                            receivedMessage.Id.ShouldBe(id);
 
-                    handler.ReceivedMessages.ShouldHaveSingleItem().Id.ShouldBe(id);
-                    var context = accessor.ValuesWritten.ShouldHaveSingleItem();
-                    dynamic json = JsonConvert.DeserializeObject(context.Message.Body);
-                    string subject = json.Subject;
-                    subject.ShouldBe(subject);
+                            var context = accessor.ValuesWritten.ShouldHaveSingleItem();
+                            dynamic json = JsonConvert.DeserializeObject(context.Message.Body);
+                            string subject = json.Subject;
+                            subject.ShouldBe(subject);
+                        });
                 });
         }
 
