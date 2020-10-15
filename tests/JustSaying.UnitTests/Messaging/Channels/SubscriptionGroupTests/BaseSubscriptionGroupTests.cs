@@ -63,7 +63,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         {
             Queues = new List<ISqsQueue>();
             Handler = new InspectableHandler<SimpleMessage>();
-            Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
+            Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
             SerializationRegister = new FakeSerializationRegister();
             HandlerMap = new HandlerMap(Monitor, LoggerFactory);
 
