@@ -99,7 +99,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
 
                 Arn = response.TopicArn;
-                _log.LogInformation("Created topic '{TopicName}' on ARN '{Arn}'.", TopicName, Arn);
+                _log.LogInformation("Created topic '{TopicName}' with ARN '{Arn}'.", TopicName, Arn);
             }
             catch (AuthorizationErrorException ex)
             {

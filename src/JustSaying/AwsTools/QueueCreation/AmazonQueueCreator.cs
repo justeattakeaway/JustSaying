@@ -87,12 +87,18 @@ namespace JustSaying.AwsTools.QueueCreation
             return !string.IsNullOrWhiteSpace(queueConfig.TopicSourceAccount);
         }
 
-        public QueueWithAsyncStartup<SqsQueueByName> EnsureQueueExists(string region, SqsReadConfiguration queueConfig)
+        public QueueWithAsyncStartup<SqsQueueByName> EnsureQueueExists(
+            string region,
+            SqsReadConfiguration queueConfig)
         {
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);
             var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
 
-            var queue = new SqsQueueByName(regionEndpoint, queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue, _loggerFactory);
+            var queue = new SqsQueueByName(regionEndpoint,
+                queueConfig.QueueName,
+                sqsclient,
+                queueConfig.RetryCountBeforeSendingToErrorQueue,
+                _loggerFactory);
 
             var startupTask = queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig);
 
@@ -102,18 +108,27 @@ namespace JustSaying.AwsTools.QueueCreation
 
         private static async Task SubscribeQueueAndApplyFilterPolicyAsync(
             IAmazonSimpleNotificationService amazonSimpleNotificationService,
-            string topicArn, IAmazonSQS amazonSQS, Uri queueUrl, string filterPolicy)
+            string topicArn,
+            IAmazonSQS amazonSQS,
+            Uri queueUrl,
+            string filterPolicy)
         {
-            if(amazonSimpleNotificationService == null) throw new ArgumentNullException(nameof(amazonSimpleNotificationService));
+            if (amazonSimpleNotificationService == null)
+                throw new ArgumentNullException(nameof(amazonSimpleNotificationService));
             if (amazonSQS == null) throw new ArgumentNullException(nameof(amazonSQS));
             if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
-            if (string.IsNullOrEmpty(topicArn)) throw new ArgumentException("topicArn cannot be null or empty", nameof(topicArn));
+            if (string.IsNullOrEmpty(topicArn))
+                throw new ArgumentException("topicArn cannot be null or empty.", nameof(topicArn));
 
-            var subscriptionArn = await amazonSimpleNotificationService.SubscribeQueueAsync(topicArn, amazonSQS, queueUrl.AbsoluteUri)
+            var subscriptionArn = await amazonSimpleNotificationService
+                .SubscribeQueueAsync(topicArn, amazonSQS, queueUrl.AbsoluteUri)
                 .ConfigureAwait(false);
 
-            var actualFilterPolicy = string.IsNullOrWhiteSpace(filterPolicy) ? EmptyFilterPolicy : filterPolicy;
-            await amazonSimpleNotificationService.SetSubscriptionAttributesAsync(subscriptionArn, "FilterPolicy", actualFilterPolicy).ConfigureAwait(false);
+            var actualFilterPolicy =
+                string.IsNullOrWhiteSpace(filterPolicy) ? EmptyFilterPolicy : filterPolicy;
+            await amazonSimpleNotificationService
+                .SetSubscriptionAttributesAsync(subscriptionArn, "FilterPolicy", actualFilterPolicy)
+                .ConfigureAwait(false);
         }
     }
 }

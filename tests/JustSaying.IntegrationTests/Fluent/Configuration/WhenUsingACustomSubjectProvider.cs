@@ -53,7 +53,7 @@ namespace JustSaying.Fluent.Configuration
                     await listener.StartAsync(cancellationToken);
                     await publisher.StartAsync(cancellationToken);
 
-                    // Let's send an OrderPlaced, but the subject will be a guid
+                    // Let's send an OrderPlaced, but the subject will be a GUID
                     // because of the custom subject provider
                     await publisher.PublishAsync(message, cancellationToken);
 
