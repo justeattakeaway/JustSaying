@@ -74,6 +74,9 @@ resharper_web_config_wrong_module_highlighting=warning
 [*.cs]
 indent_size=4
 
+[*.ps1]
+indent_size=4
+
 [*.lock]
 end_of_line=lf
 
