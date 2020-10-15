@@ -46,10 +46,14 @@ namespace JustSaying.IntegrationTests.Fluent
         protected IServiceCollection GivenJustSaying(LogLevel? levelOverride = null)
             => Given((_) => { }, levelOverride);
 
-        protected IServiceCollection Given(Action<MessagingBusBuilder> configure, LogLevel? levelOverride = null)
+        protected IServiceCollection Given(
+            Action<MessagingBusBuilder> configure,
+            LogLevel? levelOverride = null)
             => Given((builder, _) => configure(builder), levelOverride);
 
-        protected IServiceCollection Given(Action<MessagingBusBuilder, IServiceProvider> configure, LogLevel? levelOverride = null)
+        protected IServiceCollection Given(
+            Action<MessagingBusBuilder, IServiceProvider> configure,
+            LogLevel? levelOverride = null)
         {
             return new ServiceCollection()
                 .AddLogging((p) => p.AddXUnit(OutputHelper).SetMinimumLevel(levelOverride ?? LogLevel.Debug))
@@ -79,16 +83,20 @@ namespace JustSaying.IntegrationTests.Fluent
             IHandlerAsync<T> handler = Substitute.For<IHandlerAsync<T>>();
 
             handler.Handle(Arg.Any<T>())
-                   .Returns(true)
-                   .AndDoes((_) => completionSource.TrySetResult(null));
+                .Returns(true)
+                .AndDoes((_) => completionSource.TrySetResult(null));
 
             return handler;
         }
 
-        protected async Task WhenAsync(IServiceCollection services, Func<IMessagePublisher, IMessagingBus, CancellationToken, Task> action)
+        protected async Task WhenAsync(
+            IServiceCollection services,
+            Func<IMessagePublisher, IMessagingBus, CancellationToken, Task> action)
             => await WhenAsync(services, async (p, b, _, c) => await action(p, b, c));
 
-        protected async Task WhenAsync(IServiceCollection services, Func<IMessagePublisher, IMessagingBus, IServiceProvider, CancellationToken, Task> action)
+        protected async Task WhenAsync(
+            IServiceCollection services,
+            Func<IMessagePublisher, IMessagingBus, IServiceProvider, CancellationToken, Task> action)
         {
             IServiceProvider serviceProvider = services.BuildServiceProvider();
 
@@ -113,7 +121,8 @@ namespace JustSaying.IntegrationTests.Fluent
 
                 if (resultTask == delayTask)
                 {
-                    throw new TimeoutException($"The tested action took longer than the timeout of {Timeout} to complete.");
+                    throw new TimeoutException(
+                        $"The tested action took longer than the timeout of {Timeout} to complete.");
                 }
                 else
                 {
@@ -123,6 +132,5 @@ namespace JustSaying.IntegrationTests.Fluent
                 await actionTask;
             }
         }
-
     }
 }
