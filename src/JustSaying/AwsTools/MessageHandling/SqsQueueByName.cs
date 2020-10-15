@@ -41,7 +41,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
                 else
                 {
-                    Logger.LogInformation("Error Queue {QueueName} already exists, skipping", ErrorQueue.QueueName);
+                    Logger.LogInformation("Error queue {QueueName} already exists, skipping", ErrorQueue.QueueName);
                 }
             }
 
