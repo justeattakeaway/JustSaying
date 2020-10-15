@@ -23,7 +23,7 @@ namespace JustSaying.UnitTests.AwsTools.TopicCreation
         private ITestOutputHelper OutputHelper { get; }
 
         [Fact]
-        public async Task Cannot_Create_Topic_Because_It_Exists()
+        public async Task Arn_Still_Retrieved_When_It_Already_Exists()
         {
             // Arrange
             string topicName = Guid.NewGuid().ToString();
