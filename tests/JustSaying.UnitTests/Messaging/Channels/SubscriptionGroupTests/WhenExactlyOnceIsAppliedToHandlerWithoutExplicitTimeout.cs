@@ -39,7 +39,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected override async Task WhenAsync()
         {
-            HandlerMap.Add(_queue.QueueName, () => Handler);
+            MiddlewareMap.Add(_queue.QueueName, () => Handler);
 
             var cts = new CancellationTokenSource();
 

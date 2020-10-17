@@ -159,11 +159,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             handler2.ShouldBe(fn2);
         }
 
-        private static HandlerMap CreateHandlerMap()
+        private static MiddlewareMap CreateHandlerMap()
         {
             var monitor = Substitute.For<IMessageMonitor>();
 
-            return new HandlerMap(monitor, NullLoggerFactory.Instance);
+            return new MiddlewareMap(monitor, NullLoggerFactory.Instance);
         }
     }
 }

@@ -8,6 +8,7 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Middleware;
+using JustSaying.Messaging.Middleware.Receive;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -32,8 +33,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
             _outputHelper = testOutputHelper;
             var loggerFactory = testOutputHelper.ToLoggerFactory();
 
-            MiddlewareBase<GetMessagesContext, IList<Message>> sqsMiddleware =
-                new DelegateMiddleware<GetMessagesContext, IList<Message>>();
+            MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware =
+                new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>();
             var sqsClient = Substitute.For<IAmazonSQS>();
             var queue = Substitute.For<ISqsQueue>();
             queue.Uri.Returns(new Uri("http://test.com"));

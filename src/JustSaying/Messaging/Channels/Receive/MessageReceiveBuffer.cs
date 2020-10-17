@@ -10,6 +10,7 @@ using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware;
+using JustSaying.Messaging.Middleware.Receive;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 
@@ -23,7 +24,7 @@ namespace JustSaying.Messaging.Channels.Receive
         private readonly TimeSpan _readTimeout;
         private readonly TimeSpan _sqsWaitTime;
         private readonly SqsQueueReader _sqsQueueReader;
-        private readonly MiddlewareBase<GetMessagesContext, IList<Message>> _sqsMiddleware;
+        private readonly MiddlewareBase<ReceiveMessagesContext, IList<Message>> _sqsMiddleware;
         private readonly IMessageMonitor _monitor;
         private readonly ILogger _logger;
 
@@ -40,7 +41,7 @@ namespace JustSaying.Messaging.Channels.Receive
             TimeSpan readTimeout,
             TimeSpan sqsWaitTime,
             ISqsQueue sqsQueue,
-            MiddlewareBase<GetMessagesContext, IList<Message>> sqsMiddleware,
+            MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware,
             IMessageMonitor monitor,
             ILogger<IMessageReceiveBuffer> logger,
             IMessageBackoffStrategy messageBackoffStrategy = null)
@@ -129,7 +130,7 @@ namespace JustSaying.Messaging.Channels.Receive
                 using var linkedCts =
                     CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, receiveTimeout.Token);
 
-                var context = new GetMessagesContext
+                var context = new ReceiveMessagesContext
                 {
                     Count = count,
                     QueueName = _sqsQueueReader.QueueName,

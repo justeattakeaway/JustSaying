@@ -42,8 +42,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public void HandlersAreAdded()
         {
-            SystemUnderTest.HandlerMap.Contains(_queue.QueueName, typeof(Message)).ShouldBeTrue();
-            SystemUnderTest.HandlerMap.Contains(_queue.QueueName, typeof(Message2)).ShouldBeTrue();
+            SystemUnderTest.MiddlewareMap.Contains(_queue.QueueName, typeof(Message)).ShouldBeTrue();
+            SystemUnderTest.MiddlewareMap.Contains(_queue.QueueName, typeof(Message2)).ShouldBeTrue();
         }
 
         public class Message2 : Message { }

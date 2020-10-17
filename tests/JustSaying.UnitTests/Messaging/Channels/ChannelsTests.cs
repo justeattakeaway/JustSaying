@@ -11,6 +11,7 @@ using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Middleware;
+using JustSaying.Messaging.Middleware.Receive;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
@@ -368,15 +369,15 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 TimeSpan.FromSeconds(1),
                 TimeSpan.FromSeconds(1),
                 sqsQueue,
-                new DelegateMiddleware<GetMessagesContext, IList<Message>>(),
+                new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>(),
                 Substitute.For<IMessageMonitor>(),
                 LoggerFactory.CreateLogger<MessageReceiveBuffer>());
         }
 
         private IMultiplexerSubscriber CreateSubscriber(IMessageDispatcher dispatcher)
         {
-            return new DispatchingMultiplexerSubscriber(dispatcher, Guid.NewGuid().ToString(),
-                LoggerFactory.CreateLogger<DispatchingMultiplexerSubscriber>());
+            return new MultiplexerSubscriber(dispatcher, Guid.NewGuid().ToString(),
+                LoggerFactory.CreateLogger<MultiplexerSubscriber>());
         }
 
         private ISubscriptionGroup CreateSubscriptionGroup(

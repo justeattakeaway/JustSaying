@@ -1,31 +1,32 @@
 using System;
 using System.Collections.Generic;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Middleware.Handle;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.Models;
 using Microsoft.Extensions.Logging;
-using HandlerFunc = System.Func<JustSaying.Models.Message, System.Threading.Tasks.Task<bool>>;
 
 namespace JustSaying.AwsTools.MessageHandling.Dispatch
 {
     /// <summary>
-    /// A <see cref="HandlerMap"/> is a register of handlers keyed by type and queue. Calling <see cref="Add"/>
+    /// A <see cref="MiddlewareMap"/> is a register of handlers keyed by type and queue. Calling <see cref="Add"/>
     /// with a queue name, type, and handler will cause the handler to be called when a message matching the type
     /// arrives in the queue.
     /// </summary>
-    public sealed class HandlerMap
+    public sealed class MiddlewareMap
     {
         private readonly IMessageMonitor _messageMonitor;
         private readonly ILoggerFactory _loggerFactory;
 
-        private readonly Dictionary<(string queueName, Type type), HandlerFunc> _handlers
-            = new Dictionary<(string, Type), HandlerFunc>();
+        private readonly Dictionary<(string queueName, Type type), HandleMessageMiddleware> _middlewares
+            = new Dictionary<(string, Type), HandleMessageMiddleware>();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HandlerMap"/> class.
+        /// Initializes a new instance of the <see cref="MiddlewareMap"/> class.
         /// </summary>
         /// <param name="messageMonitor">The <see cref="IMessageMonitor"/> used to wrap handlers in <see cref="MessageHandlerWrapper"/>.</param>
         /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to use.</param>
-        public HandlerMap(
+        public MiddlewareMap(
             IMessageMonitor messageMonitor,
             ILoggerFactory loggerFactory)
         {
@@ -44,7 +45,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             if (queueName is null) throw new ArgumentNullException(nameof(queueName));
             if (messageType is null) throw new ArgumentNullException(nameof(messageType));
 
-            return _handlers.ContainsKey((queueName, messageType));
+            return _middlewares.ContainsKey((queueName, messageType));
         }
 
         /// <summary>
@@ -55,7 +56,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             get
             {
                 var types = new HashSet<Type>();
-                foreach ((var _, Type type) in _handlers.Keys)
+                foreach ((var _, Type type) in _middlewares.Keys)
                 {
                     types.Add(type);
                 }
@@ -75,35 +76,21 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         /// </summary>
         /// <typeparam name="T">The type of the message to handle on this queue.</typeparam>
         /// <param name="queueName">The queue to register the handler for.</param>
-        /// <param name="futureHandler">The factory function to create handlers with.</param>
-        public HandlerMap Add<T>(string queueName, Func<IHandlerAsync<T>> futureHandler) where T : Models.Message
+        /// <param name="middleware">The factory function to create handlers with.</param>
+        public MiddlewareMap Add<T>(string queueName, HandleMessageMiddleware middleware) where T : Message
         {
             if (queueName is null) throw new ArgumentNullException(nameof(queueName));
-            if (futureHandler is null) throw new ArgumentNullException(nameof(futureHandler));
+            if (middleware is null) throw new ArgumentNullException(nameof(middleware));
 
-            var handlerWrapper = new MessageHandlerWrapper(MessageLock, _messageMonitor, _loggerFactory);
-            var handlerFunc = handlerWrapper.WrapMessageHandler(futureHandler);
+            // TODO: reimplement as middleware
+            //var handlerWrapper = new MessageHandlerWrapper(MessageLock, _messageMonitor, _loggerFactory);
+            //var handlerFunc = handlerWrapper.WrapMessageHandler(futureHandler);
 
-            return Add(queueName, typeof(T), handlerFunc);
-        }
-
-        /// <summary>
-        /// Adds a handler to be executed when a message arrives in a queue.
-        /// The last handler registered for a given queue will be used.
-        /// </summary>
-        /// <param name="queueName">The queue name to register the handler for.</param>
-        /// <param name="messageType">The type of message to handle for this queue.</param>
-        /// <param name="handlerFunc">The provider of the handler to run for the queue/message type.</param>
-        public HandlerMap Add(string queueName, Type messageType, HandlerFunc handlerFunc)
-        {
-            if (queueName is null) throw new ArgumentNullException(nameof(queueName));
-            if (messageType is null) throw new ArgumentNullException(nameof(messageType));
-            if (handlerFunc is null) throw new ArgumentNullException(nameof(handlerFunc));
-
-            _handlers[(queueName, messageType)] = handlerFunc;
+            _middlewares[(queueName, typeof(T))] = middleware;
 
             return this;
         }
+
 
         /// <summary>
         /// Gets a handler factory for a queue and message type.
@@ -111,12 +98,12 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         /// <param name="queueName">The queue name to get the handler function for.</param>
         /// <param name="messageType">The message type to get the handler function for.</param>
         /// <returns>The registered handler or null.</returns>
-        public HandlerFunc Get(string queueName, Type messageType)
+        public HandleMessageMiddleware Get(string queueName, Type messageType)
         {
             if (queueName is null) throw new ArgumentNullException(nameof(queueName));
             if (messageType is null) throw new ArgumentNullException(nameof(messageType));
 
-            return _handlers.TryGetValue((queueName, messageType), out var handler) ? handler : null;
+            return _middlewares.TryGetValue((queueName, messageType), out var handler) ? handler : null;
         }
     }
 }

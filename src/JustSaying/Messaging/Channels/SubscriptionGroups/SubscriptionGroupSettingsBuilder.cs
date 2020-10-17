@@ -2,8 +2,9 @@ using System;
 using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware;
+using JustSaying.Messaging.Middleware.Receive;
 using ReceiveMiddleware =
-    JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Channels.Context.GetMessagesContext,
+    JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.Receive.ReceiveMessagesContext,
         System.Collections.Generic.IList<Amazon.SQS.Model.Message>>;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups

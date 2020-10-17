@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Extensions;
+using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Middleware.Handle;
 using JustSaying.Models;
 using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
@@ -143,8 +145,10 @@ namespace JustSaying.Fluent
                     $"There is no handler for '{typeof(T)}' messages.");
             }
 
-            bus.AddMessageHandler(subscriptionConfig.QueueName,
-                () => resolver.ResolveHandler<T>(resolutionContext));
+            IHandlerAsync<T> HandlerResolver() => resolver.ResolveHandler<T>(resolutionContext);
+            var messageMiddleware = new DefaultHandleMessageMiddleware<T>(HandlerResolver);
+
+            bus.AddMessageHandler<T>(subscriptionConfig.QueueName, messageMiddleware);
 
             logger.LogInformation(
                 "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",

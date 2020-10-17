@@ -22,7 +22,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
     public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
     {
         protected IList<ISqsQueue> Queues;
-        protected HandlerMap HandlerMap;
+        protected MiddlewareMap MiddlewareMap;
         protected TrackingLoggingMonitor Monitor;
         protected FakeSerializationRegister SerializationRegister;
         protected int ConcurrencyLimit = 8;
@@ -30,8 +30,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         public ITestOutputHelper OutputHelper { get; }
         protected FakeMessageLock MessageLock
         {
-            get => (FakeMessageLock) HandlerMap.MessageLock;
-            set => HandlerMap.MessageLock = value;
+            get => (FakeMessageLock) MiddlewareMap.MessageLock;
+            set => MiddlewareMap.MessageLock = value;
         }
 
         protected InspectableHandler<SimpleMessage> Handler;
@@ -65,7 +65,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             Handler = new InspectableHandler<SimpleMessage>();
             Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
             SerializationRegister = new FakeSerializationRegister();
-            HandlerMap = new HandlerMap(Monitor, LoggerFactory);
+            MiddlewareMap = new MiddlewareMap(Monitor, LoggerFactory);
 
             Given();
         }
@@ -77,7 +77,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         {
             foreach (ISqsQueue queue in Queues)
             {
-                HandlerMap.Add(queue.QueueName,
+                MiddlewareMap.Add(queue.QueueName,
                     typeof(SimpleMessage),
                     msg => Handler.Handle(msg as SimpleMessage));
             }
@@ -109,7 +109,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             var dispatcher = new MessageDispatcher(
                 SerializationRegister,
                 Monitor,
-                HandlerMap,
+                MiddlewareMap,
                 LoggerFactory,
                 messageBackoffStrategy,
                 messageContextAccessor);

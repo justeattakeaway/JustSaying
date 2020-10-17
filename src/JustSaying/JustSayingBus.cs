@@ -13,6 +13,7 @@ using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Middleware.Handle;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
@@ -48,13 +49,13 @@ namespace JustSaying
 
         public IMessageLockAsync MessageLock
         {
-            get => HandlerMap.MessageLock;
-            set => HandlerMap.MessageLock = value;
+            get => MiddlewareMap.MessageLock;
+            set => MiddlewareMap.MessageLock = value;
         }
 
         public IMessageContextAccessor MessageContextAccessor { get; set; }
 
-        public HandlerMap HandlerMap { get; }
+        public MiddlewareMap MiddlewareMap { get; }
 
         public Task Completion { get; private set; }
 
@@ -71,7 +72,7 @@ namespace JustSaying
             Monitor = new NullOpMessageMonitor();
             MessageContextAccessor = new MessageContextAccessor();
             SerializationRegister = serializationRegister;
-            HandlerMap = new HandlerMap(Monitor, _loggerFactory);
+            MiddlewareMap = new MiddlewareMap(Monitor, _loggerFactory);
 
             _publishersByType = new Dictionary<Type, IMessagePublisher>();
             _subscriptionGroupSettings =
@@ -112,11 +113,11 @@ namespace JustSaying
                 new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(settings);
         }
 
-        public void AddMessageHandler<T>(string queueName, Func<IHandlerAsync<T>> futureHandler)
+        public void AddMessageHandler<T>(string queueName, HandleMessageMiddleware middleware)
             where T : Message
         {
             SerializationRegister.AddSerializer<T>();
-            HandlerMap.Add(queueName, futureHandler);
+            MiddlewareMap.Add<T>(queueName, middleware);
         }
 
         public void AddMessagePublisher<T>(IMessagePublisher messagePublisher) where T : Message
@@ -129,7 +130,6 @@ namespace JustSaying
 
             _publishersByType[typeof(T)] = messagePublisher;
         }
-
 
         public async Task StartAsync(CancellationToken stoppingToken)
         {
@@ -171,7 +171,7 @@ namespace JustSaying
             var dispatcher = new MessageDispatcher(
                 SerializationRegister,
                 Monitor,
-                HandlerMap,
+                MiddlewareMap,
                 _loggerFactory,
                 MessageBackoffStrategy,
                 MessageContextAccessor);
@@ -302,7 +302,7 @@ namespace JustSaying
             return new InterrogationResult(new
             {
                 Config.Region,
-                HandledMessageTypes = HandlerMap?.Types.Select(x => x.FullName).ToArray(),
+                HandledMessageTypes = MiddlewareMap?.Types.Select(x => x.FullName).ToArray(),
                 PublishedMessageTypes = publisherDescriptions,
                 SubscriptionGroups = SubscriptionGroups?.Interrogate()
             });
