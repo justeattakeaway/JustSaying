@@ -127,8 +127,8 @@ namespace JustSaying.AwsTools.MessageHandling
             var attributesResponse = await Client.GetTopicAttributesAsync(Arn).ConfigureAwait(false);
 
             if (!attributesResponse.Attributes.TryGetValue(
-                JustSayingConstants.AttributeEncryptionKeyId,
-                out var encryptionKeyId))
+                    JustSayingConstants.AttributeEncryptionKeyId,
+                    out var encryptionKeyId))
             {
                 return null;
             }
