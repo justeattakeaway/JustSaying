@@ -1,4 +1,3 @@
-using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Naming;
 

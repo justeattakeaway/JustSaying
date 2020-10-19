@@ -8,6 +8,7 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Middleware;
+using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -38,7 +39,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
             queue.Uri.Returns(new Uri("http://test.com"));
             queue.Client.Returns(sqsClient);
             var monitor = new TestingFramework.TrackingLoggingMonitor(
-                loggerFactory.CreateLogger("Monitor"));
+                loggerFactory.CreateLogger<TrackingLoggingMonitor>());
 
             sqsClient.ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
                 .Returns(_ =>

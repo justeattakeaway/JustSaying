@@ -13,7 +13,6 @@ namespace JustSaying.AwsTools.QueueCreation
     {
         private readonly IAwsClientFactoryProxy _awsClientFactory;
         private readonly ILoggerFactory _loggerFactory;
-        private readonly RegionResourceCache<SqsQueueByName> _queueCache = new RegionResourceCache<SqsQueueByName>();
 
         private const string EmptyFilterPolicy = "{}";
 
@@ -88,18 +87,18 @@ namespace JustSaying.AwsTools.QueueCreation
             return !string.IsNullOrWhiteSpace(queueConfig.TopicSourceAccount);
         }
 
-        public QueueWithAsyncStartup<SqsQueueByName> EnsureQueueExists(string region, SqsReadConfiguration queueConfig)
+        public QueueWithAsyncStartup<SqsQueueByName> EnsureQueueExists(
+            string region,
+            SqsReadConfiguration queueConfig)
         {
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);
             var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
-            var queue = _queueCache.TryGetFromCache(region, queueConfig.QueueName);
-            if (queue != null)
-            {
-                return new QueueWithAsyncStartup<SqsQueueByName>(queue);
-            }
-            queue = new SqsQueueByName(regionEndpoint, queueConfig.QueueName, sqsclient, queueConfig.RetryCountBeforeSendingToErrorQueue, _loggerFactory);
 
-            _queueCache.AddToCache(region, queue.QueueName, queue);
+            var queue = new SqsQueueByName(regionEndpoint,
+                queueConfig.QueueName,
+                sqsclient,
+                queueConfig.RetryCountBeforeSendingToErrorQueue,
+                _loggerFactory);
 
             var startupTask = queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig);
 
@@ -109,13 +108,25 @@ namespace JustSaying.AwsTools.QueueCreation
 
         private static async Task SubscribeQueueAndApplyFilterPolicyAsync(
             IAmazonSimpleNotificationService amazonSimpleNotificationService,
-            string topicArn, IAmazonSQS amazonSQS, Uri queueUrl, string filterPolicy)
+            string topicArn,
+            IAmazonSQS amazonSQS,
+            Uri queueUrl,
+            string filterPolicy)
         {
-            var subscriptionArn = await amazonSimpleNotificationService.SubscribeQueueAsync(topicArn, amazonSQS, queueUrl.AbsoluteUri)
+            if (amazonSimpleNotificationService == null) throw new ArgumentNullException(nameof(amazonSimpleNotificationService));
+            if (amazonSQS == null) throw new ArgumentNullException(nameof(amazonSQS));
+            if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
+            if (string.IsNullOrEmpty(topicArn)) throw new ArgumentException($"{nameof(topicArn)} cannot be null or empty.", nameof(topicArn));
+
+            var subscriptionArn = await amazonSimpleNotificationService
+                .SubscribeQueueAsync(topicArn, amazonSQS, queueUrl.AbsoluteUri)
                 .ConfigureAwait(false);
 
-            var actualFilterPolicy = string.IsNullOrWhiteSpace(filterPolicy) ? EmptyFilterPolicy : filterPolicy;
-            await amazonSimpleNotificationService.SetSubscriptionAttributesAsync(subscriptionArn, "FilterPolicy", actualFilterPolicy).ConfigureAwait(false);
+            var actualFilterPolicy =
+                string.IsNullOrWhiteSpace(filterPolicy) ? EmptyFilterPolicy : filterPolicy;
+            await amazonSimpleNotificationService
+                .SetSubscriptionAttributesAsync(subscriptionArn, "FilterPolicy", actualFilterPolicy)
+                .ConfigureAwait(false);
         }
     }
 }

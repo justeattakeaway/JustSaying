@@ -85,49 +85,52 @@ namespace JustSaying.AwsTools.MessageHandling
             return false;
         }
 
-        public async Task<bool> CreateAsync()
+        public async Task CreateAsync()
         {
             try
             {
                 var response = await Client.CreateTopicAsync(new CreateTopicRequest(TopicName))
                     .ConfigureAwait(false);
 
-                if (!string.IsNullOrEmpty(response.TopicArn))
+                if (string.IsNullOrEmpty(response.TopicArn))
                 {
-                    Arn = response.TopicArn;
-                    _log.LogInformation("Created topic '{TopicName}' on ARN '{Arn}'.", TopicName, Arn);
-                    return true;
+                    var requestId = response.ResponseMetadata.RequestId;
+                    _log.LogError("Failed to create or obtain ARN for topic {TopicName}. RequestId: {RequestId}.",
+                        TopicName, requestId);
+                    throw new InvalidOperationException($"Failed to create or obtain ARN for topic '{TopicName}'. RequestId: {requestId}.");
                 }
-                _log.LogWarning("Failed to create topic '{TopicName}'.", TopicName);
+
+                Arn = response.TopicArn;
+                _log.LogInformation("Created topic '{TopicName}' with ARN '{Arn}'.", TopicName, Arn);
             }
             catch (AuthorizationErrorException ex)
             {
                 _log.LogWarning(0, ex, "Not authorized to create topic '{TopicName}'.", TopicName);
                 if (!await ExistsAsync().ConfigureAwait(false))
                 {
-                    throw new InvalidOperationException($"Topic '{TopicName}' does not exist, and no permission to create it.");
+                    throw new InvalidOperationException(
+                        $"Topic '{TopicName}' does not exist, and no permission to create it.");
                 }
             }
-
-            return false;
         }
 
-        public async Task<bool> CreateWithEncryptionAsync(ServerSideEncryption config)
+        public async Task CreateWithEncryptionAsync(ServerSideEncryption config)
         {
-            var created = await CreateAsync().ConfigureAwait(false);
+            await CreateAsync().ConfigureAwait(false);
 
-            ServerSideEncryption = await ExtractServerSideEncryptionFromTopicAttributes().ConfigureAwait(false);
+            ServerSideEncryption =
+                await ExtractServerSideEncryptionFromTopicAttributes().ConfigureAwait(false);
 
             await EnsureServerSideEncryptionIsUpdatedAsync(config).ConfigureAwait(false);
-
-            return created;
         }
 
         private async Task<ServerSideEncryption> ExtractServerSideEncryptionFromTopicAttributes()
         {
             var attributesResponse = await Client.GetTopicAttributesAsync(Arn).ConfigureAwait(false);
 
-            if (!attributesResponse.Attributes.TryGetValue(JustSayingConstants.AttributeEncryptionKeyId, out var encryptionKeyId))
+            if (!attributesResponse.Attributes.TryGetValue(
+                    JustSayingConstants.AttributeEncryptionKeyId,
+                    out var encryptionKeyId))
             {
                 return null;
             }
@@ -159,7 +162,11 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
                 else
                 {
-                    _log.LogWarning("Request to set topic attribute '{TopicAttributeName}' to '{TopicAttributeValue}' failed with status code '{HttpStatusCode}'.", request.AttributeName, request.AttributeValue, response.HttpStatusCode);
+                    _log.LogWarning(
+                        "Request to set topic attribute '{TopicAttributeName}' to '{TopicAttributeValue}' failed with status code '{HttpStatusCode}'.",
+                        request.AttributeName,
+                        request.AttributeValue,
+                        response.HttpStatusCode);
                 }
             }
         }

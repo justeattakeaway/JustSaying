@@ -71,7 +71,7 @@ namespace JustSaying.Messaging.MessageSerialization
                 var dataType = obj.Value.GetProperty("Type").GetString();
                 var dataValue = obj.Value.GetProperty("Value").GetString();
 
-                var isString = dataType == "StringValue";
+                var isString = dataType == "String";
 
                 attributes.Add(obj.Name, new MessageAttributeValue()
                 {

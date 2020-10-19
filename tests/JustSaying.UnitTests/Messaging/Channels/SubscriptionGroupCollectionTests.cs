@@ -29,7 +29,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             _outputHelper = testOutputHelper;
             LoggerFactory = testOutputHelper.ToLoggerFactory();
-            MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
+            MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
         }
 
         [Fact]

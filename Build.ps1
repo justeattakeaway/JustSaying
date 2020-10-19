@@ -132,12 +132,12 @@ function DotNetTest {
     $dotNetTestExitCode = $LASTEXITCODE
 
     if ((Test-Path $coverageOutput)) {
-      & $dotnet `
-          $reportGeneratorPath `
-          `"-reports:$coverageOutput`" `
-          `"-targetdir:$reportOutput`" `
-          -reporttypes:HTML `
-          -verbosity:Warning
+        & $dotnet `
+            $reportGeneratorPath `
+            `"-reports:$coverageOutput`" `
+            `"-targetdir:$reportOutput`" `
+            -reporttypes:HTML `
+            -verbosity:Warning
     }
 
     if ($dotNetTestExitCode -ne 0) {
@@ -153,9 +153,9 @@ ForEach ($libraryProject in $libraryProjects) {
 }
 
 if (($null -ne $env:CI) -And ($EnableIntegrationTests -eq $true)) {
-    & docker pull pafortin/goaws
-    & docker run -d --name goaws -p 4100:4100 pafortin/goaws
-    $env:AWS_SERVICE_URL = "http://localhost:4100"
+    & docker pull localstack/localstack
+    & docker run -d --name localstack -p 4566:4566 localstack/localstack
+    $env:AWS_SERVICE_URL = "http://localhost:4566"
 }
 
 if ($SkipTests -eq $false) {

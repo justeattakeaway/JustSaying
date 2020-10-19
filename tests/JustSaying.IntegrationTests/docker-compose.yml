@@ -1,8 +1,8 @@
 version: "2"
 services:
   goaws:
-    container_name: goaws
+    container_name: localstack
     restart: unless-stopped
-    image: pafortin/goaws
+    image: localstack/localstack
     ports:
-      - 4100:4100
+      - 4566:4566

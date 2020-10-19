@@ -34,7 +34,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
         {
             OutputHelper = testOutputHelper;
             LoggerFactory = testOutputHelper.ToLoggerFactory();
-            MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<IMessageMonitor>());
+            MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
         }
 
         public TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
