@@ -94,8 +94,10 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 if (string.IsNullOrEmpty(response.TopicArn))
                 {
-                    _log.LogError("Failed to create or obtain ARN for topic {TopicName}.", TopicName);
-                    throw new Exception($"Failed to create or obtain ARN for topic '{TopicName}'.");
+                    var requestId = response.ResponseMetadata.RequestId;
+                    _log.LogError("Failed to create or obtain ARN for topic {TopicName}. RequestId: {RequestId}.",
+                        TopicName, requestId);
+                    throw new InvalidOperationException($"Failed to create or obtain ARN for topic '{TopicName}'. RequestId: {requestId}.");
                 }
 
                 Arn = response.TopicArn;
