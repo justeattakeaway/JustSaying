@@ -116,7 +116,7 @@ namespace JustSaying.AwsTools.QueueCreation
             if (amazonSimpleNotificationService == null) throw new ArgumentNullException(nameof(amazonSimpleNotificationService));
             if (amazonSQS == null) throw new ArgumentNullException(nameof(amazonSQS));
             if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
-            if (string.IsNullOrEmpty(topicArn)) throw new ArgumentException("topicArn cannot be null or empty.", nameof(topicArn));
+            if (string.IsNullOrEmpty(topicArn)) throw new ArgumentException($"{nameof(topicArn)} cannot be null or empty.", nameof(topicArn));
 
             var subscriptionArn = await amazonSimpleNotificationService
                 .SubscribeQueueAsync(topicArn, amazonSQS, queueUrl.AbsoluteUri)
