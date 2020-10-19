@@ -9,6 +9,8 @@ using JustSaying.Models;
 using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
 
+using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.Handle.HandleMessageContext, bool>;
+
 namespace JustSaying.Fluent
 {
     /// <summary>
@@ -107,6 +109,7 @@ namespace JustSaying.Fluent
         void ISubscriptionBuilder<T>.Configure(
             JustSayingBus bus,
             IHandlerResolver resolver,
+            IServiceResolver serviceResolver,
             IVerifyAmazonQueues creator,
             ILoggerFactory loggerFactory)
         {
@@ -145,8 +148,8 @@ namespace JustSaying.Fluent
                     $"There is no handler for '{typeof(T)}' messages.");
             }
 
-            IHandlerAsync<T> HandlerResolver() => resolver.ResolveHandler<T>(resolutionContext);
-            var messageMiddleware = new DefaultHandleMessageMiddleware<T>(HandlerResolver);
+            IHandlerAsync<T> HandlerResolver(HandlerResolutionContext context) => resolver.ResolveHandler<T>(context);
+            Func<HandleMessageMiddleware>  messageMiddleware = () =>  new HandlerInvocationMiddleware<T>(HandlerResolver);
 
             bus.AddMessageHandler<T>(subscriptionConfig.QueueName, messageMiddleware);
 

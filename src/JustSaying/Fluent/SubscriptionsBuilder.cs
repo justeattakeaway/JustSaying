@@ -166,38 +166,6 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Configures the subscriptions for the <see cref="JustSayingBus"/>.
-        /// </summary>
-        /// <param name="bus">The <see cref="JustSayingBus"/> to configure subscriptions for.</param>
-        /// <param name="creator">The <see cref="IVerifyAmazonQueues"/>to use to create queues with.</param>
-        /// <param name="loggerFactory">The <see cref="ILoggerFactory"/>logger factory to use.</param>
-        /// <exception cref="InvalidOperationException">
-        /// No instance of <see cref="IHandlerResolver"/> could be resolved.
-        /// </exception>
-        internal void Configure(
-            JustSayingBus bus,
-            IVerifyAmazonQueues creator,
-            ILoggerFactory loggerFactory)
-        {
-            var resolver = Parent.ServicesBuilder?.HandlerResolver?.Invoke() ??
-                Parent.ServiceResolver.ResolveService<IHandlerResolver>();
-
-            if (resolver == null)
-            {
-                throw new InvalidOperationException($"No {nameof(IHandlerResolver)} is registered.");
-            }
-
-            Defaults.Validate();
-
-            bus.SetGroupSettings(Defaults, SubscriptionGroupSettings);
-
-            foreach (ISubscriptionBuilder<Message> builder in Subscriptions)
-            {
-                builder.Configure(bus, resolver, creator, loggerFactory);
-            }
-        }
-
-        /// <summary>
         /// Adds or updates SubscriptionGroup configuration.
         /// </summary>
         /// <param name="groupName">The name of the group to update.</param>
@@ -224,6 +192,40 @@ namespace JustSaying.Fluent
             }
 
             return this;
+        }
+
+        /// <summary>
+        /// Configures the subscriptions for the <see cref="JustSayingBus"/>.
+        /// </summary>
+        /// <param name="bus">The <see cref="JustSayingBus"/> to configure subscriptions for.</param>
+        /// <param name="serviceResolver">The <see cref="IServiceResolver"/> to use to resolve middleware with</param>
+        /// <param name="creator">The <see cref="IVerifyAmazonQueues"/>to use to create queues with.</param>
+        /// <param name="loggerFactory">The <see cref="ILoggerFactory"/>logger factory to use.</param>
+        /// <exception cref="InvalidOperationException">
+        /// No instance of <see cref="IHandlerResolver"/> could be resolved.
+        /// </exception>
+        internal void Configure(
+            JustSayingBus bus,
+            IServiceResolver serviceResolver,
+            IVerifyAmazonQueues creator,
+            ILoggerFactory loggerFactory)
+        {
+            var resolver = Parent.ServicesBuilder?.HandlerResolver?.Invoke() ??
+                Parent.ServiceResolver.ResolveService<IHandlerResolver>();
+
+            if (resolver == null)
+            {
+                throw new InvalidOperationException($"No {nameof(IHandlerResolver)} is registered.");
+            }
+
+            Defaults.Validate();
+
+            bus.SetGroupSettings(Defaults, SubscriptionGroupSettings);
+
+            foreach (ISubscriptionBuilder<Message> builder in Subscriptions)
+            {
+                builder.Configure(bus, resolver, serviceResolver, creator, loggerFactory);
+            }
         }
     }
 }

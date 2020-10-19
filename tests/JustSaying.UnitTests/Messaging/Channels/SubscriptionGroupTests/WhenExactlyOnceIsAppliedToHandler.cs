@@ -31,9 +31,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected override void Given()
         {
-            Handler = new ExactlyOnceHandler();
 
-            _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
+            _queue = CreateSuccessfulTestQueue("TestQueue",  new TestMessage());
 
             Queues.Add(_queue);
 
@@ -42,7 +41,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected override async Task WhenAsync()
         {
-            MiddlewareMap.Add(_queue.QueueName, () => Handler);
+            MiddlewareMap.Add<SimpleMessage>(_queue.QueueName, () => Middleware);
 
             using var cts = new CancellationTokenSource();
 
@@ -50,7 +49,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
             // wait until it's done
             await Patiently.AssertThatAsync(OutputHelper,
-                () => Handler.ReceivedMessages.Any());
+                () => Middleware.Handler.ReceivedMessages.Any());
 
             cts.Cancel();
 
@@ -60,7 +59,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         [Fact]
         public void ProcessingIsPassedToTheHandler()
         {
-            Handler.ReceivedMessages.ShouldNotBeEmpty();
+            Middleware.Handler.ReceivedMessages.ShouldNotBeEmpty();
         }
 
         [Fact]

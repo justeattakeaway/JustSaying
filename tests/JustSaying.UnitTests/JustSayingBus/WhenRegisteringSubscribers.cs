@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.Middleware.Handle;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using NSubstitute;
@@ -44,12 +45,12 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override async Task WhenAsync()
         {
-            SystemUnderTest.AddMessageHandler(_queue1.QueueName,
-                () => new InspectableHandler<OrderAccepted>());
-            SystemUnderTest.AddMessageHandler(_queue1.QueueName,
-                () => new InspectableHandler<OrderRejected>());
-            SystemUnderTest.AddMessageHandler(_queue1.QueueName,
-                () => new InspectableHandler<SimpleMessage>());
+            SystemUnderTest.AddMessageHandler<OrderAccepted>(_queue1.QueueName,
+                () => new InspectableMiddleware<OrderAccepted>());
+            SystemUnderTest.AddMessageHandler<OrderRejected>(_queue1.QueueName,
+                () => new InspectableMiddleware<OrderRejected>());
+            SystemUnderTest.AddMessageHandler<SimpleMessage>(_queue1.QueueName,
+                () => new InspectableMiddleware<SimpleMessage>());
 
             SystemUnderTest.AddQueue("groupA", _queue1);
             SystemUnderTest.AddQueue("groupB", _queue2);

@@ -3,10 +3,15 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Middleware.ExactlyOnce;
+using JustSaying.Messaging.Middleware.Handle;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests.Support;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
+using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -14,6 +19,26 @@ using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
+    public class TestServiceResolver : IServiceResolver, IHandlerResolver
+    {
+        private readonly IServiceProvider _provider;
+
+        public TestServiceResolver(IServiceProvider provider)
+        {
+            _provider = provider;
+        }
+
+        public IHandlerAsync<T> ResolveHandler<T>(HandlerResolutionContext context)
+        {
+            return (IHandlerAsync<T>) _provider.GetService(typeof(IHandlerAsync<T>));
+        }
+
+        public T ResolveService<T>()
+        {
+            return _provider.GetService<T>();
+        }
+    }
+
     public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout : BaseSubscriptionGroupTests
     {
         private ISqsQueue _queue;
@@ -33,20 +58,36 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
             MessageLock = new FakeMessageLock();
 
-            _handler = new ExactlyOnceSignallingHandler();
-            Handler = _handler;
+            var sc = new ServiceCollection()
+                .AddSingleton(new ExactlyOnceMiddleware<SimpleMessage>(MessageLock,
+                        TimeSpan.MaxValue,
+                        nameof(ExactlyOnceSignallingHandler),
+                        Logger))
+                .AddSingleton<HandleMiddlewareBuilder>();
+
+            var serviceResolver = new TestServiceResolver(sc.BuildServiceProvider());
+
+            var middleware = new HandleMiddlewareBuilder(serviceResolver, serviceResolver)
+                .Configure(pipe =>
+                {
+                    pipe.Use((service, next) => service.ResolveService<ExactlyOnceMiddleware<SimpleMessage>>());
+                    pipe.UseHandlerMiddleware<SimpleMessage>(serviceResolver);
+                })
+                .Build<SimpleMessage>();
+
+            Middleware = middleware;
         }
 
         protected override async Task WhenAsync()
         {
-            MiddlewareMap.Add(_queue.QueueName, () => Handler);
+            MiddlewareMap.Add<SimpleMessage>(_queue.QueueName, () => Middleware);
 
             var cts = new CancellationTokenSource();
 
             var completion = SystemUnderTest.RunAsync(cts.Token);
 
             await Patiently.AssertThatAsync(OutputHelper,
-                () => Handler.ReceivedMessages.Any());
+                () => Middleware.Handler.ReceivedMessages.Any());
 
             cts.Cancel();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);

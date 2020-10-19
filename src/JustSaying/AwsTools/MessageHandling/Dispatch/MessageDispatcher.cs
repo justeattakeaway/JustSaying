@@ -179,8 +179,8 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                 bool handlerSucceeded = false;
                 try
                 {
-                    var context = new HandleMessageContext(message, messageType);
-                    handlerSucceeded = await middleware.RunAsync(context, null, cancellationToken)
+                    var context = new HandleMessageContext(message, messageType, queueName);
+                    handlerSucceeded = await middleware().RunAsync(context, null, cancellationToken)
                         .ConfigureAwait(false);
                 }
                 finally

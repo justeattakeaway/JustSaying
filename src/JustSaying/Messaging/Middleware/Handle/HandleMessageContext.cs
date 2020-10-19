@@ -5,24 +5,19 @@ namespace JustSaying.Messaging.Middleware.Handle
 {
     public sealed class HandleMessageContext
     {
-        private readonly Type _messageType;
-        private readonly Message _message;
-
-        public HandleMessageContext(Message message, Type messageType)
+        public HandleMessageContext(Message message, Type messageType, string queueName)
         {
-            _message = message;
-            _messageType = messageType;
+            Message = message;
+            MessageType = messageType;
+            QueueName = queueName;
         }
 
-        public T Message<T> () where T : Message
-        {
-            if (typeof(T) != _messageType)
-            {
-                throw new InvalidOperationException($"This context has no message of type {_messageType.Name}");
-            }
+        public string QueueName { get; }
 
-            return (T)_message;
-        }
+        public Type MessageType { get; }
 
+        public Message Message { get; }
+
+        public TMessage MessageAs<TMessage>() where TMessage : Message => Message as TMessage;
     }
 }

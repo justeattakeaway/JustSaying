@@ -262,7 +262,7 @@ namespace JustSaying
 
             if (SubscriptionBuilder != null)
             {
-                SubscriptionBuilder.Configure(bus, creator, loggerFactory);
+                SubscriptionBuilder.Configure(bus, ServiceResolver, creator, loggerFactory);
             }
 
             return bus;

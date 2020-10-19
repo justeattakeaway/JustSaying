@@ -18,6 +18,9 @@ using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
+using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.Handle.HandleMessageContext, bool>;
+
+
 namespace JustSaying
 {
     public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposable
@@ -113,7 +116,7 @@ namespace JustSaying
                 new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(settings);
         }
 
-        public void AddMessageHandler<T>(string queueName, HandleMessageMiddleware middleware)
+        public void AddMessageHandler<T>(string queueName, Func<HandleMessageMiddleware> middleware)
             where T : Message
         {
             SerializationRegister.AddSerializer<T>();

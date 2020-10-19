@@ -9,6 +9,8 @@ using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
+using JustSaying.Messaging.Middleware;
+using JustSaying.Messaging.Middleware.Handle;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
@@ -34,7 +36,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             set => MiddlewareMap.MessageLock = value;
         }
 
-        protected InspectableHandler<SimpleMessage> Handler;
+        protected InspectableMiddleware<SimpleMessage> Middleware;
 
         protected ISubscriptionGroup SystemUnderTest { get; private set; }
 
@@ -62,7 +64,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         private void GivenInternal()
         {
             Queues = new List<ISqsQueue>();
-            Handler = new InspectableHandler<SimpleMessage>();
+            Middleware = new InspectableMiddleware<SimpleMessage>();
             Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
             SerializationRegister = new FakeSerializationRegister();
             MiddlewareMap = new MiddlewareMap(Monitor, LoggerFactory);
@@ -77,9 +79,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         {
             foreach (ISqsQueue queue in Queues)
             {
-                MiddlewareMap.Add(queue.QueueName,
-                    typeof(SimpleMessage),
-                    msg => Handler.Handle(msg as SimpleMessage));
+                MiddlewareMap.Add<SimpleMessage>(queue.QueueName, () => Middleware);
             }
 
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
@@ -95,7 +95,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         protected virtual bool Until()
         {
             OutputHelper.WriteLine("Checking if handler has received any messages");
-            return Handler.ReceivedMessages.Any();
+            return Middleware.Handler.ReceivedMessages.Any();
         }
 
         private ISubscriptionGroup CreateSystemUnderTest()

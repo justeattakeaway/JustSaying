@@ -2,13 +2,14 @@ using System;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Middleware.Handle;
 
 namespace JustSaying.Fluent
 {
     /// <summary>
     /// A class representing a builder for configuring instances of <see cref="SqsReadConfiguration"/>. This class cannot be inherited.
     /// </summary>
-    public sealed class SqsReadConfigurationBuilder : SqsConfigurationBuilder<SqsReadConfiguration, SqsReadConfigurationBuilder>
+    public sealed class  SqsReadConfigurationBuilder : SqsConfigurationBuilder<SqsReadConfiguration, SqsReadConfigurationBuilder>
     {
         /// <inheritdoc />
         protected override SqsReadConfigurationBuilder Self => this;
@@ -20,9 +21,18 @@ namespace JustSaying.Fluent
 
         private string SubscriptionGroupName { get; set; }
 
+        private Action<HandleMiddlewareBuilder> MiddlewareConfiguration { get; set; }
+
         public SqsReadConfigurationBuilder WithSubscriptionGroup(string subscriptionGroupName)
         {
             SubscriptionGroupName = subscriptionGroupName;
+            return this;
+        }
+
+        public SqsReadConfigurationBuilder WithMiddlewareConfiguration(
+            Action<HandleMiddlewareBuilder> middlewareConfiguration)
+        {
+            MiddlewareConfiguration = middlewareConfiguration;
             return this;
         }
 
@@ -69,6 +79,11 @@ namespace JustSaying.Fluent
             if (SubscriptionGroupName != null)
             {
                 config.SubscriptionGroupName = SubscriptionGroupName;
+            }
+
+            if (MiddlewareConfiguration != null)
+            {
+                config.MiddlewareConfiguration = MiddlewareConfiguration;
             }
         }
     }

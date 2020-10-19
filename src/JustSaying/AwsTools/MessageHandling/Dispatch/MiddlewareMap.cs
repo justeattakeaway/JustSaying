@@ -6,6 +6,8 @@ using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
+using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.Handle.HandleMessageContext, bool>;
+
 namespace JustSaying.AwsTools.MessageHandling.Dispatch
 {
     /// <summary>
@@ -18,8 +20,8 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         private readonly IMessageMonitor _messageMonitor;
         private readonly ILoggerFactory _loggerFactory;
 
-        private readonly Dictionary<(string queueName, Type type), HandleMessageMiddleware> _middlewares
-            = new Dictionary<(string, Type), HandleMessageMiddleware>();
+        private readonly Dictionary<(string queueName, Type type), Func<HandleMessageMiddleware>> _middlewares
+            = new Dictionary<(string, Type), Func<HandleMessageMiddleware>>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MiddlewareMap"/> class.
@@ -77,7 +79,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         /// <typeparam name="T">The type of the message to handle on this queue.</typeparam>
         /// <param name="queueName">The queue to register the handler for.</param>
         /// <param name="middleware">The factory function to create handlers with.</param>
-        public MiddlewareMap Add<T>(string queueName, HandleMessageMiddleware middleware) where T : Message
+        public MiddlewareMap Add<T>(string queueName, Func<HandleMessageMiddleware> middleware) where T : Message
         {
             if (queueName is null) throw new ArgumentNullException(nameof(queueName));
             if (middleware is null) throw new ArgumentNullException(nameof(middleware));
@@ -98,7 +100,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         /// <param name="queueName">The queue name to get the handler function for.</param>
         /// <param name="messageType">The message type to get the handler function for.</param>
         /// <returns>The registered handler or null.</returns>
-        public HandleMessageMiddleware Get(string queueName, Type messageType)
+        public Func<HandleMessageMiddleware> Get(string queueName, Type messageType)
         {
             if (queueName is null) throw new ArgumentNullException(nameof(queueName));
             if (messageType is null) throw new ArgumentNullException(nameof(messageType));

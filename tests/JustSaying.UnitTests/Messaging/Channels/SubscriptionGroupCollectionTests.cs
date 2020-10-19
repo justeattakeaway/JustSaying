@@ -16,6 +16,8 @@ using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
+using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.Handle.HandleMessageContext, bool>;
+
 namespace JustSaying.UnitTests.Messaging.Channels
 {
     public class SubscriptionGroupCollectionTests
@@ -43,11 +45,11 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             JustSaying.JustSayingBus bus = CreateBus();
 
-            var handler1 = new InspectableHandler<TestJustSayingMessage>();
-            var handler2 = new InspectableHandler<TestJustSayingMessage>();
+            var middleware1 = new InspectableMiddleware<TestJustSayingMessage>();
+            var middleware2 = new InspectableMiddleware<TestJustSayingMessage>();
 
-            bus.AddMessageHandler(queueName1, () => handler1);
-            bus.AddMessageHandler(queueName2, () => handler2);
+            bus.AddMessageHandler<TestJustSayingMessage>(queueName1, () => middleware1);
+            bus.AddMessageHandler<TestJustSayingMessage>(queueName2, () => middleware2);
 
             ISqsQueue queue1 = TestQueue(bus.SerializationRegister, queueName1);
             ISqsQueue queue2 = TestQueue(bus.SerializationRegister, queueName2);
@@ -63,19 +65,19 @@ namespace JustSaying.UnitTests.Messaging.Channels
             await Patiently.AssertThatAsync(_outputHelper,
                 () =>
                 {
-                    handler1.ReceivedMessages.Count.ShouldBeGreaterThan(0);
-                    handler2.ReceivedMessages.Count.ShouldBeGreaterThan(0);
+                    middleware1.Handler.ReceivedMessages.Count.ShouldBeGreaterThan(0);
+                    middleware2.Handler.ReceivedMessages.Count.ShouldBeGreaterThan(0);
                 });
 
             cts.Cancel();
             await bus.Completion;
 
-            foreach (var message in handler1.ReceivedMessages)
+            foreach (var message in middleware1.Handler.ReceivedMessages)
             {
                 message.QueueName.ShouldBe(queueName1);
             }
 
-            foreach (var message in handler2.ReceivedMessages)
+            foreach (var message in middleware2.Handler.ReceivedMessages)
             {
                 message.QueueName.ShouldBe(queueName2);
             }
