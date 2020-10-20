@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Middleware.Handle;
 
-namespace JustSaying.UnitTests.Messaging.Middleware
+namespace JustSaying.TestingFramework
 {
     public class TrackingMiddleware : MiddlewareBase<HandleMessageContext, bool>
     {
