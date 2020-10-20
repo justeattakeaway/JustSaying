@@ -5,8 +5,7 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.IntegrationTests.TestHandlers
 {
-    [ExactlyOnce(TimeOut = 10)]
-    public class ExactlyOnceHandlerWithTimeout : IHandlerAsync<SimpleMessage>
+    public class ExactlyOnceHandler : IHandlerAsync<SimpleMessage>
     {
         private readonly ConcurrentDictionary<string, int> _counts = new ConcurrentDictionary<string, int>();
 

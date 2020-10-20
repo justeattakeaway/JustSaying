@@ -22,8 +22,6 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         public async Task Sqs_Policy_Is_Applied_With_Wildcard()
         {
             // Arrange
-            var handler = new ExactlyOnceHandlerWithTimeout();
-
             var services = GivenJustSaying()
                 .ConfigureJustSaying((builder) => builder.WithLoopbackTopic<TopicA>(UniqueName))
                 .ConfigureJustSaying((builder) => builder.WithLoopbackTopic<TopicB>(UniqueName))
