@@ -3,10 +3,11 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Models;
 
 namespace JustSaying.Messaging.Middleware.Handle
 {
-    public class HandlerInvocationMiddleware<T> : MiddlewareBase<HandleMessageContext, bool>
+    public class HandlerInvocationMiddleware<T> : MiddlewareBase<HandleMessageContext, bool> where T : Message
     {
         private readonly Func<HandlerResolutionContext, IHandlerAsync<T>> _handlerResolver;
 
@@ -28,17 +29,7 @@ namespace JustSaying.Messaging.Middleware.Handle
 
             IHandlerAsync<T> handler = _handlerResolver(resolutionContext);
 
-            //TODO: cache these
-            Type handlerType = handler.GetType();
-            MethodInfo handleMethod = handlerType.GetMethod("Handle");
-
-            if (handleMethod == null)
-                throw new InvalidOperationException(
-                    $"No Handle method found on handler type {handlerType.Name}");
-
-            var task = (Task<bool>) handleMethod.Invoke(handler, new object[] { context.Message });
-
-            return await task.ConfigureAwait(false);
+            return await handler.Handle(context.MessageAs<T>());
         }
     }
 }
