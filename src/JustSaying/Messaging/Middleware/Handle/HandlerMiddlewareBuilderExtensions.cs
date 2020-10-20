@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware.ExactlyOnce;
+using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.Handle.HandleMessageContext, bool>;
@@ -12,7 +13,7 @@ namespace JustSaying.Messaging.Middleware.Handle
     public static class HandlerMiddlewareBuilderExtensions
     {
         public static HandlerMiddlewareBuilder UseHandler<TMessage>(this HandlerMiddlewareBuilder builder,
-            Func<HandlerResolutionContext, IHandlerAsync<TMessage>> handler)
+            Func<HandlerResolutionContext, IHandlerAsync<TMessage>> handler) where TMessage : Message
         {
             if(builder == null) throw new ArgumentNullException(nameof(builder));
             if(handler == null) throw new ArgumentNullException(nameof(handler));

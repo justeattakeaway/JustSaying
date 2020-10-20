@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using JustSaying.Fluent;
+using JustSaying.Models;
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.Handle.HandleMessageContext, bool>;
 
 namespace JustSaying.Messaging.Middleware.Handle
@@ -46,7 +47,7 @@ namespace JustSaying.Messaging.Middleware.Handle
             return this;
         }
 
-        public HandlerMiddlewareBuilder UseHandler<TMessage>()
+        public HandlerMiddlewareBuilder UseHandler<TMessage>() where TMessage : Message
         {
             if (_handlerMiddleware != null)
             {

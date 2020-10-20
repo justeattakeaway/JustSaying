@@ -29,7 +29,7 @@ namespace JustSaying.Messaging.Middleware.Handle
 
             IHandlerAsync<T> handler = _handlerResolver(resolutionContext);
 
-            return await handler.Handle(context.MessageAs<T>());
+            return await handler.Handle(context.MessageAs<T>()).ConfigureAwait(false);
         }
     }
 }
