@@ -39,20 +39,20 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         [Fact]
         public void ProcessingIsPassedToTheHandlerForCorrectMessage()
         {
-            Middleware.Handler.ReceivedMessages.ShouldContain(SerializationRegister.DefaultDeserializedMessage());
+            Handler.ReceivedMessages.ShouldContain(SerializationRegister.DefaultDeserializedMessage());
         }
 
         [Fact]
         public void AllMessagesAreClearedFromQueue()
         {
-            var numberOfMessagesHandled = Middleware.Handler.ReceivedMessages.Count;
+            var numberOfMessagesHandled = Handler.ReceivedMessages.Count;
             _sqsClient.DeleteMessageRequests.Count.ShouldBe(numberOfMessagesHandled);
         }
 
         [Fact]
         public void ReceiveMessageTimeStatsSent()
         {
-            var numberOfMessagesHandled = Middleware.Handler.ReceivedMessages.Count;
+            var numberOfMessagesHandled = Handler.ReceivedMessages.Count;
 
             // The receive buffer might receive messages that aren't handled before shutdown
             Monitor.ReceiveMessageTimes.Count.ShouldBeGreaterThanOrEqualTo(numberOfMessagesHandled);

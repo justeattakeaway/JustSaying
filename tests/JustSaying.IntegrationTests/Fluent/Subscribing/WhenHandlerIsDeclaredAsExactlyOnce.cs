@@ -2,9 +2,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using JustSaying.AwsTools.QueueCreation;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Middleware.Handle;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -27,8 +29,11 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
             var handler = new ExactlyOnceHandlerNoTimeout();
 
             var services = GivenJustSaying()
-                .ConfigureJustSaying((builder) => builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
                 .ConfigureJustSaying((builder) => builder.Services((config) => config.WithMessageLock(() => messageLock)))
+                .ConfigureJustSaying((builder) =>
+                    builder.WithLoopbackTopic<SimpleMessage>(UniqueName,
+                        c =>
+                            c.WithMiddlewareConfiguration(m => m.UseExactlyOnce<SimpleMessage>("simple-message-lock"))))
                 .AddJustSayingHandlers(new[] { handler });
 
             await WhenAsync(

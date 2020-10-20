@@ -38,6 +38,8 @@ namespace JustSaying.Fluent
         /// </summary>
         private Action<SqsReadConfiguration> ConfigureReads { get; set; }
 
+        private Action<HandlerMiddlewareBuilder> ConfigureMiddleware { get; set; }
+
         /// <summary>
         /// Configures that the <see cref="IQueueNamingConvention"/> will create the queue name that should be used.
         /// </summary>
@@ -89,6 +91,12 @@ namespace JustSaying.Fluent
             return this;
         }
 
+        public QueueSubscriptionBuilder<T> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> configure)
+        {
+            ConfigureMiddleware = configure ?? throw new ArgumentNullException(nameof(configure));
+            return this;
+        }
+
         /// <summary>
         /// Configures the SQS read configuration.
         /// </summary>
@@ -111,7 +119,8 @@ namespace JustSaying.Fluent
             IHandlerResolver resolver,
             IServiceResolver serviceResolver,
             IVerifyAmazonQueues creator,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            ServicesBuilder servicesBuilder)
         {
             var logger = loggerFactory.CreateLogger<QueueSubscriptionBuilder<T>>();
 
@@ -127,6 +136,7 @@ namespace JustSaying.Fluent
             subscriptionConfig.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
             subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
             subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
+            subscriptionConfig.MiddlewareConfiguration = ConfigureMiddleware;
             subscriptionConfig.Validate();
 
             var queue = creator.EnsureQueueExists(config.Region, subscriptionConfig);
@@ -148,10 +158,14 @@ namespace JustSaying.Fluent
                     $"There is no handler for '{typeof(T)}' messages.");
             }
 
-            IHandlerAsync<T> HandlerResolver(HandlerResolutionContext context) => resolver.ResolveHandler<T>(context);
-            Func<HandleMessageMiddleware>  messageMiddleware = () =>  new HandlerInvocationMiddleware<T>(HandlerResolver);
+            var middlewareBuilder = new HandlerMiddlewareBuilder(resolver, serviceResolver, servicesBuilder);
 
-            bus.AddMessageHandler<T>(subscriptionConfig.QueueName, messageMiddleware);
+            var handlerMiddleware = middlewareBuilder
+                .UseHandler<T>()
+                .Configure(subscriptionConfig.MiddlewareConfiguration)
+                .Build();
+
+            bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, () =>handlerMiddleware);
 
             logger.LogInformation(
                 "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",

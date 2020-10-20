@@ -10,7 +10,7 @@ namespace JustSaying.UnitTests.Messaging.Policies.ExamplePolicies
     {
         private readonly IAsyncPolicy _policy;
 
-        public PollyMiddleware(MiddlewareBase<TContext, TOut> next, IAsyncPolicy policy) : base(next)
+        public PollyMiddleware(IAsyncPolicy policy)
         {
             _policy = policy;
         }

@@ -3,10 +3,15 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Middleware.Handle;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.Messaging.Channels.Fakes;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests.Support;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -31,12 +36,26 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected override void Given()
         {
-
             _queue = CreateSuccessfulTestQueue("TestQueue",  new TestMessage());
 
             Queues.Add(_queue);
-
             MessageLock = new FakeMessageLock();
+
+            var servicesBuilder = new ServicesBuilder(new MessagingBusBuilder());
+            var serviceResolver = new FakeServiceResolver(sc =>
+                sc.AddSingleton<IMessageLockAsync>(MessageLock)
+                    .AddSingleton<IHandlerAsync<SimpleMessage>>(Handler)
+                    .AddLogging(x => x.AddXUnit(OutputHelper)));
+
+            var middlewareBuilder = new HandlerMiddlewareBuilder(serviceResolver, serviceResolver, servicesBuilder);
+
+            var middleware = middlewareBuilder.Configure(pipe =>
+            {
+                pipe.UseExactlyOnce<SimpleMessage>("a-unique-lock-key", TimeSpan.FromSeconds(5));
+                pipe.UseHandler<SimpleMessage>();
+            }).Build();
+
+            Middleware = middleware;
         }
 
         protected override async Task WhenAsync()
@@ -49,7 +68,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
             // wait until it's done
             await Patiently.AssertThatAsync(OutputHelper,
-                () => Middleware.Handler.ReceivedMessages.Any());
+                () => Handler.ReceivedMessages.Any());
 
             cts.Cancel();
 
@@ -59,7 +78,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         [Fact]
         public void ProcessingIsPassedToTheHandler()
         {
-            Middleware.Handler.ReceivedMessages.ShouldNotBeEmpty();
+            Handler.ReceivedMessages.ShouldNotBeEmpty();
         }
 
         [Fact]

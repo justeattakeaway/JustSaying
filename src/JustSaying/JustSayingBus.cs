@@ -116,7 +116,7 @@ namespace JustSaying
                 new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(settings);
         }
 
-        public void AddMessageHandler<T>(string queueName, Func<HandleMessageMiddleware> middleware)
+        public void AddMessageMiddleware<T>(string queueName, Func<HandleMessageMiddleware> middleware)
             where T : Message
         {
             SerializationRegister.AddSerializer<T>();

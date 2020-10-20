@@ -60,7 +60,7 @@ namespace JustSaying.TestingFramework
         public void Handled(Models.Message message)
         {
             HandledMessages.Add(message);
-            _logger.LogInformation("Handled message of type {MessageType}");
+            _logger.LogInformation("Handled message of type {MessageType}", message.GetType());
         }
 
         public void IncrementThrottlingStatistic()

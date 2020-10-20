@@ -36,6 +36,8 @@ namespace JustSaying.Fluent
         /// </summary>
         private Action<SqsReadConfiguration> ConfigureReads { get; set; }
 
+        private Action<HandlerMiddlewareBuilder> ConfigureMiddleware { get; set; }
+
         /// <summary>
         /// Configures that the <see cref="ITopicNamingConvention"/> will create the topic name that should be used.
         /// </summary>
@@ -87,6 +89,12 @@ namespace JustSaying.Fluent
             return this;
         }
 
+        public TopicSubscriptionBuilder<T> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> configure)
+        {
+            ConfigureMiddleware = configure ?? throw new ArgumentNullException(nameof(configure));
+            return this;
+        }
+
         /// <summary>
         /// Configures the SNS read configuration.
         /// </summary>
@@ -109,7 +117,8 @@ namespace JustSaying.Fluent
             IHandlerResolver resolver,
             IServiceResolver serviceResolver,
             IVerifyAmazonQueues creator,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            ServicesBuilder servicesBuilder)
         {
             var logger = loggerFactory.CreateLogger<TopicSubscriptionBuilder<T>>();
 
@@ -118,14 +127,15 @@ namespace JustSaying.Fluent
                 QueueName = TopicName
             };
 
-            ConfigureReads?.Invoke(subscriptionConfig);
-
             var config = bus.Config;
+
+            ConfigureReads?.Invoke(subscriptionConfig);
 
             subscriptionConfig.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
             subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
             subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
             subscriptionConfig.PublishEndpoint = subscriptionConfig.TopicName;
+            subscriptionConfig.MiddlewareConfiguration = ConfigureMiddleware;
             subscriptionConfig.Validate();
 
             var queueWithStartup = creator.EnsureTopicExistsWithQueueSubscribed(
@@ -150,14 +160,15 @@ namespace JustSaying.Fluent
                     $"There is no handler for '{typeof(T)}' messages.");
             }
 
-            var middlewareBuilder = new HandleMiddlewareBuilder(resolver, serviceResolver);
+            var middlewareBuilder = new HandlerMiddlewareBuilder(resolver, serviceResolver, servicesBuilder);
 
             var handlerMiddleware = middlewareBuilder
+                .UseHandler<T>()
                 .Configure(subscriptionConfig.MiddlewareConfiguration)
-                .Build<T>();
+                .Build();
 
             /* Maybe this should be re-created for each request - should middlewares be singletons? I think so */
-            bus.AddMessageHandler<T>(subscriptionConfig.QueueName, () => handlerMiddleware);
+            bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, () => handlerMiddleware);
 
             logger.LogInformation(
                 "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",

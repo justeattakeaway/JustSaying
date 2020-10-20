@@ -25,7 +25,7 @@ namespace JustSaying.AwsTools.QueueCreation
         public IMessageBackoffStrategy MessageBackoffStrategy { get; set; }
         public string FilterPolicy { get; set; }
         public string SubscriptionGroupName { get; set; }
-        public Action<HandleMiddlewareBuilder> MiddlewareConfiguration { get; set; }
+        public Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
         public void ApplyTopicNamingConvention<T>(ITopicNamingConvention namingConvention)
         {

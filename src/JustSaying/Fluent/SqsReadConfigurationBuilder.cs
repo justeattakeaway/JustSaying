@@ -21,7 +21,7 @@ namespace JustSaying.Fluent
 
         private string SubscriptionGroupName { get; set; }
 
-        private Action<HandleMiddlewareBuilder> MiddlewareConfiguration { get; set; }
+        private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
         public SqsReadConfigurationBuilder WithSubscriptionGroup(string subscriptionGroupName)
         {
@@ -30,7 +30,7 @@ namespace JustSaying.Fluent
         }
 
         public SqsReadConfigurationBuilder WithMiddlewareConfiguration(
-            Action<HandleMiddlewareBuilder> middlewareConfiguration)
+            Action<HandlerMiddlewareBuilder> middlewareConfiguration)
         {
             MiddlewareConfiguration = middlewareConfiguration;
             return this;

@@ -22,7 +22,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
             Queues.Add(queue);
 
-            Middleware.Handler.OnHandle = (msg) =>
+            Handler.OnHandle = (msg) =>
             {
                 if (!_firstTime) return;
 
@@ -34,13 +34,13 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         [Fact]
         public void MessageHandlerWasCalled()
         {
-            Middleware.Handler.ReceivedMessages.Any(msg => msg.GetType() == typeof(SimpleMessage)).ShouldBeTrue();
+            Handler.ReceivedMessages.Any(msg => msg.GetType() == typeof(SimpleMessage)).ShouldBeTrue();
         }
 
         [Fact]
         public void FailedMessageIsNotRemovedFromQueue()
         {
-            var numberHandled = Middleware.Handler.ReceivedMessages.Count;
+            var numberHandled = Handler.ReceivedMessages.Count;
             _sqsClient.DeleteMessageRequests.Count.ShouldBe(numberHandled - 1);
         }
 

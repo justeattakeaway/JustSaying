@@ -9,41 +9,21 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware.ExactlyOnce;
 using JustSaying.Messaging.Middleware.Handle;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.Messaging.Channels.Fakes;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests.Support;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.DependencyInjection;
-using NSubstitute;
+using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    public class TestServiceResolver : IServiceResolver, IHandlerResolver
-    {
-        private readonly IServiceProvider _provider;
-
-        public TestServiceResolver(IServiceProvider provider)
-        {
-            _provider = provider;
-        }
-
-        public IHandlerAsync<T> ResolveHandler<T>(HandlerResolutionContext context)
-        {
-            return (IHandlerAsync<T>) _provider.GetService(typeof(IHandlerAsync<T>));
-        }
-
-        public T ResolveService<T>()
-        {
-            return _provider.GetService<T>();
-        }
-    }
-
     public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout : BaseSubscriptionGroupTests
     {
         private ISqsQueue _queue;
         private readonly int _maximumTimeout = (int)TimeSpan.MaxValue.TotalSeconds;
-        private ExactlyOnceSignallingHandler _handler;
 
         public WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
@@ -53,27 +33,22 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         protected override void Given()
         {
             _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage());
-
             Queues.Add(_queue);
-
             MessageLock = new FakeMessageLock();
 
-            var sc = new ServiceCollection()
-                .AddSingleton(new ExactlyOnceMiddleware<SimpleMessage>(MessageLock,
-                        TimeSpan.MaxValue,
-                        nameof(ExactlyOnceSignallingHandler),
-                        Logger))
-                .AddSingleton<HandleMiddlewareBuilder>();
+            var servicesBuilder = new ServicesBuilder(new MessagingBusBuilder());
+            var serviceResolver = new FakeServiceResolver(sc =>
+                sc.AddSingleton<IMessageLockAsync>(MessageLock)
+                    .AddSingleton<IHandlerAsync<SimpleMessage>>(Handler)
+                    .AddLogging(x => x.AddXUnit(OutputHelper)));
 
-            var serviceResolver = new TestServiceResolver(sc.BuildServiceProvider());
+            var middlewareBuilder = new HandlerMiddlewareBuilder(serviceResolver, serviceResolver, servicesBuilder);
 
-            var middleware = new HandleMiddlewareBuilder(serviceResolver, serviceResolver)
-                .Configure(pipe =>
-                {
-                    pipe.Use((service, next) => service.ResolveService<ExactlyOnceMiddleware<SimpleMessage>>());
-                    pipe.UseHandlerMiddleware<SimpleMessage>(serviceResolver);
-                })
-                .Build<SimpleMessage>();
+            var middleware = middlewareBuilder.Configure(pipe =>
+            {
+                pipe.UseExactlyOnce<SimpleMessage>("a-unique-lock-key");
+                pipe.UseHandler<SimpleMessage>();
+            }).Build();
 
             Middleware = middleware;
         }
@@ -87,7 +62,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             var completion = SystemUnderTest.RunAsync(cts.Token);
 
             await Patiently.AssertThatAsync(OutputHelper,
-                () => Middleware.Handler.ReceivedMessages.Any());
+                () => Handler.ReceivedMessages.Any());
 
             cts.Cancel();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
@@ -100,10 +75,13 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             var messageId = SerializationRegister.DefaultDeserializedMessage().Id.ToString();
 
             var tempLockRequests = MessageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
-            tempLockRequests.Count().ShouldBeGreaterThan(0);
-            tempLockRequests.ShouldAllBe(pair =>
-                pair.key.Contains(messageId, StringComparison.OrdinalIgnoreCase) &&
-                pair.howLong == TimeSpan.FromSeconds(_maximumTimeout));
+            tempLockRequests.ShouldNotBeEmpty();
+
+            foreach(var lockRequest in tempLockRequests)
+            {
+                lockRequest.key.ShouldContain(messageId, Case.Insensitive);
+                ((int)lockRequest.howLong.TotalSeconds).ShouldBe(_maximumTimeout);
+            }
         }
     }
 }

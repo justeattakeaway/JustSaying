@@ -39,8 +39,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         protected override async Task WhenAsync()
         {
             SystemUnderTest.AddQueue(typeof(Message).FullName, _queue);
-            SystemUnderTest.AddMessageHandler<Message>(_queue.QueueName, _futureHandler1);
-            SystemUnderTest.AddMessageHandler<Message2>(_queue.QueueName, _futureHandler2);
+            SystemUnderTest.AddMessageMiddleware<Message>(_queue.QueueName, _futureHandler1);
+            SystemUnderTest.AddMessageMiddleware<Message2>(_queue.QueueName, _futureHandler2);
 
             var cts = new CancellationTokenSource(TimeoutPeriod);
             await SystemUnderTest.StartAsync(cts.Token);

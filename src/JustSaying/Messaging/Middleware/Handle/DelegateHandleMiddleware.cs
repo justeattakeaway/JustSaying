@@ -9,7 +9,7 @@ namespace JustSaying.Messaging.Middleware.Handle
     {
         protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
         {
-            return await func(stoppingToken);
+            return await func(stoppingToken).ConfigureAwait(false);
         }
     }
 }

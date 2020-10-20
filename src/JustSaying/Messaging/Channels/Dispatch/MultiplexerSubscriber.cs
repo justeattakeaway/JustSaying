@@ -34,7 +34,7 @@ namespace JustSaying.Messaging.Channels.Dispatch
         {
             await Task.Yield();
 
-            _logger.LogDebug("Starting up {StartupType} {SubscriberId}",
+            _logger.LogTrace("Starting up {StartupType} {SubscriberId}",
                 nameof(MultiplexerSubscriber),
                 _subscriberId);
 

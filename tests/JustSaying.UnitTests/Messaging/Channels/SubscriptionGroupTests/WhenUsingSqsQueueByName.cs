@@ -48,7 +48,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         [Fact]
         public void HandlerReceivesMessage()
         {
-            Middleware.Handler.ReceivedMessages.Contains(SerializationRegister.DefaultDeserializedMessage())
+            Handler.ReceivedMessages.Contains(SerializationRegister.DefaultDeserializedMessage())
                 .ShouldBeTrue();
         }
 

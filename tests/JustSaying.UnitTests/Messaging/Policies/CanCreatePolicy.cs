@@ -33,8 +33,8 @@ namespace JustSaying.UnitTests.Messaging.Policies
         public async Task MiddlewareBuilder_Error_Handler_Async()
         {
             var called = false;
-            var noop = MiddlewareBuilder.BuildAsync<string, int>(
-                _ => new ErrorHandlingMiddleware<string, int, InvalidOperationException>());
+            var noop = MiddlewareBuilder.BuildAsync(
+                new ErrorHandlingMiddleware<string, int, InvalidOperationException>());
 
             var result = await noop.RunAsync("context", async ct =>
             {
@@ -56,8 +56,8 @@ namespace JustSaying.UnitTests.Messaging.Policies
                     exceptionsAllowedBeforeBreaking: 2,
                     durationOfBreak: TimeSpan.FromSeconds(1));
 
-            var policy = MiddlewareBuilder.BuildAsync<string, int>(
-                next => new PollyMiddleware<string, int>(next, pollyPolicy));
+            var policy = MiddlewareBuilder.BuildAsync(
+                new PollyMiddleware<string, int>(pollyPolicy));
 
             var calledCount = 0;
             await Assert.ThrowsAsync<CustomException>(async () => await policy.RunAsync("context", ct =>

@@ -6,11 +6,12 @@ namespace JustSaying.Messaging.Middleware
 {
     public abstract class MiddlewareBase<TContext, TOut>
     {
-        private readonly MiddlewareBase<TContext, TOut> _next;
+        private MiddlewareBase<TContext, TOut> _next;
 
-        protected MiddlewareBase(MiddlewareBase<TContext, TOut> next = null)
+        public MiddlewareBase<TContext, TOut> WithNext(MiddlewareBase<TContext, TOut> next)
         {
             _next = next;
+            return this;
         }
 
         public async Task<TOut> RunAsync(

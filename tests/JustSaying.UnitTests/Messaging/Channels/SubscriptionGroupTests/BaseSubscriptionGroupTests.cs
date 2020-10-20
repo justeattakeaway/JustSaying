@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Fluent;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
@@ -13,11 +14,15 @@ using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Middleware.Handle;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.Messaging.Channels.Fakes;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
+
+using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.Handle.HandleMessageContext, bool>;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
@@ -36,7 +41,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             set => MiddlewareMap.MessageLock = value;
         }
 
-        protected InspectableMiddleware<SimpleMessage> Middleware;
+        protected HandleMessageMiddleware Middleware;
+        protected InspectableHandler<SimpleMessage> Handler;
 
         protected ISubscriptionGroup SystemUnderTest { get; private set; }
 
@@ -64,7 +70,13 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         private void GivenInternal()
         {
             Queues = new List<ISqsQueue>();
-            Middleware = new InspectableMiddleware<SimpleMessage>();
+            Handler = new InspectableHandler<SimpleMessage>();
+
+            var servicesBuilder = new ServicesBuilder(new MessagingBusBuilder());
+            var testResolver = new FakeServiceResolver(sc => sc
+                .AddLogging(l => l.AddXUnit(OutputHelper)));
+
+            Middleware = new HandlerMiddlewareBuilder(testResolver, testResolver, servicesBuilder).UseHandler(ctx => Handler).Build();
             Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
             SerializationRegister = new FakeSerializationRegister();
             MiddlewareMap = new MiddlewareMap(Monitor, LoggerFactory);
@@ -95,7 +107,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         protected virtual bool Until()
         {
             OutputHelper.WriteLine("Checking if handler has received any messages");
-            return Middleware.Handler.ReceivedMessages.Any();
+            return Handler.ReceivedMessages.Any();
         }
 
         private ISubscriptionGroup CreateSystemUnderTest()

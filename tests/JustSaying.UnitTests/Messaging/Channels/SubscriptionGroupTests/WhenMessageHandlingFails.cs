@@ -25,13 +25,13 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             _sqsClient = queue.FakeClient;
 
             Queues.Add(queue);
-            Middleware.Handler.ShouldSucceed = false;
+            Handler.ShouldSucceed = false;
         }
 
         [Fact]
         public void MessageHandlerWasCalled()
         {
-            Middleware.Handler.ReceivedMessages.ShouldNotBeEmpty();
+            Handler.ReceivedMessages.ShouldNotBeEmpty();
         }
 
         [Fact]

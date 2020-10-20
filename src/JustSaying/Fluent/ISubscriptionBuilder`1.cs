@@ -28,6 +28,7 @@ namespace JustSaying.Fluent
             IHandlerResolver resolver,
             IServiceResolver serviceResolver,
             IVerifyAmazonQueues creator,
-            ILoggerFactory loggerFactory);
+            ILoggerFactory loggerFactory,
+            ServicesBuilder servicesBuilder);
     }
 }

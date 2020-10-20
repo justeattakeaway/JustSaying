@@ -1,32 +1,30 @@
 using System;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
-using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.Models;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.AwsTools.MessageHandling;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Shouldly;
 using Xunit;
-
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.Handle.HandleMessageContext, bool>;
 
-namespace JustSaying.UnitTests.AwsTools.MessageHandling
+namespace JustSaying.UnitTests.Messaging.Middleware
 {
-    public class HandlerMapTests
+    public class MiddlewareMapTests
     {
         [Fact]
         public void EmptyMapDoesNotContain()
         {
-            var map = CreateHandlerMap();
+            var map = CreateMiddlewareMap();
             map.Contains("queue", typeof(SimpleMessage)).ShouldBeFalse();
         }
 
         [Fact]
-        public void EmptyMapReturnsNullHandlers()
+        public void EmptyMapReturnsNullMiddleware()
         {
-            var map = CreateHandlerMap();
+            var map = CreateMiddlewareMap();
 
             var handler = map.Get("queue", typeof(SimpleMessage));
 
@@ -34,9 +32,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         }
 
         [Fact]
-        public void HandlerIsReturnedForMatchingType()
+        public void MiddlewareIsReturnedForMatchingType()
         {
-            var map = CreateHandlerMap();
+            var map = CreateMiddlewareMap();
 
             var middleware = new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true));
             map.Add<SimpleMessage>("queue",  () => middleware);
@@ -47,9 +45,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         }
 
         [Fact]
-        public void HandlerContainsKeyForMatchingTypeOnly()
+        public void MiddlewareContainsKeyForMatchingTypeOnly()
         {
-            var map = CreateHandlerMap();
+            var map = CreateMiddlewareMap();
             var middleware = new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true));
             map.Add<SimpleMessage>("queue", () => middleware);
 
@@ -58,9 +56,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         }
 
         [Fact]
-        public void HandlerIsNotReturnedForNonMatchingType()
+        public void MiddlewareIsNotReturnedForNonMatchingType()
         {
-            var map = CreateHandlerMap();
+            var map = CreateMiddlewareMap();
             var middleware = new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true));
             map.Add<SimpleMessage>("queue", () => middleware);
 
@@ -70,12 +68,12 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         }
 
         [Fact]
-        public void MultipleHandlersForATypeAreNotSupported()
+        public void MultipleMiddlewareForATypeAreNotSupported()
         {
             Func<HandleMessageMiddleware> fn1 = () => new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true));
             Func<HandleMessageMiddleware> fn2 = () => new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true));
 
-            var map = CreateHandlerMap();
+            var map = CreateMiddlewareMap();
 
             map.Add<SimpleMessage>("queue", fn1);
             map.Add<SimpleMessage>("queue", fn2);
@@ -85,13 +83,13 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         }
 
         [Fact]
-        public void MultipleHandlersForATypeWithOtherHandlersAreNotSupported()
+        public void MultipleMiddlewareForATypeWithOtherHandlersAreNotSupported()
         {
             Func<HandleMessageMiddleware> fn1 = () =>  new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true));
             Func<HandleMessageMiddleware> fn2 = () =>  new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(false));
             Func<HandleMessageMiddleware> fn3 = () =>  new DelegateMessageHandlingMiddleware<AnotherSimpleMessage>(m => Task.FromResult(true));
 
-            var map = CreateHandlerMap();
+            var map = CreateMiddlewareMap();
             map.Add<SimpleMessage>("queue", fn1);
             map.Add<AnotherSimpleMessage>("queue", fn3);
             map.Add<SimpleMessage>("queue", fn2);
@@ -102,11 +100,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         }
 
         [Fact]
-        public void HandlerIsNotReturnedForAnotherQueue()
+        public void MiddlewareIsNotReturnedForAnotherQueue()
         {
             string queue1 = "queue1";
             string queue2 = "queue2";
-            var map = CreateHandlerMap();
+            var map = CreateMiddlewareMap();
 
             map.Add<SimpleMessage>(queue1,
                 () => new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true)));
@@ -117,11 +115,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         }
 
         [Fact]
-        public void HandlerContainsKeyForMatchingQueueOnly()
+        public void MiddlewareContainsKeyForMatchingQueueOnly()
         {
             string queue1 = "queue1";
             string queue2 = "queue2";
-            var map = CreateHandlerMap();
+            var map = CreateMiddlewareMap();
 
             map.Add<SimpleMessage>(queue1,
                 () => new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true)));
@@ -131,12 +129,12 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
         }
 
         [Fact]
-        public void CorrectHandlerIsReturnedForQueue()
+        public void MiddlewareHandlerIsReturnedForQueue()
         {
             string queue1 = "queue1";
             string queue2 = "queue2";
 
-            var map = CreateHandlerMap();
+            var map = CreateMiddlewareMap();
             Func<HandleMessageMiddleware> fn1 = () => new DelegateMessageHandlingMiddleware<SimpleMessage>(m => Task.FromResult(true));
             map.Add<SimpleMessage>(queue1,fn1);
 
@@ -150,7 +148,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling
             handler2.ShouldBe(fn2);
         }
 
-        private static MiddlewareMap CreateHandlerMap()
+        private static MiddlewareMap CreateMiddlewareMap()
         {
             var monitor = Substitute.For<IMessageMonitor>();
 
