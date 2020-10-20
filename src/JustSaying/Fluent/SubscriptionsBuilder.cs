@@ -166,35 +166,6 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Adds or updates SubscriptionGroup configuration.
-        /// </summary>
-        /// <param name="groupName">The name of the group to update.</param>
-        /// <param name="action">The update action to apply to the configuration.</param>
-        /// <returns>
-        /// The current <see cref="SubscriptionsBuilder"/>.
-        /// </returns>
-        public SubscriptionsBuilder WithSubscriptionGroup(
-            string groupName,
-            Action<SubscriptionGroupConfigBuilder> action)
-        {
-            if (string.IsNullOrEmpty(groupName)) throw new ArgumentException("Cannot be null or empty.", nameof(groupName));
-            if (action == null) throw new ArgumentNullException(nameof(action));
-
-            if (SubscriptionGroupSettings.TryGetValue(groupName, out var settings))
-            {
-                action.Invoke(settings);
-            }
-            else
-            {
-                var newSettings = new SubscriptionGroupConfigBuilder(groupName);
-                action.Invoke(newSettings);
-                SubscriptionGroupSettings.Add(groupName, newSettings);
-            }
-
-            return this;
-        }
-
-        /// <summary>
         /// Configures the subscriptions for the <see cref="JustSayingBus"/>.
         /// </summary>
         /// <param name="bus">The <see cref="JustSayingBus"/> to configure subscriptions for.</param>
@@ -226,6 +197,35 @@ namespace JustSaying.Fluent
             {
                 builder.Configure(bus, resolver, serviceResolver, creator, loggerFactory, Parent.ServicesBuilder);
             }
+        }
+
+        /// <summary>
+        /// Adds or updates SubscriptionGroup configuration.
+        /// </summary>
+        /// <param name="groupName">The name of the group to update.</param>
+        /// <param name="action">The update action to apply to the configuration.</param>
+        /// <returns>
+        /// The current <see cref="SubscriptionsBuilder"/>.
+        /// </returns>
+        public SubscriptionsBuilder WithSubscriptionGroup(
+            string groupName,
+            Action<SubscriptionGroupConfigBuilder> action)
+        {
+            if (string.IsNullOrEmpty(groupName)) throw new ArgumentException("Cannot be null or empty.", nameof(groupName));
+            if (action == null) throw new ArgumentNullException(nameof(action));
+
+            if (SubscriptionGroupSettings.TryGetValue(groupName, out var settings))
+            {
+                action.Invoke(settings);
+            }
+            else
+            {
+                var newSettings = new SubscriptionGroupConfigBuilder(groupName);
+                action.Invoke(newSettings);
+                SubscriptionGroupSettings.Add(groupName, newSettings);
+            }
+
+            return this;
         }
     }
 }
