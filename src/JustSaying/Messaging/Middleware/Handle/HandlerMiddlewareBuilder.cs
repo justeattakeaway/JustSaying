@@ -21,10 +21,9 @@ namespace JustSaying.Messaging.Middleware.Handle
         private readonly List<Func<HandleMessageMiddleware>> _middlewares;
         private HandleMessageMiddleware _handlerMiddleware;
 
-        public HandlerMiddlewareBuilder(IHandlerResolver handlerResolver, IServiceResolver serviceResolver, ServicesBuilder servicesBuilder)
+        public HandlerMiddlewareBuilder(IHandlerResolver handlerResolver, IServiceResolver serviceResolver)
         {
             ServiceResolver = serviceResolver;
-            ServicesBuilder = servicesBuilder;
             HandlerResolver = handlerResolver;
             _middlewares = new List<Func<HandleMessageMiddleware>>();
         }

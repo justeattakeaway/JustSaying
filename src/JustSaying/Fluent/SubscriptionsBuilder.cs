@@ -195,7 +195,7 @@ namespace JustSaying.Fluent
 
             foreach (ISubscriptionBuilder<Message> builder in Subscriptions)
             {
-                builder.Configure(bus, resolver, serviceResolver, creator, loggerFactory, Parent.ServicesBuilder);
+                builder.Configure(bus, resolver, serviceResolver, creator, loggerFactory);
             }
         }
 

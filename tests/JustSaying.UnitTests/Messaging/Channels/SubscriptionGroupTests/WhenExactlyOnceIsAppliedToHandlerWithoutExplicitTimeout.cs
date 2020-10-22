@@ -43,7 +43,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
                     .AddSingleton<IHandlerAsync<SimpleMessage>>(Handler)
                     .AddLogging(x => x.AddXUnit(OutputHelper)));
 
-            var middlewareBuilder = new HandlerMiddlewareBuilder(serviceResolver, serviceResolver, servicesBuilder);
+            var middlewareBuilder = new HandlerMiddlewareBuilder(serviceResolver, serviceResolver);
 
             var middleware = middlewareBuilder.Configure(pipe =>
             {

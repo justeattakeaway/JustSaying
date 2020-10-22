@@ -117,8 +117,7 @@ namespace JustSaying.Fluent
             IHandlerResolver handlerResolver,
             IServiceResolver serviceResolver,
             IVerifyAmazonQueues creator,
-            ILoggerFactory loggerFactory,
-            ServicesBuilder servicesBuilder)
+            ILoggerFactory loggerFactory)
         {
             var logger = loggerFactory.CreateLogger<TopicSubscriptionBuilder<T>>();
 
@@ -160,7 +159,7 @@ namespace JustSaying.Fluent
                     $"There is no handler for '{typeof(T)}' messages.");
             }
 
-            var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver, servicesBuilder);
+            var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver);
 
             var handlerMiddleware = middlewareBuilder
                 .UseHandler<T>()

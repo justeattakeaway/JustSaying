@@ -35,7 +35,7 @@ namespace JustSaying.UnitTests.Messaging.Middleware
             var m2 = new TrackingMiddleware("middle", Before, After);
             var m3 = new TrackingMiddleware("inner", Before, After);
 
-            var middleware = new HandlerMiddlewareBuilder(_resolver, _resolver, new ServicesBuilder(new MessagingBusBuilder()))
+            var middleware = new HandlerMiddlewareBuilder(_resolver, _resolver)
                 .Configure(pipe =>
                 {
                     pipe.Use(m1);

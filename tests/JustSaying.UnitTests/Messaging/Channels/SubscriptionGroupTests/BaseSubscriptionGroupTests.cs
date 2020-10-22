@@ -67,11 +67,10 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             Queues = new List<ISqsQueue>();
             Handler = new InspectableHandler<SimpleMessage>();
 
-            var servicesBuilder = new ServicesBuilder(new MessagingBusBuilder());
             var testResolver = new FakeServiceResolver(sc => sc
                 .AddLogging(l => l.AddXUnit(OutputHelper)));
 
-            Middleware = new HandlerMiddlewareBuilder(testResolver, testResolver, servicesBuilder).UseHandler(ctx => Handler).Build();
+            Middleware = new HandlerMiddlewareBuilder(testResolver, testResolver).UseHandler(ctx => Handler).Build();
             Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
             SerializationRegister = new FakeSerializationRegister();
             MiddlewareMap = new MiddlewareMap();
