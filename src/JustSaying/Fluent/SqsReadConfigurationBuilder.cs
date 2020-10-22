@@ -9,7 +9,7 @@ namespace JustSaying.Fluent
     /// <summary>
     /// A class representing a builder for configuring instances of <see cref="SqsReadConfiguration"/>. This class cannot be inherited.
     /// </summary>
-    public sealed class  SqsReadConfigurationBuilder : SqsConfigurationBuilder<SqsReadConfiguration, SqsReadConfigurationBuilder>
+    public sealed class SqsReadConfigurationBuilder : SqsConfigurationBuilder<SqsReadConfiguration, SqsReadConfigurationBuilder>
     {
         /// <inheritdoc />
         protected override SqsReadConfigurationBuilder Self => this;
