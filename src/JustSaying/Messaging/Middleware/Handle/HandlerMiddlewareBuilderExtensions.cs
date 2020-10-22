@@ -13,8 +13,8 @@ namespace JustSaying.Messaging.Middleware.Handle
         public static HandlerMiddlewareBuilder UseHandler<TMessage>(this HandlerMiddlewareBuilder builder,
             Func<HandlerResolutionContext, IHandlerAsync<TMessage>> handler) where TMessage : Message
         {
-            if(builder == null) throw new ArgumentNullException(nameof(builder));
-            if(handler == null) throw new ArgumentNullException(nameof(handler));
+            if (builder == null) throw new ArgumentNullException(nameof(builder));
+            if (handler == null) throw new ArgumentNullException(nameof(handler));
 
             return builder.Use(new HandlerInvocationMiddleware<TMessage>(handler));
         }
