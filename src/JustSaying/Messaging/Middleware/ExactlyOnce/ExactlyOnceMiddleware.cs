@@ -28,8 +28,8 @@ namespace JustSaying.Messaging.Middleware.ExactlyOnce
 
         protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
         {
-            if(context == null) throw new ArgumentNullException(nameof(context));
-            if(func == null) throw new ArgumentNullException(nameof(func));
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (func == null) throw new ArgumentNullException(nameof(func));
 
             string lockKey = $"{context.Message.UniqueKey()}-{_lockSuffixKeyForHandler}";
 
