@@ -23,7 +23,7 @@ namespace JustSaying.Messaging.Middleware.ExactlyOnce
             _timeout = timeout;
             _logger = logger;
 
-            _lockSuffixKeyForHandler = $"{typeof(T).ToString().ToLowerInvariant()}-{handlerName}";
+            _lockSuffixKeyForHandler = $"{typeof(T).FullName.ToLowerInvariant()}-{handlerName}";
         }
 
         protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
