@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.Handle.HandleMessageContext, bool>;
 
-
 namespace JustSaying.Messaging.Middleware.Handle
 {
     public static class HandlerMiddlewareBuilderExtensions
