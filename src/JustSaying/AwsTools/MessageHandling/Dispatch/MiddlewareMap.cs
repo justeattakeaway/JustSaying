@@ -93,7 +93,6 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             return this;
         }
 
-
         /// <summary>
         /// Gets a handler factory for a queue and message type.
         /// </summary>
