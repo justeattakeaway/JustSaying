@@ -68,7 +68,6 @@ namespace JustSaying.Messaging.Middleware.ExactlyOnce
                 _logger.LogDebug("Released lock for message with key {MessageLockKey}.", lockKey);
                 throw;
             }
-
         }
     }
 }
