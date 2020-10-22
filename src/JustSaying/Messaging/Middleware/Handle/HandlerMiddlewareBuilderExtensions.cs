@@ -26,7 +26,7 @@ namespace JustSaying.Messaging.Middleware.Handle
         {
             HandleMessageMiddleware CreateMiddleware()
             {
-                var messageLock = builder.ServicesBuilder?.MessageLock?.Invoke() ?? builder.ServiceResolver.ResolveService<IMessageLockAsync>();
+                var messageLock = builder.ServiceResolver.ResolveService<IMessageLockAsync>();
                 var logger = builder.ServiceResolver.ResolveService<ILogger<ExactlyOnceMiddleware<TMessage>>>();
 
                 return new ExactlyOnceMiddleware<TMessage>(messageLock,

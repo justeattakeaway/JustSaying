@@ -49,12 +49,6 @@ namespace JustSaying
         public IMessageSerializationRegister SerializationRegister { get; }
         public IMessageBackoffStrategy MessageBackoffStrategy { get; set; }
 
-        public IMessageLockAsync MessageLock
-        {
-            get => MiddlewareMap.MessageLock;
-            set => MiddlewareMap.MessageLock = value;
-        }
-
         public IMessageContextAccessor MessageContextAccessor { get; set; }
 
         public MiddlewareMap MiddlewareMap { get; }
@@ -74,7 +68,7 @@ namespace JustSaying
             Monitor = new NullOpMessageMonitor();
             MessageContextAccessor = new MessageContextAccessor();
             SerializationRegister = serializationRegister;
-            MiddlewareMap = new MiddlewareMap(Monitor, _loggerFactory);
+            MiddlewareMap = new MiddlewareMap();
 
             _publishersByType = new Dictionary<Type, IMessagePublisher>();
             _subscriptionGroupSettings =

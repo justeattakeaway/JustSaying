@@ -64,10 +64,12 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public async Task SubscribersStartedUp()
         {
-            await _cts.Token.WaitForCancellation();
-
-            _client1.ReceiveMessageRequests.Count.ShouldBeGreaterThan(0);
-            _client2.ReceiveMessageRequests.Count.ShouldBeGreaterThan(0);
+            await Patiently.AssertThatAsync(OutputHelper,
+                () =>
+                {
+                    _client1.ReceiveMessageRequests.Count.ShouldBeGreaterThan(0);
+                    _client2.ReceiveMessageRequests.Count.ShouldBeGreaterThan(0);
+                });
         }
 
         [Fact]

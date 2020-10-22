@@ -29,6 +29,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
     {
         private ISqsQueue _queue;
         private readonly int _expectedTimeout = 5;
+        private FakeMessageLock _messageLock;
 
         public WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
@@ -39,11 +40,12 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             _queue = CreateSuccessfulTestQueue("TestQueue",  new TestMessage());
 
             Queues.Add(_queue);
-            MessageLock = new FakeMessageLock();
+
+            _messageLock = new FakeMessageLock();
 
             var servicesBuilder = new ServicesBuilder(new MessagingBusBuilder());
             var serviceResolver = new FakeServiceResolver(sc =>
-                sc.AddSingleton<IMessageLockAsync>(MessageLock)
+                sc.AddSingleton<IMessageLockAsync>(_messageLock)
                     .AddSingleton<IHandlerAsync<SimpleMessage>>(Handler)
                     .AddLogging(x => x.AddXUnit(OutputHelper)));
 
@@ -86,7 +88,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         {
             var messageId = SerializationRegister.DefaultDeserializedMessage().Id.ToString();
 
-            var tempLockRequests = MessageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
+            var tempLockRequests = _messageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
             tempLockRequests.Count().ShouldBeGreaterThan(0);
             tempLockRequests.ShouldAllBe(pair =>
                 pair.key.Contains(messageId, StringComparison.OrdinalIgnoreCase) &&

@@ -35,11 +35,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         protected int ConcurrencyLimit = 8;
 
         public ITestOutputHelper OutputHelper { get; }
-        protected FakeMessageLock MessageLock
-        {
-            get => (FakeMessageLock) MiddlewareMap.MessageLock;
-            set => MiddlewareMap.MessageLock = value;
-        }
 
         protected HandleMessageMiddleware Middleware;
         protected InspectableHandler<SimpleMessage> Handler;
@@ -79,7 +74,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             Middleware = new HandlerMiddlewareBuilder(testResolver, testResolver, servicesBuilder).UseHandler(ctx => Handler).Build();
             Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
             SerializationRegister = new FakeSerializationRegister();
-            MiddlewareMap = new MiddlewareMap(Monitor, LoggerFactory);
+            MiddlewareMap = new MiddlewareMap();
 
             Given();
         }

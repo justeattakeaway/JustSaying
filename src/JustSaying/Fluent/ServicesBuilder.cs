@@ -40,11 +40,6 @@ namespace JustSaying.Fluent
         internal Func<IMessageMonitor> MessageMonitoring { get; private set; }
 
         /// <summary>
-        /// Gets or sets a delegate to a method to create the <see cref="IMessageLockAsync"/> to use.
-        /// </summary>
-        internal Func<IMessageLockAsync> MessageLock { get; private set; }
-
-        /// <summary>
         /// Gets or sets a delegate to a method to create the <see cref="IMessageSerializationRegister"/> to use.
         /// </summary>
         internal Func<IMessageSerializationRegister> SerializationRegister { get; private set; }
@@ -123,22 +118,6 @@ namespace JustSaying.Fluent
         public ServicesBuilder WithLoggerFactory(Func<ILoggerFactory> loggerFactory)
         {
             LoggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
-            return this;
-        }
-
-        /// <summary>
-        /// Specifies the <see cref="IMessageLockAsync"/> to use.
-        /// </summary>
-        /// <param name="messageLock">A delegate to a method to get the <see cref="IMessageLockAsync"/> to use.</param>
-        /// <returns>
-        /// The current <see cref="ServicesBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="messageLock"/> is <see langword="null"/>.
-        /// </exception>
-        public ServicesBuilder WithMessageLock(Func<IMessageLockAsync> messageLock)
-        {
-            MessageLock = messageLock ?? throw new ArgumentNullException(nameof(messageLock));
             return this;
         }
 

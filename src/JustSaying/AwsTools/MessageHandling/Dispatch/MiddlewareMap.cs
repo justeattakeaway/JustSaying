@@ -17,24 +17,8 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
     /// </summary>
     public sealed class MiddlewareMap
     {
-        private readonly IMessageMonitor _messageMonitor;
-        private readonly ILoggerFactory _loggerFactory;
-
         private readonly Dictionary<(string queueName, Type type), Func<HandleMessageMiddleware>> _middlewares
             = new Dictionary<(string, Type), Func<HandleMessageMiddleware>>();
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MiddlewareMap"/> class.
-        /// </summary>
-        /// <param name="messageMonitor">The <see cref="IMessageMonitor"/> used to wrap handlers in <see cref="MessageHandlerWrapper"/>.</param>
-        /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to use.</param>
-        public MiddlewareMap(
-            IMessageMonitor messageMonitor,
-            ILoggerFactory loggerFactory)
-        {
-            _messageMonitor = messageMonitor ?? throw new ArgumentNullException(nameof(messageMonitor));
-            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
-        }
 
         /// <summary>
         /// Checks if a handler has been added for a given queue and message type.
@@ -66,11 +50,6 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                 return types;
             }
         }
-
-        /// <summary>
-        /// Gets the <see cref="IMessageLockAsync"/> to be used by the <see cref="MessageHandlerWrapper"/>.
-        /// </summary>
-        public IMessageLockAsync MessageLock { get; set; }
 
         /// <summary>
         /// Adds a handler to be executed when a message arrives in a queue.

@@ -150,9 +150,7 @@ namespace JustSaying.UnitTests.Messaging.Middleware
 
         private static MiddlewareMap CreateMiddlewareMap()
         {
-            var monitor = Substitute.For<IMessageMonitor>();
-
-            return new MiddlewareMap(monitor, NullLoggerFactory.Instance);
+            return new MiddlewareMap();
         }
     }
 }

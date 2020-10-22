@@ -26,7 +26,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
             var handler2 = new InspectableHandler<SimpleMessage>();
 
             var services = GivenJustSaying()
-                .ConfigureJustSaying(c => c.Services(s => s.WithMessageLock(() => messageLock)))
+                .AddSingleton<IMessageLockAsync>(messageLock)
                 .ConfigureJustSaying((builder) =>
                     builder.WithLoopbackTopic<SimpleMessage>(UniqueName,
                         t => t.WithMiddlewareConfiguration(m => m.UseExactlyOnce<SimpleMessage>("some-key"))))

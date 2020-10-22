@@ -45,7 +45,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
         private readonly IMessageMonitor _messageMonitor = Substitute.For<IMessageMonitor>();
-        private readonly MiddlewareMap _middlewareMap = new MiddlewareMap(Substitute.For<IMessageMonitor>(), NullLoggerFactory.Instance);
+        private readonly MiddlewareMap _middlewareMap = new MiddlewareMap();
         private readonly ILoggerFactory _loggerFactory;
         private readonly IMessageBackoffStrategy _messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
         private IAmazonSQS _amazonSqsClient = Substitute.For<IAmazonSQS>();

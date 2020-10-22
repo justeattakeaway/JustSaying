@@ -24,6 +24,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
     {
         private ISqsQueue _queue;
         private readonly int _maximumTimeout = (int)TimeSpan.MaxValue.TotalSeconds;
+        private FakeMessageLock _messageLock;
 
         public WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
@@ -34,11 +35,11 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         {
             _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage());
             Queues.Add(_queue);
-            MessageLock = new FakeMessageLock();
+            _messageLock = new FakeMessageLock();
 
             var servicesBuilder = new ServicesBuilder(new MessagingBusBuilder());
             var serviceResolver = new FakeServiceResolver(sc =>
-                sc.AddSingleton<IMessageLockAsync>(MessageLock)
+                sc.AddSingleton<IMessageLockAsync>(_messageLock)
                     .AddSingleton<IHandlerAsync<SimpleMessage>>(Handler)
                     .AddLogging(x => x.AddXUnit(OutputHelper)));
 
@@ -74,7 +75,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         {
             var messageId = SerializationRegister.DefaultDeserializedMessage().Id.ToString();
 
-            var tempLockRequests = MessageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
+            var tempLockRequests = _messageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
             tempLockRequests.ShouldNotBeEmpty();
 
             foreach(var lockRequest in tempLockRequests)

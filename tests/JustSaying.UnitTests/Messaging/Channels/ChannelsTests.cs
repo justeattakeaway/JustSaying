@@ -118,7 +118,6 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeoutPeriod);
 
-
             // consumers
             var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
             var consumer1Completion = consumer1.RunAsync(cts.Token);
