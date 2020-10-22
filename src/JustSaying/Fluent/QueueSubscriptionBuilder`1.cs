@@ -165,7 +165,7 @@ namespace JustSaying.Fluent
                 .Configure(subscriptionConfig.MiddlewareConfiguration)
                 .Build();
 
-            bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, () =>handlerMiddleware);
+            bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, () => handlerMiddleware);
 
             logger.LogInformation(
                 "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",
