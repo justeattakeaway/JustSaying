@@ -80,8 +80,9 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                     await messageContext.DeleteMessageFromQueueAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
+
 #pragma warning disable CA1031
-            catch (Exception ex)
+            catch (Exception ex) when(!(ex is OperationCanceledException))
 #pragma warning restore CA1031
             {
                 _logger.LogError(
