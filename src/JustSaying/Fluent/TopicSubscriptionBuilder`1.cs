@@ -114,7 +114,7 @@ namespace JustSaying.Fluent
         /// <inheritdoc />
         void ISubscriptionBuilder<T>.Configure(
             JustSayingBus bus,
-            IHandlerResolver resolver,
+            IHandlerResolver handlerResolver,
             IServiceResolver serviceResolver,
             IVerifyAmazonQueues creator,
             ILoggerFactory loggerFactory,
@@ -153,21 +153,20 @@ namespace JustSaying.Fluent
                 subscriptionConfig.QueueName);
 
             var resolutionContext = new HandlerResolutionContext(subscriptionConfig.QueueName);
-            var proposedHandler = resolver.ResolveHandler<T>(resolutionContext);
+            var proposedHandler = handlerResolver.ResolveHandler<T>(resolutionContext);
             if (proposedHandler == null)
             {
                 throw new HandlerNotRegisteredWithContainerException(
                     $"There is no handler for '{typeof(T)}' messages.");
             }
 
-            var middlewareBuilder = new HandlerMiddlewareBuilder(resolver, serviceResolver, servicesBuilder);
+            var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver, servicesBuilder);
 
             var handlerMiddleware = middlewareBuilder
                 .UseHandler<T>()
                 .Configure(subscriptionConfig.MiddlewareConfiguration)
                 .Build();
 
-            /* Maybe this should be re-created for each request - should middlewares be singletons? I think so */
             bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, () => handlerMiddleware);
 
             logger.LogInformation(

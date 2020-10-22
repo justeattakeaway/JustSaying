@@ -17,7 +17,5 @@ namespace JustSaying.Messaging.Middleware.Handle
         public Type MessageType { get; }
 
         public Message Message { get; }
-
-        public TMessage MessageAs<TMessage>() where TMessage : Message => Message as TMessage;
     }
 }
