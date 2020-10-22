@@ -20,7 +20,6 @@ using Microsoft.Extensions.Logging;
 
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.Handle.HandleMessageContext, bool>;
 
-
 namespace JustSaying
 {
     public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposable
