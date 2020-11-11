@@ -32,4 +32,4 @@ updates:
     - ">= 4.7.a, < 4.8"
   - dependency-name: System.Text.Json
     versions:
-    - ">= 4.7.a, < 4.8"
+    - ">= 4.7.a, < 6"
