@@ -15,7 +15,6 @@ namespace JustSaying.Messaging.Middleware.Handle
         private Action<HandlerMiddlewareBuilder> _configure;
 
         internal IServiceResolver ServiceResolver { get; }
-        internal ServicesBuilder ServicesBuilder { get; }
         internal IHandlerResolver HandlerResolver { get; }
 
         private readonly List<Func<HandleMessageMiddleware>> _middlewares;

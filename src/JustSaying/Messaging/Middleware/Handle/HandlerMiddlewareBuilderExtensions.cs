@@ -1,6 +1,8 @@
 using System;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware.ExactlyOnce;
+using JustSaying.Messaging.Middleware.Metrics;
+using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -17,6 +19,16 @@ namespace JustSaying.Messaging.Middleware.Handle
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
             return builder.Use(new HandlerInvocationMiddleware<TMessage>(handler));
+        }
+
+        public static HandlerMiddlewareBuilder UseStopwatch(this HandlerMiddlewareBuilder builder,
+            Type handlerType)
+        {
+            if (builder == null) throw new ArgumentNullException(nameof(builder));
+
+            IMessageMonitor monitor = builder.ServiceResolver.ResolveService<IMessageMonitor>();
+
+            return builder.Use(new StopwatchMiddleware(monitor, handlerType));
         }
 
         public static HandlerMiddlewareBuilder UseExactlyOnce<TMessage>(

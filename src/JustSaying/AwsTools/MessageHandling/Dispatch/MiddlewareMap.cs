@@ -11,8 +11,8 @@ using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<J
 namespace JustSaying.AwsTools.MessageHandling.Dispatch
 {
     /// <summary>
-    /// A <see cref="MiddlewareMap"/> is a register of handlers keyed by type and queue. Calling <see cref="Add"/>
-    /// with a queue name, type, and handler will cause the handler to be called when a message matching the type
+    /// A <see cref="MiddlewareMap"/> is a register of middlewares keyed by type and queue. Calling <see cref="Add"/>
+    /// with a queue name, type, and middleware will cause the middleware to be called when a message matching the type
     /// arrives in the queue.
     /// </summary>
     public sealed class MiddlewareMap
@@ -21,11 +21,11 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             = new Dictionary<(string, Type), Func<HandleMessageMiddleware>>();
 
         /// <summary>
-        /// Checks if a handler has been added for a given queue and message type.
+        /// Checks if a middleware has been added for a given queue and message type.
         /// </summary>
-        /// <param name="queueName">The queue name to register the handler for.</param>
+        /// <param name="queueName">The queue name to register the middleware for.</param>
         /// <param name="messageType">The type of message to handle for this queue.</param>
-        /// <returns>Returns true if the handler has been registered for the queue.</returns>
+        /// <returns>Returns true if the middleware has been registered for the queue.</returns>
         public bool Contains(string queueName, Type messageType)
         {
             if (queueName is null) throw new ArgumentNullException(nameof(queueName));
@@ -52,20 +52,16 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         }
 
         /// <summary>
-        /// Adds a handler to be executed when a message arrives in a queue.
-        /// If the handler is already registered for a queue, it will not be added again.
+        /// Adds a middleware chain to be executed when a message arrives in a queue.
+        /// If the middleware is already registered for a queue, it will not be added again.
         /// </summary>
         /// <typeparam name="T">The type of the message to handle on this queue.</typeparam>
-        /// <param name="queueName">The queue to register the handler for.</param>
-        /// <param name="middleware">The factory function to create handlers with.</param>
+        /// <param name="queueName">The queue to register the middleware for.</param>
+        /// <param name="middleware">The factory function to create middleware with.</param>
         public MiddlewareMap Add<T>(string queueName, Func<HandleMessageMiddleware> middleware) where T : Message
         {
             if (queueName is null) throw new ArgumentNullException(nameof(queueName));
             if (middleware is null) throw new ArgumentNullException(nameof(middleware));
-
-            // TODO: reimplement as middleware
-            //var handlerWrapper = new MessageHandlerWrapper(MessageLock, _messageMonitor, _loggerFactory);
-            //var handlerFunc = handlerWrapper.WrapMessageHandler(futureHandler);
 
             _middlewares[(queueName, typeof(T))] = middleware;
 
@@ -73,17 +69,17 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         }
 
         /// <summary>
-        /// Gets a handler factory for a queue and message type.
+        /// Gets a middleware factory for a queue and message type.
         /// </summary>
-        /// <param name="queueName">The queue name to get the handler function for.</param>
-        /// <param name="messageType">The message type to get the handler function for.</param>
-        /// <returns>The registered handler or null.</returns>
+        /// <param name="queueName">The queue name to get the middleware function for.</param>
+        /// <param name="messageType">The message type to get the middleware function for.</param>
+        /// <returns>The registered middleware or null.</returns>
         public Func<HandleMessageMiddleware> Get(string queueName, Type messageType)
         {
             if (queueName is null) throw new ArgumentNullException(nameof(queueName));
             if (messageType is null) throw new ArgumentNullException(nameof(messageType));
 
-            return _middlewares.TryGetValue((queueName, messageType), out var handler) ? handler : null;
+            return _middlewares.TryGetValue((queueName, messageType), out var middleware) ? middleware : null;
         }
     }
 }

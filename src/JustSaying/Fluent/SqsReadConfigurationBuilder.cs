@@ -23,6 +23,13 @@ namespace JustSaying.Fluent
 
         private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
+        /// <summary>
+        /// Configures the read configuration to use a custom subscription group.
+        /// By default, each queue has its own subscription group.
+        /// </summary>
+        /// <param name="subscriptionGroupName">The name of the subscription group that this
+        /// configuration should be part of</param>
+        /// <returns>The current <see cref="SqsReadConfigurationBuilder"/>.</returns>
         public SqsReadConfigurationBuilder WithSubscriptionGroup(string subscriptionGroupName)
         {
             SubscriptionGroupName = subscriptionGroupName;

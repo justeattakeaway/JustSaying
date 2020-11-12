@@ -161,6 +161,7 @@ namespace JustSaying.Fluent
 
             var handlerMiddleware = middlewareBuilder
                 .UseHandler<T>()
+                .UseStopwatch(proposedHandler.GetType())
                 .Configure(subscriptionConfig.MiddlewareConfiguration)
                 .Build();
 

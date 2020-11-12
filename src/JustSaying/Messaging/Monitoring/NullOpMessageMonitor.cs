@@ -21,5 +21,6 @@ namespace JustSaying.Messaging.Monitoring
         public void PublishMessageTime(TimeSpan duration) { }
 
         public void ReceiveMessageTime(TimeSpan duration, string queueName, string region) { }
+        public void HandlerExecutionTime(Type handlerType, Type messageType, TimeSpan duration) { }
     }
 }

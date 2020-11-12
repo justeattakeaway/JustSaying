@@ -175,7 +175,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
 
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
-            using (_messagingMonitor.MeasureHandler())
+            using (_messagingMonitor.MeasureDispatch())
             {
                 bool handlerSucceeded = false;
                 try

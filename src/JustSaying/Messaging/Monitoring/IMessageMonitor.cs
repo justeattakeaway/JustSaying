@@ -14,5 +14,6 @@ namespace JustSaying.Messaging.Monitoring
         void HandleThrottlingTime(TimeSpan duration);
         void PublishMessageTime(TimeSpan duration);
         void ReceiveMessageTime(TimeSpan duration, string queueName, string region);
+        void HandlerExecutionTime(Type handlerType, Type messageType, TimeSpan duration);
     }
 }

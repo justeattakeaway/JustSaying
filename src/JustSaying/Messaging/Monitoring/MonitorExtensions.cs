@@ -10,7 +10,7 @@ namespace JustSaying.Messaging.Monitoring
                 monitor.HandleThrottlingTime(duration);
             });
 
-        public static Operation MeasureHandler(this IMessageMonitor messageMonitor)
+        public static Operation MeasureDispatch(this IMessageMonitor messageMonitor)
             => new Operation(messageMonitor, (duration, monitor) => monitor.HandleTime(duration));
 
         public static Operation MeasureReceive(this IMessageMonitor messageMonitor, string queueName, string region)
@@ -19,5 +19,7 @@ namespace JustSaying.Messaging.Monitoring
 
         public static Operation MeasurePublish(this IMessageMonitor messageMonitor)
             => new Operation(messageMonitor, (duration, monitor) => monitor.PublishMessageTime(duration));
+
+
     }
 }

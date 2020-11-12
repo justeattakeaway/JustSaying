@@ -21,5 +21,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Messaging\Middleware\Approvals" />
+    <Folder Include="Messaging\Monitoring" />
   </ItemGroup>
 </Project>
