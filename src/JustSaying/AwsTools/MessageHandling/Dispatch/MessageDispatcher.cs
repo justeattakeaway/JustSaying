@@ -177,11 +177,11 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
 
             using (_messagingMonitor.MeasureDispatch())
             {
-                bool handlerSucceeded = false;
+                bool dispatchSuccessful = false;
                 try
                 {
                     var context = new HandleMessageContext(message, messageType, queueName);
-                    handlerSucceeded = await middleware().RunAsync(context, null, cancellationToken)
+                    dispatchSuccessful = await middleware().RunAsync(context, null, cancellationToken)
                         .ConfigureAwait(false);
                 }
                 finally
@@ -190,7 +190,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
 
                     var logMessage =
                         "{Status} handling message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}ms.";
-                    if (handlerSucceeded)
+                    if (dispatchSuccessful)
                     {
                         _logger.LogInformation(logMessage,
                             "Succeeded",
@@ -208,7 +208,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                     }
                 }
 
-                return handlerSucceeded;
+                return dispatchSuccessful;
             }
         }
 
