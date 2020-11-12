@@ -8,12 +8,13 @@ using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Monitoring
+namespace JustSaying.UnitTests.Messaging.Middleware
 {
     public class StopwatchMiddlewareTests
     {
@@ -21,10 +22,12 @@ namespace JustSaying.UnitTests.Messaging.Monitoring
         private readonly TrackingLoggingMonitor _monitor;
         private readonly MiddlewareBase<HandleMessageContext, bool> _middleware;
 
-        public StopwatchMiddlewareTests()
+        public StopwatchMiddlewareTests(ITestOutputHelper outputHelper)
         {
+            var loggerFactory = LoggerFactory.Create(lf => lf.AddXUnit(outputHelper));
+
             _handler = new InspectableHandler<OrderAccepted>();
-            _monitor = new TrackingLoggingMonitor(NullLogger<TrackingLoggingMonitor>.Instance);
+            _monitor = new TrackingLoggingMonitor(loggerFactory.CreateLogger<TrackingLoggingMonitor>());
             var serviceResolver = new FakeServiceResolver(c =>
                 c.AddSingleton<IHandlerAsync<OrderAccepted>>(_handler)
                     .AddSingleton<IMessageMonitor>(_monitor));
@@ -36,7 +39,7 @@ namespace JustSaying.UnitTests.Messaging.Monitoring
         }
 
         [Fact]
-        public async Task WhenHandlerIsWrappedinStopWatch_InnerHandlerIsCalled()
+        public async Task WhenMiddlewareIsWrappedinStopWatch_InnerMiddlewareIsCalled()
         {
             var context = new HandleMessageContext(new OrderAccepted(), typeof(OrderAccepted), "test-queue");
 
@@ -48,7 +51,7 @@ namespace JustSaying.UnitTests.Messaging.Monitoring
         }
 
         [Fact]
-        public async Task WhenHandlerIsWrappedinStopWatch_MonitoringIsCalled()
+        public async Task WhenMiddlewareIsWrappedinStopWatch_MonitoringIsCalled()
         {
             var context = new HandleMessageContext(new OrderAccepted(), typeof(OrderAccepted), "test-queue");
 
