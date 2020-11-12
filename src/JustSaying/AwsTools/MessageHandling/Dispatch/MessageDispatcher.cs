@@ -168,7 +168,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             if (middleware == null)
             {
                 _logger.LogError(
-                    "Failed to dispatch. Handler for message of type '{MessageTypeName}' not found in handler map.",
+                    "Failed to dispatch. Middleware for message of type '{MessageTypeName}' not found in middleware map.",
                     message.GetType().FullName);
                 return false;
             }
