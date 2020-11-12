@@ -19,7 +19,5 @@ namespace JustSaying.Messaging.Monitoring
 
         public static Operation MeasurePublish(this IMessageMonitor messageMonitor)
             => new Operation(messageMonitor, (duration, monitor) => monitor.PublishMessageTime(duration));
-
-
     }
 }
