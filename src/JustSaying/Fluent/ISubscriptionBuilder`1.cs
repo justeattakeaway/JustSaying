@@ -21,6 +21,7 @@ namespace JustSaying.Fluent
         /// </summary>
         /// <param name="bus">The <see cref="JustSayingBus"/> to configure subscriptions for.</param>
         /// <param name="handlerResolver">The <see cref="IHandlerResolver"/> to resolve handlers from.</param>
+        /// <param name="serviceResolver">The <see cref="IServiceResolver"/> to resolve middleware services from.</param>
         /// <param name="creator">The <see cref="IVerifyAmazonQueues"/> to use to create queues with.</param>
         /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> logger factory to use.</param>
         void Configure(

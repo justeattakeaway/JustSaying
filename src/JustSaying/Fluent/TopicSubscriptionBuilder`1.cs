@@ -36,8 +36,6 @@ namespace JustSaying.Fluent
         /// </summary>
         private Action<SqsReadConfiguration> ConfigureReads { get; set; }
 
-        private Action<HandlerMiddlewareBuilder> ConfigureMiddleware { get; set; }
-
         /// <summary>
         /// Configures that the <see cref="ITopicNamingConvention"/> will create the topic name that should be used.
         /// </summary>
@@ -89,12 +87,6 @@ namespace JustSaying.Fluent
             return this;
         }
 
-        public TopicSubscriptionBuilder<T> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> configure)
-        {
-            ConfigureMiddleware = configure ?? throw new ArgumentNullException(nameof(configure));
-            return this;
-        }
-
         /// <summary>
         /// Configures the SNS read configuration.
         /// </summary>
@@ -134,7 +126,7 @@ namespace JustSaying.Fluent
             subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
             subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
             subscriptionConfig.PublishEndpoint = subscriptionConfig.TopicName;
-            subscriptionConfig.MiddlewareConfiguration = ConfigureMiddleware;
+            subscriptionConfig.MiddlewareConfiguration = subscriptionConfig.MiddlewareConfiguration;
             subscriptionConfig.Validate();
 
             var queueWithStartup = creator.EnsureTopicExistsWithQueueSubscribed(

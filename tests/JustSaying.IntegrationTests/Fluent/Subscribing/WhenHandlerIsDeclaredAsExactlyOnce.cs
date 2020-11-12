@@ -30,8 +30,9 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 .ConfigureJustSaying((builder) =>
                     builder.WithLoopbackTopic<SimpleMessage>(UniqueName,
                         c =>
-                            c.WithMiddlewareConfiguration(m =>
-                                m.UseExactlyOnce<SimpleMessage>("simple-message-lock"))))
+                            c.WithReadConfiguration(rc =>
+                                rc.WithMiddlewareConfiguration(m =>
+                                    m.UseExactlyOnce<SimpleMessage>("simple-message-lock")))))
                 .AddJustSayingHandlers(new[] { handler });
 
             await WhenAsync(

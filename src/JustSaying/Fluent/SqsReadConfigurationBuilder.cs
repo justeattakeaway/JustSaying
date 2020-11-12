@@ -36,6 +36,31 @@ namespace JustSaying.Fluent
             return this;
         }
 
+        /// <summary>
+        /// Configures the middleware pipeline for this subscription.
+        /// Any middleware configured here will be wrapped around a handler and metrics middleware.
+        /// </summary>
+        /// <param name="middlewareConfiguration"></param>
+        /// <example>
+        /// A sample configuration:
+        /// <code>
+        /// WithMiddlewareConfiguration(pipe =>
+        /// {
+        ///     pipe.Use&lt;SomeCustomMiddleware&gt;();
+        ///     pipe.Use&lt;SomeOtherCustomMiddleware&gt;();
+        /// });
+        /// </code>
+        /// would yield this order of execution:
+        /// Before_SomeCustomMiddleware
+        /// Before_SomeOtherCustomMiddleware
+        /// Before_StopwatchMiddleware
+        /// Before_HandlerInvocationMiddleware
+        /// After_HandlerInvocationMiddleware
+        /// After_StopwatchMiddleware
+        /// After_SomeOtherCustomMiddleware
+        /// After_SomeCustomMiddleware
+        /// </example>
+        /// <returns></returns>
         public SqsReadConfigurationBuilder WithMiddlewareConfiguration(
             Action<HandlerMiddlewareBuilder> middlewareConfiguration)
         {

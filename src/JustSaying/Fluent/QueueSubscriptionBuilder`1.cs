@@ -38,8 +38,6 @@ namespace JustSaying.Fluent
         /// </summary>
         private Action<SqsReadConfiguration> ConfigureReads { get; set; }
 
-        private Action<HandlerMiddlewareBuilder> ConfigureMiddleware { get; set; }
-
         /// <summary>
         /// Configures that the <see cref="IQueueNamingConvention"/> will create the queue name that should be used.
         /// </summary>
@@ -91,12 +89,6 @@ namespace JustSaying.Fluent
             return this;
         }
 
-        public QueueSubscriptionBuilder<T> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> configure)
-        {
-            ConfigureMiddleware = configure ?? throw new ArgumentNullException(nameof(configure));
-            return this;
-        }
-
         /// <summary>
         /// Configures the SQS read configuration.
         /// </summary>
@@ -135,7 +127,7 @@ namespace JustSaying.Fluent
             subscriptionConfig.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
             subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
             subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
-            subscriptionConfig.MiddlewareConfiguration = ConfigureMiddleware;
+            subscriptionConfig.MiddlewareConfiguration = subscriptionConfig.MiddlewareConfiguration;
             subscriptionConfig.Validate();
 
             var queue = creator.EnsureQueueExists(config.Region, subscriptionConfig);
