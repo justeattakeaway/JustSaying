@@ -1,0 +1,1 @@
+[{"MessageType":"OrderAccepted","QueueName":"queue1","MiddlewareChain":["InspectableMiddleware`1"]},{"MessageType":"OrderRejected","QueueName":"queue1","MiddlewareChain":["InspectableMiddleware`1"]},{"MessageType":"SimpleMessage","QueueName":"queue1","MiddlewareChain":["InspectableMiddleware`1"]}]

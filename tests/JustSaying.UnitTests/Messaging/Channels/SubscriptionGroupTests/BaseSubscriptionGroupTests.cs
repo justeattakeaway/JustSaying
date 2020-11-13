@@ -85,7 +85,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         {
             foreach (ISqsQueue queue in Queues)
             {
-                MiddlewareMap.Add<SimpleMessage>(queue.QueueName, () => Middleware);
+                MiddlewareMap.Add<SimpleMessage>(queue.QueueName, Middleware);
             }
 
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));

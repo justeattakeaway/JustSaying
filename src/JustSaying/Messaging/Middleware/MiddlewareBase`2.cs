@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using JustSaying.Messaging.Interrogation;
 
 namespace JustSaying.Messaging.Middleware
 {
@@ -38,5 +40,19 @@ namespace JustSaying.Messaging.Middleware
             TContext context,
             Func<CancellationToken, Task<TOut>> func,
             CancellationToken stoppingToken);
+
+        internal IEnumerable<string> Interrogate()
+        {
+            var thisType = GetType();
+            if (thisType.IsGenericType && thisType.GetGenericTypeDefinition() == typeof(DelegateMiddleware<,>)) yield break;
+
+            yield return GetType().Name;
+            if (_next == null) yield break;
+
+            foreach (var middlewareName in _next.Interrogate())
+            {
+                yield return middlewareName;
+            }
+        }
     }
 }

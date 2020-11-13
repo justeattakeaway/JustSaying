@@ -109,7 +109,7 @@ namespace JustSaying
                 new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(settings);
         }
 
-        public void AddMessageMiddleware<T>(string queueName, Func<HandleMessageMiddleware> middleware)
+        public void AddMessageMiddleware<T>(string queueName, HandleMessageMiddleware middleware)
             where T : Message
         {
             SerializationRegister.AddSerializer<T>();
@@ -298,7 +298,7 @@ namespace JustSaying
             return new InterrogationResult(new
             {
                 Config.Region,
-                HandledMessageTypes = MiddlewareMap?.Types.Select(x => x.FullName).ToArray(),
+                Middleware = MiddlewareMap.Interrogate(),
                 PublishedMessageTypes = publisherDescriptions,
                 SubscriptionGroups = SubscriptionGroups?.Interrogate()
             });

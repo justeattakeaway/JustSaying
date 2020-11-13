@@ -55,7 +55,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected override async Task WhenAsync()
         {
-            MiddlewareMap.Add<SimpleMessage>(_queue.QueueName, () => Middleware);
+            MiddlewareMap.Add<SimpleMessage>(_queue.QueueName, Middleware);
 
             using var cts = new CancellationTokenSource();
 

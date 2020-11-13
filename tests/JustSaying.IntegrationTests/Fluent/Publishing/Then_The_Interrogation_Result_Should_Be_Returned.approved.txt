@@ -1,8 +1,17 @@
 {
   "Region": "eu-west-1",
-  "HandledMessageTypes": [
-    "JustSaying.TestingFramework.SimpleMessage"
-  ],
+  "Middleware": {
+    "Middlewares": [
+      {
+        "MessageType": "SimpleMessage",
+        "QueueName": "integrationTestQueueName",
+        "MiddlewareChain": [
+          "StopwatchMiddleware",
+          "HandlerInvocationMiddleware`1"
+        ]
+      }
+    ]
+  },
   "PublishedMessageTypes": [],
   "SubscriptionGroups": {
     "Groups": [
@@ -29,7 +38,9 @@
 
 {
   "Region": "eu-west-1",
-  "HandledMessageTypes": [],
+  "Middleware": {
+    "Middlewares": []
+  },
   "PublishedMessageTypes": [
     "SimpleMessage"
   ],

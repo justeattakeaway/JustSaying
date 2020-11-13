@@ -48,8 +48,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var middleware1 = new InspectableMiddleware<TestJustSayingMessage>();
             var middleware2 = new InspectableMiddleware<TestJustSayingMessage>();
 
-            bus.AddMessageMiddleware<TestJustSayingMessage>(queueName1, () => middleware1);
-            bus.AddMessageMiddleware<TestJustSayingMessage>(queueName2, () => middleware2);
+            bus.AddMessageMiddleware<TestJustSayingMessage>(queueName1, middleware1);
+            bus.AddMessageMiddleware<TestJustSayingMessage>(queueName2, middleware2);
 
             ISqsQueue queue1 = TestQueue(bus.SerializationRegister, queueName1);
             ISqsQueue queue2 = TestQueue(bus.SerializationRegister, queueName2);

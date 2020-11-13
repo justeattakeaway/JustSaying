@@ -8,6 +8,7 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Middleware.Handle;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
+using Newtonsoft.Json;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -46,11 +47,11 @@ namespace JustSaying.UnitTests.JustSayingBus
         protected override async Task WhenAsync()
         {
             SystemUnderTest.AddMessageMiddleware<OrderAccepted>(_queue1.QueueName,
-                () => new InspectableMiddleware<OrderAccepted>());
+                new InspectableMiddleware<OrderAccepted>());
             SystemUnderTest.AddMessageMiddleware<OrderRejected>(_queue1.QueueName,
-                () => new InspectableMiddleware<OrderRejected>());
+                new InspectableMiddleware<OrderRejected>());
             SystemUnderTest.AddMessageMiddleware<SimpleMessage>(_queue1.QueueName,
-                () => new InspectableMiddleware<SimpleMessage>());
+                new InspectableMiddleware<SimpleMessage>());
 
             SystemUnderTest.AddQueue("groupA", _queue1);
             SystemUnderTest.AddQueue("groupB", _queue2);
@@ -73,18 +74,13 @@ namespace JustSaying.UnitTests.JustSayingBus
         }
 
         [Fact]
-        public void AndInterrogationShowsPublishersHaveBeenSet()
+        public void AndInterrogationShowsSubscribersHaveBeenSet()
         {
             dynamic response = SystemUnderTest.Interrogate();
 
-            string[] handledTypes = response.Data.HandledMessageTypes;
+            string json = JsonConvert.SerializeObject(response.Data.Middleware.Data.Middlewares, Formatting.Indented);
 
-            handledTypes.ShouldBe(new[]
-            {
-                typeof(OrderAccepted).FullName,
-                typeof(OrderRejected).FullName,
-                typeof(SimpleMessage).FullName
-            });
+            json.ShouldMatchApproved(c => c.SubFolder("Aprovals"));
         }
 
         private static FakeAmazonSqs CreateSubstituteClient()

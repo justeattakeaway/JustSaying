@@ -152,7 +152,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
                 var successMiddleware =
                     new DelegateMessageHandlingMiddleware<OrderAccepted>(m => Task.FromResult(true));
-                _middlewareMap.Add<OrderAccepted>(_queue.QueueName, () => successMiddleware);
+                _middlewareMap.Add<OrderAccepted>(_queue.QueueName, successMiddleware);
             }
 
             [Fact]
@@ -182,7 +182,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
                 base.Given();
 
                 _messageBackoffStrategy.GetBackoffDuration(_typedMessage, 1, _expectedException).Returns(_expectedBackoffTimeSpan);
-                _middlewareMap.Add<OrderAccepted>(_queue.QueueName, () => new DelegateMessageHandlingMiddleware<OrderAccepted>(m => throw _expectedException));
+                _middlewareMap.Add<OrderAccepted>(_queue.QueueName, new DelegateMessageHandlingMiddleware<OrderAccepted>(m => throw _expectedException));
                 _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString(CultureInfo.InvariantCulture));
             }
 

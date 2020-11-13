@@ -1,9 +1,5 @@
 using System;
-using System.Threading.Tasks;
-using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Extensions;
-using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware.Handle;
 using JustSaying.Messaging.Middleware.Metrics;
 using JustSaying.Models;
@@ -158,7 +154,7 @@ namespace JustSaying.Fluent
                 .Configure(subscriptionConfig.MiddlewareConfiguration)
                 .Build();
 
-            bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, () => handlerMiddleware);
+            bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, handlerMiddleware);
 
             logger.LogInformation(
                 "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",

@@ -181,7 +181,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                 try
                 {
                     var context = new HandleMessageContext(message, messageType, queueName);
-                    dispatchSuccessful = await middleware().RunAsync(context, null, cancellationToken)
+                    dispatchSuccessful = await middleware.RunAsync(context, null, cancellationToken)
                         .ConfigureAwait(false);
                 }
                 finally

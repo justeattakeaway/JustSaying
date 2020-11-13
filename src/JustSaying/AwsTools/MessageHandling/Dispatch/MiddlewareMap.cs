@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware.Handle;
 using JustSaying.Messaging.Monitoring;
@@ -15,10 +17,10 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
     /// with a queue name, type, and middleware will cause the middleware to be called when a message matching the type
     /// arrives in the queue.
     /// </summary>
-    public sealed class MiddlewareMap
+    public sealed class MiddlewareMap : IInterrogable
     {
-        private readonly Dictionary<(string queueName, Type type), Func<HandleMessageMiddleware>> _middlewares
-            = new Dictionary<(string, Type), Func<HandleMessageMiddleware>>();
+        private readonly Dictionary<(string queueName, Type type), HandleMessageMiddleware> _middlewares
+            = new Dictionary<(string, Type), HandleMessageMiddleware>();
 
         /// <summary>
         /// Checks if a middleware has been added for a given queue and message type.
@@ -58,7 +60,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         /// <typeparam name="T">The type of the message to handle on this queue.</typeparam>
         /// <param name="queueName">The queue to register the middleware for.</param>
         /// <param name="middleware">The factory function to create middleware with.</param>
-        public MiddlewareMap Add<T>(string queueName, Func<HandleMessageMiddleware> middleware) where T : Message
+        public MiddlewareMap Add<T>(string queueName, HandleMessageMiddleware middleware) where T : Message
         {
             if (queueName is null) throw new ArgumentNullException(nameof(queueName));
             if (middleware is null) throw new ArgumentNullException(nameof(middleware));
@@ -74,12 +76,28 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         /// <param name="queueName">The queue name to get the middleware function for.</param>
         /// <param name="messageType">The message type to get the middleware function for.</param>
         /// <returns>The registered middleware or null.</returns>
-        public Func<HandleMessageMiddleware> Get(string queueName, Type messageType)
+        public HandleMessageMiddleware Get(string queueName, Type messageType)
         {
             if (queueName is null) throw new ArgumentNullException(nameof(queueName));
             if (messageType is null) throw new ArgumentNullException(nameof(messageType));
 
             return _middlewares.TryGetValue((queueName, messageType), out var middleware) ? middleware : null;
+        }
+
+        public InterrogationResult Interrogate()
+        {
+            var middlewares = _middlewares.Select(item =>
+                new
+                {
+                    MessageType = item.Key.type.Name,
+                    QueueName = item.Key.queueName,
+                    MiddlewareChain = item.Value.Interrogate()
+                });
+
+            return new InterrogationResult(new
+            {
+                Middlewares = middlewares
+            });
         }
     }
 }

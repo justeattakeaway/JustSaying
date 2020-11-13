@@ -21,8 +21,8 @@ namespace JustSaying.UnitTests.JustSayingBus
         private ISqsQueue _queue;
         private IHandlerAsync<Message> _handler1;
         private IHandlerAsync<Message2> _handler2;
-        private Func<HandleMessageMiddleware> _futureHandler1;
-        private Func<HandleMessageMiddleware> _futureHandler2;
+        private HandleMessageMiddleware _futureHandler1;
+        private HandleMessageMiddleware _futureHandler2;
 
         protected override void Given()
         {
@@ -31,8 +31,8 @@ namespace JustSaying.UnitTests.JustSayingBus
             _handler1 = Substitute.For<IHandlerAsync<Message>>();
             _handler2 = Substitute.For<IHandlerAsync<Message2>>();
 
-            _futureHandler1 = () => new DelegateMessageHandlingMiddleware<Message>(m => _handler1.Handle(m));
-            _futureHandler2 = () => new DelegateMessageHandlingMiddleware<Message2>(m => _handler2.Handle(m));
+            _futureHandler1 = new DelegateMessageHandlingMiddleware<Message>(m => _handler1.Handle(m));
+            _futureHandler2 = new DelegateMessageHandlingMiddleware<Message2>(m => _handler2.Handle(m));
             _queue = Substitute.For<ISqsQueue>();
         }
 
