@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.IntegrationTests.TestHandlers;
@@ -24,7 +25,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         {
             // Arrange
             var messageLock = new MessageLockStore();
-            var handler = new ExactlyOnceHandler();
+            var handler = new InspectableHandler<SimpleMessage>();
 
             var services = GivenJustSaying()
                 .AddSingleton<IMessageLockAsync>(messageLock)
@@ -50,8 +51,8 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     await publisher.PublishAsync(message, cancellationToken);
                     await Task.Delay(1.Seconds(), cancellationToken);
 
-                    // Assert
-                    handler.NumberOfTimesIHaveBeenCalledForMessage(message.UniqueKey()).ShouldBe(1);
+                    handler.ReceivedMessages.Where(m => m.Id.ToString() == message.UniqueKey())
+                        .ShouldHaveSingleItem();
                 });
         }
     }
