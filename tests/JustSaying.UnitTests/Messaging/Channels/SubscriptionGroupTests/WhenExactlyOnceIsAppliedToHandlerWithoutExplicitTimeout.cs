@@ -10,7 +10,6 @@ using JustSaying.Messaging.Middleware.ExactlyOnce;
 using JustSaying.Messaging.Middleware.Handle;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
-using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests.Support;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

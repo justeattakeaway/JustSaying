@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Middleware.ExactlyOnce;
 using JustSaying.Messaging.Middleware.Handle;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
-using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests.Support;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -19,12 +19,6 @@ using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    [ExactlyOnce(TimeOut = 5)]
-    public class ExactlyOnceHandler : InspectableHandler<SimpleMessage>
-    {
-
-    }
-
     public class WhenExactlyOnceIsAppliedToHandler : BaseSubscriptionGroupTests
     {
         private ISqsQueue _queue;
@@ -43,7 +37,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
             _messageLock = new FakeMessageLock();
 
-            var servicesBuilder = new ServicesBuilder(new MessagingBusBuilder());
             var serviceResolver = new FakeServiceResolver(sc =>
                 sc.AddSingleton<IMessageLockAsync>(_messageLock)
                     .AddSingleton<IHandlerAsync<SimpleMessage>>(Handler)

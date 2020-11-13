@@ -20,6 +20,7 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Messaging\Channels\SubscriptionGroupTests\Support" />
     <Folder Include="Messaging\Middleware\Approvals" />
     <Folder Include="Messaging\Monitoring" />
   </ItemGroup>

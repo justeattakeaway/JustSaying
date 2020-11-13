@@ -1,40 +1,55 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Middleware.ExactlyOnce;
+using JustSaying.Messaging.Middleware.Handle;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.Messaging.Channels.Fakes;
+using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
+using MartinCostello.Logging.XUnit;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.MessageHandling
 {
     public class WhenEnsuringMessageIsOnlyHandledExactlyOnce
     {
+        private readonly ITestOutputHelper _outputHelper;
+
+        public WhenEnsuringMessageIsOnlyHandledExactlyOnce(ITestOutputHelper outputHelper)
+        {
+            _outputHelper = outputHelper;
+        }
+
         [Fact]
         public async Task WhenMessageIsLockedByAnotherHandler_MessageWillBeLeftInTheQueue()
         {
-            // Arrange
-            var messageLock = Substitute.For<IMessageLockAsync>();
+            var messageLock = new FakeMessageLock(false);
 
-            messageLock
-                .TryAquireLockAsync(Arg.Any<string>(), Arg.Any<TimeSpan>())
-                .Returns(new MessageLockResponse { DoIHaveExclusiveLock = false });
+            var testResolver = new FakeServiceResolver(sc => sc
+                .AddLogging(l =>
+                    l.AddXUnit(_outputHelper))
+                .AddSingleton<IMessageLockAsync>(messageLock));
 
-            var logger = NullLoggerFactory.Instance.CreateLogger<ExactlyOnceHandler<OrderAccepted>>();
+            var handler = new InspectableHandler<OrderAccepted>();
 
-            var sut = new ExactlyOnceHandler<OrderAccepted>(
-                Substitute.For<IHandlerAsync<OrderAccepted>>(),
-                messageLock,
-                TimeSpan.FromSeconds(1),
-                "handlerName",
-                logger);
+            var middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
+                .UseExactlyOnce<OrderAccepted>(nameof(InspectableHandler<OrderAccepted>),
+                    TimeSpan.FromSeconds(1))
+                .UseHandler(ctx => handler)
+                .Build();
 
-            // Act
-            var result = await sut.Handle(new OrderAccepted());
+            var context = new HandleMessageContext(new OrderAccepted(), typeof(OrderAccepted),
+                "test-queue");
+            var result = await middleware.RunAsync(context, null, CancellationToken.None);
 
-            // Assert
+            handler.ReceivedMessages.ShouldBeEmpty();
             result.ShouldBeFalse();
         }
     }

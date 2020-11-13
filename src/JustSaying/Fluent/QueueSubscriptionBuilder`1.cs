@@ -5,6 +5,7 @@ using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Extensions;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware.Handle;
+using JustSaying.Messaging.Middleware.Metrics;
 using JustSaying.Models;
 using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
