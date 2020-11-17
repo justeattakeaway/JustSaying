@@ -51,7 +51,7 @@ namespace JustSaying
 
         public IMessageContextAccessor MessageContextAccessor { get; set; }
 
-        public MiddlewareMap MiddlewareMap { get; }
+        internal MiddlewareMap MiddlewareMap { get; }
 
         public Task Completion { get; private set; }
 

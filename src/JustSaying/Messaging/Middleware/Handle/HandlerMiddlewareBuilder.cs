@@ -84,7 +84,7 @@ namespace JustSaying.Messaging.Middleware.Handle
         /// <exception cref="InvalidOperationException">
         /// If a HandlerInvocationMiddleware already exists in this pipeline, it cannot be added again.
         /// </exception>
-        public HandlerMiddlewareBuilder UseHandler<TMessage>() where TMessage : Message
+        internal HandlerMiddlewareBuilder UseHandler<TMessage>() where TMessage : Message
         {
             if (_handlerMiddleware != null)
             {

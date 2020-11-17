@@ -8,7 +8,7 @@ using JustSaying.Messaging.Monitoring;
 namespace JustSaying.Messaging.Middleware.Metrics
 {
     /// <summary>
-    /// This middleware measures handlers' execution duration and reports the results to <see cref="IMessageMonitor"/>.
+    /// This middleware measures the handler's execution duration and reports the results to an <see cref="IMessageMonitor"/>.
     /// </summary>
     public class StopwatchMiddleware : MiddlewareBase<HandleMessageContext, bool>
     {
