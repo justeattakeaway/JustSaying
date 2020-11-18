@@ -31,16 +31,16 @@ namespace JustSaying.UnitTests.Messaging.Middleware
             void Before(string id) => callRecord.Add($"Before_{id}");
             void After(string id) => callRecord.Add($"After_{id}");
 
-            var m1 = new TrackingMiddleware("outer", Before, After);
-            var m2 = new TrackingMiddleware("middle", Before, After);
-            var m3 = new TrackingMiddleware("inner", Before, After);
+            var outer = new TrackingMiddleware("outer", Before, After);
+            var middle = new TrackingMiddleware("middle", Before, After);
+            var inner = new TrackingMiddleware("inner", Before, After);
 
             var middleware = new HandlerMiddlewareBuilder(_resolver, _resolver)
                 .Configure(pipe =>
                 {
-                    pipe.Use(m1);
-                    pipe.Use(m2);
-                    pipe.Use(m3);
+                    pipe.Use(outer);
+                    pipe.Use(middle);
+                    pipe.Use(inner);
                 }).Build();
 
             var context = new HandleMessageContext(new SimpleMessage(),

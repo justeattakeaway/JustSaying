@@ -92,7 +92,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                     MessageType = item.Key.type.Name,
                     QueueName = item.Key.queueName,
                     MiddlewareChain = item.Value.Interrogate()
-                });
+                }).ToList();
 
             return new InterrogationResult(new
             {
