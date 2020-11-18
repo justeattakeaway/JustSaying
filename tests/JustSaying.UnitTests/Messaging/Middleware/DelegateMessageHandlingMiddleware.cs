@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
-using JustSaying.Messaging.Middleware.Handle;
 using JustSaying.Models;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling

@@ -2,10 +2,9 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.Middleware.Handle;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Messaging.Middleware.ExactlyOnce
+namespace JustSaying.Messaging.Middleware
 {
     public class ExactlyOnceMiddleware<T> : MiddlewareBase<HandleMessageContext, bool>
     {

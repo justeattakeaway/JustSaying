@@ -1,14 +1,13 @@
-
 using System;
 using JustSaying.Models;
 
-namespace JustSaying.Messaging.Middleware.Handle
+namespace JustSaying.Messaging.Middleware
 {
     public static class HandleMessageContextExtensions
     {
         public static TMessage MessageAs<TMessage>(this HandleMessageContext context) where TMessage : Message
         {
-            if(context == null) throw new ArgumentNullException(nameof(context));
+            if (context == null) throw new ArgumentNullException(nameof(context));
 
             return context.Message as TMessage;
         }

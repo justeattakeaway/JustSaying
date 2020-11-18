@@ -1,6 +1,6 @@
 using System;
 using JustSaying.Messaging.MessageProcessingStrategies;
-using JustSaying.Messaging.Middleware.Handle;
+using JustSaying.Messaging.Middleware;
 using JustSaying.Naming;
 
 namespace JustSaying.AwsTools.QueueCreation

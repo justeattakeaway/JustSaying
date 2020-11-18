@@ -4,9 +4,9 @@ using System.Linq;
 using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
-using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.Handle.HandleMessageContext, bool>;
+using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
-namespace JustSaying.Messaging.Middleware.Handle
+namespace JustSaying.Messaging.Middleware
 {
 
     /// <summary>
@@ -88,8 +88,8 @@ namespace JustSaying.Messaging.Middleware.Handle
         {
             if (_handlerMiddleware != null)
             {
-                throw new InvalidOperationException($"Handler middleware has already been specified " +
-                    $"for {typeof(TMessage).Name} on this queue.");
+                throw new InvalidOperationException(
+                    $"Handler middleware has already been specified for {typeof(TMessage).Name} on this queue.");
             }
 
             _handlerMiddleware = new HandlerInvocationMiddleware<TMessage>(HandlerResolver.ResolveHandler<TMessage>);

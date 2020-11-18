@@ -1,12 +1,11 @@
 using System;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.Middleware.Handle;
 using Microsoft.Extensions.Logging;
-using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.Handle.HandleMessageContext, bool>;
+using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
-namespace JustSaying.Messaging.Middleware.ExactlyOnce
+namespace JustSaying.Messaging.Middleware
 {
-    public static class HandlerMiddlewareBuilderExtensions
+    public static class ExactlyOnceHandlerMiddlewareBuilderExtensions
     {
         /// <summary>
         /// Adds an <see cref="ExactlyOnceMiddleware{T}"/> to the current pipeline.
@@ -21,6 +20,9 @@ namespace JustSaying.Messaging.Middleware.ExactlyOnce
             string lockKey,
             TimeSpan? lockDuration = null)
         {
+            if(builder == null) throw new ArgumentNullException(nameof(builder));
+            if(string.IsNullOrEmpty(lockKey)) throw new ArgumentException("Parameter cannot be null or empty", nameof(lockKey));
+
             HandleMessageMiddleware CreateMiddleware()
             {
                 var messageLock = builder.ServiceResolver.ResolveService<IMessageLockAsync>();

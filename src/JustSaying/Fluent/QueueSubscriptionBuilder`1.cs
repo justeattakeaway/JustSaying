@@ -1,12 +1,11 @@
 using System;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Messaging.Middleware.Handle;
-using JustSaying.Messaging.Middleware.Metrics;
+using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
 
-using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.Handle.HandleMessageContext, bool>;
+using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
 namespace JustSaying.Fluent
 {

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 
-namespace JustSaying.Messaging.Middleware.Handle
+namespace JustSaying.Messaging.Middleware
 {
     /// <summary>
     /// This middleware is responsible for resolving a message handler and calling it.

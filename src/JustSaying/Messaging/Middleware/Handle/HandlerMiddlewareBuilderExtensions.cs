@@ -1,15 +1,10 @@
 using System;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.Middleware.ExactlyOnce;
-using JustSaying.Messaging.Middleware.Metrics;
-using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
-using Microsoft.Extensions.Logging;
-using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.Handle.HandleMessageContext, bool>;
+using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
-namespace JustSaying.Messaging.Middleware.Handle
+namespace JustSaying.Messaging.Middleware
 {
-
     public static class HandlerMiddlewareBuilderExtensions
     {
         /// <summary>

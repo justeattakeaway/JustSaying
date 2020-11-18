@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.Middleware;
-using JustSaying.Messaging.Middleware.Handle;
 
 namespace JustSaying.TestingFramework
 {

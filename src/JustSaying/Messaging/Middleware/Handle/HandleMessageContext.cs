@@ -1,7 +1,7 @@
 using System;
 using JustSaying.Models;
 
-namespace JustSaying.Messaging.Middleware.Handle
+namespace JustSaying.Messaging.Middleware
 {
     public sealed class HandleMessageContext
     {

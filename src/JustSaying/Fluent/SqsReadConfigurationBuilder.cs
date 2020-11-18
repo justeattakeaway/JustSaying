@@ -2,7 +2,7 @@ using System;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
-using JustSaying.Messaging.Middleware.Handle;
+using JustSaying.Messaging.Middleware;
 
 namespace JustSaying.Fluent
 {
@@ -51,16 +51,18 @@ namespace JustSaying.Fluent
         /// });
         /// </code>
         /// would yield this order of execution:
-        /// Before_SomeCustomMiddleware
-        /// Before_SomeOtherCustomMiddleware
-        /// Before_StopwatchMiddleware
-        /// Before_HandlerInvocationMiddleware
-        /// After_HandlerInvocationMiddleware
-        /// After_StopwatchMiddleware
-        /// After_SomeOtherCustomMiddleware
-        /// After_SomeCustomMiddleware
+        /// <ul>
+        /// <li>Before_SomeCustomMiddleware</li>
+        /// <li>Before_SomeOtherCustomMiddleware</li>
+        /// <li>Before_StopwatchMiddleware</li>
+        /// <li>Before_HandlerInvocationMiddleware</li>
+        /// <li>After_HandlerInvocationMiddleware</li>
+        /// <li>After_StopwatchMiddleware</li>
+        /// <li>After_SomeOtherCustomMiddleware</li>
+        /// <li>After_SomeCustomMiddleware</li>
+        /// </ul>
         /// </example>
-        /// <returns></returns>
+        /// <returns>The current <see cref="SqsReadConfigurationBuilder"/>.</returns>
         public SqsReadConfigurationBuilder WithMiddlewareConfiguration(
             Action<HandlerMiddlewareBuilder> middlewareConfiguration)
         {

@@ -1,10 +1,9 @@
 using System;
-using JustSaying.Messaging.Middleware.Handle;
 using JustSaying.Messaging.Monitoring;
 
-namespace JustSaying.Messaging.Middleware.Metrics
+namespace JustSaying.Messaging.Middleware
 {
-    public static class HandlerMiddlewareBuilderExtensions
+    public static class MetricsHandlerMiddlewareBuilderExtensions
     {
         /// <summary>
         /// Adds a <see cref="StopwatchMiddleware"/> to the current pipeline.

@@ -2,10 +2,9 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using JustSaying.Messaging.Middleware.Handle;
 using JustSaying.Messaging.Monitoring;
 
-namespace JustSaying.Messaging.Middleware.Metrics
+namespace JustSaying.Messaging.Middleware
 {
     /// <summary>
     /// This middleware measures the handler's execution duration and reports the results to an <see cref="IMessageMonitor"/>.
