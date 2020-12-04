@@ -1,6 +1,5 @@
 <Project>
   <PropertyGroup>
-    <AnalyzersPackageVersion>3.3.2</AnalyzersPackageVersion>
     <DotNetTestSdkVersion>16.8.3</DotNetTestSdkVersion>
     <MicrosoftExtensionsDependencyInjectionVersion>5.0.0</MicrosoftExtensionsDependencyInjectionVersion>
     <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
@@ -14,13 +13,16 @@
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
     <PackageReference Include="ReportGenerator" Version="4.8.1" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="$(AnalyzersPackageVersion)" PrivateAssets="All" />
     <PackageReference Include="MinVer" Version="2.3.1" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)package-icon.png" Pack="True" PackagePath="" />
   </ItemGroup>
   <PropertyGroup>
+    <!-- Enable at a later point as there's a number of new ones to fix -->
+    <!--
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    -->
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)justeat-oss.snk</AssemblyOriginatorKeyFile>
     <Authors>JUSTEAT_OSS</Authors>
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)CodeAnalysisRules.ruleset</CodeAnalysisRuleSet>
@@ -31,6 +33,7 @@
     <MinVerTagPrefix>v</MinVerTagPrefix>
     <MinVerSkip Condition=" '$(Configuration)' == 'Debug' ">true</MinVerSkip>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <EnableSourceControlManagerQueries>$(EnableSourceLink)</EnableSourceControlManagerQueries>
     <NoWarn>$(NoWarn);CA1062;CA1303</NoWarn>
     <PackageIcon>package-icon.png</PackageIcon>
