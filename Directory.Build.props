@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <AnalyzersPackageVersion>3.3.1</AnalyzersPackageVersion>
+    <AnalyzersPackageVersion>3.3.2</AnalyzersPackageVersion>
     <DotNetTestSdkVersion>16.8.3</DotNetTestSdkVersion>
     <MicrosoftExtensionsDependencyInjectionVersion>5.0.0</MicrosoftExtensionsDependencyInjectionVersion>
     <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
