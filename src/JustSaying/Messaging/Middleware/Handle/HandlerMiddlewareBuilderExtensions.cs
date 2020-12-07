@@ -16,7 +16,7 @@ namespace JustSaying.Messaging.Middleware
         /// <typeparam name="TMessage">The type of the message that should be handled</typeparam>
         /// <returns>The current <see cref="HandlerMiddlewareBuilder"/>.</returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="builder"/> is <see langword="null"/>.
+        /// <paramref name="builder"/> or <paramref name="handler"/> is <see langword="null"/>.
         /// </exception>
         public static HandlerMiddlewareBuilder UseHandler<TMessage>(
             this HandlerMiddlewareBuilder builder,
