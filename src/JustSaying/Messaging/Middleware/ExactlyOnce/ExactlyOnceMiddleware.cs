@@ -1,38 +1,38 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
-using JustSaying.Models;
+using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Messaging.MessageHandling
+// ReSharper disable once CheckNamespace
+namespace JustSaying.Messaging.Middleware
 {
-    internal sealed class ExactlyOnceHandler<T> : IHandlerAsync<T> where T : Message
+    public class ExactlyOnceMiddleware<T> : MiddlewareBase<HandleMessageContext, bool>
     {
-        private readonly IHandlerAsync<T> _inner;
         private readonly IMessageLockAsync _messageLock;
         private readonly TimeSpan _timeout;
         private readonly string _lockSuffixKeyForHandler;
         private readonly ILogger _logger;
 
-        public ExactlyOnceHandler(
-            IHandlerAsync<T> inner,
-            IMessageLockAsync messageLock,
-            TimeSpan timeout,
-            string handlerName,
-            ILogger<ExactlyOnceHandler<T>> logger)
-        {
-            _inner = inner;
-            _messageLock = messageLock;
-            _timeout = timeout;
-            _lockSuffixKeyForHandler = $"{typeof(T).ToString().ToLowerInvariant()}-{handlerName}";
-            _logger = logger;
-        }
-
         private const bool RemoveTheMessageFromTheQueue = true;
         private const bool LeaveItInTheQueue = false;
 
-        public async Task<bool> Handle(T message)
+        public ExactlyOnceMiddleware(IMessageLockAsync messageLock, TimeSpan timeout, string handlerName, ILogger logger)
         {
-            string lockKey = $"{message.UniqueKey()}-{_lockSuffixKeyForHandler}";
+            _messageLock = messageLock;
+            _timeout = timeout;
+            _logger = logger;
+
+            _lockSuffixKeyForHandler = $"{typeof(T).FullName.ToLowerInvariant()}-{handlerName}";
+        }
+
+        protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
+        {
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (func == null) throw new ArgumentNullException(nameof(func));
+
+            string lockKey = $"{context.Message.UniqueKey()}-{_lockSuffixKeyForHandler}";
+
             MessageLockResponse lockResponse = await _messageLock.TryAquireLockAsync(lockKey, _timeout).ConfigureAwait(false);
 
             if (!lockResponse.DoIHaveExclusiveLock)
@@ -51,7 +51,7 @@ namespace JustSaying.Messaging.MessageHandling
             {
                 _logger.LogDebug("Acquired lock for message with key {MessageLockKey}.", lockKey);
 
-                bool successfullyHandled = await _inner.Handle(message).ConfigureAwait(false);
+                bool successfullyHandled = await func(stoppingToken).ConfigureAwait(false);
 
                 if (successfullyHandled)
                 {

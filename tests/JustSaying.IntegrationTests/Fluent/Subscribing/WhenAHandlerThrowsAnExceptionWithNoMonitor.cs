@@ -7,6 +7,7 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
@@ -24,7 +25,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         public async Task Then_The_Message_Is_Handled()
         {
             // Arrange
-            var monitor = new TrackingMonitor();
+            var monitor = new TrackingLoggingMonitor(NullLogger<TrackingLoggingMonitor>.Instance);
 
             var handler = new ThrowingHandler();
 
@@ -53,50 +54,8 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
                     // Assert
                     handler.MessageReceived.ShouldNotBeNull();
-                    monitor.ErrorCount.ShouldBe(1);
+                    monitor.HandledErrors.Count.ShouldBe(1);
                 });
-        }
-    }
-
-    public class TrackingMonitor : IMessageMonitor
-    {
-        public void HandleException(Type messageType)
-        {
-        }
-
-        public void HandleError(Exception ex, Message message)
-        {
-            ErrorCount++;
-        }
-
-        public int ErrorCount { get; private set; }
-
-        public void HandleTime(TimeSpan duration)
-        {
-        }
-
-        public void IssuePublishingMessage()
-        {
-        }
-
-        public void Handled(Models.Message message)
-        {
-        }
-
-        public void IncrementThrottlingStatistic()
-        {
-        }
-
-        public void HandleThrottlingTime(TimeSpan duration)
-        {
-        }
-
-        public void PublishMessageTime(TimeSpan duration)
-        {
-        }
-
-        public void ReceiveMessageTime(TimeSpan duration, string queueName, string region)
-        {
         }
     }
 }

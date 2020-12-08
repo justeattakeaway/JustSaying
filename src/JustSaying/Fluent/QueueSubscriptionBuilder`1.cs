@@ -1,11 +1,11 @@
 using System;
-using System.Threading.Tasks;
-using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Extensions;
+using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
+
+using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
 namespace JustSaying.Fluent
 {
@@ -104,7 +104,8 @@ namespace JustSaying.Fluent
         /// <inheritdoc />
         void ISubscriptionBuilder<T>.Configure(
             JustSayingBus bus,
-            IHandlerResolver resolver,
+            IHandlerResolver handlerResolver,
+            IServiceResolver serviceResolver,
             IVerifyAmazonQueues creator,
             ILoggerFactory loggerFactory)
         {
@@ -122,6 +123,7 @@ namespace JustSaying.Fluent
             subscriptionConfig.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
             subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
             subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
+            subscriptionConfig.MiddlewareConfiguration = subscriptionConfig.MiddlewareConfiguration;
             subscriptionConfig.Validate();
 
             var queue = creator.EnsureQueueExists(config.Region, subscriptionConfig);
@@ -136,15 +138,22 @@ namespace JustSaying.Fluent
                 subscriptionConfig.QueueName);
 
             var resolutionContext = new HandlerResolutionContext(subscriptionConfig.QueueName);
-            var proposedHandler = resolver.ResolveHandler<T>(resolutionContext);
+            var proposedHandler = handlerResolver.ResolveHandler<T>(resolutionContext);
             if (proposedHandler == null)
             {
                 throw new HandlerNotRegisteredWithContainerException(
                     $"There is no handler for '{typeof(T)}' messages.");
             }
 
-            bus.AddMessageHandler(subscriptionConfig.QueueName,
-                () => resolver.ResolveHandler<T>(resolutionContext));
+            var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver);
+
+            var handlerMiddleware = middlewareBuilder
+                .UseHandler<T>()
+                .UseStopwatch(proposedHandler.GetType())
+                .Configure(subscriptionConfig.MiddlewareConfiguration)
+                .Build();
+
+            bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, handlerMiddleware);
 
             logger.LogInformation(
                 "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",

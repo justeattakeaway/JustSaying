@@ -34,7 +34,9 @@ namespace JustSaying.Messaging.Channels.Dispatch
         {
             await Task.Yield();
 
-            _logger.LogDebug("Starting up MultiplexerSubscriber {SubscriberId}", _subscriberId);
+            _logger.LogTrace("Starting up {StartupType} with Id {SubscriberId}",
+                nameof(MultiplexerSubscriber),
+                _subscriberId);
 
             await foreach (IQueueMessageContext messageContext in _messageSource.WithCancellation(
                 stoppingToken))

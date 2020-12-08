@@ -8,10 +8,11 @@ using JustSaying.Messaging.Channels.Dispatch;
 using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Middleware;
+using JustSaying.Messaging.Middleware.Receive;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 using ReceiveMiddleware =
-    JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Channels.Context.GetMessagesContext,
+    JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.Receive.ReceiveMessagesContext,
         System.Collections.Generic.IList<Amazon.SQS.Model.Message>>;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
@@ -24,7 +25,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         private readonly IMessageDispatcher _messageDispatcher;
         private readonly IMessageMonitor _monitor;
         private readonly ILoggerFactory _loggerFactory;
-        private ReceiveMiddleware _defaultSqsMiddleware;
+        private readonly ReceiveMiddleware _defaultSqsMiddleware;
 
         /// <summary>
         /// Creates an instance of <see cref="SubscriptionGroupFactory"/>.
@@ -41,7 +42,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
             _monitor = monitor;
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _defaultSqsMiddleware =
-                new DefaultSqsMiddleware(_loggerFactory.CreateLogger<DefaultSqsMiddleware>());
+                new DefaultReceiveMessagesMiddleware(_loggerFactory.CreateLogger<DefaultReceiveMessagesMiddleware>());
         }
 
         /// <summary>

@@ -2,6 +2,7 @@ using System;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Middleware;
 
 namespace JustSaying.Fluent
 {
@@ -20,9 +21,52 @@ namespace JustSaying.Fluent
 
         private string SubscriptionGroupName { get; set; }
 
+        private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
+
+        /// <summary>
+        /// Configures this read configuration to use a custom subscription group.
+        /// By default, each queue has its own subscription group.
+        /// </summary>
+        /// <param name="subscriptionGroupName">The name of the subscription group that this
+        /// configuration should be part of</param>
+        /// <returns>The current <see cref="SqsReadConfigurationBuilder"/>.</returns>
         public SqsReadConfigurationBuilder WithSubscriptionGroup(string subscriptionGroupName)
         {
             SubscriptionGroupName = subscriptionGroupName;
+            return this;
+        }
+
+        /// <summary>
+        /// Configures the middleware pipeline for this subscription.
+        /// Any middleware configured here will be wrapped around a handler and metrics middleware.
+        /// </summary>
+        /// <param name="middlewareConfiguration"></param>
+        /// <example>
+        /// A sample configuration:
+        /// <code>
+        /// WithMiddlewareConfiguration(pipe =>
+        /// {
+        ///     pipe.Use&lt;SomeCustomMiddleware&gt;();
+        ///     pipe.Use&lt;SomeOtherCustomMiddleware&gt;();
+        /// });
+        /// </code>
+        /// would yield this order of execution:
+        /// <ul>
+        /// <li>Before_SomeCustomMiddleware</li>
+        /// <li>Before_SomeOtherCustomMiddleware</li>
+        /// <li>Before_StopwatchMiddleware</li>
+        /// <li>Before_HandlerInvocationMiddleware</li>
+        /// <li>After_HandlerInvocationMiddleware</li>
+        /// <li>After_StopwatchMiddleware</li>
+        /// <li>After_SomeOtherCustomMiddleware</li>
+        /// <li>After_SomeCustomMiddleware</li>
+        /// </ul>
+        /// </example>
+        /// <returns>The current <see cref="SqsReadConfigurationBuilder"/>.</returns>
+        public SqsReadConfigurationBuilder WithMiddlewareConfiguration(
+            Action<HandlerMiddlewareBuilder> middlewareConfiguration)
+        {
+            MiddlewareConfiguration = middlewareConfiguration;
             return this;
         }
 
@@ -69,6 +113,11 @@ namespace JustSaying.Fluent
             if (SubscriptionGroupName != null)
             {
                 config.SubscriptionGroupName = SubscriptionGroupName;
+            }
+
+            if (MiddlewareConfiguration != null)
+            {
+                config.MiddlewareConfiguration = MiddlewareConfiguration;
             }
         }
     }

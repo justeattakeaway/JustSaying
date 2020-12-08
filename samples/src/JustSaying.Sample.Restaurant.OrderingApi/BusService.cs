@@ -27,8 +27,8 @@ namespace JustSaying.Sample.Restaurant.OrderingApi
         {
             _logger.LogInformation("Ordering API subscriber running");
 
-            await _bus.StartAsync(stoppingToken);
             await _publisher.StartAsync(stoppingToken);
+            await _bus.StartAsync(stoppingToken);
         }
     }
 }

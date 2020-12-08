@@ -7,6 +7,7 @@ using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
+using Newtonsoft.Json;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -44,12 +45,12 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         protected override async Task WhenAsync()
         {
-            SystemUnderTest.AddMessageHandler(_queue1.QueueName,
-                () => new InspectableHandler<OrderAccepted>());
-            SystemUnderTest.AddMessageHandler(_queue1.QueueName,
-                () => new InspectableHandler<OrderRejected>());
-            SystemUnderTest.AddMessageHandler(_queue1.QueueName,
-                () => new InspectableHandler<SimpleMessage>());
+            SystemUnderTest.AddMessageMiddleware<OrderAccepted>(_queue1.QueueName,
+                new InspectableMiddleware<OrderAccepted>());
+            SystemUnderTest.AddMessageMiddleware<OrderRejected>(_queue1.QueueName,
+                new InspectableMiddleware<OrderRejected>());
+            SystemUnderTest.AddMessageMiddleware<SimpleMessage>(_queue1.QueueName,
+                new InspectableMiddleware<SimpleMessage>());
 
             SystemUnderTest.AddQueue("groupA", _queue1);
             SystemUnderTest.AddQueue("groupB", _queue2);
@@ -63,25 +64,22 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public async Task SubscribersStartedUp()
         {
-            await _cts.Token.WaitForCancellation();
-
-            _client1.ReceiveMessageRequests.Count.ShouldBeGreaterThan(0);
-            _client2.ReceiveMessageRequests.Count.ShouldBeGreaterThan(0);
+            await Patiently.AssertThatAsync(OutputHelper,
+                () =>
+                {
+                    _client1.ReceiveMessageRequests.Count.ShouldBeGreaterThan(0);
+                    _client2.ReceiveMessageRequests.Count.ShouldBeGreaterThan(0);
+                });
         }
 
         [Fact]
-        public void AndInterrogationShowsPublishersHaveBeenSet()
+        public void AndInterrogationShowsSubscribersHaveBeenSet()
         {
             dynamic response = SystemUnderTest.Interrogate();
 
-            string[] handledTypes = response.Data.HandledMessageTypes;
+            string json = JsonConvert.SerializeObject(response.Data.Middleware.Data.Middlewares, Formatting.Indented);
 
-            handledTypes.ShouldBe(new[]
-            {
-                typeof(OrderAccepted).FullName,
-                typeof(OrderRejected).FullName,
-                typeof(SimpleMessage).FullName
-            });
+            json.ShouldMatchApproved(c => c.SubFolder("Aprovals"));
         }
 
         private static FakeAmazonSqs CreateSubstituteClient()

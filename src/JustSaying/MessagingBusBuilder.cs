@@ -262,7 +262,7 @@ namespace JustSaying
 
             if (SubscriptionBuilder != null)
             {
-                SubscriptionBuilder.Configure(bus, creator, loggerFactory);
+                SubscriptionBuilder.Configure(bus, ServiceResolver, creator, loggerFactory);
             }
 
             return bus;
@@ -277,10 +277,6 @@ namespace JustSaying
 
             bus.Monitor = CreateMessageMonitor();
             bus.MessageContextAccessor = CreateMessageContextAccessor();
-            if (ServicesBuilder?.MessageLock != null)
-            {
-                bus.MessageLock = ServicesBuilder.MessageLock();
-            }
 
             return bus;
         }

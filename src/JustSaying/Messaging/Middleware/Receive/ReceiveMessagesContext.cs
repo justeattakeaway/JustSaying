@@ -1,9 +1,9 @@
-namespace JustSaying.Messaging.Channels.Context
+namespace JustSaying.Messaging.Middleware.Receive
 {
     /// <summary>
     /// GetMessagesContext contains the parameters required to get messages from <see cref="ISqsQueue"/>.
     /// </summary>
-    public sealed class GetMessagesContext
+    public sealed class ReceiveMessagesContext
     {
         /// <summary>
         /// Gets the maximum number of messages to return from the queue.

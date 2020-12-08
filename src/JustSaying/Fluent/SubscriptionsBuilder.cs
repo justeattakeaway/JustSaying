@@ -169,6 +169,7 @@ namespace JustSaying.Fluent
         /// Configures the subscriptions for the <see cref="JustSayingBus"/>.
         /// </summary>
         /// <param name="bus">The <see cref="JustSayingBus"/> to configure subscriptions for.</param>
+        /// <param name="serviceResolver">The <see cref="IServiceResolver"/> to use to resolve middleware with</param>
         /// <param name="creator">The <see cref="IVerifyAmazonQueues"/>to use to create queues with.</param>
         /// <param name="loggerFactory">The <see cref="ILoggerFactory"/>logger factory to use.</param>
         /// <exception cref="InvalidOperationException">
@@ -176,6 +177,7 @@ namespace JustSaying.Fluent
         /// </exception>
         internal void Configure(
             JustSayingBus bus,
+            IServiceResolver serviceResolver,
             IVerifyAmazonQueues creator,
             ILoggerFactory loggerFactory)
         {
@@ -193,7 +195,7 @@ namespace JustSaying.Fluent
 
             foreach (ISubscriptionBuilder<Message> builder in Subscriptions)
             {
-                builder.Configure(bus, resolver, creator, loggerFactory);
+                builder.Configure(bus, resolver, serviceResolver, creator, loggerFactory);
             }
         }
 

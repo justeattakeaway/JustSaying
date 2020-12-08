@@ -6,34 +6,36 @@ using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Fluent;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
+using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.Messaging.Channels.Fakes;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
+
+using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
     public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
     {
         protected IList<ISqsQueue> Queues;
-        protected HandlerMap HandlerMap;
+        protected MiddlewareMap MiddlewareMap;
         protected TrackingLoggingMonitor Monitor;
         protected FakeSerializationRegister SerializationRegister;
         protected int ConcurrencyLimit = 8;
 
         public ITestOutputHelper OutputHelper { get; }
-        protected FakeMessageLock MessageLock
-        {
-            get => (FakeMessageLock) HandlerMap.MessageLock;
-            set => HandlerMap.MessageLock = value;
-        }
 
+        protected HandleMessageMiddleware Middleware;
         protected InspectableHandler<SimpleMessage> Handler;
 
         protected ISubscriptionGroup SystemUnderTest { get; private set; }
@@ -63,9 +65,14 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         {
             Queues = new List<ISqsQueue>();
             Handler = new InspectableHandler<SimpleMessage>();
+
+            var testResolver = new FakeServiceResolver(sc => sc
+                .AddLogging(l => l.AddXUnit(OutputHelper)));
+
+            Middleware = new HandlerMiddlewareBuilder(testResolver, testResolver).UseHandler(ctx => Handler).Build();
             Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
             SerializationRegister = new FakeSerializationRegister();
-            HandlerMap = new HandlerMap(Monitor, LoggerFactory);
+            MiddlewareMap = new MiddlewareMap();
 
             Given();
         }
@@ -77,9 +84,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         {
             foreach (ISqsQueue queue in Queues)
             {
-                HandlerMap.Add(queue.QueueName,
-                    typeof(SimpleMessage),
-                    msg => Handler.Handle(msg as SimpleMessage));
+                MiddlewareMap.Add<SimpleMessage>(queue.QueueName, Middleware);
             }
 
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
@@ -109,7 +114,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             var dispatcher = new MessageDispatcher(
                 SerializationRegister,
                 Monitor,
-                HandlerMap,
+                MiddlewareMap,
                 LoggerFactory,
                 messageBackoffStrategy,
                 messageContextAccessor);

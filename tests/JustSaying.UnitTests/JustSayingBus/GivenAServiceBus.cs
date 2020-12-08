@@ -19,14 +19,17 @@ namespace JustSaying.UnitTests.JustSayingBus
         protected ILoggerFactory LoggerFactory;
         private bool _recordThrownExceptions;
 
+        public ITestOutputHelper OutputHelper { get; private set; }
         protected Exception ThrownException { get; private set; }
 
         protected JustSaying.JustSayingBus SystemUnderTest { get; private set; }
 
         protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
 
+
         public GivenAServiceBus(ITestOutputHelper outputHelper)
         {
+            OutputHelper = outputHelper;
             LoggerFactory = outputHelper.ToLoggerFactory();
         }
 

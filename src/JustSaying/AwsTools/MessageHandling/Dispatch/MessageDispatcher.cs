@@ -11,6 +11,7 @@ using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
@@ -21,7 +22,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
     {
         private readonly IMessageSerializationRegister _serializationRegister;
         private readonly IMessageMonitor _messagingMonitor;
-        private readonly HandlerMap _handlerMap;
+        private readonly MiddlewareMap _middlewareMap;
         private readonly IMessageBackoffStrategy _messageBackoffStrategy;
         private readonly IMessageContextAccessor _messageContextAccessor;
 
@@ -30,14 +31,14 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         public MessageDispatcher(
             IMessageSerializationRegister serializationRegister,
             IMessageMonitor messagingMonitor,
-            HandlerMap handlerMap,
+            MiddlewareMap middlewareMap,
             ILoggerFactory loggerFactory,
             IMessageBackoffStrategy messageBackoffStrategy,
             IMessageContextAccessor messageContextAccessor)
         {
             _serializationRegister = serializationRegister;
             _messagingMonitor = messagingMonitor;
-            _handlerMap = handlerMap;
+            _middlewareMap = middlewareMap;
             _logger = loggerFactory.CreateLogger("JustSaying");
             _messageBackoffStrategy = messageBackoffStrategy;
             _messageContextAccessor = messageContextAccessor;
@@ -70,7 +71,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                     _messageContextAccessor.MessageContext =
                         new MessageContext(messageContext.Message, messageContext.QueueUri, attributes);
 
-                    handlingSucceeded = await CallMessageHandler(messageContext.QueueName, typedMessage)
+                    handlingSucceeded = await CallMessageHandler(messageContext.QueueName, typedMessage, cancellationToken)
                         .ConfigureAwait(false);
                 }
 
@@ -79,8 +80,9 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                     await messageContext.DeleteMessageFromQueueAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
+
 #pragma warning disable CA1031
-            catch (Exception ex)
+            catch (Exception ex) when(!(ex is OperationCanceledException))
 #pragma warning restore CA1031
             {
                 _logger.LogError(
@@ -157,28 +159,30 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             }
         }
 
-        private async Task<bool> CallMessageHandler(string queueName, Message message)
+        private async Task<bool> CallMessageHandler(string queueName, Message message, CancellationToken cancellationToken)
         {
             var messageType = message.GetType();
 
-            var handler = _handlerMap.Get(queueName, messageType);
+            var middleware = _middlewareMap.Get(queueName, messageType);
 
-            if (handler == null)
+            if (middleware == null)
             {
                 _logger.LogError(
-                    "Failed to dispatch. Handler for message of type '{MessageTypeName}' not found in handler map.",
+                    "Failed to dispatch. Middleware for message of type '{MessageTypeName}' not found in middleware map.",
                     message.GetType().FullName);
                 return false;
             }
 
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
-            using (_messagingMonitor.MeasureHandler())
+            using (_messagingMonitor.MeasureDispatch())
             {
-                bool handlerSucceeded = false;
+                bool dispatchSuccessful = false;
                 try
                 {
-                    handlerSucceeded = await handler(message).ConfigureAwait(false);
+                    var context = new HandleMessageContext(message, messageType, queueName);
+                    dispatchSuccessful = await middleware.RunAsync(context, null, cancellationToken)
+                        .ConfigureAwait(false);
                 }
                 finally
                 {
@@ -186,7 +190,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
 
                     var logMessage =
                         "{Status} handling message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}ms.";
-                    if (handlerSucceeded)
+                    if (dispatchSuccessful)
                     {
                         _logger.LogInformation(logMessage,
                             "Succeeded",
@@ -204,7 +208,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                     }
                 }
 
-                return handlerSucceeded;
+                return dispatchSuccessful;
             }
         }
 

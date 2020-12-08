@@ -3,29 +3,28 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
-using JustSaying.Messaging.Channels.Context;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Messaging.Middleware
+namespace JustSaying.Messaging.Middleware.Receive
 {
     /// <summary>
     /// The default middleware to use for the receive pipeline.
     /// </summary>
-    public class DefaultSqsMiddleware : MiddlewareBase<GetMessagesContext, IList<Message>>
+    public class DefaultReceiveMessagesMiddleware : MiddlewareBase<ReceiveMessagesContext, IList<Message>>
     {
-        private readonly ILogger<DefaultSqsMiddleware> _logger;
+        private readonly ILogger<DefaultReceiveMessagesMiddleware> _logger;
 
         /// <summary>
-        /// Creates an instance of <see cref="DefaultSqsMiddleware"/>.
+        /// Creates an instance of <see cref="DefaultReceiveMessagesMiddleware"/>.
         /// </summary>
         /// <param name="logger">The <see cref="ILogger"/> to use.</param>
-        public DefaultSqsMiddleware(ILogger<DefaultSqsMiddleware> logger)
+        public DefaultReceiveMessagesMiddleware(ILogger<DefaultReceiveMessagesMiddleware> logger)
         {
             _logger = logger;
         }
 
         protected override async Task<IList<Message>> RunInnerAsync(
-            GetMessagesContext context,
+            ReceiveMessagesContext context,
             Func<CancellationToken, Task<IList<Message>>> func,
             CancellationToken stoppingToken)
         {

@@ -20,9 +20,11 @@ namespace JustSaying.TestingFramework
             HandledThrottlingTime = new List<TimeSpan>();
             PublishMessageTimes = new List<TimeSpan>();
             ReceiveMessageTimes = new List<(TimeSpan duration, string queue, string region)>();
+            HandlerExecutionTimes = new List<(Type handlerType, Type messageType, TimeSpan duration)>();
             HandledMessages = new List<Models.Message>();
         }
 
+        public List<(Type handlerType, Type messageType, TimeSpan duration)> HandlerExecutionTimes { get; }
         public IList<Type> HandledExceptions { get; }
         public IList<(Exception exception, Message message)> HandledErrors { get; }
         public IList<TimeSpan> HandledTimes { get; }
@@ -60,7 +62,7 @@ namespace JustSaying.TestingFramework
         public void Handled(Models.Message message)
         {
             HandledMessages.Add(message);
-            _logger.LogInformation("Handled message of type {MessageType}");
+            _logger.LogInformation("Handled message of type {MessageType}", message.GetType());
         }
 
         public void IncrementThrottlingStatistic()
@@ -88,6 +90,15 @@ namespace JustSaying.TestingFramework
                 duration,
                 queueName,
                 region);
+        }
+
+        public void HandlerExecutionTime(Type handlerType, Type messageType, TimeSpan duration)
+        {
+            HandlerExecutionTimes.Add((handlerType, messageType, duration));
+            _logger.LogInformation("Handler type {HandlerType} spent {Duration} handling message of type {MessageType}",
+                handlerType,
+                duration,
+                messageType);
         }
     }
 }

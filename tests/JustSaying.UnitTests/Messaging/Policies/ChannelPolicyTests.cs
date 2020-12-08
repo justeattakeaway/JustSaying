@@ -7,6 +7,7 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Middleware.Receive;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels;
@@ -47,7 +48,7 @@ namespace JustSaying.UnitTests.Messaging.Policies
             var config = new SubscriptionGroupSettingsBuilder()
                 .WithDefaultConcurrencyLimit(8);
             config.WithCustomMiddleware(
-                new ErrorHandlingMiddleware<GetMessagesContext, IList<Message>, InvalidOperationException>());
+                new ErrorHandlingMiddleware<ReceiveMessagesContext, IList<Message>, InvalidOperationException>());
 
             var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
             {

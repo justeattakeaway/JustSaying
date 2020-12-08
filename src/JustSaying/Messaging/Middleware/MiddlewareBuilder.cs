@@ -16,7 +16,7 @@ namespace JustSaying.Messaging.Middleware
         /// returned composite <see cref="MiddlewareBase{TContext, TOut}"/>.</param>
         /// <returns>A composite <see cref="MiddlewareBase{TContext, TOut}"/>.</returns>
         public static MiddlewareBase<TContext, TOut> BuildAsync<TContext, TOut>(
-            params Func<MiddlewareBase<TContext, TOut>, MiddlewareBase<TContext, TOut>>[] middleware)
+            params MiddlewareBase<TContext, TOut>[] middleware)
         {
             if (middleware == null) throw new ArgumentNullException(nameof(middleware));
 
@@ -34,7 +34,7 @@ namespace JustSaying.Messaging.Middleware
         /// <returns>A composite <see cref="MiddlewareBase{TContext, TOut}"/>.</returns>
         public static MiddlewareBase<TIn, TOut> WithAsync<TIn, TOut>(
             this MiddlewareBase<TIn, TOut> inner,
-            params Func<MiddlewareBase<TIn, TOut>, MiddlewareBase<TIn, TOut>>[] middleware)
+            params MiddlewareBase<TIn, TOut>[] middleware)
         {
             if (inner == null) throw new ArgumentNullException(nameof(inner));
             if (middleware == null) throw new ArgumentNullException(nameof(middleware));
@@ -43,7 +43,7 @@ namespace JustSaying.Messaging.Middleware
             var policy = inner;
             foreach (var m in middleware)
             {
-                policy = m(policy);
+                policy = m.WithNext(policy);
             }
 
             return policy;

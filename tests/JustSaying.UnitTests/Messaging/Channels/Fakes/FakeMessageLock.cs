@@ -7,8 +7,11 @@ namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers
 {
     public class FakeMessageLock : IMessageLockAsync
     {
-        public FakeMessageLock()
+        private readonly bool _exclusive;
+
+        public FakeMessageLock(bool exclusive = true)
         {
+            _exclusive = exclusive;
             MessageLockRequests = new List<(string key, TimeSpan howLong, bool isPermanent)>();
         }
 
@@ -19,7 +22,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers
             MessageLockRequests.Add((key, TimeSpan.MaxValue, true));
             return Task.FromResult(new MessageLockResponse
             {
-                DoIHaveExclusiveLock = true
+                DoIHaveExclusiveLock = _exclusive
             });
         }
 
@@ -28,7 +31,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers
             MessageLockRequests.Add((key, howLong, false));
             return Task.FromResult(new MessageLockResponse
             {
-                DoIHaveExclusiveLock = true
+                DoIHaveExclusiveLock = _exclusive
             });
         }
 

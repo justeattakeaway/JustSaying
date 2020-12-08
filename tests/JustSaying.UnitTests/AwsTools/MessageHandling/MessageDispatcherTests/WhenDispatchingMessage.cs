@@ -45,7 +45,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
         private readonly IMessageMonitor _messageMonitor = Substitute.For<IMessageMonitor>();
-        private readonly HandlerMap _handlerMap = new HandlerMap(Substitute.For<IMessageMonitor>(), NullLoggerFactory.Instance);
+        private readonly MiddlewareMap _middlewareMap = new MiddlewareMap();
         private readonly ILoggerFactory _loggerFactory;
         private readonly IMessageBackoffStrategy _messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
         private IAmazonSQS _amazonSqsClient = Substitute.For<IAmazonSQS>();
@@ -108,7 +108,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             var dispatcher = new MessageDispatcher(
                 _serializationRegister,
                 _messageMonitor,
-                _handlerMap,
+                _middlewareMap,
                 _loggerFactory,
                 _messageBackoffStrategy,
                 new MessageContextAccessor());
@@ -149,7 +149,10 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             protected override void Given()
             {
                 base.Given();
-                _handlerMap.Add(_queue.QueueName, typeof(OrderAccepted), m => Task.FromResult(true));
+
+                var successMiddleware =
+                    new DelegateMessageHandlingMiddleware<OrderAccepted>(m => Task.FromResult(true));
+                _middlewareMap.Add<OrderAccepted>(_queue.QueueName, successMiddleware);
             }
 
             [Fact]
@@ -177,8 +180,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             protected override void Given()
             {
                 base.Given();
+
                 _messageBackoffStrategy.GetBackoffDuration(_typedMessage, 1, _expectedException).Returns(_expectedBackoffTimeSpan);
-                _handlerMap.Add(_queue.QueueName, typeof(OrderAccepted), m => throw _expectedException);
+                _middlewareMap.Add<OrderAccepted>(_queue.QueueName, new DelegateMessageHandlingMiddleware<OrderAccepted>(m => throw _expectedException));
                 _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString(CultureInfo.InvariantCulture));
             }
 

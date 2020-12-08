@@ -3,11 +3,15 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
-using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests.Support;
+using JustSaying.UnitTests.Messaging.Channels.Fakes;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
-using NSubstitute;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
@@ -18,7 +22,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
     {
         private ISqsQueue _queue;
         private readonly int _maximumTimeout = (int)TimeSpan.MaxValue.TotalSeconds;
-        private ExactlyOnceSignallingHandler _handler;
+        private FakeMessageLock _messageLock;
 
         public WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
@@ -28,18 +32,29 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         protected override void Given()
         {
             _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage());
-
             Queues.Add(_queue);
+            _messageLock = new FakeMessageLock();
 
-            MessageLock = new FakeMessageLock();
+            var servicesBuilder = new ServicesBuilder(new MessagingBusBuilder());
+            var serviceResolver = new FakeServiceResolver(sc =>
+                sc.AddSingleton<IMessageLockAsync>(_messageLock)
+                    .AddSingleton<IHandlerAsync<SimpleMessage>>(Handler)
+                    .AddLogging(x => x.AddXUnit(OutputHelper)));
 
-            _handler = new ExactlyOnceSignallingHandler();
-            Handler = _handler;
+            var middlewareBuilder = new HandlerMiddlewareBuilder(serviceResolver, serviceResolver);
+
+            var middleware = middlewareBuilder.Configure(pipe =>
+            {
+                pipe.UseExactlyOnce<SimpleMessage>("a-unique-lock-key");
+                pipe.UseHandler<SimpleMessage>();
+            }).Build();
+
+            Middleware = middleware;
         }
 
         protected override async Task WhenAsync()
         {
-            HandlerMap.Add(_queue.QueueName, () => Handler);
+            MiddlewareMap.Add<SimpleMessage>(_queue.QueueName, Middleware);
 
             var cts = new CancellationTokenSource();
 
@@ -58,11 +73,14 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         {
             var messageId = SerializationRegister.DefaultDeserializedMessage().Id.ToString();
 
-            var tempLockRequests = MessageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
-            tempLockRequests.Count().ShouldBeGreaterThan(0);
-            tempLockRequests.ShouldAllBe(pair =>
-                pair.key.Contains(messageId, StringComparison.OrdinalIgnoreCase) &&
-                pair.howLong == TimeSpan.FromSeconds(_maximumTimeout));
+            var tempLockRequests = _messageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
+            tempLockRequests.ShouldNotBeEmpty();
+
+            foreach(var lockRequest in tempLockRequests)
+            {
+                lockRequest.key.ShouldContain(messageId, Case.Insensitive);
+                ((int)lockRequest.howLong.TotalSeconds).ShouldBe(_maximumTimeout);
+            }
         }
     }
 }
