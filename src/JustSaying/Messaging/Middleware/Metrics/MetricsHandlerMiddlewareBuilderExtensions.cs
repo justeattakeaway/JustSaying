@@ -1,6 +1,7 @@
 using System;
 using JustSaying.Messaging.Monitoring;
 
+// ReSharper disable once CheckNamespace
 namespace JustSaying.Messaging.Middleware
 {
     public static class MetricsHandlerMiddlewareBuilderExtensions

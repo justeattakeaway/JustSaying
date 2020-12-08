@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.Monitoring;
 
+// ReSharper disable once CheckNamespace
 namespace JustSaying.Messaging.Middleware
 {
     /// <summary>

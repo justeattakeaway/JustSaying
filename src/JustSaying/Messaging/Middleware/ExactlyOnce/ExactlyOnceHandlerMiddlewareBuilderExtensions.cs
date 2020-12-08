@@ -3,6 +3,7 @@ using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.Logging;
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
+// ReSharper disable once CheckNamespace
 namespace JustSaying.Messaging.Middleware
 {
     public static class ExactlyOnceHandlerMiddlewareBuilderExtensions

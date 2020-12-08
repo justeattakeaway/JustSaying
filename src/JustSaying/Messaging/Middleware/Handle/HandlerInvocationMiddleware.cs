@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 
+// ReSharper disable once CheckNamespace
 namespace JustSaying.Messaging.Middleware
 {
     /// <summary>
