@@ -20,8 +20,8 @@ namespace JustSaying.Messaging.Middleware
             string lockKey,
             TimeSpan? lockDuration = null)
         {
-            if(builder == null) throw new ArgumentNullException(nameof(builder));
-            if(string.IsNullOrEmpty(lockKey)) throw new ArgumentException("Parameter cannot be null or empty", nameof(lockKey));
+            if (builder == null) throw new ArgumentNullException(nameof(builder));
+            if (string.IsNullOrEmpty(lockKey)) throw new ArgumentException("Parameter cannot be null or empty.", nameof(lockKey));
 
             HandleMessageMiddleware CreateMiddleware()
             {
