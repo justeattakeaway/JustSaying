@@ -10,7 +10,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
     {
         private readonly ConcurrentDictionary<string, int> _store = new ConcurrentDictionary<string, int>();
 
-        public Task<MessageLockResponse> TryAquireLockAsync(string key, TimeSpan howLong)
+        public Task<MessageLockResponse> TryAcquireLockAsync(string key, TimeSpan howLong)
         {
             // Only the first attempt to access the value for the key can acquire the lock
             int newValue = _store.AddOrUpdate(key, 0, (_, i) => i + 1);
@@ -24,7 +24,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
             return Task.FromResult(response);
         }
 
-        public Task<MessageLockResponse> TryAquireLockPermanentlyAsync(string key)
+        public Task<MessageLockResponse> TryAcquireLockPermanentlyAsync(string key)
         {
             _store.AddOrUpdate(key, int.MinValue, (_, i) => int.MinValue);
 

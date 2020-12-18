@@ -33,7 +33,7 @@ namespace JustSaying.Messaging.Middleware
 
             string lockKey = $"{context.Message.UniqueKey()}-{_lockSuffixKeyForHandler}";
 
-            MessageLockResponse lockResponse = await _messageLock.TryAquireLockAsync(lockKey, _timeout).ConfigureAwait(false);
+            MessageLockResponse lockResponse = await _messageLock.TryAcquireLockAsync(lockKey, _timeout).ConfigureAwait(false);
 
             if (!lockResponse.DoIHaveExclusiveLock)
             {
@@ -55,7 +55,7 @@ namespace JustSaying.Messaging.Middleware
 
                 if (successfullyHandled)
                 {
-                    await _messageLock.TryAquireLockPermanentlyAsync(lockKey).ConfigureAwait(false);
+                    await _messageLock.TryAcquireLockPermanentlyAsync(lockKey).ConfigureAwait(false);
 
                     _logger.LogDebug("Acquired permanent lock for message with key {MessageLockKey}.", lockKey);
                 }

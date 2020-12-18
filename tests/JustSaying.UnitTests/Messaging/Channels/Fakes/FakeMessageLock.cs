@@ -17,7 +17,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers
 
         public IList<(string key, TimeSpan howLong, bool isPermanent)> MessageLockRequests { get; }
 
-        public Task<MessageLockResponse> TryAquireLockPermanentlyAsync(string key)
+        public Task<MessageLockResponse> TryAcquireLockPermanentlyAsync(string key)
         {
             MessageLockRequests.Add((key, TimeSpan.MaxValue, true));
             return Task.FromResult(new MessageLockResponse
@@ -26,7 +26,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers
             });
         }
 
-        public Task<MessageLockResponse> TryAquireLockAsync(string key, TimeSpan howLong)
+        public Task<MessageLockResponse> TryAcquireLockAsync(string key, TimeSpan howLong)
         {
             MessageLockRequests.Add((key, howLong, false));
             return Task.FromResult(new MessageLockResponse
