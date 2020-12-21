@@ -268,7 +268,7 @@ An example policy would look like;
                 "sns:Subscribe",
                 "sns:TagResource"
             ],
-            "Resource": "arn:aws:sqs:aws-region:aws-account-id:uk-orderaccepted"
+            "Resource": "arn:aws:sns:aws-region:aws-account-id:uk-orderaccepted"
         }
     ]
 }
