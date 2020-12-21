@@ -80,11 +80,11 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Creates a tag with no value that will be assigned to the SNS topic.
         /// </summary>
-        /// <param name="key">The key for the tag</param>
+        /// <param name="key">The key for the tag.</param>
         /// <returns>
         /// The current <see cref="TopicPublicationBuilder{T}"/>.
         /// </returns>
-        /// <remarks>Tag keys are case insensitive and any existing ones with the same key will be overriden</remarks>
+        /// <remarks>Tag keys are case-sensitive. A new tag with a key identical to that of an existing one will overwrite it.</remarks>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is <see langword="null"/> or whitespace.
         /// </exception>
@@ -93,12 +93,12 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Creates a tag with a value that will be assigned to the SNS topic.
         /// </summary>
-        /// <param name="key">The key for the tag</param>
-        /// <param name="value">The value associated with this tag</param>
+        /// <param name="key">The key for the tag.</param>
+        /// <param name="value">The value associated with this tag.</param>
         /// <returns>
         /// The current <see cref="TopicPublicationBuilder{T}"/>.
         /// </returns>
-        /// <remarks>Tag keys are case insensitive and any existing ones with the same key will be overriden</remarks>
+        /// <remarks>Tag keys are case-sensitive. A new tag with a key identical to that of an existing one will overwrite it.</remarks>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="key"/> is <see langword="null"/> or whitespace.
         /// </exception>
