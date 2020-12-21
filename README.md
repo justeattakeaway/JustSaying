@@ -218,6 +218,7 @@ sns:ListTopics
 sns:Publish
 sns:SetSubscriptionAttributes
 sns:Subscribe
+sns:TagResource
 
 // SQS
 sqs:ChangeMessageVisibility
@@ -264,7 +265,8 @@ An example policy would look like;
             "Action": [
                 "sns:CreateTopic",
                 "sns:Publish",
-                "sns:Subscribe"
+                "sns:Subscribe",
+                "sns:TagResource"
             ],
             "Resource": "arn:aws:sqs:aws-region:aws-account-id:uk-orderaccepted"
         }
@@ -406,7 +408,7 @@ As an example, the following response would be available for that same sample me
     }
   }
 }
-```` 
+````
 
 ## Power tool
 
@@ -441,7 +443,7 @@ JustSaying.Tools.exe move -from "source_queue_name" -to "destination_queue_name"
   - Add acceptance tests project
   - Add dockerfile for api, console, aws and tests
   - Demonstrate docker-compose executing acceptance tests against other images
-  
+
 ## Contributing...
 
 Please read the [contributing guide](./.github/CONTRIBUTING.md "Contributing to JustSaying").
