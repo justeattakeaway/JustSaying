@@ -20,7 +20,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
             : base(outputHelper)
         { }
 
-        [AwsFact]
+        [NotSimulatorFact]
         public async Task Then_A_Topic_Is_Created_With_The_Correct_Tags()
         {
             // Arrange

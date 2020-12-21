@@ -83,14 +83,9 @@ namespace JustSaying.AwsTools.MessageHandling
                 Tags = Tags.Select(CreateTag).ToList()
             };
 
-            var tagResponse = await Client.TagResourceAsync(tagRequest).ConfigureAwait(false);
+            await Client.TagResourceAsync(tagRequest).ConfigureAwait(false);
 
-            if (tagResponse.HttpStatusCode == HttpStatusCode.OK)
-            {
-
-            }
-
-            // TODO: What to do with errors - https://docs.aws.amazon.com/sns/latest/api/API_TagResource.html
+            _logger.LogInformation("Added {TagCount} tags to topic {TopicName}", tagRequest.Tags.Count, TopicName);
         }
 
         public override async Task<bool> ExistsAsync()
