@@ -97,8 +97,14 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
                         config.Publications(x =>
                         {
                             // Creates the following if they do not already exist
-                            //  - a SNS topic of name `orderreadyevent`
-                            x.WithTopic<OrderReadyEvent>();
+                            //  - a SNS topic of name `orderreadyevent` with two tags:
+                            //      - "IsOrderEvent" with no value
+                            //      - "Publisher" with the value "KitchenConsole"
+                            x.WithTopic<OrderReadyEvent>(cfg =>
+                            {
+                                cfg.WithTag("IsOrderEvent")
+                                    .WithTag("Publisher", nameof(KitchenConsole));
+                            });
                             x.WithTopic<OrderDeliveredEvent>();
                         });
                     });

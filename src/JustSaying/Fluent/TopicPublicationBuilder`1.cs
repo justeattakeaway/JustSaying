@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon;
 using JustSaying.AwsTools;
@@ -28,6 +29,11 @@ namespace JustSaying.Fluent
         /// Gets or sets a delegate to a method to use to configure SNS writes.
         /// </summary>
         private Action<SnsWriteConfiguration> ConfigureWrites { get; set; }
+
+        /// <summary>
+        /// Gets the tags to add to the topic.
+        /// </summary>
+        private Dictionary<string, string> Tags { get; } = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Configures the SNS write configuration.
@@ -71,6 +77,25 @@ namespace JustSaying.Fluent
             return this;
         }
 
+        public TopicPublicationBuilder<T> WithTag(string key) => WithTag(key, string.Empty);
+
+        public TopicPublicationBuilder<T> WithTag(string key, string value)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            Tags.Add(key, value);
+
+            return this;
+        }
+
         /// <inheritdoc />
         void IPublicationBuilder<T>.Configure(
             JustSayingBus bus,
@@ -100,7 +125,8 @@ namespace JustSaying.Fluent
                 writeConfiguration,
                 config.MessageSubjectProvider)
             {
-                MessageResponseLogger = config.MessageResponseLogger
+                MessageResponseLogger = config.MessageResponseLogger,
+                Tags = Tags
             };
 
             async Task StartupTask()
@@ -117,6 +143,8 @@ namespace JustSaying.Fluent
 
                 await eventPublisher.EnsurePolicyIsUpdatedAsync(config.AdditionalSubscriberAccounts)
                     .ConfigureAwait(false);
+
+                await eventPublisher.ApplyTagsAsync().ConfigureAwait(false);
             }
 
             bus.AddStartupTask(StartupTask());
