@@ -77,8 +77,31 @@ namespace JustSaying.Fluent
             return this;
         }
 
-        public TopicPublicationBuilder<T> WithTag(string key) => WithTag(key, string.Empty);
+        /// <summary>
+        /// Creates a tag with no value that will be assigned to the SNS topic.
+        /// </summary>
+        /// <param name="key">The key for the tag</param>
+        /// <returns>
+        /// The current <see cref="TopicPublicationBuilder{T}"/>.
+        /// </returns>
+        /// <remarks>Tag keys are case insensitive and any existing ones with the same key will be overriden</remarks>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="key"/> is <see langword="null"/> or whitespace.
+        /// </exception>
+        public TopicPublicationBuilder<T> WithTag(string key) => WithTag(key, null);
 
+        /// <summary>
+        /// Creates a tag with a value that will be assigned to the SNS topic.
+        /// </summary>
+        /// <param name="key">The key for the tag</param>
+        /// <param name="value">The value associated with this tag</param>
+        /// <returns>
+        /// The current <see cref="TopicPublicationBuilder{T}"/>.
+        /// </returns>
+        /// <remarks>Tag keys are case insensitive and any existing ones with the same key will be overriden</remarks>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="key"/> is <see langword="null"/> or whitespace.
+        /// </exception>
         public TopicPublicationBuilder<T> WithTag(string key, string value)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -86,12 +109,7 @@ namespace JustSaying.Fluent
                 throw new ArgumentNullException(nameof(key));
             }
 
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            Tags.Add(key, value);
+            Tags.Add(key, value ?? string.Empty);
 
             return this;
         }
