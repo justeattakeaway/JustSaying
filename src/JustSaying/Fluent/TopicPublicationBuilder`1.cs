@@ -106,7 +106,7 @@ namespace JustSaying.Fluent
         {
             if (string.IsNullOrWhiteSpace(key))
             {
-                throw new ArgumentException("A topic tag key can not be null or only whitespace", nameof(key));
+                throw new ArgumentException("A topic tag key cannot be null or only whitespace", nameof(key));
             }
 
             Tags.Add(key, value ?? string.Empty);
