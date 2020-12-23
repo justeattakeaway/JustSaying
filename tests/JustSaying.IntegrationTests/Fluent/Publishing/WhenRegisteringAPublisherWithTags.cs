@@ -27,7 +27,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
             var tags = new Dictionary<string, string>
             {
                 [Guid.NewGuid().ToString()] = null,
-                [Guid.NewGuid().ToString()] = "Value",
+                [Guid.NewGuid().ToString()] = "Value"
             };
 
             var serviceProvider = GivenJustSaying()
