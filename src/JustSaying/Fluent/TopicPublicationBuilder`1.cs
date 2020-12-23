@@ -33,7 +33,7 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Gets the tags to add to the topic.
         /// </summary>
-        private Dictionary<string, string> Tags { get; } = new(StringComparer.OrdinalIgnoreCase);
+        private Dictionary<string, string> Tags { get; } = new(StringComparer.Ordinal);
 
         /// <summary>
         /// Configures the SNS write configuration.
@@ -99,14 +99,14 @@ namespace JustSaying.Fluent
         /// The current <see cref="TopicPublicationBuilder{T}"/>.
         /// </returns>
         /// <remarks>Tag keys are case-sensitive. A new tag with a key identical to that of an existing one will overwrite it.</remarks>
-        /// <exception cref="ArgumentNullException">
+        /// <exception cref="ArgumentException">
         /// <paramref name="key"/> is <see langword="null"/> or whitespace.
         /// </exception>
         public TopicPublicationBuilder<T> WithTag(string key, string value)
         {
             if (string.IsNullOrWhiteSpace(key))
             {
-                throw new ArgumentNullException(nameof(key));
+                throw new ArgumentException("A topic tag key can not be null or only whitespace", nameof(key));
             }
 
             Tags.Add(key, value ?? string.Empty);
