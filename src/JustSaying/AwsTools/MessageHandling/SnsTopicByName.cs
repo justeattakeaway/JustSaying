@@ -14,8 +14,10 @@ namespace JustSaying.AwsTools.MessageHandling
 {
     public class SnsTopicByName : SnsTopicBase
     {
+        private readonly ILogger _logger;
+
         public string TopicName { get; }
-        private readonly ILogger _log;
+        public Dictionary<string, string> Tags { get; set; }
 
         public SnsTopicByName(
             string topicName,
@@ -27,7 +29,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             TopicName = topicName;
             Client = client;
-            _log = loggerFactory.CreateLogger("JustSaying");
+            _logger = loggerFactory.CreateLogger("JustSaying");
         }
 
         public SnsTopicByName(
@@ -41,7 +43,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             TopicName = topicName;
             Client = client;
-            _log = loggerFactory.CreateLogger("JustSaying");
+            _logger = loggerFactory.CreateLogger("JustSaying");
         }
 
         public override InterrogationResult Interrogate()
@@ -66,6 +68,26 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
+        public async Task ApplyTagsAsync()
+        {
+            if (!Tags.Any())
+            {
+                return;
+            }
+
+            Tag CreateTag(KeyValuePair<string, string> tag) => new() { Key = tag.Key, Value = tag.Value };
+
+            var tagRequest = new TagResourceRequest
+            {
+                ResourceArn = Arn,
+                Tags = Tags.Select(CreateTag).ToList()
+            };
+
+            await Client.TagResourceAsync(tagRequest).ConfigureAwait(false);
+
+            _logger.LogInformation("Added {TagCount} tags to topic {TopicName}", tagRequest.Tags.Count, TopicName);
+        }
+
         public override async Task<bool> ExistsAsync()
         {
             if (!string.IsNullOrWhiteSpace(Arn))
@@ -73,7 +95,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 return true;
             }
 
-            _log.LogInformation("Checking for existence of the topic '{TopicName}'.", TopicName);
+            _logger.LogInformation("Checking for existence of the topic '{TopicName}'.", TopicName);
             var topic = await Client.FindTopicAsync(TopicName).ConfigureAwait(false);
 
             if (topic != null)
@@ -95,17 +117,17 @@ namespace JustSaying.AwsTools.MessageHandling
                 if (string.IsNullOrEmpty(response.TopicArn))
                 {
                     var requestId = response.ResponseMetadata.RequestId;
-                    _log.LogError("Failed to create or obtain ARN for topic {TopicName}. RequestId: {RequestId}.",
+                    _logger.LogError("Failed to create or obtain ARN for topic {TopicName}. RequestId: {RequestId}.",
                         TopicName, requestId);
                     throw new InvalidOperationException($"Failed to create or obtain ARN for topic '{TopicName}'. RequestId: {requestId}.");
                 }
 
                 Arn = response.TopicArn;
-                _log.LogInformation("Created topic '{TopicName}' with ARN '{Arn}'.", TopicName, Arn);
+                _logger.LogInformation("Created topic '{TopicName}' with ARN '{Arn}'.", TopicName, Arn);
             }
             catch (AuthorizationErrorException ex)
             {
-                _log.LogWarning(0, ex, "Not authorized to create topic '{TopicName}'.", TopicName);
+                _logger.LogWarning(0, ex, "Not authorized to create topic '{TopicName}'.", TopicName);
                 if (!await ExistsAsync().ConfigureAwait(false))
                 {
                     throw new InvalidOperationException(
@@ -162,7 +184,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
                 else
                 {
-                    _log.LogWarning(
+                    _logger.LogWarning(
                         "Request to set topic attribute '{TopicAttributeName}' to '{TopicAttributeValue}' failed with status code '{HttpStatusCode}'.",
                         request.AttributeName,
                         request.AttributeValue,

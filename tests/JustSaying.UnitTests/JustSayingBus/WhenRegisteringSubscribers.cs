@@ -79,7 +79,7 @@ namespace JustSaying.UnitTests.JustSayingBus
 
             string json = JsonConvert.SerializeObject(response.Data.Middleware.Data.Middlewares, Formatting.Indented);
 
-            json.ShouldMatchApproved(c => c.SubFolder("Aprovals"));
+            json.ShouldMatchApproved(c => c.SubFolder("Approvals"));
         }
 
         private static FakeAmazonSqs CreateSubstituteClient()

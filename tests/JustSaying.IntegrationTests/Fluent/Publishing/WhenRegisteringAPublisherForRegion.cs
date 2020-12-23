@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
-using Amazon.SimpleNotificationService.Model;
 using JustSaying.Messaging;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
@@ -33,7 +31,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                 .BuildServiceProvider();
 
             // Act
-            var publisher = serviceProvider.GetService<IMessagePublisher>();
+            var publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
             await publisher.StartAsync(CancellationToken.None);
 
             await publisher.PublishAsync(new MyMessageForRegion());
@@ -44,17 +42,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
 
             var client = clientFactory.GetSnsClient(region);
 
-            var topics = new List<Topic>();
-            string nextToken = null;
-
-            do
-            {
-                var topicsResponse = await client.ListTopicsAsync(nextToken).ConfigureAwait(false);
-                nextToken = topicsResponse.NextToken;
-                topics.AddRange(topicsResponse.Topics);
-            } while (nextToken != null);
-
-            topics
+            (await client.GetAllTopics())
                 .Select((p) => p.TopicArn)
                 .Count((p) => p.EndsWith($":{nameof(MyMessageForRegion)}", StringComparison.OrdinalIgnoreCase))
                 .ShouldBe(1);

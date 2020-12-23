@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon;
 using JustSaying.AwsTools;
@@ -28,6 +29,11 @@ namespace JustSaying.Fluent
         /// Gets or sets a delegate to a method to use to configure SNS writes.
         /// </summary>
         private Action<SnsWriteConfiguration> ConfigureWrites { get; set; }
+
+        /// <summary>
+        /// Gets the tags to add to the topic.
+        /// </summary>
+        private Dictionary<string, string> Tags { get; } = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Configures the SNS write configuration.
@@ -71,6 +77,43 @@ namespace JustSaying.Fluent
             return this;
         }
 
+        /// <summary>
+        /// Creates a tag with no value that will be assigned to the SNS topic.
+        /// </summary>
+        /// <param name="key">The key for the tag.</param>
+        /// <returns>
+        /// The current <see cref="TopicPublicationBuilder{T}"/>.
+        /// </returns>
+        /// <remarks>Tag keys are case-sensitive. A new tag with a key identical to that of an existing one will overwrite it.</remarks>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="key"/> is <see langword="null"/> or whitespace.
+        /// </exception>
+        public TopicPublicationBuilder<T> WithTag(string key) => WithTag(key, null);
+
+        /// <summary>
+        /// Creates a tag with a value that will be assigned to the SNS topic.
+        /// </summary>
+        /// <param name="key">The key for the tag.</param>
+        /// <param name="value">The value associated with this tag.</param>
+        /// <returns>
+        /// The current <see cref="TopicPublicationBuilder{T}"/>.
+        /// </returns>
+        /// <remarks>Tag keys are case-sensitive. A new tag with a key identical to that of an existing one will overwrite it.</remarks>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="key"/> is <see langword="null"/> or whitespace.
+        /// </exception>
+        public TopicPublicationBuilder<T> WithTag(string key, string value)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            Tags.Add(key, value ?? string.Empty);
+
+            return this;
+        }
+
         /// <inheritdoc />
         void IPublicationBuilder<T>.Configure(
             JustSayingBus bus,
@@ -100,7 +143,8 @@ namespace JustSaying.Fluent
                 writeConfiguration,
                 config.MessageSubjectProvider)
             {
-                MessageResponseLogger = config.MessageResponseLogger
+                MessageResponseLogger = config.MessageResponseLogger,
+                Tags = Tags
             };
 
             async Task StartupTask()
@@ -117,6 +161,8 @@ namespace JustSaying.Fluent
 
                 await eventPublisher.EnsurePolicyIsUpdatedAsync(config.AdditionalSubscriberAccounts)
                     .ConfigureAwait(false);
+
+                await eventPublisher.ApplyTagsAsync().ConfigureAwait(false);
             }
 
             bus.AddStartupTask(StartupTask());
