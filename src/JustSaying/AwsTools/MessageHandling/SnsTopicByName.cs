@@ -17,7 +17,7 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly ILogger _logger;
 
         public string TopicName { get; }
-        public Dictionary<string, string> Tags { get; set; }
+        public IDictionary<string, string> Tags { get; set; }
 
         public SnsTopicByName(
             string topicName,

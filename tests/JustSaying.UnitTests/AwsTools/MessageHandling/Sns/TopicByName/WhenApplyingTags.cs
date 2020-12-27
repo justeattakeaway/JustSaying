@@ -31,12 +31,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         {
             _tags = new Dictionary<string, string>
             {
-                {
-                    "TagOne", "Tag-One"
-                },
-                {
-                    "TagTwo", "Tag-Two"
-                }
+                ["TagOne"] = "Tag-One",
+                ["TagTwo"] = "Tag-Two"
             };
 
             Sns.FindTopicAsync(Arg.Any<string>())
