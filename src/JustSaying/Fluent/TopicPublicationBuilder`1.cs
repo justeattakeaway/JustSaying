@@ -85,7 +85,7 @@ namespace JustSaying.Fluent
         /// The current <see cref="TopicPublicationBuilder{T}"/>.
         /// </returns>
         /// <remarks>Tag keys are case-sensitive. A new tag with a key identical to that of an existing one will overwrite it.</remarks>
-        /// <exception cref="ArgumentNullException">
+        /// <exception cref="ArgumentException">
         /// <paramref name="key"/> is <see langword="null"/> or whitespace.
         /// </exception>
         public TopicPublicationBuilder<T> WithTag(string key) => WithTag(key, null);
