@@ -21,7 +21,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         public WhenRegisteringASubscriberWithTags(ITestOutputHelper outputHelper) : base(outputHelper)
         { }
 
-        [Fact]
+        [NotSimulatorFact]
         public async Task Then_A_Queue_For_Topic_Subscription_Is_Created_With_The_Correct_Tags()
         {
             // Arrange
@@ -44,7 +44,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     }));
         }
 
-        [Fact]
+        [NotSimulatorFact]
         public async Task Then_A_Queue_Subscription_Is_Created_With_The_Correct_Tags()
         {
             // Arrange
