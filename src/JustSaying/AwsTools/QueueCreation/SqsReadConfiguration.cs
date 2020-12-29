@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Naming;
@@ -20,6 +22,7 @@ namespace JustSaying.AwsTools.QueueCreation
 
         public string TopicName { get; set; }
         public string PublishEndpoint { get; set; }
+        public Dictionary<string, string> Tags { get; set; }
 
         public string TopicSourceAccount { get; set; }
         public IMessageBackoffStrategy MessageBackoffStrategy { get; set; }

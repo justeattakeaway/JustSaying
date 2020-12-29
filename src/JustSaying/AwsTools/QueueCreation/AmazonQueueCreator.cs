@@ -92,11 +92,11 @@ namespace JustSaying.AwsTools.QueueCreation
             SqsReadConfiguration queueConfig)
         {
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);
-            var sqsclient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
+            var sqsClient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
 
             var queue = new SqsQueueByName(regionEndpoint,
                 queueConfig.QueueName,
-                sqsclient,
+                sqsClient,
                 queueConfig.RetryCountBeforeSendingToErrorQueue,
                 _loggerFactory);
 

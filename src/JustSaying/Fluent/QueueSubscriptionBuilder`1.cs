@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
@@ -33,6 +34,11 @@ namespace JustSaying.Fluent
         /// Gets or sets a delegate to a method to use to configure SQS reads.
         /// </summary>
         private Action<SqsReadConfiguration> ConfigureReads { get; set; }
+
+        /// <summary>
+        /// Gets the tags to add to the queue.
+        /// </summary>
+        private Dictionary<string, string> Tags { get; } = new(StringComparer.Ordinal);
 
         /// <summary>
         /// Configures that the <see cref="IQueueNamingConvention"/> will create the queue name that should be used.
@@ -101,6 +107,43 @@ namespace JustSaying.Fluent
             return this;
         }
 
+        /// <summary>
+        /// Creates a tag with no value that will be assigned to the SQS queue.
+        /// </summary>
+        /// <param name="key">The key for the tag.</param>
+        /// <returns>
+        /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
+        /// </returns>
+        /// <remarks>Tag keys are case-sensitive. A new tag with a key identical to that of an existing one will overwrite it.</remarks>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="key"/> is <see langword="null"/> or whitespace.
+        /// </exception>
+        public QueueSubscriptionBuilder<T> WithTag(string key) => WithTag(key, null);
+
+        /// <summary>
+        /// Creates a tag with a value that will be assigned to the SQS queue.
+        /// </summary>
+        /// <param name="key">The key for the tag.</param>
+        /// <param name="value">The value associated with this tag.</param>
+        /// <returns>
+        /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
+        /// </returns>
+        /// <remarks>Tag keys are case-sensitive. A new tag with a key identical to that of an existing one will overwrite it.</remarks>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="key"/> is <see langword="null"/> or whitespace.
+        /// </exception>
+        public QueueSubscriptionBuilder<T> WithTag(string key, string value)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                throw new ArgumentException("A queue tag key cannot be null or only whitespace", nameof(key));
+            }
+
+            Tags.Add(key, value ?? string.Empty);
+
+            return this;
+        }
+
         /// <inheritdoc />
         void ISubscriptionBuilder<T>.Configure(
             JustSayingBus bus,
@@ -113,7 +156,8 @@ namespace JustSaying.Fluent
 
             var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.PointToPoint)
             {
-                QueueName = QueueName
+                QueueName = QueueName,
+                Tags = Tags
             };
 
             ConfigureReads?.Invoke(subscriptionConfig);
