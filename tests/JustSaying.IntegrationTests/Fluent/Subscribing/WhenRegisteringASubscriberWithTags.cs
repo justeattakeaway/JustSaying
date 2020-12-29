@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing
@@ -19,7 +19,8 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         private const string QueueName = "simple-message-queue-with-tags";
 
         public WhenRegisteringASubscriberWithTags(ITestOutputHelper outputHelper) : base(outputHelper)
-        { }
+        {
+        }
 
         [NotSimulatorFact]
         public async Task Then_A_Queue_For_Topic_Subscription_Is_Created_With_The_Correct_Tags()
@@ -85,9 +86,14 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
             var client = clientFactory.GetSqsClient(RegionEndpoint.EUWest1);
 
-            var queueUrl = (await client.GetQueueUrlAsync(QueueName)).QueueUrl;
+            await AssertTagsExist(client, QueueName, expectedQueueTags);
+            await AssertTagsExist(client, $"{QueueName}_error", expectedQueueTags);
+        }
 
-            var queueTags = (await client.ListQueueTagsAsync(new ListQueueTagsRequest { QueueUrl = queueUrl })).Tags;
+        private static async Task AssertTagsExist(IAmazonSQS client, string queueName, Dictionary<string, string> expectedQueueTags)
+        {
+            string queueUrl = (await client.GetQueueUrlAsync(queueName)).QueueUrl;
+            Dictionary<string, string> queueTags = (await client.ListQueueTagsAsync(new ListQueueTagsRequest { QueueUrl = queueUrl })).Tags;
 
             foreach ((string key, string value) in expectedQueueTags)
             {

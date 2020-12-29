@@ -142,7 +142,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             var tagRequest = new TagQueueRequest
             {
-                QueueUrl = Uri.ToString(),
+                QueueUrl = queue.Uri.ToString(),
                 Tags = tags
             };
 
