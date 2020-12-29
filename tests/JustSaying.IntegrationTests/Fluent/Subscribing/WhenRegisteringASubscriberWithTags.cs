@@ -73,7 +73,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
             var serviceProvider = GivenJustSaying()
                 .ConfigureJustSaying((builder) =>
                     builder.Subscriptions(subscriptionBuilder))
-                .AddJustSayingHandler<SimpleMessage, NullOpHandler<SimpleMessage>>()
+                .AddJustSayingHandler<SimpleMessage, NoOpHandler<SimpleMessage>>()
                 .BuildServiceProvider();
 
             // Act
