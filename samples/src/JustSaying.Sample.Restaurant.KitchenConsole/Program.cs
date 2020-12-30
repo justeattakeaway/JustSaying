@@ -85,12 +85,17 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
                             //  - a SQS queue of name `orderplacedevent`
                             //  - a SQS queue of name `orderplacedevent_error`
                             //  - a SNS topic of name `orderplacedevent`
-                            //  - a SNS topic subscription on topic 'orderplacedevent' and queue 'orderplacedevent'
-                            x.ForTopic<OrderPlacedEvent>(c =>
-                                c.WithReadConfiguration(rc  =>
-                                    rc.WithSubscriptionGroup("GroupA")));
-                            x.ForTopic<OrderOnItsWayEvent>(c =>
-                                c.WithReadConfiguration(rc =>
+                            //  - a SNS topic subscription on topic 'orderplacedevent' and queue 'orderplacedevent' with two tags
+                            //      - "IsOrderEvent" with no value
+                            //      - "Subscriber" with the value "KitchenConsole"
+                            //  - a SNS topic subscription on topic 'orderonitswayevent' and queue 'orderonitswayevent'
+                            x.ForTopic<OrderPlacedEvent>(cfg =>
+                                cfg.WithTag("IsOrderEvent")
+                                    .WithTag("Subscriber", nameof(KitchenConsole))
+                                    .WithReadConfiguration(rc  =>
+                                        rc.WithSubscriptionGroup("GroupA")));
+                            x.ForTopic<OrderOnItsWayEvent>(cfg =>
+                                cfg.WithReadConfiguration(rc =>
                                     rc.WithSubscriptionGroup("GroupB")));
                         });
 

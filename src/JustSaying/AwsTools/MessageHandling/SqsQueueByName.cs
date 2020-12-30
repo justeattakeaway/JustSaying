@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Amazon;
@@ -90,7 +91,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        public async Task EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(SqsBasicConfiguration queueConfig)
+        public async Task EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(SqsReadConfiguration queueConfig)
         {
             if (queueConfig == null) throw new ArgumentNullException(nameof(queueConfig));
 
@@ -103,6 +104,8 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 await UpdateQueueAttributeAsync(queueConfig).ConfigureAwait(false);
             }
+
+            await ApplyTagsAsync(this, queueConfig.Tags).ConfigureAwait(false);
 
             //Create an error queue for existing queues if they don't already have one
             if (ErrorQueue != null && NeedErrorQueue(queueConfig))
@@ -125,7 +128,27 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 await UpdateRedrivePolicyAsync(
                     new RedrivePolicy(queueConfig.RetryCountBeforeSendingToErrorQueue, ErrorQueue.Arn)).ConfigureAwait(false);
+
+                await ApplyTagsAsync(ErrorQueue, queueConfig.Tags).ConfigureAwait(false);
             }
+        }
+
+        private async Task ApplyTagsAsync(ISqsQueue queue, Dictionary<string, string> tags)
+        {
+            if (tags is null || !tags.Any())
+            {
+                return;
+            }
+
+            var tagRequest = new TagQueueRequest
+            {
+                QueueUrl = queue.Uri.ToString(),
+                Tags = tags
+            };
+
+            await queue.Client.TagQueueAsync(tagRequest).ConfigureAwait(false);
+
+            Logger.LogInformation("Added {TagCount} tags to queue {QueueName}", tagRequest.Tags.Count, QueueName);
         }
 
         protected override Dictionary<string, string> GetCreateQueueAttributes(SqsBasicConfiguration queueConfig)
