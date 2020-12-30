@@ -229,6 +229,7 @@ sqs:GetQueueUrl
 sqs:ListQueues
 sqs:ReceiveMessage
 sqs:SetQueueAttributes
+sqs:TagQueue
 ```
 
 An example policy would look like;
@@ -256,7 +257,8 @@ An example policy would look like;
                 "sqs:GetQueueAttributes",
                 "sqs:ReceiveMessage",
                 "sqs:SendMessage",
-                "sqs:SetQueueAttributes"
+                "sqs:SetQueueAttributes",
+                "sqs:TagQueue"
             ],
             "Resource": "arn:aws:sqs:aws-region:aws-account-id:uk-myfeature-orderaccepted"
         },

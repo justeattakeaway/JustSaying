@@ -105,7 +105,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 await UpdateQueueAttributeAsync(queueConfig).ConfigureAwait(false);
             }
 
-            await ApplyTagsAsync(this, queueConfig.Tags);
+            await ApplyTagsAsync(this, queueConfig.Tags).ConfigureAwait(false);
 
             //Create an error queue for existing queues if they don't already have one
             if (ErrorQueue != null && NeedErrorQueue(queueConfig))
@@ -129,7 +129,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 await UpdateRedrivePolicyAsync(
                     new RedrivePolicy(queueConfig.RetryCountBeforeSendingToErrorQueue, ErrorQueue.Arn)).ConfigureAwait(false);
 
-                await ApplyTagsAsync(ErrorQueue, queueConfig.Tags);
+                await ApplyTagsAsync(ErrorQueue, queueConfig.Tags).ConfigureAwait(false);
             }
         }
 
