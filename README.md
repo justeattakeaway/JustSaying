@@ -10,7 +10,7 @@ A helpful library for publishing and consuming events / messages over SNS (SNS /
 
 ## Documentation
 
-Docs can be found [here](https://justeat.gitbook.io/justsaying/)
+Docs can be found [here](https://justeat.gitbook.io/justsaying/).
 
 ## Contributing...
 
