@@ -85,7 +85,7 @@ namespace JustSaying.Messaging.Middleware
         /// <exception cref="InvalidOperationException">
         /// If a HandlerInvocationMiddleware already exists in this pipeline, it cannot be added again.
         /// </exception>
-        internal HandlerMiddlewareBuilder UseHandler<TMessage>() where TMessage : Message
+        public HandlerMiddlewareBuilder UseHandler<TMessage>() where TMessage : Message
         {
             if (_handlerMiddleware != null)
             {
@@ -117,7 +117,7 @@ namespace JustSaying.Messaging.Middleware
         /// Produces a callable middleware chain from the configured middlewares.
         /// </summary>
         /// <returns>A callable <see cref="HandleMessageMiddleware"/></returns>
-        internal HandleMessageMiddleware Build()
+        public HandleMessageMiddleware Build()
         {
             _configure?.Invoke(this);
 
