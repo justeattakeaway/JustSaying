@@ -7,11 +7,13 @@ namespace JustSaying.Models
         protected Message()
         {
             TimeStamp = DateTime.UtcNow;
-            Id = Guid.NewGuid();
+            TimeStampWithOffset = DateTimeOffset.Now;
+            Id = Guid.NewGuid();            
         }
 
         public Guid Id { get; set; }
         public DateTime TimeStamp { get; set; }
+        public DateTimeOffset TimeStampWithOffset { get; set; }
         public string RaisingComponent { get; set; }
         public string Version { get; private set; }
         public string SourceIp { get; private set; }
