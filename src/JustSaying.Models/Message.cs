@@ -6,8 +6,8 @@ namespace JustSaying.Models
     {
         protected Message()
         {
-            TimeStamp = DateTime.UtcNow;
             TimeStampWithOffset = DateTimeOffset.Now;
+            TimeStamp = TimeStampWithOffset.UtcDateTime;            
             Id = Guid.NewGuid();            
         }
 
