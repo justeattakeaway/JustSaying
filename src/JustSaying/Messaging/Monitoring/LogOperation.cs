@@ -11,10 +11,12 @@ namespace JustSaying.Messaging.Monitoring
         private readonly string _message;
         private readonly object[] _args;
         private readonly Stopwatch _watch;
+        private readonly LogLevel _logLevel;
 
-        public LogOperation(ILogger logger, string message, params object[] args)
+        public LogOperation(ILogger logger, LogLevel logLevel, string message, params object[] args)
         {
             _logger = logger;
+            _logLevel = logLevel;
             _message = message;
             _args = args;
             _watch = Stopwatch.StartNew();
@@ -26,7 +28,29 @@ namespace JustSaying.Messaging.Monitoring
 
             var args = _args.Concat(new object[] { _watch.Elapsed }).ToArray();
 
-            _logger.LogInformation($"{_message} completed in {{Duration}}", args);
+            switch (_logLevel)
+            {
+                case LogLevel.Trace:
+                    _logger.LogTrace(_message, args);
+                    return;
+                case LogLevel.Debug:
+                    _logger.LogDebug(_message, args);
+                    return;
+                case LogLevel.Information:
+                    _logger.LogInformation(_message, args);
+                    return;
+                case LogLevel.Warning:
+                    _logger.LogWarning(_message, args);
+                    return;
+                case LogLevel.Error:
+                    _logger.LogError(_message, args);
+                    return;
+                case LogLevel.Critical:
+                    _logger.LogCritical(_message, args);
+                    return;
+                case LogLevel.None:
+                    return;
+            }
         }
     }
 }

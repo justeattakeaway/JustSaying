@@ -62,7 +62,7 @@ namespace JustSaying.Messaging.Channels.Multiplexer
 
             try
             {
-                _logger.LogInformation(
+                _logger.LogDebug(
                     "Starting up channel multiplexer with a queue capacity of {Capacity}",
                     _channelCapacity);
 

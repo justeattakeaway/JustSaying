@@ -29,7 +29,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
-                using (Logger.Time("Checking if queue '{QueueName}' exists", QueueName))
+                using (Logger.Time(LogLevel.Debug, "Checking if queue '{QueueName}' exists", QueueName))
                 {
                     result = await Client.GetQueueUrlAsync(QueueName).ConfigureAwait(false);
                 }
