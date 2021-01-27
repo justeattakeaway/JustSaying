@@ -247,6 +247,12 @@ namespace JustSaying
             CancellationToken cancellationToken)
         {
             attemptCount++;
+
+            if (message.TimeStampWithOffset == null)
+            {
+                message.TimeStampWithOffset = DateTimeOffset.Now;
+            }
+
             try
             {
                 using (Monitor.MeasurePublish())
