@@ -2,10 +2,10 @@ name: build
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     tags: [v*]
   pull_request:
-    branches: [master]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -67,7 +67,7 @@ jobs:
 
       - name: Authenticate with GitHub Packages
         uses: actions/setup-dotnet@v1
-        if: ${{ github.repository_owner == 'justeat' && github.ref == 'refs/heads/master' && runner.os == 'Windows' }}
+        if: ${{ github.repository_owner == 'justeat' && github.ref == 'refs/heads/main' && runner.os == 'Windows' }}
         with:
           source-url: https://nuget.pkg.github.com/justeat/index.json
         env:
@@ -75,7 +75,7 @@ jobs:
 
       - name: Publish pre-release NuGet packages to GitHub Packages
         run: dotnet nuget push "artifacts\packages\*.nupkg" --skip-duplicate --no-symbols true
-        if: ${{ github.repository_owner == 'justeat' && github.ref == 'refs/heads/master' && runner.os == 'Windows' }}
+        if: ${{ github.repository_owner == 'justeat' && github.ref == 'refs/heads/main' && runner.os == 'Windows' }}
 
       - name: Push NuGet packages to NuGet.org
         run: dotnet nuget push "artifacts\packages\*.nupkg" --api-key ${{ secrets.NUGET_TOKEN }} --skip-duplicate --source https://api.nuget.org/v3/index.json
