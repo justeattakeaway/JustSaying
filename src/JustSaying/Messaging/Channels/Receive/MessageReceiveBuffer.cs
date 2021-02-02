@@ -28,7 +28,7 @@ namespace JustSaying.Messaging.Channels.Receive
         private readonly IMessageMonitor _monitor;
         private readonly ILogger _logger;
 
-        private readonly List<string> _requestMessageAttributeNames = new List<string>();
+        private readonly HashSet<string> _requestMessageAttributeNames = new HashSet<string>();
         private readonly string _backoffStrategyName;
 
         public ChannelReader<IQueueMessageContext> Reader => _channel.Reader;
