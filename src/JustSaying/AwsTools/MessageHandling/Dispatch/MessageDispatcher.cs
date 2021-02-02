@@ -39,7 +39,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             _serializationRegister = serializationRegister;
             _messagingMonitor = messagingMonitor;
             _middlewareMap = middlewareMap;
-            _logger = loggerFactory.CreateLogger("JustSaying");
+            _logger = loggerFactory.CreateLogger("JustSaying.Dispatch");
             _messageBackoffStrategy = messageBackoffStrategy;
             _messageContextAccessor = messageContextAccessor;
         }
