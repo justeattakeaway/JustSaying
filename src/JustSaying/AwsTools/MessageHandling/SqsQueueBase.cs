@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public abstract class SqsQueueBase : ISqsQueue
+    internal abstract class SqsQueueBase : ISqsQueue
     {
         public string Arn { get; protected set; }
         public Uri Uri { get; protected set; }

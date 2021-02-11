@@ -27,7 +27,7 @@ using SQSMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 {
-    public class DummySqsQueue : SqsQueueBase
+    internal class DummySqsQueue : SqsQueueBase
     {
         public DummySqsQueue(Uri uri, IAmazonSQS client, ILoggerFactory loggerFactory)
             : base(RegionEndpoint.EUWest1, client, loggerFactory)

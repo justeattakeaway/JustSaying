@@ -6,27 +6,26 @@ namespace JustSaying.AwsTools.MessageHandling
     /// Represents an <see cref="ISqsQueue"/> with an associated startup task that must be run before
     /// the queue is ready to be used.
     /// </summary>
-    /// <typeparam name="TQueue">The type of the SQS queue.</typeparam>
-    public class QueueWithAsyncStartup<TQueue> where TQueue : ISqsQueue
+    public class QueueWithAsyncStartup
     {
         /// <summary>
-        /// Creates an instance of <see cref="QueueWithAsyncStartup{TQueue}"/> for which the <see cref="TQueue"/>
+        /// Creates an instance of <see cref="QueueWithAsyncStartup"/> for which the <see cref="Queue"/>
         /// is already ready, and doesn't need to be initialised.
         /// </summary>
         /// <param name="queue">The queue that is ready.</param>
-        public QueueWithAsyncStartup(TQueue queue)
+        public QueueWithAsyncStartup(ISqsQueue queue)
         {
             StartupTask = Task.CompletedTask;
             Queue = queue;
         }
 
         /// <summary>
-        /// Creates an instance of <see cref="QueueWithAsyncStartup{TQueue}"/> that requires the <see cref="TQueue"/>
+        /// Creates an instance of <see cref="QueueWithAsyncStartup"/> that requires the <see cref="Queue"/>
         /// to be initialised by awaiting the <see cref="StartupTask"/>.
         /// </summary>
         /// <param name="startupTask">The <see cref="Task"/> that must be awaited on startup.</param>
-        /// <param name="queue">An <see cref="TQueue"/> that must be initialised on startup.</param>
-        public QueueWithAsyncStartup(Task startupTask, TQueue queue)
+        /// <param name="queue">An <see cref="ISqsQueue"/> that must be initialised on startup.</param>
+        public QueueWithAsyncStartup(Task startupTask, ISqsQueue queue)
         {
             StartupTask = startupTask;
             Queue = queue;
@@ -41,6 +40,6 @@ namespace JustSaying.AwsTools.MessageHandling
         /// An <see cref="ISqsQueue"/> that will be ready when the <see cref="StartupTask"/>
         /// has been awaited.
         /// </summary>
-        public TQueue Queue { get; }
+        public ISqsQueue Queue { get; }
     }
 }

@@ -21,7 +21,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
         private const string TopicArn = "topicarn";
 
-        protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
+        private protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
         {
             var topic = new SnsTopicByName("TopicName", Sns, _serializationRegister, Substitute.For<ILoggerFactory>(), new GenericMessageSubjectProvider());
             await topic.ExistsAsync();

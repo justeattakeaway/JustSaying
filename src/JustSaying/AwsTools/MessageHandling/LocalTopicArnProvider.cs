@@ -4,7 +4,7 @@ using Amazon.SimpleNotificationService;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public class LocalTopicArnProvider : ITopicArnProvider
+    internal class LocalTopicArnProvider : ITopicArnProvider
     {
         private readonly IAmazonSimpleNotificationService _client;
         private readonly Lazy<Task<string>> _lazyGetArnAsync;

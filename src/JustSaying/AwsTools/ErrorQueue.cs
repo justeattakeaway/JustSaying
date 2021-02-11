@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools
 {
-    public class ErrorQueue : SqsQueueByNameBase
+    internal class ErrorQueue : SqsQueueByNameBase
     {
         public ErrorQueue(RegionEndpoint region, string sourceQueueName, IAmazonSQS client, ILoggerFactory loggerFactory)
             : base(region, sourceQueueName + "_error", client, loggerFactory)

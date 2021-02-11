@@ -17,7 +17,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         private Dictionary<string, string> _tags;
         private TagResourceRequest _actualCreateRequest;
 
-        protected override Task<SnsTopicByName> CreateSystemUnderTestAsync()
+        private protected override Task<SnsTopicByName> CreateSystemUnderTestAsync()
         {
             var topicByName = new SnsTopicByName("TopicName", Sns, Substitute.For<IMessageSerializationRegister>(), Substitute.For<ILoggerFactory>(), new NonGenericMessageSubjectProvider())
             {

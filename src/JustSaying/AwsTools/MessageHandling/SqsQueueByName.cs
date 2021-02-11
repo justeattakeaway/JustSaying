@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public class SqsQueueByName : SqsQueueByNameBase
+    internal class SqsQueueByName : SqsQueueByNameBase
     {
         private readonly int _retryCountBeforeSendingToErrorQueue;
 

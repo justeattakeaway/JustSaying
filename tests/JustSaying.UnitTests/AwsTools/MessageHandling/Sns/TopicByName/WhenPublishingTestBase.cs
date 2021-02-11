@@ -8,7 +8,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 {
     public abstract class WhenPublishingTestBase : IAsyncLifetime
     {
-        public SnsTopicByName SystemUnderTest { get; private set; }
+        private protected SnsTopicByName SystemUnderTest { get; private set; }
 
         public IAmazonSimpleNotificationService Sns { get; private set; } = Substitute.For<IAmazonSimpleNotificationService>();
 
@@ -33,7 +33,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         }
 
         protected abstract void Given();
-        protected abstract Task<SnsTopicByName> CreateSystemUnderTestAsync();
+        private protected abstract Task<SnsTopicByName> CreateSystemUnderTestAsync();
 
         protected abstract Task WhenAsync();
     }

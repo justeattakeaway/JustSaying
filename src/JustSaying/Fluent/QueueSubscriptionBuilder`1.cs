@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
@@ -171,8 +172,7 @@ namespace JustSaying.Fluent
             subscriptionConfig.Validate();
 
             var queue = creator.EnsureQueueExists(config.Region, subscriptionConfig);
-            bus.AddStartupTask(
-                queue.Queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(subscriptionConfig));
+            bus.AddStartupTask(queue.StartupTask);
 
             bus.AddQueue(subscriptionConfig.SubscriptionGroupName, queue.Queue);
 
