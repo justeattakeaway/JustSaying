@@ -12,7 +12,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             QueueName = queueName;
             RegionSystemName = "fake-region";
             Uri = new Uri("http://test.com");
-            Arn = $"arn:aws:fake-region:account-ID-without-hyphens:{queueName}";
+            Arn = $"arn:aws:fake-region:123456789012:{queueName}";
             Client = client;
         }
 
