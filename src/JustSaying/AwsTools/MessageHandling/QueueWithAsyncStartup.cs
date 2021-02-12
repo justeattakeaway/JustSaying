@@ -9,7 +9,7 @@ namespace JustSaying.AwsTools.MessageHandling
     public class QueueWithAsyncStartup
     {
         /// <summary>
-        /// Creates an instance of <see cref="QueueWithAsyncStartup"/> for which the <see cref="queue"/>
+        /// Creates an instance of <see cref="QueueWithAsyncStartup"/> for which <see cref="queue"/>
         /// is already ready, and doesn't need to be initialised.
         /// </summary>
         /// <param name="queue">The queue that is ready.</param>
@@ -20,7 +20,7 @@ namespace JustSaying.AwsTools.MessageHandling
         }
 
         /// <summary>
-        /// Creates an instance of <see cref="QueueWithAsyncStartup"/> that requires the <see cref="queue"/>
+        /// Creates an instance of <see cref="QueueWithAsyncStartup"/> that requires <see cref="queue"/>
         /// to be initialised by awaiting the <see cref="StartupTask"/>.
         /// </summary>
         /// <param name="startupTask">The <see cref="Task"/> that must be awaited on startup.</param>
