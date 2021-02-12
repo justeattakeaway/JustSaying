@@ -3,7 +3,7 @@ using Amazon;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public class ForeignTopicArnProvider : ITopicArnProvider
+    internal class ForeignTopicArnProvider : ITopicArnProvider
     {
 
         private readonly string _arn;

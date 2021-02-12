@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public class SnsTopicByName : SnsTopicBase
+    internal class SnsTopicByName : SnsTopicBase
     {
         private readonly ILogger _logger;
 

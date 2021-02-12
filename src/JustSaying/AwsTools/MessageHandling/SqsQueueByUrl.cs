@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public class SqsQueueByUrl : SqsQueueBase
+    internal class SqsQueueByUrl : SqsQueueBase
     {
         public SqsQueueByUrl(RegionEndpoint region, Uri queueUri, IAmazonSQS client, ILoggerFactory loggerFactory)
             : base(region, client, loggerFactory)

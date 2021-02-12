@@ -12,6 +12,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             QueueName = queueName;
             RegionSystemName = "fake-region";
             Uri = new Uri("http://test.com");
+            Arn = $"arn:aws:fake-region:123456789012:{queueName}";
             Client = client;
         }
 
@@ -23,6 +24,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         public string QueueName { get; }
         public string RegionSystemName { get; }
         public Uri Uri { get; }
+        public string Arn { get; }
         public IAmazonSQS Client { get; }
 
         public FakeAmazonSqs FakeClient => Client as FakeAmazonSqs;

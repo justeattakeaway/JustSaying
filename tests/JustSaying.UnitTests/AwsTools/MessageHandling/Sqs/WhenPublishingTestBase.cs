@@ -8,7 +8,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 {
     public abstract class WhenPublishingTestBase : IAsyncLifetime
     {
-        public SqsPublisher SystemUnderTest { get; private set; }
+        private protected SqsPublisher SystemUnderTest { get; private set; }
         public IAmazonSQS Sqs { get; private set; } = Substitute.For<IAmazonSQS>();
 
         public virtual async Task InitializeAsync()
@@ -32,7 +32,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         }
 
         protected abstract void Given();
-        protected abstract Task<SqsPublisher> CreateSystemUnderTestAsync();
+        private protected abstract Task<SqsPublisher> CreateSystemUnderTestAsync();
 
         protected abstract Task WhenAsync();
     }

@@ -26,7 +26,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 
         private const string QueueName = "queuename";
 
-        protected override async Task<SqsPublisher> CreateSystemUnderTestAsync()
+        private protected override async Task<SqsPublisher> CreateSystemUnderTestAsync()
         {
             var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, Sqs, 0,
                 _serializationRegister, Substitute.For<ILoggerFactory>());
