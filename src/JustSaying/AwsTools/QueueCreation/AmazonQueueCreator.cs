@@ -36,7 +36,7 @@ namespace JustSaying.AwsTools.QueueCreation
 
             async Task StartupTask()
             {
-                await queueWithStartup.StartupTask.ConfigureAwait(false);
+                await queueWithStartup.StartupTask.Invoke().ConfigureAwait(false);
                 var queue = queueWithStartup.Queue;
                 if (TopicExistsInAnotherAccount(queueConfig))
                 {
@@ -78,8 +78,7 @@ namespace JustSaying.AwsTools.QueueCreation
                 }
             }
 
-            // This StartupTask is intentionally not awaited, as it will be run when the bus is started.
-            return new QueueWithAsyncStartup(StartupTask(), queueWithStartup.Queue);
+            return new QueueWithAsyncStartup(StartupTask, queueWithStartup.Queue);
         }
 
         private static bool TopicExistsInAnotherAccount(SqsReadConfiguration queueConfig)
@@ -100,9 +99,8 @@ namespace JustSaying.AwsTools.QueueCreation
                 queueConfig.RetryCountBeforeSendingToErrorQueue,
                 _loggerFactory);
 
-            var startupTask = queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig);
+            var startupTask = new Func<Task>(() => queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig));
 
-            // This startupTask is intentionally not awaited, as it will be run when the bus is started.
             return new QueueWithAsyncStartup(startupTask, queue);
         }
 

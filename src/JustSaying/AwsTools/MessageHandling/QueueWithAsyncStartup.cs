@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 
 namespace JustSaying.AwsTools.MessageHandling
@@ -15,7 +16,7 @@ namespace JustSaying.AwsTools.MessageHandling
         /// <param name="queue">The queue that is ready.</param>
         public QueueWithAsyncStartup(ISqsQueue queue)
         {
-            StartupTask = Task.CompletedTask;
+            StartupTask = () => Task.CompletedTask;
             Queue = queue;
         }
 
@@ -23,18 +24,18 @@ namespace JustSaying.AwsTools.MessageHandling
         /// Creates an instance of <see cref="QueueWithAsyncStartup"/> that requires <see cref="queue"/>
         /// to be initialised by awaiting the <see cref="StartupTask"/>.
         /// </summary>
-        /// <param name="startupTask">The <see cref="Task"/> that must be awaited on startup.</param>
+        /// <param name="startupTask">The <see cref="Func{Task}"/> that must be awaited on startup.</param>
         /// <param name="queue">An <see cref="ISqsQueue"/> that must be initialised on startup.</param>
-        public QueueWithAsyncStartup(Task startupTask, ISqsQueue queue)
+        public QueueWithAsyncStartup(Func<Task> startupTask, ISqsQueue queue)
         {
             StartupTask = startupTask;
             Queue = queue;
         }
 
         /// <summary>
-        /// A <see cref="Task"/> that must be run before the queue is ready.
+        /// A <see cref="Func{Task}"/> that must be run before the queue is ready.
         /// </summary>
-        public Task StartupTask { get; }
+        public Func<Task> StartupTask { get; }
 
         /// <summary>
         /// An <see cref="ISqsQueue"/> that will be ready when the <see cref="StartupTask"/>

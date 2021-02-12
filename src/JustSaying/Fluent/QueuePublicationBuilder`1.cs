@@ -111,7 +111,7 @@ namespace JustSaying.Fluent
                 }
             }
 
-            bus.AddStartupTask(StartupTask());
+            bus.AddStartupTask(StartupTask);
 
             bus.AddMessagePublisher<T>(eventPublisher);
 

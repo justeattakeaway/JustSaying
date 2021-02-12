@@ -165,7 +165,7 @@ namespace JustSaying.Fluent
                 await eventPublisher.ApplyTagsAsync().ConfigureAwait(false);
             }
 
-            bus.AddStartupTask(StartupTask());
+            bus.AddStartupTask(StartupTask);
 
             bus.AddMessagePublisher<T>(eventPublisher);
 
