@@ -24,8 +24,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
                 Substitute.For<IMessageSerializationRegister>(),
                 Substitute.For<ILoggerFactory>(),
                 new NonGenericMessageSubjectProvider(),
-                _tags,
-                false);
+                null,
+                _tags);
 
             return Task.FromResult(topicByName);
         }

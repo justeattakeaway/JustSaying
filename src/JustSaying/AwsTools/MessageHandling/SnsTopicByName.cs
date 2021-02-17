@@ -36,9 +36,9 @@ namespace JustSaying.AwsTools.MessageHandling
             IMessageSerializationRegister serializationRegister,
             ILoggerFactory loggerFactory,
             IMessageSubjectProvider messageSubjectProvider,
-            IDictionary<string, string> tags,
-            bool throwOnPublishFailure)
-            : base(serializationRegister, loggerFactory, messageSubjectProvider, throwOnPublishFailure)
+            SnsWriteConfiguration writeConfiguration,
+            IDictionary<string, string> tags)
+            : base(serializationRegister, loggerFactory,writeConfiguration, messageSubjectProvider)
         {
             TopicName = topicName;
             Client = client;

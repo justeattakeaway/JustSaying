@@ -23,7 +23,13 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         private protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
         {
-            var topic = new SnsTopicByName("TopicName", Sns, _serializationRegister, Substitute.For<ILoggerFactory>(), Substitute.For<IMessageSubjectProvider>(), null, false);
+            var topic = new SnsTopicByName("TopicName",
+                Sns,
+                _serializationRegister,
+                Substitute.For<ILoggerFactory>(),
+                Substitute.For<IMessageSubjectProvider>(),
+                null,
+                null);
 
             await topic.ExistsAsync();
             return topic;

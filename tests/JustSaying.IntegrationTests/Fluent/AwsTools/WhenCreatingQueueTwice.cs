@@ -37,7 +37,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                 client,
                 serializationRegister,
                 loggerFactory,
-                subjectProvider, null, false);
+                subjectProvider,null, null);
 
             // Shouldn't throw
             await topic.CreateAsync();

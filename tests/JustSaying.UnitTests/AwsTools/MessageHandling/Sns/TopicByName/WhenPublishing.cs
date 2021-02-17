@@ -22,7 +22,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         {
             var topic = new SnsTopicByName("TopicName", Sns, _serializationRegister,
                 Substitute.For<ILoggerFactory>(),
-                new NonGenericMessageSubjectProvider(), null, false);
+                new NonGenericMessageSubjectProvider(),null, null);
             await topic.ExistsAsync();
             return topic;
         }

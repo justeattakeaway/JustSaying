@@ -127,8 +127,8 @@ namespace JustSaying.AwsTools.Publishing
                             _serializationRegister,
                             _loggerFactory,
                             _config.MessageSubjectProvider,
-                            tags,
-                            throwOnPublishFailure);
+                            null,
+                            tags);
 
                         return _topicPublishers[topicName];
                     }
