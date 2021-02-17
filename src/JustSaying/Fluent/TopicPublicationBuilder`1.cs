@@ -139,7 +139,7 @@ namespace JustSaying.Fluent
 
             async Task StartupTask()
             {
-                var queueCreator = queueTopicCreatorFactory.CreateSnsCreator(readConfiguration.TopicName, Tags);
+                var queueCreator = queueTopicCreatorFactory.CreateSnsCreator(readConfiguration.TopicName, false, Tags);
 
                 if (writeConfiguration.Encryption != null)
                 {

@@ -232,10 +232,9 @@ namespace JustSaying
             JustSayingBus bus = CreateBus(config, register, loggerFactory);
             IAwsClientFactoryProxy proxy = CreateFactoryProxy();
 
-            IMessagePublisherFactory publisherFactory = new MessagePublisherFactory(proxy, register, loggerFactory, config);
-            IQueueTopicCreatorFactory queueTopicCreatorFactory = new QueueTopicCreatorFactory(proxy, register, loggerFactory, config);
+            var publisherFactory = new MessagePublisherFactory(proxy, register, loggerFactory, config);
 
-            PublicationsBuilder?.Configure(bus, proxy, publisherFactory, queueTopicCreatorFactory, loggerFactory);
+            PublicationsBuilder?.Configure(bus, proxy, publisherFactory, publisherFactory, loggerFactory);
 
             return bus;
         }
@@ -260,9 +259,9 @@ namespace JustSaying
             JustSayingBus bus = CreateBus(config, register, loggerFactory);
 
             IAwsClientFactoryProxy proxy = CreateFactoryProxy();
-            IQueueTopicCreatorFactory queueTopicCreatorFactory = new QueueTopicCreatorFactory(proxy, register, loggerFactory, config);
+            var messagePublisherFactory = new MessagePublisherFactory(proxy, register, loggerFactory, config);
 
-            IVerifyAmazonQueues creator = CreateQueueCreator(loggerFactory, queueTopicCreatorFactory);
+            IVerifyAmazonQueues creator = CreateQueueCreator(loggerFactory, messagePublisherFactory);
 
             if (ServicesBuilder?.MessageContextAccessor != null)
             {
