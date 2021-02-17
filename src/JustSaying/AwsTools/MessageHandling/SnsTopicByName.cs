@@ -12,37 +12,37 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    internal class SnsTopicByName : SnsTopicBase
+    public interface ITopicCreator
+    {
+        Task EnsurePolicyIsUpdatedAsync(IReadOnlyCollection<string> additionalSubscriberAccounts);
+        Task ApplyTagsAsync();
+        Task<bool> ExistsAsync();
+        Task CreateAsync();
+        Task CreateWithEncryptionAsync(ServerSideEncryption config);
+
+        public string Arn { get;}
+    }
+
+    internal class SnsTopicByName : SnsTopicBase, ITopicCreator
     {
         private readonly ILogger _logger;
 
         public string TopicName { get; }
-        public IDictionary<string, string> Tags { get; set; }
+        public IDictionary<string, string> Tags { get; }
 
         public SnsTopicByName(
             string topicName,
             IAmazonSimpleNotificationService client,
             IMessageSerializationRegister serializationRegister,
             ILoggerFactory loggerFactory,
-            IMessageSubjectProvider messageSubjectProvider)
-            : base(serializationRegister, loggerFactory, messageSubjectProvider)
+            IMessageSubjectProvider messageSubjectProvider,
+            IDictionary<string, string> tags,
+            bool throwOnPublishFailure)
+            : base(serializationRegister, loggerFactory, messageSubjectProvider, throwOnPublishFailure)
         {
             TopicName = topicName;
             Client = client;
-            _logger = loggerFactory.CreateLogger("JustSaying");
-        }
-
-        public SnsTopicByName(
-            string topicName,
-            IAmazonSimpleNotificationService client,
-            IMessageSerializationRegister serializationRegister,
-            ILoggerFactory loggerFactory,
-            SnsWriteConfiguration snsWriteConfiguration,
-            IMessageSubjectProvider messageSubjectProvider)
-            : base(serializationRegister, loggerFactory, snsWriteConfiguration, messageSubjectProvider)
-        {
-            TopicName = topicName;
-            Client = client;
+            Tags = tags ?? new Dictionary<string, string>();
             _logger = loggerFactory.CreateLogger("JustSaying");
         }
 
@@ -118,7 +118,8 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     var requestId = response.ResponseMetadata.RequestId;
                     _logger.LogError("Failed to create or obtain ARN for topic {TopicName}. RequestId: {RequestId}.",
-                        TopicName, requestId);
+                        TopicName,
+                        requestId);
                     throw new InvalidOperationException($"Failed to create or obtain ARN for topic '{TopicName}'. RequestId: {requestId}.");
                 }
 
@@ -151,8 +152,8 @@ namespace JustSaying.AwsTools.MessageHandling
             var attributesResponse = await Client.GetTopicAttributesAsync(Arn).ConfigureAwait(false);
 
             if (!attributesResponse.Attributes.TryGetValue(
-                    JustSayingConstants.AttributeEncryptionKeyId,
-                    out var encryptionKeyId))
+                JustSayingConstants.AttributeEncryptionKeyId,
+                out var encryptionKeyId))
             {
                 return null;
             }

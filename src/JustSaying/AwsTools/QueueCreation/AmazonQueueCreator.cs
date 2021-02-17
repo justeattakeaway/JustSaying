@@ -4,6 +4,7 @@ using Amazon;
 using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.Publishing;
 using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
 
@@ -13,13 +14,15 @@ namespace JustSaying.AwsTools.QueueCreation
     {
         private readonly IAwsClientFactoryProxy _awsClientFactory;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly IQueueTopicCreatorFactory _queueTopicCreatorFactory;
 
         private const string EmptyFilterPolicy = "{}";
 
-        public AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory, ILoggerFactory loggerFactory)
+        public AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory, ILoggerFactory loggerFactory, IQueueTopicCreatorFactory queueTopicCreatorFactory)
         {
             _awsClientFactory = awsClientFactory;
             _loggerFactory = loggerFactory;
+            _queueTopicCreatorFactory = queueTopicCreatorFactory;
         }
 
         public QueueWithAsyncStartup EnsureTopicExistsWithQueueSubscribed(
@@ -53,11 +56,8 @@ namespace JustSaying.AwsTools.QueueCreation
                 }
                 else
                 {
-                    var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint,
-                        snsClient,
-                        serializationRegister,
-                        _loggerFactory,
-                        messageSubjectProvider);
+                    var eventTopic = _queueTopicCreatorFactory.CreateSnsCreator(queueConfig.PublishEndpoint, null);
+
                     await eventTopic.CreateAsync().ConfigureAwait(false);
 
                     await SubscribeQueueAndApplyFilterPolicyAsync(snsClient,

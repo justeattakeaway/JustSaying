@@ -1,4 +1,5 @@
 using System;
+using JustSaying.AwsTools.Publishing;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
@@ -37,6 +38,8 @@ namespace JustSaying.Fluent
         /// Gets or sets a delegate to a method to create the <see cref="IMessageMonitor"/> to use.
         /// </summary>
         internal Func<IMessageMonitor> MessageMonitoring { get; private set; }
+
+        internal Func<IMessagePublisherFactory> MessagePublisherFactory { get; private set; }
 
         /// <summary>
         /// Gets or sets a delegate to a method to create the <see cref="IMessageSerializationRegister"/> to use.

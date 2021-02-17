@@ -7,6 +7,7 @@ using Amazon;
 using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
@@ -15,7 +16,17 @@ using MessageAttributeValue = Amazon.SQS.Model.MessageAttributeValue;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    internal class SqsPublisher : SqsQueueByName, IMessagePublisher
+    public interface IQueueCreator
+    {
+        Task<bool> CreateAsync(SqsBasicConfiguration queueConfig, int attempt = 0);
+        Task DeleteAsync();
+        Task UpdateRedrivePolicyAsync(RedrivePolicy requestedRedrivePolicy);
+        Task EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(SqsReadConfiguration queueConfig);
+        Task<bool> ExistsAsync();
+        Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig);
+    }
+
+    internal class SqsPublisher : SqsQueueByName, IMessagePublisher, IQueueCreator
     {
         private readonly IAmazonSQS _client;
         private readonly IMessageSerializationRegister _serializationRegister;

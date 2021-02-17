@@ -29,7 +29,9 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                 client,
                 null,
                 loggerFactory,
-                null);
+                null,
+                null,
+                false);
 
             // Act
             await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = JustSayingConstants.DefaultSnsAttributeEncryptionKeyId });
@@ -52,7 +54,9 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                 client,
                 null,
                 loggerFactory,
-                null);
+                null,
+                null,
+                false);
 
             await topic.CreateAsync();
 
@@ -77,7 +81,9 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                 client,
                 null,
                 loggerFactory,
-                null);
+                null,
+                null,
+                false);
 
             await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = "previousKeyId" });
 

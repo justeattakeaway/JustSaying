@@ -40,7 +40,9 @@ namespace JustSaying.UnitTests.AwsTools.TopicCreation
                 client,
                 serializationRegister,
                 loggerFactory,
-                subjectProvider);
+                subjectProvider,
+                null,
+                false);
 
             // Act
             await topic.CreateAsync();
@@ -67,7 +69,9 @@ namespace JustSaying.UnitTests.AwsTools.TopicCreation
                 client,
                 serializationRegister,
                 loggerFactory,
-                subjectProvider);
+                subjectProvider,
+                null,
+                false);
 
             // Act and Assert
             await Assert.ThrowsAsync<InvalidOperationException>(() => topic.CreateAsync());

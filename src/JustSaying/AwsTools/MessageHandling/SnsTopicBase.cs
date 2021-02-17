@@ -21,33 +21,23 @@ namespace JustSaying.AwsTools.MessageHandling
     {
         private readonly IMessageSerializationRegister _serializationRegister; // ToDo: Grrr...why is this here even. GET OUT!
         private readonly IMessageSubjectProvider _messageSubjectProvider;
-        private readonly SnsWriteConfiguration _snsWriteConfiguration;
-        public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
-        public string Arn { get; protected set; }
+        private readonly bool _throwOnPublishFailure;
         internal ServerSideEncryption ServerSideEncryption { get; set; }
         protected IAmazonSimpleNotificationService Client { get; set; }
+
         private readonly ILogger _logger;
+        public string Arn { get; protected set; }
 
         protected SnsTopicBase(
             IMessageSerializationRegister serializationRegister,
             ILoggerFactory loggerFactory,
-            IMessageSubjectProvider messageSubjectProvider)
+            IMessageSubjectProvider messageSubjectProvider,
+            bool throwOnPublishFailure)
         {
             _serializationRegister = serializationRegister;
             _messageSubjectProvider = messageSubjectProvider;
+            _throwOnPublishFailure = throwOnPublishFailure;
             _logger = loggerFactory.CreateLogger("JustSaying");
-        }
-
-        protected SnsTopicBase(
-            IMessageSerializationRegister serializationRegister,
-            ILoggerFactory loggerFactory,
-            SnsWriteConfiguration snsWriteConfiguration,
-            IMessageSubjectProvider messageSubjectProvider)
-        {
-            _serializationRegister = serializationRegister;
-            _logger = loggerFactory.CreateLogger("JustSaying");
-            _snsWriteConfiguration = snsWriteConfiguration;
-            _messageSubjectProvider = messageSubjectProvider;
         }
 
         public abstract Task<bool> ExistsAsync();
@@ -71,7 +61,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
             catch (AmazonServiceException ex)
             {
-                if (!ClientExceptionHandler(ex, message))
+                if (_throwOnPublishFailure)
                 {
                     throw new PublishException(
                         $"Failed to publish message to SNS. Topic ARN: '{request.TopicArn}', Subject: '{request.Subject}', Message: '{request.Message}'.",
@@ -84,21 +74,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 request.Subject,
                 request.Message,
                 response?.ResponseMetadata?.RequestId);
-
-            if (MessageResponseLogger != null)
-            {
-                var responseData = new MessageResponse
-                {
-                    HttpStatusCode = response?.HttpStatusCode,
-                    MessageId = response?.MessageId,
-                    ResponseMetadata = response?.ResponseMetadata
-                };
-                MessageResponseLogger.Invoke(responseData, message);
-            }
-
         }
-
-        private bool ClientExceptionHandler(Exception ex, Message message) => _snsWriteConfiguration?.HandleException?.Invoke(ex, message) ?? false;
 
         private PublishRequest BuildPublishRequest(Message message, PublishMetadata metadata)
         {

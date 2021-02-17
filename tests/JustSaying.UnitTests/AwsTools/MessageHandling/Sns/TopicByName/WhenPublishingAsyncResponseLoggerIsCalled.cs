@@ -1,3 +1,4 @@
+/*
 using System.Net;
 using System.Threading.Tasks;
 using Amazon.Runtime;
@@ -29,7 +30,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         private protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
         {
-            var topic = new SnsTopicByName("TopicName", Sns, _serializationRegister, Substitute.For<ILoggerFactory>(), Substitute.For<SnsWriteConfiguration>(), Substitute.For<IMessageSubjectProvider>())
+            var topic = new SnsTopicByName("TopicName", Sns, _serializationRegister, Substitute.For<ILoggerFactory>(), Substitute.For<IMessageSubjectProvider>(), null, false)
             {
                 MessageResponseLogger = (r, m) =>
                 {
@@ -98,3 +99,4 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         }
     }
 }
+*/

@@ -19,10 +19,13 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         private protected override Task<SnsTopicByName> CreateSystemUnderTestAsync()
         {
-            var topicByName = new SnsTopicByName("TopicName", Sns, Substitute.For<IMessageSerializationRegister>(), Substitute.For<ILoggerFactory>(), new NonGenericMessageSubjectProvider())
-            {
-                Tags = _tags
-            };
+            var topicByName = new SnsTopicByName("TopicName",
+                Sns,
+                Substitute.For<IMessageSerializationRegister>(),
+                Substitute.For<ILoggerFactory>(),
+                new NonGenericMessageSubjectProvider(),
+                _tags,
+                false);
 
             return Task.FromResult(topicByName);
         }

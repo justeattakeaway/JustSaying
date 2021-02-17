@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using JustSaying.AwsTools;
+using JustSaying.AwsTools.Publishing;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
 using JustSaying.Messaging;
@@ -226,13 +227,15 @@ namespace JustSaying
             ILoggerFactory loggerFactory =
                 ServicesBuilder?.LoggerFactory?.Invoke() ?? ServiceResolver.ResolveService<ILoggerFactory>();
 
-            JustSayingBus bus = CreateBus(config, loggerFactory);
+            IMessageSerializationRegister register = ServicesBuilder?.SerializationRegister?.Invoke()
+                ?? ServiceResolver.ResolveService<IMessageSerializationRegister>();
+            JustSayingBus bus = CreateBus(config, register, loggerFactory);
             IAwsClientFactoryProxy proxy = CreateFactoryProxy();
 
-            if (PublicationsBuilder != null)
-            {
-                PublicationsBuilder.Configure(bus, proxy, loggerFactory);
-            }
+            IMessagePublisherFactory publisherFactory = new MessagePublisherFactory(proxy, register, loggerFactory, config);
+            IQueueTopicCreatorFactory queueTopicCreatorFactory = new QueueTopicCreatorFactory(proxy, register, loggerFactory, config);
+
+            PublicationsBuilder?.Configure(bus, proxy, publisherFactory, queueTopicCreatorFactory, loggerFactory);
 
             return bus;
         }
@@ -252,27 +255,27 @@ namespace JustSaying
             ILoggerFactory loggerFactory =
                 ServicesBuilder?.LoggerFactory?.Invoke() ?? ServiceResolver.ResolveService<ILoggerFactory>();
 
-            JustSayingBus bus = CreateBus(config, loggerFactory);
-            IVerifyAmazonQueues creator = CreateQueueCreator(loggerFactory);
+            IMessageSerializationRegister register = ServicesBuilder?.SerializationRegister?.Invoke()
+                ?? ServiceResolver.ResolveService<IMessageSerializationRegister>();
+            JustSayingBus bus = CreateBus(config, register, loggerFactory);
+
+            IAwsClientFactoryProxy proxy = CreateFactoryProxy();
+            IQueueTopicCreatorFactory queueTopicCreatorFactory = new QueueTopicCreatorFactory(proxy, register, loggerFactory, config);
+
+            IVerifyAmazonQueues creator = CreateQueueCreator(loggerFactory, queueTopicCreatorFactory);
 
             if (ServicesBuilder?.MessageContextAccessor != null)
             {
                 bus.MessageContextAccessor = ServicesBuilder.MessageContextAccessor();
             }
 
-            if (SubscriptionBuilder != null)
-            {
-                SubscriptionBuilder.Configure(bus, ServiceResolver, creator, loggerFactory);
-            }
+            SubscriptionBuilder?.Configure(bus, ServiceResolver, creator, loggerFactory);
 
             return bus;
         }
 
-        private JustSayingBus CreateBus(IMessagingConfig config, ILoggerFactory loggerFactory)
+        private JustSayingBus CreateBus(IMessagingConfig config, IMessageSerializationRegister register, ILoggerFactory loggerFactory)
         {
-            IMessageSerializationRegister register =
-                ServicesBuilder?.SerializationRegister?.Invoke() ?? ServiceResolver.ResolveService<IMessageSerializationRegister>();
-
             var bus =  new JustSayingBus(config, register, loggerFactory);
 
             bus.Monitor = CreateMessageMonitor();
@@ -305,10 +308,10 @@ namespace JustSaying
             return ServicesBuilder?.MessageContextAccessor?.Invoke() ?? ServiceResolver.ResolveService<IMessageContextAccessor>();
         }
 
-        private IVerifyAmazonQueues CreateQueueCreator(ILoggerFactory loggerFactory)
+        private IVerifyAmazonQueues CreateQueueCreator(ILoggerFactory loggerFactory, IQueueTopicCreatorFactory queueTopicCreatorFactory)
         {
             IAwsClientFactoryProxy proxy = CreateFactoryProxy();
-            IVerifyAmazonQueues queueCreator = new AmazonQueueCreator(proxy, loggerFactory);
+            IVerifyAmazonQueues queueCreator = new AmazonQueueCreator(proxy, loggerFactory, queueTopicCreatorFactory);
 
             return queueCreator;
         }

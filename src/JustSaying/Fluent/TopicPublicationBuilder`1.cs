@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.Publishing;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
@@ -118,6 +119,8 @@ namespace JustSaying.Fluent
         void IPublicationBuilder<T>.Configure(
             JustSayingBus bus,
             IAwsClientFactoryProxy proxy,
+            IMessagePublisherFactory publisherFactory,
+            IQueueTopicCreatorFactory queueTopicCreatorFactory,
             ILoggerFactory loggerFactory)
         {
             var logger = loggerFactory.CreateLogger<TopicPublicationBuilder<T>>();
@@ -134,38 +137,29 @@ namespace JustSaying.Fluent
 
             bus.SerializationRegister.AddSerializer<T>();
 
-            // TODO pass region down into topic creation for when we have foreign topics so we can generate the arn
-            var eventPublisher = new SnsTopicByName(
-                readConfiguration.TopicName,
-                proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(config.Region)),
-                bus.SerializationRegister,
-                loggerFactory,
-                writeConfiguration,
-                config.MessageSubjectProvider)
-            {
-                MessageResponseLogger = config.MessageResponseLogger,
-                Tags = Tags
-            };
-
             async Task StartupTask()
             {
+                var queueCreator = queueTopicCreatorFactory.CreateSnsCreator(readConfiguration.TopicName, Tags);
+
                 if (writeConfiguration.Encryption != null)
                 {
-                    await eventPublisher.CreateWithEncryptionAsync(writeConfiguration.Encryption)
+                    await queueCreator.CreateWithEncryptionAsync(writeConfiguration.Encryption)
                         .ConfigureAwait(false);
                 }
                 else
                 {
-                    await eventPublisher.CreateAsync().ConfigureAwait(false);
+                    await queueCreator.CreateAsync().ConfigureAwait(false);
                 }
 
-                await eventPublisher.EnsurePolicyIsUpdatedAsync(config.AdditionalSubscriberAccounts)
+                await queueCreator.EnsurePolicyIsUpdatedAsync(config.AdditionalSubscriberAccounts)
                     .ConfigureAwait(false);
 
-                await eventPublisher.ApplyTagsAsync().ConfigureAwait(false);
+                await queueCreator.ApplyTagsAsync().ConfigureAwait(false);
             }
 
             bus.AddStartupTask(StartupTask);
+
+            var eventPublisher = publisherFactory.CreateSnsPublisher(readConfiguration.TopicName);
 
             bus.AddMessagePublisher<T>(eventPublisher);
 
