@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.QueueCreation;
@@ -48,10 +49,9 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     // Act
                     await publisher.PublishAsync(message, cancellationToken);
                     await publisher.PublishAsync(message, cancellationToken);
-                    await Task.Delay(1.Seconds(), cancellationToken);
 
-                    handler.ReceivedMessages.Where(m => m.Id.ToString() == message.UniqueKey())
-                        .ShouldHaveSingleItem();
+                    await Patiently.AssertThatAsync(OutputHelper,
+                        () => handler.ReceivedMessages.Count(m => m.Id.ToString() == message.UniqueKey()).ShouldBe(1));
                 });
         }
     }
