@@ -16,16 +16,6 @@ using MessageAttributeValue = Amazon.SQS.Model.MessageAttributeValue;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public interface IQueueCreator
-    {
-        Task<bool> CreateAsync(SqsBasicConfiguration queueConfig, int attempt = 0);
-        Task DeleteAsync();
-        Task UpdateRedrivePolicyAsync(RedrivePolicy requestedRedrivePolicy);
-        Task EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(SqsReadConfiguration queueConfig);
-        Task<bool> ExistsAsync();
-        Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig);
-    }
-
     internal class SqsPublisher : SqsQueueByName, IMessagePublisher, IQueueCreator
     {
         private readonly IAmazonSQS _client;

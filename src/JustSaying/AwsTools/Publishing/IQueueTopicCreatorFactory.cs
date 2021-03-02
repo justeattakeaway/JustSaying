@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Amazon;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
 

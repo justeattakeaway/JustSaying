@@ -9,22 +9,6 @@ namespace JustSaying.TestingFramework
 {
     public static class Patiently
     {
-
-        public static async Task AssertThatAsync(
-            ITestOutputHelper output,
-            Action func,
-            TimeSpan timeout,
-            [System.Runtime.CompilerServices.CallerMemberName]
-            string memberName = "")
-            => await AssertThatAsync(output,
-                () =>
-                {
-                    func();
-                    return true;
-                },
-                timeout,
-                memberName).ConfigureAwait(false);
-
         public static async Task AssertThatAsync(
             ITestOutputHelper output,
             Action func,

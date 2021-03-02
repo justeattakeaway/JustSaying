@@ -4,6 +4,7 @@ using System.Threading;
 using Amazon;
 using Amazon.SimpleNotificationService;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
