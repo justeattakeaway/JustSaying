@@ -4,7 +4,8 @@ using JustSaying.Messaging;
 namespace JustSaying.AwsTools.Publishing
 {
     /// <summary>
-    /// This interface facilitates the creation of message publishers, without having to know the underlying types.
+    /// Provides <see cref="IMessagePublisher"/>'s without having to know the details of how to create them.
+    /// Multiple calls to get a publisher for the same queue or topic will return the same publisher.
     /// </summary>
     public interface IMessagePublisherFactory
     {
