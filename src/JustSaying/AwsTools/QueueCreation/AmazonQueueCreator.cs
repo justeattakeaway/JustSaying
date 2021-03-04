@@ -14,15 +14,15 @@ namespace JustSaying.AwsTools.QueueCreation
     {
         private readonly IAwsClientFactoryProxy _awsClientFactory;
         private readonly ILoggerFactory _loggerFactory;
-        private readonly IQueueTopicCreatorFactory _queueTopicCreatorFactory;
+        private readonly IQueueTopicCreatorProvider _queueTopicCreatorProvider;
 
         private const string EmptyFilterPolicy = "{}";
 
-        public AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory, ILoggerFactory loggerFactory, IQueueTopicCreatorFactory queueTopicCreatorFactory)
+        public AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory, ILoggerFactory loggerFactory, IQueueTopicCreatorProvider queueTopicCreatorProvider)
         {
             _awsClientFactory = awsClientFactory;
             _loggerFactory = loggerFactory;
-            _queueTopicCreatorFactory = queueTopicCreatorFactory;
+            _queueTopicCreatorProvider = queueTopicCreatorProvider;
         }
 
         public QueueWithAsyncStartup EnsureTopicExistsWithQueueSubscribed(
@@ -56,7 +56,7 @@ namespace JustSaying.AwsTools.QueueCreation
                 }
                 else
                 {
-                    var eventTopic = _queueTopicCreatorFactory.CreateSnsCreator(queueConfig.PublishEndpoint, false, null);
+                    var eventTopic = _queueTopicCreatorProvider.GetSnsCreator(queueConfig.PublishEndpoint, false, null);
 
                     await eventTopic.CreateAsync().ConfigureAwait(false);
 

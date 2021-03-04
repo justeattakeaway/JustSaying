@@ -7,10 +7,10 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.Publishing
 {
-    public interface IQueueTopicCreatorFactory
+    public interface IQueueTopicCreatorProvider
     {
-        ITopicCreator CreateSnsCreator(string topicName, bool throwOnPublishFailure, IDictionary<string, string> tags);
-        IQueueCreator CreateSqsCreator(string queueName,
+        ITopicCreator GetSnsCreator(string topicName, bool throwOnPublishFailure, IDictionary<string, string> tags);
+        IQueueCreator GetSqsCreator(string queueName,
             string region,
             int retryCountBeforeSendingToErrorQueue,
             Dictionary<string, string> tags);

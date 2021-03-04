@@ -137,14 +137,18 @@ namespace JustSaying.Fluent
         /// <param name="bus">The <see cref="JustSayingBus"/> to configure subscriptions for.</param>
         /// <param name="proxy">The <see cref="IAwsClientFactoryProxy"/> to use to create SQS/SNS clients with.</param>
         /// <param name="publisherFactory">The <see cref="IMessagePublisherFactory"/> to use to create <see cref="IMessagePublisher"/>s with.</param>
-        /// <param name="queueTopicCreatorFactory">The <see cref="IQueueTopicCreatorFactory"/> to use to ensure queues exist with.</param>
+        /// <param name="queueTopicCreatorProvider">The <see cref="IQueueTopicCreatorProvider"/> to use to ensure queues exist with.</param>
         /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> logger factory to use.</param>
-        internal void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, IMessagePublisherFactory publisherFactory,
-            IQueueTopicCreatorFactory queueTopicCreatorFactory, ILoggerFactory loggerFactory)
+        internal void Configure(
+            JustSayingBus bus,
+            IAwsClientFactoryProxy proxy,
+            IMessagePublisherFactory publisherFactory,
+            IQueueTopicCreatorProvider queueTopicCreatorProvider,
+            ILoggerFactory loggerFactory)
         {
             foreach (IPublicationBuilder<Message> builder in Publications)
             {
-                builder.Configure(bus, proxy, publisherFactory, queueTopicCreatorFactory, loggerFactory);
+                builder.Configure(bus, proxy, publisherFactory, queueTopicCreatorProvider, loggerFactory);
             }
         }
     }

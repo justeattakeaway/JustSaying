@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.Publishing
 {
-    internal class MessagePublisherFactory : IMessagePublisherFactory, IQueueTopicCreatorFactory
+    internal class MessagePublisherProvider : IMessagePublisherFactory, IQueueTopicCreatorProvider
     {
         private readonly IAwsClientFactoryProxy _proxy;
         private readonly IMessageSerializationRegister _serializationRegister;
@@ -23,7 +23,7 @@ namespace JustSaying.AwsTools.Publishing
 
         private readonly ReaderWriterLockSlim _writeLock = new();
 
-        public MessagePublisherFactory(
+        public MessagePublisherProvider(
             IAwsClientFactoryProxy proxy,
             IMessageSerializationRegister serializationRegister,
             ILoggerFactory loggerFactory,
@@ -45,12 +45,12 @@ namespace JustSaying.AwsTools.Publishing
             return GetQueuePublisher(queueName, _config.Region, retryCountBeforeSendingToErrorQueue);
         }
 
-        public ITopicCreator CreateSnsCreator(string topicName, bool throwOnPublishFailure, IDictionary<string, string> tags)
+        public ITopicCreator GetSnsCreator(string topicName, bool throwOnPublishFailure, IDictionary<string, string> tags)
         {
             return GetTopicPublisher(topicName, throwOnPublishFailure, tags);
         }
 
-        public IQueueCreator CreateSqsCreator(
+        public IQueueCreator GetSqsCreator(
             string queueName,
             string region,
             int retryCountBeforeSendingToErrorQueue,

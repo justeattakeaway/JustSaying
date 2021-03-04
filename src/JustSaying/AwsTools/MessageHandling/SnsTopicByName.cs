@@ -12,17 +12,6 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public interface ITopicCreator
-    {
-        Task EnsurePolicyIsUpdatedAsync(IReadOnlyCollection<string> additionalSubscriberAccounts);
-        Task ApplyTagsAsync();
-        Task<bool> ExistsAsync();
-        Task CreateAsync();
-        Task CreateWithEncryptionAsync(ServerSideEncryption config);
-
-        public string Arn { get;}
-    }
-
     internal class SnsTopicByName : SnsTopicBase, ITopicCreator
     {
         private readonly ILogger _logger;

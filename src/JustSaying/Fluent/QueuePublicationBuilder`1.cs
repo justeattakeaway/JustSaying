@@ -78,7 +78,7 @@ namespace JustSaying.Fluent
             JustSayingBus bus,
             IAwsClientFactoryProxy proxy,
             IMessagePublisherFactory publisherFactory,
-            IQueueTopicCreatorFactory queueTopicCreatorFactory,
+            IQueueTopicCreatorProvider queueTopicCreatorProvider,
             ILoggerFactory loggerFactory)
         {
             var logger = loggerFactory.CreateLogger<QueuePublicationBuilder<T>>();
@@ -94,7 +94,7 @@ namespace JustSaying.Fluent
 
             async Task StartupTask()
             {
-                var queueCreator = queueTopicCreatorFactory.CreateSqsCreator(writeConfiguration.QueueName, config.Region, writeConfiguration.RetryCountBeforeSendingToErrorQueue, null);
+                var queueCreator = queueTopicCreatorProvider.GetSqsCreator(writeConfiguration.QueueName, config.Region, writeConfiguration.RetryCountBeforeSendingToErrorQueue, null);
 
                 if (!await queueCreator.ExistsAsync().ConfigureAwait(false))
                 {

@@ -227,12 +227,11 @@ namespace JustSaying
             ILoggerFactory loggerFactory =
                 ServicesBuilder?.LoggerFactory?.Invoke() ?? ServiceResolver.ResolveService<ILoggerFactory>();
 
-            IMessageSerializationRegister register = ServicesBuilder?.SerializationRegister?.Invoke()
-                ?? ServiceResolver.ResolveService<IMessageSerializationRegister>();
+            IMessageSerializationRegister register = CreateSerializationRegister();
             JustSayingBus bus = CreateBus(config, register, loggerFactory);
             IAwsClientFactoryProxy proxy = CreateFactoryProxy();
 
-            var publisherFactory = new MessagePublisherFactory(proxy, register, loggerFactory, config);
+            var publisherFactory = new MessagePublisherProvider(proxy, register, loggerFactory, config);
 
             PublicationsBuilder?.Configure(bus, proxy, publisherFactory, publisherFactory, loggerFactory);
 
@@ -254,14 +253,13 @@ namespace JustSaying
             ILoggerFactory loggerFactory =
                 ServicesBuilder?.LoggerFactory?.Invoke() ?? ServiceResolver.ResolveService<ILoggerFactory>();
 
-            IMessageSerializationRegister register = ServicesBuilder?.SerializationRegister?.Invoke()
-                ?? ServiceResolver.ResolveService<IMessageSerializationRegister>();
+            IMessageSerializationRegister register = CreateSerializationRegister();
             JustSayingBus bus = CreateBus(config, register, loggerFactory);
 
             IAwsClientFactoryProxy proxy = CreateFactoryProxy();
-            var messagePublisherFactory = new MessagePublisherFactory(proxy, register, loggerFactory, config);
+            var messagePublisherFactory = new MessagePublisherProvider(proxy, register, loggerFactory, config);
 
-            IVerifyAmazonQueues creator = CreateQueueCreator(loggerFactory, messagePublisherFactory);
+            IVerifyAmazonQueues creator = CreateQueueCreator(proxy, loggerFactory, messagePublisherFactory);
 
             if (ServicesBuilder?.MessageContextAccessor != null)
             {
@@ -271,6 +269,12 @@ namespace JustSaying
             SubscriptionBuilder?.Configure(bus, ServiceResolver, creator, loggerFactory);
 
             return bus;
+        }
+
+        private IMessageSerializationRegister CreateSerializationRegister()
+        {
+            return ServicesBuilder?.SerializationRegister?.Invoke()
+                ?? ServiceResolver.ResolveService<IMessageSerializationRegister>();
         }
 
         private JustSayingBus CreateBus(IMessagingConfig config, IMessageSerializationRegister register, ILoggerFactory loggerFactory)
@@ -307,10 +311,9 @@ namespace JustSaying
             return ServicesBuilder?.MessageContextAccessor?.Invoke() ?? ServiceResolver.ResolveService<IMessageContextAccessor>();
         }
 
-        private IVerifyAmazonQueues CreateQueueCreator(ILoggerFactory loggerFactory, IQueueTopicCreatorFactory queueTopicCreatorFactory)
+        private IVerifyAmazonQueues CreateQueueCreator(IAwsClientFactoryProxy factoryProxy, ILoggerFactory loggerFactory, IQueueTopicCreatorProvider queueTopicCreatorProvider)
         {
-            IAwsClientFactoryProxy proxy = CreateFactoryProxy();
-            IVerifyAmazonQueues queueCreator = new AmazonQueueCreator(proxy, loggerFactory, queueTopicCreatorFactory);
+            IVerifyAmazonQueues queueCreator = new AmazonQueueCreator(factoryProxy, loggerFactory, queueTopicCreatorProvider);
 
             return queueCreator;
         }
