@@ -104,7 +104,7 @@ namespace JustSaying.Fluent
 
             bus.AddStartupTask(StartupTask);
 
-            var queuePublisher = publisherFactory.CreateSqsPublisher(writeConfiguration.QueueName, writeConfiguration.RetryCountBeforeSendingToErrorQueue);
+            var queuePublisher = publisherFactory.GetSqsPublisher(writeConfiguration.QueueName, writeConfiguration.RetryCountBeforeSendingToErrorQueue);
             bus.AddMessagePublisher<T>(queuePublisher);
 
             logger.LogInformation(

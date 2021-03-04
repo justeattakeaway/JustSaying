@@ -11,6 +11,10 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.Publishing
 {
+    /// <summary>
+    /// Provides <see cref="IMessagePublisher"/>'s without having to know the details of how to create them.
+    /// Multiple calls to get a publisher for the same queue or topic will return the same publisher.
+    /// </summary>
     public class MessagePublisherProvider : IMessagePublisherFactory, IQueueTopicCreatorProvider
     {
         private readonly IAwsClientFactoryProxy _proxy;
@@ -35,21 +39,25 @@ namespace JustSaying.AwsTools.Publishing
             _config = config;
         }
 
-        public IMessagePublisher CreateSnsPublisher(string topicName, bool throwOnPublishFailure, IDictionary<string, string> tags)
+        ///<inheritdoc/>
+        public IMessagePublisher GetSnsPublisher(string topicName, bool throwOnPublishFailure, IDictionary<string, string> tags)
         {
             return GetTopicPublisher(topicName, throwOnPublishFailure, tags);
         }
 
-        public IMessagePublisher CreateSqsPublisher(string queueName, int retryCountBeforeSendingToErrorQueue)
+        ///<inheritdoc/>
+        public IMessagePublisher GetSqsPublisher(string queueName, int retryCountBeforeSendingToErrorQueue)
         {
             return GetQueuePublisher(queueName, _config.Region, retryCountBeforeSendingToErrorQueue);
         }
 
+        ///<inheritdoc/>
         public ITopicCreator GetSnsCreator(string topicName, bool throwOnPublishFailure, IDictionary<string, string> tags)
         {
             return GetTopicPublisher(topicName, throwOnPublishFailure, tags);
         }
 
+        ///<inheritdoc/>
         public IQueueCreator GetSqsCreator(
             string queueName,
             string region,

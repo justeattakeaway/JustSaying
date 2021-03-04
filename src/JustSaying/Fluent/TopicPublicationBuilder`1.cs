@@ -159,7 +159,7 @@ namespace JustSaying.Fluent
 
             bus.AddStartupTask(StartupTask);
 
-            var eventPublisher = publisherFactory.CreateSnsPublisher(readConfiguration.TopicName);
+            var eventPublisher = publisherFactory.GetSnsPublisher(readConfiguration.TopicName);
 
             bus.AddMessagePublisher<T>(eventPublisher);
 
