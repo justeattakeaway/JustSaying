@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.Publishing
 {
-    internal class MessagePublisherProvider : IMessagePublisherFactory, IQueueTopicCreatorProvider
+    public class MessagePublisherProvider : IMessagePublisherFactory, IQueueTopicCreatorProvider
     {
         private readonly IAwsClientFactoryProxy _proxy;
         private readonly IMessageSerializationRegister _serializationRegister;
