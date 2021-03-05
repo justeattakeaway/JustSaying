@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Amazon;
 using JustSaying.AwsTools;
-using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.Publishing;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Models;
@@ -139,7 +137,7 @@ namespace JustSaying.Fluent
 
             async Task StartupTask()
             {
-                var queueCreator = queueTopicCreatorProvider.GetSnsCreator(readConfiguration.TopicName, false, Tags);
+                var queueCreator = queueTopicCreatorProvider.GetSnsCreator(readConfiguration.TopicName, Tags);
 
                 if (writeConfiguration.Encryption != null)
                 {

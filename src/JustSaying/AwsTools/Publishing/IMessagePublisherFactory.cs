@@ -13,10 +13,9 @@ namespace JustSaying.AwsTools.Publishing
         /// Returns an IMessagePublisher that publishes to a given topic.
         /// </summary>
         /// <param name="topicName">The name of the topic to publish to.</param>
-        /// <param name="throwOnPublishFailure">Whether to throw an exception on failure publish.</param>
         /// <param name="tags">A list of tags that will be added to the topic if this publisher is used to create topics.</param>
         /// <returns>An <see cref="IMessagePublisher"/> that can be used to publish to this topic.</returns>
-        IMessagePublisher GetSnsPublisher(string topicName, bool throwOnPublishFailure = false, IDictionary<string, string> tags = null);
+        IMessagePublisher GetSnsPublisher(string topicName, IDictionary<string, string> tags = null);
 
         /// <summary>
         /// Returns an IMessagePublisher that publishes to a given queue.

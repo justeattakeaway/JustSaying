@@ -40,9 +40,9 @@ namespace JustSaying.AwsTools.Publishing
         }
 
         ///<inheritdoc/>
-        public IMessagePublisher GetSnsPublisher(string topicName, bool throwOnPublishFailure, IDictionary<string, string> tags)
+        public IMessagePublisher GetSnsPublisher(string topicName, IDictionary<string, string> tags)
         {
-            return GetTopicPublisher(topicName, throwOnPublishFailure, tags);
+            return GetTopicPublisher(topicName, tags);
         }
 
         ///<inheritdoc/>
@@ -52,9 +52,9 @@ namespace JustSaying.AwsTools.Publishing
         }
 
         ///<inheritdoc/>
-        public ITopicCreator GetSnsCreator(string topicName, bool throwOnPublishFailure, IDictionary<string, string> tags)
+        public ITopicCreator GetSnsCreator(string topicName, IDictionary<string, string> tags)
         {
-            return GetTopicPublisher(topicName, throwOnPublishFailure, tags);
+            return GetTopicPublisher(topicName, tags);
         }
 
         ///<inheritdoc/>
@@ -110,7 +110,7 @@ namespace JustSaying.AwsTools.Publishing
             }
         }
 
-        private SnsTopicByName GetTopicPublisher(string topicName, bool throwOnPublishFailure, IDictionary<string, string> tags)
+        private SnsTopicByName GetTopicPublisher(string topicName, IDictionary<string, string> tags)
         {
             _writeLock.EnterUpgradeableReadLock();
 

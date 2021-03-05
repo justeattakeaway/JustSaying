@@ -56,7 +56,7 @@ namespace JustSaying.AwsTools.QueueCreation
                 }
                 else
                 {
-                    var eventTopic = _queueTopicCreatorProvider.GetSnsCreator(queueConfig.PublishEndpoint, false, null);
+                    var eventTopic = _queueTopicCreatorProvider.GetSnsCreator(queueConfig.PublishEndpoint, null);
 
                     await eventTopic.CreateAsync().ConfigureAwait(false);
 
