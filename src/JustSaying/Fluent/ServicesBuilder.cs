@@ -20,7 +20,6 @@ namespace JustSaying.Fluent
             BusBuilder = busBuilder;
         }
 
-        /// <inheritdoc />
         internal MessagingBusBuilder BusBuilder { get; }
 
         /// <summary>

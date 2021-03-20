@@ -23,7 +23,6 @@ namespace JustSaying.Fluent
             BusBuilder = busBuilder;
         }
 
-        /// <inheritdoc />
         public MessagingBusBuilder BusBuilder { get; }
 
         /// <summary>
@@ -75,7 +74,7 @@ namespace JustSaying.Fluent
         /// The current <see cref="MessagingConfigurationBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="regions"/> is <see cref="null"/>.
+        /// <paramref name="regions"/> is <see langword="null"/>.
         /// </exception>
         public MessagingConfigurationBuilder WithAdditionalSubscriberAccounts(params string[] regions)
             => WithAdditionalSubscriberAccounts(regions as IEnumerable<string>);
@@ -88,7 +87,7 @@ namespace JustSaying.Fluent
         /// The current <see cref="MessagingConfigurationBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="accountIds"/> is <see cref="null"/>.
+        /// <paramref name="accountIds"/> is <see langword="null"/>.
         /// </exception>
         public MessagingConfigurationBuilder WithAdditionalSubscriberAccounts(IEnumerable<string> accountIds)
         {
@@ -109,7 +108,7 @@ namespace JustSaying.Fluent
         /// The current <see cref="MessagingConfigurationBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="accountId"/> is <see cref="null"/>.
+        /// <paramref name="accountId"/> is <see langword="null"/>.
         /// </exception>
         public MessagingConfigurationBuilder WithAdditionalSubscriberAccount(string accountId)
         {
@@ -135,7 +134,7 @@ namespace JustSaying.Fluent
         /// The current <see cref="MessagingConfigurationBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="logger"/> is <see cref="null"/>.
+        /// <paramref name="logger"/> is <see langword="null"/>.
         /// </exception>
         public MessagingConfigurationBuilder WithMessageResponseLogger(Action<MessageResponse, Message> logger)
         {
@@ -151,7 +150,7 @@ namespace JustSaying.Fluent
         /// The current <see cref="MessagingConfigurationBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="subjectProvider"/> is <see cref="null"/>.
+        /// <paramref name="subjectProvider"/> is <see langword="null"/>.
         /// </exception>
         public MessagingConfigurationBuilder WithMessageSubjectProvider(IMessageSubjectProvider subjectProvider)
         {
@@ -194,7 +193,7 @@ namespace JustSaying.Fluent
         /// The current <see cref="MessagingConfigurationBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="region"/> is <see cref="null"/>.
+        /// <paramref name="region"/> is <see langword="null"/>.
         /// </exception>
         public MessagingConfigurationBuilder WithRegion(string region)
         {
@@ -211,7 +210,7 @@ namespace JustSaying.Fluent
         /// The current <see cref="MessagingConfigurationBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="region"/> is <see cref="null"/>.
+        /// <paramref name="region"/> is <see langword="null"/>.
         /// </exception>
         public MessagingConfigurationBuilder WithRegion(RegionEndpoint region)
         {
@@ -232,7 +231,7 @@ namespace JustSaying.Fluent
         /// The current <see cref="MessagingConfigurationBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="namingConvention"/> is <see cref="null"/>.
+        /// <paramref name="namingConvention"/> is <see langword="null"/>.
         /// </exception>
         public MessagingConfigurationBuilder WithTopicNamingConvention(ITopicNamingConvention namingConvention)
         {
@@ -243,12 +242,12 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Specifies the <see cref="ITopicNamingConvention"/> to use.
         /// </summary>
-        /// <typeparam name="T">The <see cref="ITopicNamingConvention"> to use which will be resolved from the <see cref="IServiceResolver"/></typeparam>
+        /// <typeparam name="T">The <see cref="ITopicNamingConvention"/> to use which will be resolved from the <see cref="IServiceResolver"/></typeparam>
         /// <returns>
         /// The current <see cref="MessagingConfigurationBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="T"/> is resolved to <see cref="null"/>.
+        /// <typeparamref name="T"/> is resolved to <see langword="null"/>.
         /// </exception>
         public MessagingConfigurationBuilder WithTopicNamingConvention<T>() where T : class, ITopicNamingConvention
         {
@@ -263,7 +262,7 @@ namespace JustSaying.Fluent
         /// The current <see cref="MessagingConfigurationBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="namingConvention"/> is <see cref="null"/>.
+        /// <paramref name="namingConvention"/> is <see langword="null"/>.
         /// </exception>
         public MessagingConfigurationBuilder WithQueueNamingConvention(IQueueNamingConvention namingConvention)
         {
@@ -274,12 +273,12 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Specifies the <see cref="IQueueNamingConvention"/> to use.
         /// </summary>
-        /// <typeparam name="T">The <see cref="IQueueNamingConvention"> to use which will be resolved from the <see cref="IServiceResolver"/></typeparam>
+        /// <typeparam name="T">The <see cref="IQueueNamingConvention"/> to use which will be resolved from the <see cref="IServiceResolver"/></typeparam>
         /// <returns>
         /// The current <see cref="MessagingConfigurationBuilder"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref name="T"/> is resolved to <see cref="null"/>.
+        /// <typeparamref name="T"/> is resolved to <see langword="null"/>.
         /// </exception>
         public MessagingConfigurationBuilder WithQueueNamingConvention<T>() where T : class, IQueueNamingConvention
         {
