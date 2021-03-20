@@ -135,6 +135,7 @@ namespace JustSaying.Fluent
             bus.SerializationRegister.AddSerializer<T>();
 
             // TODO pass region down into topic creation for when we have foreign topics so we can generate the arn
+#pragma warning disable 618
             var eventPublisher = new SnsTopicByName(
                 readConfiguration.TopicName,
                 proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(config.Region)),
@@ -146,6 +147,7 @@ namespace JustSaying.Fluent
                 MessageResponseLogger = config.MessageResponseLogger,
                 Tags = Tags
             };
+#pragma warning restore 618
 
             async Task StartupTask()
             {

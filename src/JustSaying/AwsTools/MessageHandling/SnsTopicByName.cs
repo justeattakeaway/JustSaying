@@ -12,7 +12,8 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    internal class SnsTopicByName : SnsTopicBase
+    [Obsolete("SnsTopicBase and related classes are not intended for general usage and may be removed in a future major release")]
+    public class SnsTopicByName : SnsTopicBase
     {
         private readonly ILogger _logger;
 

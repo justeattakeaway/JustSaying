@@ -8,6 +8,7 @@ using Amazon.SQS.Model;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using Microsoft.Extensions.Logging;
+#pragma warning disable 618
 
 namespace JustSaying.Tools.Commands
 {

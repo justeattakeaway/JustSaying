@@ -10,7 +10,8 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    internal abstract class SqsQueueByNameBase : SqsQueueBase
+    [Obsolete("SqsQueueBase and related classes are not intended for general usage and may be removed in a future major release")]
+    public abstract class SqsQueueByNameBase : SqsQueueBase
     {
         protected SqsQueueByNameBase(RegionEndpoint region, string queueName, IAmazonSQS client, ILoggerFactory loggerFactory)
             : base(region, client, loggerFactory)

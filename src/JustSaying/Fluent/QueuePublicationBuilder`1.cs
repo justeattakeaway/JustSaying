@@ -4,7 +4,6 @@ using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Extensions;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -92,6 +91,7 @@ namespace JustSaying.Fluent
             var regionEndpoint = RegionEndpoint.GetBySystemName(config.Region);
             var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
 
+#pragma warning disable 618
             var eventPublisher = new SqsPublisher(
                 regionEndpoint,
                 writeConfiguration.QueueName,
@@ -102,6 +102,7 @@ namespace JustSaying.Fluent
             {
                 MessageResponseLogger = config.MessageResponseLogger
             };
+#pragma warning restore 618
 
             async Task StartupTask()
             {

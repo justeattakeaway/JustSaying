@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
@@ -12,7 +13,8 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools
 {
-    internal class ErrorQueue : SqsQueueByNameBase
+    [Obsolete("SqsQueueBase and related classes are not intended for general usage and may be removed in a future major release")]
+    public class ErrorQueue : SqsQueueByNameBase
     {
         public ErrorQueue(RegionEndpoint region, string sourceQueueName, IAmazonSQS client, ILoggerFactory loggerFactory)
             : base(region, sourceQueueName + "_error", client, loggerFactory)

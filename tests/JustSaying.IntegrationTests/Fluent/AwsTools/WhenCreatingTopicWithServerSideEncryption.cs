@@ -5,6 +5,7 @@ using JustSaying.AwsTools.QueueCreation;
 using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit.Abstractions;
+#pragma warning disable 618
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools
 {

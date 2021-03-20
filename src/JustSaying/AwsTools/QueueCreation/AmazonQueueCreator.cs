@@ -53,11 +53,13 @@ namespace JustSaying.AwsTools.QueueCreation
                 }
                 else
                 {
+#pragma warning disable 618
                     var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint,
                         snsClient,
                         serializationRegister,
                         _loggerFactory,
                         messageSubjectProvider);
+#pragma warning restore 618
                     await eventTopic.CreateAsync().ConfigureAwait(false);
 
                     await SubscribeQueueAndApplyFilterPolicyAsync(snsClient,
@@ -93,11 +95,13 @@ namespace JustSaying.AwsTools.QueueCreation
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);
             var sqsClient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
 
+#pragma warning disable 618
             var queue = new SqsQueueByName(regionEndpoint,
                 queueConfig.QueueName,
                 sqsClient,
                 queueConfig.RetryCountBeforeSendingToErrorQueue,
                 _loggerFactory);
+#pragma warning restore 618
 
             var startupTask = new Func<Task>(() => queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig));
 
