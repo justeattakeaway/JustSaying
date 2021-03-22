@@ -12,7 +12,8 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    internal abstract class SqsQueueBase : ISqsQueue
+    [Obsolete("SqsQueueBase and related classes are not intended for general usage and may be removed in a future major release")]
+    public abstract class SqsQueueBase : ISqsQueue
     {
         public string Arn { get; protected set; }
         public Uri Uri { get; protected set; }

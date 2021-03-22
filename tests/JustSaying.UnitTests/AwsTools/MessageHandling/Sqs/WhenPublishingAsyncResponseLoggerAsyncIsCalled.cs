@@ -13,6 +13,7 @@ using NSubstitute.Core;
 using Shouldly;
 using Xunit;
 using Message = JustSaying.Models.Message;
+#pragma warning disable 618
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 {

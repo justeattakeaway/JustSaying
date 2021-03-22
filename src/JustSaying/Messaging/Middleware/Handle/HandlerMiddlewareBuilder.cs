@@ -37,7 +37,7 @@ namespace JustSaying.Messaging.Middleware
         }
 
         /// <summary>
-        /// Adds a middleware of type <see cref="TMiddleware"/> to the pipeline which will be resolved from the
+        /// Adds a middleware of type <typeparamref name="TMiddleware"/> to the pipeline which will be resolved from the
         /// <see cref="IServiceResolver"/>. It will be resolved once when the pipeline is built, and cached
         /// for the lifetime of the bus.
         /// </summary>

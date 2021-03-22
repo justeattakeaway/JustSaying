@@ -15,7 +15,8 @@ using MessageAttributeValue = Amazon.SQS.Model.MessageAttributeValue;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    internal class SqsPublisher : SqsQueueByName, IMessagePublisher
+    [Obsolete("SqsQueueBase and related classes are not intended for general usage and may be removed in a future major release")]
+    public class SqsPublisher : SqsQueueByName, IMessagePublisher
     {
         private readonly IAmazonSQS _client;
         private readonly IMessageSerializationRegister _serializationRegister;

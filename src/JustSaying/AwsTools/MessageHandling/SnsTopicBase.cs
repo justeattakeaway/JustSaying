@@ -17,7 +17,8 @@ using MessageAttributeValue = Amazon.SimpleNotificationService.Model.MessageAttr
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    internal abstract class SnsTopicBase : IMessagePublisher, IInterrogable
+    [Obsolete("SnsTopicBase and related classes are not intended for general usage and may be removed in a future major release")]
+    public abstract class SnsTopicBase : IMessagePublisher, IInterrogable
     {
         private readonly IMessageSerializationRegister _serializationRegister; // ToDo: Grrr...why is this here even. GET OUT!
         private readonly IMessageSubjectProvider _messageSubjectProvider;

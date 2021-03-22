@@ -24,6 +24,7 @@ using Xunit;
 using Xunit.Abstractions;
 using Message = JustSaying.Models.Message;
 using SQSMessage = Amazon.SQS.Model.Message;
+#pragma warning disable 618
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 {

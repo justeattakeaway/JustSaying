@@ -13,6 +13,7 @@ using NSubstitute.Core;
 using Shouldly;
 using Xunit;
 using Amazon.Runtime;
+#pragma warning disable 618
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 {

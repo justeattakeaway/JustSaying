@@ -9,6 +9,7 @@ using JustSaying.TestingFramework;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
+#pragma warning disable 618
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {

@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Xunit.Abstractions;
+#pragma warning disable 618
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing
 {

@@ -3,6 +3,7 @@ using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
 using NSubstitute;
 using Xunit;
+#pragma warning disable 618
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 {
