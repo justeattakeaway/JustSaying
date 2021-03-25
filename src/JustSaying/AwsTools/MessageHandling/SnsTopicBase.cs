@@ -46,7 +46,7 @@ namespace JustSaying.AwsTools.MessageHandling
             IMessageSubjectProvider messageSubjectProvider)
         {
             _serializationRegister = serializationRegister;
-            _logger = loggerFactory.CreateLogger("JustSaying");
+            _logger = loggerFactory.CreateLogger("JustSaying.Publish");
             _snsWriteConfiguration = snsWriteConfiguration;
             _messageSubjectProvider = messageSubjectProvider;
         }
@@ -80,11 +80,19 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
             }
 
-            _logger.LogInformation(
-                "Published message: '{SnsSubject}' with content {SnsMessage} and request Id '{SnsRequestId}'",
-                request.Subject,
-                request.Message,
-                response?.ResponseMetadata?.RequestId);
+
+            using (_logger.BeginScope(new[]
+            {
+                new KeyValuePair<string, object>("AwsRequestId", response?.MessageId)
+            }))
+            {
+                _logger.LogInformation(
+                    "Published message {MessageId} of type {MessageType} to {Type} '{Target}'.",
+                    message.Id,
+                    message.GetType().Name,
+                    "Topic",
+                    request.TopicArn);
+            }
 
             if (MessageResponseLogger != null)
             {

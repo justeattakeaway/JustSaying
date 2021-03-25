@@ -56,7 +56,7 @@ namespace JustSaying.IntegrationTests.Fluent
             LogLevel? levelOverride = null)
         {
             return new ServiceCollection()
-                .AddLogging((p) => p.AddXUnit(OutputHelper).SetMinimumLevel(levelOverride ?? LogLevel.Debug))
+                .AddLogging((p) => p.AddXUnit(OutputHelper, o => o.IncludeScopes = true).SetMinimumLevel(levelOverride ?? LogLevel.Debug))
                 .AddJustSaying(
                     (builder, serviceProvider) =>
                     {

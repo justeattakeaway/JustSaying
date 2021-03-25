@@ -94,6 +94,7 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
                                     .WithTag("Subscriber", nameof(KitchenConsole))
                                     .WithReadConfiguration(rc  =>
                                         rc.WithSubscriptionGroup("GroupA")));
+
                             x.ForTopic<OrderOnItsWayEvent>(cfg =>
                                 cfg.WithReadConfiguration(rc =>
                                     rc.WithSubscriptionGroup("GroupB")));

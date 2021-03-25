@@ -174,8 +174,8 @@ namespace JustSaying.Fluent
                 bus.SerializationRegister,
                 subscriptionConfig,
                 config.MessageSubjectProvider);
-            bus.AddStartupTask(queueWithStartup.StartupTask);
 
+            bus.AddStartupTask(queueWithStartup.StartupTask);
             bus.AddQueue(subscriptionConfig.SubscriptionGroupName, queueWithStartup.Queue);
 
             logger.LogInformation(
