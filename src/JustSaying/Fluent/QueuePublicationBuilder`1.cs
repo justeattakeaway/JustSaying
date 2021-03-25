@@ -88,6 +88,8 @@ namespace JustSaying.Fluent
             ConfigureWrites?.Invoke(writeConfiguration);
             writeConfiguration.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
 
+            bus.SerializationRegister.AddSerializer<T>();
+
             var regionEndpoint = RegionEndpoint.GetBySystemName(config.Region);
             var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
 
