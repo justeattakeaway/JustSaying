@@ -23,5 +23,5 @@
 [{DateTime}] info: JustSaying[0]
       Starting bus
 [{DateTime}] info: JustSaying.Publish[0]
-      => System.Collections.Generic.KeyValuePair`2[System.String,System.Object][]
+      => AwsRequestId: {AwsRequestId}
       Published message {MessageId} of type SimpleMessage to Queue 'http://localhost:4566/000000000000/{TestDiscriminator}'.
