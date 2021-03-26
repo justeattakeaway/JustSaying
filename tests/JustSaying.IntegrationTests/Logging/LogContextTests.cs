@@ -80,7 +80,7 @@ namespace JustSaying.Logging
             message = message.Replace(messageId, "{MessageId}");
             message = message.Replace(UniqueName, "{TestDiscriminator}");
 
-            message = Regex.Replace(message, @"AwsRequestId: {1}.{8}-.{4}-.{4}-.{4}-.{12}", "AwsRequestId: {AwsRequestId}");
+            message = Regex.Replace(message, @"AwsRequestId: .{8}-.{4}-.{4}-.{4}-.{12}", "AwsRequestId: {AwsRequestId}");
             message = Regex.Replace(message, @"(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})Z", "{DateTime}");
             return message;
         }
