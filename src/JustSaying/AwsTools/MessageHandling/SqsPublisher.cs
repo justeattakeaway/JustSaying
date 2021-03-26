@@ -65,7 +65,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }))
             {
                 Logger.LogInformation(
-                    "Published message {MessageId} of type {MessageType} to {Type} '{Target}'.",
+                    "Published message {MessageId} of type {MessageType} to {QueueOrTopic} '{MessageDestination}'.",
                     message.Id,
                     message.GetType().Name,
                     "Queue",
