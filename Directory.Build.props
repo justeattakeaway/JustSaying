@@ -5,8 +5,8 @@
     <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <AwsSdkSnsVersion>3.5.0.9</AwsSdkSnsVersion>
-    <AwsSdkSqsVersion>3.5.0.9</AwsSdkSqsVersion>
+    <AwsSdkSnsVersion>3.7.0</AwsSdkSnsVersion>
+    <AwsSdkSqsVersion>3.7.0</AwsSdkSqsVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.msbuild" Version="3.0.3" PrivateAssets="All" />
