@@ -80,14 +80,13 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
             }
 
-
             using (_logger.BeginScope(new[]
             {
                 new KeyValuePair<string, object>("AwsRequestId", response?.MessageId)
             }))
             {
                 _logger.LogInformation(
-                    "Published message {MessageId} of type {MessageType} to {QueueOrTopic} '{MessageDestination}'.",
+                    "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
                     message.Id,
                     message.GetType().Name,
                     "Topic",
