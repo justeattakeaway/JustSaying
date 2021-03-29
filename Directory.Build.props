@@ -28,6 +28,7 @@
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)CodeAnalysisRules.ruleset</CodeAnalysisRuleSet>
     <Company>Just Eat</Company>
     <Copyright>Copyright (c) Just Eat 2015-$([System.DateTime]::Now.ToString(yyyy))</Copyright>
+    <Deterministic>true</Deterministic>
     <Description>A light-weight message bus on top of AWS SNS and SQS</Description>
     <MinVerMinimumMajorMinor>7.0</MinVerMinimumMajorMinor>
     <MinVerTagPrefix>v</MinVerTagPrefix>
