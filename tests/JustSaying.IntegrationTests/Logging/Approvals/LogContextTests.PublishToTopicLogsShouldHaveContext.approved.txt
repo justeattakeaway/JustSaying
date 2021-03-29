@@ -1,0 +1,17 @@
+[{DateTime}] info: JustSaying.Fluent.TopicPublicationBuilder[0]
+      Adding SNS publisher for message type 'JustSaying.TestingFramework.SimpleMessage'.
+[{DateTime}] info: JustSaying.Fluent.TopicPublicationBuilder[0]
+      Created SNS topic publisher on topic 'simplemessage' for message type 'JustSaying.TestingFramework.SimpleMessage'.
+[{DateTime}] dbug: JustSaying[0]
+      Created topic 'simplemessage' with ARN 'arn:aws:sns:us-east-1:000000000000:simplemessage'.
+[{DateTime}] info: JustSaying[0]
+      Running 1 startup tasks
+[{DateTime}] info: JustSaying[0]
+      Starting bus with settings: JustSaying.Messaging.Interrogation.InterrogationResult
+[{DateTime}] info: JustSaying.Messaging.Channels.SubscriptionGroups.SubscriptionGroupCollection[0]
+      Subscription group collection successfully started
+[{DateTime}] info: JustSaying[0]
+      Starting bus
+[{DateTime}] info: JustSaying.Publish[0]
+      => AwsRequestId: {AwsRequestId}
+      Published message {MessageId} of type SimpleMessage to Topic 'arn:aws:sns:us-east-1:000000000000:simplemessage'.

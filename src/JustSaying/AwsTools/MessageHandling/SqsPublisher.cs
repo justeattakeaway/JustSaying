@@ -59,10 +59,18 @@ namespace JustSaying.AwsTools.MessageHandling
                     ex);
             }
 
-            Logger.LogInformation(
-                "Published message to queue '{QueueUrl}' with content '{MessageBody}'.",
-                request.QueueUrl,
-                request.MessageBody);
+            using (Logger.BeginScope(new[]
+            {
+                new KeyValuePair<string, object>("AwsRequestId", response?.MessageId)
+            }))
+            {
+                Logger.LogInformation(
+                    "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
+                    message.Id,
+                    message.GetType().Name,
+                    "Queue",
+                    request.QueueUrl);
+            }
 
             if (MessageResponseLogger != null)
             {
