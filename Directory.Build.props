@@ -6,7 +6,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <AwsSdkSnsVersion>3.5.0.9</AwsSdkSnsVersion>
-    <AwsSdkSqsVersion>3.5.0.9</AwsSdkSqsVersion>
+    <AwsSdkSqsVersion>3.7.0.2</AwsSdkSqsVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.msbuild" Version="3.0.3" PrivateAssets="All" />
