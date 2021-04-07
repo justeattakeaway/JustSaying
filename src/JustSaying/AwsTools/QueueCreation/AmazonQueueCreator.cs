@@ -52,7 +52,7 @@ namespace JustSaying.AwsTools.QueueCreation
                 else if (infrastructureAction == InfrastructureAction.ValidateExists)
                 {
                     if (TopicExistsInAnotherAccount(queueConfig))
-                        await CheckForeignTopicExists(queueConfig, regionEndpoint);
+                        await CheckForeignTopicExists(queueConfig, regionEndpoint, snsClient);
                     else
                         await CheckTopicAndSubscriptioon(serializationRegister, queueConfig, messageSubjectProvider, snsClient, sqsClient, queue);
                 }
@@ -61,11 +61,12 @@ namespace JustSaying.AwsTools.QueueCreation
             return new QueueWithAsyncStartup(StartupTask, queueWithStartup.Queue);
         }
 
-        private async Task CheckForeignTopicExists(SqsReadConfiguration queueConfig, RegionEndpoint regionEndpoint)
+        private async Task CheckForeignTopicExists(SqsReadConfiguration queueConfig, RegionEndpoint regionEndpoint, IAmazonSimpleNotificationService snsClient)
         {
             var arnProvider = new ForeignTopicArnProvider(regionEndpoint,
                 queueConfig.TopicSourceAccount,
-                queueConfig.PublishEndpoint);
+                queueConfig.PublishEndpoint,
+                snsClient);
 
             //TODO: Currently a no-op on this class - but we should check x-account - if we have a queue should we check for subscription instead
             var exists = await arnProvider.ArnExistsAsync();
@@ -105,7 +106,8 @@ namespace JustSaying.AwsTools.QueueCreation
         {
             var arnProvider = new ForeignTopicArnProvider(regionEndpoint,
                 queueConfig.TopicSourceAccount,
-                queueConfig.PublishEndpoint);
+                queueConfig.PublishEndpoint,
+                snsClient);
 
             var topicArn = await arnProvider.GetArnAsync().ConfigureAwait(false);
             await SubscribeQueueAndApplyFilterPolicyAsync(snsClient,
