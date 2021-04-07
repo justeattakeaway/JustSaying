@@ -68,7 +68,6 @@ namespace JustSaying.AwsTools.QueueCreation
                 queueConfig.PublishEndpoint,
                 snsClient);
 
-            //TODO: Currently a no-op on this class - but we should check x-account - if we have a queue should we check for subscription instead
             var exists = await arnProvider.ArnExistsAsync();
             if (!exists)
                 throw new InvalidOperationException($"The topic {queueConfig.PublishEndpoint} in account {queueConfig.TopicSourceAccount} does not exist");
