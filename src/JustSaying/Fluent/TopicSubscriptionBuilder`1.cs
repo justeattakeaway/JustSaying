@@ -11,7 +11,7 @@ namespace JustSaying.Fluent
     /// <summary>
     /// A class representing a builder for a topic subscription. This class cannot be inherited.
     /// </summary>
-    /// <typeparam topicName="T">
+    /// <typeparam name="T">
     /// The type of the message.
     /// </typeparam>
     public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
@@ -103,7 +103,7 @@ namespace JustSaying.Fluent
         /// <summary>
         /// We need a topic to send a message to. Do we want to create it, or do we want to validate it exists?
         /// </summary>
-        /// <param topicName="action">The action to take with respect to topics</param>
+        /// <param name="action">The action to take with respect to topics</param>
         /// <returns></returns>
         public TopicSubscriptionBuilder<T> WithInfrastructure(InfrastructureAction action)
         {
@@ -148,12 +148,12 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Configures the SNS read configuration.
         /// </summary>
-        /// <param topicName="configure">A delegate to a method to use to configure SNS reads.</param>
+        /// <param name="configure">A delegate to a method to use to configure SNS reads.</param>
         /// <returns>
         /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref topicName="configure"/> is <see langword="null"/>.
+        /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
         public TopicSubscriptionBuilder<T> WithReadConfiguration(
             Action<SqsReadConfigurationBuilder> configure)
@@ -174,12 +174,12 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Configures the SNS read configuration.
         /// </summary>
-        /// <param topicName="configure">A delegate to a method to use to configure SNS reads.</param>
+        /// <param name="configure">A delegate to a method to use to configure SNS reads.</param>
         /// <returns>
         /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref topicName="configure"/> is <see langword="null"/>.
+        /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
         public TopicSubscriptionBuilder<T> WithReadConfiguration(Action<SqsReadConfiguration> configure)
         {
@@ -190,27 +190,27 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Creates a tag with no value that will be assigned to the SQS queue.
         /// </summary>
-        /// <param topicName="key">The key for the tag.</param>
+        /// <param name="key">The key for the tag.</param>
         /// <returns>
         /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
         /// </returns>
         /// <remarks>Tag keys are case-sensitive. A new tag with a key identical to that of an existing one will overwrite it.</remarks>
         /// <exception cref="ArgumentException">
-        /// <paramref topicName="key"/> is <see langword="null"/> or whitespace.
+        /// <paramref name="key"/> is <see langword="null"/> or whitespace.
         /// </exception>
         public TopicSubscriptionBuilder<T> WithTag(string key) => WithTag(key, null);
 
         /// <summary>
         /// Creates a tag with a value that will be assigned to the SQS queue.
         /// </summary>
-        /// <param topicName="key">The key for the tag.</param>
-        /// <param topicName="value">The value associated with this tag.</param>
+        /// <param name="key">The key for the tag.</param>
+        /// <param name="value">The value associated with this tag.</param>
         /// <returns>
         /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
         /// </returns>
         /// <remarks>Tag keys are case-sensitive. A new tag with a key identical to that of an existing one will overwrite it.</remarks>
         /// <exception cref="ArgumentException">
-        /// <paramref topicName="key"/> is <see langword="null"/> or whitespace.
+        /// <paramref name="key"/> is <see langword="null"/> or whitespace.
         /// </exception>
         public TopicSubscriptionBuilder<T> WithTag(string key, string value)
         {

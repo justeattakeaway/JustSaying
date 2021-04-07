@@ -14,7 +14,7 @@ namespace JustSaying.Fluent
     /// <summary>
     /// A class representing a builder for a queue subscription. This class cannot be inherited.
     /// </summary>
-    /// <typeparam queueName="T">
+    /// <typeparam name="T">
     /// The type of the message.
     /// </typeparam>
     public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
@@ -84,7 +84,7 @@ namespace JustSaying.Fluent
         /// <summary>
         /// What should we do about infrastructure requirements
         /// </summary>
-        /// <param queueName="action">What action should we take</param>
+        /// <param name="action">What action should we take</param>
         /// <returns></returns>
         public QueueSubscriptionBuilder<T> WithInfrastructure(InfrastructureAction action)
         {
@@ -95,12 +95,12 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Configures the queueName of the queue.
         /// </summary>
-        /// <param queueName="queueName">The queueName of the queue to subscribe to.</param>
+        /// <param name="queueName">The queueName of the queue to subscribe to.</param>
         /// <returns>
         /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref queueName="queueName"/> is <see langword="null"/>.
+        /// <paramref name="queueName"/> is <see langword="null"/>.
         /// </exception>
         public QueueSubscriptionBuilder<T> WithQueue(string queueName)
         {
@@ -121,12 +121,12 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Configures the SQS read configuration.
         /// </summary>
-        /// <param queueName="configure">A delegate to a method to use to configure SQS reads.</param>
+        /// <param name="configure">A delegate to a method to use to configure SQS reads.</param>
         /// <returns>
         /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref queueName="configure"/> is <see langword="null"/>.
+        /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
         public QueueSubscriptionBuilder<T> WithReadConfiguration(
             Action<SqsReadConfigurationBuilder> configure)
@@ -147,12 +147,12 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Configures the SQS read configuration.
         /// </summary>
-        /// <param queueName="configure">A delegate to a method to use to configure SQS reads.</param>
+        /// <param name="configure">A delegate to a method to use to configure SQS reads.</param>
         /// <returns>
         /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// <paramref queueName="configure"/> is <see langword="null"/>.
+        /// <paramref name="configure"/> is <see langword="null"/>.
         /// </exception>
         public QueueSubscriptionBuilder<T> WithReadConfiguration(Action<SqsReadConfiguration> configure)
         {
@@ -163,8 +163,8 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Overrides the policy of generating the topic from the type queueName, and allows it to be passed in instead
         /// </summary>
-        /// <param queueName="topicName">The topic queueName to use</param>
-        /// <param queueName="topicARN">We do not supply a queueName, instead use this externally created Arn instead. Should be used with validate infrastructure only</param>
+        /// <param name="topicName">The topic queueName to use</param>
+        /// <param name="topicARN">We do not supply a queueName, instead use this externally created Arn instead. Should be used with validate infrastructure only</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
         public QueueSubscriptionBuilder<T> WithTopic(string topicName = null, string topicARN = null)
@@ -197,27 +197,27 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Creates a tag with no value that will be assigned to the SQS queue.
         /// </summary>
-        /// <param queueName="key">The key for the tag.</param>
+        /// <param name="key">The key for the tag.</param>
         /// <returns>
         /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
         /// </returns>
         /// <remarks>Tag keys are case-sensitive. A new tag with a key identical to that of an existing one will overwrite it.</remarks>
         /// <exception cref="ArgumentException">
-        /// <paramref queueName="key"/> is <see langword="null"/> or whitespace.
+        /// <paramref name="key"/> is <see langword="null"/> or whitespace.
         /// </exception>
         public QueueSubscriptionBuilder<T> WithTag(string key) => WithTag(key, null);
 
         /// <summary>
         /// Creates a tag with a value that will be assigned to the SQS queue.
         /// </summary>
-        /// <param queueName="key">The key for the tag.</param>
-        /// <param queueName="value">The value associated with this tag.</param>
+        /// <param name="key">The key for the tag.</param>
+        /// <param name="value">The value associated with this tag.</param>
         /// <returns>
         /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
         /// </returns>
         /// <remarks>Tag keys are case-sensitive. A new tag with a key identical to that of an existing one will overwrite it.</remarks>
         /// <exception cref="ArgumentException">
-        /// <paramref queueName="key"/> is <see langword="null"/> or whitespace.
+        /// <paramref name="key"/> is <see langword="null"/> or whitespace.
         /// </exception>
         public QueueSubscriptionBuilder<T> WithTag(string key, string value)
         {
