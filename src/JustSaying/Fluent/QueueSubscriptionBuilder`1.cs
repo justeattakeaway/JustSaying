@@ -266,7 +266,7 @@ namespace JustSaying.Fluent
             subscriptionConfig.MiddlewareConfiguration = subscriptionConfig.MiddlewareConfiguration;
             subscriptionConfig.Validate();
 
-            var queue = creator.EnsureQueueExists(config.Region, subscriptionConfig);
+            var queue = creator.EnsureQueueExists(config.Region, HasArnNotName, subscriptionConfig);
             bus.AddStartupTask(queue.StartupTask);
 
             bus.AddQueue(subscriptionConfig.SubscriptionGroupName, queue.Queue);

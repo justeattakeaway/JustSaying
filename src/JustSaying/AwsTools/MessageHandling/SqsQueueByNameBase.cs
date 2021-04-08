@@ -13,9 +13,17 @@ namespace JustSaying.AwsTools.MessageHandling
     [Obsolete("SqsQueueBase and related classes are not intended for general usage and may be removed in a future major release")]
     public abstract class SqsQueueByNameBase : SqsQueueBase
     {
-        protected SqsQueueByNameBase(RegionEndpoint region, string queueName, IAmazonSQS client, ILoggerFactory loggerFactory)
+        private readonly bool _queueNameIsArn;
+
+        protected SqsQueueByNameBase(
+            RegionEndpoint region,
+            string queueName,
+            bool queueNameIsArn,
+            IAmazonSQS client,
+            ILoggerFactory loggerFactory)
             : base(region, client, loggerFactory)
         {
+            _queueNameIsArn = queueNameIsArn;
             QueueName = queueName;
         }
 
@@ -26,6 +34,35 @@ namespace JustSaying.AwsTools.MessageHandling
                 return false;
             }
 
+            return _queueNameIsArn ? await CheckExistsByArn(): await CheckExistsByName();
+        }
+
+        private async Task<bool> CheckExistsByArn()
+        {
+            bool exists = false;
+            ListQueuesResponse listQueuesResponse = new ListQueuesResponse();
+            do
+            {
+                listQueuesResponse = await Client.ListQueuesAsync(new ListQueuesRequest{MaxResults = 100, QueueNamePrefix = new Arn(QueueName).Resource, NextToken = listQueuesResponse.NextToken});
+
+                //Hopefully we get one, but possible we have synomyms, partial matches etc
+                foreach (var queueUrl in listQueuesResponse.QueueUrls)
+                {
+                    var getQueueAttributesResponse = await Client.GetQueueAttributesAsync(new GetQueueAttributesRequest { QueueUrl = queueUrl });
+                    if (getQueueAttributesResponse.QueueARN == QueueName)
+                    {
+                        exists = true;
+                        Arn = QueueName;
+                        break;
+                    }
+                }
+            } while (!exists && listQueuesResponse.NextToken != null);
+
+            return exists;
+        }
+
+        private async Task<bool> CheckExistsByName()
+        {
             GetQueueUrlResponse result;
 
             try

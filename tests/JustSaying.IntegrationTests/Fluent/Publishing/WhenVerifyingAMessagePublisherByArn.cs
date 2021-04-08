@@ -17,28 +17,28 @@ using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing
 {
-    public class WhenVerifyingAMessagePublisher : IntegrationTestBase
+    public class WhenVerifyingAMessagePublisherByArn : IntegrationTestBase
     {
-        public WhenVerifyingAMessagePublisher(ITestOutputHelper outputHelper)
+        public WhenVerifyingAMessagePublisherByArn(ITestOutputHelper outputHelper)
             : base(outputHelper)
         {
         }
 
         [AwsFact]
-        public async Task Then_The_Topic_Exist()
+        public async Task Then_The_Topic_Exists()
         {
             // Arrange
             //Let's create the required topic
             var topicName = new UniqueTopicNamingConvention().TopicName<SimpleMessage>();
             var snsClient = CreateClientFactory().GetSnsClient(Region);
-            var response = await snsClient.CreateTopicAsync(new CreateTopicRequest()
+            var createTopicResponse = await snsClient.CreateTopicAsync(new CreateTopicRequest()
             {
                 Name = topicName,
                 Tags = new List<Tag>{new Tag{Key="Author", Value="WhenVerifyingAMessagePublisher"}}
             });
 
             //sanity check
-            response.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
+            createTopicResponse.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
 
             // Act - Check topic creation
             var createdOK = true;
@@ -55,7 +55,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                                 {
                                     //The topic should already exists and we just want to verify it
                                     configure
-                                        .WithTopic(topicName)
+                                        .WithTopic(topicARN: createTopicResponse.TopicArn)
                                         .WithInfastructure(InfrastructureAction.ValidateExists);
                                 });
                             })

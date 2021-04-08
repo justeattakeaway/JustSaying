@@ -51,7 +51,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
 
                     builder.Subscriptions(
                         (subscription) => subscription.ForTopic<SimpleMessage>(
-                            (topic) => topic.WithTopic(UniqueName)));
+                            (topic) => topic.WithQueue(UniqueName)));
                 })
                 .AddSingleton(handler);
 

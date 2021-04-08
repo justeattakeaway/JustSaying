@@ -155,18 +155,21 @@ namespace JustSaying.Fluent
             if (!emptyArn && !emptyName)
             {
                 HasArnNotName = true;
+                HasNameOverride = false;
                 Topic = topicARN;
             }
 
             if (!emptyName && emptyArn)
             {
                 HasNameOverride = true;
+                HasArnNotName = false;
                 Topic = topicName;
             }
 
             if (!emptyArn && emptyName)
             {
                 HasArnNotName = true;
+                HasNameOverride = false;
                 Topic = topicARN;
             }
 
@@ -204,9 +207,7 @@ namespace JustSaying.Fluent
 
             if (!HasNameOverride && !HasArnNotName)
                 readConfiguration.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
-            else if (HasArnNotName)
-                readConfiguration.TopicName = Topic;
-            else if (HasNameOverride)
+            else if (HasArnNotName || HasNameOverride)
                 readConfiguration.TopicName = Topic;
 
             if (HasArnNotName && InfrastructureAction != InfrastructureAction.ValidateExists)
@@ -222,7 +223,8 @@ namespace JustSaying.Fluent
                 bus.SerializationRegister,
                 loggerFactory,
                 writeConfiguration,
-                config.MessageSubjectProvider)
+                config.MessageSubjectProvider,
+                topicNameIsArn: HasArnNotName)
             {
                 MessageResponseLogger = config.MessageResponseLogger,
                 Tags = Tags

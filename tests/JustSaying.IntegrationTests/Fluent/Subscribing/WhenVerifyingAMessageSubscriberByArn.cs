@@ -13,19 +13,19 @@ using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing
 {
-    public class WhenVerifyingAMessageSubscriber : IntegrationTestBase
+    public class WhenVerifyingAMessageSubscriberByArn : IntegrationTestBase
     {
-        public WhenVerifyingAMessageSubscriber(ITestOutputHelper outputHelper)
+        public WhenVerifyingAMessageSubscriberByArn(ITestOutputHelper outputHelper)
             : base(outputHelper)
         {
         }
 
         [AwsFact]
-        public async Task Then_The_Topic_Exist()
+        public async Task Then_The_Topic_Exists()
         {
             // Arrange
             var topicName = new UniqueTopicNamingConvention().TopicName<SimpleMessage>();
-            await CreateRequiredInfrastructure(topicName);
+            var createRequiredInfra =  await CreateRequiredInfrastructure(topicName);
 
             // Act - Force topic creation
             var createdOK = true;
@@ -43,9 +43,9 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                                 options.ForTopic<SimpleMessage>(topicConfig =>
                                 {
                                     topicConfig
-                                        .WithQueue(UniqueName)
-                                        .WithTopic(topicName)
-                                        .WithInfrastructure(InfrastructureAction.ValidateExists);
+                                    .WithQueue(queueArn: createRequiredInfra.queueArn)
+                                    .WithTopic(topicARN: createRequiredInfra.topicArn)
+                                    .WithInfrastructure(InfrastructureAction.ValidateExists);
                                 });
                             });
                         })
@@ -69,7 +69,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
         }
 
-        private async Task CreateRequiredInfrastructure(string topicName)
+        private async Task<(string topicArn, string queueArn)> CreateRequiredInfrastructure(string topicName)
         {
             var snsClient = CreateClientFactory().GetSnsClient(Region);
             var createTopicResponse = await snsClient.CreateTopicAsync(new CreateTopicRequest()
@@ -92,11 +92,16 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
             //sanity check
             createQueueResponse.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
 
+            var queueAttributes = await sqsClient.GetQueueAttributesAsync(new GetQueueAttributesRequest{QueueUrl = createQueueResponse.QueueUrl});
+            queueAttributes.ShouldNotBeNull();
+
             //bind the queue to the topic
             var subscriptionArn = await snsClient.SubscribeQueueAsync(createTopicResponse.TopicArn, sqsClient, createQueueResponse.QueueUrl);
 
             //sanityCheck
             subscriptionArn.ShouldNotBeNull();
+
+            return (createTopicResponse.TopicArn, queueAttributes.QueueARN);
         }
     }
 }

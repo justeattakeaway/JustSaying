@@ -38,26 +38,25 @@ namespace JustSaying.Fluent
         /// </summary>
         private Action<SqsReadConfiguration> ConfigureReads { get; set; }
 
-
         /// <summary>
         /// Is the queue named via a naming strategy via the subscription data type (true) or passed in (false)
         /// </summary>
-        private bool HasDefaultQueueName { get; set; }
-
-        /// <summary>
-        /// Just use the naming convention to create the topic name from type name
-        /// </summary>
-        private bool HasDefaultTopicName { get; set; }
-
-        /// <summary>
-        /// Do we override the name of the topic from the infer from type approach
-        /// </summary>
-        private bool HasNameOverride { get; set; }
+        private bool HasDefaultQueueName { get; set; } = true;
 
         /// <summary>
         /// Do we supply an ARN and not use the name at all?
         /// </summary>
-        private bool HasArnNotName { get; set; }
+        public bool HasQueueArnNotName { get; set; }
+
+        /// <summary>
+        /// Just use the naming convention to create the topic name from type name
+        /// </summary>
+        private bool HasDefaultTopicName { get; set; } = true;
+
+        /// <summary>
+        /// Do we supply an ARN and not use the name at all?
+        /// </summary>
+        private bool HasTopicArnNotName { get; set; }
 
         /// <summary>
         /// What should we do about required infrastructure
@@ -84,23 +83,37 @@ namespace JustSaying.Fluent
         /// </returns>
         public TopicSubscriptionBuilder<T> IntoDefaultTopic() => WithTopic();
 
-        public TopicSubscriptionBuilder<T> WithQueue(string queueName = null)
+        public TopicSubscriptionBuilder<T> WithQueue(string queueName = null, string queueArn = null)
         {
-            if (string.IsNullOrEmpty(queueName))
+            bool emptyName = string.IsNullOrEmpty(queueName);
+            bool emptyArn = string.IsNullOrEmpty(queueArn);
+
+            if (!emptyArn && !emptyName)
             {
                 HasDefaultQueueName = true;
-            }
-            else
-            {
-                Queue = queueName;
-                HasDefaultQueueName = false;
+                HasQueueArnNotName = false;
             }
 
+            //if we supply both, just use the Arn
+            if (!emptyArn)
+            {
+                HasQueueArnNotName = true;
+                HasDefaultQueueName = false;
+                Queue = queueArn;
+            }
+
+            if (!emptyName)
+            {
+                HasDefaultQueueName = false;
+                HasQueueArnNotName = false;
+                Queue = queueName;
+            }
 
             return this;
+
         }
 
-        /// <summary>
+       /// <summary>
         /// We need a topic to send a message to. Do we want to create it, or do we want to validate it exists?
         /// </summary>
         /// <param name="action">The action to take with respect to topics</param>
@@ -126,18 +139,21 @@ namespace JustSaying.Fluent
             if (!emptyArn && !emptyName)
             {
                 HasDefaultTopicName = true;
+                HasTopicArnNotName = false;
             }
 
             //if we supply both, just use the Arn
             if (!emptyArn)
             {
-                HasArnNotName = true;
+                HasTopicArnNotName = true;
+                HasDefaultTopicName = false;
                 Topic = topicARN;
             }
 
             if (!emptyName)
             {
-                HasNameOverride = true;
+                HasDefaultTopicName = false;
+                HasTopicArnNotName = false;
                 Topic = topicName;
             }
 
@@ -236,7 +252,6 @@ namespace JustSaying.Fluent
 
             var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic)
             {
-                QueueName = HasDefaultQueueName ? Topic : Queue,
                 Tags = Tags
             };
 
@@ -272,7 +287,9 @@ namespace JustSaying.Fluent
                 bus.SerializationRegister,
                 subscriptionConfig,
                 config.MessageSubjectProvider,
-                InfrastructureAction);
+                InfrastructureAction,
+                HasQueueArnNotName,
+                HasTopicArnNotName);
 
             bus.AddStartupTask(queueWithStartup.StartupTask);
             bus.AddQueue(subscriptionConfig.SubscriptionGroupName, queueWithStartup.Queue);

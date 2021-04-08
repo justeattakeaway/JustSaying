@@ -41,9 +41,10 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                             {
                                 options.ForTopic<SimpleMessage>(topicConfig =>
                                 {
-                                    topicConfig.WithQueue(UniqueName);
-                                    topicConfig.WithTopic(topicName);
-                                    topicConfig.WithInfrastructure(InfrastructureAction.CreateIfMissing);
+                                    topicConfig
+                                        .WithQueue(UniqueName)
+                                        .WithTopic(topicName)
+                                        .WithInfrastructure(InfrastructureAction.CreateIfMissing);
                                 });
                            });
                         })

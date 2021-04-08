@@ -40,8 +40,9 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                             {
                                 options.ForQueue<SimpleMessage>(queueConfig =>
                                  {
-                                     queueConfig.WithQueue(UniqueName);
-                                     queueConfig.WithInfrastructure(InfrastructureAction.CreateIfMissing);
+                                     queueConfig
+                                         .WithQueue(UniqueName)
+                                         .WithInfrastructure(InfrastructureAction.CreateIfMissing);
                                  });
                             });
                         })

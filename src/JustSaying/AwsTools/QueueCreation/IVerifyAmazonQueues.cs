@@ -11,8 +11,10 @@ namespace JustSaying.AwsTools.QueueCreation
             IMessageSerializationRegister serializationRegister,
             SqsReadConfiguration queueConfig,
             IMessageSubjectProvider messageSubjectProvider,
-            InfrastructureAction infrastructureAction);
+            InfrastructureAction infrastructureAction,
+            bool hasQueueArnNotName,
+            bool hasTopicArnNotName);
 
-        QueueWithAsyncStartup EnsureQueueExists(string region, SqsReadConfiguration queueConfig);
+        QueueWithAsyncStartup EnsureQueueExists(string region, bool hasArnNotName, SqsReadConfiguration queueConfig);
     }
 }

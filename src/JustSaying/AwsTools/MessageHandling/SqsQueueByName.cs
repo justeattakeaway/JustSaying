@@ -18,8 +18,14 @@ namespace JustSaying.AwsTools.MessageHandling
     {
         private readonly int _retryCountBeforeSendingToErrorQueue;
 
-        public SqsQueueByName(RegionEndpoint region, string queueName, IAmazonSQS client, int retryCountBeforeSendingToErrorQueue, ILoggerFactory loggerFactory)
-            : base(region, queueName, client, loggerFactory)
+        public SqsQueueByName(
+            RegionEndpoint region,
+            string queueName,
+            bool queueNameIsArn,
+            int retryCountBeforeSendingToErrorQueue,
+            IAmazonSQS client,
+            ILoggerFactory loggerFactory)
+            : base(region, queueName, queueNameIsArn, client, loggerFactory)
         {
             _retryCountBeforeSendingToErrorQueue = retryCountBeforeSendingToErrorQueue;
             ErrorQueue = new ErrorQueue(region, queueName, client, loggerFactory);

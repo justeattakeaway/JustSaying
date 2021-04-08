@@ -34,8 +34,8 @@ namespace JustSaying.Tools.Commands
 
             var config = new AmazonSQSConfig { RegionEndpoint = RegionEndpoint.GetBySystemName(Region) };
             var client = new DefaultAwsClientFactory().GetSqsClient(config.RegionEndpoint);
-            var sourceQueue = new SqsQueueByName(config.RegionEndpoint, SourceQueueName, client, JustSayingConstants.DefaultHandlerRetryCount, loggerFactory);
-            var destinationQueue = new SqsQueueByName(config.RegionEndpoint, DestinationQueueName, client, JustSayingConstants.DefaultHandlerRetryCount, loggerFactory);
+            var sourceQueue = new SqsQueueByName(config.RegionEndpoint, SourceQueueName,false, JustSayingConstants.DefaultHandlerRetryCount, client, loggerFactory);
+            var destinationQueue = new SqsQueueByName(config.RegionEndpoint, DestinationQueueName, false, JustSayingConstants.DefaultHandlerRetryCount, client, loggerFactory);
 
             await EnsureQueueExistsAsync(sourceQueue).ConfigureAwait(false);
             await EnsureQueueExistsAsync(destinationQueue).ConfigureAwait(false);

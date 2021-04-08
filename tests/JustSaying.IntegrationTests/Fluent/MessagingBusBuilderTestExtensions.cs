@@ -27,7 +27,7 @@ namespace JustSaying.IntegrationTests.Fluent
                 .Publications((options) => options.WithTopic<T>())
                 .Subscriptions((options) => options.ForTopic<T>(subscriptionBuilder =>
                 {
-                    subscriptionBuilder.WithTopic(name);
+                    subscriptionBuilder.WithQueue(name);
                     configure?.Invoke(subscriptionBuilder);
                 }));
         }

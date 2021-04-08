@@ -17,28 +17,18 @@ using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing
 {
-    public class WhenVerifyingAMessagePublisher : IntegrationTestBase
+    public class WhenVerifyingAMessagePublisherByArnFails : IntegrationTestBase
     {
-        public WhenVerifyingAMessagePublisher(ITestOutputHelper outputHelper)
+        public WhenVerifyingAMessagePublisherByArnFails(ITestOutputHelper outputHelper)
             : base(outputHelper)
         {
         }
 
         [AwsFact]
-        public async Task Then_The_Topic_Exist()
+        public async Task Then_The_Topic_Does_Not_Exist()
         {
             // Arrange
-            //Let's create the required topic
-            var topicName = new UniqueTopicNamingConvention().TopicName<SimpleMessage>();
-            var snsClient = CreateClientFactory().GetSnsClient(Region);
-            var response = await snsClient.CreateTopicAsync(new CreateTopicRequest()
-            {
-                Name = topicName,
-                Tags = new List<Tag>{new Tag{Key="Author", Value="WhenVerifyingAMessagePublisher"}}
-            });
-
-            //sanity check
-            response.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
+            string topicName = new UniqueTopicNamingConvention().AsArn<SimpleMessage>();
 
             // Act - Check topic creation
             var createdOK = true;
@@ -55,7 +45,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                                 {
                                     //The topic should already exists and we just want to verify it
                                     configure
-                                        .WithTopic(topicName)
+                                        .WithTopic(topicARN: topicName)
                                         .WithInfastructure(InfrastructureAction.ValidateExists);
                                 });
                             })
@@ -73,7 +63,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
             }
 
             // Assert
-            createdOK.ShouldBeTrue();
+            createdOK.ShouldBeFalse();
 
         }
     }
