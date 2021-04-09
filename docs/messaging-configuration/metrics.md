@@ -4,5 +4,5 @@ By default, JustSaying won't emit any metrics as it doesn't have any information
 
 JustSaying will automatically pick up the last registered implementation of `IMessageMonitor` that is registered into the DI container, so all you need to do is register one:
 
-`services.AddSingleton<MyCustomMessageMonitor>();`
+`services.AddSingleton<IMessageMonitor, MyCustomMessageMonitor>();`
 
