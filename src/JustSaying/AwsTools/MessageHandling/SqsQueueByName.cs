@@ -21,11 +21,10 @@ namespace JustSaying.AwsTools.MessageHandling
         public SqsQueueByName(
             RegionEndpoint region,
             string queueName,
-            bool queueNameIsArn,
             int retryCountBeforeSendingToErrorQueue,
             IAmazonSQS client,
             ILoggerFactory loggerFactory)
-            : base(region, queueName, queueNameIsArn, client, loggerFactory)
+            : base(region, queueName, client, loggerFactory)
         {
             _retryCountBeforeSendingToErrorQueue = retryCountBeforeSendingToErrorQueue;
             ErrorQueue = new ErrorQueue(region, queueName, client, loggerFactory);

@@ -36,7 +36,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
             var queue = new SqsQueueByName(RegionEndpoint.EUWest1,
                 "some-queue-name",
-                false,
                 retryCount,
                 _client,
                 LoggerFactory);

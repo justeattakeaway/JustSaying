@@ -181,7 +181,6 @@ namespace JustSaying.AwsTools.QueueCreation
 #pragma warning disable 618
             var queue = new SqsQueueByName(regionEndpoint,
                 queueConfig.QueueName,
-                hasArnNotName,
                 queueConfig.RetryCountBeforeSendingToErrorQueue,
                 sqsClient,
                 _loggerFactory);

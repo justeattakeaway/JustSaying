@@ -18,12 +18,11 @@ namespace JustSaying.AwsTools.MessageHandling
         protected SqsQueueByNameBase(
             RegionEndpoint region,
             string queueName,
-            bool queueNameIsArn,
             IAmazonSQS client,
             ILoggerFactory loggerFactory)
             : base(region, client, loggerFactory)
         {
-            _queueNameIsArn = queueNameIsArn;
+            _queueNameIsArn = Amazon.Arn.IsArn(queueName);
             QueueName = queueName;
         }
 
@@ -43,7 +42,7 @@ namespace JustSaying.AwsTools.MessageHandling
             ListQueuesResponse listQueuesResponse = new ListQueuesResponse();
             do
             {
-                listQueuesResponse = await Client.ListQueuesAsync(new ListQueuesRequest{MaxResults = 100, QueueNamePrefix = new Arn(QueueName).Resource, NextToken = listQueuesResponse.NextToken});
+                listQueuesResponse = await Client.ListQueuesAsync(new ListQueuesRequest{MaxResults = 100, QueueNamePrefix = Amazon.Arn.Parse(QueueName).Resource, NextToken = listQueuesResponse.NextToken});
 
                 //Hopefully we get one, but possible we have synomyms, partial matches etc
                 foreach (var queueUrl in listQueuesResponse.QueueUrls)

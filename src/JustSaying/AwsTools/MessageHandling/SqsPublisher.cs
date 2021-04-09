@@ -29,7 +29,7 @@ namespace JustSaying.AwsTools.MessageHandling
             int retryCountBeforeSendingToErrorQueue,
             IMessageSerializationRegister serializationRegister,
             ILoggerFactory loggerFactory)
-            : base(region, queueName, false, retryCountBeforeSendingToErrorQueue, client, loggerFactory)
+            : base(region, queueName, retryCountBeforeSendingToErrorQueue, client, loggerFactory)
         {
             _client = client;
             _serializationRegister = serializationRegister;

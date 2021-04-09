@@ -17,7 +17,7 @@ namespace JustSaying.AwsTools
     public class ErrorQueue : SqsQueueByNameBase
     {
         public ErrorQueue(RegionEndpoint region, string sourceQueueName, IAmazonSQS client, ILoggerFactory loggerFactory)
-            : base(region, sourceQueueName + "_error", false, client, loggerFactory)
+            : base(region, sourceQueueName + "_error", client, loggerFactory)
         {
             ErrorQueue = null;
         }
