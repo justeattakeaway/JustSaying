@@ -73,7 +73,9 @@ namespace JustSaying.Logging
 
             var services = GivenJustSaying()
                 .ConfigureJustSaying(
-                    (builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
+                    (builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName)
+                        .Subscriptions(sub => sub.WithDefaults(sgb =>
+                            sgb.WithDefaultConcurrencyLimit(10))))
                 .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
             var sp = services.BuildServiceProvider();

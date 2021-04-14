@@ -39,7 +39,7 @@
 [{DateTime}] info: JustSaying[0]
       Starting bus with settings: JustSaying.Messaging.Interrogation.InterrogationResult
 [{DateTime}] info: JustSaying.Messaging.Channels.SubscriptionGroups.SubscriptionGroup[0]
-      Starting up SubscriptionGroup {TestDiscriminator} for queues [{TestDiscriminator}] with 1 receive buffers and 48 subscribers.
+      Starting up SubscriptionGroup {TestDiscriminator} for queues [{TestDiscriminator}] with 1 receive buffers and 10 subscribers.
 [{DateTime}] dbug: JustSaying.Messaging.Channels.Multiplexer.MergingMultiplexer[0]
       Starting up channel multiplexer with a queue capacity of 100
 [{DateTime}] info: JustSaying.Messaging.Channels.SubscriptionGroups.SubscriptionGroupCollection[0]
