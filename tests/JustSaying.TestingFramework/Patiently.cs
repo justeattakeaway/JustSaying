@@ -10,6 +10,12 @@ namespace JustSaying.TestingFramework
     public static class Patiently
     {
         public static async Task AssertThatAsync(
+            Action func,
+            [System.Runtime.CompilerServices.CallerMemberName]
+            string memberName = "") =>
+            await AssertThatAsync(null, func, memberName);
+
+        public static async Task AssertThatAsync(
             ITestOutputHelper output,
             Action func,
             [System.Runtime.CompilerServices.CallerMemberName]
@@ -63,7 +69,7 @@ namespace JustSaying.TestingFramework
 
                 await Task.Delay(50.Milliseconds()).ConfigureAwait(false);
 
-                output.WriteLine(
+                output?.WriteLine(
                     $"Waiting for {watch.Elapsed.TotalMilliseconds} ms - Still Checking.");
             } while (watch.Elapsed < timeout);
 
@@ -95,7 +101,7 @@ namespace JustSaying.TestingFramework
 
                 await Task.Delay(50.Milliseconds()).ConfigureAwait(false);
 
-                output.WriteLine(
+                output?.WriteLine(
                     $"Waiting for {watch.Elapsed.TotalMilliseconds} ms - Still waiting for {description}.");
             } while (watch.Elapsed < timeout);
 

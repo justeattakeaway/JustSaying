@@ -14,7 +14,10 @@ namespace JustSaying.Logging
     public class LogContextTests : IntegrationTestBase
     {
         public LogContextTests(ITestOutputHelper outputHelper) : base(outputHelper)
-        { }
+        {
+            MinimumLogLevel = LogLevel.Information;
+        }
+
 
         [AwsFact]
         public async Task PublishToTopicLogsShouldHaveContext()
@@ -89,13 +92,9 @@ namespace JustSaying.Logging
             var message = new SimpleMessage();
             await publisher .PublishAsync(message, cts.Token);
 
-            await Patiently.AssertThatAsync(OutputHelper,
-                () =>
-                {
-                    handler.ReceivedMessages
-                        .ShouldHaveSingleItem()
-                        .Id.ShouldBe(message.Id);
-                });
+            await Patiently.AssertThatAsync(() => handler.ReceivedMessages
+                    .ShouldHaveSingleItem()
+                    .Id.ShouldBe(message.Id));
 
             var output = ((TestOutputHelper) OutputHelper).Output;
             output.ShouldMatchApproved(o => o
@@ -103,6 +102,8 @@ namespace JustSaying.Logging
                 .WithScrubber(logMessage => ScrubLogs(logMessage, message.Id.ToString())));
 
             cts.Cancel();
+            // We need to let the bus finish up before changing the test output helper context
+            await Task.Delay(TimeSpan.FromSeconds(1));
         }
 
         private string ScrubLogs(string message, string messageId)
