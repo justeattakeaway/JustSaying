@@ -72,7 +72,7 @@ namespace JustSaying
             {
                 Logger.LogDebug(
                     "Resolved handler of type {ResolvedHandlerType} for queue {QueueName}.",
-                    handler.GetType().FullName,
+                    handler.GetType().Name,
                     context.QueueName);
             }
 

@@ -1,0 +1,62 @@
+[{DateTime}] info: JustSaying.Fluent.QueuePublicationBuilder[0]
+      Adding SQS publisher for message type 'JustSaying.TestingFramework.SimpleMessage'.
+[{DateTime}] info: JustSaying.Fluent.QueuePublicationBuilder[0]
+      Created SQS publisher for message type 'JustSaying.TestingFramework.SimpleMessage' on queue '{TestDiscriminator}'.
+[{DateTime}] dbug: JustSaying.Publish[0]
+      Checking if queue '{TestDiscriminator}' exists
+[{DateTime}] dbug: JustSaying.Publish[0]
+      Checking if queue '{TestDiscriminator}_error' exists
+[{DateTime}] info: JustSaying.Publish[0]
+      Created queue '{TestDiscriminator}_error' with ARN 'arn:aws:sqs:us-east-1:000000000000:{TestDiscriminator}_error'.
+[{DateTime}] info: JustSaying.Publish[0]
+      Creating error queue {TestDiscriminator}_error
+[{DateTime}] info: JustSaying.Publish[0]
+      Created queue '{TestDiscriminator}' with ARN 'arn:aws:sqs:us-east-1:000000000000:{TestDiscriminator}'.
+[{DateTime}] info: JustSaying.Publish[0]
+      Creating queue {TestDiscriminator} attempt number 0
+[{DateTime}] info: JustSaying[0]
+      Running 1 startup tasks
+[{DateTime}] info: JustSaying[0]
+      Starting bus with settings: JustSaying.Messaging.Interrogation.InterrogationResult
+[{DateTime}] info: JustSaying.Messaging.Channels.SubscriptionGroups.SubscriptionGroupCollection[0]
+      Subscription group collection successfully started
+[{DateTime}] info: JustSaying[0]
+      Starting bus
+[{DateTime}] info: JustSaying.Fluent.QueueSubscriptionBuilder[0]
+      Created SQS subscriber for message type 'JustSaying.TestingFramework.SimpleMessage' on queue '{TestDiscriminator}'.
+[{DateTime}] dbug: JustSaying.ServiceProviderResolver[0]
+      Resolving handler for message type JustSaying.TestingFramework.SimpleMessage for queue {TestDiscriminator}.
+[{DateTime}] dbug: JustSaying.ServiceProviderResolver[0]
+      Resolved handler of type InspectableHandler`1 for queue {TestDiscriminator}.
+[{DateTime}] info: JustSaying.Fluent.QueueSubscriptionBuilder[0]
+      Added a message handler for message type for 'JustSaying.TestingFramework.SimpleMessage' on topic 'simplemessage' and queue '{TestDiscriminator}'.
+[{DateTime}] dbug: JustSaying.Publish[0]
+      Checking if queue '{TestDiscriminator}' exists
+[{DateTime}] dbug: JustSaying.Publish[0]
+      Checking if queue '{TestDiscriminator}_error' exists
+[{DateTime}] info: JustSaying[0]
+      Running 1 startup tasks
+[{DateTime}] info: JustSaying[0]
+      Starting bus with settings: JustSaying.Messaging.Interrogation.InterrogationResult
+[{DateTime}] info: JustSaying.Messaging.Channels.SubscriptionGroups.SubscriptionGroup[0]
+      Starting up SubscriptionGroup {TestDiscriminator} for queues [{TestDiscriminator}] with 1 receive buffers and 48 subscribers.
+[{DateTime}] dbug: JustSaying.Messaging.Channels.Multiplexer.MergingMultiplexer[0]
+      Starting up channel multiplexer with a queue capacity of 100
+[{DateTime}] info: JustSaying.Messaging.Channels.SubscriptionGroups.SubscriptionGroupCollection[0]
+      Subscription group collection successfully started
+[{DateTime}] info: JustSaying[0]
+      Starting bus
+[{DateTime}] info: JustSaying.Publish[0]
+      => AwsRequestId: {AwsRequestId}
+      Published message {MessageId} of type SimpleMessage to Queue 'http://localhost:4566/000000000000/{TestDiscriminator}'.
+[{DateTime}] dbug: JustSaying[0]
+      Attempting to deserialize message with serialization register JustSaying.Messaging.MessageSerialization.MessageSerializationRegister
+[{DateTime}] dbug: JustSaying.ServiceProviderResolver[0]
+      Resolving handler for message type JustSaying.TestingFramework.SimpleMessage for queue {TestDiscriminator}.
+[{DateTime}] dbug: JustSaying.ServiceProviderResolver[0]
+      Resolved handler of type InspectableHandler`1 for queue {TestDiscriminator}.
+[{DateTime}] info: JustSaying[0]
+      => MessageSource: {TestDiscriminator}
+      => SourceType: Queue
+      Succeeded handling message with Id '{MessageId}' of type JustSaying.TestingFramework.SimpleMessage {Duration}
+Waiting for {Duration} - Still waiting for HandleMessageFromQueueLogs_ShouldHaveContext.
