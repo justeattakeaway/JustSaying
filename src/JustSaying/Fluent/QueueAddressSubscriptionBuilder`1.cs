@@ -12,13 +12,11 @@ namespace JustSaying.Fluent
     public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         where T : Message
     {
-        private readonly Uri _queueUrl;
-        private readonly string _regionName;
+        private readonly QueueAddress _queueAddress;
 
-        internal QueueAddressSubscriptionBuilder(Uri queueUrl, string regionName)
+        internal QueueAddressSubscriptionBuilder(QueueAddress queueAddress)
         {
-            _queueUrl = queueUrl;
-            _regionName = regionName;
+            _queueAddress = queueAddress;
         }
 
         private Action<QueueAddressConfiguration> ConfigureReads { get; set; }
@@ -45,9 +43,9 @@ namespace JustSaying.Fluent
 
             IAmazonSQS sqsClient = serviceResolver
                 .ResolveService<IAwsClientFactory>()
-                .GetSqsClient(RegionEndpoint.GetBySystemName(_regionName));
+                .GetSqsClient(RegionEndpoint.GetBySystemName(_queueAddress.RegionName));
 
-            var queue = new QueueAddressQueue(_queueUrl, sqsClient);
+            var queue = new QueueAddressQueue(_queueAddress, sqsClient);
 
             attachedQueueConfig.SubscriptionGroupName ??= queue.QueueName;
             attachedQueueConfig.Validate();

@@ -25,16 +25,16 @@ namespace JustSaying.Fluent
         private readonly IAmazonSimpleNotificationService _snsClient;
         private readonly IMessageSubjectProvider _subjectProvider;
         private readonly IMessageSerializationRegister _serializationRegister;
-        private readonly string _topicArn;
+        private readonly TopicAddress _topicAddress;
         private readonly ILogger _logger;
         private readonly Func<Exception, Message, bool> _handleException;
 
-        public TopicAddressPublisher(IAmazonSimpleNotificationService snsClient, ILoggerFactory loggerFactory, IMessageSubjectProvider subjectProvider, IMessageSerializationRegister serializationRegister, Func<Exception, Message, bool> handleException, string topicArn)
+        public TopicAddressPublisher(IAmazonSimpleNotificationService snsClient, ILoggerFactory loggerFactory, IMessageSubjectProvider subjectProvider, IMessageSerializationRegister serializationRegister, Func<Exception, Message, bool> handleException, TopicAddress topicAddress)
         {
             _snsClient = snsClient;
             _subjectProvider = subjectProvider;
             _serializationRegister = serializationRegister;
-            _topicArn = topicArn;
+            _topicAddress = topicAddress;
             _handleException = handleException;
             _logger = loggerFactory.CreateLogger("JustSaying");
         }
@@ -82,7 +82,7 @@ namespace JustSaying.Fluent
             var messageType = _subjectProvider.GetSubjectForType(message.GetType());
             return new PublishRequest
             {
-                TopicArn = _topicArn,
+                TopicArn = _topicAddress.TopicArn,
                 Subject = messageType,
                 Message = messageToSend,
                 MessageAttributes = BuildMessageAttributes(metadata)

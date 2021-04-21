@@ -102,7 +102,14 @@ namespace JustSaying.Fluent
         {
             if (queueAddress == null) throw new ArgumentNullException(nameof(queueAddress));
 
-            Subscriptions.Add(new QueueAddressSubscriptionBuilder<T>(queueAddress.QueueUrl, queueAddress.RegionName));
+            if (Equals(queueAddress, QueueAddress.None))
+            {
+                Subscriptions.Add(new QueueSubscriptionBuilder<T>());
+            }
+            else
+            {
+                Subscriptions.Add(new QueueAddressSubscriptionBuilder<T>(queueAddress));
+            }
 
             return this;
         }
@@ -120,7 +127,7 @@ namespace JustSaying.Fluent
             if (queueAddress == null) throw new ArgumentNullException(nameof(queueAddress));
             if (configure == null) throw new ArgumentNullException(nameof(configure));
 
-            var builder = new QueueAddressSubscriptionBuilder<T>(queueAddress.QueueUrl, queueAddress.RegionName);
+            var builder = new QueueAddressSubscriptionBuilder<T>(queueAddress);
 
             configure(builder);
 

@@ -11,17 +11,16 @@ namespace JustSaying.Fluent
     /// </summary>
     internal sealed class QueueAddressQueue : ISqsQueue
     {
-        public QueueAddressQueue(Uri queueUri, IAmazonSQS sqsClient)
+        public QueueAddressQueue(QueueAddress queueAddress, IAmazonSQS sqsClient)
         {
-            Uri = queueUri;
-            var hostParts = queueUri.Host.Split('.');
-            var pathParts = queueUri.AbsolutePath.Split('/');
+            Uri = queueAddress.QueueUrl;
+            var pathParts = queueAddress.QueueUrl.AbsolutePath.TrimStart('/').Split('/');
 
-            if (pathParts.Length != 2) throw new ArgumentException("Queue Uri did not have a valid path.", nameof(queueUri));
-            var region = RegionEndpoint.GetBySystemName(hostParts[1]);
+            var region = RegionEndpoint.GetBySystemName(queueAddress.RegionName);
             var accountId = pathParts[0];
             var resource = pathParts[1];
             RegionSystemName = region.SystemName;
+            QueueName = resource;
             Arn = new Arn { Partition = region.PartitionName, Service = "sqs", Region = region.SystemName, AccountId = accountId, Resource = resource }.ToString();
             Client = sqsClient;
         }

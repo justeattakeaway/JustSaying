@@ -9,8 +9,8 @@ namespace JustSaying.Fluent
     public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
         where T : Message
     {
-        private readonly string _topicArn;
-        private Func<Exception,Message,bool> _exceptionHandler = null;
+        private readonly TopicAddress _topicAddress;
+        private Func<Exception,Message,bool> _exceptionHandler;
 
 
         public TopicAddressPublicationBuilder<T> WithExceptionHandler(Func<Exception, Message, bool> exceptionHandler)
@@ -21,7 +21,7 @@ namespace JustSaying.Fluent
 
         internal TopicAddressPublicationBuilder(TopicAddress topicAddress)
         {
-            _topicArn = topicAddress.TopicArn;
+            _topicAddress = topicAddress;
         }
 
         public void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
@@ -31,7 +31,7 @@ namespace JustSaying.Fluent
             logger.LogInformation("Adding SNS publisher for message type '{MessageType}'", typeof(T));
 
             var config = bus.Config;
-            var arn = Arn.Parse(_topicArn);
+            var arn = Arn.Parse(_topicAddress.TopicArn);
 
             bus.SerializationRegister.AddSerializer<T>();
 
@@ -41,7 +41,7 @@ namespace JustSaying.Fluent
                 config.MessageSubjectProvider,
                 bus.SerializationRegister,
                 _exceptionHandler,
-                _topicArn);
+                _topicAddress);
             bus.AddMessagePublisher<T>(eventPublisher);
 
             logger.LogInformation(
