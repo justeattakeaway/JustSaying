@@ -48,20 +48,6 @@ namespace JustSaying.Fluent
         /// Configures a publisher for a queue.
         /// </summary>
         /// <typeparam name="T">The type of the message to publish.</typeparam>
-        /// <param name="name">The name to use for the queue.</param>
-        /// <returns>
-        /// The current <see cref="PublicationsBuilder"/>.
-        /// </returns>
-        public PublicationsBuilder WithQueue<T>(string name)
-            where T : Message
-        {
-            return WithQueue<T>((options) => options.WithWriteConfiguration((r) => r.WithQueueName(name)));
-        }
-
-        /// <summary>
-        /// Configures a publisher for a queue.
-        /// </summary>
-        /// <typeparam name="T">The type of the message to publish.</typeparam>
         /// <param name="configure">A delegate to a method to use to configure a queue.</param>
         /// <returns>
         /// The current <see cref="PublicationsBuilder"/>.
@@ -120,6 +106,38 @@ namespace JustSaying.Fluent
             }
 
             var builder = new TopicPublicationBuilder<T>();
+
+            configure(builder);
+
+            Publications.Add(builder);
+
+            return this;
+        }
+
+        public PublicationsBuilder WithTopic<T>(TopicAddress topicAddress)
+            where T : Message
+        {
+            if (topicAddress == null) throw new ArgumentNullException(nameof(topicAddress));
+
+            Publications.Add(new TopicAddressPublicationBuilder<T>(topicAddress));
+
+            return this;
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="topicAddress"></param>
+        /// <param name="configure"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public PublicationsBuilder WithTopic<T>(TopicAddress topicAddress, Action<TopicAddressPublicationBuilder<T>> configure)
+            where T : Message
+        {
+            if (topicAddress == null) throw new ArgumentNullException(nameof(topicAddress));
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
+
+            var builder = new TopicAddressPublicationBuilder<T>(topicAddress);
 
             configure(builder);
 

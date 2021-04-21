@@ -111,7 +111,7 @@ namespace JustSaying.Benchmark
 
                 config.Publications(x => { x.WithTopic<BenchmarkMessage>(); });
 
-                config.Subscriptions(x => { x.ForTopic<BenchmarkMessage>("justsaying-benchmark"); });
+                config.Subscriptions(x => { x.ForTopic<BenchmarkMessage>(cfg => cfg.WithName("justsaying-benchmark")); });
             });
 
             services.AddJustSayingHandler<BenchmarkMessage, BenchmarkMessageHander>();

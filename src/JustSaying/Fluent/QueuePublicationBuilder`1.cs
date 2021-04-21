@@ -71,6 +71,18 @@ namespace JustSaying.Fluent
             return this;
         }
 
+        /// <summary>
+        /// Configures the SQS Queue name, rather than using the naming convention.
+        /// </summary>
+        /// <param name="queueName">The name of the queue to subscribe to.</param>
+        /// <returns>
+        /// The current <see cref="QueuePublicationBuilder{T}"/>.
+        /// </returns>
+        public QueuePublicationBuilder<T> WithName(string queueName)
+        {
+            return this.WithWriteConfiguration(r => r.WithQueueName(queueName));
+        }
+
         /// <inheritdoc />
         void IPublicationBuilder<T>.Configure(
             JustSayingBus bus,

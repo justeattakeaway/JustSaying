@@ -26,7 +26,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
             var services = GivenJustSaying()
                 .ConfigureJustSaying((builder) => builder.Publications((options) =>
-                    options.WithQueue<SimpleMessage>(UniqueName)))
+                    options.WithQueue<SimpleMessage>(qo => qo.WithName(UniqueName))))
                 .ConfigureJustSaying(
                     (builder) => builder.Subscriptions(
                         (options) => options.ForQueue<SimpleMessage>(

@@ -67,23 +67,6 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Configures a queue subscription for the specified queue name.
-        /// </summary>
-        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
-        /// <param name="name">The name of the queue to subscribe to.</param>
-        /// <returns>
-        /// The current <see cref="SubscriptionsBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="name"/> is <see langword="null"/>.
-        /// </exception>
-        public SubscriptionsBuilder ForQueue<T>(string name)
-            where T : Message
-        {
-            return ForQueue<T>((p) => p.WithName(name));
-        }
-
-        /// <summary>
         /// Configures a queue subscription.
         /// </summary>
         /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
@@ -109,6 +92,44 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
+        /// Configures a queue subscription where the queue has already been created.
+        /// </summary>
+        /// <param name="queueAddress">The address of the queue to subscribe to.</param>
+        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+        /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
+        public SubscriptionsBuilder ForQueue<T>(QueueAddress queueAddress)
+            where T : Message
+        {
+            if (queueAddress == null) throw new ArgumentNullException(nameof(queueAddress));
+
+            Subscriptions.Add(new QueueAddressSubscriptionBuilder<T>(queueAddress.QueueUrl, queueAddress.RegionName));
+
+            return this;
+        }
+
+        /// <summary>
+        /// Configures a queue subscription where the queue has already been created.
+        /// </summary>
+        /// <param name="queueAddress">The address of the queue to subscribe to.</param>
+        /// <param name="configure">A delegate to a method to use to configure a queue subscription.</param>
+        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+        /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
+        public SubscriptionsBuilder ForQueue<T>(QueueAddress queueAddress, Action<QueueAddressSubscriptionBuilder<T>> configure)
+            where T : Message
+        {
+            if (queueAddress == null) throw new ArgumentNullException(nameof(queueAddress));
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
+
+            var builder = new QueueAddressSubscriptionBuilder<T>(queueAddress.QueueUrl, queueAddress.RegionName);
+
+            configure(builder);
+
+            Subscriptions.Add(builder);
+
+            return this;
+        }
+
+        /// <summary>
         /// Configures a topic subscription for the default topic name.
         /// </summary>
         /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
@@ -119,23 +140,6 @@ namespace JustSaying.Fluent
             where T : Message
         {
             return ForTopic<T>((p) => p.IntoDefaultTopic());
-        }
-
-        /// <summary>
-        /// Configures a topic subscription for the specified topic name.
-        /// </summary>
-        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
-        /// <param name="name">The name of the topic to subscribe to.</param>
-        /// <returns>
-        /// The current <see cref="SubscriptionsBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="name"/> is <see langword="null"/>.
-        /// </exception>
-        public SubscriptionsBuilder ForTopic<T>(string name)
-            where T : Message
-        {
-            return ForTopic<T>((p) => p.WithName(name));
         }
 
         /// <summary>

@@ -17,7 +17,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
 
         private int? _bufferSize;
         private TimeSpan? _receiveBufferReadTimeout;
-        private TimeSpan? _recieveMessagesWaitTime;
+        private TimeSpan? _receiveMessagesWaitTime;
         private int? _concurrencyLimit;
         private int? _multiplexerCapacity;
         private int? _prefetch;
@@ -101,7 +101,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         /// <returns>This builder object.</returns>
         public SubscriptionGroupConfigBuilder WithReceiveMessagesWaitTime(TimeSpan waitTime)
         {
-            _recieveMessagesWaitTime = waitTime;
+            _receiveMessagesWaitTime = waitTime;
             return this;
         }
 
@@ -144,7 +144,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
                 _concurrencyLimit ?? defaults.ConcurrencyLimit,
                 _bufferSize ?? defaults.BufferSize,
                 _receiveBufferReadTimeout ?? defaults.ReceiveBufferReadTimeout,
-                _recieveMessagesWaitTime ?? defaults.ReceiveMessagesWaitTime,
+                _receiveMessagesWaitTime ?? defaults.ReceiveMessagesWaitTime,
                 _multiplexerCapacity ?? defaults.MultiplexerCapacity,
                 _prefetch ?? defaults.Prefetch,
                 _sqsQueues);

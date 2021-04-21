@@ -37,7 +37,7 @@ namespace JustSaying.AwsTools.QueueCreation
             async Task StartupTask()
             {
                 await queueWithStartup.StartupTask.Invoke().ConfigureAwait(false);
-                var queue = queueWithStartup.Queue;
+                var queue = queueWithStartup.Queue as ISqsQueueWithArn ?? throw new InvalidOperationException("Expected the created queue to be of type ISqsQueueWithArn");
                 if (TopicExistsInAnotherAccount(queueConfig))
                 {
                     var arnProvider = new ForeignTopicArnProvider(regionEndpoint,
