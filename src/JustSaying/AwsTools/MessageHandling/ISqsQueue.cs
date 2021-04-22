@@ -25,6 +25,11 @@ namespace JustSaying.AwsTools.MessageHandling
         Uri Uri { get; }
 
         /// <summary>
+        /// Gets the ARN of this queue.
+        /// </summary>
+        string Arn { get; }
+
+        /// <summary>
         /// Gets the SQS queue client.
         /// </summary>
         IAmazonSQS Client { get; }
