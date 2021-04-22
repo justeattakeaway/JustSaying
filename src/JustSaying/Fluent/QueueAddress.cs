@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using Amazon;
 
 namespace JustSaying.Fluent
@@ -52,10 +53,12 @@ namespace JustSaying.Fluent
         {
             if (!Arn.TryParse(queueArn, out var arn)) throw new ArgumentException("Must be a valid ARN.", nameof(queueArn));
             if (arn.Service != "sqs") throw new ArgumentException("Must be an ARN for an SQS queue.");
-            var dnsSuffix = RegionEndpoint.GetBySystemName(arn.Region).PartitionDnsSuffix;
+            var endpoint = RegionEndpoint.GetBySystemName(arn.Region).GetEndpointForService("sqs", false);
+            var queueUrl = new Uri(FormattableString.Invariant($"https://{endpoint.Hostname}/{arn.AccountId}/{arn.Resource}"));
+
             return new QueueAddress
             {
-                QueueUrl = new Uri($"https://{arn.Service}.{arn.Region}.{dnsSuffix}/{arn.AccountId}/{arn.Resource}"),
+                QueueUrl = queueUrl,
                 RegionName = arn.Region
             };
         }

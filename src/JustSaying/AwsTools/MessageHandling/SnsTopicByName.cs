@@ -12,12 +12,13 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    [Obsolete("SnsTopicBase and related classes are not intended for general usage and may be removed in a future major release")]
-    public class SnsTopicByName : SnsTopicBase
+    [Obsolete("SnsTopicByName and related classes are not intended for general usage and may be removed in a future major release")]
+    public class SnsTopicByName : SnsMessagePublisher
     {
         private readonly ILogger _logger;
 
         public string TopicName { get; }
+        internal ServerSideEncryption ServerSideEncryption { get; set; }
         public IDictionary<string, string> Tags { get; set; }
 
         public SnsTopicByName(
@@ -40,7 +41,7 @@ namespace JustSaying.AwsTools.MessageHandling
             ILoggerFactory loggerFactory,
             SnsWriteConfiguration snsWriteConfiguration,
             IMessageSubjectProvider messageSubjectProvider)
-            : base(serializationRegister, loggerFactory, snsWriteConfiguration, messageSubjectProvider)
+            : base(serializationRegister, loggerFactory, snsWriteConfiguration.HandleException, messageSubjectProvider)
         {
             TopicName = topicName;
             Client = client;
@@ -89,7 +90,7 @@ namespace JustSaying.AwsTools.MessageHandling
             _logger.LogInformation("Added {TagCount} tags to topic {TopicName}", tagRequest.Tags.Count, TopicName);
         }
 
-        public override async Task<bool> ExistsAsync()
+        public virtual async Task<bool> ExistsAsync()
         {
             if (!string.IsNullOrWhiteSpace(Arn))
             {
