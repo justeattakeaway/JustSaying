@@ -33,6 +33,7 @@ namespace JustSaying.Fluent
             IHandlerResolver handlerResolver,
             IServiceResolver serviceResolver,
             IVerifyAmazonQueues creator,
+            IAwsClientFactoryProxy awsClientFactoryProxy,
             ILoggerFactory loggerFactory)
         {
             var logger = loggerFactory.CreateLogger<QueueSubscriptionBuilder<T>>();
@@ -41,8 +42,8 @@ namespace JustSaying.Fluent
 
             ConfigureReads?.Invoke(attachedQueueConfig);
 
-            IAmazonSQS sqsClient = serviceResolver
-                .ResolveService<IAwsClientFactory>()
+            IAmazonSQS sqsClient = awsClientFactoryProxy
+                .GetAwsClientFactory()
                 .GetSqsClient(RegionEndpoint.GetBySystemName(_queueAddress.RegionName));
 
             var queue = new QueueAddressQueue(_queueAddress, sqsClient);

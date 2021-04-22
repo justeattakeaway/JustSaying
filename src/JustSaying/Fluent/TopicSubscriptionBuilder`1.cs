@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
@@ -148,6 +149,7 @@ namespace JustSaying.Fluent
             IHandlerResolver handlerResolver,
             IServiceResolver serviceResolver,
             IVerifyAmazonQueues creator,
+            IAwsClientFactoryProxy awsClientFactoryProxy,
             ILoggerFactory loggerFactory)
         {
             var logger = loggerFactory.CreateLogger<TopicSubscriptionBuilder<T>>();
