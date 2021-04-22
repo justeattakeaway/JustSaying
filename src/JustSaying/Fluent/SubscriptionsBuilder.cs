@@ -103,14 +103,12 @@ namespace JustSaying.Fluent
         {
             if (queueAddress == null) throw new ArgumentNullException(nameof(queueAddress));
 
-            if (Equals(queueAddress, QueueAddress.None))
-            {
-                Subscriptions.Add(new QueueSubscriptionBuilder<T>());
-            }
-            else
-            {
-                Subscriptions.Add(new QueueAddressSubscriptionBuilder<T>(queueAddress));
-            }
+            ISubscriptionBuilder<T> builder =
+                queueAddress == QueueAddress.None
+                ? new QueueSubscriptionBuilder<T>()
+                : new QueueAddressSubscriptionBuilder<T>(queueAddress);
+
+            Subscriptions.Add(builder);
 
             return this;
         }

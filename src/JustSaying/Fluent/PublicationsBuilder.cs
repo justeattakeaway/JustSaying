@@ -119,14 +119,12 @@ namespace JustSaying.Fluent
         {
             if (topicAddress == null) throw new ArgumentNullException(nameof(topicAddress));
 
-            if (topicAddress == TopicAddress.None)
-            {
-                Publications.Add(new TopicPublicationBuilder<Message>());
-            }
-            else
-            {
-                Publications.Add(new TopicAddressPublicationBuilder<T>(topicAddress));
-            }
+            IPublicationBuilder<T> builder =
+                topicAddress == TopicAddress.None
+                ? new TopicPublicationBuilder<T>()
+                : new TopicAddressPublicationBuilder<T>(topicAddress);
+
+            Publications.Add(builder);
 
             return this;
         }
