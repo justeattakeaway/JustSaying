@@ -105,20 +105,22 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
 
                             // New proposal
                             x.ForQueue<OrderPlacedEvent>(QueueAddress.FromArn("arn:aws:sqs:eu-west-1:111122223333:queue1"));
-                            // Try the simplified builder here
+                            // To revert to the classic "auto-infrastructure" mode
+                            x.ForQueue<OrderPlacedEvent>(QueueAddress.None);
+                            // try the simplified builder
                             x.ForQueue<OrderPlacedEvent>(QueueAddress.FromArn("arn:aws:sqs:eu-west-1:111122223333:queue1"), cfg => { });
 
                             // From a queue url, the region can be inferred
                             x.ForQueue<OrderPlacedEvent>(QueueAddress.FromUrl("https://sqs.eu-west-1.amazonaws.com/111122223333/queue1"));
                             // For localstack, you need to specify the region
-                            x.ForQueue<OrderPlacedEvent>(QueueAddress.FromUrl("http://localhost:4576/123456789012/queue1", RegionEndpoint.USEast1.SystemName));
+                            x.ForQueue<OrderPlacedEvent>(QueueAddress.FromUrl("http://localhost:4566/123456789012/queue1", "us-east-1"));
 
                             // For interop with the classic JustSaying Infrastructure
-                            var namingConventions = new DefaultNamingConventions();
-                            var addressProvider = new AccountAddressProvider("111122223333", RegionEndpoint.EUWest1.SystemName, namingConventions, namingConventions);
+                            var addressProvider = new AccountAddressProvider("111122223333", "eu-west-1");
 
+                            // Using `DefaultNamingConventions`, other implementations can be passed into the constructor of `AccountAddressProvider`
                             x.ForQueue<OrderPlacedEvent>(addressProvider.GetQueueAddressByConvention<OrderPlacedEvent>());
-                            // Explicit names (no need for the naming convention in the `AccountAddressProvider` constructor for this)
+                            // Explicit names
                             x.ForQueue<OrderPlacedEvent>(addressProvider.GetQueueAddress("queue1"));
                         });
 
