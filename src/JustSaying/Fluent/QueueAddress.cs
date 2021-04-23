@@ -3,6 +3,9 @@ using Amazon;
 
 namespace JustSaying.Fluent
 {
+    /// <summary>
+    /// A type that encapsulates an address of an SQS queue.
+    /// </summary>
     public sealed class QueueAddress
     {
         internal QueueAddress()
@@ -13,7 +16,14 @@ namespace JustSaying.Fluent
             _isNone = isNone;
         }
 
+        /// <summary>
+        /// The QueueUrl of the SQS queue.
+        /// </summary>
         public Uri QueueUrl { get; internal set; }
+
+        /// <summary>
+        /// The region of the queue.
+        /// </summary>
         public string RegionName { get; internal set; }
 
         private readonly bool _isNone = false;
@@ -23,6 +33,13 @@ namespace JustSaying.Fluent
         /// </summary>
         public static QueueAddress None { get; } = new(true);
 
+        /// <summary>
+        /// Creates a <see cref="QueueAddress"/> from a queue URL.
+        /// </summary>
+        /// <param name="queueUrl">The queue URL.</param>
+        /// <param name="regionName">Optional region name (e.g. eu-west-1), this can be omitted if the region can be inferred from the URL.</param>
+        /// <returns>A <see cref="QueueAddress"/> created from the URL.</returns>
+        /// <exception cref="ArgumentException"></exception>
         public static QueueAddress FromUrl(string queueUrl, string regionName = null)
         {
             if (!Uri.TryCreate(queueUrl, UriKind.Absolute, out var queueUri)) throw new ArgumentException("Must be a valid Uri.", nameof(queueUri));
@@ -48,6 +65,12 @@ namespace JustSaying.Fluent
             }
         }
 
+        /// <summary>
+        /// Creates a <see cref="QueueAddress"/> from a queue ARN.
+        /// </summary>
+        /// <param name="queueArn">The queue ARN.</param>
+        /// <returns>A <see cref="QueueAddress"/> created from the ARN.</returns>
+        /// <exception cref="ArgumentException"></exception>
         public static QueueAddress FromArn(string queueArn)
         {
             if (!Arn.TryParse(queueArn, out var arn)) throw new ArgumentException("Must be a valid ARN.", nameof(queueArn));
