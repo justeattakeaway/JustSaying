@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Amazon;
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
@@ -14,7 +15,7 @@ namespace JustSaying.Fluent
         public QueueAddressQueue(QueueAddress queueAddress, IAmazonSQS sqsClient)
         {
             Uri = queueAddress.QueueUrl;
-            var pathSegments = queueAddress.QueueUrl.Segments;
+            var pathSegments = queueAddress.QueueUrl.Segments.Select(x => x.Trim('/')).Where(x => !string.IsNullOrEmpty(x)).ToArray();
             if (pathSegments.Length != 2) throw new ArgumentException("Queue Url was not correctly formatted. Path should contain 2 segments.");
 
             var region = RegionEndpoint.GetBySystemName(queueAddress.RegionName);
