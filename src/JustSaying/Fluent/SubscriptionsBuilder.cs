@@ -93,10 +93,10 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Configures a queue subscription where the queue has already been created.
+        /// Configures a queue subscription for a pre-existing queue.
         /// </summary>
-        /// <param name="queueArn"></param>
-        /// <param name="configure"></param>
+        /// <param name="queueArn">The ARN of the queue to subscribe to.</param>
+        /// <param name="configure">A optional delegate to configure a queue subscription.</param>
         /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
         /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
         public SubscriptionsBuilder ForQueueArn<T>(string queueArn, Action<QueueAddressSubscriptionBuilder<T>> configure = null)
@@ -115,11 +115,11 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Configures a queue subscription where the queue has already been created.
+        /// Configures a queue subscription for a pre-existing queue.
         /// </summary>
-        /// <param name="queueUrl"></param>
-        /// <param name="regionName"></param>
-        /// <param name="configure"></param>
+        /// <param name="queueUrl">The URL of the queue to subscribe to.</param>
+        /// <param name="regionName">The AWS region the queue is in.</param>
+        /// <param name="configure">A optional delegate to configure a queue subscription.</param>
         /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
         /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
         public SubscriptionsBuilder ForQueueUrl<T>(string queueUrl, string regionName = null, Action<QueueAddressSubscriptionBuilder<T>> configure = null)
@@ -138,11 +138,11 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Configures a queue subscription where the queue has already been created.
+        /// Configures a queue subscription for a pre-existing queue.
         /// </summary>
-        /// <param name="queueUrl"></param>
-        /// <param name="regionName"></param>
-        /// <param name="configure"></param>
+        /// <param name="queueUrl">The URL of the queue to subscribe to.</param>
+        /// <param name="regionName">The AWS region the queue is in.</param>
+        /// <param name="configure">A optional delegate to configure a queue subscription.</param>
         /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
         /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
         public SubscriptionsBuilder ForQueueUri<T>(Uri queueUrl, string regionName = null, Action<QueueAddressSubscriptionBuilder<T>> configure = null)
@@ -161,7 +161,7 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Configures a queue subscription where the queue has already been created.
+        /// Configures a queue subscription for a pre-existing queue.
         /// </summary>
         /// <param name="queueAddress">The address of the queue to subscribe to.</param>
         /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
@@ -182,10 +182,10 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Configures a queue subscription where the queue has already been created.
+        /// Configures a queue subscription for a pre-existing queue.
         /// </summary>
         /// <param name="queueAddress">The address of the queue to subscribe to.</param>
-        /// <param name="configure">A delegate to a method to use to configure a queue subscription.</param>
+        /// <param name="configure">A delegate to configure a queue subscription.</param>
         /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
         /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
         public SubscriptionsBuilder ForQueue<T>(QueueAddress queueAddress, Action<QueueAddressSubscriptionBuilder<T>> configure)

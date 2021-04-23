@@ -114,6 +114,13 @@ namespace JustSaying.Fluent
             return this;
         }
 
+        /// <summary>
+        /// Configures a publisher for a pre-existing topic.
+        /// </summary>
+        /// <param name="topicAddress">The address of the topic to publish to.</param>
+        /// <typeparam name="T">The type of the message to publish to.</typeparam>
+        /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public PublicationsBuilder WithTopic<T>(TopicAddress topicAddress)
             where T : Message
         {
@@ -130,12 +137,13 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        ///
+        /// Configures a publisher for a pre-existing topic.
         /// </summary>
-        /// <param name="topicArn"></param>
-        /// <param name="configure"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
+        /// <param name="topicArn">The ARN of the topic to publish to.</param>
+        /// <param name="configure">An optional delegate to configure a topic publisher.</param>
+        /// <typeparam name="T">The type of the message to publish to.</typeparam>
+        /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public PublicationsBuilder WithTopicArn<T>(string topicArn, Action<TopicAddressPublicationBuilder<T>> configure = null)
             where T : Message
         {
@@ -151,12 +159,13 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        ///
+        /// Configures a publisher for a pre-existing topic.
         /// </summary>
-        /// <param name="topicAddress"></param>
-        /// <param name="configure"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
+        /// <param name="topicAddress">The address of the topic to publish to</param>
+        /// <param name="configure">An optional delegate to configure a topic publisher.</param>
+        /// <typeparam name="T">The type of the message to publish to.</typeparam>
+        /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public PublicationsBuilder WithTopic<T>(TopicAddress topicAddress, Action<TopicAddressPublicationBuilder<T>> configure)
             where T : Message
         {
