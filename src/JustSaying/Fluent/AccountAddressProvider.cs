@@ -20,9 +20,18 @@ namespace JustSaying.Fluent
         /// <param name="accountId">The AWS account ID the topics and queues belong in.</param>
         /// <param name="regionName">The AWS region the topics and queues belong in.</param>
         public AccountAddressProvider(string accountId, string regionName)
+            : this(accountId, RegionEndpoint.GetBySystemName(regionName))
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AccountAddressProvider"/> class with the default naming convention.
+        /// </summary>
+        /// <param name="accountId">The AWS account ID the topics and queues belong in.</param>
+        /// <param name="regionEndpoint">The AWS region the topics and queues belong in.</param>
+        public AccountAddressProvider(string accountId, RegionEndpoint regionEndpoint)
         {
             _accountId = accountId;
-            _regionEndpoint = RegionEndpoint.GetBySystemName(regionName);
+            _regionEndpoint = regionEndpoint;
             var namingConventions = new DefaultNamingConventions();
             _queueNamingConvention = namingConventions;
             _topicNamingConvention = namingConventions;
@@ -36,9 +45,20 @@ namespace JustSaying.Fluent
         /// <param name="queueNamingConvention">A <see cref="IQueueNamingConvention"/> to use for producing a queue name from a message type.</param>
         /// <param name="topicNamingConvention">A <see cref="ITopicNamingConvention"/> to use for producing a topic name from a message type</param>
         public AccountAddressProvider(string accountId, string regionName, IQueueNamingConvention queueNamingConvention, ITopicNamingConvention topicNamingConvention)
+            : this(accountId, RegionEndpoint.GetBySystemName(regionName), queueNamingConvention, topicNamingConvention)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AccountAddressProvider"/> class with provided naming conventions.
+        /// </summary>
+        /// <param name="accountId">The AWS account ID the topics and queues belong in.</param>
+        /// <param name="regionEndpoint">The AWS region the topics and queues belong in.</param>
+        /// <param name="queueNamingConvention">A <see cref="IQueueNamingConvention"/> to use for producing a queue name from a message type.</param>
+        /// <param name="topicNamingConvention">A <see cref="ITopicNamingConvention"/> to use for producing a topic name from a message type</param>
+        public AccountAddressProvider(string accountId, RegionEndpoint regionEndpoint, IQueueNamingConvention queueNamingConvention, ITopicNamingConvention topicNamingConvention)
         {
             _accountId = accountId;
-            _regionEndpoint = RegionEndpoint.GetBySystemName(regionName);
+            _regionEndpoint = regionEndpoint;
             _queueNamingConvention = queueNamingConvention;
             _topicNamingConvention = topicNamingConvention;
         }
