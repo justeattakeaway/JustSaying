@@ -22,6 +22,12 @@ namespace JustSaying.UnitTests.Fluent
         }
 
         [Fact]
+        public void ParsingNullArnThrows()
+        {
+            Assert.Throws<ArgumentException>(() => TopicAddress.FromArn(null));
+        }
+
+        [Fact]
         public void ValidArnCanBeParsed()
         {
             var ta = TopicAddress.FromArn("arn:aws:sns:eu-west-1:111122223333:topic1");
