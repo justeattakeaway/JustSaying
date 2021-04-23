@@ -40,7 +40,7 @@ namespace JustSaying.Fluent
         /// <param name="regionName">Optional region name (e.g. eu-west-1), this can be omitted if the region can be inferred from the URL.</param>
         /// <returns>A <see cref="QueueAddress"/> created from the URL.</returns>
         /// <exception cref="ArgumentException"></exception>
-        public static QueueAddress FromUrl(Uri queueUrl, string regionName = null)
+        public static QueueAddress FromUri(Uri queueUrl, string regionName = null)
         {
             var queueRegion = regionName ?? ParseRegionFromUri(queueUrl);
             return new QueueAddress { QueueUrl = queueUrl, RegionName = queueRegion };
@@ -73,7 +73,7 @@ namespace JustSaying.Fluent
         public static QueueAddress FromUrl(string queueUrl, string regionName = null)
         {
             if (!Uri.TryCreate(queueUrl, UriKind.Absolute, out var queueUri)) throw new ArgumentException("Must be a valid Uri.", nameof(queueUri));
-            return FromUrl(queueUri, regionName);
+            return FromUri(queueUri, regionName);
         }
 
         /// <summary>
