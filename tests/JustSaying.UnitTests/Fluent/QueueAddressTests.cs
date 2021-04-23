@@ -22,6 +22,12 @@ namespace JustSaying.UnitTests.Fluent
         }
 
         [Fact]
+        public void ParsingNullArnThrows()
+        {
+            Assert.Throws<ArgumentException>(() => QueueAddress.FromArn(null));
+        }
+
+        [Fact]
         public void ValidArnCanBeParsed()
         {
             var qa = QueueAddress.FromArn("arn:aws:sqs:eu-west-1:111122223333:queue1");
