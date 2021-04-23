@@ -116,7 +116,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         {
             var queueName = UniqueName;
             var accountId = "000000000000";
-            var names = new ManualNamingConvention(queueName, "");
+            var names = new ManualNamingConvention(queueName, null);
 
             IAwsClientFactory clientFactory = CreateClientFactory();
             var sqsClient = clientFactory.GetSqsClient(Region);
