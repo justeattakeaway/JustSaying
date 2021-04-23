@@ -14,12 +14,12 @@ namespace JustSaying.Fluent
         public QueueAddressQueue(QueueAddress queueAddress, IAmazonSQS sqsClient)
         {
             Uri = queueAddress.QueueUrl;
-            var pathParts = queueAddress.QueueUrl.AbsolutePath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            if (pathParts.Length != 2) throw new ArgumentException("Queue Url was not correctly formatted. Path should contain 2 parts.");
+            var pathSegments = queueAddress.QueueUrl.Segments;
+            if (pathSegments.Length != 2) throw new ArgumentException("Queue Url was not correctly formatted. Path should contain 2 segments.");
 
             var region = RegionEndpoint.GetBySystemName(queueAddress.RegionName);
-            var accountId = pathParts[0];
-            var resource = pathParts[1];
+            var accountId = pathSegments[0];
+            var resource = pathSegments[1];
             RegionSystemName = region.SystemName;
             QueueName = resource;
             Arn = new Arn { Partition = region.PartitionName, Service = "sqs", Region = region.SystemName, AccountId = accountId, Resource = resource }.ToString();

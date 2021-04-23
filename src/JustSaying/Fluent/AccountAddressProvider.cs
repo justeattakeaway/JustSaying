@@ -90,9 +90,15 @@ namespace JustSaying.Fluent
         /// <returns>The <see cref="QueueAddress"/> for this queue.</returns>
         public QueueAddress GetQueueAddress(string queueName)
         {
+            var hostname = _regionEndpoint.GetEndpointForService("sqs").Hostname;
+            Uri queueUrl = new UriBuilder("https", hostname)
+            {
+                Path = $"{_accountId}/{queueName}"
+            }.Uri;
+
             return new QueueAddress
             {
-                QueueUrl = new Uri($"https://sqs.{_regionEndpoint.SystemName}.{_regionEndpoint.PartitionDnsSuffix}/{_accountId}/{queueName}"),
+                QueueUrl = queueUrl,
                 RegionName = _regionEndpoint.SystemName
             };
         }

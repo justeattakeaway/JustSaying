@@ -40,12 +40,10 @@ namespace JustSaying.Fluent
         /// <param name="regionName">Optional region name (e.g. eu-west-1), this can be omitted if the region can be inferred from the URL.</param>
         /// <returns>A <see cref="QueueAddress"/> created from the URL.</returns>
         /// <exception cref="ArgumentException"></exception>
-        public static QueueAddress FromUrl(string queueUrl, string regionName = null)
+        public static QueueAddress FromUrl(Uri queueUrl, string regionName = null)
         {
-            if (!Uri.TryCreate(queueUrl, UriKind.Absolute, out var queueUri)) throw new ArgumentException("Must be a valid Uri.", nameof(queueUri));
-
-            var queueRegion = regionName ?? ParseRegionFromUri(queueUri);
-            return new QueueAddress { QueueUrl = queueUri, RegionName = queueRegion };
+            var queueRegion = regionName ?? ParseRegionFromUri(queueUrl);
+            return new QueueAddress { QueueUrl = queueUrl, RegionName = queueRegion };
 
             static string ParseRegionFromUri(Uri queueUri)
             {
@@ -53,7 +51,7 @@ namespace JustSaying.Fluent
                 if (hostParts.Length >= 2)
                 {
                     var servicePart = hostParts[0];
-                    if (servicePart != "sqs") throw new ArgumentException("Must be an ARN for an SQS queue.");
+                    if (!string.Equals(servicePart, "sqs", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Must be an ARN for an SQS queue.");
 
                     var regionHostPart = hostParts[1];
                     if (RegionEndpoint.GetBySystemName(regionHostPart) is { } regionEndpoint )
@@ -66,6 +64,19 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
+        /// Creates a <see cref="QueueAddress"/> from a queue URL.
+        /// </summary>
+        /// <param name="queueUrl">The queue URL.</param>
+        /// <param name="regionName">Optional region name (e.g. eu-west-1), this can be omitted if the region can be inferred from the URL.</param>
+        /// <returns>A <see cref="QueueAddress"/> created from the URL.</returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static QueueAddress FromUrl(string queueUrl, string regionName = null)
+        {
+            if (!Uri.TryCreate(queueUrl, UriKind.Absolute, out var queueUri)) throw new ArgumentException("Must be a valid Uri.", nameof(queueUri));
+            return FromUrl(queueUri, regionName);
+        }
+
+        /// <summary>
         /// Creates a <see cref="QueueAddress"/> from a queue ARN.
         /// </summary>
         /// <param name="queueArn">The queue ARN.</param>
@@ -74,13 +85,16 @@ namespace JustSaying.Fluent
         public static QueueAddress FromArn(string queueArn)
         {
             if (!Arn.TryParse(queueArn, out var arn)) throw new ArgumentException("Must be a valid ARN.", nameof(queueArn));
-            if (arn.Service != "sqs") throw new ArgumentException("Must be an ARN for an SQS queue.");
+            if (!string.Equals(arn.Service, "sqs", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Must be an ARN for an SQS queue.");
 
             var hostname = RegionEndpoint.GetBySystemName(arn.Region)
-                .GetEndpointForService("sqs", false)
+                .GetEndpointForService("sqs")
                 .Hostname;
 
-            var queueUrl = new Uri(FormattableString.Invariant($"https://{hostname}/{arn.AccountId}/{arn.Resource}"));
+            var queueUrl = new UriBuilder("https", hostname)
+            {
+                Path = FormattableString.Invariant($"{arn.AccountId}/{arn.Resource}")
+            }.Uri;
 
             return new QueueAddress
             {
