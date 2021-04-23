@@ -95,6 +95,74 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Configures a queue subscription where the queue has already been created.
         /// </summary>
+        /// <param name="queueArn"></param>
+        /// <param name="configure"></param>
+        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+        /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
+        public SubscriptionsBuilder ForQueueArn<T>(string queueArn, Action<QueueAddressSubscriptionBuilder<T>> configure = null)
+            where T : Message
+        {
+            if (queueArn == null) throw new ArgumentNullException(nameof(queueArn));
+
+            var queueAddress = QueueAddress.FromArn(queueArn);
+            var builder = new QueueAddressSubscriptionBuilder<T>(queueAddress);
+
+            configure?.Invoke(builder);
+
+            Subscriptions.Add(builder);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Configures a queue subscription where the queue has already been created.
+        /// </summary>
+        /// <param name="queueUrl"></param>
+        /// <param name="regionName"></param>
+        /// <param name="configure"></param>
+        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+        /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
+        public SubscriptionsBuilder ForQueueUrl<T>(string queueUrl, string regionName = null, Action<QueueAddressSubscriptionBuilder<T>> configure = null)
+            where T : Message
+        {
+            if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
+
+            var queueAddress = QueueAddress.FromUrl(queueUrl, regionName);
+            var builder = new QueueAddressSubscriptionBuilder<T>(queueAddress);
+
+            configure?.Invoke(builder);
+
+            Subscriptions.Add(builder);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Configures a queue subscription where the queue has already been created.
+        /// </summary>
+        /// <param name="queueUrl"></param>
+        /// <param name="regionName"></param>
+        /// <param name="configure"></param>
+        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+        /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
+        public SubscriptionsBuilder ForQueueUri<T>(Uri queueUrl, string regionName = null, Action<QueueAddressSubscriptionBuilder<T>> configure = null)
+            where T : Message
+        {
+            if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
+
+            var queueAddress = QueueAddress.FromUri(queueUrl, regionName);
+            var builder = new QueueAddressSubscriptionBuilder<T>(queueAddress);
+
+            configure?.Invoke(builder);
+
+            Subscriptions.Add(builder);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Configures a queue subscription where the queue has already been created.
+        /// </summary>
         /// <param name="queueAddress">The address of the queue to subscribe to.</param>
         /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
         /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>

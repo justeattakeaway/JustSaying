@@ -132,6 +132,27 @@ namespace JustSaying.Fluent
         /// <summary>
         ///
         /// </summary>
+        /// <param name="topicArn"></param>
+        /// <param name="configure"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public PublicationsBuilder WithTopicArn<T>(string topicArn, Action<TopicAddressPublicationBuilder<T>> configure = null)
+            where T : Message
+        {
+            if (topicArn == null) throw new ArgumentNullException(nameof(topicArn));
+
+            var builder = new TopicAddressPublicationBuilder<T>(TopicAddress.FromArn(topicArn));
+
+            configure?.Invoke(builder);
+
+            Publications.Add(builder);
+
+            return this;
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
         /// <param name="topicAddress"></param>
         /// <param name="configure"></param>
         /// <typeparam name="T"></typeparam>

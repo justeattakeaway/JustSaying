@@ -103,17 +103,34 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
                                     rc.WithSubscriptionGroup("GroupB")));
 
 
+                            // TODO - REVERT BEFORE MERGING
                             // New proposal
+                            // Option 1
                             x.ForQueue<OrderPlacedEvent>(QueueAddress.FromArn("arn:aws:sqs:eu-west-1:111122223333:queue1"));
+                            // Option 2
+                            x.ForQueueArn<OrderPlacedEvent>("arn:aws:sqs:eu-west-1:111122223333:queue1");
+
                             // To revert to the classic "auto-infrastructure" mode
+                            // Only possible with Option 1
                             x.ForQueue<OrderPlacedEvent>(QueueAddress.None);
+
                             // try the simplified builder
+                            // Option 1
                             x.ForQueue<OrderPlacedEvent>(QueueAddress.FromArn("arn:aws:sqs:eu-west-1:111122223333:queue1"), cfg => { });
+                            // Option 2
+                            x.ForQueueArn<OrderPlacedEvent>("arn:aws:sqs:eu-west-1:111122223333:queue1", cfg => { });
 
                             // From a queue url, the region can be inferred
+                            // Option 1
                             x.ForQueue<OrderPlacedEvent>(QueueAddress.FromUrl("https://sqs.eu-west-1.amazonaws.com/111122223333/queue1"));
+                            // Option 2
+                            x.ForQueueUrl<OrderPlacedEvent>("https://sqs.eu-west-1.amazonaws.com/111122223333/queue1");
+
                             // For localstack, you need to specify the region
+                            // Option 1
                             x.ForQueue<OrderPlacedEvent>(QueueAddress.FromUrl("http://localhost:4566/123456789012/queue1", "us-east-1"));
+                            // Option 2
+                            x.ForQueueUrl<OrderPlacedEvent>("http://localhost:4566/123456789012/queue1", "us-east-1");
 
                             // For interop with the classic JustSaying Infrastructure
                             var addressProvider = new AccountAddressProvider("111122223333", "eu-west-1");
