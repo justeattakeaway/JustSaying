@@ -67,7 +67,7 @@ namespace JustSaying.Fluent
         /// <exception cref="ArgumentException"></exception>
         public static QueueAddress FromUrl(string queueUrl, string regionName = null)
         {
-            if (!Uri.TryCreate(queueUrl, UriKind.Absolute, out var queueUri)) throw new ArgumentException("Must be a valid Uri.", nameof(queueUri));
+            if (!Uri.TryCreate(queueUrl, UriKind.Absolute, out var queueUri)) throw new ArgumentException("Must be a valid Uri.", nameof(queueUrl));
             return FromUri(queueUri, regionName);
         }
 
@@ -80,7 +80,7 @@ namespace JustSaying.Fluent
         public static QueueAddress FromArn(string queueArn)
         {
             if (!Arn.TryParse(queueArn, out var arn)) throw new ArgumentException("Must be a valid ARN.", nameof(queueArn));
-            if (!string.Equals(arn.Service, "sqs", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Must be an ARN for an SQS queue.");
+            if (!string.Equals(arn.Service, "sqs", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Must be an ARN for an SQS queue.", nameof(queueArn));
 
             var hostname = RegionEndpoint.GetBySystemName(arn.Region)
                 .GetEndpointForService("sqs")

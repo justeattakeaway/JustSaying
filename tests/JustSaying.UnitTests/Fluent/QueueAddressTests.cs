@@ -54,7 +54,7 @@ namespace JustSaying.UnitTests.Fluent
         [Fact]
         public void LocalStackUrlWithoutRegionThrows()
         {
-            Assert.Throws<ArgumentException>("queueUrl", () => QueueAddress.FromUrl("http://localhost:4576/111122223333/queue1"));
+            Assert.Throws<ArgumentException>("queueUri", () => QueueAddress.FromUrl("http://localhost:4576/111122223333/queue1"));
         }
 
         [Fact]
