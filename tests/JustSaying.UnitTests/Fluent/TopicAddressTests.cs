@@ -18,13 +18,13 @@ namespace JustSaying.UnitTests.Fluent
         [Fact]
         public void ParsingEmptyArnThrows()
         {
-            Assert.Throws<ArgumentException>(() => TopicAddress.FromArn(""));
+            Assert.Throws<ArgumentException>("topicArn", () => TopicAddress.FromArn(""));
         }
 
         [Fact]
         public void ParsingNullArnThrows()
         {
-            Assert.Throws<ArgumentException>(() => TopicAddress.FromArn(null));
+            Assert.Throws<ArgumentException>("topicArn", () => TopicAddress.FromArn(null));
         }
 
         [Fact]
@@ -38,7 +38,7 @@ namespace JustSaying.UnitTests.Fluent
         [Fact]
         public void ArnForWrongServiceThrows()
         {
-            Assert.Throws<ArgumentException>(() => TopicAddress.FromArn("arn:aws:sqs:eu-west-1:111122223333:queue1"));
+            Assert.Throws<ArgumentException>("topicArn", () => TopicAddress.FromArn("arn:aws:sqs:eu-west-1:111122223333:queue1"));
         }
     }
 }

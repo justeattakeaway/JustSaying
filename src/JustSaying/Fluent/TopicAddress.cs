@@ -37,7 +37,7 @@ namespace JustSaying.Fluent
         public static TopicAddress FromArn(string topicArn)
         {
             if (!Arn.IsArn(topicArn) || !Arn.TryParse(topicArn, out var arn)) throw new ArgumentException("Must be a valid ARN.", nameof(topicArn));
-            if (!string.Equals(arn.Service, "sns", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Must be an ARN for an SNS topic.");
+            if (!string.Equals(arn.Service, "sns", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Must be an ARN for an SNS topic.", nameof(topicArn));
             return new TopicAddress { TopicArn = topicArn };
         }
     }

@@ -18,13 +18,13 @@ namespace JustSaying.UnitTests.Fluent
         [Fact]
         public void ParsingEmptyArnThrows()
         {
-            Assert.Throws<ArgumentException>(() => QueueAddress.FromArn(""));
+            Assert.Throws<ArgumentException>("queueArn",() => QueueAddress.FromArn(""));
         }
 
         [Fact]
         public void ParsingNullArnThrows()
         {
-            Assert.Throws<ArgumentException>(() => QueueAddress.FromArn(null));
+            Assert.Throws<ArgumentException>("queueArn", () => QueueAddress.FromArn(null));
         }
 
         [Fact]
@@ -39,7 +39,7 @@ namespace JustSaying.UnitTests.Fluent
         [Fact]
         public void ArnForWrongServiceThrows()
         {
-            Assert.Throws<ArgumentException>(() => QueueAddress.FromArn("arn:aws:sns:eu-west-1:111122223333:queue1"));
+            Assert.Throws<ArgumentException>("queueArn", () => QueueAddress.FromArn("arn:aws:sns:eu-west-1:111122223333:queue1"));
         }
 
         [Fact]
@@ -54,7 +54,7 @@ namespace JustSaying.UnitTests.Fluent
         [Fact]
         public void LocalStackUrlWithoutRegionThrows()
         {
-            Assert.Throws<ArgumentException>(() => QueueAddress.FromUrl("http://localhost:4576/111122223333/queue1"));
+            Assert.Throws<ArgumentException>("queueUrl", () => QueueAddress.FromUrl("http://localhost:4576/111122223333/queue1"));
         }
 
         [Fact]
@@ -69,7 +69,7 @@ namespace JustSaying.UnitTests.Fluent
         [Fact]
         public void EmptyUrlThrows()
         {
-            Assert.Throws<ArgumentException>(() => QueueAddress.FromUrl(""));
+            Assert.Throws<ArgumentException>("queueUrl", () => QueueAddress.FromUrl(""));
         }
     }
 }
