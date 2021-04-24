@@ -27,10 +27,9 @@ namespace JustSaying.AwsTools.MessageHandling
             IMessageSerializationRegister serializationRegister,
             ILoggerFactory loggerFactory,
             IMessageSubjectProvider messageSubjectProvider)
-            : base(serializationRegister, loggerFactory, messageSubjectProvider)
+            : base(client, serializationRegister, loggerFactory, messageSubjectProvider)
         {
             TopicName = topicName;
-            Client = client;
             _logger = loggerFactory.CreateLogger("JustSaying");
         }
 
@@ -41,10 +40,9 @@ namespace JustSaying.AwsTools.MessageHandling
             ILoggerFactory loggerFactory,
             SnsWriteConfiguration snsWriteConfiguration,
             IMessageSubjectProvider messageSubjectProvider)
-            : base(serializationRegister, loggerFactory, snsWriteConfiguration?.HandleException, messageSubjectProvider)
+            : base(client, serializationRegister, loggerFactory, messageSubjectProvider, snsWriteConfiguration?.HandleException)
         {
             TopicName = topicName;
-            Client = client;
             _logger = loggerFactory.CreateLogger("JustSaying");
         }
 

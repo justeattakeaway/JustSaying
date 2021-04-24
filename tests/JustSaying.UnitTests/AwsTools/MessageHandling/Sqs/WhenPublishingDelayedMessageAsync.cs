@@ -26,10 +26,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 
         private protected override Task<SqsMessagePublisher> CreateSystemUnderTestAsync()
         {
-            var sqs = new SqsMessagePublisher(Sqs, _serializationRegister, Substitute.For<ILoggerFactory>())
-            {
-                QueueUrl = new Uri(Url)
-            };
+            var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _serializationRegister, Substitute.For<ILoggerFactory>());
             return Task.FromResult(sqs);
         }
 

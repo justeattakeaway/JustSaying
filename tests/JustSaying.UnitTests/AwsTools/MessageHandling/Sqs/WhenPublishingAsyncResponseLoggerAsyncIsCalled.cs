@@ -31,14 +31,13 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 
         private protected override Task<SqsMessagePublisher> CreateSystemUnderTestAsync()
         {
-            var sqs = new SqsMessagePublisher(Sqs, _serializationRegister, Substitute.For<ILoggerFactory>())
+            var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _serializationRegister, Substitute.For<ILoggerFactory>())
             {
                 MessageResponseLogger = (r, m) =>
                 {
                     _response = r;
                     _message = m;
-                },
-                QueueUrl = new Uri(Url)
+                }
             };
             return Task.FromResult(sqs);
         }

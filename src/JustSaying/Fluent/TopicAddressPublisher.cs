@@ -12,10 +12,8 @@ namespace JustSaying.Fluent
     /// </summary>
     internal sealed class TopicAddressPublisher : SnsMessagePublisher
     {
-        public TopicAddressPublisher(IAmazonSimpleNotificationService snsClient, ILoggerFactory loggerFactory, IMessageSubjectProvider subjectProvider, IMessageSerializationRegister serializationRegister, Func<Exception, Message, bool> handleException, TopicAddress topicAddress) : base(serializationRegister, loggerFactory, handleException, subjectProvider)
-        {
-            Client = snsClient;
-            Arn = topicAddress.TopicArn;
-        }
+        public TopicAddressPublisher(IAmazonSimpleNotificationService snsClient, ILoggerFactory loggerFactory, IMessageSubjectProvider subjectProvider, IMessageSerializationRegister serializationRegister, Func<Exception, Message, bool> handleException, TopicAddress topicAddress)
+            : base(topicAddress.TopicArn, snsClient, serializationRegister, loggerFactory, subjectProvider, handleException)
+        { }
     }
 }

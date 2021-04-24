@@ -23,25 +23,29 @@ namespace JustSaying.AwsTools.MessageHandling
         private readonly Func<Exception, Message, bool> _handleException;
         public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
         public string Arn { get; protected set; }
-        protected IAmazonSimpleNotificationService Client { get; set; }
+        protected IAmazonSimpleNotificationService Client { get; }
         private readonly ILogger _logger;
 
         protected SnsMessagePublisher(
+            string topicArn,
+            IAmazonSimpleNotificationService client,
             IMessageSerializationRegister serializationRegister,
             ILoggerFactory loggerFactory,
-            IMessageSubjectProvider messageSubjectProvider)
+            IMessageSubjectProvider messageSubjectProvider,
+            Func<Exception, Message, bool> handleException = null)
+            : this(client, serializationRegister, loggerFactory, messageSubjectProvider, handleException)
         {
-            _serializationRegister = serializationRegister;
-            _messageSubjectProvider = messageSubjectProvider;
-            _logger = loggerFactory.CreateLogger("JustSaying");
+            Arn = topicArn;
         }
 
         protected SnsMessagePublisher(
+            IAmazonSimpleNotificationService client,
             IMessageSerializationRegister serializationRegister,
             ILoggerFactory loggerFactory,
-            Func<Exception, Message, bool> handleException,
-            IMessageSubjectProvider messageSubjectProvider)
+            IMessageSubjectProvider messageSubjectProvider,
+            Func<Exception, Message, bool> handleException = null)
         {
+            Client = client;
             _serializationRegister = serializationRegister;
             _logger = loggerFactory.CreateLogger("JustSaying.Publish");
             _handleException = handleException;

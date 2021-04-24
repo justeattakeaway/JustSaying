@@ -13,14 +13,23 @@ using Message = JustSaying.Models.Message;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public sealed class SqsMessagePublisher : IMessagePublisher
+    public class SqsMessagePublisher : IMessagePublisher
     {
         private readonly IAmazonSQS _client;
         private readonly IMessageSerializationRegister _serializationRegister;
         private readonly ILogger _logger;
         public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
 
-        public Uri QueueUrl { get; set; }
+        public Uri QueueUrl { get; internal set; }
+
+        public SqsMessagePublisher(
+            Uri queueUrl,
+            IAmazonSQS client,
+            IMessageSerializationRegister serializationRegister,
+            ILoggerFactory loggerFactory) : this(client, serializationRegister, loggerFactory)
+        {
+            QueueUrl = queueUrl;
+        }
 
         public SqsMessagePublisher(
             IAmazonSQS client,
