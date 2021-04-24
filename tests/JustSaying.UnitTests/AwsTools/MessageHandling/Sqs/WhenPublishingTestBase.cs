@@ -3,13 +3,12 @@ using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
 using NSubstitute;
 using Xunit;
-#pragma warning disable 618
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 {
     public abstract class WhenPublishingTestBase : IAsyncLifetime
     {
-        private protected SqsPublisher SystemUnderTest { get; private set; }
+        private protected SqsMessagePublisher SystemUnderTest { get; private set; }
         public IAmazonSQS Sqs { get; private set; } = Substitute.For<IAmazonSQS>();
 
         public virtual async Task InitializeAsync()
@@ -33,7 +32,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         }
 
         protected abstract void Given();
-        private protected abstract Task<SqsPublisher> CreateSystemUnderTestAsync();
+        private protected abstract Task<SqsMessagePublisher> CreateSystemUnderTestAsync();
 
         protected abstract Task WhenAsync();
     }

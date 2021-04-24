@@ -105,25 +105,31 @@ namespace JustSaying.Fluent
             var regionEndpoint = RegionEndpoint.GetBySystemName(config.Region);
             var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
 
-#pragma warning disable 618
-            var eventPublisher = new SqsPublisher(
-                regionEndpoint,
-                writeConfiguration.QueueName,
+            var eventPublisher = new SqsMessagePublisher(
                 sqsClient,
-                writeConfiguration.RetryCountBeforeSendingToErrorQueue,
                 bus.SerializationRegister,
                 loggerFactory)
             {
                 MessageResponseLogger = config.MessageResponseLogger
             };
+
+#pragma warning disable 618
+            var sqsQueue = new SqsQueueByName(
+                regionEndpoint,
+                writeConfiguration.QueueName,
+                sqsClient,
+                writeConfiguration.RetryCountBeforeSendingToErrorQueue,
+                loggerFactory);
 #pragma warning restore 618
 
             async Task StartupTask()
             {
-                if (!await eventPublisher.ExistsAsync().ConfigureAwait(false))
+                if (!await sqsQueue.ExistsAsync().ConfigureAwait(false))
                 {
-                    await eventPublisher.CreateAsync(writeConfiguration).ConfigureAwait(false);
+                    await sqsQueue.CreateAsync(writeConfiguration).ConfigureAwait(false);
                 }
+
+                eventPublisher.QueueUrl = sqsQueue.Uri;
             }
 
             bus.AddStartupTask(StartupTask);

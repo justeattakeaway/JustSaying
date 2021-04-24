@@ -39,7 +39,7 @@ namespace JustSaying.AwsTools.MessageHandling
             Region = region;
             Client = client;
 
-            Logger = loggerFactory.CreateLogger("JustSaying.Publish");
+            Logger = loggerFactory.CreateLogger("JustSaying");
         }
 
         protected ILogger Logger { get; }

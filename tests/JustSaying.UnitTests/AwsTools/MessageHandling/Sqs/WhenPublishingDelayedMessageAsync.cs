@@ -10,7 +10,6 @@ using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
-#pragma warning disable 618
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 {
@@ -25,12 +24,13 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         };
         private const string QueueName = "queuename";
 
-        private protected override async Task<SqsPublisher> CreateSystemUnderTestAsync()
+        private protected override Task<SqsMessagePublisher> CreateSystemUnderTestAsync()
         {
-            var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, Sqs, 0,
-                _serializationRegister, Substitute.For<ILoggerFactory>());
-            await sqs.ExistsAsync();
-            return sqs;
+            var sqs = new SqsMessagePublisher(Sqs, _serializationRegister, Substitute.For<ILoggerFactory>())
+            {
+                QueueUrl = new Uri(Url)
+            };
+            return Task.FromResult(sqs);
         }
 
         protected override void Given()
