@@ -50,7 +50,7 @@ namespace JustSaying.Fluent
                 var hostParts = queueUri.Host.Split('.');
                 if (hostParts.Length < 2) throw new ArgumentException("Could not infer region from queueUrl, please specify the region using the regionName argument. If you are using localstack, the default region is us-east-1.");
                 var servicePart = hostParts[0];
-                if (!string.Equals(servicePart, "sqs", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Must be an ARN for an SQS queue.");
+                if (!string.Equals(servicePart, "sqs", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Must be an ARN for an SQS queue.", nameof(queueUri));
 
                 var regionHostPart = hostParts[1];
                 var regionEndpoint = RegionEndpoint.GetBySystemName(regionHostPart) ?? throw new ArgumentException($"Could not parse region: {regionHostPart}", nameof(regionHostPart));
