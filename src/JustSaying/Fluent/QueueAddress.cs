@@ -53,7 +53,7 @@ namespace JustSaying.Fluent
                 if (!string.Equals(servicePart, "sqs", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Must be an ARN for an SQS queue.");
 
                 var regionHostPart = hostParts[1];
-                var regionEndpoint = RegionEndpoint.GetBySystemName(regionHostPart) ?? throw new ArgumentException($"Could not parse region: {regionHostPart}");
+                var regionEndpoint = RegionEndpoint.GetBySystemName(regionHostPart) ?? throw new ArgumentException($"Could not parse region: {regionHostPart}", nameof(regionHostPart));
                 return regionEndpoint.SystemName;
             }
         }
