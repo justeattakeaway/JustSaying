@@ -25,7 +25,8 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
             var sqsClient = clientFactory.GetSqsClient(Region);
             var snsClient = clientFactory.GetSnsClient(Region);
             var queueResponse = await sqsClient.CreateQueueAsync(UniqueName);
-            var topicResponse = await snsClient.CreateTopicAsync(UniqueName);
+            var anotherUniqueName = $"{Guid.NewGuid():N}-integration-tests";
+            var topicResponse = await snsClient.CreateTopicAsync(anotherUniqueName);
             var subscriptionArn = await snsClient.SubscribeQueueAsync(topicResponse.TopicArn, sqsClient, queueResponse.QueueUrl);
 
             var handler = new InspectableHandler<SimpleMessage>();
@@ -71,7 +72,8 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
             var sqsClient = clientFactory.GetSqsClient(Region);
             var snsClient = clientFactory.GetSnsClient(Region);
             var queueResponse = await sqsClient.CreateQueueAsync(UniqueName);
-            var topicResponse = await snsClient.CreateTopicAsync(UniqueName);
+            var anotherUniqueName = $"{Guid.NewGuid():N}-integration-tests";
+            var topicResponse = await snsClient.CreateTopicAsync(anotherUniqueName);
             var subscriptionArn = await snsClient.SubscribeQueueAsync(topicResponse.TopicArn, sqsClient, queueResponse.QueueUrl);
             var queueArn = (await sqsClient.GetQueueAttributesAsync(queueResponse.QueueUrl, new List<string> { SQSConstants.ATTRIBUTE_QUEUE_ARN })).Attributes[SQSConstants.ATTRIBUTE_QUEUE_ARN];
 
