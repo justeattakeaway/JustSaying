@@ -54,11 +54,7 @@ namespace JustSaying.AwsTools.QueueCreation
                 else
                 {
 #pragma warning disable 618
-                    var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint,
-                        snsClient,
-                        serializationRegister,
-                        _loggerFactory,
-                        messageSubjectProvider);
+                    var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsClient, _loggerFactory);
 #pragma warning restore 618
                     await eventTopic.CreateAsync().ConfigureAwait(false);
 

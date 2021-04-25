@@ -6,6 +6,7 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Xunit;
 #pragma warning disable 618
@@ -22,11 +23,10 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
         private const string TopicArn = "topicarn";
 
-        private protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
+        private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
         {
-            var topic = new SnsTopicByName("TopicName", Sns, _serializationRegister, Substitute.For<ILoggerFactory>(), new GenericMessageSubjectProvider());
-            await topic.ExistsAsync();
-            return topic;
+            var topic = new SnsMessagePublisher(TopicArn, Sns, _serializationRegister, NullLoggerFactory.Instance, new GenericMessageSubjectProvider());
+            return Task.FromResult(topic);
         }
 
         protected override void Given()

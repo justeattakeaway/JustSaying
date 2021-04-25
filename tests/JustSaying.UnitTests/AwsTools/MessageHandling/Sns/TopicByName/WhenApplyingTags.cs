@@ -4,6 +4,7 @@ using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -11,7 +12,7 @@ using Xunit;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 {
-    public class WhenApplyingTags : WhenPublishingTestBase
+    public class WhenApplyingTags : WhenSnsTopicTestBase
     {
         private const string TopicArn = "topicarn";
 
@@ -20,7 +21,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         private protected override Task<SnsTopicByName> CreateSystemUnderTestAsync()
         {
-            var topicByName = new SnsTopicByName("TopicName", Sns, Substitute.For<IMessageSerializationRegister>(), Substitute.For<ILoggerFactory>(), new NonGenericMessageSubjectProvider())
+            var topicByName = new SnsTopicByName("TopicName", Sns,  NullLoggerFactory.Instance)
             {
                 Tags = _tags
             };

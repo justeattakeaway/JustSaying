@@ -16,17 +16,17 @@ using MessageAttributeValue = Amazon.SimpleNotificationService.Model.MessageAttr
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    public abstract class SnsMessagePublisher : IMessagePublisher, IInterrogable
+    public class SnsMessagePublisher : IMessagePublisher, IInterrogable
     {
         private readonly IMessageSerializationRegister _serializationRegister;
         private readonly IMessageSubjectProvider _messageSubjectProvider;
         private readonly Func<Exception, Message, bool> _handleException;
         public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
-        public string Arn { get; protected set; }
+        public string Arn { get; internal set; }
         protected IAmazonSimpleNotificationService Client { get; }
         private readonly ILogger _logger;
 
-        protected SnsMessagePublisher(
+        public SnsMessagePublisher(
             string topicArn,
             IAmazonSimpleNotificationService client,
             IMessageSerializationRegister serializationRegister,
@@ -38,7 +38,7 @@ namespace JustSaying.AwsTools.MessageHandling
             Arn = topicArn;
         }
 
-        protected SnsMessagePublisher(
+        public SnsMessagePublisher(
             IAmazonSimpleNotificationService client,
             IMessageSerializationRegister serializationRegister,
             ILoggerFactory loggerFactory,
