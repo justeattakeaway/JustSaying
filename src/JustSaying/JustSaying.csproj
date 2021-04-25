@@ -6,6 +6,11 @@
     <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="JustSaying.IntegrationTests" Key="$(JustSayingKey)" />
+    <InternalsVisibleTo Include="JustSaying.Tools" Key="$(JustSayingKey)" />
+    <InternalsVisibleTo Include="JustSaying.UnitTests" Key="$(JustSayingKey)" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.0" />
     <PackageReference Include="AWSSDK.SQS" Version="3.7.0" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.1" />
