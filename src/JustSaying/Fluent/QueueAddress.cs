@@ -57,8 +57,8 @@ namespace JustSaying.Fluent
                     if (!string.Equals(servicePart, "sqs", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Must be an ARN for an SQS queue.", nameof(queueUri));
 
                     var regionHostPart = hostParts[1];
-                    // From here: https://github.com/aws/aws-sdk-net/blob/850c66f71f4ce54943700565ecea5572ce31979a/sdk/src/Core/endpoints.json#L16
-                    if (Regex.IsMatch(regionHostPart, "^(us|eu|ap|sa|ca|me|af)\\-\\w+\\-\\d+$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.RightToLeft))
+                    // Based on this: https://github.com/aws/aws-sdk-net/blob/850c66f71f4ce54943700565ecea5572ce31979a/sdk/src/Core/endpoints.json#L16
+                    if (Regex.IsMatch(regionHostPart, "^[a-z]{2}\\-\\w+\\-\\d+$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.RightToLeft))
                     {
                         var regionEndpoint = RegionEndpoint.GetBySystemName(regionHostPart);
                         return regionEndpoint.SystemName;
