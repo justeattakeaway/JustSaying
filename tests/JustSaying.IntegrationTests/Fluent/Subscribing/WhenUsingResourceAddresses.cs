@@ -34,9 +34,9 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 .ConfigureJustSaying(builder =>
                     builder
                         .Subscriptions(c =>
-                            c.ForQueue<SimpleMessage>(QueueAddress.FromUrl(queueResponse.QueueUrl)))
+                            c.ForQueueUrl<SimpleMessage>(queueResponse.QueueUrl))
                         .Publications(c =>
-                            c.WithTopic<SimpleMessage>(TopicAddress.FromArn(topicResponse.TopicArn))
+                            c.WithTopicArn<SimpleMessage>(topicResponse.TopicArn)
                         )
                 )
                 .AddJustSayingHandlers(new[] { handler });
@@ -81,9 +81,9 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 .ConfigureJustSaying(builder =>
                     builder
                         .Subscriptions(c =>
-                            c.ForQueue<SimpleMessage>(QueueAddress.FromArn(queueArn)))
+                            c.ForQueueArn<SimpleMessage>(queueArn))
                         .Publications(c =>
-                            c.WithTopic<SimpleMessage>(TopicAddress.FromArn(topicResponse.TopicArn))
+                            c.WithTopicArn<SimpleMessage>(topicResponse.TopicArn)
                         )
                 )
                 .AddJustSayingHandlers(new[] { handler });
