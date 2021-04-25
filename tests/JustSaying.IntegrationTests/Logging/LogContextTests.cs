@@ -11,6 +11,7 @@ using Xunit.Sdk;
 
 namespace JustSaying.Logging
 {
+    [Collection("LogContext Collection")]
     public class LogContextTests : IntegrationTestBase
     {
         public LogContextTests(ITestOutputHelper outputHelper) : base(outputHelper)
