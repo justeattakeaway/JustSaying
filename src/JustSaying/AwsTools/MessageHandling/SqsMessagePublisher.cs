@@ -52,7 +52,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
-            if (QueueUrl is null) throw new PublishException("Queue URL was null, perhaps you have not called `StartAsync` on the `IMessagePublisher` before use.");
+            if (QueueUrl is null) throw new PublishException("Queue URL was null, perhaps you need to call `StartAsync` on the `IMessagePublisher` before publishing.");
 
             var request = BuildSendMessageRequest(message, metadata);
             SendMessageResponse response;
