@@ -52,6 +52,16 @@ namespace JustSaying.UnitTests.Fluent
         }
 
         [Fact]
+        public void UppercaseUrlCanBeParsed()
+        {
+            var qa = QueueAddress.FromUrl("HTTPS://SQS.EU-WEST-1.AMAZONAWS.COM/111122223333/Queue1");
+
+            // Queue name is case-sensitive.
+            Assert.Equal("https://sqs.eu-west-1.amazonaws.com/111122223333/Queue1", qa.QueueUrl.AbsoluteUri);
+            Assert.Equal("eu-west-1", qa.RegionName);
+        }
+
+        [Fact]
         public void LocalStackUrlWithoutRegionHashUnknownRegion()
         {
             var qa = QueueAddress.FromUrl("http://localhost:4576/111122223333/queue1");
