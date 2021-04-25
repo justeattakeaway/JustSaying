@@ -2,12 +2,12 @@ using System;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
-using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels.Context;
+using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
@@ -20,20 +20,25 @@ using Xunit;
 using Xunit.Abstractions;
 using Message = JustSaying.Models.Message;
 using SQSMessage = Amazon.SQS.Model.Message;
-#pragma warning disable 618
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 {
-    internal class DummySqsQueue : SqsQueueBase
+    internal class DummySqsQueue : ISqsQueue
     {
-        public DummySqsQueue(Uri uri, IAmazonSQS client, ILoggerFactory loggerFactory)
-            : base(RegionEndpoint.EUWest1, client, loggerFactory)
+        public DummySqsQueue(Uri uri, IAmazonSQS client)
         {
             Uri = uri;
+            Client = client;
             QueueName = "DummySqsQueue";
         }
 
-        public override Task<bool> ExistsAsync() => Task.FromResult(true);
+        public InterrogationResult Interrogate() => InterrogationResult.Empty;
+
+        public string QueueName { get; }
+        public string RegionSystemName { get; }
+        public Uri Uri { get; }
+        public string Arn { get; }
+        public IAmazonSQS Client { get; }
     }
 
     public class WhenDispatchingMessage : IAsyncLifetime
@@ -88,8 +93,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
                 ReceiptHandle = "i_am_receipt_handle"
             };
 
-            _queue = new DummySqsQueue(new Uri(ExpectedQueueUrl),
-                _amazonSqsClient, _loggerFactory);
+            _queue = new DummySqsQueue(new Uri(ExpectedQueueUrl), _amazonSqsClient);
             _serializationRegister.DeserializeMessage(Arg.Any<string>())
                 .Returns(new MessageWithAttributes(_typedMessage, new MessageAttributes()));
         }
