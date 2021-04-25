@@ -1,4 +1,6 @@
 using System;
+using System.Drawing;
+using System.Text.RegularExpressions;
 using Amazon;
 
 namespace JustSaying.Fluent
@@ -37,7 +39,7 @@ namespace JustSaying.Fluent
         /// Creates a <see cref="QueueAddress"/> from a queue URL.
         /// </summary>
         /// <param name="queueUrl">The queue URL.</param>
-        /// <param name="regionName">Optional region name (e.g. eu-west-1), this can be omitted if the region can be inferred from the URL.</param>
+        /// <param name="regionName">Optional region name (e.g. eu-west-1), if not provided the region will be inferred from the URL, and 'unknown' if it cannot.</param>
         /// <returns>A <see cref="QueueAddress"/> created from the URL.</returns>
         /// <exception cref="ArgumentException"></exception>
         public static QueueAddress FromUri(Uri queueUrl, string regionName = null)
@@ -48,13 +50,23 @@ namespace JustSaying.Fluent
             static string ParseRegionFromUri(Uri queueUri)
             {
                 var hostParts = queueUri.Host.Split('.');
-                if (hostParts.Length < 2) throw new ArgumentException($"Could not infer region from {nameof(queueUrl)}, please specify the region using the {nameof(regionName)} argument. If you are using localstack, the default region is us-east-1.", nameof(queueUri));
-                var servicePart = hostParts[0];
-                if (!string.Equals(servicePart, "sqs", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Must be an ARN for an SQS queue.", nameof(queueUri));
+                // AWS cloud region endpoints are of the form "{service}.{region}.{dnsSuffix}" - https://github.com/aws/aws-sdk-net/blob/850c66f71f4ce54943700565ecea5572ce31979a/sdk/src/Core/endpoints.json#L5
+                if (hostParts.Length >= 3)
+                {
+                    var servicePart = hostParts[0];
+                    if (!string.Equals(servicePart, "sqs", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Must be an ARN for an SQS queue.", nameof(queueUri));
 
-                var regionHostPart = hostParts[1];
-                var regionEndpoint = RegionEndpoint.GetBySystemName(regionHostPart) ?? throw new ArgumentException($"Could not parse region: {regionHostPart}", nameof(regionHostPart));
-                return regionEndpoint.SystemName;
+                    var regionHostPart = hostParts[1];
+                    // From here: https://github.com/aws/aws-sdk-net/blob/850c66f71f4ce54943700565ecea5572ce31979a/sdk/src/Core/endpoints.json#L16
+                    if (Regex.IsMatch(regionHostPart, "^(us|eu|ap|sa|ca|me|af)\\-\\w+\\-\\d+$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.RightToLeft))
+                    {
+                        var regionEndpoint = RegionEndpoint.GetBySystemName(regionHostPart);
+                        return regionEndpoint.SystemName;
+                    }
+                }
+
+                const string unknownRegionName = "unknown";
+                return RegionEndpoint.GetBySystemName(unknownRegionName).SystemName;
             }
         }
 
@@ -62,7 +74,7 @@ namespace JustSaying.Fluent
         /// Creates a <see cref="QueueAddress"/> from a queue URL.
         /// </summary>
         /// <param name="queueUrl">The queue URL.</param>
-        /// <param name="regionName">Optional region name (e.g. eu-west-1), this can be omitted if the region can be inferred from the URL.</param>
+        /// <param name="regionName">Optional region name (e.g. eu-west-1), if not provided the region will be inferred from the URL, and 'unknown' if it cannot.</param>
         /// <returns>A <see cref="QueueAddress"/> created from the URL.</returns>
         /// <exception cref="ArgumentException"></exception>
         public static QueueAddress FromUrl(string queueUrl, string regionName = null)

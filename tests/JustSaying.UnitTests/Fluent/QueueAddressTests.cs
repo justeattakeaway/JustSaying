@@ -52,9 +52,11 @@ namespace JustSaying.UnitTests.Fluent
         }
 
         [Fact]
-        public void LocalStackUrlWithoutRegionThrows()
+        public void LocalStackUrlWithoutRegionHashUnknownRegion()
         {
-            Assert.Throws<ArgumentException>("queueUri", () => QueueAddress.FromUrl("http://localhost:4576/111122223333/queue1"));
+            var qa = QueueAddress.FromUrl("http://localhost:4576/111122223333/queue1");
+
+            Assert.Equal("unknown", qa.RegionName);
         }
 
         [Fact]

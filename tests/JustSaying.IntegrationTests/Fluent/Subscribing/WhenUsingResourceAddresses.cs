@@ -34,7 +34,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 .ConfigureJustSaying(builder =>
                     builder
                         .Subscriptions(c =>
-                            c.ForQueue<SimpleMessage>(QueueAddress.FromUrl(queueResponse.QueueUrl, RegionName)))
+                            c.ForQueue<SimpleMessage>(QueueAddress.FromUrl(queueResponse.QueueUrl)))
                         .Publications(c =>
                             c.WithTopic<SimpleMessage>(TopicAddress.FromArn(topicResponse.TopicArn))
                         )
