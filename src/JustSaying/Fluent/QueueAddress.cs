@@ -49,6 +49,7 @@ namespace JustSaying.Fluent
 
             static string ParseRegionFromUri(Uri queueUri)
             {
+                string regionName = "unknown";
                 var hostParts = queueUri.Host.Split('.');
                 // AWS cloud region endpoints are of the form "{service}.{region}.{dnsSuffix}" - https://github.com/aws/aws-sdk-net/blob/850c66f71f4ce54943700565ecea5572ce31979a/sdk/src/Core/endpoints.json#L5
                 if (hostParts.Length >= 3)
@@ -60,13 +61,11 @@ namespace JustSaying.Fluent
                     // Based on this: https://github.com/aws/aws-sdk-net/blob/850c66f71f4ce54943700565ecea5572ce31979a/sdk/src/Core/endpoints.json#L16
                     if (Regex.IsMatch(regionHostPart, "^[a-z]{2}\\-\\w+\\-\\d+$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.RightToLeft))
                     {
-                        var regionEndpoint = RegionEndpoint.GetBySystemName(regionHostPart);
-                        return regionEndpoint.SystemName;
+                        regionName = regionHostPart;
                     }
                 }
 
-                const string unknownRegionName = "unknown";
-                return RegionEndpoint.GetBySystemName(unknownRegionName).SystemName;
+                return RegionEndpoint.GetBySystemName(regionName).SystemName;
             }
         }
 
