@@ -59,7 +59,7 @@ namespace JustSaying.Fluent
 
                     var regionHostPart = hostParts[1];
                     // Based on this: https://github.com/aws/aws-sdk-net/blob/850c66f71f4ce54943700565ecea5572ce31979a/sdk/src/Core/endpoints.json#L16
-                    if (Regex.IsMatch(regionHostPart, "^[a-z]{2}\\-\\w+\\-\\d+$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.RightToLeft))
+                    if (Regex.IsMatch(regionHostPart, "^[a-z]{2}\\-\\w+\\-\\d+$", RegexOptions.Compiled | RegexOptions.IgnoreCase))
                     {
                         regionName = regionHostPart;
                     }
