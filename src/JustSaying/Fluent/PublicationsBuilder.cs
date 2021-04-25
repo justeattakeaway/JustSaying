@@ -73,6 +73,85 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
+        /// Configures a publisher for a pre-existing queue.
+        /// </summary>
+        /// <param name="queueAddress">The address of the queue to publish to.</param>
+        /// <typeparam name="T">The type of the message to publish to.</typeparam>
+        /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public PublicationsBuilder WithQueue<T>(QueueAddress queueAddress)
+            where T : Message
+        {
+            if (queueAddress == null) throw new ArgumentNullException(nameof(queueAddress));
+
+            IPublicationBuilder<T> builder =
+                queueAddress == QueueAddress.None
+                ? new QueuePublicationBuilder<T>()
+                : new QueueAddressPublicationBuilder<T>(queueAddress);
+
+            Publications.Add(builder);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Configures a publisher for a pre-existing topic.
+        /// </summary>
+        /// <param name="queueArn">The ARN of the queue to publish to.</param>
+        /// <typeparam name="T">The type of the message to publish to.</typeparam>
+        /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public PublicationsBuilder WithQueueArn<T>(string queueArn)
+            where T : Message
+        {
+            if (queueArn == null) throw new ArgumentNullException(nameof(queueArn));
+
+            var builder = new QueueAddressPublicationBuilder<T>(QueueAddress.FromArn(queueArn));
+
+            Publications.Add(builder);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Configures a publisher for a pre-existing topic.
+        /// </summary>
+        /// <param name="queueUrl">The URL of the queue to publish to.</param>
+        /// <typeparam name="T">The type of the message to publish to.</typeparam>
+        /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public PublicationsBuilder WithQueueUrl<T>(string queueUrl)
+            where T : Message
+        {
+            if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
+
+            var builder = new QueueAddressPublicationBuilder<T>(QueueAddress.FromUrl(queueUrl));
+
+            Publications.Add(builder);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Configures a publisher for a pre-existing topic.
+        /// </summary>
+        /// <param name="queueUrl">The URL of the queue to publish to.</param>
+        /// <typeparam name="T">The type of the message to publish to.</typeparam>
+        /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public PublicationsBuilder WithQueueUri<T>(Uri queueUrl)
+            where T : Message
+        {
+            if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
+
+            var builder = new QueueAddressPublicationBuilder<T>(QueueAddress.FromUri(queueUrl));
+
+            Publications.Add(builder);
+
+            return this;
+        }
+
+        /// <summary>
         /// Configures a publisher for a topic.
         /// </summary>
         /// <typeparam name="T">The type of the message to publish.</typeparam>
