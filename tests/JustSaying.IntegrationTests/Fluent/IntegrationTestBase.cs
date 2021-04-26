@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Runtime;
 using JustSaying.AwsTools;
+using JustSaying.IntegrationTests.Fluent.Subscribing;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;

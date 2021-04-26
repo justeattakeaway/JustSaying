@@ -96,7 +96,7 @@ namespace JustSaying.Logging
                     .ShouldHaveSingleItem()
                     .Id.ShouldBe(message.Id));
 
-            var output = ((TestOutputHelper) OutputHelper).Output;
+            var output = OutputHelper.Output;
             output.ShouldMatchApproved(o => o
                 .SubFolder("Approvals")
                 .WithScrubber(logMessage => ScrubLogs(logMessage, message.Id.ToString())));
