@@ -9,11 +9,21 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent
 {
+    /// <summary>
+    /// A class representing a builder for a queue subscription to an existing queue. This class cannot be inherited.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of the message.
+    /// </typeparam>
     public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         where T : Message
     {
         private readonly QueueAddress _queueAddress;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="QueueAddressSubscriptionBuilder{T}"/> class.
+        /// </summary>
+        /// <param name="queueAddress">The address of the queue to subscribe to.</param>
         internal QueueAddressSubscriptionBuilder(QueueAddress queueAddress)
         {
             _queueAddress = queueAddress;
@@ -21,6 +31,16 @@ namespace JustSaying.Fluent
 
         private Action<QueueAddressConfiguration> ConfigureReads { get; set; }
 
+        /// <summary>
+        /// Configures the SQS read configuration.
+        /// </summary>
+        /// <param name="configure">A delegate to configure SQS reads.</param>
+        /// <returns>
+        /// The current <see cref="QueueAddressSubscriptionBuilder{T}"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
         public QueueAddressSubscriptionBuilder<T> WithReadConfiguration(Action<QueueAddressConfiguration> configure)
         {
             ConfigureReads = configure ?? throw new ArgumentNullException(nameof(configure));

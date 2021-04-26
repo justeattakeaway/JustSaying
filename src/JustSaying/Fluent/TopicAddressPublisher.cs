@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 namespace JustSaying.Fluent
 {
     /// <summary>
-    ///
+    /// An SNS message publisher for a <see cref="TopicAddress"/>.
     /// </summary>
     internal sealed class TopicAddressPublisher : SnsMessagePublisher
     {
