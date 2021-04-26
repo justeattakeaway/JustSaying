@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
-using JustSaying.Messaging.Channels;
 using JustSaying.Messaging.Channels.Context;
 
 namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;

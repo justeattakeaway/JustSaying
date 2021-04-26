@@ -3,10 +3,8 @@ using System.Threading.Tasks;
 using JustSaying.IntegrationTests.Fluent;
 using JustSaying.IntegrationTests.Fluent.Subscribing;
 using JustSaying.IntegrationTests.TestHandlers;
-using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit.Abstractions;
 

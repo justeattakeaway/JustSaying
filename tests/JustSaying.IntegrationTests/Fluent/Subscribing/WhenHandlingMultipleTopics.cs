@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 using JustSaying.TestingFramework;

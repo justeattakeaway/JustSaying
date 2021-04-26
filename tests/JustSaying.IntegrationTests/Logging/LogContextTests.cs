@@ -1,20 +1,11 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoFixture;
 using JustSaying.IntegrationTests.Fluent;
-using JustSaying.IntegrationTests.Fluent.Subscribing;
 using JustSaying.Messaging;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Shouldly;
-using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 

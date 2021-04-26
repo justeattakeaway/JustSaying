@@ -1,9 +1,4 @@
 using System;
-using System.Threading;
-using Amazon.SQS;
-using Amazon.SQS.Model;
-using JustSaying.TestingFramework;
-using NSubstitute;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;

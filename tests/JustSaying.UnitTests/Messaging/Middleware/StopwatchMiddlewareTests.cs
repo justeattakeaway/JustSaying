@@ -8,7 +8,6 @@ using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;

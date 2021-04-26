@@ -1,5 +1,3 @@
-using JustSaying.AwsTools.QueueCreation;
-
 namespace JustSaying.Naming
 {
     /// <summary>

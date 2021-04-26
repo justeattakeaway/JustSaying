@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using JustSaying.AwsTools;
-using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 

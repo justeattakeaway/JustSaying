@@ -1,4 +1,3 @@
-using System.Net;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.Messaging;

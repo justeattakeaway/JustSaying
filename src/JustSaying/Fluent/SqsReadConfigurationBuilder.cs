@@ -1,7 +1,5 @@
 using System;
-using Amazon.SQS.Model;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Middleware;
 
 namespace JustSaying.Fluent

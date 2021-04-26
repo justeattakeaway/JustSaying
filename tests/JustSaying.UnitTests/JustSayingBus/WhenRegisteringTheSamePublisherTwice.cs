@@ -1,8 +1,6 @@
-using System.Linq;
 using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.Models;
-using Newtonsoft.Json;
 using NSubstitute;
 using Shouldly;
 using Xunit;
