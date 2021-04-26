@@ -1,8 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Amazon;
-using JustSaying.Fluent;
-using JustSaying.Naming;
 using JustSaying.Sample.Restaurant.KitchenConsole.Handlers;
 using JustSaying.Sample.Restaurant.Models;
 using Microsoft.Extensions.Configuration;
@@ -101,28 +98,6 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
                             x.ForTopic<OrderOnItsWayEvent>(cfg =>
                                 cfg.WithReadConfiguration(rc =>
                                     rc.WithSubscriptionGroup("GroupB")));
-
-
-                            // TODO - REVERT BEFORE MERGING
-                            // New proposal
-                            x.ForQueueArn<OrderPlacedEvent>("arn:aws:sqs:eu-west-1:111122223333:queue1");
-
-                            // try the simplified builder
-                            x.ForQueueArn<OrderPlacedEvent>("arn:aws:sqs:eu-west-1:111122223333:queue1", cfg => { });
-
-                            // From a queue url, the region can be inferred
-                            x.ForQueueUrl<OrderPlacedEvent>("https://sqs.eu-west-1.amazonaws.com/111122223333/queue1");
-
-                            // For localstack, you don't need to specify the region, but you can
-                            x.ForQueueUrl<OrderPlacedEvent>("http://localhost:4566/123456789012/queue1", "us-east-1");
-
-                            // For interop with the classic JustSaying Infrastructure
-                            var addressProvider = new AccountAddressProvider("111122223333", "eu-west-1");
-
-                            // Using `DefaultNamingConventions`, other implementations can be passed into the constructor of `AccountAddressProvider`
-                            x.ForQueueUri<OrderPlacedEvent>(addressProvider.GetQueueUriByConvention<OrderPlacedEvent>());
-                            // Explicit names
-                            x.ForQueueUri<OrderPlacedEvent>(addressProvider.GetQueueUri("queue1"));
                         });
 
                         config.Publications(x =>
