@@ -18,7 +18,9 @@ namespace JustSaying.Fluent
             BusBuilder = busBuilder;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// The <see cref="MessagingBusBuilder"/> that owns this instance.
+        /// </summary>
         public MessagingBusBuilder BusBuilder { get; }
 
         /// <summary>
