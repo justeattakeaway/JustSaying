@@ -110,5 +110,48 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     handler.ReceivedMessages.ShouldHaveSingleItem().Content.ShouldBe(content);
                 });
         }
+
+        [AwsFact]
+        public async Task CanPublishUsingQueueUrl()
+        {
+            IAwsClientFactory clientFactory = CreateClientFactory();
+            var sqsClient = clientFactory.GetSqsClient(Region);
+            var queueResponse = await sqsClient.CreateQueueAsync(UniqueName);
+
+            var handler = new InspectableHandler<SimpleMessage>();
+
+            var services = GivenJustSaying()
+                .ConfigureJustSaying(builder =>
+                    builder
+                        .Subscriptions(c =>
+                            c.ForQueueUrl<SimpleMessage>(queueResponse.QueueUrl))
+                        .Publications(c =>
+                            c.WithQueueUrl<SimpleMessage>(queueResponse.QueueUrl)
+                        )
+                )
+                .AddJustSayingHandlers(new[] { handler });
+
+            string content = Guid.NewGuid().ToString();
+
+            var message = new SimpleMessage
+            {
+                Content = content
+            };
+
+            await WhenAsync(
+                services,
+                async (publisher, listener, serviceProvider, cancellationToken) =>
+                {
+                    await listener.StartAsync(cancellationToken);
+                    await publisher.StartAsync(cancellationToken);
+
+                    await publisher.PublishAsync(message, cancellationToken);
+
+                    // Assert
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+
+                    handler.ReceivedMessages.ShouldHaveSingleItem().Content.ShouldBe(content);
+                });
+        }
     }
 }
