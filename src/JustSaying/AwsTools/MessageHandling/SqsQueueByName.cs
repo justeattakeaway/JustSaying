@@ -136,7 +136,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private async Task ApplyTagsAsync(ISqsQueue queue, Dictionary<string, string> tags)
         {
-            if (tags is null || !tags.Any())
+            if (tags == null || !tags.Any())
             {
                 return;
             }
