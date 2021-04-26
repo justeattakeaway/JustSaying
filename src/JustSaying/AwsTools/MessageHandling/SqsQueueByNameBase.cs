@@ -20,23 +20,23 @@ namespace JustSaying.AwsTools.MessageHandling
             if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
             QueueName = queueName;
             Client = client;
-            Region = region;
+            _region = region;
             Logger = loggerFactory.CreateLogger("JustSaying");
         }
 
-        public string Arn { get; protected set; }
-        public Uri Uri { get; protected set; }
-        public IAmazonSQS Client { get; private set; }
-        public string QueueName { get; protected set; }
-        public RegionEndpoint Region { get; protected set; }
-        public ErrorQueue ErrorQueue { get; protected set; }
+        private readonly RegionEndpoint _region;
+        private TimeSpan _visibilityTimeout;
+        private TimeSpan _deliveryDelay;
+        private ServerSideEncryption _serverSideEncryption;
+        private string _policy;
+
+        public string Arn { get; private set; }
+        public Uri Uri { get; private set; }
+        public IAmazonSQS Client { get; }
+        public string QueueName { get; }
         internal TimeSpan MessageRetentionPeriod { get; set; }
-        internal TimeSpan VisibilityTimeout { get; set; }
-        internal TimeSpan DeliveryDelay { get; set; }
         internal RedrivePolicy RedrivePolicy { get; set; }
-        internal ServerSideEncryption ServerSideEncryption { get; set; }
-        public string Policy { get; private set; }
-        public string RegionSystemName { get; }
+        public string RegionSystemName => _region.SystemName;
         protected ILogger Logger { get; }
 
         public virtual async Task<bool> ExistsAsync()
@@ -134,9 +134,6 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public virtual async Task DeleteAsync()
         {
-            Arn = null;
-            Uri = null;
-
             var exists = await ExistsAsync().ConfigureAwait(false);
             if (exists)
             {
@@ -145,13 +142,10 @@ namespace JustSaying.AwsTools.MessageHandling
                     QueueUrl = Uri.AbsoluteUri
                 };
                 await Client.DeleteQueueAsync(request).ConfigureAwait(false);
-
-                Arn = null;
-                Uri = null;
             }
         }
 
-        protected async Task SetQueuePropertiesAsync()
+        private async Task SetQueuePropertiesAsync()
         {
             var keys = new[]
             {
@@ -167,14 +161,14 @@ namespace JustSaying.AwsTools.MessageHandling
             var attributes = await GetAttrsAsync(keys).ConfigureAwait(false);
             Arn = attributes.QueueARN;
             MessageRetentionPeriod = TimeSpan.FromSeconds(attributes.MessageRetentionPeriod);
-            VisibilityTimeout = TimeSpan.FromSeconds(attributes.VisibilityTimeout);
-            Policy = attributes.Policy;
-            DeliveryDelay = TimeSpan.FromSeconds(attributes.DelaySeconds);
+            _visibilityTimeout = TimeSpan.FromSeconds(attributes.VisibilityTimeout);
+            _policy = attributes.Policy;
+            _deliveryDelay = TimeSpan.FromSeconds(attributes.DelaySeconds);
             RedrivePolicy = ExtractRedrivePolicyFromQueueAttributes(attributes.Attributes);
-            ServerSideEncryption = ExtractServerSideEncryptionFromQueueAttributes(attributes.Attributes);
+            _serverSideEncryption = ExtractServerSideEncryptionFromQueueAttributes(attributes.Attributes);
         }
 
-        protected async Task<GetQueueAttributesResponse> GetAttrsAsync(IEnumerable<string> attrKeys)
+        private async Task<GetQueueAttributesResponse> GetAttrsAsync(IEnumerable<string> attrKeys)
         {
             var request = new GetQueueAttributesRequest
             {
@@ -218,9 +212,9 @@ namespace JustSaying.AwsTools.MessageHandling
                 if (response.HttpStatusCode == HttpStatusCode.OK)
                 {
                     MessageRetentionPeriod = queueConfig.MessageRetention;
-                    VisibilityTimeout = queueConfig.VisibilityTimeout;
-                    DeliveryDelay = queueConfig.DeliveryDelay;
-                    ServerSideEncryption = queueConfig.ServerSideEncryption;
+                    _visibilityTimeout = queueConfig.VisibilityTimeout;
+                    _deliveryDelay = queueConfig.DeliveryDelay;
+                    _serverSideEncryption = queueConfig.ServerSideEncryption;
                 }
             }
         }
@@ -228,22 +222,22 @@ namespace JustSaying.AwsTools.MessageHandling
         protected virtual bool QueueNeedsUpdating(SqsBasicConfiguration queueConfig)
         {
             return MessageRetentionPeriod != queueConfig.MessageRetention
-                   || VisibilityTimeout != queueConfig.VisibilityTimeout
-                   || DeliveryDelay != queueConfig.DeliveryDelay
+                   || _visibilityTimeout != queueConfig.VisibilityTimeout
+                   || _deliveryDelay != queueConfig.DeliveryDelay
                    || QueueNeedsUpdatingBecauseOfEncryption(queueConfig);
         }
 
         private bool QueueNeedsUpdatingBecauseOfEncryption(SqsBasicConfiguration queueConfig)
         {
-            if (ServerSideEncryption == queueConfig.ServerSideEncryption)
+            if (_serverSideEncryption == queueConfig.ServerSideEncryption)
             {
                 return false;
             }
 
-            if (ServerSideEncryption != null && queueConfig.ServerSideEncryption != null)
+            if (_serverSideEncryption != null && queueConfig.ServerSideEncryption != null)
             {
-                return ServerSideEncryption.KmsMasterKeyId != queueConfig.ServerSideEncryption.KmsMasterKeyId ||
-                       ServerSideEncryption.KmsDataKeyReusePeriodSeconds != queueConfig.ServerSideEncryption.KmsDataKeyReusePeriodSeconds;
+                return _serverSideEncryption.KmsMasterKeyId != queueConfig.ServerSideEncryption.KmsMasterKeyId ||
+                       _serverSideEncryption.KmsDataKeyReusePeriodSeconds != queueConfig.ServerSideEncryption.KmsDataKeyReusePeriodSeconds;
             }
 
             return true;
@@ -273,18 +267,17 @@ namespace JustSaying.AwsTools.MessageHandling
             };
         }
 
-        public InterrogationResult Interrogate()
+        public virtual InterrogationResult Interrogate()
         {
             return new InterrogationResult(new
             {
                 Arn,
                 QueueName,
-                Region = Region.SystemName,
-                Policy,
+                Region = _region.SystemName,
+                Policy = _policy,
                 Uri,
-                DeliveryDelay,
-                ErrorQueue = ErrorQueue.QueueName,
-                VisibilityTimeout,
+                DeliveryDelay = _deliveryDelay,
+                VisibilityTimeout = _visibilityTimeout,
                 MessageRetentionPeriod,
             });
         }
