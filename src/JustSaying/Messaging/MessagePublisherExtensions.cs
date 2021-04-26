@@ -14,7 +14,7 @@ namespace JustSaying.Messaging
             return publisher.PublishAsync(message, CancellationToken.None);
         }
 
-        public static async Task PublishAsync(this IMessagePublisher publisher,
+        public static Task PublishAsync(this IMessagePublisher publisher,
             Message message, PublishMetadata metadata)
         {
             if (publisher == null)
@@ -22,11 +22,10 @@ namespace JustSaying.Messaging
                 throw new ArgumentNullException(nameof(publisher));
             }
 
-            await publisher.PublishAsync(message, metadata, CancellationToken.None)
-                .ConfigureAwait(false);
+            return publisher.PublishAsync(message, metadata, CancellationToken.None);
         }
 
-        public static async Task PublishAsync(this IMessagePublisher publisher,
+        public static Task PublishAsync(this IMessagePublisher publisher,
             Message message, CancellationToken cancellationToken)
         {
             if (publisher == null)
@@ -34,8 +33,7 @@ namespace JustSaying.Messaging
                 throw new ArgumentNullException(nameof(publisher));
             }
 
-            await publisher.PublishAsync(message, null, cancellationToken)
-                .ConfigureAwait(false);
+            return publisher.PublishAsync(message, null, cancellationToken);
         }
     }
 }

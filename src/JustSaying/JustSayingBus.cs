@@ -194,10 +194,10 @@ namespace JustSaying
             }
         }
 
-        public async Task PublishAsync(Message message, CancellationToken cancellationToken)
-            => await PublishAsync(message, null, cancellationToken).ConfigureAwait(false);
+        public Task PublishAsync(Message message, CancellationToken cancellationToken)
+            => PublishAsync(message, null, cancellationToken);
 
-        public async Task PublishAsync(
+        public Task PublishAsync(
             Message message,
             PublishMetadata metadata,
             CancellationToken cancellationToken)
@@ -208,8 +208,7 @@ namespace JustSaying
             }
 
             IMessagePublisher publisher = GetPublisherForMessage(message);
-            await PublishAsync(publisher, message, metadata, 0, cancellationToken)
-                .ConfigureAwait(false);
+            return PublishAsync(publisher, message, metadata, 0, cancellationToken);
         }
 
         private IMessagePublisher GetPublisherForMessage(Message message)

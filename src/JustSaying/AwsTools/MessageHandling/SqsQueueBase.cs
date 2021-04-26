@@ -88,7 +88,7 @@ namespace JustSaying.AwsTools.MessageHandling
             ServerSideEncryption = ExtractServerSideEncryptionFromQueueAttributes(attributes.Attributes);
         }
 
-        protected async Task<GetQueueAttributesResponse> GetAttrsAsync(IEnumerable<string> attrKeys)
+        protected Task<GetQueueAttributesResponse> GetAttrsAsync(IEnumerable<string> attrKeys)
         {
             var request = new GetQueueAttributesRequest
             {
@@ -96,7 +96,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 AttributeNames = new List<string>(attrKeys)
             };
 
-            return await Client.GetQueueAttributesAsync(request).ConfigureAwait(false);
+            return Client.GetQueueAttributesAsync(request);
         }
 
         public virtual async Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig)

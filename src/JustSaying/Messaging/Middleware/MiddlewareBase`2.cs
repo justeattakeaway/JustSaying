@@ -16,12 +16,12 @@ namespace JustSaying.Messaging.Middleware
             return this;
         }
 
-        public async Task<TOut> RunAsync(
+        public Task<TOut> RunAsync(
             TContext context,
             Func<CancellationToken, Task<TOut>> func,
             CancellationToken stoppingToken)
         {
-            return await RunInnerAsync(context,
+            return RunInnerAsync(context,
                 async ct =>
                 {
                     if (_next == null)
@@ -33,7 +33,7 @@ namespace JustSaying.Messaging.Middleware
                         return await _next.RunAsync(context, func, ct).ConfigureAwait(false);
                     }
                 },
-                stoppingToken).ConfigureAwait(false);
+                stoppingToken);
         }
 
         protected abstract Task<TOut> RunInnerAsync(

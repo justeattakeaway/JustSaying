@@ -48,7 +48,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return sqsMessageResponse?.Messages;
         }
 
-        internal async Task DeleteMessageAsync(
+        internal Task DeleteMessageAsync(
             string receiptHandle,
             CancellationToken cancellationToken)
         {
@@ -58,10 +58,10 @@ namespace JustSaying.AwsTools.MessageHandling
                 ReceiptHandle = receiptHandle,
             };
 
-            await _sqsQueue.Client.DeleteMessageAsync(deleteRequest, cancellationToken).ConfigureAwait(false);
+            return _sqsQueue.Client.DeleteMessageAsync(deleteRequest, cancellationToken);
         }
 
-        internal async Task ChangeMessageVisibilityAsync(
+        internal Task ChangeMessageVisibilityAsync(
             string receiptHandle,
             TimeSpan timeout,
             CancellationToken cancellationToken)
@@ -73,7 +73,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 VisibilityTimeout = (int)timeout.TotalSeconds,
             };
 
-            await _sqsQueue.Client.ChangeMessageVisibilityAsync(visibilityRequest, cancellationToken).ConfigureAwait(false);
+            return _sqsQueue.Client.ChangeMessageVisibilityAsync(visibilityRequest, cancellationToken);
         }
     }
 }

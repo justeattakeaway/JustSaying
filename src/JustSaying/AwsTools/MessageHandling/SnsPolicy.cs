@@ -9,7 +9,7 @@ namespace JustSaying.AwsTools.MessageHandling
 {
     internal static class SnsPolicy
     {
-        internal static async Task SaveAsync(SnsPolicyDetails policyDetails, IAmazonSimpleNotificationService client)
+        internal static Task SaveAsync(SnsPolicyDetails policyDetails, IAmazonSimpleNotificationService client)
         {
             var sourceAccountId = ExtractSourceAccountId(policyDetails.SourceArn);
             var policyJson = $@"{{
@@ -50,7 +50,7 @@ namespace JustSaying.AwsTools.MessageHandling
 }}";
             var setQueueAttributesRequest = new SetTopicAttributesRequest(policyDetails.SourceArn, "Policy", policyJson);
 
-            await client.SetTopicAttributesAsync(setQueueAttributesRequest).ConfigureAwait(false);
+            return client.SetTopicAttributesAsync(setQueueAttributesRequest);
         }
 
         private static string ExtractSourceAccountId(string sourceArn)

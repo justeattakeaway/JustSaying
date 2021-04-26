@@ -7,7 +7,7 @@ namespace JustSaying.AwsTools.MessageHandling
 {
     internal static class SqsPolicy
     {
-        internal static async Task SaveAsync(SqsPolicyDetails policyDetails, IAmazonSQS client)
+        internal static Task SaveAsync(SqsPolicyDetails policyDetails, IAmazonSQS client)
         {
             var topicArnWildcard = CreateTopicArnWildcard(policyDetails.SourceArn);
 
@@ -40,7 +40,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
             };
 
-            await client.SetQueueAttributesAsync(setQueueAttributesRequest).ConfigureAwait(false);
+            return client.SetQueueAttributesAsync(setQueueAttributesRequest);
         }
 
         private static string CreateTopicArnWildcard(string topicArn)

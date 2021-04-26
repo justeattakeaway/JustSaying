@@ -56,7 +56,7 @@ namespace JustSaying.AwsTools.MessageHandling
             });
         }
 
-        public async Task EnsurePolicyIsUpdatedAsync(IReadOnlyCollection<string> additionalSubscriberAccounts)
+        public Task EnsurePolicyIsUpdatedAsync(IReadOnlyCollection<string> additionalSubscriberAccounts)
         {
             if (additionalSubscriberAccounts.Any())
             {
@@ -65,8 +65,10 @@ namespace JustSaying.AwsTools.MessageHandling
                     AccountIds = additionalSubscriberAccounts,
                     SourceArn = Arn
                 };
-                await SnsPolicy.SaveAsync(policyDetails, Client).ConfigureAwait(false);
+                return SnsPolicy.SaveAsync(policyDetails, Client);
             }
+
+            return Task.CompletedTask;
         }
 
         public async Task ApplyTagsAsync()

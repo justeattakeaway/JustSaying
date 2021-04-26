@@ -21,7 +21,7 @@ namespace JustSaying.Messaging.Middleware
             _handlerResolver = handlerResolver;
         }
 
-        protected override async Task<bool> RunInnerAsync(
+        protected override Task<bool> RunInnerAsync(
             HandleMessageContext context,
             Func<CancellationToken, Task<bool>> func,
             CancellationToken stoppingToken)
@@ -34,7 +34,7 @@ namespace JustSaying.Messaging.Middleware
 
             IHandlerAsync<T> handler = _handlerResolver(resolutionContext);
 
-            return await handler.Handle(context.MessageAs<T>()).ConfigureAwait(false);
+            return handler.Handle(context.MessageAs<T>());
         }
     }
 }

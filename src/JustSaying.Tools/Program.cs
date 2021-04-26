@@ -15,9 +15,9 @@ namespace JustSaying.Tools
             }
         }
 
-        private static async Task<bool> ProcessLine(string line)
+        private static Task<bool> ProcessLine(string line)
         {
-            return await CommandParser.ParseAndExecuteAsync(line).ConfigureAwait(false);
+            return CommandParser.ParseAndExecuteAsync(line);
         }
     }
 }

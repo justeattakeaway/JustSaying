@@ -35,9 +35,9 @@ namespace JustSaying.Sample.Restaurant.KitchenConsole
             }
         }
 
-        private static async Task Run()
+        private static Task Run()
         {
-            await new HostBuilder()
+            return new HostBuilder()
                 .ConfigureAppConfiguration((hostContext, config) =>
                 {
                     config.AddJsonFile("appsettings.json", optional: false);
