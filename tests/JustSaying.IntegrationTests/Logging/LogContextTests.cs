@@ -33,7 +33,7 @@ namespace JustSaying.Logging
             var message = new SimpleMessage();
             await publisher.PublishAsync(message, cts.Token);
 
-            var output = ((TestOutputHelper) OutputHelper).Output;
+            var output = OutputHelper.Output;
             output.ShouldMatchApproved(o => o
                 .SubFolder("Approvals")
                 .WithScrubber(logMessage => ScrubLogs(logMessage, message.Id.ToString())));
@@ -58,7 +58,7 @@ namespace JustSaying.Logging
             var message = new SimpleMessage();
             await publisher.PublishAsync(message, cts.Token);
 
-            var output = ((TestOutputHelper) OutputHelper).Output;
+            var output = OutputHelper.Output;
             output.ShouldMatchApproved(o => o
                 .SubFolder("Approvals")
                 .WithScrubber(logMessage => ScrubLogs(logMessage, message.Id.ToString())));

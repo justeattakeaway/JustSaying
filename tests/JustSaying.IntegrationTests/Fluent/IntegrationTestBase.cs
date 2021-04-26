@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Runtime;
@@ -19,7 +20,7 @@ namespace JustSaying.IntegrationTests.Fluent
     {
         protected IntegrationTestBase(ITestOutputHelper outputHelper)
         {
-            OutputHelper = outputHelper;
+            OutputHelper = new CapturingTestOutputHelper(outputHelper);
         }
 
         protected virtual string AccessKeyId { get; } = "accessKeyId";
@@ -28,7 +29,7 @@ namespace JustSaying.IntegrationTests.Fluent
 
         protected virtual string SessionToken { get; } = "token";
 
-        protected ITestOutputHelper OutputHelper { get; }
+        protected CapturingTestOutputHelper OutputHelper { get; }
 
         protected virtual string RegionName => Region.SystemName;
 
@@ -129,6 +130,32 @@ namespace JustSaying.IntegrationTests.Fluent
                 }
 
                 await actionTask;
+            }
+        }
+
+        public class CapturingTestOutputHelper : ITestOutputHelper
+        {
+            private readonly ITestOutputHelper _inner;
+            private readonly StringBuilder _sb;
+
+            public string Output => _sb.ToString();
+
+            public CapturingTestOutputHelper(ITestOutputHelper inner)
+            {
+                _inner = inner;
+                _sb = new StringBuilder();
+            }
+
+            public void WriteLine(string message)
+            {
+                _sb.AppendLine(message);
+                _inner.WriteLine(message);
+            }
+
+            public void WriteLine(string format, params object[] args)
+            {
+                _sb.AppendLine(string.Format(format, args));
+                _inner.WriteLine(format, args);
             }
         }
     }
