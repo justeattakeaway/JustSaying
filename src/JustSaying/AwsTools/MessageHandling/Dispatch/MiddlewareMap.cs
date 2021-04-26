@@ -12,7 +12,7 @@ using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<J
 namespace JustSaying.AwsTools.MessageHandling.Dispatch
 {
     /// <summary>
-    /// A <see cref="MiddlewareMap"/> is a register of middlewares keyed by type and queue. Calling <see cref="Add"/>
+    /// A <see cref="MiddlewareMap"/> is a register of middlewares keyed by type and queue. Calling <see cref="Add{T}"/>
     /// with a queue name, type, and middleware will cause the middleware to be called when a message matching the type
     /// arrives in the queue.
     /// </summary>
