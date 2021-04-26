@@ -26,9 +26,6 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private readonly RegionEndpoint _region;
         private TimeSpan _visibilityTimeout;
-        private TimeSpan _deliveryDelay;
-        private ServerSideEncryption _serverSideEncryption;
-        private string _policy;
 
         public string Arn { get; private set; }
         public Uri Uri { get; private set; }
@@ -37,6 +34,9 @@ namespace JustSaying.AwsTools.MessageHandling
         internal TimeSpan MessageRetentionPeriod { get; set; }
         internal RedrivePolicy RedrivePolicy { get; set; }
         public string RegionSystemName => _region.SystemName;
+        internal TimeSpan DeliveryDelay { get; private set; }
+        internal ServerSideEncryption ServerSideEncryption { get; private set; }
+        internal string Policy { get; private set; }
         protected ILogger Logger { get; }
 
         public virtual async Task<bool> ExistsAsync()
@@ -162,10 +162,10 @@ namespace JustSaying.AwsTools.MessageHandling
             Arn = attributes.QueueARN;
             MessageRetentionPeriod = TimeSpan.FromSeconds(attributes.MessageRetentionPeriod);
             _visibilityTimeout = TimeSpan.FromSeconds(attributes.VisibilityTimeout);
-            _policy = attributes.Policy;
-            _deliveryDelay = TimeSpan.FromSeconds(attributes.DelaySeconds);
+            Policy = attributes.Policy;
+            DeliveryDelay = TimeSpan.FromSeconds(attributes.DelaySeconds);
             RedrivePolicy = ExtractRedrivePolicyFromQueueAttributes(attributes.Attributes);
-            _serverSideEncryption = ExtractServerSideEncryptionFromQueueAttributes(attributes.Attributes);
+            ServerSideEncryption = ExtractServerSideEncryptionFromQueueAttributes(attributes.Attributes);
         }
 
         private async Task<GetQueueAttributesResponse> GetAttrsAsync(IEnumerable<string> attrKeys)
@@ -213,8 +213,8 @@ namespace JustSaying.AwsTools.MessageHandling
                 {
                     MessageRetentionPeriod = queueConfig.MessageRetention;
                     _visibilityTimeout = queueConfig.VisibilityTimeout;
-                    _deliveryDelay = queueConfig.DeliveryDelay;
-                    _serverSideEncryption = queueConfig.ServerSideEncryption;
+                    DeliveryDelay = queueConfig.DeliveryDelay;
+                    ServerSideEncryption = queueConfig.ServerSideEncryption;
                 }
             }
         }
@@ -223,21 +223,21 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             return MessageRetentionPeriod != queueConfig.MessageRetention
                    || _visibilityTimeout != queueConfig.VisibilityTimeout
-                   || _deliveryDelay != queueConfig.DeliveryDelay
+                   || DeliveryDelay != queueConfig.DeliveryDelay
                    || QueueNeedsUpdatingBecauseOfEncryption(queueConfig);
         }
 
         private bool QueueNeedsUpdatingBecauseOfEncryption(SqsBasicConfiguration queueConfig)
         {
-            if (_serverSideEncryption == queueConfig.ServerSideEncryption)
+            if (ServerSideEncryption == queueConfig.ServerSideEncryption)
             {
                 return false;
             }
 
-            if (_serverSideEncryption != null && queueConfig.ServerSideEncryption != null)
+            if (ServerSideEncryption != null && queueConfig.ServerSideEncryption != null)
             {
-                return _serverSideEncryption.KmsMasterKeyId != queueConfig.ServerSideEncryption.KmsMasterKeyId ||
-                       _serverSideEncryption.KmsDataKeyReusePeriodSeconds != queueConfig.ServerSideEncryption.KmsDataKeyReusePeriodSeconds;
+                return ServerSideEncryption.KmsMasterKeyId != queueConfig.ServerSideEncryption.KmsMasterKeyId ||
+                       ServerSideEncryption.KmsDataKeyReusePeriodSeconds != queueConfig.ServerSideEncryption.KmsDataKeyReusePeriodSeconds;
             }
 
             return true;
@@ -274,9 +274,9 @@ namespace JustSaying.AwsTools.MessageHandling
                 Arn,
                 QueueName,
                 Region = _region.SystemName,
-                Policy = _policy,
+                Policy = Policy,
                 Uri,
-                DeliveryDelay = _deliveryDelay,
+                DeliveryDelay = DeliveryDelay,
                 VisibilityTimeout = _visibilityTimeout,
                 MessageRetentionPeriod,
             });

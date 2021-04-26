@@ -18,25 +18,25 @@ namespace JustSaying.AwsTools.MessageHandling
     {
         private readonly int _retryCountBeforeSendingToErrorQueue;
 
-        private readonly ErrorQueue _errorQueue;
+        internal ErrorQueue ErrorQueue { get; }
 
         public SqsQueueByName(RegionEndpoint region, string queueName, IAmazonSQS client, int retryCountBeforeSendingToErrorQueue, ILoggerFactory loggerFactory)
             : base(region, queueName, client, loggerFactory)
         {
             _retryCountBeforeSendingToErrorQueue = retryCountBeforeSendingToErrorQueue;
-            _errorQueue = new ErrorQueue(region, queueName, client, loggerFactory);
+            ErrorQueue = new ErrorQueue(region, queueName, client, loggerFactory);
         }
 
         public override async Task<bool> CreateAsync(SqsBasicConfiguration queueConfig, int attempt = 0)
         {
             if (NeedErrorQueue(queueConfig))
             {
-                var exists = await _errorQueue.ExistsAsync().ConfigureAwait(false);
+                var exists = await ErrorQueue.ExistsAsync().ConfigureAwait(false);
                 if (!exists)
                 {
-                    using (Logger.Time("Creating error queue {QueueName}", _errorQueue.QueueName))
+                    using (Logger.Time("Creating error queue {QueueName}", ErrorQueue.QueueName))
                     {
-                        await _errorQueue.CreateAsync(new SqsBasicConfiguration
+                        await ErrorQueue.CreateAsync(new SqsBasicConfiguration
                         {
                             ErrorQueueRetentionPeriod = queueConfig.ErrorQueueRetentionPeriod,
                             ErrorQueueOptOut = true
@@ -45,7 +45,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
                 else
                 {
-                    Logger.LogInformation("Error queue {QueueName} already exists, skipping", _errorQueue.QueueName);
+                    Logger.LogInformation("Error queue {QueueName} already exists, skipping", ErrorQueue.QueueName);
                 }
             }
 
@@ -64,15 +64,15 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public override async Task DeleteAsync()
         {
-            if (_errorQueue != null)
+            if (ErrorQueue != null)
             {
-                await _errorQueue.DeleteAsync().ConfigureAwait(false);
+                await ErrorQueue.DeleteAsync().ConfigureAwait(false);
             }
 
             await base.DeleteAsync().ConfigureAwait(false);
         }
 
-        private async Task UpdateRedrivePolicyAsync(RedrivePolicy requestedRedrivePolicy)
+        internal async Task UpdateRedrivePolicyAsync(RedrivePolicy requestedRedrivePolicy)
         {
             if (RedrivePolicyNeedsUpdating(requestedRedrivePolicy))
             {
@@ -111,7 +111,7 @@ namespace JustSaying.AwsTools.MessageHandling
             await ApplyTagsAsync(this, queueConfig.Tags).ConfigureAwait(false);
 
             //Create an error queue for existing queues if they don't already have one
-            if (_errorQueue != null && NeedErrorQueue(queueConfig))
+            if (ErrorQueue != null && NeedErrorQueue(queueConfig))
             {
                 var errorQueueConfig = new SqsReadConfiguration(SubscriptionType.ToTopic)
                 {
@@ -119,20 +119,20 @@ namespace JustSaying.AwsTools.MessageHandling
                     ErrorQueueOptOut = true
                 };
 
-                var errorQueueExists = await _errorQueue.ExistsAsync().ConfigureAwait(false);
+                var errorQueueExists = await ErrorQueue.ExistsAsync().ConfigureAwait(false);
                 if (!errorQueueExists)
                 {
-                    await _errorQueue.CreateAsync(errorQueueConfig).ConfigureAwait(false);
+                    await ErrorQueue.CreateAsync(errorQueueConfig).ConfigureAwait(false);
                 }
                 else
                 {
-                    await _errorQueue.UpdateQueueAttributeAsync(errorQueueConfig).ConfigureAwait(false);
+                    await ErrorQueue.UpdateQueueAttributeAsync(errorQueueConfig).ConfigureAwait(false);
                 }
 
                 await UpdateRedrivePolicyAsync(
-                    new RedrivePolicy(queueConfig.RetryCountBeforeSendingToErrorQueue, _errorQueue.Arn)).ConfigureAwait(false);
+                    new RedrivePolicy(queueConfig.RetryCountBeforeSendingToErrorQueue, ErrorQueue.Arn)).ConfigureAwait(false);
 
-                await ApplyTagsAsync(_errorQueue, queueConfig.Tags).ConfigureAwait(false);
+                await ApplyTagsAsync(ErrorQueue, queueConfig.Tags).ConfigureAwait(false);
             }
         }
 
@@ -165,7 +165,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             if (NeedErrorQueue(queueConfig))
             {
-                policy.Add(JustSayingConstants.AttributeRedrivePolicy, new RedrivePolicy(_retryCountBeforeSendingToErrorQueue, _errorQueue.Arn).ToString());
+                policy.Add(JustSayingConstants.AttributeRedrivePolicy, new RedrivePolicy(_retryCountBeforeSendingToErrorQueue, ErrorQueue.Arn).ToString());
             }
 
             if (queueConfig.ServerSideEncryption != null)
