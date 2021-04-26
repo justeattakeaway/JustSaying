@@ -7,15 +7,6 @@ namespace JustSaying.UnitTests.Fluent
     public class TopicAddressTests
     {
         [Fact]
-        public void TwoNoneInstancesAreConsideredEqual()
-        {
-            var ta1 = TopicAddress.None;
-            var ta2 = TopicAddress.None;
-
-            Assert.Equal(ta1, ta2);
-        }
-
-        [Fact]
         public void ParsingEmptyArnThrows()
         {
             Assert.Throws<ArgumentException>("topicArn", () => TopicAddress.FromArn(""));

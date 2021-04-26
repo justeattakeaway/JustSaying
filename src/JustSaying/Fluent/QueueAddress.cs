@@ -7,32 +7,20 @@ namespace JustSaying.Fluent
     /// <summary>
     /// A type that encapsulates an address of an SQS queue.
     /// </summary>
-    public sealed class QueueAddress
+    internal sealed class QueueAddress
     {
-        internal QueueAddress()
+        private QueueAddress()
         { }
-
-        private QueueAddress(bool isNone)
-        {
-            _isNone = isNone;
-        }
 
         /// <summary>
         /// The QueueUrl of the SQS queue.
         /// </summary>
-        public Uri QueueUrl { get; internal set; }
+        public Uri QueueUrl { get; private set; }
 
         /// <summary>
         /// The region of the queue.
         /// </summary>
-        public string RegionName { get; internal set; }
-
-        private readonly bool _isNone = false;
-
-        /// <summary>
-        /// Use <see cref="None"/> to have JustSaying automatically create your queue.
-        /// </summary>
-        public static QueueAddress None { get; } = new(true);
+        public string RegionName { get; private set; }
 
         /// <summary>
         /// Creates a <see cref="QueueAddress"/> from a queue URL.

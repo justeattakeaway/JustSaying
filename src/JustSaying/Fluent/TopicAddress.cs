@@ -6,27 +6,15 @@ namespace JustSaying.Fluent
     /// <summary>
     /// A type that encapsulates an address of an SNS topic.
     /// </summary>
-    public sealed class TopicAddress
+    internal sealed class TopicAddress
     {
-        internal TopicAddress()
+        private TopicAddress()
         { }
-
-        private TopicAddress(bool isNone)
-        {
-            _isNone = isNone;
-        }
 
         /// <summary>
         /// The ARN of the topic.
         /// </summary>
-        public string TopicArn { get; internal set; }
-
-        private readonly bool _isNone = false;
-
-        /// <summary>
-        /// Use <see cref="None"/> to have JustSaying automatically create your topic.
-        /// </summary>
-        public static TopicAddress None { get; } = new (true);
+        public string TopicArn { get; private set; }
 
         /// <summary>
         /// Creates a <see cref="TopicAddress"/> from a topic ARN.

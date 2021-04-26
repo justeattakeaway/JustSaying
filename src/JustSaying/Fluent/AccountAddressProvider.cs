@@ -64,63 +64,54 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Creates a <see cref="TopicAddress"/> within the current account from <see cref="T"/> by using the topic naming convention.
+        /// Creates an ARN for a topic within the current account with the name from <see cref="T"/> by using the topic naming convention.
         /// </summary>
         /// <typeparam name="T">Message type</typeparam>
         /// <returns>The <see cref="TopicAddress"/> for this message type.</returns>
-        public TopicAddress GetTopicAddressByConvention<T>()
+        public string GetTopicArnByConvention<T>()
         {
-            return GetTopicAddress(_topicNamingConvention.TopicName<T>());
+            return GetTopicArn(_topicNamingConvention.TopicName<T>());
         }
 
         /// <summary>
-        /// Creates a <see cref="TopicAddress"/> in the current account with name specified with <see cref="topicName"/>.
+        /// Creates an ARN for a topic in the current account with the name specified with <see cref="topicName"/>.
         /// </summary>
         /// <param name="topicName">The topic name.</param>
-        /// <returns>The <see cref="TopicAddress"/> for this topic.</returns>
-        public TopicAddress GetTopicAddress(string topicName)
+        /// <returns>The ARN for this topic.</returns>
+        public string GetTopicArn(string topicName)
         {
-            return new TopicAddress
-            {
-                TopicArn = new Arn
+            return new Arn
                 {
                     Partition = _regionEndpoint.PartitionName,
                     Service = "sns",
                     Region = _regionEndpoint.SystemName,
                     AccountId = _accountId,
                     Resource = topicName
-                }.ToString()
-            };
+                }.ToString();
         }
 
         /// <summary>
-        /// Creates a <see cref="QueueAddress"/> within the current account from <see cref="T"/> by using the queue naming convention.
+        /// Creates a <see cref="Uri"/> for a queue within the current account with the name from <see cref="T"/> by using the queue naming convention.
         /// </summary>
         /// <typeparam name="T">Message type</typeparam>
-        /// <returns>The <see cref="QueueAddress"/> for this message type.</returns>
-        public QueueAddress GetQueueAddressByConvention<T>()
+        /// <returns>The <see cref="Uri"/> for this message type.</returns>
+        public Uri GetQueueUriByConvention<T>()
         {
-            return GetQueueAddress(_queueNamingConvention.QueueName<T>());
+            return GetQueueUri(_queueNamingConvention.QueueName<T>());
         }
 
         /// <summary>
-        /// Creates a <see cref="QueueAddress"/> in the current account with name specified with <see cref="queueName"/>.
+        /// Creates a <see cref="Uri"/> for a queue in the current account with name specified with <see cref="queueName"/>.
         /// </summary>
         /// <param name="queueName">The queue name.</param>
-        /// <returns>The <see cref="QueueAddress"/> for this queue.</returns>
-        public QueueAddress GetQueueAddress(string queueName)
+        /// <returns>The <see cref="Uri"/> for this queue.</returns>
+        public Uri GetQueueUri(string queueName)
         {
             var hostname = _regionEndpoint.GetEndpointForService("sqs").Hostname;
-            Uri queueUrl = new UriBuilder("https", hostname)
+            return new UriBuilder("https", hostname)
             {
                 Path = $"{_accountId}/{queueName}"
             }.Uri;
-
-            return new QueueAddress
-            {
-                QueueUrl = queueUrl,
-                RegionName = _regionEndpoint.SystemName
-            };
         }
     }
 }

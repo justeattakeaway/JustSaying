@@ -161,49 +161,6 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Configures a queue subscription for a pre-existing queue.
-        /// </summary>
-        /// <param name="queueAddress">The address of the queue to subscribe to.</param>
-        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
-        /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
-        public SubscriptionsBuilder ForQueue<T>(QueueAddress queueAddress)
-            where T : Message
-        {
-            if (queueAddress == null) throw new ArgumentNullException(nameof(queueAddress));
-
-            ISubscriptionBuilder<T> builder =
-                queueAddress == QueueAddress.None
-                ? new QueueSubscriptionBuilder<T>()
-                : new QueueAddressSubscriptionBuilder<T>(queueAddress);
-
-            Subscriptions.Add(builder);
-
-            return this;
-        }
-
-        /// <summary>
-        /// Configures a queue subscription for a pre-existing queue.
-        /// </summary>
-        /// <param name="queueAddress">The address of the queue to subscribe to.</param>
-        /// <param name="configure">A delegate to configure a queue subscription.</param>
-        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
-        /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
-        public SubscriptionsBuilder ForQueue<T>(QueueAddress queueAddress, Action<QueueAddressSubscriptionBuilder<T>> configure)
-            where T : Message
-        {
-            if (queueAddress == null) throw new ArgumentNullException(nameof(queueAddress));
-            if (configure == null) throw new ArgumentNullException(nameof(configure));
-
-            var builder = new QueueAddressSubscriptionBuilder<T>(queueAddress);
-
-            configure(builder);
-
-            Subscriptions.Add(builder);
-
-            return this;
-        }
-
-        /// <summary>
         /// Configures a topic subscription for the default topic name.
         /// </summary>
         /// <typeparam name="T">The type of the message to subscribe to.</typeparam>

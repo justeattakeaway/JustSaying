@@ -12,38 +12,36 @@ namespace JustSaying.UnitTests.Fluent
         public void CanGetAccountQueueByName()
         {
             var sut = new AccountAddressProvider("123456789012", "eu-west-1");
-            var address = sut.GetQueueAddress("queue1");
+            var address = sut.GetQueueUri("queue1");
 
-            Assert.Equal(new Uri(" https://sqs.eu-west-1.amazonaws.com/123456789012/queue1"), address.QueueUrl);
-            Assert.Equal("eu-west-1", address.RegionName);
+            Assert.Equal(new Uri(" https://sqs.eu-west-1.amazonaws.com/123456789012/queue1"), address);
         }
 
         [Fact]
         public void CanGetAccountTopicByName()
         {
             var sut = new AccountAddressProvider("123456789012", "eu-west-1");
-            var address = sut.GetTopicAddress("topic1");
+            var address = sut.GetTopicArn("topic1");
 
-            Assert.Equal("arn:aws:sns:eu-west-1:123456789012:topic1", address.TopicArn);
+            Assert.Equal("arn:aws:sns:eu-west-1:123456789012:topic1", address);
         }
 
         [Fact]
         public void CanGetAccountQueueByDefaultConvention()
         {
             var sut = new AccountAddressProvider("123456789012", "eu-west-1");
-            var address = sut.GetQueueAddressByConvention<Order>();
+            var address = sut.GetQueueUriByConvention<Order>();
 
-            Assert.Equal(new Uri(" https://sqs.eu-west-1.amazonaws.com/123456789012/order"), address.QueueUrl);
-            Assert.Equal("eu-west-1", address.RegionName);
+            Assert.Equal(new Uri(" https://sqs.eu-west-1.amazonaws.com/123456789012/order"), address);
         }
 
         [Fact]
         public void CanGetAccountTopicByDefaultConvention()
         {
             var sut = new AccountAddressProvider("123456789012", "eu-west-1");
-            var address = sut.GetTopicAddressByConvention<Order>();
+            var address = sut.GetTopicArnByConvention<Order>();
 
-            Assert.Equal("arn:aws:sns:eu-west-1:123456789012:order", address.TopicArn);
+            Assert.Equal("arn:aws:sns:eu-west-1:123456789012:order", address);
         }
 
         [Fact]
@@ -51,10 +49,9 @@ namespace JustSaying.UnitTests.Fluent
         {
             var convention = new ManualNamingConvention("adhoc-queue-name", null);
             var sut = new AccountAddressProvider("123456789012", "eu-west-1", convention, null);
-            var address = sut.GetQueueAddressByConvention<Order>();
+            var address = sut.GetQueueUriByConvention<Order>();
 
-            Assert.Equal(new Uri(" https://sqs.eu-west-1.amazonaws.com/123456789012/adhoc-queue-name"), address.QueueUrl);
-            Assert.Equal("eu-west-1", address.RegionName);
+            Assert.Equal(new Uri(" https://sqs.eu-west-1.amazonaws.com/123456789012/adhoc-queue-name"), address);
         }
 
         [Fact]
@@ -62,9 +59,9 @@ namespace JustSaying.UnitTests.Fluent
         {
             var convention = new ManualNamingConvention(null, "adhoc-topic-name");
             var sut = new AccountAddressProvider("123456789012", "eu-west-1", null, convention);
-            var address = sut.GetTopicAddressByConvention<Order>();
+            var address = sut.GetTopicArnByConvention<Order>();
 
-            Assert.Equal("arn:aws:sns:eu-west-1:123456789012:adhoc-topic-name", address.TopicArn);
+            Assert.Equal("arn:aws:sns:eu-west-1:123456789012:adhoc-topic-name", address);
         }
 
         private class ManualNamingConvention : IQueueNamingConvention, ITopicNamingConvention

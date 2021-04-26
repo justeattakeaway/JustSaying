@@ -73,28 +73,6 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Configures a publisher for a pre-existing queue.
-        /// </summary>
-        /// <param name="queueAddress">The address of the queue to publish to.</param>
-        /// <typeparam name="T">The type of the message to publish to.</typeparam>
-        /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        public PublicationsBuilder WithQueue<T>(QueueAddress queueAddress)
-            where T : Message
-        {
-            if (queueAddress == null) throw new ArgumentNullException(nameof(queueAddress));
-
-            IPublicationBuilder<T> builder =
-                queueAddress == QueueAddress.None
-                ? new QueuePublicationBuilder<T>()
-                : new QueueAddressPublicationBuilder<T>(queueAddress);
-
-            Publications.Add(builder);
-
-            return this;
-        }
-
-        /// <summary>
         /// Configures a publisher for a pre-existing topic.
         /// </summary>
         /// <param name="queueArn">The ARN of the queue to publish to.</param>
@@ -196,28 +174,6 @@ namespace JustSaying.Fluent
         /// <summary>
         /// Configures a publisher for a pre-existing topic.
         /// </summary>
-        /// <param name="topicAddress">The address of the topic to publish to.</param>
-        /// <typeparam name="T">The type of the message to publish to.</typeparam>
-        /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        public PublicationsBuilder WithTopic<T>(TopicAddress topicAddress)
-            where T : Message
-        {
-            if (topicAddress == null) throw new ArgumentNullException(nameof(topicAddress));
-
-            IPublicationBuilder<T> builder =
-                topicAddress == TopicAddress.None
-                ? new TopicPublicationBuilder<T>()
-                : new TopicAddressPublicationBuilder<T>(topicAddress);
-
-            Publications.Add(builder);
-
-            return this;
-        }
-
-        /// <summary>
-        /// Configures a publisher for a pre-existing topic.
-        /// </summary>
         /// <param name="topicArn">The ARN of the topic to publish to.</param>
         /// <param name="configure">An optional delegate to configure a topic publisher.</param>
         /// <typeparam name="T">The type of the message to publish to.</typeparam>
@@ -231,29 +187,6 @@ namespace JustSaying.Fluent
             var builder = new TopicAddressPublicationBuilder<T>(TopicAddress.FromArn(topicArn));
 
             configure?.Invoke(builder);
-
-            Publications.Add(builder);
-
-            return this;
-        }
-
-        /// <summary>
-        /// Configures a publisher for a pre-existing topic.
-        /// </summary>
-        /// <param name="topicAddress">The address of the topic to publish to</param>
-        /// <param name="configure">An optional delegate to configure a topic publisher.</param>
-        /// <typeparam name="T">The type of the message to publish to.</typeparam>
-        /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        public PublicationsBuilder WithTopic<T>(TopicAddress topicAddress, Action<TopicAddressPublicationBuilder<T>> configure)
-            where T : Message
-        {
-            if (topicAddress == null) throw new ArgumentNullException(nameof(topicAddress));
-            if (configure == null) throw new ArgumentNullException(nameof(configure));
-
-            var builder = new TopicAddressPublicationBuilder<T>(topicAddress);
-
-            configure(builder);
 
             Publications.Add(builder);
 

@@ -7,15 +7,6 @@ namespace JustSaying.UnitTests.Fluent
     public class QueueAddressTests
     {
         [Fact]
-        public void TwoNoneInstancesAreConsideredEqual()
-        {
-            var qa1 = QueueAddress.None;
-            var qa2 = QueueAddress.None;
-
-            Assert.Equal(qa1, qa2);
-        }
-
-        [Fact]
         public void ParsingEmptyArnThrows()
         {
             Assert.Throws<ArgumentException>("queueArn",() => QueueAddress.FromArn(""));
