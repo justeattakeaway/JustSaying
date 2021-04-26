@@ -26,7 +26,7 @@
           {
             "BufferSize": 10,
             "QueueName": "integrationTestQueueName",
-            "Region": null,
+            "Region": "eu-west-1",
             "Prefetch": 10,
             "BackoffStrategyName": null
           }

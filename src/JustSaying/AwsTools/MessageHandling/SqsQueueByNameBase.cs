@@ -274,9 +274,9 @@ namespace JustSaying.AwsTools.MessageHandling
                 Arn,
                 QueueName,
                 Region = _region.SystemName,
-                Policy = Policy,
+                Policy,
                 Uri,
-                DeliveryDelay = DeliveryDelay,
+                DeliveryDelay,
                 VisibilityTimeout = _visibilityTimeout,
                 MessageRetentionPeriod,
             });
