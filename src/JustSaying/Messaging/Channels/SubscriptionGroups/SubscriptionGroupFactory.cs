@@ -95,6 +95,8 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
         {
             var buffers = new List<IMessageReceiveBuffer>();
 
+            var logger = _loggerFactory.CreateLogger<MessageReceiveBuffer>();
+
             foreach (ISqsQueue queue in subscriptionGroupSettings.Queues)
             {
                 var buffer = new MessageReceiveBuffer(
@@ -105,7 +107,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups
                     queue,
                     receiveMiddleware,
                     _monitor,
-                    _loggerFactory.CreateLogger<MessageReceiveBuffer>());
+                    logger);
 
                 buffers.Add(buffer);
             }
