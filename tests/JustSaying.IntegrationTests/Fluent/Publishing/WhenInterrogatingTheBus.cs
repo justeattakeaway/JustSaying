@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using NSubstitute;
 using Shouldly;
 using Xunit.Abstractions;
 

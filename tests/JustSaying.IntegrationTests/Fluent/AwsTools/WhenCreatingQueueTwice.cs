@@ -6,7 +6,6 @@ using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using Shouldly;
-using Xunit;
 using Xunit.Abstractions;
 #pragma warning disable 618
 

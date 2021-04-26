@@ -2,15 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using JustSaying.Fluent;
 using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Middleware
 {

@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;

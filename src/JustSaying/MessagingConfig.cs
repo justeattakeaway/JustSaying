@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.Channels;
-using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.Naming;

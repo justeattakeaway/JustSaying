@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Messaging;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;

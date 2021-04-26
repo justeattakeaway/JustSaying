@@ -1,12 +1,9 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
-using NSubstitute;
-using Shouldly;
 using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools

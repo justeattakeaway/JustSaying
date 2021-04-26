@@ -1,4 +1,3 @@
-using JustSaying.AwsTools;
 using JustSaying.Sample.Restaurant.Models;
 using JustSaying.Sample.Restaurant.OrderingApi.Handlers;
 using Microsoft.AspNetCore.Builder;

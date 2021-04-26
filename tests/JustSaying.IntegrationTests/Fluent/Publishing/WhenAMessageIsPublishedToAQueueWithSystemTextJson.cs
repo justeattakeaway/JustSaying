@@ -1,7 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using JustSaying.Fluent;
-using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;

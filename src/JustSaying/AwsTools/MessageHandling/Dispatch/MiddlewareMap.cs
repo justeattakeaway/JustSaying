@@ -2,10 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using JustSaying.Messaging.Interrogation;
-using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
-using Microsoft.Extensions.Logging;
 
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 

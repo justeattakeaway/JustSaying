@@ -6,7 +6,6 @@ using Amazon.Runtime;
 using JustSaying.AwsTools;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;

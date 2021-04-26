@@ -1,15 +1,10 @@
-using System;
 using System.Threading.Tasks;
-using Amazon.SQS.Model;
 using JustSaying.IntegrationTests.TestHandlers;
-using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing

@@ -1,11 +1,7 @@
-using System;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
-using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.AwsTools.MessageHandling;
-using Microsoft.Extensions.Logging.Abstractions;
-using NSubstitute;
 using Shouldly;
 using Xunit;
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
