@@ -31,10 +31,9 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                 .BuildServiceProvider();
 
             // Act
+            using var source = new CancellationTokenSource(Timeout);
             var publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
-            await publisher.StartAsync(CancellationToken.None);
-
-            await publisher.PublishAsync(new MyMessageForRegion());
+            await publisher.StartAsync(source.Token);
 
             // Assert
             var busBuilder = serviceProvider.GetRequiredService<MessagingBusBuilder>();
