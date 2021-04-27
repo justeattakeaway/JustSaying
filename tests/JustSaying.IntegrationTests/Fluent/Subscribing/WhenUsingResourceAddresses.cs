@@ -197,9 +197,6 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 services,
                 async (publisher, listener, serviceProvider, cancellationToken) =>
                 {
-                    await listener.StartAsync(cancellationToken);
-                    await publisher.StartAsync(cancellationToken);
-
                     // Assert does not throw
                     await publisher.PublishAsync(message, cancellationToken);
                 });
