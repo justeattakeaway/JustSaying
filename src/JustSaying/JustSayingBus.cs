@@ -202,9 +202,9 @@ namespace JustSaying
             PublishMetadata metadata,
             CancellationToken cancellationToken)
         {
-            if (!_busStarted)
+            if (!_busStarted && _startupTasks.Count > 0)
             {
-                throw new InvalidOperationException("Bus must be started before publishing messages.");
+                throw new InvalidOperationException("There are pending startup tasks that must be executed by calling StartAsync before messages may be published.");
             }
 
             IMessagePublisher publisher = GetPublisherForMessage(message);
