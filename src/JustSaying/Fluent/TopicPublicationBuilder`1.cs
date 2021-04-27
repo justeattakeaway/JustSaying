@@ -126,6 +126,7 @@ namespace JustSaying.Fluent
                 typeof(T));
 
             var config = bus.Config;
+            var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
             var readConfiguration = new SqsReadConfiguration(SubscriptionType.ToTopic);
             var writeConfiguration = new SnsWriteConfiguration();
@@ -135,7 +136,7 @@ namespace JustSaying.Fluent
             bus.SerializationRegister.AddSerializer<T>();
 
             var eventPublisher = new SnsMessagePublisher(
-                proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(config.Region)),
+                proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
                 bus.SerializationRegister,
                 loggerFactory,
                 config.MessageSubjectProvider)
@@ -146,7 +147,7 @@ namespace JustSaying.Fluent
 #pragma warning disable 618
             var snsTopic = new SnsTopicByName(
                 readConfiguration.TopicName,
-                proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(config.Region)),
+                proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
                 loggerFactory)
             {
                 Tags = Tags

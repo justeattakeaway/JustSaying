@@ -161,6 +161,7 @@ namespace JustSaying.Fluent
             };
 
             var config = bus.Config;
+            var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
             ConfigureReads?.Invoke(subscriptionConfig);
 
@@ -172,7 +173,7 @@ namespace JustSaying.Fluent
             subscriptionConfig.Validate();
 
             var queueWithStartup = creator.EnsureTopicExistsWithQueueSubscribed(
-                config.Region,
+                region,
                 bus.SerializationRegister,
                 subscriptionConfig,
                 config.MessageSubjectProvider);

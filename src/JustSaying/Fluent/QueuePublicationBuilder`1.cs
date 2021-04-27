@@ -95,6 +95,7 @@ namespace JustSaying.Fluent
                 typeof(T));
 
             var config = bus.Config;
+            var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
             var writeConfiguration = new SqsWriteConfiguration();
             ConfigureWrites?.Invoke(writeConfiguration);
@@ -102,7 +103,7 @@ namespace JustSaying.Fluent
 
             bus.SerializationRegister.AddSerializer<T>();
 
-            var regionEndpoint = RegionEndpoint.GetBySystemName(config.Region);
+            var regionEndpoint = RegionEndpoint.GetBySystemName(region);
             var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
 
             var eventPublisher = new SqsMessagePublisher(

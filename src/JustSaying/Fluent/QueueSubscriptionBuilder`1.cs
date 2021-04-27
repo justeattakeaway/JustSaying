@@ -163,6 +163,7 @@ namespace JustSaying.Fluent
             ConfigureReads?.Invoke(subscriptionConfig);
 
             var config = bus.Config;
+            var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
             subscriptionConfig.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
             subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
@@ -170,7 +171,7 @@ namespace JustSaying.Fluent
             subscriptionConfig.MiddlewareConfiguration = subscriptionConfig.MiddlewareConfiguration;
             subscriptionConfig.Validate();
 
-            var queue = creator.EnsureQueueExists(config.Region, subscriptionConfig);
+            var queue = creator.EnsureQueueExists(region, subscriptionConfig);
             bus.AddStartupTask(queue.StartupTask);
 
             bus.AddQueue(subscriptionConfig.SubscriptionGroupName, queue.Queue);
