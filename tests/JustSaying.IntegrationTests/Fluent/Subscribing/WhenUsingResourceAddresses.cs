@@ -57,9 +57,11 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     await publisher.PublishAsync(message, cancellationToken);
 
                     // Assert
-                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
-
-                    handler.ReceivedMessages.ShouldHaveSingleItem().Content.ShouldBe(content);
+                    await Patiently.AssertThatAsync(OutputHelper,
+                        () =>
+                        {
+                            handler.ReceivedMessages.ShouldHaveSingleItem().Content.ShouldBe(content);
+                        });
                 });
         }
 
@@ -105,9 +107,11 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     await publisher.PublishAsync(message, cancellationToken);
 
                     // Assert
-                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
-
-                    handler.ReceivedMessages.ShouldHaveSingleItem().Content.ShouldBe(content);
+                    await Patiently.AssertThatAsync(OutputHelper,
+                        () =>
+                        {
+                            handler.ReceivedMessages.ShouldHaveSingleItem().Content.ShouldBe(content);
+                        });
                 });
         }
 
@@ -148,9 +152,11 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     await publisher.PublishAsync(message, cancellationToken);
 
                     // Assert
-                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
-
-                    handler.ReceivedMessages.ShouldHaveSingleItem().Content.ShouldBe(content);
+                    await Patiently.AssertThatAsync(OutputHelper,
+                        () =>
+                        {
+                            handler.ReceivedMessages.ShouldHaveSingleItem().Content.ShouldBe(content);
+                        });
                 });
         }
     }
