@@ -40,8 +40,8 @@ namespace JustSaying
 
         public IMessageMonitor Monitor
         {
-            get { return _monitor; }
-            set { _monitor = value ?? new NullOpMessageMonitor(); }
+            get => _monitor;
+            set => _monitor = value ?? new NullOpMessageMonitor();
         }
 
         private ISubscriptionGroup SubscriptionGroups { get; set; }

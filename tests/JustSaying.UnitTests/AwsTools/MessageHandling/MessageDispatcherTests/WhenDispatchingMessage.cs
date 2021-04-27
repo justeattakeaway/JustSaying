@@ -74,12 +74,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
         public virtual Task DisposeAsync()
         {
-            if (_amazonSqsClient != null)
-            {
-                _amazonSqsClient.Dispose();
-                _amazonSqsClient = null;
-            }
-
+            _amazonSqsClient?.Dispose();
             return Task.CompletedTask;
         }
 

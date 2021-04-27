@@ -24,12 +24,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         public virtual Task DisposeAsync()
         {
-            if (Sns != null)
-            {
-                Sns.Dispose();
-                Sns = null;
-            }
-
+            Sns?.Dispose();
             return Task.CompletedTask;
         }
 

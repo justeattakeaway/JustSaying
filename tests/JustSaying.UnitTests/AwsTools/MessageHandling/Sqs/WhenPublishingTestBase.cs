@@ -22,12 +22,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 
         public virtual Task DisposeAsync()
         {
-            if (Sqs != null)
-            {
-                Sqs.Dispose();
-                Sqs = null;
-            }
-
+            Sqs?.Dispose();
             return Task.CompletedTask;
         }
 
