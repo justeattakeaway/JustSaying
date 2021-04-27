@@ -5,6 +5,7 @@ using Amazon.SQS.Util;
 using JustSaying.AwsTools;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit.Abstractions;
 
@@ -157,6 +158,50 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                         {
                             handler.ReceivedMessages.ShouldHaveSingleItem().Content.ShouldBe(content);
                         });
+                });
+        }
+
+        [AwsFact]
+        public async Task CanPublishUsingTopicArnWithoutStartingBusAndWithNoRegion()
+        {
+            IAwsClientFactory clientFactory = CreateClientFactory();
+            var snsClient = clientFactory.GetSnsClient(Region);
+            var topicResponse = await snsClient.CreateTopicAsync(UniqueName);
+
+            var services = new ServiceCollection()
+                    .AddLogging((p) => p.AddXUnit(OutputHelper, o => o.IncludeScopes = true).SetMinimumLevel(LogLevel.Debug))
+                    .AddJustSaying(
+                        (builder, serviceProvider) =>
+                        {
+                            builder.Client((options) =>
+                                {
+                                    options.WithSessionCredentials(AccessKeyId, SecretAccessKey, SessionToken)
+                                        .WithServiceUri(ServiceUri);
+                                });
+                        })
+                .ConfigureJustSaying(builder =>
+                    builder
+                        .Publications(c =>
+                            c.WithTopicArn<SimpleMessage>(topicResponse.TopicArn)
+                        )
+                );
+
+            string content = Guid.NewGuid().ToString();
+
+            var message = new SimpleMessage
+            {
+                Content = content
+            };
+
+            await WhenAsync(
+                services,
+                async (publisher, listener, serviceProvider, cancellationToken) =>
+                {
+                    await listener.StartAsync(cancellationToken);
+                    await publisher.StartAsync(cancellationToken);
+
+                    // Assert does not throw
+                    await publisher.PublishAsync(message, cancellationToken);
                 });
         }
     }
