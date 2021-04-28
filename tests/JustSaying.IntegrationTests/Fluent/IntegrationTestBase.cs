@@ -54,7 +54,7 @@ namespace JustSaying.IntegrationTests.Fluent
 
         protected IServiceCollection Given(
             Action<MessagingBusBuilder, IServiceProvider> configure,
-            LogLevel? levelOverride)
+            LogLevel? levelOverride = null)
         {
             LogLevel logLevel = levelOverride ?? LogLevel.Debug;
             return new ServiceCollection()
@@ -136,32 +136,6 @@ namespace JustSaying.IntegrationTests.Fluent
                 }
 
                 await actionTask;
-            }
-        }
-
-        public class CapturingTestOutputHelper : ITestOutputHelper
-        {
-            private readonly ITestOutputHelper _inner;
-            private readonly StringBuilder _sb;
-
-            public string Output => _sb.ToString();
-
-            public CapturingTestOutputHelper(ITestOutputHelper inner)
-            {
-                _inner = inner;
-                _sb = new StringBuilder();
-            }
-
-            public void WriteLine(string message)
-            {
-                _sb.AppendLine(message);
-                _inner.WriteLine(message);
-            }
-
-            public void WriteLine(string format, params object[] args)
-            {
-                _sb.AppendLine(string.Format(format, args));
-                _inner.WriteLine(format, args);
             }
         }
     }
