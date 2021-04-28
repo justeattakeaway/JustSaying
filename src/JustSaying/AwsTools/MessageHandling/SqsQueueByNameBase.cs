@@ -245,24 +245,24 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private static RedrivePolicy ExtractRedrivePolicyFromQueueAttributes(Dictionary<string, string> queueAttributes)
         {
-            if (!queueAttributes.ContainsKey(JustSayingConstants.AttributeRedrivePolicy))
+            if (!queueAttributes.TryGetValue(JustSayingConstants.AttributeRedrivePolicy, out var redrivePolicy))
             {
                 return null;
             }
 
-            return RedrivePolicy.ConvertFromString(queueAttributes[JustSayingConstants.AttributeRedrivePolicy]);
+            return RedrivePolicy.ConvertFromString(redrivePolicy);
         }
 
         private static ServerSideEncryption ExtractServerSideEncryptionFromQueueAttributes(Dictionary<string, string> queueAttributes)
         {
-            if (!queueAttributes.ContainsKey(JustSayingConstants.AttributeEncryptionKeyId))
+            if (!queueAttributes.TryGetValue(JustSayingConstants.AttributeEncryptionKeyId, out var encryptionKeyId))
             {
                 return null;
             }
 
             return new ServerSideEncryption
             {
-                KmsMasterKeyId = queueAttributes[JustSayingConstants.AttributeEncryptionKeyId],
+                KmsMasterKeyId = encryptionKeyId,
                 KmsDataKeyReusePeriodSeconds = queueAttributes[JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId]
             };
         }
