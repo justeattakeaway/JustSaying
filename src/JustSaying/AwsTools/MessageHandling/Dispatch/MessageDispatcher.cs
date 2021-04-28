@@ -175,10 +175,10 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
 
             using (_messagingMonitor.MeasureDispatch())
             {
+                var context = new HandleMessageContext(message, messageType, queueName);
                 bool dispatchSuccessful = false;
                 try
                 {
-                    var context = new HandleMessageContext(message, messageType, queueName);
                     dispatchSuccessful = await middleware.RunAsync(context, null, cancellationToken)
                         .ConfigureAwait(false);
                 }
@@ -186,23 +186,30 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                 {
                     watch.Stop();
 
-                    var logMessage =
-                        "{Status} handling message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}ms.";
-                    if (dispatchSuccessful)
+                    using (_logger.BeginScope(new Dictionary<string, object>()
                     {
-                        _logger.LogInformation(logMessage,
-                            "Succeeded",
-                            message.Id,
-                            messageType,
-                            watch.ElapsedMilliseconds);
-                    }
-                    else
+                        ["MessageSource"] = context.QueueName,
+                        ["SourceType"] = "Queue"
+                    }))
                     {
-                        _logger.LogWarning(logMessage,
-                            "Failed",
-                            message.Id,
-                            messageType,
-                            watch.ElapsedMilliseconds);
+                        var logMessage =
+                            "{Status} handling message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}ms.";
+                        if (dispatchSuccessful)
+                        {
+                            _logger.LogInformation(logMessage,
+                                "Succeeded",
+                                message.Id,
+                                messageType,
+                                watch.ElapsedMilliseconds);
+                        }
+                        else
+                        {
+                            _logger.LogWarning(logMessage,
+                                "Failed",
+                                message.Id,
+                                messageType,
+                                watch.ElapsedMilliseconds);
+                        }
                     }
                 }
 

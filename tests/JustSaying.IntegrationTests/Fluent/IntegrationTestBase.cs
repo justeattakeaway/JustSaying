@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Runtime;
 using JustSaying.AwsTools;
+using JustSaying.IntegrationTests.Fluent.Subscribing;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
@@ -55,8 +56,13 @@ namespace JustSaying.IntegrationTests.Fluent
             Action<MessagingBusBuilder, IServiceProvider> configure,
             LogLevel? levelOverride = null)
         {
+            LogLevel logLevel = levelOverride ?? LogLevel.Debug;
             return new ServiceCollection()
-                .AddLogging((p) => p.AddXUnit(OutputHelper, o => o.IncludeScopes = true).SetMinimumLevel(levelOverride ?? LogLevel.Debug))
+                .AddLogging((p) => p.AddXUnit(OutputHelper, o =>
+                {
+                    o.IncludeScopes = true;
+                    o.Filter = (_, level) => level >= logLevel;
+                }).SetMinimumLevel(logLevel))
                 .AddJustSaying(
                     (builder, serviceProvider) =>
                     {
@@ -130,32 +136,6 @@ namespace JustSaying.IntegrationTests.Fluent
                 }
 
                 await actionTask;
-            }
-        }
-
-        public class CapturingTestOutputHelper : ITestOutputHelper
-        {
-            private readonly ITestOutputHelper _inner;
-            private readonly StringBuilder _sb;
-
-            public string Output => _sb.ToString();
-
-            public CapturingTestOutputHelper(ITestOutputHelper inner)
-            {
-                _inner = inner;
-                _sb = new StringBuilder();
-            }
-
-            public void WriteLine(string message)
-            {
-                _sb.AppendLine(message);
-                _inner.WriteLine(message);
-            }
-
-            public void WriteLine(string format, params object[] args)
-            {
-                _sb.AppendLine(string.Format(format, args));
-                _inner.WriteLine(format, args);
             }
         }
     }

@@ -78,9 +78,9 @@ namespace JustSaying.AwsTools.MessageHandling
                 }
             }
 
-            using (_logger.BeginScope(new[]
+            using (_logger.BeginScope(new Dictionary<string, object>
             {
-                new KeyValuePair<string, object>("AwsRequestId", response?.MessageId)
+                ["AwsRequestId"] = response?.MessageId
             }))
             {
                 _logger.LogInformation(
