@@ -2,12 +2,14 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService.Model;
+using Castle.Core.Logging;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Xunit;
 #pragma warning disable 618
@@ -23,11 +25,10 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
         private const string TopicArn = "topicarn";
 
-        private protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
+        private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
         {
-            var topic = new SnsTopicByName("TopicName", Sns, _serializationRegister, Substitute.For<ILoggerFactory>(), new NonGenericMessageSubjectProvider());
-            await topic.ExistsAsync();
-            return topic;
+            var topic = new SnsMessagePublisher(TopicArn, Sns, _serializationRegister, NullLoggerFactory.Instance, new NonGenericMessageSubjectProvider());
+            return Task.FromResult(topic);
         }
 
         protected override void Given()

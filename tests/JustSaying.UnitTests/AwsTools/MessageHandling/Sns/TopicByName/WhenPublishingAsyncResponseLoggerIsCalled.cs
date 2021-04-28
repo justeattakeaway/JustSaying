@@ -9,6 +9,7 @@ using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using NSubstitute.Core;
 using Shouldly;
@@ -28,9 +29,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         private static MessageResponse _response;
         private static Message _message;
 
-        private protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
+        private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
         {
-            var topic = new SnsTopicByName("TopicName", Sns, _serializationRegister, Substitute.For<ILoggerFactory>(), Substitute.For<SnsWriteConfiguration>(), Substitute.For<IMessageSubjectProvider>())
+            var topic = new SnsMessagePublisher(TopicArn, Sns, _serializationRegister, NullLoggerFactory.Instance, Substitute.For<IMessageSubjectProvider>())
             {
                 MessageResponseLogger = (r, m) =>
                 {
@@ -39,8 +40,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
                 }
             };
 
-            await topic.ExistsAsync();
-            return topic;
+            return Task.FromResult(topic);
         }
 
         protected override void Given()

@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
-using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageSerialization;
@@ -17,43 +16,42 @@ using MessageAttributeValue = Amazon.SimpleNotificationService.Model.MessageAttr
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    [Obsolete("SnsTopicBase and related classes are not intended for general usage and may be removed in a future major release")]
-    public abstract class SnsTopicBase : IMessagePublisher, IInterrogable
+    public class SnsMessagePublisher : IMessagePublisher, IInterrogable
     {
-        private readonly IMessageSerializationRegister _serializationRegister; // ToDo: Grrr...why is this here even. GET OUT!
+        private readonly IMessageSerializationRegister _serializationRegister;
         private readonly IMessageSubjectProvider _messageSubjectProvider;
-        private readonly SnsWriteConfiguration _snsWriteConfiguration;
+        private readonly Func<Exception, Message, bool> _handleException;
         public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
-        public string Arn { get; protected set; }
-        internal ServerSideEncryption ServerSideEncryption { get; set; }
-        protected IAmazonSimpleNotificationService Client { get; set; }
+        public string Arn { get; internal set; }
+        protected IAmazonSimpleNotificationService Client { get; }
         private readonly ILogger _logger;
 
-        protected SnsTopicBase(
+        public SnsMessagePublisher(
+            string topicArn,
+            IAmazonSimpleNotificationService client,
             IMessageSerializationRegister serializationRegister,
             ILoggerFactory loggerFactory,
-            IMessageSubjectProvider messageSubjectProvider)
+            IMessageSubjectProvider messageSubjectProvider,
+            Func<Exception, Message, bool> handleException = null)
+            : this(client, serializationRegister, loggerFactory, messageSubjectProvider, handleException)
         {
-            _serializationRegister = serializationRegister;
-            _messageSubjectProvider = messageSubjectProvider;
-            _logger = loggerFactory.CreateLogger("JustSaying");
+            Arn = topicArn;
         }
 
-        protected SnsTopicBase(
+        public SnsMessagePublisher(
+            IAmazonSimpleNotificationService client,
             IMessageSerializationRegister serializationRegister,
             ILoggerFactory loggerFactory,
-            SnsWriteConfiguration snsWriteConfiguration,
-            IMessageSubjectProvider messageSubjectProvider)
+            IMessageSubjectProvider messageSubjectProvider,
+            Func<Exception, Message, bool> handleException = null)
         {
+            Client = client;
             _serializationRegister = serializationRegister;
             _logger = loggerFactory.CreateLogger("JustSaying.Publish");
-            _snsWriteConfiguration = snsWriteConfiguration;
+            _handleException = handleException;
             _messageSubjectProvider = messageSubjectProvider;
         }
 
-        public abstract Task<bool> ExistsAsync();
-
-        // TODO: This type shouldn't be an IMessagePublisher
         public Task StartAsync(CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
@@ -103,10 +101,9 @@ namespace JustSaying.AwsTools.MessageHandling
                 };
                 MessageResponseLogger.Invoke(responseData, message);
             }
-
         }
 
-        private bool ClientExceptionHandler(Exception ex, Message message) => _snsWriteConfiguration?.HandleException?.Invoke(ex, message) ?? false;
+        private bool ClientExceptionHandler(Exception ex, Message message) => _handleException?.Invoke(ex, message) ?? false;
 
         private PublishRequest BuildPublishRequest(Message message, PublishMetadata metadata)
         {

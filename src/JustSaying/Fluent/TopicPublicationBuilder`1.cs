@@ -126,6 +126,7 @@ namespace JustSaying.Fluent
                 typeof(T));
 
             var config = bus.Config;
+            var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
             var readConfiguration = new SqsReadConfiguration(SubscriptionType.ToTopic);
             var writeConfiguration = new SnsWriteConfiguration();
@@ -134,17 +135,21 @@ namespace JustSaying.Fluent
 
             bus.SerializationRegister.AddSerializer<T>();
 
-            // TODO pass region down into topic creation for when we have foreign topics so we can generate the arn
-#pragma warning disable 618
-            var eventPublisher = new SnsTopicByName(
-                readConfiguration.TopicName,
-                proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(config.Region)),
+            var eventPublisher = new SnsMessagePublisher(
+                proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
                 bus.SerializationRegister,
                 loggerFactory,
-                writeConfiguration,
                 config.MessageSubjectProvider)
             {
                 MessageResponseLogger = config.MessageResponseLogger,
+            };
+
+#pragma warning disable 618
+            var snsTopic = new SnsTopicByName(
+                readConfiguration.TopicName,
+                proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
+                loggerFactory)
+            {
                 Tags = Tags
             };
 #pragma warning restore 618
@@ -153,18 +158,20 @@ namespace JustSaying.Fluent
             {
                 if (writeConfiguration.Encryption != null)
                 {
-                    await eventPublisher.CreateWithEncryptionAsync(writeConfiguration.Encryption)
+                    await snsTopic.CreateWithEncryptionAsync(writeConfiguration.Encryption)
                         .ConfigureAwait(false);
                 }
                 else
                 {
-                    await eventPublisher.CreateAsync().ConfigureAwait(false);
+                    await snsTopic.CreateAsync().ConfigureAwait(false);
                 }
 
-                await eventPublisher.EnsurePolicyIsUpdatedAsync(config.AdditionalSubscriberAccounts)
+                await snsTopic.EnsurePolicyIsUpdatedAsync(config.AdditionalSubscriberAccounts)
                     .ConfigureAwait(false);
 
-                await eventPublisher.ApplyTagsAsync().ConfigureAwait(false);
+                await snsTopic.ApplyTagsAsync().ConfigureAwait(false);
+
+                eventPublisher.Arn = snsTopic.Arn;
             }
 
             bus.AddStartupTask(StartupTask);

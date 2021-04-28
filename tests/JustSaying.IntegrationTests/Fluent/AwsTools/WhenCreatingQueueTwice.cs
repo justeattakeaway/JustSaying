@@ -26,18 +26,12 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
             ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
             IAwsClientFactory clientFactory = CreateClientFactory();
 
-            var subjectProvider = new NonGenericMessageSubjectProvider();
-            var serializerFactor = new NewtonsoftSerializationFactory();
-            var serializationRegister = new MessageSerializationRegister(subjectProvider, serializerFactor);
-
             var client = clientFactory.GetSnsClient(Region);
 
             var topic = new SnsTopicByName(
                 topicName,
                 client,
-                serializationRegister,
-                loggerFactory,
-                subjectProvider);
+                loggerFactory);
 
             // Shouldn't throw
             await topic.CreateAsync();

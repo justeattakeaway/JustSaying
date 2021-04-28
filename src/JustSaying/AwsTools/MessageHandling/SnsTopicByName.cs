@@ -7,53 +7,29 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.Interrogation;
-using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    [Obsolete("SnsTopicBase and related classes are not intended for general usage and may be removed in a future major release")]
-    public class SnsTopicByName : SnsTopicBase
+    [Obsolete("SnsTopicByName is not intended for general usage and may be removed in a future major release")]
+    public sealed class SnsTopicByName : IInterrogable
     {
+        private readonly IAmazonSimpleNotificationService _client;
         private readonly ILogger _logger;
 
         public string TopicName { get; }
+        public string Arn { get; private set; }
+        internal ServerSideEncryption ServerSideEncryption { get; set; }
         public IDictionary<string, string> Tags { get; set; }
 
         public SnsTopicByName(
             string topicName,
             IAmazonSimpleNotificationService client,
-            IMessageSerializationRegister serializationRegister,
-            ILoggerFactory loggerFactory,
-            IMessageSubjectProvider messageSubjectProvider)
-            : base(serializationRegister, loggerFactory, messageSubjectProvider)
+            ILoggerFactory loggerFactory)
         {
+            _client = client;
             TopicName = topicName;
-            Client = client;
             _logger = loggerFactory.CreateLogger("JustSaying");
-        }
-
-        public SnsTopicByName(
-            string topicName,
-            IAmazonSimpleNotificationService client,
-            IMessageSerializationRegister serializationRegister,
-            ILoggerFactory loggerFactory,
-            SnsWriteConfiguration snsWriteConfiguration,
-            IMessageSubjectProvider messageSubjectProvider)
-            : base(serializationRegister, loggerFactory, snsWriteConfiguration, messageSubjectProvider)
-        {
-            TopicName = topicName;
-            Client = client;
-            _logger = loggerFactory.CreateLogger("JustSaying");
-        }
-
-        public override InterrogationResult Interrogate()
-        {
-            return new InterrogationResult(new
-            {
-                Arn,
-                TopicName
-            });
         }
 
         public async Task EnsurePolicyIsUpdatedAsync(IReadOnlyCollection<string> additionalSubscriberAccounts)
@@ -65,7 +41,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     AccountIds = additionalSubscriberAccounts,
                     SourceArn = Arn
                 };
-                await SnsPolicy.SaveAsync(policyDetails, Client).ConfigureAwait(false);
+                await SnsPolicy.SaveAsync(policyDetails, _client).ConfigureAwait(false);
             }
         }
 
@@ -84,12 +60,12 @@ namespace JustSaying.AwsTools.MessageHandling
                 Tags = Tags.Select(CreateTag).ToList()
             };
 
-            await Client.TagResourceAsync(tagRequest).ConfigureAwait(false);
+            await _client.TagResourceAsync(tagRequest).ConfigureAwait(false);
 
             _logger.LogInformation("Added {TagCount} tags to topic {TopicName}", tagRequest.Tags.Count, TopicName);
         }
 
-        public override async Task<bool> ExistsAsync()
+        public async Task<bool> ExistsAsync()
         {
             if (!string.IsNullOrWhiteSpace(Arn))
             {
@@ -97,7 +73,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
 
             _logger.LogInformation("Checking for existence of the topic '{TopicName}'.", TopicName);
-            var topic = await Client.FindTopicAsync(TopicName).ConfigureAwait(false);
+            var topic = await _client.FindTopicAsync(TopicName).ConfigureAwait(false);
 
             if (topic != null)
             {
@@ -112,7 +88,7 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             try
             {
-                var response = await Client.CreateTopicAsync(new CreateTopicRequest(TopicName))
+                var response = await _client.CreateTopicAsync(new CreateTopicRequest(TopicName))
                     .ConfigureAwait(false);
 
                 if (string.IsNullOrEmpty(response.TopicArn))
@@ -149,7 +125,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private async Task<ServerSideEncryption> ExtractServerSideEncryptionFromTopicAttributes()
         {
-            var attributesResponse = await Client.GetTopicAttributesAsync(Arn).ConfigureAwait(false);
+            var attributesResponse = await _client.GetTopicAttributesAsync(Arn).ConfigureAwait(false);
 
             if (!attributesResponse.Attributes.TryGetValue(
                     JustSayingConstants.AttributeEncryptionKeyId,
@@ -175,7 +151,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     AttributeValue = config?.KmsMasterKeyId ?? string.Empty
                 };
 
-                var response = await Client.SetTopicAttributesAsync(request).ConfigureAwait(false);
+                var response = await _client.SetTopicAttributesAsync(request).ConfigureAwait(false);
 
                 if (response.HttpStatusCode == HttpStatusCode.OK)
                 {
@@ -208,5 +184,15 @@ namespace JustSaying.AwsTools.MessageHandling
 
             return true;
         }
+
+        public InterrogationResult Interrogate()
+        {
+            return new InterrogationResult(new
+            {
+                Arn,
+                TopicName
+            });
+        }
+
     }
 }

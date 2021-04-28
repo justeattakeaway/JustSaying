@@ -1,15 +1,17 @@
 using System.Threading.Tasks;
-using Amazon.SQS;
+using Amazon.SimpleNotificationService;
 using JustSaying.AwsTools.MessageHandling;
 using NSubstitute;
 using Xunit;
+#pragma warning disable 618
 
-namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 {
-    public abstract class WhenPublishingTestBase : IAsyncLifetime
+    public abstract class WhenSnsTopicTestBase : IAsyncLifetime
     {
-        private protected SqsMessagePublisher SystemUnderTest { get; private set; }
-        public IAmazonSQS Sqs { get; private set; } = Substitute.For<IAmazonSQS>();
+        private protected SnsTopicByName SystemUnderTest { get; private set; }
+
+        public IAmazonSimpleNotificationService Sns { get; private set; } = Substitute.For<IAmazonSimpleNotificationService>();
 
         public virtual async Task InitializeAsync()
         {
@@ -22,12 +24,12 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 
         public virtual Task DisposeAsync()
         {
-            Sqs?.Dispose();
+            Sns?.Dispose();
             return Task.CompletedTask;
         }
 
         protected abstract void Given();
-        private protected abstract Task<SqsMessagePublisher> CreateSystemUnderTestAsync();
+        private protected abstract Task<SnsTopicByName> CreateSystemUnderTestAsync();
 
         protected abstract Task WhenAsync();
     }

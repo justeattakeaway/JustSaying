@@ -18,6 +18,8 @@ namespace JustSaying.AwsTools.MessageHandling
     {
         private readonly int _retryCountBeforeSendingToErrorQueue;
 
+        internal ErrorQueue ErrorQueue { get; }
+
         public SqsQueueByName(RegionEndpoint region, string queueName, IAmazonSQS client, int retryCountBeforeSendingToErrorQueue, ILoggerFactory loggerFactory)
             : base(region, queueName, client, loggerFactory)
         {
@@ -70,7 +72,7 @@ namespace JustSaying.AwsTools.MessageHandling
             await base.DeleteAsync().ConfigureAwait(false);
         }
 
-        public async Task UpdateRedrivePolicyAsync(RedrivePolicy requestedRedrivePolicy)
+        internal async Task UpdateRedrivePolicyAsync(RedrivePolicy requestedRedrivePolicy)
         {
             if (RedrivePolicyNeedsUpdating(requestedRedrivePolicy))
             {
@@ -136,7 +138,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private async Task ApplyTagsAsync(ISqsQueue queue, Dictionary<string, string> tags)
         {
-            if (tags is null || !tags.Any())
+            if (tags == null || !tags.Any())
             {
                 return;
             }

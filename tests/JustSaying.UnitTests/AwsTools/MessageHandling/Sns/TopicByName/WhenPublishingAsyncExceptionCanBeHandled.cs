@@ -6,6 +6,7 @@ using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using NSubstitute.Core;
 using Shouldly;
@@ -19,15 +20,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
         private const string TopicArn = "topicarn";
 
-        private protected override async Task<SnsTopicByName> CreateSystemUnderTestAsync()
+        private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
         {
-            var topic = new SnsTopicByName("TopicName", Sns, _serializationRegister, Substitute.For<ILoggerFactory>(), new SnsWriteConfiguration
-            {
-                HandleException = (ex, m) => true
-            }, Substitute.For<IMessageSubjectProvider>());
+            var topic = new SnsMessagePublisher(TopicArn, Sns, _serializationRegister, NullLoggerFactory.Instance, Substitute.For<IMessageSubjectProvider>(), (_, _) => true);
 
-            await topic.ExistsAsync();
-            return topic;
+            return Task.FromResult(topic);
         }
 
         protected override void Given()

@@ -11,7 +11,7 @@ namespace JustSaying.IntegrationTests.Fluent
             where T : Message
         {
             return builder
-                .Publications((options) => options.WithQueue<T>(name))
+                .Publications((options) => options.WithQueue<T>(o => o.WithName(name)))
                 .Subscriptions((options) => options.ForQueue<T>(subscriptionBuilder =>
                 {
                     subscriptionBuilder.WithName(name);

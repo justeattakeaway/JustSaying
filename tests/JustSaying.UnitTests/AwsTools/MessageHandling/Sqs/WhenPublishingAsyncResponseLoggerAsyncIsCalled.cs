@@ -1,6 +1,6 @@
+using System;
 using System.Net;
 using System.Threading.Tasks;
-using Amazon;
 using Amazon.Runtime;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
@@ -13,7 +13,6 @@ using NSubstitute.Core;
 using Shouldly;
 using Xunit;
 using Message = JustSaying.Models.Message;
-#pragma warning disable 618
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
 {
@@ -30,9 +29,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         private static MessageResponse _response;
         private static Message _message;
 
-        private protected override async Task<SqsPublisher> CreateSystemUnderTestAsync()
+        private protected override Task<SqsMessagePublisher> CreateSystemUnderTestAsync()
         {
-            var sqs = new SqsPublisher(RegionEndpoint.EUWest1, QueueName, Sqs, 0, _serializationRegister, Substitute.For<ILoggerFactory>())
+            var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _serializationRegister, Substitute.For<ILoggerFactory>())
             {
                 MessageResponseLogger = (r, m) =>
                 {
@@ -40,8 +39,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
                     _message = m;
                 }
             };
-            await sqs.ExistsAsync();
-            return sqs;
+            return Task.FromResult(sqs);
         }
 
         protected override void Given()

@@ -22,7 +22,8 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
         {
             // Arrange
             var serviceProvider = GivenJustSaying()
-                .ConfigureJustSaying((builder) => builder.Publications((options) => options.WithQueue<SimpleMessage>(UniqueName)))
+                .ConfigureJustSaying((builder) => builder.Publications((options) =>
+                    options.WithQueue<SimpleMessage>(qo => qo.WithName(UniqueName))))
                 .BuildServiceProvider();
 
             // Act - Force queue creation

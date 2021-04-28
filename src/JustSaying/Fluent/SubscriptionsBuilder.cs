@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Models;
@@ -67,23 +68,6 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
-        /// Configures a queue subscription for the specified queue name.
-        /// </summary>
-        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
-        /// <param name="name">The name of the queue to subscribe to.</param>
-        /// <returns>
-        /// The current <see cref="SubscriptionsBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="name"/> is <see langword="null"/>.
-        /// </exception>
-        public SubscriptionsBuilder ForQueue<T>(string name)
-            where T : Message
-        {
-            return ForQueue<T>((p) => p.WithName(name));
-        }
-
-        /// <summary>
         /// Configures a queue subscription.
         /// </summary>
         /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
@@ -109,6 +93,74 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
+        /// Configures a queue subscription for a pre-existing queue.
+        /// </summary>
+        /// <param name="queueArn">The ARN of the queue to subscribe to.</param>
+        /// <param name="configure">An optional delegate to configure a queue subscription.</param>
+        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+        /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
+        public SubscriptionsBuilder ForQueueArn<T>(string queueArn, Action<QueueAddressSubscriptionBuilder<T>> configure = null)
+            where T : Message
+        {
+            if (queueArn == null) throw new ArgumentNullException(nameof(queueArn));
+
+            var queueAddress = QueueAddress.FromArn(queueArn);
+            var builder = new QueueAddressSubscriptionBuilder<T>(queueAddress);
+
+            configure?.Invoke(builder);
+
+            Subscriptions.Add(builder);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Configures a queue subscription for a pre-existing queue.
+        /// </summary>
+        /// <param name="queueUrl">The URL of the queue to subscribe to.</param>
+        /// <param name="regionName">The AWS region the queue is in.</param>
+        /// <param name="configure">An optional delegate to configure a queue subscription.</param>
+        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+        /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
+        public SubscriptionsBuilder ForQueueUrl<T>(string queueUrl, string regionName = null, Action<QueueAddressSubscriptionBuilder<T>> configure = null)
+            where T : Message
+        {
+            if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
+
+            var queueAddress = QueueAddress.FromUrl(queueUrl, regionName);
+            var builder = new QueueAddressSubscriptionBuilder<T>(queueAddress);
+
+            configure?.Invoke(builder);
+
+            Subscriptions.Add(builder);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Configures a queue subscription for a pre-existing queue.
+        /// </summary>
+        /// <param name="queueUrl">The URL of the queue to subscribe to.</param>
+        /// <param name="regionName">The AWS region the queue is in.</param>
+        /// <param name="configure">An optional delegate to configure a queue subscription.</param>
+        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+        /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
+        public SubscriptionsBuilder ForQueueUri<T>(Uri queueUrl, string regionName = null, Action<QueueAddressSubscriptionBuilder<T>> configure = null)
+            where T : Message
+        {
+            if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
+
+            var queueAddress = QueueAddress.FromUri(queueUrl, regionName);
+            var builder = new QueueAddressSubscriptionBuilder<T>(queueAddress);
+
+            configure?.Invoke(builder);
+
+            Subscriptions.Add(builder);
+
+            return this;
+        }
+
+        /// <summary>
         /// Configures a topic subscription for the default topic name.
         /// </summary>
         /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
@@ -119,23 +171,6 @@ namespace JustSaying.Fluent
             where T : Message
         {
             return ForTopic<T>((p) => p.IntoDefaultTopic());
-        }
-
-        /// <summary>
-        /// Configures a topic subscription for the specified topic name.
-        /// </summary>
-        /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
-        /// <param name="name">The name of the topic to subscribe to.</param>
-        /// <returns>
-        /// The current <see cref="SubscriptionsBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="name"/> is <see langword="null"/>.
-        /// </exception>
-        public SubscriptionsBuilder ForTopic<T>(string name)
-            where T : Message
-        {
-            return ForTopic<T>((p) => p.WithName(name));
         }
 
         /// <summary>
@@ -169,6 +204,7 @@ namespace JustSaying.Fluent
         /// <param name="bus">The <see cref="JustSayingBus"/> to configure subscriptions for.</param>
         /// <param name="serviceResolver">The <see cref="IServiceResolver"/> to use to resolve middleware with</param>
         /// <param name="creator">The <see cref="IVerifyAmazonQueues"/>to use to create queues with.</param>
+        /// <param name="awsClientFactoryProxy">The <see cref="IAwsClientFactoryProxy"/> to use to create SQS/SNS clients with.</param>
         /// <param name="loggerFactory">The <see cref="ILoggerFactory"/>logger factory to use.</param>
         /// <exception cref="InvalidOperationException">
         /// No instance of <see cref="IHandlerResolver"/> could be resolved.
@@ -177,6 +213,7 @@ namespace JustSaying.Fluent
             JustSayingBus bus,
             IServiceResolver serviceResolver,
             IVerifyAmazonQueues creator,
+            IAwsClientFactoryProxy awsClientFactoryProxy,
             ILoggerFactory loggerFactory)
         {
             var resolver = Parent.ServicesBuilder?.HandlerResolver?.Invoke() ??
@@ -188,12 +225,11 @@ namespace JustSaying.Fluent
             }
 
             Defaults.Validate();
-
             bus.SetGroupSettings(Defaults, SubscriptionGroupSettings);
 
             foreach (ISubscriptionBuilder<Message> builder in Subscriptions)
             {
-                builder.Configure(bus, resolver, serviceResolver, creator, loggerFactory);
+                builder.Configure(bus, resolver, serviceResolver, creator, awsClientFactoryProxy, loggerFactory);
             }
         }
 

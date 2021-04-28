@@ -9,7 +9,5 @@ namespace JustSaying.AwsTools.QueueCreation
             VisibilityTimeout = JustSayingConstants.DefaultVisibilityTimeout;
             RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
         }
-
-
     }
 }

@@ -71,6 +71,18 @@ namespace JustSaying.Fluent
             return this;
         }
 
+        /// <summary>
+        /// Configures the SQS Queue name, rather than using the naming convention.
+        /// </summary>
+        /// <param name="queueName">The name of the queue to subscribe to.</param>
+        /// <returns>
+        /// The current <see cref="QueuePublicationBuilder{T}"/>.
+        /// </returns>
+        public QueuePublicationBuilder<T> WithName(string queueName)
+        {
+            return this.WithWriteConfiguration(r => r.WithQueueName(queueName));
+        }
+
         /// <inheritdoc />
         void IPublicationBuilder<T>.Configure(
             JustSayingBus bus,
@@ -83,6 +95,7 @@ namespace JustSaying.Fluent
                 typeof(T));
 
             var config = bus.Config;
+            var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
             var writeConfiguration = new SqsWriteConfiguration();
             ConfigureWrites?.Invoke(writeConfiguration);
@@ -90,28 +103,34 @@ namespace JustSaying.Fluent
 
             bus.SerializationRegister.AddSerializer<T>();
 
-            var regionEndpoint = RegionEndpoint.GetBySystemName(config.Region);
+            var regionEndpoint = RegionEndpoint.GetBySystemName(region);
             var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
 
-#pragma warning disable 618
-            var eventPublisher = new SqsPublisher(
-                regionEndpoint,
-                writeConfiguration.QueueName,
+            var eventPublisher = new SqsMessagePublisher(
                 sqsClient,
-                writeConfiguration.RetryCountBeforeSendingToErrorQueue,
                 bus.SerializationRegister,
                 loggerFactory)
             {
                 MessageResponseLogger = config.MessageResponseLogger
             };
+
+#pragma warning disable 618
+            var sqsQueue = new SqsQueueByName(
+                regionEndpoint,
+                writeConfiguration.QueueName,
+                sqsClient,
+                writeConfiguration.RetryCountBeforeSendingToErrorQueue,
+                loggerFactory);
 #pragma warning restore 618
 
             async Task StartupTask()
             {
-                if (!await eventPublisher.ExistsAsync().ConfigureAwait(false))
+                if (!await sqsQueue.ExistsAsync().ConfigureAwait(false))
                 {
-                    await eventPublisher.CreateAsync(writeConfiguration).ConfigureAwait(false);
+                    await sqsQueue.CreateAsync(writeConfiguration).ConfigureAwait(false);
                 }
+
+                eventPublisher.QueueUrl = sqsQueue.Uri;
             }
 
             bus.AddStartupTask(StartupTask);

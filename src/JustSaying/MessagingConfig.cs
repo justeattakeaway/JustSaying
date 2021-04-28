@@ -31,11 +31,6 @@ namespace JustSaying
 
         public virtual void Validate()
         {
-            if (string.IsNullOrWhiteSpace(Region))
-            {
-                throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(Region)} property.");
-            }
-
             if (MessageSubjectProvider == null)
             {
                 throw new InvalidOperationException($"Config cannot have a null for the {nameof(MessageSubjectProvider)} property.");

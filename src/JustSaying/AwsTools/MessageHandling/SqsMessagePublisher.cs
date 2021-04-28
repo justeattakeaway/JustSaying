@@ -2,35 +2,43 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Amazon;
 using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
-    [Obsolete("SqsQueueBase and related classes are not intended for general usage and may be removed in a future major release")]
-    public class SqsPublisher : SqsQueueByName, IMessagePublisher
+    public class SqsMessagePublisher : IMessagePublisher
     {
         private readonly IAmazonSQS _client;
         private readonly IMessageSerializationRegister _serializationRegister;
+        private readonly ILogger _logger;
         public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
 
-        public SqsPublisher(
-            RegionEndpoint region,
-            string queueName,
+        public Uri QueueUrl { get; internal set; }
+
+        public SqsMessagePublisher(
+            Uri queueUrl,
             IAmazonSQS client,
-            int retryCountBeforeSendingToErrorQueue,
+            IMessageSerializationRegister serializationRegister,
+            ILoggerFactory loggerFactory) : this(client, serializationRegister, loggerFactory)
+        {
+            QueueUrl = queueUrl;
+        }
+
+        public SqsMessagePublisher(
+            IAmazonSQS client,
             IMessageSerializationRegister serializationRegister,
             ILoggerFactory loggerFactory)
-            : base(region, queueName, client, retryCountBeforeSendingToErrorQueue, loggerFactory)
         {
             _client = client;
             _serializationRegister = serializationRegister;
+            _logger = loggerFactory.CreateLogger("JustSaying.Publish");
         }
 
         // TODO: This type shouldn't be an IMessagePublisher
@@ -44,6 +52,8 @@ namespace JustSaying.AwsTools.MessageHandling
 
         public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
         {
+            if (QueueUrl is null) throw new PublishException("Queue URL was null, perhaps you need to call `StartAsync` on the `IMessagePublisher` before publishing.");
+
             var request = BuildSendMessageRequest(message, metadata);
             SendMessageResponse response;
             try
@@ -57,12 +67,12 @@ namespace JustSaying.AwsTools.MessageHandling
                     ex);
             }
 
-            using (Logger.BeginScope(new[]
+            using (_logger.BeginScope(new[]
             {
                 new KeyValuePair<string, object>("AwsRequestId", response?.MessageId)
             }))
             {
-                Logger.LogInformation(
+                _logger.LogInformation(
                     "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
                     message.Id,
                     message.GetType().Name,
@@ -87,7 +97,7 @@ namespace JustSaying.AwsTools.MessageHandling
             var request = new SendMessageRequest
             {
                 MessageBody = GetMessageInContext(message),
-                QueueUrl = Uri?.AbsoluteUri,
+                QueueUrl = QueueUrl.AbsoluteUri,
             };
 
             if (metadata?.Delay != null)
@@ -98,5 +108,10 @@ namespace JustSaying.AwsTools.MessageHandling
         }
 
         public string GetMessageInContext(Message message) => _serializationRegister.Serialize(message, serializeForSnsPublishing: false);
+
+        public InterrogationResult Interrogate()
+        {
+            return InterrogationResult.Empty;
+        }
     }
 }

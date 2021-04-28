@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
@@ -148,6 +149,7 @@ namespace JustSaying.Fluent
             IHandlerResolver handlerResolver,
             IServiceResolver serviceResolver,
             IVerifyAmazonQueues creator,
+            IAwsClientFactoryProxy awsClientFactoryProxy,
             ILoggerFactory loggerFactory)
         {
             var logger = loggerFactory.CreateLogger<TopicSubscriptionBuilder<T>>();
@@ -159,6 +161,7 @@ namespace JustSaying.Fluent
             };
 
             var config = bus.Config;
+            var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
             ConfigureReads?.Invoke(subscriptionConfig);
 
@@ -170,7 +173,7 @@ namespace JustSaying.Fluent
             subscriptionConfig.Validate();
 
             var queueWithStartup = creator.EnsureTopicExistsWithQueueSubscribed(
-                config.Region,
+                region,
                 bus.SerializationRegister,
                 subscriptionConfig,
                 config.MessageSubjectProvider);

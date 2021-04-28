@@ -19,7 +19,6 @@ namespace JustSaying.AwsTools
         public ErrorQueue(RegionEndpoint region, string sourceQueueName, IAmazonSQS client, ILoggerFactory loggerFactory)
             : base(region, sourceQueueName + "_error", client, loggerFactory)
         {
-            ErrorQueue = null;
         }
 
         protected override Dictionary<string, string> GetCreateQueueAttributes(SqsBasicConfiguration queueConfig)
