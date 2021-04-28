@@ -2,10 +2,6 @@
       Adding SQS publisher for message type 'JustSaying.TestingFramework.SimpleMessage'.
 [{DateTime}] info: JustSaying.Fluent.QueuePublicationBuilder[0]
       Created SQS publisher for message type 'JustSaying.TestingFramework.SimpleMessage' on queue '{TestDiscriminator}'.
-[{DateTime}] dbug: JustSaying[0]
-      Checking if queue '{TestDiscriminator}' exists
-[{DateTime}] dbug: JustSaying[0]
-      Checking if queue '{TestDiscriminator}_error' exists
 [{DateTime}] info: JustSaying[0]
       Created queue '{TestDiscriminator}_error' with ARN 'arn:aws:sqs:us-east-1:000000000000:{TestDiscriminator}_error'.
 [{DateTime}] info: JustSaying[0]

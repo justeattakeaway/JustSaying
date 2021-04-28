@@ -186,10 +186,10 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                 {
                     watch.Stop();
 
-                    using (_logger.BeginScope(new[]
+                    using (_logger.BeginScope(new Dictionary<string, object>()
                     {
-                        new KeyValuePair<string, object>("MessageSource", context.QueueName),
-                        new KeyValuePair<string, object>("SourceType", "Queue")
+                        ["MessageSource"] = context.QueueName,
+                        ["SourceType"] = "Queue"
                     }))
                     {
                         var logMessage =
