@@ -24,8 +24,6 @@ namespace JustSaying.IntegrationTests.Fluent
             OutputHelper = new CapturingTestOutputHelper(outputHelper);
         }
 
-        protected virtual LogLevel MinimumLogLevel { get; set; } = LogLevel.Debug;
-
         protected virtual string AccessKeyId { get; } = "accessKeyId";
 
         protected virtual string SecretAccessKey { get; } = "secretAccessKey";
@@ -56,14 +54,15 @@ namespace JustSaying.IntegrationTests.Fluent
 
         protected IServiceCollection Given(
             Action<MessagingBusBuilder, IServiceProvider> configure,
-            LogLevel? levelOverride = null)
+            LogLevel? levelOverride)
         {
+            LogLevel logLevel = levelOverride ?? LogLevel.Debug;
             return new ServiceCollection()
                 .AddLogging((p) => p.AddXUnit(OutputHelper, o =>
                 {
                     o.IncludeScopes = true;
-                    o.Filter = (_, level) => level >= MinimumLogLevel;
-                }).SetMinimumLevel(levelOverride ?? LogLevel.Debug))
+                    o.Filter = (_, level) => level >= logLevel;
+                }).SetMinimumLevel(logLevel))
                 .AddJustSaying(
                     (builder, serviceProvider) =>
                     {

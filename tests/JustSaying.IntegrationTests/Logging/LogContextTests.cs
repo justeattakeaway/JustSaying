@@ -17,14 +17,13 @@ namespace JustSaying.Logging
     {
         public LogContextTests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
-            MinimumLogLevel = LogLevel.Information;
         }
 
 
         [AwsFact]
         public async Task PublishToTopicLogsShouldHaveContext()
         {
-            var services = GivenJustSaying()
+            var services = GivenJustSaying(levelOverride: LogLevel.Information)
                 .ConfigureJustSaying(
                     (builder) => builder.WithLoopbackTopic<SimpleMessage>(UniqueName));
 
@@ -49,7 +48,7 @@ namespace JustSaying.Logging
         [AwsFact]
         public async Task PublishToQueueLogsShouldHaveContext()
         {
-            var services = GivenJustSaying()
+            var services = GivenJustSaying(levelOverride: LogLevel.Information)
                 .ConfigureJustSaying(
                     (builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName));
 
@@ -76,7 +75,7 @@ namespace JustSaying.Logging
         {
             var handler = new InspectableHandler<SimpleMessage>();
 
-            var services = GivenJustSaying()
+            var services = GivenJustSaying(levelOverride: LogLevel.Information)
                 .ConfigureJustSaying(
                     (builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName)
                         .Subscriptions(sub => sub.WithDefaults(sgb =>
