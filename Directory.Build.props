@@ -18,6 +18,9 @@
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)package-icon.png" Pack="True" PackagePath="" />
   </ItemGroup>
+  <ItemGroup>
+    <SourceRoot Include = " $(MSBuildThisFileDirectory)/ " />
+  </ItemGroup>
   <PropertyGroup>
     <!-- Enable at a later point as there's a number of new ones to fix -->
     <!--
