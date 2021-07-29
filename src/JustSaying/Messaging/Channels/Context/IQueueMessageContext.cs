@@ -5,29 +5,26 @@ using Amazon.SQS.Model;
 
 namespace JustSaying.Messaging.Channels.Context
 {
+    public interface IMessageDeleter
+    {
+        Task DeleteMessage(CancellationToken cancellationToken);
+    }
+
+    public interface IMessageVisibilityUpdater
+    {
+        Task UpdateMessageVisibility(TimeSpan visibilityTimeout, CancellationToken cancellationToken);
+    }
+
     /// <summary>
     /// A context object that is created by <see cref="Receive.IMessageReceiveBuffer"/> and consumed by
     /// <see cref="Dispatch.IMultiplexerSubscriber"/>
     /// </summary>
-    public interface IQueueMessageContext
+    public interface IQueueMessageContext : IMessageVisibilityUpdater, IMessageDeleter
     {
         /// <summary>
         /// Gets the raw <see cref="Amazon.SQS.Model.Message"/> that is sent over the wire.
         /// </summary>
         Message Message { get; }
-
-        /// <summary>
-        /// Updates this messages visibility so that it won't be received by other subscribers before the new timeout expires.
-        /// </summary>
-        /// <param name="visibilityTimeout">How far into the future to prevent others from receiving this message.</param>
-        /// <returns>A <see cref="Task"/> that completes when the update is completed.</returns>
-        Task ChangeMessageVisibilityAsync(TimeSpan visibilityTimeout, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Deletes this message from the SQS queue.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> that completes when the message is deleted.</returns>
-        Task DeleteMessageFromQueueAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Gets the absolute URI of the SQS queue that this message was received from.

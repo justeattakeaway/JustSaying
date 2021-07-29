@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
@@ -28,7 +29,7 @@ namespace JustSaying.UnitTests.Messaging.MessageHandling
         {
             var messageLock = new FakeMessageLock(false);
 
-            var testResolver = new FakeServiceResolver(sc => sc
+            var testResolver = new InMemoryServiceResolver(sc => sc
                 .AddLogging(l =>
                     l.AddXUnit(_outputHelper))
                 .AddSingleton<IMessageLockAsync>(messageLock));
@@ -41,8 +42,10 @@ namespace JustSaying.UnitTests.Messaging.MessageHandling
                 .UseHandler(ctx => handler)
                 .Build();
 
-            var context = new HandleMessageContext(new OrderAccepted(), typeof(OrderAccepted),
-                "test-queue");
+            var context = new HandleMessageContext( "test-queue", new Message(), new OrderAccepted(),
+                typeof(OrderAccepted),
+                new FakeVisbilityUpdater(),
+                new FakeMessageDeleter());
             var result = await middleware.RunAsync(context, null, CancellationToken.None);
 
             handler.ReceivedMessages.ShouldBeEmpty();

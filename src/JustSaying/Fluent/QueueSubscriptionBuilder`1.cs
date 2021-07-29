@@ -191,13 +191,15 @@ namespace JustSaying.Fluent
 
             var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver);
 
-            var handlerMiddleware = middlewareBuilder
-                .UseHandler<T>()
-                .UseStopwatch(proposedHandler.GetType())
-                .Configure(subscriptionConfig.MiddlewareConfiguration)
-                .Build();
+            HandlerMiddlewareBuilder handlerMiddleware = subscriptionConfig.MiddlewareConfiguration != null
+                ? middlewareBuilder.Configure(subscriptionConfig.MiddlewareConfiguration)
+                : middlewareBuilder
+                    .UseHandler<T>()
+                    .UseStopwatch(proposedHandler.GetType())
+                    .Configure(subscriptionConfig.MiddlewareConfiguration);
 
-            bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, handlerMiddleware);
+
+            bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, handlerMiddleware.Build());
 
             logger.LogInformation(
                 "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",

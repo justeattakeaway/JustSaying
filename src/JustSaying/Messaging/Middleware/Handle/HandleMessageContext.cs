@@ -1,4 +1,5 @@
 using System;
+using JustSaying.Messaging.Channels.Context;
 using JustSaying.Models;
 
 
@@ -13,11 +14,16 @@ namespace JustSaying.Messaging.Middleware
         /// <param name="message">The JustSaying message that was deserialized from SQS.</param>
         /// <param name="messageType">The type of the JustSaying message contained in <see cref="Message"/>.</param>
         /// <param name="queueName">The queue from which this message was received.</param>
-        public HandleMessageContext(Message message, Type messageType, string queueName)
+        /// <param name="visibilityUpdater">The <see cref="IMessageVisibilityUpdater"/> to use to update message visibilities on failure.</param>
+        /// <param name="messageDeleter">The <see cref="IMessageDeleter"/> to use to remove a message from the queue on success.</param>
+        public HandleMessageContext(string queueName, Amazon.SQS.Model.Message rawMessage, Message message, Type messageType, IMessageVisibilityUpdater visibilityUpdater, IMessageDeleter messageDeleter)
         {
             Message = message;
             MessageType = messageType;
             QueueName = queueName;
+            VisibilityUpdater = visibilityUpdater;
+            MessageDeleter = messageDeleter;
+            RawMessage = rawMessage;
         }
 
         /// <summary>
@@ -34,5 +40,11 @@ namespace JustSaying.Messaging.Middleware
         /// The JustSaying message that was deserialized from SQS.
         /// </summary>
         public Message Message { get; }
+
+        public Amazon.SQS.Model.Message RawMessage { get; }
+
+        public IMessageVisibilityUpdater VisibilityUpdater { get; }
+
+        public IMessageDeleter MessageDeleter { get; }
     }
 }

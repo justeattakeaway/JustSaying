@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
@@ -26,7 +27,7 @@ namespace JustSaying.UnitTests.Messaging.Middleware
 
             _handler = new InspectableHandler<OrderAccepted>();
             _monitor = new TrackingLoggingMonitor(loggerFactory.CreateLogger<TrackingLoggingMonitor>());
-            var serviceResolver = new FakeServiceResolver(c =>
+            var serviceResolver = new InMemoryServiceResolver(c =>
                 c.AddSingleton<IHandlerAsync<OrderAccepted>>(_handler)
                     .AddSingleton<IMessageMonitor>(_monitor));
 
@@ -39,8 +40,7 @@ namespace JustSaying.UnitTests.Messaging.Middleware
         [Fact]
         public async Task WhenMiddlewareIsWrappedinStopWatch_InnerMiddlewareIsCalled()
         {
-            var context = new HandleMessageContext(new OrderAccepted(), typeof(OrderAccepted), "test-queue");
-
+            var context = TestHandleContexts.From<OrderAccepted>();
             var result = await _middleware.RunAsync(context, null, CancellationToken.None);
 
             result.ShouldBeTrue();
@@ -51,7 +51,7 @@ namespace JustSaying.UnitTests.Messaging.Middleware
         [Fact]
         public async Task WhenMiddlewareIsWrappedinStopWatch_MonitoringIsCalled()
         {
-            var context = new HandleMessageContext(new OrderAccepted(), typeof(OrderAccepted), "test-queue");
+            var context = TestHandleContexts.From<OrderAccepted>();
 
             var result = await _middleware.RunAsync(context, null, CancellationToken.None);
 

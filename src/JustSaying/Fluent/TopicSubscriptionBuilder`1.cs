@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.Middleware;
+using JustSaying.Messaging.Middleware.PostProcessing;
 using JustSaying.Models;
 using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
@@ -196,13 +197,15 @@ namespace JustSaying.Fluent
 
             var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver);
 
-            var handlerMiddleware = middlewareBuilder
-                .UseHandler<T>()
-                .UseStopwatch(proposedHandler.GetType())
-                .Configure(subscriptionConfig.MiddlewareConfiguration)
-                .Build();
+            HandlerMiddlewareBuilder handlerMiddleware = subscriptionConfig.MiddlewareConfiguration != null
+                ? middlewareBuilder.Configure(subscriptionConfig.MiddlewareConfiguration)
+                : middlewareBuilder
+                    .UseHandler<T>()
+                    .Use<SqsPostProcessorMiddleware>()
+                    .Use<LoggingMiddleware>()
+                    .UseStopwatch(proposedHandler.GetType());
 
-            bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, handlerMiddleware);
+            bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, handlerMiddleware.Build());
 
             logger.LogInformation(
                 "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",

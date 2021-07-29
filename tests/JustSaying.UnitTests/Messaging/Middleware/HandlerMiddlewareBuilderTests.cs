@@ -12,11 +12,11 @@ namespace JustSaying.UnitTests.Messaging.Middleware
 {
     public class HandlerMiddlewareBuilderTests
     {
-        private readonly FakeServiceResolver _resolver;
+        private readonly InMemoryServiceResolver _resolver;
 
         public HandlerMiddlewareBuilderTests()
         {
-            _resolver = new FakeServiceResolver();
+            _resolver = new InMemoryServiceResolver();
         }
 
         [Fact]
@@ -39,9 +39,7 @@ namespace JustSaying.UnitTests.Messaging.Middleware
                     pipe.Use(inner);
                 }).Build();
 
-            var context = new HandleMessageContext(new SimpleMessage(),
-                typeof(SimpleMessage),
-                "a-fake-queue");
+            var context = TestHandleContexts.From<SimpleMessage>();
 
             await middleware.RunAsync(context,
                 ct =>

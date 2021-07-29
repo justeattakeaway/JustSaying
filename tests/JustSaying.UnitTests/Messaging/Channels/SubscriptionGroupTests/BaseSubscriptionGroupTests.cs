@@ -64,7 +64,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             Queues = new List<ISqsQueue>();
             Handler = new InspectableHandler<SimpleMessage>();
 
-            var testResolver = new FakeServiceResolver(sc => sc
+            var testResolver = new InMemoryServiceResolver(sc => sc
                 .AddLogging(l => l.AddXUnit(OutputHelper)));
 
             Middleware = new HandlerMiddlewareBuilder(testResolver, testResolver).UseHandler(ctx => Handler).Build();

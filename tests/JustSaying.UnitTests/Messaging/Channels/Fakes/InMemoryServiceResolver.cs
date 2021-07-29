@@ -5,11 +5,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.UnitTests.Messaging.Channels.Fakes
 {
-    public class FakeServiceResolver : IServiceResolver, IHandlerResolver
+    public class InMemoryServiceResolver : IServiceResolver, IHandlerResolver
     {
         private readonly IServiceProvider _provider;
 
-        public FakeServiceResolver(Action<IServiceCollection> configure = null)
+        public InMemoryServiceResolver(Action<IServiceCollection> configure = null)
         {
             var collection = new ServiceCollection();
             configure?.Invoke(collection);

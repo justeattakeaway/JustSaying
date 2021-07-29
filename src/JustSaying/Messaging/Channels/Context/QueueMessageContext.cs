@@ -26,21 +26,21 @@ namespace JustSaying.Messaging.Channels.Context
         public Message Message { get; }
 
         /// <inheritdoc />
-        public async Task DeleteMessageFromQueueAsync(CancellationToken cancellationToken)
-        {
-            await _queueReader.DeleteMessageAsync(Message.ReceiptHandle, cancellationToken).ConfigureAwait(false);
-        }
+        public Uri QueueUri => _queueReader.Uri;
 
         /// <inheritdoc />
-        public async Task ChangeMessageVisibilityAsync(TimeSpan visibilityTimeout, CancellationToken cancellationToken)
+        public string QueueName => _queueReader.QueueName;
+
+        /// <inheritdoc />
+        public async Task UpdateMessageVisibility(TimeSpan visibilityTimeout, CancellationToken cancellationToken)
         {
             await _queueReader.ChangeMessageVisibilityAsync(Message.ReceiptHandle, visibilityTimeout, cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
-        public Uri QueueUri => _queueReader.Uri;
-
-        /// <inheritdoc />
-        public string QueueName => _queueReader.QueueName;
+        public async Task DeleteMessage(CancellationToken cancellationToken)
+        {
+            await _queueReader.DeleteMessageAsync(Message.ReceiptHandle, cancellationToken).ConfigureAwait(false);
+        }
     }
 }
