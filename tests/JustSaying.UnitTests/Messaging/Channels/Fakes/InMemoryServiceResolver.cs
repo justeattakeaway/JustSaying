@@ -1,7 +1,12 @@
 using System;
+using System.Threading;
 using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Middleware.PostProcessing;
+using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.Fakes
 {
@@ -9,8 +14,22 @@ namespace JustSaying.UnitTests.Messaging.Channels.Fakes
     {
         private readonly IServiceProvider _provider;
 
+        private static readonly Action<IServiceCollection, ITestOutputHelper, IMessageMonitor> Configure = (sc, outputHelper, monitor) =>
+            sc.AddLogging(l => l.AddXUnit(outputHelper))
+            .AddSingleton<IMessageMonitor>(monitor)
+            .AddSingleton<LoggingMiddleware>();
+
+        public InMemoryServiceResolver(ITestOutputHelper outputHelper, IMessageMonitor monitor, Action<IServiceCollection> configure = null) :
+            this(sc =>
+            {
+                Configure(sc, outputHelper, monitor);
+                configure?.Invoke(sc);
+            })
+        { }
+
         public InMemoryServiceResolver(Action<IServiceCollection> configure = null)
         {
+
             var collection = new ServiceCollection();
             configure?.Invoke(collection);
             _provider = collection.BuildServiceProvider();
@@ -23,7 +42,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.Fakes
 
         public T ResolveService<T>()
         {
-            return _provider.GetService<T>();
+            return _provider.GetRequiredService<T>();
         }
     }
 }

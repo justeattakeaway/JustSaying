@@ -1,5 +1,6 @@
 using System;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Middleware.PostProcessing;
 using JustSaying.Models;
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
@@ -27,6 +28,20 @@ namespace JustSaying.Messaging.Middleware
             if (handler == null) throw new ArgumentNullException(nameof(handler));
 
             return builder.Use(new HandlerInvocationMiddleware<TMessage>(handler));
+        }
+
+        public static HandlerMiddlewareBuilder ApplyDefaults<TMessage>(
+            this HandlerMiddlewareBuilder builder,
+            Type handlerType)
+        where TMessage : Message
+        {
+            builder
+                .UseHandler<TMessage>()
+                .Use(new SqsPostProcessorMiddleware())
+                .Use<LoggingMiddleware>()
+                .UseStopwatch(handlerType);
+
+            return builder;
         }
     }
 }

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using JustSaying;
 using JustSaying.Fluent;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Middleware.PostProcessing;
 
 namespace StructureMap
 {

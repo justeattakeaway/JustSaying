@@ -10,6 +10,8 @@ using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware;
+using JustSaying.Messaging.Middleware.PostProcessing;
+using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
@@ -35,11 +37,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected HandleMessageMiddleware Middleware;
         protected InspectableHandler<SimpleMessage> Handler;
-
         protected ISubscriptionGroup SystemUnderTest { get; private set; }
-
-        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(2);
-
         protected ILoggerFactory LoggerFactory { get; }
         protected ILogger Logger { get; }
 
@@ -63,14 +61,15 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         {
             Queues = new List<ISqsQueue>();
             Handler = new InspectableHandler<SimpleMessage>();
-
-            var testResolver = new InMemoryServiceResolver(sc => sc
-                .AddLogging(l => l.AddXUnit(OutputHelper)));
-
-            Middleware = new HandlerMiddlewareBuilder(testResolver, testResolver).UseHandler(ctx => Handler).Build();
             Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
             SerializationRegister = new FakeSerializationRegister();
             MiddlewareMap = new MiddlewareMap();
+
+            var testResolver = new InMemoryServiceResolver(OutputHelper, Monitor,
+                sc => sc.AddSingleton<IHandlerAsync<SimpleMessage>>(Handler));
+
+            Middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
+                .ApplyDefaults<SimpleMessage>(typeof(InspectableHandler<SimpleMessage>)).Build();
 
             Given();
         }

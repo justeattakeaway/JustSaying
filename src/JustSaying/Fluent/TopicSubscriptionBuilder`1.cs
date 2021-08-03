@@ -40,6 +40,9 @@ namespace JustSaying.Fluent
         /// </summary>
         private Dictionary<string, string> Tags { get; } = new(StringComparer.Ordinal);
 
+        private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
+
+
         /// <summary>
         /// Configures that the <see cref="ITopicNamingConvention"/> will create the topic name that should be used.
         /// </summary>
@@ -144,6 +147,12 @@ namespace JustSaying.Fluent
             return this;
         }
 
+        public ISubscriptionBuilder<T> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
+        {
+            MiddlewareConfiguration = middlewareConfiguration;
+            return this;
+        }
+
         /// <inheritdoc />
         void ISubscriptionBuilder<T>.Configure(
             JustSayingBus bus,
@@ -170,7 +179,6 @@ namespace JustSaying.Fluent
             subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
             subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
             subscriptionConfig.PublishEndpoint = subscriptionConfig.TopicName;
-            subscriptionConfig.MiddlewareConfiguration = subscriptionConfig.MiddlewareConfiguration;
             subscriptionConfig.Validate();
 
             var queueWithStartup = creator.EnsureTopicExistsWithQueueSubscribed(
@@ -196,16 +204,12 @@ namespace JustSaying.Fluent
             }
 
             var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver);
+            var handlerMiddleware =
+                middlewareBuilder.ApplyDefaults<T>(proposedHandler.GetType())
+                    .Configure(MiddlewareConfiguration)
+                    .Build();
 
-            HandlerMiddlewareBuilder handlerMiddleware = subscriptionConfig.MiddlewareConfiguration != null
-                ? middlewareBuilder.Configure(subscriptionConfig.MiddlewareConfiguration)
-                : middlewareBuilder
-                    .UseHandler<T>()
-                    .Use<SqsPostProcessorMiddleware>()
-                    .Use<LoggingMiddleware>()
-                    .UseStopwatch(proposedHandler.GetType());
-
-            bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, handlerMiddleware.Build());
+            bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, handlerMiddleware);
 
             logger.LogInformation(
                 "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",

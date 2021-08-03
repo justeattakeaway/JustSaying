@@ -56,6 +56,8 @@ namespace JustSaying.Messaging.Middleware
         /// <returns>The current HandlerMiddlewareBuilder.</returns>
         public HandlerMiddlewareBuilder Use(HandleMessageMiddleware middleware)
         {
+            if (middleware == null) throw new ArgumentNullException(nameof(middleware));
+
             _middlewares.Add(() => middleware);
             return this;
         }
@@ -69,6 +71,8 @@ namespace JustSaying.Messaging.Middleware
         /// <returns>The current HandlerMiddlewareBuilder.</returns>
         public HandlerMiddlewareBuilder Use(Func<HandleMessageMiddleware> middlewareFactory)
         {
+            if (middlewareFactory == null) throw new ArgumentNullException(nameof(middlewareFactory));
+
             _middlewares.Add(middlewareFactory);
             return this;
         }
@@ -95,6 +99,18 @@ namespace JustSaying.Messaging.Middleware
 
             _handlerMiddleware = new HandlerInvocationMiddleware<TMessage>(HandlerResolver.ResolveHandler<TMessage>);
 
+            return this;
+        }
+
+        /// <summary>
+        /// Resets this <see cref="HandlerMiddlewareBuilder"/> to
+        /// </summary>
+        /// <returns></returns>
+        public HandlerMiddlewareBuilder Clear()
+        {
+            _handlerMiddleware = null;
+            _middlewares.Clear();
+            _configure = null;
             return this;
         }
 
@@ -132,7 +148,9 @@ namespace JustSaying.Messaging.Middleware
             // (i.e. russian doll).
             var middlewares =
                 _middlewares
-                    .Select(m => m()).Reverse().ToArray();
+                    .Select(m => m())
+                    .Reverse()
+                    .ToArray();
 
             return MiddlewareBuilder.BuildAsync(middlewares);
         }

@@ -23,10 +23,6 @@
 [{DateTime}] info: JustSaying.Fluent.QueueSubscriptionBuilder[0]
       Added a message handler for message type for 'JustSaying.TestingFramework.SimpleMessage' on topic 'simplemessage' and queue '{TestDiscriminator}'.
 [{DateTime}] info: JustSaying[0]
-      => MessageSource: fc31e55ddf4447759eafc244f3473234-integration-tests
-      => SourceType: Queue
-      Succeeded handling message with Id 'ef92f02b-797e-4c76-824c-d696f5432885' of type JustSaying.TestingFramework.SimpleMessage {Duration}
-[{DateTime}] info: JustSaying[0]
       Running 1 startup tasks
 [{DateTime}] info: JustSaying[0]
       Starting bus with settings: JustSaying.Messaging.Interrogation.InterrogationResult
@@ -39,7 +35,7 @@
 [{DateTime}] info: JustSaying.Publish[0]
       => AwsRequestId: {AwsRequestId}
       Published message {MessageId} of type SimpleMessage to Queue 'http://localhost:4566/000000000000/{TestDiscriminator}'.
-[{DateTime}] info: JustSaying[0]
+[{DateTime}] info: JustSaying.Messaging.Middleware.PostProcessing.LoggingMiddleware[0]
       => MessageSource: {TestDiscriminator}
       => SourceType: Queue
-      Succeeded handling message with Id '{MessageId}' of type JustSaying.TestingFramework.SimpleMessage {Duration}
+      Succeeded handling message with Id '{MessageId}' of type SimpleMessage {Duration}

@@ -22,12 +22,9 @@ namespace JustSaying.AwsTools.QueueCreation
         public string TopicName { get; set; }
         public string PublishEndpoint { get; set; }
         public Dictionary<string, string> Tags { get; set; }
-
         public string TopicSourceAccount { get; set; }
-        public IMessageBackoffStrategy MessageBackoffStrategy { get; set; }
         public string FilterPolicy { get; set; }
         public string SubscriptionGroupName { get; set; }
-        public Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
         public void ApplyTopicNamingConvention<T>(ITopicNamingConvention namingConvention)
         {

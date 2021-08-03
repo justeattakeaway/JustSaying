@@ -6,6 +6,8 @@
         "MessageType": "SimpleMessage",
         "QueueName": "integrationTestQueueName",
         "MiddlewareChain": [
+          "SqsPostProcessorMiddleware",
+          "LoggingMiddleware",
           "StopwatchMiddleware",
           "HandlerInvocationMiddleware`1"
         ]

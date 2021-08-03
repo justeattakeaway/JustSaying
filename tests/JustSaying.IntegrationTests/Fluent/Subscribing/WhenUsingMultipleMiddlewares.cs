@@ -34,14 +34,13 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 .AddSingleton<IHandlerAsync<SimpleMessage>>(handler)
                 .ConfigureJustSaying(builder =>
                     builder.WithLoopbackTopic<SimpleMessage>(UniqueName,
-                        topic => topic.WithReadConfiguration(rc =>
-                            rc.WithMiddlewareConfiguration(
+                        topic => topic.WithMiddlewareConfiguration(
                                 pipe =>
                                 {
                                     pipe.Use<TrackingMiddleware>(); // from DI
                                     pipe.Use(() => middleMiddleware); // provide a Func<MiddlewareBase<HandleMessageContext, bool>
                                     pipe.Use(innerMiddleware); // Existing instance
-                                }))));
+                                })));
 
             await WhenAsync(services,
                 async (publisher, listener, serviceProvider, cancellationToken) =>

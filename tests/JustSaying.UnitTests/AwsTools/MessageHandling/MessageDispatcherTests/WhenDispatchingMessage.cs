@@ -11,8 +11,11 @@ using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.Messaging.Channels.Fakes;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using NSubstitute;
@@ -50,7 +53,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
         private readonly MiddlewareMap _middlewareMap = new MiddlewareMap();
         private readonly ILoggerFactory _loggerFactory;
         private readonly IMessageBackoffStrategy _messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
-        private IAmazonSQS _amazonSqsClient = Substitute.For<IAmazonSQS>();
+        private readonly ITestOutputHelper _outputHelper;
+        private readonly IAmazonSQS _amazonSqsClient = Substitute.For<IAmazonSQS>();
 
         private DummySqsQueue _queue;
         private SQSMessage _sqsMessage;
@@ -60,6 +64,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
         public WhenDispatchingMessage(ITestOutputHelper outputHelper)
         {
+            _outputHelper = outputHelper;
             _loggerFactory = outputHelper.ToLoggerFactory();
         }
 
@@ -146,9 +151,16 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             {
                 base.Given();
 
-                var successMiddleware =
-                    new DelegateMessageHandlingMiddleware<OrderAccepted>(m => Task.FromResult(true));
-                _middlewareMap.Add<OrderAccepted>(_queue.QueueName, successMiddleware);
+                var handler = new InspectableHandler<SimpleMessage>();
+
+                var testResolver = new InMemoryServiceResolver(_outputHelper, _messageMonitor,
+                    sc => sc.AddSingleton<IHandlerAsync<SimpleMessage>>(handler));
+
+                var middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
+                    .ApplyDefaults<SimpleMessage>(handler.GetType())
+                    .Build();
+
+                _middlewareMap.Add<OrderAccepted>(_queue.QueueName, middleware);
             }
 
             [Fact]

@@ -27,9 +27,8 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 .AddSingleton<IMessageLockAsync>(messageLock)
                 .ConfigureJustSaying((builder) =>
                     builder.WithLoopbackTopic<SimpleMessage>(UniqueName,
-                        t => t.WithReadConfiguration(rc =>
-                            rc.WithMiddlewareConfiguration(m =>
-                                m.UseExactlyOnce<SimpleMessage>("some-key")))))
+                        t => t.WithMiddlewareConfiguration(m =>
+                                m.UseExactlyOnce<SimpleMessage>("some-key"))))
                 .AddJustSayingHandlers(new[] { handler1, handler2 });
 
             await WhenAsync(
