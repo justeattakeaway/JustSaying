@@ -199,7 +199,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                             _logger.LogInformation(logMessage,
                                 "Succeeded",
                                 message.Id,
-                                messageType,
+                                messageType.FullName,
                                 watch.ElapsedMilliseconds);
                         }
                         else
@@ -207,7 +207,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                             _logger.LogWarning(logMessage,
                                 "Failed",
                                 message.Id,
-                                messageType,
+                                messageType.FullName,
                                 watch.ElapsedMilliseconds);
                         }
                     }
