@@ -32,7 +32,7 @@ namespace JustSaying.Messaging.Channels.Context
         public string QueueName => _queueReader.QueueName;
 
         /// <inheritdoc />
-        public async Task UpdateMessageVisibility(TimeSpan visibilityTimeout, CancellationToken cancellationToken)
+        public async Task UpdateMessageVisibilityTimeout(TimeSpan visibilityTimeout, CancellationToken cancellationToken)
         {
             await _queueReader.ChangeMessageVisibilityAsync(Message.ReceiptHandle, visibilityTimeout, cancellationToken).ConfigureAwait(false);
         }

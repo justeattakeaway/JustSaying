@@ -4,8 +4,9 @@
     "Middlewares": [
       {
         "MessageType": "SimpleMessage",
-        "QueueName": "integrationTestQueueName",
+        "QueueName": "TestQueueName",
         "MiddlewareChain": [
+          "ExactlyOnceMiddleware`1",
           "MessageContextAccessorMiddleware",
           "ErrorHandlerMiddleware",
           "LoggingMiddleware",
@@ -20,8 +21,8 @@
   "SubscriptionGroups": {
     "Groups": [
       {
-        "Name": "integrationTestQueueName",
-        "ConcurrencyLimit": 10,
+        "Name": "TestQueueName",
+        "ConcurrencyLimit": 48,
         "Multiplexer": {
           "ChannelCapacity": 100,
           "ReaderCount": 1
@@ -29,7 +30,7 @@
         "ReceiveBuffers": [
           {
             "BufferSize": 10,
-            "QueueName": "integrationTestQueueName",
+            "QueueName": "TestQueueName",
             "Region": "eu-west-1",
             "Prefetch": 10,
             "BackoffStrategyName": null
@@ -38,15 +39,4 @@
       }
     ]
   }
-}
-
-{
-  "Region": "eu-west-1",
-  "Middleware": {
-    "Middlewares": []
-  },
-  "PublishedMessageTypes": [
-    "SimpleMessage"
-  ],
-  "SubscriptionGroups": null
 }

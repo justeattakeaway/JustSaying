@@ -38,17 +38,8 @@ namespace JustSaying
 
         private IMessageMonitor _monitor;
 
-        public IMessageMonitor Monitor
-        {
-            get => _monitor;
-            set => _monitor = value ?? new NullOpMessageMonitor();
-        }
-
         private ISubscriptionGroup SubscriptionGroups { get; set; }
         public IMessageSerializationRegister SerializationRegister { get; }
-        public IMessageBackoffStrategy MessageBackoffStrategy { get; set; }
-
-        public IMessageContextAccessor MessageContextAccessor { get; set; }
 
         internal MiddlewareMap MiddlewareMap { get; }
 
@@ -57,15 +48,16 @@ namespace JustSaying
         public JustSayingBus(
             IMessagingConfig config,
             IMessageSerializationRegister serializationRegister,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            IMessageMonitor monitor)
         {
-            _loggerFactory = loggerFactory;
+            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
+
             _startupTasks = new List<Func<Task>>();
             _log = _loggerFactory.CreateLogger("JustSaying");
 
             Config = config;
-            Monitor = new NullOpMessageMonitor();
-            MessageContextAccessor = new MessageContextAccessor();
             SerializationRegister = serializationRegister;
             MiddlewareMap = new MiddlewareMap();
 
@@ -165,15 +157,13 @@ namespace JustSaying
         {
             var dispatcher = new MessageDispatcher(
                 SerializationRegister,
-                Monitor,
+                _monitor,
                 MiddlewareMap,
-                _loggerFactory,
-                MessageBackoffStrategy,
-                MessageContextAccessor);
+                _loggerFactory);
 
             var subscriptionGroupFactory = new SubscriptionGroupFactory(
                 dispatcher,
-                Monitor,
+                _monitor,
                 _loggerFactory);
 
             SubscriptionGroups =
@@ -249,7 +239,7 @@ namespace JustSaying
             attemptCount++;
             try
             {
-                using (Monitor.MeasurePublish())
+                using (_monitor.MeasurePublish())
                 {
                     await publisher.PublishAsync(message, metadata, cancellationToken)
                         .ConfigureAwait(false);
@@ -261,7 +251,7 @@ namespace JustSaying
 
                 if (attemptCount >= Config.PublishFailureReAttempts)
                 {
-                    Monitor.IssuePublishingMessage();
+                    _monitor.IssuePublishingMessage();
 
                     _log.LogError(
                         ex,

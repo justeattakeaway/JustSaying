@@ -45,11 +45,14 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
                     // Act
                     await publisher.PublishAsync(message, cancellationToken);
-                    await handler.DoneSignal.Task;
 
                     // Assert
-                    handler.MessageReceived.ShouldNotBeNull();
-                    monitor.HandledErrors.Count.ShouldBe(1);
+                    await Patiently.AssertThatAsync(() =>
+                    {
+                        handler.MessageReceived.ShouldNotBeNull();
+                        monitor.HandledErrors.Count.ShouldBe(1);
+                    });
+
                 });
         }
     }

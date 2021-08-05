@@ -21,7 +21,8 @@ namespace JustSaying.IntegrationTests.Fluent
     {
         protected IntegrationTestBase(ITestOutputHelper outputHelper)
         {
-            OutputHelper = new CapturingTestOutputHelper(outputHelper);
+            OutputHelper = outputHelper;
+            LoggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(lf => lf.AddXUnit(outputHelper));
         }
 
         protected virtual string AccessKeyId { get; } = "accessKeyId";
@@ -30,7 +31,8 @@ namespace JustSaying.IntegrationTests.Fluent
 
         protected virtual string SessionToken { get; } = "token";
 
-        protected CapturingTestOutputHelper OutputHelper { get; }
+        protected ITestOutputHelper OutputHelper { get; }
+        protected ILoggerFactory LoggerFactory { get; }
 
         protected virtual string RegionName => Region.SystemName;
 

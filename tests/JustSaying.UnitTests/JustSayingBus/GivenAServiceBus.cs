@@ -65,10 +65,8 @@ namespace JustSaying.UnitTests.JustSayingBus
             var serializerRegister = new FakeSerializationRegister();
             var bus = new JustSaying.JustSayingBus(Config,
                 serializerRegister,
-                LoggerFactory)
-            {
-                Monitor = Monitor
-            };
+                LoggerFactory,
+                Monitor);
 
             bus.SetGroupSettings(new SubscriptionGroupSettingsBuilder()
                     .WithDefaultConcurrencyLimit(8),

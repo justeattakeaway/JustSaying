@@ -36,10 +36,7 @@ namespace JustSaying.UnitTests.JustSayingBus
 
         private JustSaying.JustSayingBus CreateSystemUnderTest()
         {
-            return new JustSaying.JustSayingBus(Config, null, LoggerFactory)
-            {
-                Monitor = null
-            };
+            return new JustSaying.JustSayingBus(Config, null, LoggerFactory, null);
         }
     }
 }

@@ -14,8 +14,13 @@ namespace JustSaying.Fluent
     internal sealed class DefaultServiceResolver : IServiceResolver
     {
         /// <inheritdoc />
-        public T ResolveService<T>()
+        public T ResolveService<T>() where T : class
             => (T)ResolveService(typeof(T));
+
+        public T ResolveOptionalService<T>() where T : class
+        {
+            return null;
+        }
 
         private object ResolveService(Type desiredType)
         {

@@ -1,4 +1,6 @@
+using System;
 using Amazon.SQS.Model;
+using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.Middleware;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
 
@@ -15,7 +17,9 @@ namespace JustSaying.UnitTests.Messaging.Middleware
                 message ?? new TMessage(),
                 typeof(TMessage),
                 new FakeVisbilityUpdater(),
-                new FakeMessageDeleter());
+                new FakeMessageDeleter(),
+                new Uri("http://test-queue"),
+                new MessageAttributes());
         }
     }
 }

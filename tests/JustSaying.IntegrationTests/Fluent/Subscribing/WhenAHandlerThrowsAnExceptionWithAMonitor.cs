@@ -27,7 +27,8 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
             var services = GivenJustSaying()
                 .ConfigureJustSaying((builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
-                .ConfigureJustSaying((builder) => builder.Services((options) => options.WithMessageMonitoring(() => monitoring)))
+                .ConfigureJustSaying((builder) => builder.Services((options) =>
+                    options.WithMessageMonitoring(() => monitoring)))
                 .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
             var message = new SimpleMessage();
@@ -41,12 +42,13 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
                     // Act
                     await publisher.PublishAsync(message, cancellationToken);
-                    await handler.DoneSignal.Task;
 
-                    // Assert
-                    handler.MessageReceived.ShouldNotBeNull();
+                    await Patiently.AssertThatAsync(OutputHelper, () =>
+                    {
+                        handler.MessageReceived.ShouldNotBeNull();
+                        monitoring.Received().HandleException(Arg.Any<Type>());
+                    });
 
-                    monitoring.Received().HandleException(Arg.Any<Type>());
                 });
         }
     }

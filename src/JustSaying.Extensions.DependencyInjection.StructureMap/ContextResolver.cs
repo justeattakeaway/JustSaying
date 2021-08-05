@@ -29,7 +29,10 @@ namespace JustSaying
             => Context.GetInstance<IHandlerAsync<T>>();
 
         /// <inheritdoc />
-        public T ResolveService<T>()
+        public T ResolveService<T>() where T : class
             => Context.GetInstance<T>();
+
+        public T ResolveOptionalService<T>() where T : class
+            => Context.TryGetInstance<T>();
     }
 }

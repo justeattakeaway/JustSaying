@@ -7,6 +7,7 @@ using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
+using JustSaying.UnitTests.Messaging.Middleware;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Shouldly;
@@ -34,6 +35,7 @@ namespace JustSaying.UnitTests.Messaging.MessageHandling
                     l.AddXUnit(_outputHelper))
                 .AddSingleton<IMessageLockAsync>(messageLock));
 
+            var monitor = new TrackingLoggingMonitor(LoggerFactory.Create(lf => lf.AddXUnit()).CreateLogger<TrackingLoggingMonitor>());
             var handler = new InspectableHandler<OrderAccepted>();
 
             var middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
@@ -42,10 +44,8 @@ namespace JustSaying.UnitTests.Messaging.MessageHandling
                 .UseHandler(ctx => handler)
                 .Build();
 
-            var context = new HandleMessageContext( "test-queue", new Message(), new OrderAccepted(),
-                typeof(OrderAccepted),
-                new FakeVisbilityUpdater(),
-                new FakeMessageDeleter());
+            var context = TestHandleContexts.From<OrderAccepted>();
+
             var result = await middleware.RunAsync(context, null, CancellationToken.None);
 
             handler.ReceivedMessages.ShouldBeEmpty();

@@ -3,8 +3,10 @@ using System.Threading.Tasks;
 using JustSaying.IntegrationTests.Fluent;
 using JustSaying.IntegrationTests.Fluent.Subscribing;
 using JustSaying.IntegrationTests.TestHandlers;
+using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit.Abstractions;
 
@@ -21,15 +23,13 @@ namespace JustSaying.Fluent.Monitoring
             // Arrange
             var future = new Future<SimpleMessage>();
 
+            var monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
+
             var services = GivenJustSaying()
                 .ConfigureJustSaying(
                     (builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
-                .ConfigureJustSaying(
-                    (builder) => builder.Services(s =>
-                        s.WithMessageMonitoring(
-                            builder.ServiceResolver.ResolveService<TrackingLoggingMonitor>)))
                 .AddSingleton(future)
-                .AddSingleton<TrackingLoggingMonitor>()
+                .AddSingleton<IMessageMonitor>(monitor)
                 .AddJustSayingHandler<SimpleMessage, HandlerWithMessageContext>();
 
             string content = Guid.NewGuid().ToString();
@@ -51,8 +51,6 @@ namespace JustSaying.Fluent.Monitoring
 
                     // Assert
                     await future.DoneSignal;
-
-                    var monitor = serviceProvider.GetService<TrackingLoggingMonitor>();
 
                     monitor.HandledTimes.ShouldHaveSingleItem().ShouldBeGreaterThan(TimeSpan.Zero);
                     monitor.PublishMessageTimes.ShouldHaveSingleItem().ShouldBeGreaterThan(TimeSpan.Zero);

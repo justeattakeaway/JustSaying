@@ -7,7 +7,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.Fakes
 {
     public class FakeVisbilityUpdater : IMessageVisibilityUpdater
     {
-        public Task UpdateMessageVisibility(TimeSpan visibilityTimeout, CancellationToken cancellationToken)
+        public Task UpdateMessageVisibilityTimeout(TimeSpan visibilityTimeout, CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }

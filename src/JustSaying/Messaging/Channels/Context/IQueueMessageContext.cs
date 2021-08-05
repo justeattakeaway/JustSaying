@@ -12,7 +12,7 @@ namespace JustSaying.Messaging.Channels.Context
 
     public interface IMessageVisibilityUpdater
     {
-        Task UpdateMessageVisibility(TimeSpan visibilityTimeout, CancellationToken cancellationToken);
+        Task UpdateMessageVisibilityTimeout(TimeSpan visibilityTimeout, CancellationToken cancellationToken);
     }
 
     /// <summary>

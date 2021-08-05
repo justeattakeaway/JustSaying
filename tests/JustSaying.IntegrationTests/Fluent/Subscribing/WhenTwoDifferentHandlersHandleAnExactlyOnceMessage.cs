@@ -42,11 +42,14 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
                     // Act
                     await publisher.PublishAsync(message, cancellationToken);
-                    await Task.Delay(1.Seconds(), cancellationToken);
 
                     // Assert
-                    handler1.ReceivedMessages.ShouldHaveSingleItem().Id.ShouldBe(message.Id);
-                    handler2.ReceivedMessages.ShouldHaveSingleItem().Id.ShouldBe(message.Id);
+                    await Patiently.AssertThatAsync(OutputHelper,
+                        () =>
+                        {
+                            handler1.ReceivedMessages.ShouldHaveSingleItem().Id.ShouldBe(message.Id);
+                            handler2.ReceivedMessages.ShouldHaveSingleItem().Id.ShouldBe(message.Id);
+                        });
                 });
         }
     }

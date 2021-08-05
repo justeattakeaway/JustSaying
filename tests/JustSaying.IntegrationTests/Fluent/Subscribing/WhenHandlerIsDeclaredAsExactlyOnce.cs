@@ -4,6 +4,7 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using Shouldly;
 using Xunit.Abstractions;
 
@@ -44,6 +45,14 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     await publisher.PublishAsync(message, cancellationToken);
                     await publisher.PublishAsync(message, cancellationToken);
                     await Task.Delay(1.Seconds(), cancellationToken);
+
+                    var json = JsonConvert.SerializeObject(listener.Interrogate(), Formatting.Indented)
+                        .Replace(UniqueName, "TestQueueName");
+                    json.ShouldMatchApproved(c => c
+                        .SubFolder("Approvals")
+                        .WithFilenameGenerator(
+                            (_, _, type, extension) =>
+                                $"{nameof(Then_The_Handler_Only_Receives_The_Message_Once)}.{type}.{extension}"));
 
                     handler.ReceivedMessages.Where(m => m.Id.ToString() == message.UniqueKey())
                         .ShouldHaveSingleItem();

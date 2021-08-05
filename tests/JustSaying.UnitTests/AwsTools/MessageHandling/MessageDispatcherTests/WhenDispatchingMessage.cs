@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS;
@@ -15,10 +16,12 @@ using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
+using MELT;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using NSubstitute;
+using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 using Message = JustSaying.Models.Message;
@@ -49,10 +52,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
         private const string ExpectedQueueUrl = "http://testurl.com/queue";
 
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
-        private readonly IMessageMonitor _messageMonitor = Substitute.For<IMessageMonitor>();
-        private readonly MiddlewareMap _middlewareMap = new MiddlewareMap();
+        private readonly TrackingLoggingMonitor _messageMonitor;
+        private readonly MiddlewareMap _middlewareMap;
         private readonly ILoggerFactory _loggerFactory;
-        private readonly IMessageBackoffStrategy _messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
         private readonly ITestOutputHelper _outputHelper;
         private readonly IAmazonSQS _amazonSqsClient = Substitute.For<IAmazonSQS>();
 
@@ -62,10 +64,14 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
         internal MessageDispatcher SystemUnderTest { get; private set; }
 
+        protected readonly IMessageBackoffStrategy MessageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
+
         public WhenDispatchingMessage(ITestOutputHelper outputHelper)
         {
             _outputHelper = outputHelper;
-            _loggerFactory = outputHelper.ToLoggerFactory();
+            _loggerFactory = TestLoggerFactory.Create(lb => lb.AddXUnit(outputHelper));
+            _messageMonitor = new TrackingLoggingMonitor(_loggerFactory.CreateLogger<TrackingLoggingMonitor>());
+            _middlewareMap = new MiddlewareMap();
         }
 
         public virtual async Task InitializeAsync()
@@ -110,9 +116,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
                 _serializationRegister,
                 _messageMonitor,
                 _middlewareMap,
-                _loggerFactory,
-                _messageBackoffStrategy,
-                new MessageContextAccessor());
+                _loggerFactory);
 
             return dispatcher;
         }
@@ -125,7 +129,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             protected override void Given()
             {
                 base.Given();
-                _messageBackoffStrategy.GetBackoffDuration(_typedMessage, 1, null).Returns(_expectedBackoffTimeSpan);
                 _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString(CultureInfo.InvariantCulture));
             }
 
@@ -136,9 +139,10 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             }
 
             [Fact]
-            public void ShouldUpdateMessageVisibility()
+            public void ShouldNotHandleMessage()
             {
-                _amazonSqsClient.Received(1).ChangeMessageVisibilityAsync(Arg.Is<ChangeMessageVisibilityRequest>(x => x.QueueUrl == ExpectedQueueUrl && x.ReceiptHandle == _sqsMessage.ReceiptHandle && x.VisibilityTimeout == (int)_expectedBackoffTimeSpan.TotalSeconds));
+                var testLogger = _loggerFactory.GetTestLoggerSink();
+                testLogger.LogEntries.ShouldContain(le => le.OriginalFormat == "Failed to dispatch. Middleware for message of type '{MessageTypeName}' not found in middleware map.");
             }
 
             public AndHandlerMapDoesNotHaveMatchingHandler(ITestOutputHelper outputHelper) : base(outputHelper)
@@ -154,7 +158,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
                 var handler = new InspectableHandler<SimpleMessage>();
 
                 var testResolver = new InMemoryServiceResolver(_outputHelper, _messageMonitor,
-                    sc => sc.AddSingleton<IHandlerAsync<SimpleMessage>>(handler));
+                    sc => sc
+                        .AddSingleton<IHandlerAsync<SimpleMessage>>(handler)
+                        .AddSingleton(MessageBackoffStrategy));
 
                 var middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
                     .ApplyDefaults<SimpleMessage>(handler.GetType())
@@ -189,15 +195,30 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             {
                 base.Given();
 
-                _messageBackoffStrategy.GetBackoffDuration(_typedMessage, 1, _expectedException).Returns(_expectedBackoffTimeSpan);
-                _middlewareMap.Add<OrderAccepted>(_queue.QueueName, new DelegateMessageHandlingMiddleware<OrderAccepted>(m => throw _expectedException));
+                var handler = new InspectableHandler<SimpleMessage>()
+                {
+                    OnHandle = msg => throw _expectedException
+                };
+
+                var testResolver = new InMemoryServiceResolver(_outputHelper, _messageMonitor,
+                    sc => sc
+                        .AddSingleton<IHandlerAsync<SimpleMessage>>(handler)
+                        .AddSingleton(MessageBackoffStrategy));
+
+                var middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
+                    .ApplyDefaults<SimpleMessage>(handler.GetType())
+                    .Build();
+
+                _middlewareMap.Add<OrderAccepted>(_queue.QueueName, middleware);
+
+                MessageBackoffStrategy.GetBackoffDuration(_typedMessage, 1, _expectedException).Returns(_expectedBackoffTimeSpan);
                 _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString(CultureInfo.InvariantCulture));
             }
 
             [Fact]
             public void ShouldInvokeMessageBackoffStrategyWithNumberOfReceives()
             {
-                _messageBackoffStrategy.Received(1).GetBackoffDuration(Arg.Is(_typedMessage), Arg.Is(ExpectedReceiveCount), Arg.Is(_expectedException));
+                MessageBackoffStrategy.Received(1).GetBackoffDuration(Arg.Is(_typedMessage), Arg.Is(ExpectedReceiveCount), Arg.Is(_expectedException));
             }
 
             [Fact]

@@ -32,7 +32,7 @@ namespace JustSaying.Messaging.Middleware.PostProcessing
             bool dispatchSuccessful = false;
             try
             {
-                dispatchSuccessful = await func(stoppingToken);
+                dispatchSuccessful = await func(stoppingToken).ConfigureAwait(false);
                 watch.Stop();
                 return dispatchSuccessful;
             }
@@ -43,7 +43,7 @@ namespace JustSaying.Messaging.Middleware.PostProcessing
                     _logger.LogInformation(MessageTemplate,
                         Succeeded,
                         context.Message.Id,
-                        context.MessageType.Name,
+                        context.MessageType.FullName,
                         watch.ElapsedMilliseconds);
                 }
                 else
@@ -51,7 +51,7 @@ namespace JustSaying.Messaging.Middleware.PostProcessing
                     _logger.LogWarning(MessageTemplate,
                         Failed,
                         context.Message.Id,
-                        context.MessageType.Name,
+                        context.MessageType.FullName,
                         watch.ElapsedMilliseconds);
                 }
             }

@@ -31,13 +31,6 @@ namespace JustSaying.TestingFramework
             });
         }
 
-        public static Task WaitForCancellation(this CancellationToken cancellationToken)
-        {
-            var tcs = new TaskCompletionSource<bool>();
-            cancellationToken.Register(() => tcs.SetResult(true));
-            return tcs.Task;
-        }
-
         public static async Task HandleCancellation(this Task task)
         {
             try

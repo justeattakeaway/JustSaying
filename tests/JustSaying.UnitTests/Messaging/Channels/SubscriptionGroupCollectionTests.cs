@@ -91,10 +91,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 new NonGenericMessageSubjectProvider(),
                 new NewtonsoftSerializationFactory());
 
-            var bus = new JustSaying.JustSayingBus(config, serializationRegister, LoggerFactory)
-            {
-                Monitor = MessageMonitor,
-            };
+            var bus = new JustSaying.JustSayingBus(config, serializationRegister, LoggerFactory, MessageMonitor);
 
             var defaultSubscriptionSettings = new SubscriptionGroupSettingsBuilder()
                 .WithDefaultMultiplexerCapacity(1)

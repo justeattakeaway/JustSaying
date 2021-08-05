@@ -16,13 +16,17 @@ namespace JustSaying.Messaging.Middleware
         /// <param name="queueName">The queue from which this message was received.</param>
         /// <param name="visibilityUpdater">The <see cref="IMessageVisibilityUpdater"/> to use to update message visibilities on failure.</param>
         /// <param name="messageDeleter">The <see cref="IMessageDeleter"/> to use to remove a message from the queue on success.</param>
-        public HandleMessageContext(string queueName, Amazon.SQS.Model.Message rawMessage, Message message, Type messageType, IMessageVisibilityUpdater visibilityUpdater, IMessageDeleter messageDeleter)
+        public HandleMessageContext(string queueName, Amazon.SQS.Model.Message rawMessage, Message message,
+            Type messageType, IMessageVisibilityUpdater visibilityUpdater, IMessageDeleter messageDeleter,
+            Uri queueUri, MessageAttributes messageAttributes)
         {
             Message = message;
             MessageType = messageType;
             QueueName = queueName;
             VisibilityUpdater = visibilityUpdater;
             MessageDeleter = messageDeleter;
+            QueueUri = queueUri;
+            MessageAttributes = messageAttributes;
             RawMessage = rawMessage;
         }
 
@@ -41,10 +45,21 @@ namespace JustSaying.Messaging.Middleware
         /// </summary>
         public Message Message { get; }
 
+        public Uri QueueUri { get; }
+
+        public MessageAttributes MessageAttributes { get; }
+
         public Amazon.SQS.Model.Message RawMessage { get; }
 
         public IMessageVisibilityUpdater VisibilityUpdater { get; }
 
         public IMessageDeleter MessageDeleter { get; }
+
+        public Exception HandleException { get; private set; }
+
+        public void SetException(Exception e)
+        {
+            HandleException = e;
+        }
     }
 }

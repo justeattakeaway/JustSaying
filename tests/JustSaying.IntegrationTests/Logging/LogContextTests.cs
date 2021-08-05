@@ -132,7 +132,7 @@ namespace JustSaying.Logging
             handleMessage.Exception?.Message.ShouldBe(exceptionMessage);
 
             var propertyMap = new Dictionary<string, object>(handleMessage.Properties);
-            propertyMap.ShouldContainKeyAndValue("Status", status);
+            propertyMap.ShouldContainKeyAndValue("Status", status); 
             propertyMap.ShouldContainKeyAndValue("MessageId", message.Id);
             propertyMap.ShouldContainKeyAndValue("MessageType", message.GetType().FullName);
             propertyMap.ShouldContainKey("TimeToHandle");

@@ -112,9 +112,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
                 SerializationRegister,
                 Monitor,
                 MiddlewareMap,
-                LoggerFactory,
-                messageBackoffStrategy,
-                messageContextAccessor);
+                LoggerFactory);
 
             var defaults = new SubscriptionGroupSettingsBuilder()
                 .WithDefaultConcurrencyLimit(ConcurrencyLimit);

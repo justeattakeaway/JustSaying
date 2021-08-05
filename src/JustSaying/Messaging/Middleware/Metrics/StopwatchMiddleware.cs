@@ -31,13 +31,18 @@ namespace JustSaying.Messaging.Middleware
         {
             var watch = Stopwatch.StartNew();
 
-            bool result = await func(stoppingToken).ConfigureAwait(false);
-
-            watch.Stop();
-
-            _monitor.HandlerExecutionTime(_handlerType, context.MessageType, watch.Elapsed);
-
-            return result;
+            try
+            {
+                using (_monitor.MeasureDispatch())
+                {
+                    return await func(stoppingToken).ConfigureAwait(false);
+                }
+            }
+            finally
+            {
+                _monitor.HandlerExecutionTime(_handlerType, context.MessageType, watch.Elapsed);
+                watch.Stop();
+            }
         }
     }
 }

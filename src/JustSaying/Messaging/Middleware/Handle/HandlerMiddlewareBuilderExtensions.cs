@@ -1,5 +1,9 @@
 using System;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.MessageProcessingStrategies;
+using JustSaying.Messaging.Middleware.Backoff;
+using JustSaying.Messaging.Middleware.ErrorHandling;
+using JustSaying.Messaging.Middleware.MessageContext;
 using JustSaying.Messaging.Middleware.PostProcessing;
 using JustSaying.Models;
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
@@ -32,14 +36,19 @@ namespace JustSaying.Messaging.Middleware
 
         public static HandlerMiddlewareBuilder ApplyDefaults<TMessage>(
             this HandlerMiddlewareBuilder builder,
-            Type handlerType)
+            Type handlerType,
+            Action<HandlerMiddlewareBuilder> configure = null)
         where TMessage : Message
         {
-            builder
-                .UseHandler<TMessage>()
-                .Use(new SqsPostProcessorMiddleware())
-                .Use<LoggingMiddleware>()
-                .UseStopwatch(handlerType);
+            configure?.Invoke(builder);
+
+            builder.UseMessageContextAccessor();
+            builder.UseBackoff();
+            builder.UseErrorHandler();
+            builder.Use<LoggingMiddleware>();
+            builder.UseStopwatch(handlerType);
+            builder.Use<SqsPostProcessorMiddleware>();
+            builder.UseHandler<TMessage>();
 
             return builder;
         }
