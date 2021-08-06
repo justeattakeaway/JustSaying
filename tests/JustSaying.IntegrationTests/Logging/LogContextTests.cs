@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,9 +8,11 @@ using JustSaying.IntegrationTests.Fluent;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
+using MELT;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Shouldly;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace JustSaying.Logging
@@ -37,10 +41,16 @@ namespace JustSaying.Logging
             var message = new SimpleMessage();
             await publisher.PublishAsync(message, cts.Token);
 
-            var output = OutputHelper.Output;
-            output.ShouldMatchApproved(o => o
-                .SubFolder("Approvals")
-                .WithScrubber(logMessage => ScrubLogs(logMessage, message.Id.ToString())));
+            var testLogger = sp.GetRequiredService<ITestLoggerSink>();
+
+            var handleMessage = testLogger.LogEntries
+                .Single(le => le.OriginalFormat == "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.");
+
+            var propertyMap = new Dictionary<string, object>(handleMessage.Properties);
+            propertyMap.ShouldContainKeyAndValue("MessageId", message.Id);
+            propertyMap.ShouldContainKeyAndValue("MessageType", message.GetType().FullName);
+            propertyMap.ShouldContainKeyAndValue("DestinationType", "Topic");
+            propertyMap.ShouldContainKey("MessageDestination");
 
             cts.Cancel();
         }
@@ -62,18 +72,34 @@ namespace JustSaying.Logging
             var message = new SimpleMessage();
             await publisher.PublishAsync(message, cts.Token);
 
-            var output = OutputHelper.Output;
-            output.ShouldMatchApproved(o => o
-                .SubFolder("Approvals")
-                .WithScrubber(logMessage => ScrubLogs(logMessage, message.Id.ToString())));
+            var testLogger = sp.GetRequiredService<ITestLoggerSink>();
+
+            var handleMessage = testLogger.LogEntries
+                .Single(le => le.OriginalFormat == "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.");
+
+            var propertyMap = new Dictionary<string, object>(handleMessage.Properties);
+            propertyMap.ShouldContainKeyAndValue("MessageId", message.Id);
+            propertyMap.ShouldContainKeyAndValue("MessageType", message.GetType().FullName);
+            propertyMap.ShouldContainKeyAndValue("DestinationType", "Queue");
+            propertyMap.ShouldContainKey("MessageDestination");
 
             cts.Cancel();
         }
 
-        [AwsFact]
-        public async Task HandleMessageFromQueueLogs_ShouldHaveContext()
+        [AwsTheory]
+        [InlineData(true, LogLevel.Information, "Succeeded", null)]
+        [InlineData(false, LogLevel.Warning, "Failed", null)]
+        [InlineData(false, LogLevel.Warning, "Failed", "Something went wrong!")]
+        public async Task HandleMessageFromQueueLogs_ShouldHaveContext(bool handlerShouldSucceed, LogLevel level, string status, string exceptionMessage)
         {
-            var handler = new InspectableHandler<SimpleMessage>();
+            var handler = new InspectableHandler<SimpleMessage>()
+            {
+                ShouldSucceed = handlerShouldSucceed,
+            };
+            if (exceptionMessage != null)
+            {
+                handler.OnHandle = msg => throw new Exception(exceptionMessage);
+            }
 
             var services = GivenJustSaying(levelOverride: LogLevel.Information)
                 .ConfigureJustSaying(
@@ -97,26 +123,21 @@ namespace JustSaying.Logging
                     .ShouldHaveSingleItem()
                     .Id.ShouldBe(message.Id));
 
-            var output = OutputHelper.Output;
-            output.ShouldMatchApproved(o => o
-                .SubFolder("Approvals")
-                .WithScrubber(logMessage => ScrubLogs(logMessage, message.Id.ToString())));
+            var testLogger = sp.GetRequiredService<ITestLoggerSink>();
+
+            var handleMessage = testLogger.LogEntries
+                .Single(le => le.OriginalFormat == "{Status} handling message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}ms.");
+
+            handleMessage.LogLevel.ShouldBe(level);
+            handleMessage.Exception?.Message.ShouldBe(exceptionMessage);
+
+            var propertyMap = new Dictionary<string, object>(handleMessage.Properties);
+            propertyMap.ShouldContainKeyAndValue("Status", status);
+            propertyMap.ShouldContainKeyAndValue("MessageId", message.Id);
+            propertyMap.ShouldContainKeyAndValue("MessageType", message.GetType().FullName);
+            propertyMap.ShouldContainKey("TimeToHandle");
 
             cts.Cancel();
-            // We need to let the bus finish up before changing the test output helper context
-            await Task.Delay(TimeSpan.FromSeconds(1));
-        }
-
-        private string ScrubLogs(string message, string messageId)
-        {
-            message = message.Replace(messageId, "{MessageId}");
-            message = message.Replace(UniqueName, "{TestDiscriminator}");
-
-            message = Regex.Replace(message, @"AwsRequestId: .{8}-.{4}-.{4}-.{4}-.{12}", "AwsRequestId: {AwsRequestId}");
-            message = Regex.Replace(message, @"(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})Z", "{DateTime}");
-            message = Regex.Replace(message, @"(\d+).(\d+) ms", "{Duration}");
-            message = Regex.Replace(message, @"in (\d+)ms.", "{Duration}");
-            return message;
         }
     }
 }

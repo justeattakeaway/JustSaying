@@ -86,7 +86,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 _logger.LogInformation(
                     "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
                     message.Id,
-                    message.GetType().Name,
+                    message.GetType().FullName,
                     "Topic",
                     request.TopicArn);
             }

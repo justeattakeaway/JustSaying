@@ -58,7 +58,9 @@ namespace JustSaying.IntegrationTests.Fluent
         {
             LogLevel logLevel = levelOverride ?? LogLevel.Debug;
             return new ServiceCollection()
-                .AddLogging((p) => p.AddXUnit(OutputHelper, o =>
+                .AddLogging((p) => p
+                    .AddTest()
+                    .AddXUnit(OutputHelper, o =>
                 {
                     o.IncludeScopes = true;
                     o.Filter = (_, level) => level >= logLevel;
