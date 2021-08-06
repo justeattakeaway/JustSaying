@@ -52,7 +52,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     await publisher.PublishAsync(new SimpleMessage(), cancellationToken);
 
                     await Patiently.AssertThatAsync(OutputHelper,
-                        () => callRecord.Count == 6);
+                        () => callRecord.Count.ShouldBe(6));
                 });
 
             string.Join(Environment.NewLine, callRecord)

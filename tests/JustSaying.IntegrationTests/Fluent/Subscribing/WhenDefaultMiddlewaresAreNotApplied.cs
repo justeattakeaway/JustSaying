@@ -31,23 +31,20 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                         })))
                 .AddJustSayingHandlers(new[] { handler });
 
+            string json = "";
             await WhenAsync(
                 services,
                 (_, listener, _, _) =>
                 {
                     dynamic middlewares = ((dynamic)listener.Interrogate().Data).Middleware;
 
-                    string json = JsonConvert.SerializeObject(middlewares, Formatting.Indented)
+                    json = JsonConvert.SerializeObject(middlewares, Formatting.Indented)
                         .Replace(UniqueName, "TestQueueName");
-
-                    json.ShouldMatchApproved(c => c
-                        .SubFolder($"Approvals")
-                        .WithFilenameGenerator(
-                            (_, _, type, extension) =>
-                                $"{nameof(WhenDefaultMiddlewaresAreNotApplied)}.{nameof(Then_The_Pipeline_Should_Only_Contain_User_Specified_Middlewares)}.{type}.{extension}"));
 
                     return Task.CompletedTask;
                 });
+
+            json.ShouldMatchApproved(c => c.SubFolder("Approvals"));
         }
     }
 }

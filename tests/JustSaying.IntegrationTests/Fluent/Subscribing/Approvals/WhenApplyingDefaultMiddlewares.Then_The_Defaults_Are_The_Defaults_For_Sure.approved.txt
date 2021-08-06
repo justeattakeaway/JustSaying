@@ -4,7 +4,11 @@
       "MessageType": "SimpleMessage",
       "QueueName": "TestQueueName",
       "MiddlewareChain": [
-        "InspectableMiddleware`1",
+        "MessageContextAccessorMiddleware",
+        "ErrorHandlerMiddleware",
+        "LoggingMiddleware",
+        "StopwatchMiddleware",
+        "SqsPostProcessorMiddleware",
         "HandlerInvocationMiddleware`1"
       ]
     }

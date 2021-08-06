@@ -26,7 +26,37 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         { }
 
         [AwsFact]
-        public async Task Then_The_Pipeline_Should_Put_User_Middlewares_Outside_First()
+        public async Task Then_The_Defaults_Are_The_Defaults_For_Sure()
+        {
+            // Arrange
+            var handler = new InspectableHandler<SimpleMessage>();
+            var outerMiddleware = new OuterTestMiddleware();
+            var innerMiddleware = new InnerTestMiddleware();
+
+            var services = GivenJustSaying()
+                .ConfigureJustSaying((builder) =>
+                    builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
+                .AddJustSayingHandlers(new[] { handler });
+
+            string json = "";
+            await WhenAsync(
+                services,
+                (_, listener, _, _) =>
+                {
+                    dynamic interrogation = listener.Interrogate();
+                    dynamic middlewares = interrogation.Data.Middleware;
+
+                    json = JsonConvert.SerializeObject(middlewares, Formatting.Indented)
+                        .Replace(UniqueName, "TestQueueName");
+
+                    return Task.CompletedTask;
+                });
+
+            json.ShouldMatchApproved(c => c.SubFolder("Approvals"));
+        }
+
+        [AwsFact]
+        public async Task Then_The_Builder_Should_Put_User_Middlewares_In_The_Correct_Order()
         {
             // Arrange
             var handler = new InspectableHandler<SimpleMessage>();
@@ -44,23 +74,21 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                         })))
                 .AddJustSayingHandlers(new[] { handler });
 
+            string json = "";
             await WhenAsync(
                 services,
                 (_, listener, _, _) =>
                 {
-                    dynamic middlewares = ((dynamic)listener.Interrogate().Data).Middleware;
+                    dynamic interrogation = listener.Interrogate();
+                    dynamic middlewares = interrogation.Data.Middleware;
 
-                    string json = JsonConvert.SerializeObject(middlewares, Formatting.Indented)
+                    json = JsonConvert.SerializeObject(middlewares, Formatting.Indented)
                         .Replace(UniqueName, "TestQueueName");
-
-                    json.ShouldMatchApproved(c => c
-                        .SubFolder($"Approvals")
-                        .WithFilenameGenerator(
-                            (_, _, type, extension) =>
-                                $"{nameof(WhenApplyingDefaultMiddlewares)}.{nameof(Then_The_Pipeline_Should_Put_User_Middlewares_Outside_First)}.{type}.{extension}"));
 
                     return Task.CompletedTask;
                 });
+
+            json.ShouldMatchApproved(c => c.SubFolder($"Approvals"));
         }
     }
 }
