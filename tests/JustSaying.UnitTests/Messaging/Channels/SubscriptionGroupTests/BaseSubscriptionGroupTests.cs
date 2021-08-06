@@ -64,15 +64,20 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
             SerializationRegister = new FakeSerializationRegister();
             MiddlewareMap = new MiddlewareMap();
+            CompletionMiddleware = new AwaitableMiddleware();
 
             var testResolver = new InMemoryServiceResolver(OutputHelper, Monitor,
                 sc => sc.AddSingleton<IHandlerAsync<SimpleMessage>>(Handler));
 
             Middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
-                .UseDefaults<SimpleMessage>(typeof(InspectableHandler<SimpleMessage>)).Build();
+                .Use(CompletionMiddleware)
+                .UseDefaults<SimpleMessage>(typeof(InspectableHandler<SimpleMessage>))
+                .Build();
 
             Given();
         }
+
+        public AwaitableMiddleware CompletionMiddleware { get; set; }
 
         protected abstract void Given();
 
@@ -96,15 +101,12 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected virtual bool Until()
         {
-            OutputHelper.WriteLine("Checking if handler has received any messages");
-            return Handler.ReceivedMessages.Any();
+            OutputHelper.WriteLine("Checking if middleware chain has completed");
+            return CompletionMiddleware.Complete?.IsCompleted ?? false;
         }
 
         private ISubscriptionGroup CreateSystemUnderTest()
         {
-            var messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
-            var messageContextAccessor = Substitute.For<IMessageContextAccessor>();
-
             Logger.LogInformation("Creating MessageDispatcher with serialization register type {Type}",
                 SerializationRegister.GetType().FullName);
 
