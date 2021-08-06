@@ -69,7 +69,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
                 sc => sc.AddSingleton<IHandlerAsync<SimpleMessage>>(Handler));
 
             Middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
-                .ApplyDefaults<SimpleMessage>(typeof(InspectableHandler<SimpleMessage>)).Build();
+                .UseDefaults<SimpleMessage>(typeof(InspectableHandler<SimpleMessage>)).Build();
 
             Given();
         }

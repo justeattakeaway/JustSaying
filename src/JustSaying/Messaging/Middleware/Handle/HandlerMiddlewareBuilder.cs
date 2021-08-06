@@ -17,7 +17,6 @@ namespace JustSaying.Messaging.Middleware
     public sealed class HandlerMiddlewareBuilder
     {
         private Action<HandlerMiddlewareBuilder> _configure;
-
         internal IServiceResolver ServiceResolver { get; }
         private IHandlerResolver HandlerResolver { get; }
 
@@ -105,18 +104,6 @@ namespace JustSaying.Messaging.Middleware
         }
 
         /// <summary>
-        /// Resets this <see cref="HandlerMiddlewareBuilder"/> to
-        /// </summary>
-        /// <returns></returns>
-        public HandlerMiddlewareBuilder Clear()
-        {
-            _handlerMiddleware = null;
-            _middlewares.Clear();
-            _configure = null;
-            return this;
-        }
-
-        /// <summary>
         /// Provides a mechanism to delegate configuration of this pipeline to user code by passing around
         /// a configuration action. The provided action is invoked after the default middlewares are added,
         /// so that additional middlewares wrap the defaults.
@@ -124,18 +111,17 @@ namespace JustSaying.Messaging.Middleware
         /// <param name="configure">An <see cref="Action{HandlerMiddlewareBuilder}"/> that customises
         /// the pipeline.</param>
         /// <returns></returns>
+
         public HandlerMiddlewareBuilder Configure(
             Action<HandlerMiddlewareBuilder> configure)
         {
-            if (configure == null) throw new ArgumentNullException(nameof(configure));
-
-            configure(this);
-
+            _configure = configure ?? throw new ArgumentNullException(nameof(configure));
             return this;
         }
 
         /// <summary>
         /// Produces a callable middleware chain from the configured middlewares.
+        ///
         /// </summary>
         /// <returns>A callable <see cref="HandleMessageMiddleware"/></returns>
         public HandleMessageMiddleware Build()
@@ -149,6 +135,8 @@ namespace JustSaying.Messaging.Middleware
                     .Select(m => m())
                     .Reverse()
                     .ToList();
+
+            //var middlewares = _middlewares.Select(m => m()).ToList();
 
             if (_handlerMiddleware != null)
             {

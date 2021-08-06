@@ -125,18 +125,22 @@ namespace JustSaying.Logging
 
             var testLogger = sp.GetRequiredService<ITestLoggerSink>();
 
-            var handleMessage = testLogger.LogEntries
-                .Single(le => le.OriginalFormat == "{Status} handling message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}ms.");
+            await Patiently.AssertThatAsync(() =>
+            {
+                var handleMessage = testLogger.LogEntries
+                    .SingleOrDefault(le => le.OriginalFormat == "{Status} handling message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}ms.");
 
-            handleMessage.LogLevel.ShouldBe(level);
-            handleMessage.Exception?.Message.ShouldBe(exceptionMessage);
+                handleMessage.ShouldNotBeNull();
 
-            var propertyMap = new Dictionary<string, object>(handleMessage.Properties);
-            propertyMap.ShouldContainKeyAndValue("Status", status); 
-            propertyMap.ShouldContainKeyAndValue("MessageId", message.Id);
-            propertyMap.ShouldContainKeyAndValue("MessageType", message.GetType().FullName);
-            propertyMap.ShouldContainKey("TimeToHandle");
+                handleMessage.LogLevel.ShouldBe(level);
+                handleMessage.Exception?.Message.ShouldBe(exceptionMessage);
 
+                var propertyMap = new Dictionary<string, object>(handleMessage.Properties);
+                propertyMap.ShouldContainKeyAndValue("Status", status);
+                propertyMap.ShouldContainKeyAndValue("MessageId", message.Id);
+                propertyMap.ShouldContainKeyAndValue("MessageType", message.GetType().FullName);
+                propertyMap.ShouldContainKey("TimeToHandle");
+            });
             cts.Cancel();
         }
     }

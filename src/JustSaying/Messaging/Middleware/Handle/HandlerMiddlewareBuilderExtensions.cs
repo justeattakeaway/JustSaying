@@ -34,14 +34,11 @@ namespace JustSaying.Messaging.Middleware
             return builder.Use(new HandlerInvocationMiddleware<TMessage>(handler));
         }
 
-        public static HandlerMiddlewareBuilder ApplyDefaults<TMessage>(
+        public static HandlerMiddlewareBuilder UseDefaults<TMessage>(
             this HandlerMiddlewareBuilder builder,
-            Type handlerType,
-            Action<HandlerMiddlewareBuilder> configure = null)
+            Type handlerType)
         where TMessage : Message
         {
-            configure?.Invoke(builder);
-
             builder.UseMessageContextAccessor();
             builder.UseBackoff();
             builder.UseErrorHandler();

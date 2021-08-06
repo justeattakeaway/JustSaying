@@ -2,6 +2,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
+using JustSaying.Messaging.Middleware.ErrorHandling;
+using JustSaying.Messaging.Middleware.PostProcessing;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -29,7 +31,10 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 .ConfigureJustSaying((builder) =>
                     builder.WithLoopbackTopic<SimpleMessage>(UniqueName,
                         c => c.WithMiddlewareConfiguration(m =>
-                            m.UseExactlyOnce<SimpleMessage>("simple-message-lock"))))
+                        {
+                            m.UseExactlyOnce<SimpleMessage>("lock-simple-message");
+                            m.UseDefaults<SimpleMessage>(handler.GetType());
+                        })))
                 .AddJustSayingHandlers(new[] { handler });
 
             await WhenAsync(
@@ -44,7 +49,6 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     // Act
                     await publisher.PublishAsync(message, cancellationToken);
                     await publisher.PublishAsync(message, cancellationToken);
-                    await Task.Delay(1.Seconds(), cancellationToken);
 
                     var json = JsonConvert.SerializeObject(listener.Interrogate(), Formatting.Indented)
                         .Replace(UniqueName, "TestQueueName");
@@ -52,10 +56,13 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                         .SubFolder("Approvals")
                         .WithFilenameGenerator(
                             (_, _, type, extension) =>
-                                $"{nameof(Then_The_Handler_Only_Receives_The_Message_Once)}.{type}.{extension}"));
+                                $"{nameof(WhenHandlerIsDeclaredAsExactlyOnce)}.{nameof(Then_The_Handler_Only_Receives_The_Message_Once)}.{type}.{extension}"));
 
-                    handler.ReceivedMessages.Where(m => m.Id.ToString() == message.UniqueKey())
-                        .ShouldHaveSingleItem();
+                    await Patiently.AssertThatAsync(() =>
+                    {
+                        handler.ReceivedMessages.Where(m => m.Id.ToString() == message.UniqueKey())
+                            .ShouldHaveSingleItem();
+                    });
                 });
         }
     }

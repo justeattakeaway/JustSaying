@@ -199,10 +199,9 @@ namespace JustSaying.Fluent
             }
 
             var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver);
-            var handlerMiddleware =
-                middlewareBuilder
-                    .ApplyDefaults<T>(proposedHandler.GetType(), MiddlewareConfiguration)
-                    .Build();
+            var handlerMiddleware = middlewareBuilder
+                .Configure(MiddlewareConfiguration ?? (b => b.UseDefaults<T>(proposedHandler.GetType())))
+                .Build();
 
             bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, handlerMiddleware);
 

@@ -163,7 +163,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
                         .AddSingleton(MessageBackoffStrategy));
 
                 var middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
-                    .ApplyDefaults<SimpleMessage>(handler.GetType())
+                    .UseDefaults<SimpleMessage>(handler.GetType())
                     .Build();
 
                 _middlewareMap.Add<OrderAccepted>(_queue.QueueName, middleware);
@@ -206,7 +206,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
                         .AddSingleton(MessageBackoffStrategy));
 
                 var middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
-                    .ApplyDefaults<SimpleMessage>(handler.GetType())
+                    .UseDefaults<SimpleMessage>(handler.GetType())
                     .Build();
 
                 _middlewareMap.Add<OrderAccepted>(_queue.QueueName, middleware);

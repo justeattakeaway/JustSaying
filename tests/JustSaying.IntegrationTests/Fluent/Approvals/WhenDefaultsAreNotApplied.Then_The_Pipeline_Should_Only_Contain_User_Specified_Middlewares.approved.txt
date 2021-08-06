@@ -1,0 +1,12 @@
+{
+  "Middlewares": [
+    {
+      "MessageType": "SimpleMessage",
+      "QueueName": "TestQueueName",
+      "MiddlewareChain": [
+        "InspectableMiddleware`1",
+        "HandlerInvocationMiddleware`1"
+      ]
+    }
+  ]
+}

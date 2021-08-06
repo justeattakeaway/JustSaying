@@ -55,64 +55,7 @@ namespace JustSaying.UnitTests.Messaging.Middleware
         }
 
         [Fact]
-        public async Task ClearingMiddleware_OutsideConfigure_ShouldRemoveAllMiddlewares()
-        {
-            var callRecord = new List<string>();
-
-            void Before(string id) => callRecord.Add($"Before_{id}");
-            void After(string id) => callRecord.Add($"After_{id}");
-
-            var outer = new TrackingMiddleware("outer", Before, After);
-            var middle = new TrackingMiddleware("middle", Before, After);
-            var inner = new TrackingMiddleware("inner", Before, After);
-
-            var middlewareBuilder = new HandlerMiddlewareBuilder(_resolver, _resolver)
-                .Configure(hmb =>
-                    hmb.Use(outer)
-                        .Use(middle)
-                        .Use(inner));
-
-            middlewareBuilder.Clear();
-
-            var handlerMiddleware = middlewareBuilder.Build();
-
-            var context = TestHandleContexts.From<SimpleMessage>();
-
-            await handlerMiddleware.RunAsync(context, null, CancellationToken.None);
-
-            callRecord.ShouldBeEmpty();
-        }
-
-        [Fact]
-        public async Task ClearingMiddleware_InsideConfigure_ShouldRemoveAllMiddlewares()
-        {
-            var callRecord = new List<string>();
-
-            void Before(string id) => callRecord.Add($"Before_{id}");
-            void After(string id) => callRecord.Add($"After_{id}");
-
-            var outer = new TrackingMiddleware("outer", Before, After);
-            var middle = new TrackingMiddleware("middle", Before, After);
-            var inner = new TrackingMiddleware("inner", Before, After);
-
-            var middlewareBuilder = new HandlerMiddlewareBuilder(_resolver, _resolver)
-                .Configure(hmb =>
-                    hmb.Use(outer)
-                        .Use(middle)
-                        .Use(inner)
-                        .Clear());
-
-            var handlerMiddleware = middlewareBuilder.Build();
-
-            var context = TestHandleContexts.From<SimpleMessage>();
-
-            await handlerMiddleware.RunAsync(context, null, CancellationToken.None);
-
-            callRecord.ShouldBeEmpty();
-        }
-
-        [Fact]
-        public async Task ClearingMiddleware_AndCreatingFreshPipeline_ShouldWork()
+        public async Task MiddlewareBuilder_WithoutDefaults_ShouldExecute()
         {
             var callRecord = new List<string>();
 
@@ -126,8 +69,7 @@ namespace JustSaying.UnitTests.Messaging.Middleware
 
             var middlewareBuilder = new HandlerMiddlewareBuilder(_resolver, _resolver)
                 .Configure(hmb =>
-                    hmb.Clear()
-                        .Use(outer)
+                    hmb.Use(outer)
                         .Use(inner)
                         .UseHandler(ctx => handler));
 

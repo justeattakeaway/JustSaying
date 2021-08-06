@@ -43,9 +43,10 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                         .Replace(UniqueName, "integrationTestQueueName", StringComparison.Ordinal);
 
                     combined.ShouldMatchApproved(opt =>
-                        opt.WithFilenameGenerator(
-                            (info, descriminator, type, extension) =>
-                                $"{nameof(Then_The_Interrogation_Result_Should_Be_Returned)}.{type}.{extension}"));
+                        opt.SubFolder($"Approvals")
+                            .WithFilenameGenerator(
+                                (info, descriminator, type, extension) =>
+                                    $"{nameof(WhenInterrogatingTheBus)}.{nameof(Then_The_Interrogation_Result_Should_Be_Returned)}.{type}.{extension}"));
 
                     completionSource.SetResult(null);
                 });
