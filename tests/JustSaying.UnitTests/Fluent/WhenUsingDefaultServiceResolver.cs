@@ -33,7 +33,7 @@ namespace JustSaying.UnitTests.Fluent
         [Fact]
         public void ShouldResolveIHandlerResolverAsNull()
         {
-            _sut.ResolveService<IHandlerResolver>().ShouldBeNull();
+            _sut.ResolveOptionalService<IHandlerResolver>().ShouldBeNull();
         }
 
         [Fact]
