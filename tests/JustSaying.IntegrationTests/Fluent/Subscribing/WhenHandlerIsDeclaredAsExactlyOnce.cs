@@ -36,6 +36,8 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                                 .UseDefaults<SimpleMessage>(handler.GetType()))))
                 .AddJustSayingHandlers(new[] { handler });
 
+            var message = new SimpleMessage();
+            string json = "";
             await WhenAsync(
                 services,
                 async (publisher, listener, serviceProvider, cancellationToken) =>
@@ -43,19 +45,13 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     await listener.StartAsync(cancellationToken);
                     await publisher.StartAsync(cancellationToken);
 
-                    var message = new SimpleMessage();
-
                     // Act
                     await publisher.PublishAsync(message, cancellationToken);
                     await publisher.PublishAsync(message, cancellationToken);
 
-                    var json = JsonConvert.SerializeObject(listener.Interrogate(), Formatting.Indented)
+                    dynamic middlewares = ((dynamic)listener.Interrogate().Data).Middleware;
+                    json = JsonConvert.SerializeObject(middlewares, Formatting.Indented)
                         .Replace(UniqueName, "TestQueueName");
-                    json.ShouldMatchApproved(c => c
-                        .SubFolder("Approvals")
-                        .WithFilenameGenerator(
-                            (_, _, type, extension) =>
-                                $"{nameof(WhenHandlerIsDeclaredAsExactlyOnce)}.{nameof(Then_The_Handler_Only_Receives_The_Message_Once)}.{type}.{extension}"));
 
                     await Patiently.AssertThatAsync(() =>
                     {
@@ -63,6 +59,8 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                             .ShouldHaveSingleItem();
                     });
                 });
+
+            json.ShouldMatchApproved(c => c.SubFolder("Approvals"));
         }
     }
 }

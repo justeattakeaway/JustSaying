@@ -1,42 +1,17 @@
 {
-  "Region": "eu-west-1",
-  "Middleware": {
-    "Middlewares": [
-      {
-        "MessageType": "SimpleMessage",
-        "QueueName": "TestQueueName",
-        "MiddlewareChain": [
-          "ExactlyOnceMiddleware`1",
-          "MessageContextAccessorMiddleware",
-          "ErrorHandlerMiddleware",
-          "LoggingMiddleware",
-          "StopwatchMiddleware",
-          "SqsPostProcessorMiddleware",
-          "HandlerInvocationMiddleware`1"
-        ]
-      }
-    ]
-  },
-  "PublishedMessageTypes": [],
-  "SubscriptionGroups": {
-    "Groups": [
-      {
-        "Name": "TestQueueName",
-        "ConcurrencyLimit": 48,
-        "Multiplexer": {
-          "ChannelCapacity": 100,
-          "ReaderCount": 1
-        },
-        "ReceiveBuffers": [
-          {
-            "BufferSize": 10,
-            "QueueName": "TestQueueName",
-            "Region": "eu-west-1",
-            "Prefetch": 10,
-            "BackoffStrategyName": null
-          }
-        ]
-      }
-    ]
-  }
+  "Middlewares": [
+    {
+      "MessageType": "SimpleMessage",
+      "QueueName": "TestQueueName",
+      "MiddlewareChain": [
+        "ExactlyOnceMiddleware`1",
+        "MessageContextAccessorMiddleware",
+        "ErrorHandlerMiddleware",
+        "LoggingMiddleware",
+        "StopwatchMiddleware",
+        "SqsPostProcessorMiddleware",
+        "HandlerInvocationMiddleware`1"
+      ]
+    }
+  ]
 }
