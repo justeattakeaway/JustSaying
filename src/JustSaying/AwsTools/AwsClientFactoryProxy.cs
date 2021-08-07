@@ -4,7 +4,7 @@ namespace JustSaying.AwsTools
 {
     public class AwsClientFactoryProxy : IAwsClientFactoryProxy
     {
-        private readonly Func<IAwsClientFactory> _awsClientFactoryFunc;
+        private Func<IAwsClientFactory> _awsClientFactoryFunc;
 
         public AwsClientFactoryProxy()
         {
@@ -22,5 +22,8 @@ namespace JustSaying.AwsTools
         }
 
         public IAwsClientFactory GetAwsClientFactory() => _awsClientFactoryFunc();
+
+        public void SetAwsClientFactory(Func<IAwsClientFactory> func) => _awsClientFactoryFunc = func;
+    }
     }
 }

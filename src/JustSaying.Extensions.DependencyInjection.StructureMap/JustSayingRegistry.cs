@@ -44,8 +44,7 @@ namespace JustSaying
             For<MessageContextAccessorMiddleware>().Singleton();
             For<ErrorHandlerMiddleware>().Singleton();
             For<SqsPostProcessorMiddleware>().Singleton();
-
-            For<BackoffMiddleware>().Transient();
+            For<BackoffMiddleware>().Singleton();
 
             For<IMessageSerializationRegister>()
                 .Use(
