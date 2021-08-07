@@ -25,5 +25,4 @@ namespace JustSaying.AwsTools
 
         public void SetAwsClientFactory(Func<IAwsClientFactory> func) => _awsClientFactoryFunc = func;
     }
-    }
 }
