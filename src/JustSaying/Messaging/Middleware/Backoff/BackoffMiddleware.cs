@@ -26,11 +26,17 @@ namespace JustSaying.Messaging.Middleware.Backoff
 
         protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
         {
-            var handlingSucceeded = await func(stoppingToken).ConfigureAwait(false);
-
-            if (!handlingSucceeded)
+            bool handlingSucceeded = false;
+            try
             {
-                await TryUpdateVisibilityTimeout(context, stoppingToken);
+                handlingSucceeded = await func(stoppingToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                if (!handlingSucceeded)
+                {
+                    await TryUpdateVisibilityTimeout(context, stoppingToken);
+                }
             }
 
             return handlingSucceeded;

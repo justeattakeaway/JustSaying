@@ -8,7 +8,6 @@ namespace JustSaying.Messaging.Middleware.Backoff
 {
     public static class BackoffMiddlewareBuilderExtensions
     {
-
         public static HandlerMiddlewareBuilder UseBackoff(this HandlerMiddlewareBuilder builder)
         {
             if (builder == null) throw new ArgumentNullException(nameof(builder));

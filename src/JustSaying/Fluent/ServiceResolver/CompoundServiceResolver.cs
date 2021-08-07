@@ -1,6 +1,6 @@
 namespace JustSaying.Fluent.ServiceResolver
 {
-    public class CompoundServiceResolver : IServiceResolver
+    internal class CompoundServiceResolver : IServiceResolver
     {
         private readonly ServiceBuilderServiceResolver _serviceBuilderResolver;
         private readonly IServiceResolver _serviceResolver;

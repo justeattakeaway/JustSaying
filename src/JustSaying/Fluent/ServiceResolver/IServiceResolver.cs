@@ -11,6 +11,9 @@ namespace JustSaying.Fluent
         /// <typeparam name="T">
         /// The type to resolve an instance of.
         /// </typeparam>
+        /// <exception>
+        /// No instance of <see cref="T"/> could be resolved.
+        /// </exception>
         /// <returns>
         /// The resolved instance of <typeparamref name="T"/>.
         /// </returns>

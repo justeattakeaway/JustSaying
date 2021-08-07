@@ -1,20 +1,8 @@
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Amazon.SQS.Model;
 
 namespace JustSaying.Messaging.Channels.Context
 {
-    public interface IMessageDeleter
-    {
-        Task DeleteMessage(CancellationToken cancellationToken);
-    }
-
-    public interface IMessageVisibilityUpdater
-    {
-        Task UpdateMessageVisibilityTimeout(TimeSpan visibilityTimeout, CancellationToken cancellationToken);
-    }
-
     /// <summary>
     /// A context object that is created by <see cref="Receive.IMessageReceiveBuffer"/> and consumed by
     /// <see cref="Dispatch.IMultiplexerSubscriber"/>

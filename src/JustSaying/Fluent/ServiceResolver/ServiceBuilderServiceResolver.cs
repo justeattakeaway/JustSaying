@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent
 {
-    public class ServiceBuilderServiceResolver : IServiceResolver
+    internal class ServiceBuilderServiceResolver : IServiceResolver
     {
         private readonly ServicesBuilder _builder;
 
