@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Middleware.ErrorHandling;
@@ -31,10 +32,8 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 .ConfigureJustSaying((builder) =>
                     builder.WithLoopbackTopic<SimpleMessage>(UniqueName,
                         c => c.WithMiddlewareConfiguration(m =>
-                        {
-                            m.UseExactlyOnce<SimpleMessage>("lock-simple-message");
-                            m.UseDefaults<SimpleMessage>(handler.GetType());
-                        })))
+                            m.UseExactlyOnce<SimpleMessage>("lock-simple-message")
+                                .UseDefaults<SimpleMessage>(handler.GetType()))))
                 .AddJustSayingHandlers(new[] { handler });
 
             await WhenAsync(
