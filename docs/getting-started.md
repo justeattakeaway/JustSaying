@@ -106,6 +106,8 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
+Note that the `AddJustSaying` extension method requires installing the [JustSaying.Extensions.DependencyInjection](https://www.nuget.org/packages/JustSaying.Extensions.DependencyInjection.Microsoft/7.0.0-beta.1) package, which is currently in pre-release.
+
 ### Startup
 
 Now that we've created an event and handler, and wired it into the DI container, let's start the bus. How this is done is up to you, but here's an example using the built in `IHostedService` that comes with .NET Core. 
