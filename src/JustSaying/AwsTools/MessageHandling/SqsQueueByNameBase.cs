@@ -130,7 +130,7 @@ namespace JustSaying.AwsTools.MessageHandling
                         attempt + 1,
                         maxAttempts);
 
-                    await Task.Delay(CreateRetryDelay).ConfigureAwait(false);
+                    await Task.Delay(CreateRetryDelay, cancellationToken).ConfigureAwait(false);
                     await CreateAsync(queueConfig, attempt + 1).ConfigureAwait(false);
                 }
                 else
@@ -222,7 +222,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     Attributes = attributes
                 };
 
-                var response = await Client.SetQueueAttributesAsync(request).ConfigureAwait(false);
+                var response = await Client.SetQueueAttributesAsync(request, cancellationToken).ConfigureAwait(false);
 
                 if (response.HttpStatusCode == HttpStatusCode.OK)
                 {

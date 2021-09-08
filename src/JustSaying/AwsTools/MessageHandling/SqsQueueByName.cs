@@ -41,7 +41,8 @@ namespace JustSaying.AwsTools.MessageHandling
                         {
                             ErrorQueueRetentionPeriod = queueConfig.ErrorQueueRetentionPeriod,
                             ErrorQueueOptOut = true
-                        }).ConfigureAwait(false);
+                        },
+                            cancellationToken: cancellationToken).ConfigureAwait(false);
                     }
                 }
                 else
@@ -54,7 +55,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 queueConfig.QueueName,
                 attempt))
             {
-                return await base.CreateAsync(queueConfig, attempt).ConfigureAwait(false);
+                return await base.CreateAsync(queueConfig, attempt, cancellationToken).ConfigureAwait(false);
             }
         }
 

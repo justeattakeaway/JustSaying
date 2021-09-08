@@ -128,7 +128,7 @@ namespace JustSaying.Fluent
             {
                 if (!await sqsQueue.ExistsAsync(cancellationToken).ConfigureAwait(false))
                 {
-                    await sqsQueue.CreateAsync(writeConfiguration).ConfigureAwait(false);
+                    await sqsQueue.CreateAsync(writeConfiguration, cancellationToken: cancellationToken).ConfigureAwait(false);
                 }
 
                 eventPublisher.QueueUrl = sqsQueue.Uri;
