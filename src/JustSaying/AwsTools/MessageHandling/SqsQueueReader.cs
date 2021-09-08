@@ -49,12 +49,6 @@ namespace JustSaying.AwsTools.MessageHandling
             string receiptHandle,
             CancellationToken cancellationToken)
         {
-            var deleteRequest = new DeleteMessageRequest
-            {
-                QueueUrl = _sqsQueue.Uri.AbsoluteUri,
-                ReceiptHandle = receiptHandle,
-            };
-
             await _sqsQueue.DeleteMessageAsync(_sqsQueue.Uri.AbsoluteUri, receiptHandle, cancellationToken).ConfigureAwait(false);
         }
 
@@ -63,13 +57,6 @@ namespace JustSaying.AwsTools.MessageHandling
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
-            var visibilityRequest = new ChangeMessageVisibilityRequest
-            {
-                QueueUrl = _sqsQueue.Uri.ToString(),
-                ReceiptHandle = receiptHandle,
-                VisibilityTimeout = (int)timeout.TotalSeconds,
-            };
-
             await _sqsQueue.ChangeMessageVisibilityAsync(
                 _sqsQueue.Uri.ToString(),
                 receiptHandle,
