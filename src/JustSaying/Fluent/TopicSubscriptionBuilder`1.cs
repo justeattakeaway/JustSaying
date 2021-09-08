@@ -183,9 +183,7 @@ namespace JustSaying.Fluent
 
             var queueWithStartup = creator.EnsureTopicExistsWithQueueSubscribed(
                 region,
-                bus.SerializationRegister,
-                subscriptionConfig,
-                config.MessageSubjectProvider);
+                subscriptionConfig);
 
             bus.AddStartupTask(queueWithStartup.StartupTask);
             bus.AddQueue(subscriptionConfig.SubscriptionGroupName, queueWithStartup.Queue);

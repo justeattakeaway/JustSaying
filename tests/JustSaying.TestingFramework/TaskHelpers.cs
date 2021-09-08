@@ -31,14 +31,17 @@ namespace JustSaying.TestingFramework
             });
         }
 
-        public static async Task HandleCancellation(this Task task)
+        public static async Task<bool> HandleCancellation(this Task task)
         {
             try
             {
                 await task.ConfigureAwait(false);
+                return false;
             }
             catch (OperationCanceledException)
-            { }
+            {
+                return true;
+            }
         }
     }
 }

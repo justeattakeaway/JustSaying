@@ -25,9 +25,7 @@ namespace JustSaying.AwsTools.QueueCreation
 
         public QueueWithAsyncStartup EnsureTopicExistsWithQueueSubscribed(
             string region,
-            IMessageSerializationRegister serializationRegister,
-            SqsReadConfiguration queueConfig,
-            IMessageSubjectProvider messageSubjectProvider)
+            SqsReadConfiguration queueConfig)
         {
             var regionEndpoint = RegionEndpoint.GetBySystemName(region);
             var sqsClient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
@@ -83,11 +81,6 @@ namespace JustSaying.AwsTools.QueueCreation
         private static bool TopicExistsInAnotherAccount(SqsReadConfiguration queueConfig)
         {
             return !string.IsNullOrWhiteSpace(queueConfig.TopicSourceAccount);
-        }
-
-        public QueueWithAsyncStartup EnsureTopicExistsWithQueueSubscribed(string region, IMessageSerializationRegister serializationRegister, SqsReadConfiguration queueConfig, IMessageSubjectProvider messageSubjectProvider, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
         }
 
         public QueueWithAsyncStartup EnsureQueueExists(

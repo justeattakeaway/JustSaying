@@ -8,12 +8,8 @@ namespace JustSaying.AwsTools.QueueCreation
     {
         QueueWithAsyncStartup EnsureTopicExistsWithQueueSubscribed(
             string region,
-            IMessageSerializationRegister serializationRegister,
-            SqsReadConfiguration queueConfig,
-            IMessageSubjectProvider messageSubjectProvider);
-
-        QueueWithAsyncStartup EnsureQueueExists(
-            string region,
             SqsReadConfiguration queueConfig);
+
+        QueueWithAsyncStartup EnsureQueueExists(string region, SqsReadConfiguration queueConfig);
     }
 }
