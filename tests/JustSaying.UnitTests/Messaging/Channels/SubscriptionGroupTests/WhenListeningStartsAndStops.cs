@@ -39,7 +39,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     if (_running) yield return response1;
-                    yield return response2;
+                    else yield return response2;
                 }
             }
 

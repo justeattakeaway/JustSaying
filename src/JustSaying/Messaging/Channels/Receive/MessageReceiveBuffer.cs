@@ -102,12 +102,16 @@ namespace JustSaying.Messaging.Channels.Receive
                         }
                     }
 
+                    if (_logger.IsEnabled(LogLevel.Trace))
+                    {
+                        _logger.LogTrace("Downloaded {MessageCount} messages from queue {QueueName}.", messages.Count, _sqsQueueReader.QueueName);
+                    }
+
                     foreach (Message message in messages)
                     {
                         IQueueMessageContext messageContext = _sqsQueueReader.ToMessageContext(message);
 
-                        // Complete all messages in the batch, rather than observing the CancellationToken to stop
-                        await writer.WriteAsync(messageContext, CancellationToken.None).ConfigureAwait(false);
+                        await writer.WriteAsync(messageContext, stoppingToken).ConfigureAwait(false);
                     }
                 }
             }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -14,7 +15,7 @@ namespace JustSaying.UnitTests.JustSayingBus
     public abstract class GivenAServiceBus : IAsyncLifetime
     {
         protected IMessagingConfig Config;
-        protected IMessageMonitor Monitor;
+        protected TrackingLoggingMonitor Monitor;
         protected ILoggerFactory LoggerFactory;
         private bool _recordThrownExceptions;
 
@@ -55,7 +56,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         protected virtual void Given()
         {
             Config = Substitute.For<IMessagingConfig>();
-            Monitor = Substitute.For<IMessageMonitor>();
+            Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
         }
 
         protected abstract Task WhenAsync();

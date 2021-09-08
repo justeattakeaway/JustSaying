@@ -38,13 +38,15 @@ namespace JustSaying.UnitTests.Messaging.Channels
             int messagesRequested = 0;
             int messagesDispatched = 0;
 
-            var sqsQueue1 = TestQueue(() =>
-                GetErrorMessages(() =>
-                {
-                    Interlocked.Increment(ref messagesRequested);
-                }));
+            IEnumerable<Message> GetMessages()
+            {
+                Interlocked.Increment(ref messagesRequested);
+                throw new Exception();
+            }
+            var queue = new FakeSqsQueue(ct => Task.FromResult(GetMessages()));
 
-            var queues = new List<ISqsQueue> { sqsQueue1 };
+
+            var queues = new List<ISqsQueue> { queue };
             IMessageDispatcher dispatcher =
                 new FakeDispatcher(() =>
                 {
@@ -88,9 +90,14 @@ namespace JustSaying.UnitTests.Messaging.Channels
             int messagesRequested = 0;
             int messagesDispatched = 0;
 
-            var sqsQueue1 = TestQueue(() => GetErrorMessages(() => messagesRequested++));
+            IEnumerable<Message> GetMessages()
+            {
+                Interlocked.Increment(ref messagesRequested);
+                throw new Exception();
+            }
+            var queue = new FakeSqsQueue(ct => Task.FromResult(GetMessages()));
 
-            var queues = new List<ISqsQueue> { sqsQueue1 };
+            var queues = new List<ISqsQueue> { queue };
             IMessageDispatcher dispatcher =
                 new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
 
@@ -122,21 +129,6 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             cts.Cancel();
             await runTask.HandleCancellation();
-        }
-
-        private static IEnumerable<ReceiveMessageResponse> GetErrorMessages(Action onMessageRequested)
-        {
-            onMessageRequested();
-            throw new Exception();
-        }
-
-        private static ISqsQueue TestQueue(Func<IEnumerable<ReceiveMessageResponse>> getMessages)
-        {
-            var fakeSqs = new FakeAmazonSqs(getMessages);
-            var fakeQueue =
-                new FakeSqsQueue("test-queue",  fakeSqs);
-
-            return fakeQueue;
         }
     }
 }

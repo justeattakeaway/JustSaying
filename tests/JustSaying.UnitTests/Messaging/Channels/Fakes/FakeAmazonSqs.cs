@@ -110,11 +110,11 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             string receiptHandle,
             CancellationToken cancellationToken = new CancellationToken())
         {
-            return DeleteMessageAsync(new DeleteMessageRequest(queueUrl, receiptHandle), cancellationToken);
+            return DeleteMessageAsync(new Amazon.SQS.Model.DeleteMessageRequest(queueUrl, receiptHandle), cancellationToken);
         }
 
         public Task<DeleteMessageResponse> DeleteMessageAsync(
-            DeleteMessageRequest request,
+            Amazon.SQS.Model.DeleteMessageRequest request,
             CancellationToken cancellationToken = new CancellationToken())
         {
             DeleteMessageRequests.Add(request);
@@ -311,8 +311,13 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             return Task.FromResult(new SetQueueAttributesResponse());
         }
 
+        public Task<TagQueueResponse> TagQueueAsync(Amazon.SQS.Model.TagQueueRequest request, CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<TagQueueResponse> TagQueueAsync(
-            TagQueueRequest request,
+            FakeTagQueueRequest request,
             CancellationToken cancellationToken = new CancellationToken())
         {
             return Task.FromResult(new TagQueueResponse());

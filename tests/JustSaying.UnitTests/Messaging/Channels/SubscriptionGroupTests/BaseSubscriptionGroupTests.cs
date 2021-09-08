@@ -139,7 +139,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected static FakeSqsQueue CreateSuccessfulTestQueue(string queueName, params Message[] messages)
         {
-            return CreateSuccessfulTestQueue(queueName, messages);
+            return CreateSuccessfulTestQueue(queueName, messages.AsEnumerable());
         }
 
         protected static FakeSqsQueue CreateSuccessfulTestQueue(string queueName, IEnumerable<Message> messages)

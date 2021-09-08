@@ -1,8 +1,8 @@
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    public class ChangeMessageVisbilityRequest
+    public class FakeChangeMessageVisbilityRequest
     {
-        public ChangeMessageVisbilityRequest(string queueUrl, string receiptHandle, int visibilityTimeoutInSeconds)
+        public FakeChangeMessageVisbilityRequest(string queueUrl, string receiptHandle, int visibilityTimeoutInSeconds)
         {
             QueueUrl = queueUrl;
             ReceiptHandle = receiptHandle;

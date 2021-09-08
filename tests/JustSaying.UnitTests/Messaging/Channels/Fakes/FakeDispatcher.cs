@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
@@ -18,7 +19,10 @@ namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers
         public Task DispatchMessageAsync(IQueueMessageContext messageContext, CancellationToken cancellationToken)
         {
             _spy?.Invoke();
+            DispatchedMessages.Add(messageContext);
             return Task.CompletedTask;
         }
+
+        public IList<IQueueMessageContext> DispatchedMessages { get; } = new List<IQueueMessageContext>();
     }
 }

@@ -2,9 +2,9 @@ using System.Collections.Generic;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    public class TagQueueRequest
+    public class FakeTagQueueRequest
     {
-        public TagQueueRequest(string queueUrl, Dictionary<string, string> tags)
+        public FakeTagQueueRequest(string queueUrl, Dictionary<string, string> tags)
         {
             QueueUrl = queueUrl;
             Tags = tags;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.DirectoryServices.ActiveDirectory;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS;
@@ -33,32 +34,37 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         public Uri Uri { get; set; }
         public string Arn { get; }
 
-        public List<DeleteMessageRequest> DeleteMessageRequests { get; } = new();
-        public List<ChangeMessageVisbilityRequest> ChangeMessageVisbilityRequests { get; } = new();
-        public List<TagQueueRequest> TagQueueRequests { get; } = new();
-        public List<ReceiveMessagesRequest> ReceiveMessageRequests { get; } = new();
+        public List<FakeDeleteMessageRequest> DeleteMessageRequests { get; } = new();
+        public List<FakeChangeMessageVisbilityRequest> ChangeMessageVisbilityRequests { get; } = new();
+        public List<FakeTagQueueRequest> TagQueueRequests { get; } = new();
+        public List<FakeReceiveMessagesRequest> ReceiveMessageRequests { get; } = new();
 
         public Task DeleteMessageAsync(string queueUrl, string receiptHandle, CancellationToken cancellationToken)
         {
-            DeleteMessageRequests.Add(new DeleteMessageRequest(queueUrl, receiptHandle));
+            DeleteMessageRequests.Add(new FakeDeleteMessageRequest(queueUrl, receiptHandle));
             return Task.CompletedTask;
         }
 
         public Task TagQueueAsync(string queueUrl, Dictionary<string, string> tags, CancellationToken cancellationToken)
         {
-            TagQueueRequests.Add(new TagQueueRequest(queueUrl, tags));
+            TagQueueRequests.Add(new FakeTagQueueRequest(queueUrl, tags));
             return Task.CompletedTask;
         }
 
-        public Task<IList<Message>> ReceiveMessagesAsync(string queueUrl, int maxNumOfMessages, int secondsWaitTime, IList<string> attributesToLoad, CancellationToken cancellationToken)
+        public async Task<IList<Message>> ReceiveMessagesAsync(string queueUrl, int maxNumOfMessages, int secondsWaitTime, IList<string> attributesToLoad, CancellationToken cancellationToken)
         {
-            ReceiveMessageRequests.Add(new ReceiveMessagesRequest(queueUrl, maxNumOfMessages, secondsWaitTime, attributesToLoad));
-            return Task.FromResult(_messageProducer(cancellationToken) as IList<Message>);
+            await Task.Delay(50, cancellationToken);
+            var messages = await _messageProducer(cancellationToken);
+            var result =  messages.Take(maxNumOfMessages).ToList();
+
+            ReceiveMessageRequests.Add(new FakeReceiveMessagesRequest(queueUrl, maxNumOfMessages, secondsWaitTime, attributesToLoad, result.Count));
+
+            return result;
         }
 
         public Task ChangeMessageVisibilityAsync(string queueUrl, string receiptHandle, int visibilityTimeoutInSeconds, CancellationToken cancellationToken)
         {
-            ChangeMessageVisbilityRequests.Add(new ChangeMessageVisbilityRequest(queueUrl, receiptHandle, visibilityTimeoutInSeconds));
+            ChangeMessageVisbilityRequests.Add(new FakeChangeMessageVisbilityRequest(queueUrl, receiptHandle, visibilityTimeoutInSeconds));
             return Task.CompletedTask;
         }
     }

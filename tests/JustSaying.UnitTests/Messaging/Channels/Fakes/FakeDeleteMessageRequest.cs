@@ -1,8 +1,8 @@
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
-    public class DeleteMessageRequest
+    public class FakeDeleteMessageRequest
     {
-        public DeleteMessageRequest(string queueUrl, string receiptHandle)
+        public FakeDeleteMessageRequest(string queueUrl, string receiptHandle)
         {
             QueueUrl = queueUrl;
             ReceiptHandle = receiptHandle;

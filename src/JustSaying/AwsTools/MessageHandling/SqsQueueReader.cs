@@ -34,13 +34,6 @@ namespace JustSaying.AwsTools.MessageHandling
             IList<string> requestMessageAttributeNames,
             CancellationToken cancellationToken)
         {
-            var request = new ReceiveMessageRequest
-            {
-                QueueUrl = _sqsQueue.Uri.AbsoluteUri,
-                MaxNumberOfMessages = maximumCount,
-                WaitTimeSeconds = (int)waitTime.TotalSeconds,
-                AttributeNames = requestMessageAttributeNames.ToList()
-            };
 
             var sqsMessageResponse =
                 await _sqsQueue.ReceiveMessagesAsync(_sqsQueue.Uri.AbsoluteUri,
