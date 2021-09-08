@@ -33,7 +33,6 @@ namespace JustSaying.Messaging.Middleware
 
             IHandlerAsync<T> handler = _handlerResolver(resolutionContext);
 
-
             return await handler.Handle(context.MessageAs<T>()).ConfigureAwait(false);
         }
     }
