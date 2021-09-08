@@ -1,3 +1,4 @@
+using System.Threading;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 
@@ -11,6 +12,8 @@ namespace JustSaying.AwsTools.QueueCreation
             SqsReadConfiguration queueConfig,
             IMessageSubjectProvider messageSubjectProvider);
 
-        QueueWithAsyncStartup EnsureQueueExists(string region, SqsReadConfiguration queueConfig);
+        QueueWithAsyncStartup EnsureQueueExists(
+            string region,
+            SqsReadConfiguration queueConfig);
     }
 }

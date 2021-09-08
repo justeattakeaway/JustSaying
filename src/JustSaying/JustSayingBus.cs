@@ -28,7 +28,7 @@ namespace JustSaying
 
         private readonly SemaphoreSlim _startLock = new SemaphoreSlim(1, 1);
         private bool _busStarted;
-        private readonly List<Func<Task>> _startupTasks;
+        private readonly List<Func<CancellationToken, Task>> _startupTasks;
 
         private ConcurrentDictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings;
         private SubscriptionGroupSettingsBuilder _defaultSubscriptionGroupSettings;
@@ -54,7 +54,7 @@ namespace JustSaying
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
 
-            _startupTasks = new List<Func<Task>>();
+            _startupTasks = new List<Func<CancellationToken, Task>>();
             _log = _loggerFactory.CreateLogger("JustSaying");
 
             Config = config;
@@ -86,7 +86,7 @@ namespace JustSaying
             builder.AddQueue(queue);
         }
 
-        internal void AddStartupTask(Func<Task> task)
+        internal void AddStartupTask(Func<CancellationToken, Task> task)
         {
             _startupTasks.Add(task);
         }
@@ -137,7 +137,7 @@ namespace JustSaying
                             {
                                 foreach (var startupTask in _startupTasks)
                                 {
-                                    await startupTask.Invoke().ConfigureAwait(false);
+                                    await startupTask.Invoke(stoppingToken).ConfigureAwait(false);
                                 }
                             }
 

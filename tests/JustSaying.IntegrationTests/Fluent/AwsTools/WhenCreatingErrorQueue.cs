@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
@@ -43,7 +44,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
 
             queueConfig.ErrorQueueRetentionPeriod = TimeSpan.FromSeconds(100);
 
-            await queue.UpdateQueueAttributeAsync(queueConfig);
+            await queue.UpdateQueueAttributeAsync(queueConfig, CancellationToken.None);
 
             // Assert
             queue.MessageRetentionPeriod.ShouldBe(TimeSpan.FromSeconds(100));

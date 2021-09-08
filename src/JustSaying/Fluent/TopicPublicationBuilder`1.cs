@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using JustSaying.AwsTools;
@@ -154,16 +155,16 @@ namespace JustSaying.Fluent
             };
 #pragma warning restore 618
 
-            async Task StartupTask()
+            async Task StartupTask(CancellationToken cancellationToken)
             {
                 if (writeConfiguration.Encryption != null)
                 {
-                    await snsTopic.CreateWithEncryptionAsync(writeConfiguration.Encryption)
+                    await snsTopic.CreateWithEncryptionAsync(writeConfiguration.Encryption, cancellationToken)
                         .ConfigureAwait(false);
                 }
                 else
                 {
-                    await snsTopic.CreateAsync().ConfigureAwait(false);
+                    await snsTopic.CreateAsync(cancellationToken).ConfigureAwait(false);
                 }
 
                 await snsTopic.EnsurePolicyIsUpdatedAsync(config.AdditionalSubscriberAccounts)

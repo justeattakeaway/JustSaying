@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
@@ -27,11 +28,11 @@ namespace JustSaying.AwsTools.MessageHandling
             ErrorQueue = new ErrorQueue(region, queueName, client, loggerFactory);
         }
 
-        public override async Task<bool> CreateAsync(SqsBasicConfiguration queueConfig, int attempt = 0)
+        public override async Task<bool> CreateAsync(SqsBasicConfiguration queueConfig, int attempt = 0, CancellationToken cancellationToken = default)
         {
             if (NeedErrorQueue(queueConfig))
             {
-                var exists = await ErrorQueue.ExistsAsync().ConfigureAwait(false);
+                var exists = await ErrorQueue.ExistsAsync(cancellationToken).ConfigureAwait(false);
                 if (!exists)
                 {
                     using (Logger.Time("Creating error queue {QueueName}", ErrorQueue.QueueName))
@@ -62,14 +63,14 @@ namespace JustSaying.AwsTools.MessageHandling
             return !queueConfig.ErrorQueueOptOut;
         }
 
-        public override async Task DeleteAsync()
+        public override async Task DeleteAsync(CancellationToken cancellationToken)
         {
             if (ErrorQueue != null)
             {
-                await ErrorQueue.DeleteAsync().ConfigureAwait(false);
+                await ErrorQueue.DeleteAsync(cancellationToken).ConfigureAwait(false);
             }
 
-            await base.DeleteAsync().ConfigureAwait(false);
+            await base.DeleteAsync(cancellationToken).ConfigureAwait(false);
         }
 
         internal async Task UpdateRedrivePolicyAsync(RedrivePolicy requestedRedrivePolicy)
@@ -94,21 +95,21 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        public async Task EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(SqsReadConfiguration queueConfig)
+        public async Task EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(SqsReadConfiguration queueConfig, CancellationToken cancellationToken)
         {
             if (queueConfig == null) throw new ArgumentNullException(nameof(queueConfig));
 
-            var exists = await ExistsAsync().ConfigureAwait(false);
+            var exists = await ExistsAsync(cancellationToken).ConfigureAwait(false);
             if (!exists)
             {
-                await CreateAsync(queueConfig).ConfigureAwait(false);
+                await CreateAsync(queueConfig, cancellationToken: cancellationToken).ConfigureAwait(false);
             }
             else
             {
-                await UpdateQueueAttributeAsync(queueConfig).ConfigureAwait(false);
+                await UpdateQueueAttributeAsync(queueConfig, cancellationToken).ConfigureAwait(false);
             }
 
-            await ApplyTagsAsync(this, queueConfig.Tags).ConfigureAwait(false);
+            await ApplyTagsAsync(this, queueConfig.Tags, cancellationToken).ConfigureAwait(false);
 
             //Create an error queue for existing queues if they don't already have one
             if (ErrorQueue != null && NeedErrorQueue(queueConfig))
@@ -119,39 +120,34 @@ namespace JustSaying.AwsTools.MessageHandling
                     ErrorQueueOptOut = true
                 };
 
-                var errorQueueExists = await ErrorQueue.ExistsAsync().ConfigureAwait(false);
+                var errorQueueExists = await ErrorQueue.ExistsAsync(cancellationToken).ConfigureAwait(false);
                 if (!errorQueueExists)
                 {
-                    await ErrorQueue.CreateAsync(errorQueueConfig).ConfigureAwait(false);
+                    await ErrorQueue.CreateAsync(errorQueueConfig, cancellationToken: cancellationToken).ConfigureAwait(false);
                 }
                 else
                 {
-                    await ErrorQueue.UpdateQueueAttributeAsync(errorQueueConfig).ConfigureAwait(false);
+                    await ErrorQueue.UpdateQueueAttributeAsync(errorQueueConfig, cancellationToken).ConfigureAwait(false);
                 }
 
                 await UpdateRedrivePolicyAsync(
                     new RedrivePolicy(queueConfig.RetryCountBeforeSendingToErrorQueue, ErrorQueue.Arn)).ConfigureAwait(false);
 
-                await ApplyTagsAsync(ErrorQueue, queueConfig.Tags).ConfigureAwait(false);
+                await ApplyTagsAsync(ErrorQueue, queueConfig.Tags, cancellationToken).ConfigureAwait(false);
             }
         }
 
-        private async Task ApplyTagsAsync(ISqsQueue queue, Dictionary<string, string> tags)
+        private async Task ApplyTagsAsync(ISqsQueue queue, Dictionary<string, string> tags, CancellationToken cancellationToken)
         {
             if (tags == null || !tags.Any())
             {
                 return;
             }
 
-            var tagRequest = new TagQueueRequest
-            {
-                QueueUrl = queue.Uri.ToString(),
-                Tags = tags
-            };
+            await queue.TagQueueAsync(queue.Uri.ToString(), tags, cancellationToken).ConfigureAwait(false);
 
-            await queue.Client.TagQueueAsync(tagRequest).ConfigureAwait(false);
-
-            Logger.LogInformation("Added {TagCount} tags to queue {QueueName}", tagRequest.Tags.Count, QueueName);
+            Logger.LogInformation("Added {TagCount} tags to queue {QueueName}",
+                tags.Count, QueueName);
         }
 
         protected override Dictionary<string, string> GetCreateQueueAttributes(SqsBasicConfiguration queueConfig)

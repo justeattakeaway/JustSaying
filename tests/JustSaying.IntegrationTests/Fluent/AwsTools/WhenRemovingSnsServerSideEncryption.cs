@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
@@ -31,10 +32,10 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                 client,
                 loggerFactory);
 
-            await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = JustSayingConstants.DefaultSnsAttributeEncryptionKeyId });
+            await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = JustSayingConstants.DefaultSnsAttributeEncryptionKeyId }, CancellationToken.None);
 
             // Act
-            await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = String.Empty });
+            await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = String.Empty }, CancellationToken.None);
 
             // Assert
             topic.ServerSideEncryption.ShouldBeNull();

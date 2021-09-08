@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
@@ -38,7 +39,7 @@ namespace JustSaying.UnitTests.AwsTools.TopicCreation
                 loggerFactory);
 
             // Act
-            await topic.CreateAsync();
+            await topic.CreateAsync(CancellationToken.None);
 
             // Assert
             topic.Arn.ShouldNotBeNull();
@@ -59,7 +60,7 @@ namespace JustSaying.UnitTests.AwsTools.TopicCreation
                 loggerFactory);
 
             // Act and Assert
-            await Assert.ThrowsAsync<InvalidOperationException>(() => topic.CreateAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(() => topic.CreateAsync(CancellationToken.None));
         }
 
         private static IAmazonSimpleNotificationService CreateSnsClient(bool exists)

@@ -64,7 +64,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
             SerializationRegister = new FakeSerializationRegister();
             MiddlewareMap = new MiddlewareMap();
-            CompletionMiddleware = new AwaitableMiddleware();
+            CompletionMiddleware = new AwaitableMiddleware(OutputHelper);
 
             var testResolver = new InMemoryServiceResolver(OutputHelper, Monitor,
                 sc => sc.AddSingleton<IHandlerAsync<SimpleMessage>>(Handler));
@@ -139,28 +139,20 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected static FakeSqsQueue CreateSuccessfulTestQueue(string queueName, params Message[] messages)
         {
-            return CreateSuccessfulTestQueue(queueName, messages.ToList);
+            return CreateSuccessfulTestQueue(queueName, messages);
+        }
+
+        protected static FakeSqsQueue CreateSuccessfulTestQueue(string queueName, IEnumerable<Message> messages)
+        {
+            return CreateSuccessfulTestQueue(queueName, ct => Task.FromResult(messages));
         }
 
         protected static FakeSqsQueue CreateSuccessfulTestQueue(
             string queueName,
-            Func<IEnumerable<Message>> getMessages)
+            Func<CancellationToken, Task<IEnumerable<Message>>> messageProducer)
         {
-            return CreateSuccessfulTestQueue(queueName,
-                () => new ReceiveMessageResponse()
-                {
-                    Messages = getMessages().ToList()
-                }.Infinite());
-        }
-
-        protected static FakeSqsQueue CreateSuccessfulTestQueue(
-            string queueName,
-            Func<IEnumerable<ReceiveMessageResponse>> getMessages)
-        {
-            var fakeClient = new FakeAmazonSqs(getMessages);
-
-            var sqsQueue = new FakeSqsQueue(queueName,
-                fakeClient);
+            var sqsQueue = new FakeSqsQueue( messageProducer,
+                queueName);
 
             return sqsQueue;
         }

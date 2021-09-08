@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -142,7 +143,7 @@ namespace JustSaying.Messaging.Channels.Receive
                 messages = await _sqsMiddleware.RunAsync(context,
                         async ct =>
                             await _sqsQueueReader
-                                .GetMessagesAsync(count, _sqsWaitTime, _requestMessageAttributeNames, ct)
+                                .GetMessagesAsync(count, _sqsWaitTime, _requestMessageAttributeNames.ToList(), ct)
                                 .ConfigureAwait(false),
                         linkedCts.Token)
                     .ConfigureAwait(false);

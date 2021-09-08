@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS;
@@ -9,6 +10,7 @@ using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Middleware.Receive;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
@@ -33,20 +35,16 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
 
             MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware =
                 new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>();
-            var sqsClient = Substitute.For<IAmazonSQS>();
-            var queue = Substitute.For<ISqsQueue>();
-            queue.Uri.Returns(new Uri("http://test.com"));
-            queue.Client.Returns(sqsClient);
-            var monitor = new TestingFramework.TrackingLoggingMonitor(
-                loggerFactory.CreateLogger<TrackingLoggingMonitor>());
 
-            sqsClient.ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
-                .Returns(_ =>
-                {
-                    Interlocked.Increment(ref _callCount);
-                    var messages = new List<Message> { new TestMessage() };
-                    return new ReceiveMessageResponse { Messages = messages };
-                });
+            var messages = new List<Message> { new TestMessage() };
+            var queue = new FakeSqsQueue(ct =>
+            {
+                Interlocked.Increment(ref _callCount);
+                return Task.FromResult(messages.AsEnumerable());
+            });
+
+            var monitor = new TrackingLoggingMonitor(
+                loggerFactory.CreateLogger<TrackingLoggingMonitor>());
 
             _messageReceiveBuffer = new MessageReceiveBuffer(
                 10,

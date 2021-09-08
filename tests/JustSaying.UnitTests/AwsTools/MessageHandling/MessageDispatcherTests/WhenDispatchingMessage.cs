@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -16,6 +17,7 @@ using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
+using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using MELT;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -29,23 +31,6 @@ using SQSMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 {
-    internal class DummySqsQueue : ISqsQueue
-    {
-        public DummySqsQueue(Uri uri, IAmazonSQS client)
-        {
-            Uri = uri;
-            Client = client;
-            QueueName = "DummySqsQueue";
-        }
-
-        public InterrogationResult Interrogate() => InterrogationResult.Empty;
-
-        public string QueueName { get; }
-        public string RegionSystemName { get; }
-        public Uri Uri { get; }
-        public string Arn { get; }
-        public IAmazonSQS Client { get; }
-    }
 
     public class WhenDispatchingMessage : IAsyncLifetime
     {
@@ -56,9 +41,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
         private readonly MiddlewareMap _middlewareMap;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ITestOutputHelper _outputHelper;
-        private readonly IAmazonSQS _amazonSqsClient = Substitute.For<IAmazonSQS>();
 
-        private DummySqsQueue _queue;
+        private FakeSqsQueue _queue;
         private SQSMessage _sqsMessage;
         private Message _typedMessage = new SimpleMessage();
 
@@ -85,7 +69,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
         public virtual Task DisposeAsync()
         {
-            _amazonSqsClient?.Dispose();
             return Task.CompletedTask;
         }
 
@@ -99,7 +82,15 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
                 ReceiptHandle = "i_am_receipt_handle"
             };
 
-            _queue = new DummySqsQueue(new Uri(ExpectedQueueUrl), _amazonSqsClient);
+            IEnumerable<SQSMessage> GetMessages()
+            {
+                yield return _sqsMessage;
+            }
+
+            _queue = new FakeSqsQueue(ct => Task.FromResult(GetMessages()))
+            {
+                Uri = new Uri(ExpectedQueueUrl)
+            };
             _serializationRegister.DeserializeMessage(Arg.Any<string>())
                 .Returns(new MessageWithAttributes(_typedMessage, new MessageAttributes()));
         }
@@ -178,7 +169,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             [Fact]
             public void ShouldDeleteMessageIfHandledSuccessfully()
             {
-                _amazonSqsClient.Received(1).DeleteMessageAsync(Arg.Is<DeleteMessageRequest>(x => x.QueueUrl == ExpectedQueueUrl && x.ReceiptHandle == _sqsMessage.ReceiptHandle));
+                var request = _queue.DeleteMessageRequests.ShouldHaveSingleItem();
+                request.QueueUrl.ShouldBe(ExpectedQueueUrl);
+                request.ReceiptHandle.ShouldBe(_sqsMessage.ReceiptHandle);
             }
 
             public AndMessageProcessingSucceeds(ITestOutputHelper outputHelper) : base(outputHelper)
@@ -224,7 +217,10 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             [Fact]
             public void ShouldUpdateMessageVisibility()
             {
-                _amazonSqsClient.Received(1).ChangeMessageVisibilityAsync(Arg.Is<ChangeMessageVisibilityRequest>(x => x.QueueUrl == ExpectedQueueUrl && x.ReceiptHandle == _sqsMessage.ReceiptHandle && x.VisibilityTimeout == (int)_expectedBackoffTimeSpan.TotalSeconds));
+                var request = _queue.ChangeMessageVisbilityRequests.ShouldHaveSingleItem();
+                request.QueueUrl.ShouldBe(ExpectedQueueUrl);
+                request.ReceiptHandle.ShouldBe(_sqsMessage.ReceiptHandle);
+                request.VisibilityTimeoutInSeconds.ShouldBe((int)_expectedBackoffTimeSpan.TotalSeconds);
             }
 
             public AndMessageProcessingFails(ITestOutputHelper outputHelper) : base(outputHelper)

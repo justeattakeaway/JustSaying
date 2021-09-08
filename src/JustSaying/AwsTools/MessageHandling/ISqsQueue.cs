@@ -1,5 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Amazon.SQS;
+using Amazon.SQS.Model;
 using JustSaying.Messaging.Interrogation;
 
 namespace JustSaying.AwsTools.MessageHandling
@@ -29,9 +33,20 @@ namespace JustSaying.AwsTools.MessageHandling
         /// </summary>
         string Arn { get; }
 
-        /// <summary>
-        /// Gets the SQS queue client.
-        /// </summary>
-        IAmazonSQS Client { get; }
+        public Task DeleteMessageAsync(string queueUrl, string receiptHandle, CancellationToken cancellationToken);
+        public Task TagQueueAsync(string queueUrl, Dictionary<string, string> tags, CancellationToken cancellationToken);
+        public Task<IList<Message>> ReceiveMessagesAsync(
+            string queueUrl,
+            int maxNumOfMessages,
+            int secondsWaitTime,
+            IList<string> attributesToLoad,
+            CancellationToken cancellationToken);
+
+        public Task ChangeMessageVisibilityAsync(
+            string queueUrl,
+            string receiptHandle,
+            int visibilityTimeoutInSeconds,
+            CancellationToken cancellationToken);
+
     }
 }

@@ -31,7 +31,7 @@ namespace JustSaying.AwsTools.MessageHandling
         internal async Task<IList<Message>> GetMessagesAsync(
             int maximumCount,
             TimeSpan waitTime,
-            IEnumerable<string> requestMessageAttributeNames,
+            IList<string> requestMessageAttributeNames,
             CancellationToken cancellationToken)
         {
             var request = new ReceiveMessageRequest
@@ -42,10 +42,14 @@ namespace JustSaying.AwsTools.MessageHandling
                 AttributeNames = requestMessageAttributeNames.ToList()
             };
 
-            ReceiveMessageResponse sqsMessageResponse =
-                await _sqsQueue.Client.ReceiveMessageAsync(request, cancellationToken).ConfigureAwait(false);
+            var sqsMessageResponse =
+                await _sqsQueue.ReceiveMessagesAsync(_sqsQueue.Uri.AbsoluteUri,
+                    maximumCount,
+                    (int)waitTime.TotalSeconds,
+                    requestMessageAttributeNames.ToList(),
+                    cancellationToken).ConfigureAwait(false);
 
-            return sqsMessageResponse?.Messages;
+            return sqsMessageResponse;
         }
 
         internal async Task DeleteMessageAsync(
@@ -58,7 +62,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 ReceiptHandle = receiptHandle,
             };
 
-            await _sqsQueue.Client.DeleteMessageAsync(deleteRequest, cancellationToken).ConfigureAwait(false);
+            await _sqsQueue.DeleteMessageAsync(_sqsQueue.Uri.AbsoluteUri, receiptHandle, cancellationToken).ConfigureAwait(false);
         }
 
         internal async Task ChangeMessageVisibilityAsync(
@@ -73,7 +77,11 @@ namespace JustSaying.AwsTools.MessageHandling
                 VisibilityTimeout = (int)timeout.TotalSeconds,
             };
 
-            await _sqsQueue.Client.ChangeMessageVisibilityAsync(visibilityRequest, cancellationToken).ConfigureAwait(false);
+            await _sqsQueue.ChangeMessageVisibilityAsync(
+                _sqsQueue.Uri.ToString(),
+                receiptHandle,
+                (int)timeout.TotalSeconds,
+                cancellationToken).ConfigureAwait(false);
         }
     }
 }

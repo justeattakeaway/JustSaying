@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
@@ -35,11 +36,11 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
             await queue.CreateAsync(new SqsBasicConfiguration());
 
             // Act
-            await queue.DeleteAsync();
+            await queue.DeleteAsync(CancellationToken.None);
 
             // Assert
             await Patiently.AssertThatAsync(
-                OutputHelper, async () => !await queue.ErrorQueue.ExistsAsync());
+                OutputHelper, async () => !await queue.ErrorQueue.ExistsAsync(CancellationToken.None));
         }
     }
 }

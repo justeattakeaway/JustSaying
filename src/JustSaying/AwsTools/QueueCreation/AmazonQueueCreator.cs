@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SimpleNotificationService;
@@ -34,9 +35,9 @@ namespace JustSaying.AwsTools.QueueCreation
 
             var queueWithStartup = EnsureQueueExists(region, queueConfig);
 
-            async Task StartupTask()
+            async Task StartupTask(CancellationToken cancellationToken)
             {
-                await queueWithStartup.StartupTask.Invoke().ConfigureAwait(false);
+                await queueWithStartup.StartupTask.Invoke(cancellationToken).ConfigureAwait(false);
                 var queue = queueWithStartup.Queue;
                 if (TopicExistsInAnotherAccount(queueConfig))
                 {
@@ -56,7 +57,7 @@ namespace JustSaying.AwsTools.QueueCreation
 #pragma warning disable 618
                     var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsClient, _loggerFactory);
 #pragma warning restore 618
-                    await eventTopic.CreateAsync().ConfigureAwait(false);
+                    await eventTopic.CreateAsync(cancellationToken).ConfigureAwait(false);
 
                     await SubscribeQueueAndApplyFilterPolicyAsync(snsClient,
                         eventTopic.Arn,
@@ -84,6 +85,11 @@ namespace JustSaying.AwsTools.QueueCreation
             return !string.IsNullOrWhiteSpace(queueConfig.TopicSourceAccount);
         }
 
+        public QueueWithAsyncStartup EnsureTopicExistsWithQueueSubscribed(string region, IMessageSerializationRegister serializationRegister, SqsReadConfiguration queueConfig, IMessageSubjectProvider messageSubjectProvider, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
         public QueueWithAsyncStartup EnsureQueueExists(
             string region,
             SqsReadConfiguration queueConfig)
@@ -99,7 +105,8 @@ namespace JustSaying.AwsTools.QueueCreation
                 _loggerFactory);
 #pragma warning restore 618
 
-            var startupTask = new Func<Task>(() => queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(queueConfig));
+            var startupTask = new Func<CancellationToken, Task>(ct => queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(
+                queueConfig, ct));
 
             return new QueueWithAsyncStartup(startupTask, queue);
         }
