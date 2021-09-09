@@ -34,7 +34,7 @@ namespace JustSaying.AwsTools.MessageHandling
         string Arn { get; }
 
         /// <summary>
-        /// Deletes a message from a queue
+        /// Deletes a message from a queue.
         /// </summary>
         /// <param name="queueUrl">The URL of the queue to delete a message from</param>
         /// <param name="receiptHandle">The receipt handle of the message to delete</param>
