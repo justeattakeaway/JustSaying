@@ -94,10 +94,13 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var consumer2Completion = consumer2.RunAsync(cts.Token);
             var buffer1Completion = buffer.RunAsync(cts.Token);
 
-            await multiplexerCompletion.HandleCancellation();
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer2Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer1Completion);
+            var results = await Task.WhenAll(
+                multiplexerCompletion.HandleCancellation(),
+                buffer1Completion.HandleCancellation(),
+                consumer1Completion.HandleCancellation(),
+                consumer2Completion.HandleCancellation());
+
+            results.Any().ShouldBeTrue();
         }
 
         [Fact]
@@ -171,11 +174,14 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             cts.Cancel();
 
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer1Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer2Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer2Completion);
-            await multiplexerCompletion.HandleCancellation();
+            var results = await Task.WhenAll(
+                multiplexerCompletion.HandleCancellation(),
+                buffer1Completion.HandleCancellation(),
+                buffer2Completion.HandleCancellation(),
+                consumer1Completion.HandleCancellation(),
+                consumer2Completion.HandleCancellation());
+
+            results.Any().ShouldBeTrue();
         }
 
         [Theory]
@@ -393,21 +399,6 @@ namespace JustSaying.UnitTests.Messaging.Channels
             public override string ToString()
             {
                 return Body;
-            }
-        }
-
-        public class TestException : Exception
-        {
-            public TestException(string message) : base(message)
-            {
-            }
-
-            public TestException(string message, Exception innerException) : base(message, innerException)
-            {
-            }
-
-            public TestException()
-            {
             }
         }
     }
