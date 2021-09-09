@@ -54,7 +54,7 @@ namespace JustSaying.AwsTools.MessageHandling
         /// <summary>
         /// Downloads messages from a queue.
         /// </summary>
-        /// <param name="queueUrl">The URL of the queue to delete a message from</param>
+        /// <param name="queueUrl">The URL of the queue to download a message from.</param>
         /// <param name="maxNumOfMessages">The maximum number of messages to try to download. Values larger than 10 will default to 10. </param>
         /// <param name="secondsWaitTime">The number of seconds to wait for messages to be available before returning.</param>
         /// <param name="attributesToLoad">A list of attributes to retrieve for the downloaded messages.</param>
