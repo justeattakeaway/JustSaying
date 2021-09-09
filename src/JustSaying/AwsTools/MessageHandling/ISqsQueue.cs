@@ -36,7 +36,7 @@ namespace JustSaying.AwsTools.MessageHandling
         /// <summary>
         /// Deletes a message from a queue.
         /// </summary>
-        /// <param name="queueUrl">The URL of the queue to delete a message from</param>
+        /// <param name="queueUrl">The URL of the queue to delete a message from.</param>
         /// <param name="receiptHandle">The receipt handle of the message to delete</param>
         /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
         /// <returns>A <see cref="Task"/> will complete when the message has been deleted, or the task has faulted.</returns>
