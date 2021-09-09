@@ -60,7 +60,7 @@ namespace JustSaying.AwsTools.MessageHandling
         /// <param name="attributesToLoad">A list of attributes to retrieve for the downloaded messages.</param>
         /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
         /// <returns>A <see cref="Task"/> will complete when messages have been received, or the task has faulted.</returns>
-        public Task<IList<Message>> ReceiveMessagesAsync(
+        Task<IList<Message>> ReceiveMessagesAsync(
             string queueUrl,
             int maxNumOfMessages,
             int secondsWaitTime,
