@@ -40,7 +40,7 @@ namespace JustSaying.AwsTools.MessageHandling
         /// <param name="receiptHandle">The receipt handle of the message to delete.</param>
         /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
         /// <returns>A <see cref="Task"/> will complete when the message has been deleted, or the task has faulted.</returns>
-        public Task DeleteMessageAsync(string queueUrl, string receiptHandle, CancellationToken cancellationToken);
+        Task DeleteMessageAsync(string queueUrl, string receiptHandle, CancellationToken cancellationToken);
 
         /// <summary>
         /// Tags a queue with one or more key-value pairs.
