@@ -75,7 +75,7 @@ namespace JustSaying.AwsTools.MessageHandling
         /// <param name="visibilityTimeoutInSeconds">The number of seconds until this message will be visible to other consumers</param>
         /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
         /// <returns></returns>
-        public Task ChangeMessageVisibilityAsync(
+        Task ChangeMessageVisibilityAsync(
             string queueUrl,
             string receiptHandle,
             int visibilityTimeoutInSeconds,
