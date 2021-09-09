@@ -45,7 +45,7 @@ namespace JustSaying.AwsTools.MessageHandling
         /// <summary>
         /// Tags a queue with one or more key-value pairs.
         /// </summary>
-        /// <param name="queueUrl">The URL of the queue to delete a message from</param>
+        /// <param name="queueUrl">The URL of the queue to tag a message from.</param>
         /// <param name="tags">A <see cref="Dictionary{string, string}"/> of tags to tag this queue with.</param>
         /// <param name="cancellationToken">A cancellation token to cancel this operation.</param>
         /// <returns>A <see cref="Task"/> will complete when the queue has been tagged, or the task has faulted.</returns>
