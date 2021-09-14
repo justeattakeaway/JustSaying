@@ -40,7 +40,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
                 return Task.FromResult(messages.AsEnumerable());
             });
 
-            var monitor = new TestingFramework.TrackingLoggingMonitor(
+            var monitor = new TrackingLoggingMonitor(
                 loggerFactory.CreateLogger<TrackingLoggingMonitor>());
 
             _messageReceiveBuffer = new MessageReceiveBuffer(
