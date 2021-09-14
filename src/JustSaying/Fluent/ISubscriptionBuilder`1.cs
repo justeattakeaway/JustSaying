@@ -23,7 +23,7 @@ namespace JustSaying.Fluent
         /// <param name="middlewareConfiguration">A configuration action that provides an API
         /// to override the default middleware behaviour. By default, <see cref="HandlerMiddlewareBuilderExtensions.UseDefaults{TMessage}"/> applies a set of
         /// default middlewares to add metrics, error handling, completion handling, context setting, and logging.
-        /// Below is an example of how to add your own middlewares around the defaults.</param>
+        /// </param>
         /// <example>
         /// A sample configuration:
         /// <code>
