@@ -23,9 +23,9 @@ namespace JustSaying.Messaging.Middleware.Backoff
         /// <summary>
         /// Constructs a <see cref="BackoffMiddleware"/> with a given backoff strategy and logger/monitor.
         /// </summary>
-        /// <param name="backoffStrategy">A <see cref="IMessageBackoffStrategy"/> to use to determine how long to delay message redelivery when a handler returns false or throws.</param>
-        /// <param name="loggerFactory"></param>
-        /// <param name="monitor"></param>
+        /// <param name="backoffStrategy">An <see cref="IMessageBackoffStrategy"/> to use to determine how long to delay message redelivery when a handler returns false or throws.</param>
+        /// <param name="loggerFactory">An <see cref="ILoggerFactory"/> to use when logging request failures.</param>
+        /// <param name="monitor">An <see cref="IMessageMonitor"/> to use when recording request failures.</param>
         public BackoffMiddleware(IMessageBackoffStrategy backoffStrategy, ILoggerFactory loggerFactory, IMessageMonitor monitor)
         {
             _backoffStrategy = backoffStrategy ?? throw new ArgumentNullException(nameof(backoffStrategy));
