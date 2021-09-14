@@ -111,6 +111,17 @@ namespace JustSaying.Fluent
         }
 
         /// <summary>
+        /// Configures the middleware pipeline for this topic subscription.
+        /// </summary>
+        /// <param name="middlewareConfiguration">An <see cref="Action{HandlerMiddlewareBuilder}"/> that configures the middleware pipeline.</param>
+        /// <returns>The current <see cref="TopicSubscriptionBuilder{T}"/></returns>
+        public ISubscriptionBuilder<T> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
+        {
+            MiddlewareConfiguration = middlewareConfiguration;
+            return this;
+        }
+
+        /// <summary>
         /// Creates a tag with no value that will be assigned to the SQS queue.
         /// </summary>
         /// <param name="key">The key for the tag.</param>
@@ -144,12 +155,6 @@ namespace JustSaying.Fluent
 
             Tags.Add(key, value ?? string.Empty);
 
-            return this;
-        }
-
-        public ISubscriptionBuilder<T> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
-        {
-            MiddlewareConfiguration = middlewareConfiguration;
             return this;
         }
 

@@ -31,6 +31,11 @@ namespace JustSaying.TestingFramework
             });
         }
 
+        /// <summary>
+        /// Swallows any <see cref="OperationCanceledException"/>'s and returns true if one was swallowed, else false.
+        /// </summary>
+        /// <param name="task"></param>
+        /// <returns></returns>
         public static async Task<bool> HandleCancellation(this Task task)
         {
             try

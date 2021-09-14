@@ -46,7 +46,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        public async Task ApplyTagsAsync()
+        public async Task ApplyTagsAsync(CancellationToken cancellationToken)
         {
             if (!Tags.Any())
             {
@@ -61,7 +61,7 @@ namespace JustSaying.AwsTools.MessageHandling
                 Tags = Tags.Select(CreateTag).ToList()
             };
 
-            await _client.TagResourceAsync(tagRequest).ConfigureAwait(false);
+            await _client.TagResourceAsync(tagRequest, cancellationToken).ConfigureAwait(false);
 
             _logger.LogInformation("Added {TagCount} tags to topic {TopicName}", tagRequest.Tags.Count, TopicName);
         }

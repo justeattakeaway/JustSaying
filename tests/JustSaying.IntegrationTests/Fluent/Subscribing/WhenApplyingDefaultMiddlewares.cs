@@ -30,8 +30,6 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         {
             // Arrange
             var handler = new InspectableHandler<SimpleMessage>();
-            var outerMiddleware = new OuterTestMiddleware();
-            var innerMiddleware = new InnerTestMiddleware();
 
             var services = GivenJustSaying()
                 .ConfigureJustSaying((builder) =>

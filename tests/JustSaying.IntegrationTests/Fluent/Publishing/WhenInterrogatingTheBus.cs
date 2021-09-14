@@ -29,6 +29,7 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                 })
                 .AddSingleton(handler);
 
+            string json = "";
             await WhenAsync(
                 services,
                 async (publisher, listener, cancellationToken) =>
@@ -38,18 +39,14 @@ namespace JustSaying.IntegrationTests.Fluent.Publishing
                     var listenerJson = JsonConvert.SerializeObject(listener.Interrogate(), Formatting.Indented);
                     var publisherJson = JsonConvert.SerializeObject(publisher.Interrogate(), Formatting.Indented);
 
-                    var combined = string.Join($"{Environment.NewLine}{Environment.NewLine}",
+                    json = string.Join($"{Environment.NewLine}{Environment.NewLine}",
                         listenerJson, publisherJson)
                         .Replace(UniqueName, "integrationTestQueueName", StringComparison.Ordinal);
 
-                    combined.ShouldMatchApproved(opt =>
-                        opt.SubFolder($"Approvals")
-                            .WithFilenameGenerator(
-                                (info, descriminator, type, extension) =>
-                                    $"{nameof(WhenInterrogatingTheBus)}.{nameof(Then_The_Interrogation_Result_Should_Be_Returned)}.{type}.{extension}"));
-
                     completionSource.SetResult(null);
                 });
+
+            json.ShouldMatchApproved(opt => opt.SubFolder("Approvals"));
         }
     }
 }

@@ -170,7 +170,7 @@ namespace JustSaying.Fluent
                 await snsTopic.EnsurePolicyIsUpdatedAsync(config.AdditionalSubscriberAccounts)
                     .ConfigureAwait(false);
 
-                await snsTopic.ApplyTagsAsync().ConfigureAwait(false);
+                await snsTopic.ApplyTagsAsync(cancellationToken).ConfigureAwait(false);
 
                 eventPublisher.Arn = snsTopic.Arn;
             }

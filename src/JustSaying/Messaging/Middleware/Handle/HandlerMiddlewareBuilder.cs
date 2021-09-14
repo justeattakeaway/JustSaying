@@ -136,8 +136,6 @@ namespace JustSaying.Messaging.Middleware
                     .Reverse()
                     .ToList();
 
-            //var middlewares = _middlewares.Select(m => m()).ToList();
-
             if (_handlerMiddleware != null)
             {
                 // Handler middleware needs to be last in the chain, so we keep an explicit reference to
