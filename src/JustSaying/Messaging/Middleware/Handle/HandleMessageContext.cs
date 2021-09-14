@@ -1,5 +1,6 @@
 using System;
 using JustSaying.Messaging.Channels.Context;
+using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 
 
@@ -45,21 +46,43 @@ namespace JustSaying.Messaging.Middleware
         /// </summary>
         public Message Message { get; }
 
+        /// <summary>
+        /// The Absolute Uri of the queue this message came from.
+        /// </summary>
         public Uri QueueUri { get; }
 
+        /// <summary>
+        /// A <see cref="MessageAttributes"/> collection of attributes that were downloaded with this message.
+        /// </summary>
         public MessageAttributes MessageAttributes { get; }
 
+        /// <summary>
+        /// The raw SQS message that was downloaded from the queue.
+        /// </summary>
         public Amazon.SQS.Model.Message RawMessage { get; }
 
+        /// <summary>
+        /// An <see cref="IMessageVisibilityUpdater"/> that can be used to update the visibility timeout for this message.
+        /// </summary>
         public IMessageVisibilityUpdater VisibilityUpdater { get; }
 
+        /// <summary>
+        /// An <see cref="IMessageDeleter"/> that can be used to delete this message.
+        /// </summary>
         public IMessageDeleter MessageDeleter { get; }
 
-        public Exception HandleException { get; private set; }
+        /// <summary>
+        /// The <see cref="Exception"/> that occurred in the handling of this message.
+        /// </summary>
+        public Exception HandledException { get; private set; }
 
+        /// <summary>
+        /// Sets an <see cref="Exception"/> to be available to other middlewares.
+        /// </summary>
+        /// <param name="e">The <see cref="Exception"/> to set for this context.</param>
         public void SetException(Exception e)
         {
-            HandleException = e;
+            HandledException = e;
         }
     }
 }

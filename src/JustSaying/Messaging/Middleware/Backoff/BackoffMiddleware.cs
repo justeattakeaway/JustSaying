@@ -11,17 +11,27 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Middleware.Backoff
 {
+    /// <summary>
+    /// Implements a middleware that will execute an <see cref="IMessageBackoffStrategy"/> to delay message redelivery when a handler returns false or throws.
+    /// </summary>
     public class BackoffMiddleware : MiddlewareBase<HandleMessageContext, bool>
     {
         private readonly IMessageBackoffStrategy _backoffStrategy;
         private readonly ILogger<BackoffMiddleware> _logger;
         private readonly IMessageMonitor _monitor;
 
+        /// <summary>
+        /// Constructs a <see cref="BackoffMiddleware"/> with a given backoff strategy and logger/monitor.
+        /// </summary>
+        /// <param name="backoffStrategy">A <see cref="IMessageBackoffStrategy"/> to use to determine how long to delay message redelivery when a handler returns false or throws.</param>
+        /// <param name="loggerFactory"></param>
+        /// <param name="monitor"></param>
         public BackoffMiddleware(IMessageBackoffStrategy backoffStrategy, ILoggerFactory loggerFactory, IMessageMonitor monitor)
         {
-            _backoffStrategy = backoffStrategy;
-            _monitor = monitor;
-            _logger = loggerFactory.CreateLogger<BackoffMiddleware>();
+            _backoffStrategy = backoffStrategy ?? throw new ArgumentNullException(nameof(backoffStrategy));
+            _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
+            _logger = loggerFactory?.CreateLogger<BackoffMiddleware>() ??
+                throw new ArgumentNullException(nameof(loggerFactory));
         }
 
         protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
@@ -44,23 +54,22 @@ namespace JustSaying.Messaging.Middleware.Backoff
 
         private async Task TryUpdateVisibilityTimeout(HandleMessageContext context, CancellationToken stoppingToken)
         {
-            if (TryGetApproxReceiveCount(context.RawMessage.Attributes, out int approxReceiveCount))
-            {
-                TimeSpan backoffDuration = _backoffStrategy.GetBackoffDuration(context.Message, approxReceiveCount, context.HandleException);
-                try
-                {
-                    await context.VisibilityUpdater.UpdateMessageVisibilityTimeout(backoffDuration, stoppingToken).ConfigureAwait(false);
-                }
-                catch (AmazonServiceException ex)
-                {
-                    _logger.LogError(
-                        ex,
-                        "Failed to update message visibility timeout by {VisibilityTimeout} seconds for message with receipt handle '{ReceiptHandle}'.",
-                        backoffDuration,
-                        context.RawMessage.ReceiptHandle);
+            if (!TryGetApproxReceiveCount(context.RawMessage.Attributes, out int approxReceiveCount)) return;
 
-                    _monitor.HandleError(ex, context.RawMessage);
-                }
+            TimeSpan backoffDuration = _backoffStrategy.GetBackoffDuration(context.Message, approxReceiveCount, context.HandledException);
+            try
+            {
+                await context.VisibilityUpdater.UpdateMessageVisibilityTimeout(backoffDuration, stoppingToken).ConfigureAwait(false);
+            }
+            catch (AmazonServiceException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to update message visibility timeout by {VisibilityTimeout} seconds for message with receipt handle '{ReceiptHandle}'.",
+                    backoffDuration,
+                    context.RawMessage.ReceiptHandle);
+
+                _monitor.HandleError(ex, context.RawMessage);
             }
         }
 

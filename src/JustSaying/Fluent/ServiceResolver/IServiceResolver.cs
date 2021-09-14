@@ -26,7 +26,7 @@ namespace JustSaying.Fluent
         /// The type to resolve an instance of.
         /// </typeparam>
         /// <returns>
-        /// The resolved instance of <typeparamref name="T"/>.
+        /// The resolved instance of <typeparamref name="T"/> or <see langword="null"/>.
         /// </returns>
         T ResolveOptionalService<T>() where T : class;
     }

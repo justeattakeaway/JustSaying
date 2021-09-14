@@ -20,12 +20,13 @@ namespace JustSaying.Fluent
         public ServiceBuilderServiceResolver(ServicesBuilder builder)
         {
             _builder = builder;
-
         }
 
         public T ResolveService<T>() where T : class
         {
-            throw new NotImplementedException();
+            return ResolveOptionalService<T>() ??
+                throw new InvalidOperationException(
+                    $"Service type {typeof(T).FullName} isn't available from this service resolver.");
         }
 
         private void Build()

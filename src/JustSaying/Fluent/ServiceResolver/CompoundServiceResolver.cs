@@ -13,16 +13,14 @@ namespace JustSaying.Fluent.ServiceResolver
 
         public T ResolveService<T>() where T : class
         {
-            var result = _serviceBuilderResolver.ResolveOptionalService<T>();
-            result ??= _serviceResolver.ResolveService<T>();
-            return result;
+            return _serviceBuilderResolver.ResolveOptionalService<T>() ??
+                _serviceResolver.ResolveService<T>();
         }
 
         public T ResolveOptionalService<T>() where T : class
         {
-            var result = _serviceBuilderResolver.ResolveOptionalService<T>();
-            result ??= _serviceResolver.ResolveOptionalService<T>();
-            return result;
+            return _serviceBuilderResolver.ResolveOptionalService<T>() ??
+                _serviceResolver.ResolveOptionalService<T>();
         }
     }
 }

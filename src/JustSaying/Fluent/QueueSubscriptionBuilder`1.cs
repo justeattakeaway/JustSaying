@@ -39,6 +39,9 @@ namespace JustSaying.Fluent
         /// </summary>
         private Dictionary<string, string> Tags { get; } = new(StringComparer.Ordinal);
 
+        /// <summary>
+        /// Gets or sets the <see cref="MiddlewareConfiguration"/>.
+        /// </summary>
         private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
 

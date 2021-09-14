@@ -12,7 +12,7 @@ namespace JustSaying.Messaging.Channels.Context
         /// Will delete this message from the queue.
         /// </summary>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>A Task that will be completed when the message has been deleted or the operation fails.</returns>
         Task DeleteMessage(CancellationToken cancellationToken);
     }
 }

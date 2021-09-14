@@ -1,6 +1,7 @@
 using System;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.Channels.Context;
+using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
 

@@ -20,7 +20,10 @@ namespace JustSaying.Fluent
         /// Configures the middleware pipeline for this subscription.
         /// Any middleware configured here will be wrapped around a handler and metrics middleware.
         /// </summary>
-        /// <param name="middlewareConfiguration"></param>
+        /// <param name="middlewareConfiguration">A configuration action that provides an API
+        /// to override the default middleware behaviour. By default, <see cref="HandlerMiddlewareBuilderExtensions.UseDefaults{TMessage}"/> applies a set of
+        /// default middlewares to add metrics, error handling, completion handling, context setting, and logging.
+        /// Below is an example of how to add your own middlewares around the defaults.</param>
         /// <example>
         /// A sample configuration:
         /// <code>
@@ -28,16 +31,25 @@ namespace JustSaying.Fluent
         /// {
         ///     pipe.Use&lt;SomeCustomMiddleware&gt;();
         ///     pipe.Use&lt;SomeOtherCustomMiddleware&gt;();
+        ///     pipe.UseDefaults&lt;SimpleMessage&gt;(typeof(MyHandler));
         /// });
         /// </code>
         /// would yield this order of execution:
         /// <ul>
         /// <li>Before_SomeCustomMiddleware</li>
         /// <li>Before_SomeOtherCustomMiddleware</li>
+        /// <li>Before_MessageContextAccessorMiddleware</li>
+        /// <li>Before_ErrorHandlerMiddleware</li>
+        /// <li>Before_LoggingMiddleware</li>
         /// <li>Before_StopwatchMiddleware</li>
+        /// <li>Before_SqsPostProcessorMiddleware</li>
         /// <li>Before_HandlerInvocationMiddleware</li>
         /// <li>After_HandlerInvocationMiddleware</li>
+        /// <li>After_SqsPostProcessorMiddleware</li>
         /// <li>After_StopwatchMiddleware</li>
+        /// <li>After_LoggingMiddleware</li>
+        /// <li>After_ErrorHandlerMiddleware</li>
+        /// <li>After_MessageContextAccessorMiddleware</li>
         /// <li>After_SomeOtherCustomMiddleware</li>
         /// <li>After_SomeCustomMiddleware</li>
         /// </ul>

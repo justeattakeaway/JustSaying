@@ -40,7 +40,10 @@ namespace JustSaying.Messaging.Middleware
         where TMessage : Message
         {
             builder.UseMessageContextAccessor();
-            builder.UseBackoff();
+            if (builder.ServiceResolver.ResolveOptionalService<IMessageBackoffStrategy>() != null)
+            {
+                builder.UseBackoff();
+            }
             builder.UseErrorHandler();
             builder.Use<LoggingMiddleware>();
             builder.UseStopwatch(handlerType);

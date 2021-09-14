@@ -10,11 +10,11 @@ namespace JustSaying.Messaging.Channels.Context
     public interface IMessageVisibilityUpdater
     {
         /// <summary>
-        /// Will set the amount of time until this message will be visible again to consumers.
+        /// Sets the amount of time until this message will be visible again to consumers.
         /// </summary>
-        /// <param name="visibilityTimeout"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <param name="visibilityTimeout">The amount of time to wait until this message should become visible again.</param>
+        /// <param name="cancellationToken">A <see cref="CancellationToken"/> cancels the operation to update the visibility timeout.</param>
+        /// <returns>A Task that will be completed when the messages visibility timeout has been updated or the operation fails.</returns>
         Task UpdateMessageVisibilityTimeout(TimeSpan visibilityTimeout, CancellationToken cancellationToken);
     }
 }

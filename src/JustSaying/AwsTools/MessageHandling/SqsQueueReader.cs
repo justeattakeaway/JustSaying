@@ -48,7 +48,7 @@ namespace JustSaying.AwsTools.MessageHandling
             string receiptHandle,
             CancellationToken cancellationToken)
         {
-            await _sqsQueue.DeleteMessageAsync(_sqsQueue.Uri.AbsoluteUri, receiptHandle, cancellationToken).ConfigureAwait(false);
+            await _sqsQueue.DeleteMessageAsync(_sqsQueue.Uri.ToString(), receiptHandle, cancellationToken).ConfigureAwait(false);
         }
 
         internal async Task ChangeMessageVisibilityAsync(
