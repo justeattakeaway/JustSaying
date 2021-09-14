@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 namespace JustSaying.Messaging.Channels.Context
 {
     /// <summary>
-    /// Provides a mechanism to delete messages once they've been successfully handled.
+    /// Provides a way to delete a message once it has been successfully handled.
     /// </summary>
     public interface IMessageDeleter
     {
