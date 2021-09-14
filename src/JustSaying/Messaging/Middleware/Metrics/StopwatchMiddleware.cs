@@ -40,8 +40,8 @@ namespace JustSaying.Messaging.Middleware
             }
             finally
             {
-                _monitor.HandlerExecutionTime(_handlerType, context.MessageType, watch.Elapsed);
                 watch.Stop();
+                _monitor.HandlerExecutionTime(_handlerType, context.MessageType, watch.Elapsed);
             }
         }
     }

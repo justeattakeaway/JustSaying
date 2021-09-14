@@ -17,7 +17,7 @@ namespace JustSaying.Messaging.Middleware
 
         public HandlerInvocationMiddleware(Func<HandlerResolutionContext, IHandlerAsync<T>> handlerResolver)
         {
-            _handlerResolver = handlerResolver;
+            _handlerResolver = handlerResolver ?? throw new ArgumentNullException(nameof(handlerResolver));
         }
 
         protected override async Task<bool> RunInnerAsync(

@@ -5,15 +5,23 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Messaging.Middleware.PostProcessing
+namespace JustSaying.Messaging.Middleware.Logging
 {
+    /// <summary>
+    /// A middleware that logs a rich information or warning event when a message is handled.
+    /// </summary>
     public class LoggingMiddleware : MiddlewareBase<HandleMessageContext, bool>
     {
         private readonly ILogger<LoggingMiddleware> _logger;
 
+        /// <summary>
+        /// Constructs a <see cref="LoggingMiddleware"/>.
+        /// </summary>
+        /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to write logs to.</param>
         public LoggingMiddleware(ILoggerFactory loggerFactory)
         {
-            _logger = loggerFactory.CreateLogger<LoggingMiddleware>();
+            _logger = loggerFactory?.CreateLogger<LoggingMiddleware>() ??
+                throw new ArgumentNullException(nameof(loggerFactory));
         }
 
         private const string MessageTemplate = "{Status} handling message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}ms.";
