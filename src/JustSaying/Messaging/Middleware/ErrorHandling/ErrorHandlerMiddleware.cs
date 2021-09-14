@@ -2,8 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.Models;
-using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Middleware.ErrorHandling
 {
@@ -16,6 +14,11 @@ namespace JustSaying.Messaging.Middleware.ErrorHandling
     {
         private readonly IMessageMonitor _monitor;
 
+        /// <summary>
+        /// Constructs an <see cref="ErrorHandlerMiddleware"/>.
+        /// </summary>
+        /// <param name="monitor">The <see cref="IMessageMonitor"/> to use to record errors.</param>
+        /// <exception cref="ArgumentNullException">When the <see cref="IMessageMonitor"/> is null.</exception>
         public ErrorHandlerMiddleware(IMessageMonitor monitor)
         {
             _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));

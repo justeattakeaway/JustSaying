@@ -11,6 +11,7 @@
         "LoggingMiddleware",
         "StopwatchMiddleware",
         "SqsPostProcessorMiddleware",
+        "AfterTestMiddleware",
         "HandlerInvocationMiddleware`1"
       ]
     }

@@ -25,6 +25,9 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
         class InnerTestMiddleware : InspectableMiddleware<SimpleMessage>
         { }
 
+        class AfterTestMiddleware : InspectableMiddleware<SimpleMessage>
+        { }
+
         [AwsFact]
         public async Task Then_The_Defaults_Are_The_Defaults_For_Sure()
         {
@@ -60,6 +63,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
             var handler = new InspectableHandler<SimpleMessage>();
             var outerMiddleware = new OuterTestMiddleware();
             var innerMiddleware = new InnerTestMiddleware();
+            var afterMiddleware = new AfterTestMiddleware();
 
             var services = GivenJustSaying()
                 .ConfigureJustSaying((builder) =>
@@ -69,6 +73,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                             m.Use(outerMiddleware);
                             m.Use(innerMiddleware);
                             m.UseDefaults<SimpleMessage>(handler.GetType());
+                            m.Use(afterMiddleware);
                         })))
                 .AddJustSayingHandlers(new[] { handler });
 
