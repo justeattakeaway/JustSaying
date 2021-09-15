@@ -110,11 +110,7 @@ namespace JustSaying.Fluent
             return this;
         }
 
-        /// <summary>
-        /// Configures the middleware pipeline for this topic subscription.
-        /// </summary>
-        /// <param name="middlewareConfiguration">An <see cref="Action{HandlerMiddlewareBuilder}"/> that configures the middleware pipeline.</param>
-        /// <returns>The current <see cref="TopicSubscriptionBuilder{T}"/></returns>
+        /// <inheritdoc />
         public ISubscriptionBuilder<T> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
         {
             MiddlewareConfiguration = middlewareConfiguration;

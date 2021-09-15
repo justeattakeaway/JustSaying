@@ -149,7 +149,7 @@ namespace JustSaying.Fluent
             return this;
         }
 
-
+        /// <inheritdoc />
         public ISubscriptionBuilder<T> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
         {
             MiddlewareConfiguration = middlewareConfiguration;

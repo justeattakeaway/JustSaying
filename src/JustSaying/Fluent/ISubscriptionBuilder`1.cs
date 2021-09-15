@@ -18,14 +18,13 @@ namespace JustSaying.Fluent
     {
         /// <summary>
         /// Configures the middleware pipeline for this subscription.
-        /// Any middleware configured here will be wrapped around a handler and metrics middleware.
         /// </summary>
-        /// <param name="middlewareConfiguration">A configuration action that provides an API
-        /// to override the default middleware behaviour. By default, <see cref="HandlerMiddlewareBuilderExtensions.UseDefaults{TMessage}"/> applies a set of
+        /// <param name="middlewareConfiguration">A configuration action that provides a way
+        /// to override the default middleware behaviour. By default, this builder calls <see cref="HandlerMiddlewareBuilderExtensions.UseDefaults{TMessage}"/> which applies a set of
         /// default middlewares to add metrics, error handling, completion handling, context setting, and logging.
         /// </param>
         /// <example>
-        /// A sample configuration:
+        /// A sample configuration with additional middlewares:
         /// <code>
         /// WithMiddlewareConfiguration(pipe =>
         /// {
