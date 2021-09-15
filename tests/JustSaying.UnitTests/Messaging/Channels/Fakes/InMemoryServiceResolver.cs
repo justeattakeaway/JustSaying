@@ -22,10 +22,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.Fakes
             sc.AddLogging(l => l.AddXUnit(outputHelper))
             .AddSingleton<IMessageMonitor>(monitor)
             .AddSingleton<LoggingMiddleware>()
-            .AddSingleton<MessageContextAccessorMiddleware>()
             .AddSingleton<SqsPostProcessorMiddleware>()
-            .AddSingleton<BackoffMiddleware>()
-            .AddSingleton<ErrorHandlerMiddleware>()
             .AddSingleton<IMessageContextAccessor>(new MessageContextAccessor());
 
         public InMemoryServiceResolver(ITestOutputHelper outputHelper, IMessageMonitor monitor, Action<IServiceCollection> configure = null) :

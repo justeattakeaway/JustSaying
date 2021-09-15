@@ -34,7 +34,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
             Queues.Add(_queue);
             _messageLock = new FakeMessageLock();
 
-            var servicesBuilder = new ServicesBuilder(new MessagingBusBuilder());
             var serviceResolver = new InMemoryServiceResolver(sc =>
                 sc.AddSingleton<IMessageLockAsync>(_messageLock)
                     .AddSingleton<IHandlerAsync<SimpleMessage>>(Handler)
