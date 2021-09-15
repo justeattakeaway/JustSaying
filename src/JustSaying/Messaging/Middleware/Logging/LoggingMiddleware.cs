@@ -10,7 +10,7 @@ namespace JustSaying.Messaging.Middleware.Logging
     /// <summary>
     /// A middleware that logs a rich information or warning event when a message is handled.
     /// </summary>
-    public class LoggingMiddleware : MiddlewareBase<HandleMessageContext, bool>
+    public sealed class LoggingMiddleware : MiddlewareBase<HandleMessageContext, bool>
     {
         private readonly ILogger<LoggingMiddleware> _logger;
 

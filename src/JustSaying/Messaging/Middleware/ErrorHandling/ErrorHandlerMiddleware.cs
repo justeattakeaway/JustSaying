@@ -10,7 +10,7 @@ namespace JustSaying.Messaging.Middleware.ErrorHandling
     /// This middleware calls HandleException(Type messageType), HandleError(Exception ex, Amazon.SQS.Model.Message message),
     /// and Handled(JustSaying.Models.Message message).
     /// </summary>
-    public class ErrorHandlerMiddleware : MiddlewareBase<HandleMessageContext, bool>
+    public sealed class ErrorHandlerMiddleware : MiddlewareBase<HandleMessageContext, bool>
     {
         private readonly IMessageMonitor _monitor;
 

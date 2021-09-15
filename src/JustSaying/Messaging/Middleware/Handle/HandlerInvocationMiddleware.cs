@@ -11,7 +11,7 @@ namespace JustSaying.Messaging.Middleware
     /// This middleware is responsible for resolving a message handler and calling it.
     /// </summary>
     /// <typeparam name="T">The type of the message that the message handler handles.</typeparam>
-    public class HandlerInvocationMiddleware<T> : MiddlewareBase<HandleMessageContext, bool> where T : Message
+    public sealed class HandlerInvocationMiddleware<T> : MiddlewareBase<HandleMessageContext, bool> where T : Message
     {
         private readonly Func<HandlerResolutionContext, IHandlerAsync<T>> _handlerResolver;
 

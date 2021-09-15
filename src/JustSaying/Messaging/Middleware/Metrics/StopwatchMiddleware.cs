@@ -10,7 +10,7 @@ namespace JustSaying.Messaging.Middleware
     /// <summary>
     /// This middleware measures the handler's execution duration and reports the results to an <see cref="IMessageMonitor"/>.
     /// </summary>
-    public class StopwatchMiddleware : MiddlewareBase<HandleMessageContext, bool>
+    public sealed class StopwatchMiddleware : MiddlewareBase<HandleMessageContext, bool>
     {
         private readonly IMessageMonitor _monitor;
         private readonly Type _handlerType;

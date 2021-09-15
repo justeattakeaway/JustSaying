@@ -14,7 +14,7 @@ namespace JustSaying.Messaging.Middleware.Backoff
     /// <summary>
     /// Implements a middleware that will execute an <see cref="IMessageBackoffStrategy"/> to delay message redelivery when a handler returns false or throws.
     /// </summary>
-    public class BackoffMiddleware : MiddlewareBase<HandleMessageContext, bool>
+    public sealed class BackoffMiddleware : MiddlewareBase<HandleMessageContext, bool>
     {
         private readonly IMessageBackoffStrategy _backoffStrategy;
         private readonly ILogger<BackoffMiddleware> _logger;

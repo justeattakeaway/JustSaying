@@ -8,7 +8,7 @@ namespace JustSaying.Messaging.Middleware.MessageContext
     /// <summary>
     /// A middleware that sets context that is available in message handlers by resolving an `IMessageContextAccessor`.
     /// </summary>
-    public class MessageContextAccessorMiddleware : MiddlewareBase<HandleMessageContext, bool>
+    public sealed class MessageContextAccessorMiddleware : MiddlewareBase<HandleMessageContext, bool>
     {
         private readonly IMessageContextAccessor _messageContextAccessor;
 
