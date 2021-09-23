@@ -134,10 +134,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<IMessageMonitor, NullOpMessageMonitor>();
 
             services.TryAddSingleton<LoggingMiddleware>();
-            services.TryAddSingleton<MessageContextAccessorMiddleware>();
-            services.TryAddSingleton<ErrorHandlerMiddleware>();
             services.TryAddSingleton<SqsPostProcessorMiddleware>();
-            services.TryAddSingleton<BackoffMiddleware>();
 
             services.AddSingleton<MessageContextAccessor>();
             services.TryAddSingleton<IMessageContextAccessor>(serviceProvider => serviceProvider.GetRequiredService<MessageContextAccessor>());

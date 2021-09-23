@@ -42,10 +42,7 @@ namespace JustSaying
             For<IMessageContextReader>().Use(context => context.GetInstance<MessageContextAccessor>());
 
             For<LoggingMiddleware>().Singleton();
-            For<MessageContextAccessorMiddleware>().Singleton();
-            For<ErrorHandlerMiddleware>().Singleton();
             For<SqsPostProcessorMiddleware>().Singleton();
-            For<BackoffMiddleware>().Singleton();
 
             For<IMessageSerializationRegister>()
                 .Use(
