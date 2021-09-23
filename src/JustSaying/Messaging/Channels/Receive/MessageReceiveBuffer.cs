@@ -30,7 +30,6 @@ namespace JustSaying.Messaging.Channels.Receive
         private readonly ILogger _logger;
 
         private readonly HashSet<string> _requestMessageAttributeNames = new HashSet<string>();
-        private readonly string _backoffStrategyName;
 
         public ChannelReader<IQueueMessageContext> Reader => _channel.Reader;
 
@@ -44,8 +43,7 @@ namespace JustSaying.Messaging.Channels.Receive
             ISqsQueue sqsQueue,
             MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware,
             IMessageMonitor monitor,
-            ILogger<IMessageReceiveBuffer> logger,
-            IMessageBackoffStrategy messageBackoffStrategy = null)
+            ILogger<IMessageReceiveBuffer> logger)
         {
             _prefetch = prefetch;
             _bufferSize = bufferSize;
@@ -56,14 +54,10 @@ namespace JustSaying.Messaging.Channels.Receive
             _sqsMiddleware = sqsMiddleware ?? throw new ArgumentNullException(nameof(sqsMiddleware));
             _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _backoffStrategyName = messageBackoffStrategy?.GetType()?.Name;
 
             _channel = Channel.CreateBounded<IQueueMessageContext>(bufferSize);
 
-            if (messageBackoffStrategy != null)
-            {
-                _requestMessageAttributeNames.Add(MessageSystemAttributeName.ApproximateReceiveCount);
-            }
+            _requestMessageAttributeNames.Add(MessageSystemAttributeName.ApproximateReceiveCount);
         }
 
         /// <summary>
@@ -174,7 +168,6 @@ namespace JustSaying.Messaging.Channels.Receive
                 _sqsQueueReader.QueueName,
                 Region = _sqsQueueReader.RegionSystemName,
                 Prefetch = _prefetch,
-                BackoffStrategyName = _backoffStrategyName,
             });
         }
     }

@@ -14,6 +14,7 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
+using JustSaying.Messaging.Middleware.Backoff;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
@@ -148,12 +149,12 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
                 var handler = new InspectableHandler<SimpleMessage>();
 
-                var testResolver = new InMemoryServiceResolver(_outputHelper, _messageMonitor,
-                    sc => sc
-                        .AddSingleton<IHandlerAsync<SimpleMessage>>(handler)
-                        .AddSingleton(MessageBackoffStrategy));
+                var testResolver = new InMemoryServiceResolver(_outputHelper,
+                    _messageMonitor,
+                    sc => sc.AddSingleton<IHandlerAsync<SimpleMessage>>(handler));
 
                 var middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
+                    .UseBackoff(MessageBackoffStrategy)
                     .UseDefaults<SimpleMessage>(handler.GetType())
                     .Build();
 
@@ -193,12 +194,12 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
                     OnHandle = msg => throw _expectedException
                 };
 
-                var testResolver = new InMemoryServiceResolver(_outputHelper, _messageMonitor,
-                    sc => sc
-                        .AddSingleton<IHandlerAsync<SimpleMessage>>(handler)
-                        .AddSingleton(MessageBackoffStrategy));
+                var testResolver = new InMemoryServiceResolver(_outputHelper,
+                    _messageMonitor,
+                    sc => sc.AddSingleton<IHandlerAsync<SimpleMessage>>(handler));
 
                 var middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
+                    .UseBackoff(MessageBackoffStrategy)
                     .UseDefaults<SimpleMessage>(handler.GetType())
                     .Build();
 
