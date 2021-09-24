@@ -12,8 +12,7 @@
           "BufferSize": 20,
           "QueueName": "EC159934-A30E-45B0-9186-78853F7D3BED",
           "Region": "fake-region",
-          "Prefetch": 5,
-          "BackoffStrategyName": null
+          "Prefetch": 5
         }
       ]
     },
@@ -29,8 +28,7 @@
           "BufferSize": 10,
           "QueueName": "C7506B3F-81DA-4898-82A5-C0293523592A",
           "Region": "fake-region",
-          "Prefetch": 10,
-          "BackoffStrategyName": null
+          "Prefetch": 10
         }
       ]
     }

@@ -13,13 +13,12 @@ namespace JustSaying.Messaging.Middleware.Backoff
         /// a <see cref="BackoffMiddleware"/> and add it to the pipeline.
         /// </summary>
         /// <param name="builder">The <see cref="HandlerMiddlewareBuilder"/> to add the middleware to.</param>
+        /// <param name="backoffStrategy">The <see cref="IMessageBackoffStrategy"/> to use to determine message visibility timeouts.</param>
         /// <returns>The current <see cref="HandlerMiddlewareBuilder"/>.</returns>
         /// <exception cref="ArgumentNullException">When the <see cref="HandlerMiddlewareBuilder"/> is null.</exception>
-        public static HandlerMiddlewareBuilder UseBackoff(this HandlerMiddlewareBuilder builder)
+        public static HandlerMiddlewareBuilder UseBackoff(this HandlerMiddlewareBuilder builder, IMessageBackoffStrategy backoffStrategy)
         {
             if (builder == null) throw new ArgumentNullException(nameof(builder));
-
-            var backoffStrategy = builder.ServiceResolver.ResolveService<IMessageBackoffStrategy>();
 
             var loggerFactory = builder.ServiceResolver.ResolveService<ILoggerFactory>();
             var monitor = builder.ServiceResolver.ResolveService<IMessageMonitor>();

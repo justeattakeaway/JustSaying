@@ -67,10 +67,6 @@ namespace JustSaying.Messaging.Middleware
             if (handlerType == null) throw new ArgumentNullException(nameof(handlerType), "HandlerType is used here to");
 
             builder.UseMessageContextAccessor();
-            if (builder.ServiceResolver.ResolveOptionalService<IMessageBackoffStrategy>() != null)
-            {
-                builder.UseBackoff();
-            }
             builder.UseErrorHandler();
             builder.Use<LoggingMiddleware>();
             builder.UseStopwatch(handlerType);
