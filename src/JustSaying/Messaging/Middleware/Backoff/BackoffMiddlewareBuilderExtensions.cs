@@ -19,6 +19,7 @@ namespace JustSaying.Messaging.Middleware.Backoff
         public static HandlerMiddlewareBuilder UseBackoff(this HandlerMiddlewareBuilder builder, IMessageBackoffStrategy backoffStrategy)
         {
             if (builder == null) throw new ArgumentNullException(nameof(builder));
+            if (backoffStrategy == null) throw new ArgumentNullException(nameof(backoffStrategy));
 
             var loggerFactory = builder.ServiceResolver.ResolveService<ILoggerFactory>();
             var monitor = builder.ServiceResolver.ResolveService<IMessageMonitor>();
