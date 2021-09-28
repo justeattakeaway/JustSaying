@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
@@ -45,7 +46,7 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        public async Task ApplyTagsAsync()
+        public async Task ApplyTagsAsync(CancellationToken cancellationToken)
         {
             if (!Tags.Any())
             {
@@ -60,12 +61,12 @@ namespace JustSaying.AwsTools.MessageHandling
                 Tags = Tags.Select(CreateTag).ToList()
             };
 
-            await _client.TagResourceAsync(tagRequest).ConfigureAwait(false);
+            await _client.TagResourceAsync(tagRequest, cancellationToken).ConfigureAwait(false);
 
             _logger.LogInformation("Added {TagCount} tags to topic {TopicName}", tagRequest.Tags.Count, TopicName);
         }
 
-        public async Task<bool> ExistsAsync()
+        public async Task<bool> ExistsAsync(CancellationToken cancellationToken)
         {
             if (!string.IsNullOrWhiteSpace(Arn))
             {
@@ -84,11 +85,11 @@ namespace JustSaying.AwsTools.MessageHandling
             return false;
         }
 
-        public async Task CreateAsync()
+        public async Task CreateAsync(CancellationToken cancellationToken)
         {
             try
             {
-                var response = await _client.CreateTopicAsync(new CreateTopicRequest(TopicName))
+                var response = await _client.CreateTopicAsync(new CreateTopicRequest(TopicName), cancellationToken)
                     .ConfigureAwait(false);
 
                 if (string.IsNullOrEmpty(response.TopicArn))
@@ -105,7 +106,7 @@ namespace JustSaying.AwsTools.MessageHandling
             catch (AuthorizationErrorException ex)
             {
                 _logger.LogWarning(0, ex, "Not authorized to create topic '{TopicName}'.", TopicName);
-                if (!await ExistsAsync().ConfigureAwait(false))
+                if (!await ExistsAsync(cancellationToken).ConfigureAwait(false))
                 {
                     throw new InvalidOperationException(
                         $"Topic '{TopicName}' does not exist, and no permission to create it.");
@@ -113,9 +114,9 @@ namespace JustSaying.AwsTools.MessageHandling
             }
         }
 
-        public async Task CreateWithEncryptionAsync(ServerSideEncryption config)
+        public async Task CreateWithEncryptionAsync(ServerSideEncryption config, CancellationToken cancellationToken)
         {
-            await CreateAsync().ConfigureAwait(false);
+            await CreateAsync(cancellationToken).ConfigureAwait(false);
 
             ServerSideEncryption =
                 await ExtractServerSideEncryptionFromTopicAttributes().ConfigureAwait(false);

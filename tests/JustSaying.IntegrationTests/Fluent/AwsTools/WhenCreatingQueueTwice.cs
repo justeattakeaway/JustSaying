@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
@@ -34,8 +35,8 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                 loggerFactory);
 
             // Shouldn't throw
-            await topic.CreateAsync();
-            await topic.CreateAsync();
+            await topic.CreateAsync(CancellationToken.None);
+            await topic.CreateAsync(CancellationToken.None);
 
             topic.Arn.ShouldNotBeNull();
             topic.Arn.ShouldEndWith(topic.TopicName);

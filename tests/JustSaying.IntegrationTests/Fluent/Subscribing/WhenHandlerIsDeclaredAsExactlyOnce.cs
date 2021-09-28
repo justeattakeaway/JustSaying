@@ -1,9 +1,13 @@
 using System.Linq;
 using System.Threading.Tasks;
+using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
+using JustSaying.Messaging.Middleware.ErrorHandling;
+using JustSaying.Messaging.Middleware.PostProcessing;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using Shouldly;
 using Xunit.Abstractions;
 
@@ -27,12 +31,13 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 .AddSingleton<IMessageLockAsync>(messageLock)
                 .ConfigureJustSaying((builder) =>
                     builder.WithLoopbackTopic<SimpleMessage>(UniqueName,
-                        c =>
-                            c.WithReadConfiguration(rc =>
-                                rc.WithMiddlewareConfiguration(m =>
-                                    m.UseExactlyOnce<SimpleMessage>("simple-message-lock")))))
+                        c => c.WithMiddlewareConfiguration(m =>
+                            m.UseExactlyOnce<SimpleMessage>("lock-simple-message")
+                                .UseDefaults<SimpleMessage>(handler.GetType()))))
                 .AddJustSayingHandlers(new[] { handler });
 
+            var message = new SimpleMessage();
+            string json = "";
             await WhenAsync(
                 services,
                 async (publisher, listener, serviceProvider, cancellationToken) =>
@@ -40,16 +45,22 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                     await listener.StartAsync(cancellationToken);
                     await publisher.StartAsync(cancellationToken);
 
-                    var message = new SimpleMessage();
-
                     // Act
                     await publisher.PublishAsync(message, cancellationToken);
                     await publisher.PublishAsync(message, cancellationToken);
-                    await Task.Delay(1.Seconds(), cancellationToken);
 
-                    handler.ReceivedMessages.Where(m => m.Id.ToString() == message.UniqueKey())
-                        .ShouldHaveSingleItem();
+                    dynamic middlewares = ((dynamic)listener.Interrogate().Data).Middleware;
+                    json = JsonConvert.SerializeObject(middlewares, Formatting.Indented)
+                        .Replace(UniqueName, "TestQueueName");
+
+                    await Patiently.AssertThatAsync(() =>
+                    {
+                        handler.ReceivedMessages.Where(m => m.Id.ToString() == message.UniqueKey())
+                            .ShouldHaveSingleItem();
+                    });
                 });
+
+            json.ShouldMatchApproved(c => c.SubFolder("Approvals"));
         }
     }
 }

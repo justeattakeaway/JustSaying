@@ -17,29 +17,24 @@ namespace JustSaying.UnitTests.JustSayingBus
 {
     public sealed class WhenRegisteringSubscribers : GivenAServiceBus, IDisposable
     {
-        private ISqsQueue _queue1;
-        private ISqsQueue _queue2;
-        private FakeAmazonSqs _client1;
-        private FakeAmazonSqs _client2;
+        private FakeSqsQueue _queue1;
+        private FakeSqsQueue _queue2;
         private CancellationTokenSource _cts;
 
         protected override void Given()
         {
             base.Given();
 
-            _client1 = CreateSubstituteClient();
-            _client2 = CreateSubstituteClient();
+            IEnumerable<Message> GetMessages(CancellationToken cancellationToken)
+            {
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    yield return new TestMessage();
+                }
+            }
 
-            _queue1 = Substitute.For<ISqsQueue>();
-            _queue1.QueueName.Returns("queue1");
-            _queue1.Uri.Returns(new Uri("http://test.com"));
-
-            _queue1.Client.Returns(_client1);
-
-            _queue2 = Substitute.For<ISqsQueue>();
-            _queue2.QueueName.Returns("queue2");
-            _queue2.Uri.Returns(new Uri("http://test.com"));
-            _queue2.Client.Returns(_client2);
+            _queue1 = new FakeSqsQueue(ct =>Task.FromResult(GetMessages(ct)), "queue1");
+            _queue2 = new FakeSqsQueue(ct => Task.FromResult(GetMessages(ct)), "queue2");
         }
 
         protected override async Task WhenAsync()
@@ -66,8 +61,8 @@ namespace JustSaying.UnitTests.JustSayingBus
             await Patiently.AssertThatAsync(OutputHelper,
                 () =>
                 {
-                    _client1.ReceiveMessageRequests.Count.ShouldBeGreaterThan(0);
-                    _client2.ReceiveMessageRequests.Count.ShouldBeGreaterThan(0);
+                    _queue1.ReceiveMessageRequests.Count.ShouldBeGreaterThan(0);
+                    _queue2.ReceiveMessageRequests.Count.ShouldBeGreaterThan(0);
                 });
         }
 
@@ -81,30 +76,16 @@ namespace JustSaying.UnitTests.JustSayingBus
             json.ShouldMatchApproved(c => c.SubFolder("Approvals"));
         }
 
-        private static FakeAmazonSqs CreateSubstituteClient()
-        {
-            return new FakeAmazonSqs(() =>
-                new ReceiveMessageResponse()
-                {
-                    Messages = new List<Message>()
-                    {
-                        new TestMessage()
-                    }
-                }.Infinite());
-        }
-
         private class TestMessage : Message
         {
             public TestMessage()
             {
-                Body = "TestMesage";
+                Body = "TestMessage";
             }
         }
 
         public void Dispose()
         {
-            _client1?.Dispose();
-            _client2?.Dispose();
             _cts?.Dispose();
         }
 

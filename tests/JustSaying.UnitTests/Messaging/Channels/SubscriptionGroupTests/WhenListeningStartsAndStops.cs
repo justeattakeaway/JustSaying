@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageProcessingStrategies;
@@ -18,7 +19,6 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         private int _expectedMaxMessageCount;
         private bool _running;
         private FakeSqsQueue _queue;
-        private FakeAmazonSqs _client;
 
         public WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
@@ -32,11 +32,18 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
             Logger.LogInformation("Expected max message count is {MaxMessageCount}", _expectedMaxMessageCount);
 
-            var response1 = new List<Message> { new Message { Body = AttributeMessageContentsRunning } };
-            var response2 = new List<Message> { new Message { Body = AttributeMessageContentsAfterStop } };
+            var response1 = new Message { Body = AttributeMessageContentsRunning };
+            var response2 = new Message { Body = AttributeMessageContentsAfterStop } ;
+            IEnumerable<Message> GetMessages(CancellationToken cancellationToken)
+            {
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    if (_running) yield return response1;
+                    else yield return response2;
+                }
+            }
 
-            _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), () => _running ? response1 : response2);
-            _client = _queue.FakeClient;
+            _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), ct => Task.FromResult(GetMessages(ct)));
 
             Queues.Add(_queue);
         }
@@ -53,13 +60,13 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         [Fact]
         public void MessagesAreReceived()
         {
-            _client.ReceiveMessageRequests.ShouldNotBeEmpty();
+            _queue.ReceiveMessageRequests.ShouldNotBeEmpty();
         }
 
         [Fact]
         public void TheMaxMessageAllowanceIsGrabbed()
         {
-            _client.ReceiveMessageRequests.ShouldAllBe(req => req.MaxNumberOfMessages == _expectedMaxMessageCount);
+            _queue.ReceiveMessageRequests.ShouldAllBe(req => req.MaxNumOfMessages == _expectedMaxMessageCount);
         }
 
         [Fact]

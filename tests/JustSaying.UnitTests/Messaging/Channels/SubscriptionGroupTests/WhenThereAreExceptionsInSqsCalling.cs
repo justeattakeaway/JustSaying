@@ -20,7 +20,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected override void Given()
         {
-            _queue = CreateSuccessfulTestQueue("TestQueue", ExceptionOnFirstCall);
+            _queue = CreateSuccessfulTestQueue("TestQueue", ExceptionOnFirstCall());
             Queues.Add(_queue);
 
             SerializationRegister.DefaultDeserializedMessage =
@@ -35,7 +35,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
                 throw new TestException("testing the failure on first call");
             }
 
-            return new List<Message>();
+            yield break;
         }
 
         protected override bool Until()

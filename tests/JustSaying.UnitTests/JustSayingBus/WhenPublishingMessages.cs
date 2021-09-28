@@ -5,6 +5,7 @@ using JustSaying.Messaging;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using NSubstitute;
+using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -33,7 +34,7 @@ namespace JustSaying.UnitTests.JustSayingBus
         [Fact]
         public void PublishMessageTimeStatsSent()
         {
-            Monitor.Received(1).PublishMessageTime(Arg.Any<TimeSpan>());
+            Monitor.PublishMessageTimes.ShouldHaveSingleItem();
         }
 
         public WhenPublishingMessages(ITestOutputHelper outputHelper) : base(outputHelper)

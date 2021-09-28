@@ -1,3 +1,4 @@
+using System.Threading;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 
@@ -7,9 +8,7 @@ namespace JustSaying.AwsTools.QueueCreation
     {
         QueueWithAsyncStartup EnsureTopicExistsWithQueueSubscribed(
             string region,
-            IMessageSerializationRegister serializationRegister,
-            SqsReadConfiguration queueConfig,
-            IMessageSubjectProvider messageSubjectProvider);
+            SqsReadConfiguration queueConfig);
 
         QueueWithAsyncStartup EnsureQueueExists(string region, SqsReadConfiguration queueConfig);
     }

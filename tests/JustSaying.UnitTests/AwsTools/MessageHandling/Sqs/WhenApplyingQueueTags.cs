@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
@@ -82,7 +83,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
             };
 
             // Act
-            await sut.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(config);
+            await sut.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(config, CancellationToken.None);
 
             // Assert
             await _client.Received(1).TagQueueAsync(Arg.Is<TagQueueRequest>(req => req.QueueUrl == QueueUrl && req.Tags == config.Tags));
@@ -95,7 +96,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
             var sut = new SqsQueueByName(RegionEndpoint.EUWest1, QueueName, _client, 3, NullLoggerFactory.Instance);
 
             // Act
-            await sut.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(new SqsReadConfiguration(SubscriptionType.ToTopic));
+            await sut.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(new SqsReadConfiguration(SubscriptionType.ToTopic), CancellationToken.None);
 
             // Assert
             await _client.Received(0).TagQueueAsync(Arg.Any<TagQueueRequest>());

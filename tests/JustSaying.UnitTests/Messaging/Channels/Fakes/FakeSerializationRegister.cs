@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using JustSaying.Messaging.Channels.Context;
+using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.TestingFramework;

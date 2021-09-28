@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS.Model;
@@ -13,9 +14,12 @@ using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Middleware.Receive;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using NSubstitute;
+using NSubstitute.Extensions;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
@@ -33,7 +37,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
         public ChannelsTests(ITestOutputHelper testOutputHelper)
         {
             OutputHelper = testOutputHelper;
-            LoggerFactory = testOutputHelper.ToLoggerFactory();
+            LoggerFactory = new LoggerFactory().AddXUnit(testOutputHelper, LogLevel.Trace);
             MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
         }
 
@@ -90,10 +94,13 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var consumer2Completion = consumer2.RunAsync(cts.Token);
             var buffer1Completion = buffer.RunAsync(cts.Token);
 
-            await multiplexerCompletion.HandleCancellation();
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer2Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer1Completion);
+            var results = await Task.WhenAll(
+                multiplexerCompletion.HandleCancellation(),
+                buffer1Completion.HandleCancellation(),
+                consumer1Completion.HandleCancellation(),
+                consumer2Completion.HandleCancellation());
+
+            results.Any().ShouldBeTrue();
         }
 
         [Fact]
@@ -123,10 +130,13 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var buffer1Completion = buffer1.RunAsync(cts.Token);
             var buffer2Completion = buffer2.RunAsync(cts.Token);
 
-            await multiplexerCompletion.HandleCancellation();
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer1Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer2Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1Completion);
+            var results = await Task.WhenAll(
+                multiplexerCompletion.HandleCancellation(),
+                buffer1Completion.HandleCancellation(),
+                buffer2Completion.HandleCancellation(),
+                consumer1Completion.HandleCancellation());
+
+            results.Any().ShouldBeTrue();
         }
 
         [Fact]
@@ -164,36 +174,32 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
             cts.Cancel();
 
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer1Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => buffer2Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1Completion);
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer2Completion);
-            await multiplexerCompletion.HandleCancellation();
+            var results = await Task.WhenAll(
+                multiplexerCompletion.HandleCancellation(),
+                buffer1Completion.HandleCancellation(),
+                buffer2Completion.HandleCancellation(),
+                consumer1Completion.HandleCancellation(),
+                consumer2Completion.HandleCancellation());
+
+            results.Any().ShouldBeTrue();
         }
 
-        [Fact]
-        public async Task Subscriber_Not_Started_No_Buffer_Filled_Then_No_More_Messages_Requested()
+        [Theory]
+        [InlineData(5, 5, 2, 10)]
+        [InlineData(10, 20, 20, 50)]
+        public async Task WhenSubscriberNotStarted_BufferShouldFillUp_AndStopDownloading(int receivePrefetch, int receiveBufferSize, int multiplexerCapacity, int expectedDownloadCount)
         {
-            // Arrange
-            int messagesFromQueue = 0;
-            int messagesDispatched = 0;
-            int receivebufferSize = 2;
-            int multiplexerCapacity = 2;
-
-            // plus one "in flight" between buffer and multiplexer
-            int expectedReceiveFromQueueCount = receivebufferSize + multiplexerCapacity + 1;
-
-            var sqsQueue = TestQueue(() => Interlocked.Increment(ref messagesFromQueue));
-            IMessageReceiveBuffer buffer = CreateMessageReceiveBuffer(sqsQueue, receivebufferSize);
-            IMessageDispatcher dispatcher =
-                new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
+            var sqsQueue = TestQueue();
+            IMessageReceiveBuffer buffer = CreateMessageReceiveBuffer(sqsQueue, receivePrefetch, receiveBufferSize);
+            FakeDispatcher dispatcher = new FakeDispatcher();
             IMultiplexerSubscriber consumer1 = CreateSubscriber(dispatcher);
             IMultiplexer multiplexer = CreateMultiplexer(multiplexerCapacity);
 
             multiplexer.ReadFrom(buffer.Reader);
             consumer1.Subscribe(multiplexer.GetMessagesAsync());
 
-            // need to start the multiplexer before calling Messages
+            OutputHelper.WriteLine("Multiplexer" + JsonConvert.SerializeObject(multiplexer.Interrogate()));
+            OutputHelper.WriteLine("MessageReceiveBuffer" + JsonConvert.SerializeObject(buffer.Interrogate()));
 
             using var cts = new CancellationTokenSource();
 
@@ -201,20 +207,13 @@ namespace JustSaying.UnitTests.Messaging.Channels
             var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
             var bufferCompletion = buffer.RunAsync(cts.Token);
 
-            cts.CancelAfter(TimeSpan.FromSeconds(3));
+            cts.CancelAfter(3.Seconds());
 
             await multiplexerCompletion.HandleCancellation();
+            await bufferCompletion.HandleCancellation();
 
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => bufferCompletion);
-
-            await Patiently.AssertThatAsync(OutputHelper,
-                () =>
-                {
-                    messagesFromQueue.ShouldBe(expectedReceiveFromQueueCount);
-                    messagesDispatched.ShouldBe(0);
-
-                    return true;
-                });
+            sqsQueue.ReceiveMessageRequests.Sum(x => x.NumMessagesReceived).ShouldBe(expectedDownloadCount);
+            dispatcher.DispatchedMessages.Count.ShouldBe(0);
 
             // Starting the consumer after the token is cancelled will not dispatch messages
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => consumer1.RunAsync(cts.Token));
@@ -222,10 +221,8 @@ namespace JustSaying.UnitTests.Messaging.Channels
             await Patiently.AssertThatAsync(OutputHelper,
                 () =>
                 {
-                    messagesFromQueue.ShouldBe(expectedReceiveFromQueueCount);
-                    messagesDispatched.ShouldBe(0);
-
-                    return true;
+                    sqsQueue.ReceiveMessageRequests.Sum(x => x.NumMessagesReceived).ShouldBe(expectedDownloadCount);
+                    dispatcher.DispatchedMessages.Count.ShouldBe(0);
                 });
         }
 
@@ -329,46 +326,34 @@ namespace JustSaying.UnitTests.Messaging.Channels
             cts.Cancel();
         }
 
-        private static ISqsQueue TestQueue(Action spy = null)
+        private static FakeSqsQueue TestQueue(Action spy = null)
         {
-            async Task<ReceiveMessageResponse> GetMessages()
+            IEnumerable<Message> GetMessages(CancellationToken cancellationToken)
             {
-                await Task.Delay(50);
-
                 spy?.Invoke();
-                var messages = new List<Message>
-                {
-                    new TestMessage(),
-                };
 
-                return new ReceiveMessageResponse
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    Messages = messages,
-                };
-
+                    yield return new TestMessage();
+                }
             }
 
-            ISqsQueue sqsQueueMock = Substitute.For<ISqsQueue>();
-            sqsQueueMock.Uri.Returns(new Uri("http://test.com"));
-            sqsQueueMock
-                .Client.ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
-                .Returns(_ => GetMessages());
-
-            return sqsQueueMock;
+            return new FakeSqsQueue(ct => Task.FromResult(GetMessages(ct)));
         }
 
         private IMessageReceiveBuffer CreateMessageReceiveBuffer(
             ISqsQueue sqsQueue,
-            int bufferSize = 10)
+            int prefetch = 10,
+            int receiveBufferSize = 10)
         {
             return new MessageReceiveBuffer(
-                10,
-                bufferSize,
+                prefetch,
+                receiveBufferSize,
                 TimeSpan.FromSeconds(1),
                 TimeSpan.FromSeconds(1),
                 sqsQueue,
                 new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>(),
-                Substitute.For<IMessageMonitor>(),
+                MessageMonitor,
                 LoggerFactory.CreateLogger<MessageReceiveBuffer>());
         }
 
@@ -406,24 +391,14 @@ namespace JustSaying.UnitTests.Messaging.Channels
 
         private class TestMessage : Message
         {
+            public TestMessage(string body = null)
+            {
+                Body = body ?? Guid.NewGuid().ToString();
+            }
+
             public override string ToString()
             {
                 return Body;
-            }
-        }
-
-        public class TestException : Exception
-        {
-            public TestException(string message) : base(message)
-            {
-            }
-
-            public TestException(string message, Exception innerException) : base(message, innerException)
-            {
-            }
-
-            public TestException()
-            {
             }
         }
     }

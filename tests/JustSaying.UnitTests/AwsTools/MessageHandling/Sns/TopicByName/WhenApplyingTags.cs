@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.MessageHandling;
@@ -46,8 +47,8 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
 
         protected override async Task WhenAsync()
         {
-            await SystemUnderTest.ExistsAsync();
-            await SystemUnderTest.ApplyTagsAsync();
+            await SystemUnderTest.ExistsAsync(CancellationToken.None);
+            await SystemUnderTest.ApplyTagsAsync(CancellationToken.None);
         }
 
         [Fact]

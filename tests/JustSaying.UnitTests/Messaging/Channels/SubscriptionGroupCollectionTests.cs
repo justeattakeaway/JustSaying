@@ -9,6 +9,7 @@ using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
@@ -91,10 +92,7 @@ namespace JustSaying.UnitTests.Messaging.Channels
                 new NonGenericMessageSubjectProvider(),
                 new NewtonsoftSerializationFactory());
 
-            var bus = new JustSaying.JustSayingBus(config, serializationRegister, LoggerFactory)
-            {
-                Monitor = MessageMonitor,
-            };
+            var bus = new JustSaying.JustSayingBus(config, serializationRegister, LoggerFactory, MessageMonitor);
 
             var defaultSubscriptionSettings = new SubscriptionGroupSettingsBuilder()
                 .WithDefaultMultiplexerCapacity(1)
@@ -112,35 +110,24 @@ namespace JustSaying.UnitTests.Messaging.Channels
             string queueName,
             Action spy = null)
         {
-            async Task<ReceiveMessageResponse> GetMessages()
+            var message = new TestJustSayingMessage
+            {
+                QueueName = queueName,
+            };
+
+            var messages = new List<Message>
+            {
+                new TestMessage { Body = messageSerializationRegister.Serialize(message, false) },
+            };
+
+            var queue = new FakeSqsQueue(async ct =>
             {
                 spy?.Invoke();
-                await Task.Delay(30);
-                var message = new TestJustSayingMessage
-                {
-                    QueueName = queueName,
-                };
+                await Task.Delay(30, ct);
+                return messages;
+            }, queueName);
 
-                var messages = new List<Message>
-                {
-                    new TestMessage { Body = messageSerializationRegister.Serialize(message, false) },
-                };
-
-                return new ReceiveMessageResponse { Messages = messages };
-            }
-
-            IAmazonSQS sqsClientMock = Substitute.For<IAmazonSQS>();
-            sqsClientMock
-                .ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>())
-                .Returns(_ => GetMessages());
-
-            ISqsQueue sqsQueueMock = Substitute.For<ISqsQueue>();
-            sqsQueueMock.Uri.Returns(new Uri("http://test.com"));
-            sqsQueueMock.Client.Returns(sqsClientMock);
-            sqsQueueMock.QueueName.Returns(queueName);
-            sqsQueueMock.Uri.Returns(new Uri("http://foo.com"));
-
-            return sqsQueueMock;
+            return queue;
         }
 
         private class TestMessage : Message

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using NSubstitute.Exceptions;
 using Shouldly;
 using Xunit.Abstractions;
 using Xunit.Sdk;
@@ -97,6 +98,8 @@ namespace JustSaying.TestingFramework
                 catch (ShouldAssertException)
                 { }
                 catch (XunitException)
+                { }
+                catch (SubstituteException)
                 { }
 
                 await Task.Delay(50.Milliseconds()).ConfigureAwait(false);

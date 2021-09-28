@@ -10,6 +10,8 @@ using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware;
+using JustSaying.Messaging.Middleware.PostProcessing;
+using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
@@ -35,11 +37,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected HandleMessageMiddleware Middleware;
         protected InspectableHandler<SimpleMessage> Handler;
-
         protected ISubscriptionGroup SystemUnderTest { get; private set; }
-
-        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(2);
-
         protected ILoggerFactory LoggerFactory { get; }
         protected ILogger Logger { get; }
 
@@ -63,17 +61,23 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         {
             Queues = new List<ISqsQueue>();
             Handler = new InspectableHandler<SimpleMessage>();
-
-            var testResolver = new FakeServiceResolver(sc => sc
-                .AddLogging(l => l.AddXUnit(OutputHelper)));
-
-            Middleware = new HandlerMiddlewareBuilder(testResolver, testResolver).UseHandler(ctx => Handler).Build();
             Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
             SerializationRegister = new FakeSerializationRegister();
             MiddlewareMap = new MiddlewareMap();
+            CompletionMiddleware = new AwaitableMiddleware(OutputHelper);
+
+            var testResolver = new InMemoryServiceResolver(OutputHelper, Monitor,
+                sc => sc.AddSingleton<IHandlerAsync<SimpleMessage>>(Handler));
+
+            Middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
+                .Use(CompletionMiddleware)
+                .UseDefaults<SimpleMessage>(typeof(InspectableHandler<SimpleMessage>))
+                .Build();
 
             Given();
         }
+
+        public AwaitableMiddleware CompletionMiddleware { get; set; }
 
         protected abstract void Given();
 
@@ -97,15 +101,12 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected virtual bool Until()
         {
-            OutputHelper.WriteLine("Checking if handler has received any messages");
-            return Handler.ReceivedMessages.Any();
+            OutputHelper.WriteLine("Checking if middleware chain has completed");
+            return CompletionMiddleware.Complete?.IsCompleted ?? false;
         }
 
         private ISubscriptionGroup CreateSystemUnderTest()
         {
-            var messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
-            var messageContextAccessor = Substitute.For<IMessageContextAccessor>();
-
             Logger.LogInformation("Creating MessageDispatcher with serialization register type {Type}",
                 SerializationRegister.GetType().FullName);
 
@@ -113,9 +114,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
                 SerializationRegister,
                 Monitor,
                 MiddlewareMap,
-                LoggerFactory,
-                messageBackoffStrategy,
-                messageContextAccessor);
+                LoggerFactory);
 
             var defaults = new SubscriptionGroupSettingsBuilder()
                 .WithDefaultConcurrencyLimit(ConcurrencyLimit);
@@ -140,28 +139,20 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected static FakeSqsQueue CreateSuccessfulTestQueue(string queueName, params Message[] messages)
         {
-            return CreateSuccessfulTestQueue(queueName, messages.ToList);
+            return CreateSuccessfulTestQueue(queueName, messages.AsEnumerable());
+        }
+
+        protected static FakeSqsQueue CreateSuccessfulTestQueue(string queueName, IEnumerable<Message> messages)
+        {
+            return CreateSuccessfulTestQueue(queueName, ct => Task.FromResult(messages));
         }
 
         protected static FakeSqsQueue CreateSuccessfulTestQueue(
             string queueName,
-            Func<IEnumerable<Message>> getMessages)
+            Func<CancellationToken, Task<IEnumerable<Message>>> messageProducer)
         {
-            return CreateSuccessfulTestQueue(queueName,
-                () => new ReceiveMessageResponse()
-                {
-                    Messages = getMessages().ToList()
-                }.Infinite());
-        }
-
-        protected static FakeSqsQueue CreateSuccessfulTestQueue(
-            string queueName,
-            Func<IEnumerable<ReceiveMessageResponse>> getMessages)
-        {
-            var fakeClient = new FakeAmazonSqs(getMessages);
-
-            var sqsQueue = new FakeSqsQueue(queueName,
-                fakeClient);
+            var sqsQueue = new FakeSqsQueue( messageProducer,
+                queueName);
 
             return sqsQueue;
         }

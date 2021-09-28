@@ -31,6 +31,9 @@ namespace JustSaying.Fluent
 
         private Action<QueueAddressConfiguration> ConfigureReads { get; set; }
 
+        private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
+
+
         /// <summary>
         /// Configures the SQS read configuration.
         /// </summary>
@@ -44,6 +47,13 @@ namespace JustSaying.Fluent
         public QueueAddressSubscriptionBuilder<T> WithReadConfiguration(Action<QueueAddressConfiguration> configure)
         {
             ConfigureReads = configure ?? throw new ArgumentNullException(nameof(configure));
+            return this;
+        }
+
+        /// <inheritdoc />
+        public ISubscriptionBuilder<T> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
+        {
+            MiddlewareConfiguration = middlewareConfiguration;
             return this;
         }
 
@@ -86,11 +96,8 @@ namespace JustSaying.Fluent
             }
 
             var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver);
-
             var handlerMiddleware = middlewareBuilder
-                .UseHandler<T>()
-                .UseStopwatch(proposedHandler.GetType())
-                .Configure(attachedQueueConfig.MiddlewareConfiguration)
+                .Configure(MiddlewareConfiguration ?? (b => b.UseDefaults<T>(proposedHandler.GetType())))
                 .Build();
 
             bus.AddMessageMiddleware<T>(queue.QueueName, handlerMiddleware);

@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS;
@@ -11,11 +13,18 @@ using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Middleware;
+using JustSaying.Messaging.Middleware.Backoff;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.Messaging.Channels.Fakes;
+using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
+using MELT;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using NSubstitute;
+using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 using Message = JustSaying.Models.Message;
@@ -23,44 +32,31 @@ using SQSMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 {
-    internal class DummySqsQueue : ISqsQueue
-    {
-        public DummySqsQueue(Uri uri, IAmazonSQS client)
-        {
-            Uri = uri;
-            Client = client;
-            QueueName = "DummySqsQueue";
-        }
-
-        public InterrogationResult Interrogate() => InterrogationResult.Empty;
-
-        public string QueueName { get; }
-        public string RegionSystemName { get; }
-        public Uri Uri { get; }
-        public string Arn { get; }
-        public IAmazonSQS Client { get; }
-    }
 
     public class WhenDispatchingMessage : IAsyncLifetime
     {
         private const string ExpectedQueueUrl = "http://testurl.com/queue";
 
         private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
-        private readonly IMessageMonitor _messageMonitor = Substitute.For<IMessageMonitor>();
-        private readonly MiddlewareMap _middlewareMap = new MiddlewareMap();
+        private readonly TrackingLoggingMonitor _messageMonitor;
+        private readonly MiddlewareMap _middlewareMap;
         private readonly ILoggerFactory _loggerFactory;
-        private readonly IMessageBackoffStrategy _messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
-        private IAmazonSQS _amazonSqsClient = Substitute.For<IAmazonSQS>();
+        private readonly ITestOutputHelper _outputHelper;
 
-        private DummySqsQueue _queue;
+        private FakeSqsQueue _queue;
         private SQSMessage _sqsMessage;
         private Message _typedMessage = new SimpleMessage();
 
         internal MessageDispatcher SystemUnderTest { get; private set; }
 
+        protected readonly IMessageBackoffStrategy MessageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
+
         public WhenDispatchingMessage(ITestOutputHelper outputHelper)
         {
-            _loggerFactory = outputHelper.ToLoggerFactory();
+            _outputHelper = outputHelper;
+            _loggerFactory = TestLoggerFactory.Create(lb => lb.AddXUnit(outputHelper));
+            _messageMonitor = new TrackingLoggingMonitor(_loggerFactory.CreateLogger<TrackingLoggingMonitor>());
+            _middlewareMap = new MiddlewareMap();
         }
 
         public virtual async Task InitializeAsync()
@@ -74,7 +70,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
         public virtual Task DisposeAsync()
         {
-            _amazonSqsClient?.Dispose();
             return Task.CompletedTask;
         }
 
@@ -88,7 +83,15 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
                 ReceiptHandle = "i_am_receipt_handle"
             };
 
-            _queue = new DummySqsQueue(new Uri(ExpectedQueueUrl), _amazonSqsClient);
+            IEnumerable<SQSMessage> GetMessages()
+            {
+                yield return _sqsMessage;
+            }
+
+            _queue = new FakeSqsQueue(ct => Task.FromResult(GetMessages()))
+            {
+                Uri = new Uri(ExpectedQueueUrl)
+            };
             _serializationRegister.DeserializeMessage(Arg.Any<string>())
                 .Returns(new MessageWithAttributes(_typedMessage, new MessageAttributes()));
         }
@@ -105,9 +108,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
                 _serializationRegister,
                 _messageMonitor,
                 _middlewareMap,
-                _loggerFactory,
-                _messageBackoffStrategy,
-                new MessageContextAccessor());
+                _loggerFactory);
 
             return dispatcher;
         }
@@ -120,7 +121,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             protected override void Given()
             {
                 base.Given();
-                _messageBackoffStrategy.GetBackoffDuration(_typedMessage, 1, null).Returns(_expectedBackoffTimeSpan);
                 _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString(CultureInfo.InvariantCulture));
             }
 
@@ -131,9 +131,10 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             }
 
             [Fact]
-            public void ShouldUpdateMessageVisibility()
+            public void ShouldNotHandleMessage()
             {
-                _amazonSqsClient.Received(1).ChangeMessageVisibilityAsync(Arg.Is<ChangeMessageVisibilityRequest>(x => x.QueueUrl == ExpectedQueueUrl && x.ReceiptHandle == _sqsMessage.ReceiptHandle && x.VisibilityTimeout == (int)_expectedBackoffTimeSpan.TotalSeconds));
+                var testLogger = _loggerFactory.GetTestLoggerSink();
+                testLogger.LogEntries.ShouldContain(le => le.OriginalFormat == "Failed to dispatch. Middleware for message of type '{MessageTypeName}' not found in middleware map.");
             }
 
             public AndHandlerMapDoesNotHaveMatchingHandler(ITestOutputHelper outputHelper) : base(outputHelper)
@@ -146,9 +147,18 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             {
                 base.Given();
 
-                var successMiddleware =
-                    new DelegateMessageHandlingMiddleware<OrderAccepted>(m => Task.FromResult(true));
-                _middlewareMap.Add<OrderAccepted>(_queue.QueueName, successMiddleware);
+                var handler = new InspectableHandler<SimpleMessage>();
+
+                var testResolver = new InMemoryServiceResolver(_outputHelper,
+                    _messageMonitor,
+                    sc => sc.AddSingleton<IHandlerAsync<SimpleMessage>>(handler));
+
+                var middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
+                    .UseBackoff(MessageBackoffStrategy)
+                    .UseDefaults<SimpleMessage>(handler.GetType())
+                    .Build();
+
+                _middlewareMap.Add<OrderAccepted>(_queue.QueueName, middleware);
             }
 
             [Fact]
@@ -160,7 +170,9 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             [Fact]
             public void ShouldDeleteMessageIfHandledSuccessfully()
             {
-                _amazonSqsClient.Received(1).DeleteMessageAsync(Arg.Is<DeleteMessageRequest>(x => x.QueueUrl == ExpectedQueueUrl && x.ReceiptHandle == _sqsMessage.ReceiptHandle));
+                var request = _queue.DeleteMessageRequests.ShouldHaveSingleItem();
+                request.QueueUrl.ShouldBe(ExpectedQueueUrl);
+                request.ReceiptHandle.ShouldBe(_sqsMessage.ReceiptHandle);
             }
 
             public AndMessageProcessingSucceeds(ITestOutputHelper outputHelper) : base(outputHelper)
@@ -177,21 +189,39 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             {
                 base.Given();
 
-                _messageBackoffStrategy.GetBackoffDuration(_typedMessage, 1, _expectedException).Returns(_expectedBackoffTimeSpan);
-                _middlewareMap.Add<OrderAccepted>(_queue.QueueName, new DelegateMessageHandlingMiddleware<OrderAccepted>(m => throw _expectedException));
+                var handler = new InspectableHandler<SimpleMessage>()
+                {
+                    OnHandle = msg => throw _expectedException
+                };
+
+                var testResolver = new InMemoryServiceResolver(_outputHelper,
+                    _messageMonitor,
+                    sc => sc.AddSingleton<IHandlerAsync<SimpleMessage>>(handler));
+
+                var middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
+                    .UseBackoff(MessageBackoffStrategy)
+                    .UseDefaults<SimpleMessage>(handler.GetType())
+                    .Build();
+
+                _middlewareMap.Add<OrderAccepted>(_queue.QueueName, middleware);
+
+                MessageBackoffStrategy.GetBackoffDuration(_typedMessage, 1, _expectedException).Returns(_expectedBackoffTimeSpan);
                 _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString(CultureInfo.InvariantCulture));
             }
 
             [Fact]
             public void ShouldInvokeMessageBackoffStrategyWithNumberOfReceives()
             {
-                _messageBackoffStrategy.Received(1).GetBackoffDuration(Arg.Is(_typedMessage), Arg.Is(ExpectedReceiveCount), Arg.Is(_expectedException));
+                MessageBackoffStrategy.Received(1).GetBackoffDuration(Arg.Is(_typedMessage), Arg.Is(ExpectedReceiveCount), Arg.Is(_expectedException));
             }
 
             [Fact]
             public void ShouldUpdateMessageVisibility()
             {
-                _amazonSqsClient.Received(1).ChangeMessageVisibilityAsync(Arg.Is<ChangeMessageVisibilityRequest>(x => x.QueueUrl == ExpectedQueueUrl && x.ReceiptHandle == _sqsMessage.ReceiptHandle && x.VisibilityTimeout == (int)_expectedBackoffTimeSpan.TotalSeconds));
+                var request = _queue.ChangeMessageVisbilityRequests.ShouldHaveSingleItem();
+                request.QueueUrl.ShouldBe(ExpectedQueueUrl);
+                request.ReceiptHandle.ShouldBe(_sqsMessage.ReceiptHandle);
+                request.VisibilityTimeoutInSeconds.ShouldBe((int)_expectedBackoffTimeSpan.TotalSeconds);
             }
 
             public AndMessageProcessingFails(ITestOutputHelper outputHelper) : base(outputHelper)

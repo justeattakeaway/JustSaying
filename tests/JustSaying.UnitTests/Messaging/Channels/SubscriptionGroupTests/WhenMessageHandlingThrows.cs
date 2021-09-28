@@ -9,7 +9,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
     public class WhenMessageHandlingThrows : BaseSubscriptionGroupTests
     {
         private bool _firstTime = true;
-        private FakeAmazonSqs _sqsClient;
+        private FakeSqsQueue _queue;
 
         public WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
@@ -17,10 +17,9 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected override void Given()
         {
-            var queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
-            _sqsClient = queue.FakeClient;
+            _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
 
-            Queues.Add(queue);
+            Queues.Add(_queue);
 
             Handler.OnHandle = (msg) =>
             {
@@ -41,7 +40,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         public void FailedMessageIsNotRemovedFromQueue()
         {
             var numberHandled = Handler.ReceivedMessages.Count;
-            _sqsClient.DeleteMessageRequests.Count.ShouldBe(numberHandled - 1);
+
+            _queue.DeleteMessageRequests.Count.ShouldBe(numberHandled - 1);
         }
 
         [Fact]

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 // ReSharper disable once CheckNamespace
 namespace JustSaying.Messaging.Middleware
 {
-    public class ExactlyOnceMiddleware<T> : MiddlewareBase<HandleMessageContext, bool>
+    public sealed class ExactlyOnceMiddleware<T> : MiddlewareBase<HandleMessageContext, bool>
     {
         private readonly IMessageLockAsync _messageLock;
         private readonly TimeSpan _timeout;

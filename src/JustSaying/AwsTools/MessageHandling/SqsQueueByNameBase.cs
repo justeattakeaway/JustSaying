@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
@@ -28,8 +30,21 @@ namespace JustSaying.AwsTools.MessageHandling
         private TimeSpan _visibilityTimeout;
 
         public string Arn { get; private set; }
+
+        public Task DeleteMessageAsync(string queueUrl, string receiptHandle, CancellationToken cancellationToken)
+            => Client.DeleteMessageAsync(queueUrl, receiptHandle, cancellationToken);
+
+        public Task TagQueueAsync(string queueUrl, Dictionary<string, string> tags, CancellationToken cancellationToken)
+            => Client.TagQueueAsync(queueUrl, tags, cancellationToken);
+
+        public Task<IList<Message>> ReceiveMessagesAsync(string queueUrl, int maxNumOfMessages, int secondsWaitTime, IList<string> attributesToLoad, CancellationToken cancellationToken)
+            => Client.ReceiveMessagesAsync(queueUrl, maxNumOfMessages, secondsWaitTime, attributesToLoad, cancellationToken);
+
+        public Task ChangeMessageVisibilityAsync(string queueUrl, string receiptHandle, int visibilityTimeoutInSeconds, CancellationToken cancellationToken)
+            => Client.ChangeMessageVisibilityAsync(queueUrl, receiptHandle, visibilityTimeoutInSeconds, cancellationToken);
+
         public Uri Uri { get; private set; }
-        public IAmazonSQS Client { get; }
+        protected IAmazonSQS Client { get; }
         public string QueueName { get; }
         internal TimeSpan MessageRetentionPeriod { get; set; }
         internal RedrivePolicy RedrivePolicy { get; set; }
@@ -39,7 +54,7 @@ namespace JustSaying.AwsTools.MessageHandling
         internal string Policy { get; private set; }
         protected ILogger Logger { get; }
 
-        public virtual async Task<bool> ExistsAsync()
+        public virtual async Task<bool> ExistsAsync(CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(QueueName))
             {
@@ -52,7 +67,7 @@ namespace JustSaying.AwsTools.MessageHandling
             {
                 using (Logger.Time(LogLevel.Debug, "Checking if queue '{QueueName}' exists", QueueName))
                 {
-                    result = await Client.GetQueueUrlAsync(QueueName).ConfigureAwait(false);
+                    result = await Client.GetQueueUrlAsync(QueueName, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (QueueDoesNotExistException)
@@ -67,26 +82,26 @@ namespace JustSaying.AwsTools.MessageHandling
 
             Uri = new Uri(result.QueueUrl);
 
-            await SetQueuePropertiesAsync().ConfigureAwait(false);
+            await SetQueuePropertiesAsync(cancellationToken).ConfigureAwait(false);
             return true;
         }
 
         private static readonly TimeSpan CreateRetryDelay = TimeSpan.FromMinutes(1);
 
-        public virtual async Task<bool> CreateAsync(SqsBasicConfiguration queueConfig, int attempt = 0)
+        public virtual async Task<bool> CreateAsync(SqsBasicConfiguration queueConfig, int attempt = 0, CancellationToken cancellationToken = default)
         {
             // If we're on a delete timeout, throw after 3 attempts.
             const int maxAttempts = 3;
 
             try
             {
-                var queueResponse = await Client.CreateQueueAsync(QueueName).ConfigureAwait(false);
+                var queueResponse = await Client.CreateQueueAsync(QueueName, cancellationToken).ConfigureAwait(false);
 
                 if (!string.IsNullOrWhiteSpace(queueResponse?.QueueUrl))
                 {
                     Uri = new Uri(queueResponse.QueueUrl);
-                    await Client.SetQueueAttributesAsync(queueResponse.QueueUrl, GetCreateQueueAttributes(queueConfig)).ConfigureAwait(false);
-                    await SetQueuePropertiesAsync().ConfigureAwait(false);
+                    await Client.SetQueueAttributesAsync(queueResponse.QueueUrl, GetCreateQueueAttributes(queueConfig), cancellationToken).ConfigureAwait(false);
+                    await SetQueuePropertiesAsync(cancellationToken).ConfigureAwait(false);
 
                     Logger.LogInformation("Created queue '{QueueName}' with ARN '{Arn}'.", QueueName, Arn);
                     return true;
@@ -115,7 +130,7 @@ namespace JustSaying.AwsTools.MessageHandling
                         attempt + 1,
                         maxAttempts);
 
-                    await Task.Delay(CreateRetryDelay).ConfigureAwait(false);
+                    await Task.Delay(CreateRetryDelay, cancellationToken).ConfigureAwait(false);
                     await CreateAsync(queueConfig, attempt + 1).ConfigureAwait(false);
                 }
                 else
@@ -132,20 +147,20 @@ namespace JustSaying.AwsTools.MessageHandling
 
         protected abstract Dictionary<string, string> GetCreateQueueAttributes(SqsBasicConfiguration queueConfig);
 
-        public virtual async Task DeleteAsync()
+        public virtual async Task DeleteAsync(CancellationToken cancellationToken)
         {
-            var exists = await ExistsAsync().ConfigureAwait(false);
+            var exists = await ExistsAsync(cancellationToken).ConfigureAwait(false);
             if (exists)
             {
                 var request = new DeleteQueueRequest
                 {
                     QueueUrl = Uri.AbsoluteUri
                 };
-                await Client.DeleteQueueAsync(request).ConfigureAwait(false);
+                await Client.DeleteQueueAsync(request, cancellationToken).ConfigureAwait(false);
             }
         }
 
-        private async Task SetQueuePropertiesAsync()
+        private async Task SetQueuePropertiesAsync(CancellationToken cancellationToken)
         {
             var keys = new[]
             {
@@ -179,7 +194,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return await Client.GetQueueAttributesAsync(request).ConfigureAwait(false);
         }
 
-        public virtual async Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig)
+        public virtual async Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig, CancellationToken cancellationToken)
         {
             if (QueueNeedsUpdating(queueConfig))
             {
@@ -207,7 +222,7 @@ namespace JustSaying.AwsTools.MessageHandling
                     Attributes = attributes
                 };
 
-                var response = await Client.SetQueueAttributesAsync(request).ConfigureAwait(false);
+                var response = await Client.SetQueueAttributesAsync(request, cancellationToken).ConfigureAwait(false);
 
                 if (response.HttpStatusCode == HttpStatusCode.OK)
                 {

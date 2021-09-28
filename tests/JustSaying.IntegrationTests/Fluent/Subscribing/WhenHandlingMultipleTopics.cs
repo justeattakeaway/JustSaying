@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
@@ -40,7 +41,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
                     var queue = new SqsQueueByName(Region, UniqueName, client, 0, loggerFactory);
 
-                    await Patiently.AssertThatAsync(OutputHelper, () => queue.ExistsAsync(), 60.Seconds());
+                    await Patiently.AssertThatAsync(OutputHelper, () => queue.ExistsAsync(CancellationToken.None), 60.Seconds());
 
                     dynamic policyJson = JObject.Parse(queue.Policy);
 

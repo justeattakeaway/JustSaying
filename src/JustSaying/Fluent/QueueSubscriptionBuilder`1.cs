@@ -40,6 +40,12 @@ namespace JustSaying.Fluent
         private Dictionary<string, string> Tags { get; } = new(StringComparer.Ordinal);
 
         /// <summary>
+        /// Gets or sets the <see cref="MiddlewareConfiguration"/>.
+        /// </summary>
+        private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
+
+
+        /// <summary>
         /// Configures that the <see cref="IQueueNamingConvention"/> will create the queue name that should be used.
         /// </summary>
         /// <returns>
@@ -144,6 +150,13 @@ namespace JustSaying.Fluent
         }
 
         /// <inheritdoc />
+        public ISubscriptionBuilder<T> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
+        {
+            MiddlewareConfiguration = middlewareConfiguration;
+            return this;
+        }
+
+        /// <inheritdoc />
         void ISubscriptionBuilder<T>.Configure(
             JustSayingBus bus,
             IHandlerResolver handlerResolver,
@@ -168,7 +181,6 @@ namespace JustSaying.Fluent
             subscriptionConfig.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
             subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
             subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
-            subscriptionConfig.MiddlewareConfiguration = subscriptionConfig.MiddlewareConfiguration;
             subscriptionConfig.Validate();
 
             var queue = creator.EnsureQueueExists(region, subscriptionConfig);
@@ -190,11 +202,8 @@ namespace JustSaying.Fluent
             }
 
             var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver);
-
             var handlerMiddleware = middlewareBuilder
-                .UseHandler<T>()
-                .UseStopwatch(proposedHandler.GetType())
-                .Configure(subscriptionConfig.MiddlewareConfiguration)
+                .Configure(MiddlewareConfiguration ?? (b => b.UseDefaults<T>(proposedHandler.GetType())))
                 .Build();
 
             bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, handlerMiddleware);

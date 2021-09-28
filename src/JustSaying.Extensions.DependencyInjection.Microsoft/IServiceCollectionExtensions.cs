@@ -8,6 +8,11 @@ using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Middleware.Backoff;
+using JustSaying.Messaging.Middleware.ErrorHandling;
+using JustSaying.Messaging.Middleware.Logging;
+using JustSaying.Messaging.Middleware.MessageContext;
+using JustSaying.Messaging.Middleware.PostProcessing;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using JustSaying.Naming;
@@ -127,6 +132,9 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<IAwsClientFactoryProxy>((p) => new AwsClientFactoryProxy(p.GetRequiredService<IAwsClientFactory>));
             services.TryAddSingleton<IMessagingConfig, MessagingConfig>();
             services.TryAddSingleton<IMessageMonitor, NullOpMessageMonitor>();
+
+            services.TryAddSingleton<LoggingMiddleware>();
+            services.TryAddSingleton<SqsPostProcessorMiddleware>();
 
             services.AddSingleton<MessageContextAccessor>();
             services.TryAddSingleton<IMessageContextAccessor>(serviceProvider => serviceProvider.GetRequiredService<MessageContextAccessor>());

@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using JustSaying.AwsTools;
@@ -123,11 +124,11 @@ namespace JustSaying.Fluent
                 loggerFactory);
 #pragma warning restore 618
 
-            async Task StartupTask()
+            async Task StartupTask(CancellationToken cancellationToken)
             {
-                if (!await sqsQueue.ExistsAsync().ConfigureAwait(false))
+                if (!await sqsQueue.ExistsAsync(cancellationToken).ConfigureAwait(false))
                 {
-                    await sqsQueue.CreateAsync(writeConfiguration).ConfigureAwait(false);
+                    await sqsQueue.CreateAsync(writeConfiguration, cancellationToken: cancellationToken).ConfigureAwait(false);
                 }
 
                 eventPublisher.QueueUrl = sqsQueue.Uri;

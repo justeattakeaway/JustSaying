@@ -6,7 +6,11 @@
         "MessageType": "SimpleMessage",
         "QueueName": "integrationTestQueueName",
         "MiddlewareChain": [
+          "MessageContextAccessorMiddleware",
+          "ErrorHandlerMiddleware",
+          "LoggingMiddleware",
           "StopwatchMiddleware",
+          "SqsPostProcessorMiddleware",
           "HandlerInvocationMiddleware`1"
         ]
       }
@@ -27,8 +31,7 @@
             "BufferSize": 10,
             "QueueName": "integrationTestQueueName",
             "Region": "eu-west-1",
-            "Prefetch": 10,
-            "BackoffStrategyName": null
+            "Prefetch": 10
           }
         ]
       }

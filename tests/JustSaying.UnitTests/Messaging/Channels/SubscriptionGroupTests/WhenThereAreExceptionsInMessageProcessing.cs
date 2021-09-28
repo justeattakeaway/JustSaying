@@ -22,15 +22,17 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         protected override void Given()
         {
             ConcurrencyLimit = 1;
-            _queue = CreateSuccessfulTestQueue("TestQueue",
-                EnumerableExtensions.GenerateInfinite(() =>
+
+            IEnumerable<Message> GetMessages(CancellationToken cancellationToken)
+            {
+                while (!cancellationToken.IsCancellationRequested)
                 {
                     Interlocked.Increment(ref _callCount);
-                    return new ReceiveMessageResponse()
-                    {
-                        Messages = new List<Message> { new TestMessage() }
-                    };
-                }));
+                    yield return new TestMessage();
+                }
+            }
+
+            _queue = CreateSuccessfulTestQueue("TestQueue", ct => Task.FromResult(GetMessages(ct)));
 
             Queues.Add(_queue);
 

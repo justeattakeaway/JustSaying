@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Amazon.SQS.Model;
 using Shouldly;
 using Xunit;
@@ -9,8 +11,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
     public class WhenMessageHandlingSucceeds : BaseSubscriptionGroupTests
     {
-        private FakeAmazonSqs _sqsClient;
         private string _messageBody = "Expected Message Body";
+        private FakeSqsQueue _queue;
 
         public WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
@@ -18,11 +20,10 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected override void Given()
         {
-            var queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(),
-                () => new List<Message> { new TestMessage { Body = _messageBody } });
-            _sqsClient = queue.FakeClient;
+            _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(),
+                ct => Task.FromResult(new List<Message> { new TestMessage { Body = _messageBody } }.AsEnumerable()));
 
-            Queues.Add(queue);
+            Queues.Add(_queue);
         }
 
         [Fact]
@@ -41,8 +42,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         [Fact]
         public void AllMessagesAreClearedFromQueue()
         {
-            var numberOfMessagesHandled = Handler.ReceivedMessages.Count;
-            _sqsClient.DeleteMessageRequests.Count.ShouldBe(numberOfMessagesHandled);
+            _queue.DeleteMessageRequests.Count.ShouldBe(Handler.ReceivedMessages.Count);
         }
 
         [Fact]

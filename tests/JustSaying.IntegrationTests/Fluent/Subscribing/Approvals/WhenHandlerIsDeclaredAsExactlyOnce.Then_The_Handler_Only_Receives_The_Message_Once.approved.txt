@@ -1,0 +1,17 @@
+{
+  "Middlewares": [
+    {
+      "MessageType": "SimpleMessage",
+      "QueueName": "TestQueueName",
+      "MiddlewareChain": [
+        "ExactlyOnceMiddleware`1",
+        "MessageContextAccessorMiddleware",
+        "ErrorHandlerMiddleware",
+        "LoggingMiddleware",
+        "StopwatchMiddleware",
+        "SqsPostProcessorMiddleware",
+        "HandlerInvocationMiddleware`1"
+      ]
+    }
+  ]
+}

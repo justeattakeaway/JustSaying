@@ -46,7 +46,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                 retryCountBeforeSendingToErrorQueue,
                 loggerFactory);
 
-            if (!await queue.ExistsAsync())
+            if (!await queue.ExistsAsync(CancellationToken.None))
             {
                 await queue.CreateAsync(new SqsBasicConfiguration());
 
@@ -59,7 +59,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                     {
                         await Task.Delay(TimeSpan.FromSeconds(2));
 
-                        if (await queue.ExistsAsync())
+                        if (await queue.ExistsAsync(CancellationToken.None))
                         {
                             break;
                         }
@@ -67,7 +67,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
                 }
             }
 
-            Assert.True(await queue.ExistsAsync(), "The queue was not created.");
+            Assert.True(await queue.ExistsAsync(CancellationToken.None), "The queue was not created.");
 
             OutputHelper.WriteLine($"{DateTime.Now} - Adding {throttleMessageCount} messages to the queue.");
 

@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JustSaying.AwsTools.MessageHandling
@@ -16,7 +17,7 @@ namespace JustSaying.AwsTools.MessageHandling
         /// <param name="queue">The queue that is ready.</param>
         public QueueWithAsyncStartup(ISqsQueue queue)
         {
-            StartupTask = () => Task.CompletedTask;
+            StartupTask = ct => Task.CompletedTask;
             Queue = queue;
         }
 
@@ -26,7 +27,7 @@ namespace JustSaying.AwsTools.MessageHandling
         /// </summary>
         /// <param name="startupTask">The <see cref="Func{Task}"/> that must be awaited on startup.</param>
         /// <param name="queue">An <see cref="ISqsQueue"/> that must be initialised on startup.</param>
-        public QueueWithAsyncStartup(Func<Task> startupTask, ISqsQueue queue)
+        public QueueWithAsyncStartup(Func<CancellationToken, Task> startupTask, ISqsQueue queue)
         {
             StartupTask = startupTask;
             Queue = queue;
@@ -35,7 +36,7 @@ namespace JustSaying.AwsTools.MessageHandling
         /// <summary>
         /// A <see cref="Func{Task}"/> that must be run before the queue is ready.
         /// </summary>
-        public Func<Task> StartupTask { get; }
+        public Func<CancellationToken, Task> StartupTask { get; }
 
         /// <summary>
         /// An <see cref="ISqsQueue"/> that will be ready when the <see cref="StartupTask"/>

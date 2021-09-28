@@ -21,8 +21,6 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
         private readonly IMessageSerializationRegister _serializationRegister;
         private readonly IMessageMonitor _messagingMonitor;
         private readonly MiddlewareMap _middlewareMap;
-        private readonly IMessageBackoffStrategy _messageBackoffStrategy;
-        private readonly IMessageContextAccessor _messageContextAccessor;
 
         private static ILogger _logger;
 
@@ -30,16 +28,12 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
             IMessageSerializationRegister serializationRegister,
             IMessageMonitor messagingMonitor,
             MiddlewareMap middlewareMap,
-            ILoggerFactory loggerFactory,
-            IMessageBackoffStrategy messageBackoffStrategy,
-            IMessageContextAccessor messageContextAccessor)
+            ILoggerFactory loggerFactory)
         {
             _serializationRegister = serializationRegister;
             _messagingMonitor = messagingMonitor;
             _middlewareMap = middlewareMap;
             _logger = loggerFactory.CreateLogger("JustSaying");
-            _messageBackoffStrategy = messageBackoffStrategy;
-            _messageContextAccessor = messageContextAccessor;
         }
 
         public async Task DispatchMessageAsync(
@@ -59,64 +53,30 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                 return;
             }
 
-            var handlingSucceeded = false;
-            Exception lastException = null;
+            var messageType = typedMessage.GetType();
+            var middleware = _middlewareMap.Get(messageContext.QueueName, messageType);
 
-            try
-            {
-                if (typedMessage != null)
-                {
-                    _messageContextAccessor.MessageContext =
-                        new MessageContext(messageContext.Message, messageContext.QueueUri, attributes);
-
-                    handlingSucceeded = await CallMessageHandler(messageContext.QueueName, typedMessage, cancellationToken)
-                        .ConfigureAwait(false);
-                }
-
-                if (handlingSucceeded)
-                {
-                    await messageContext.DeleteMessageFromQueueAsync(cancellationToken).ConfigureAwait(false);
-                }
-            }
-
-#pragma warning disable CA1031
-            catch (Exception ex) when(!(ex is OperationCanceledException))
-#pragma warning restore CA1031
+            if (middleware == null)
             {
                 _logger.LogError(
-                    ex,
-                    "Error handling message with Id '{MessageId}' and body '{MessageBody}'.",
-                    messageContext.Message.MessageId,
-                    messageContext.Message.Body);
-
-                if (typedMessage != null)
-                {
-                    _messagingMonitor.HandleException(typedMessage.GetType());
-                }
-
-                _messagingMonitor.HandleError(ex, messageContext.Message);
-
-                lastException = ex;
+                    "Failed to dispatch. Middleware for message of type '{MessageTypeName}' not found in middleware map.",
+                    typedMessage.GetType().FullName);
+                return;
             }
-            finally
-            {
-                try
-                {
-                    _messagingMonitor.Handled(typedMessage);
 
-                    if (!handlingSucceeded && _messageBackoffStrategy != null)
-                    {
-                        await UpdateMessageVisibilityTimeout(messageContext,
-                            typedMessage,
-                            lastException,
-                            cancellationToken).ConfigureAwait(false);
-                    }
-                }
-                finally
-                {
-                    _messageContextAccessor.MessageContext = null;
-                }
-            }
+            var handleContext = new HandleMessageContext(
+                messageContext.QueueName,
+                messageContext.Message,
+                typedMessage,
+                messageType,
+                messageContext,
+                messageContext,
+                messageContext.QueueUri,
+                attributes);
+
+            await middleware.RunAsync(handleContext, null, cancellationToken)
+                .ConfigureAwait(false);
+
         }
 
         private async Task<(bool success, Message typedMessage, MessageAttributes attributes)>
@@ -136,7 +96,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
                     messageContext.Message.MessageId,
                     messageContext.Message.Body);
 
-                await messageContext.DeleteMessageFromQueueAsync(cancellationToken).ConfigureAwait(false);
+                await messageContext.DeleteMessage(cancellationToken).ConfigureAwait(false);
                 _messagingMonitor.HandleError(ex, messageContext.Message);
 
                 return (false, null, null);
@@ -155,111 +115,6 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch
 
                 return (false, null, null);
             }
-        }
-
-        private async Task<bool> CallMessageHandler(string queueName, Message message, CancellationToken cancellationToken)
-        {
-            var messageType = message.GetType();
-
-            var middleware = _middlewareMap.Get(queueName, messageType);
-
-            if (middleware == null)
-            {
-                _logger.LogError(
-                    "Failed to dispatch. Middleware for message of type '{MessageTypeName}' not found in middleware map.",
-                    message.GetType().FullName);
-                return false;
-            }
-
-            var watch = System.Diagnostics.Stopwatch.StartNew();
-
-            using (_messagingMonitor.MeasureDispatch())
-            {
-                var context = new HandleMessageContext(message, messageType, queueName);
-                bool dispatchSuccessful = false;
-                try
-                {
-                    dispatchSuccessful = await middleware.RunAsync(context, null, cancellationToken)
-                        .ConfigureAwait(false);
-                }
-                finally
-                {
-                    watch.Stop();
-
-                    using (_logger.BeginScope(new Dictionary<string, object>()
-                    {
-                        ["MessageSource"] = context.QueueName,
-                        ["SourceType"] = "Queue"
-                    }))
-                    {
-                        var logMessage =
-                            "{Status} handling message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}ms.";
-                        if (dispatchSuccessful)
-                        {
-                            _logger.LogInformation(logMessage,
-                                "Succeeded",
-                                message.Id,
-                                messageType.FullName,
-                                watch.ElapsedMilliseconds);
-                        }
-                        else
-                        {
-                            _logger.LogWarning(logMessage,
-                                "Failed",
-                                message.Id,
-                                messageType.FullName,
-                                watch.ElapsedMilliseconds);
-                        }
-                    }
-                }
-
-                return dispatchSuccessful;
-            }
-        }
-
-        private async Task UpdateMessageVisibilityTimeout(
-            IQueueMessageContext messageContext,
-            Message typedMessage,
-            Exception lastException,
-            CancellationToken cancellationToken)
-        {
-            if (TryGetApproxReceiveCount(messageContext.Message.Attributes, out int approxReceiveCount))
-            {
-                var visibilityTimeout =
-                    _messageBackoffStrategy.GetBackoffDuration(typedMessage,
-                        approxReceiveCount,
-                        lastException);
-
-                try
-                {
-                    await messageContext.ChangeMessageVisibilityAsync(visibilityTimeout, cancellationToken)
-                        .ConfigureAwait(false);
-                }
-                catch (AmazonServiceException ex)
-                {
-                    _logger.LogError(
-                        ex,
-                        "Failed to update message visibility timeout by {VisibilityTimeout} seconds for message with receipt handle '{ReceiptHandle}'.",
-                        visibilityTimeout,
-                        messageContext.Message.ReceiptHandle);
-
-                    _messagingMonitor.HandleError(ex, messageContext.Message);
-                }
-            }
-        }
-
-        private static bool TryGetApproxReceiveCount(
-            IDictionary<string, string> attributes,
-            out int approxReceiveCount)
-        {
-            approxReceiveCount = 0;
-
-            return attributes.TryGetValue(MessageSystemAttributeName.ApproximateReceiveCount,
-                    out string rawApproxReceiveCount) &&
-                int.TryParse(rawApproxReceiveCount,
-                    NumberStyles.Integer,
-                    CultureInfo.InvariantCulture,
-                    out approxReceiveCount);
         }
     }
 }

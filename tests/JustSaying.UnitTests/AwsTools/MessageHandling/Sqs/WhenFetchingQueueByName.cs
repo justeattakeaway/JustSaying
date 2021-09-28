@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
@@ -44,21 +45,21 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
         public async Task IncorrectQueueNameDoNotMatch()
         {
             var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name1", _client, RetryCount, _log);
-            (await sqsQueueByName.ExistsAsync()).ShouldBeFalse();
+            (await sqsQueueByName.ExistsAsync(CancellationToken.None)).ShouldBeFalse();
         }
 
         [Fact]
         public async Task IncorrectPartialQueueNameDoNotMatch()
         {
             var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue", _client, RetryCount, _log);
-            (await sqsQueueByName.ExistsAsync()).ShouldBeFalse();
+            (await sqsQueueByName.ExistsAsync(CancellationToken.None)).ShouldBeFalse();
         }
 
         [Fact]
         public async Task CorrectQueueNameShouldMatch()
         {
             var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name", _client, RetryCount, _log);
-            (await sqsQueueByName.ExistsAsync()).ShouldBeTrue();
+            (await sqsQueueByName.ExistsAsync(CancellationToken.None)).ShouldBeTrue();
         }
     }
 }

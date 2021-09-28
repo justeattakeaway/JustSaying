@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
@@ -16,7 +17,6 @@ namespace JustSaying.Messaging.Middleware
     public sealed class HandlerMiddlewareBuilder
     {
         private Action<HandlerMiddlewareBuilder> _configure;
-
         internal IServiceResolver ServiceResolver { get; }
         private IHandlerResolver HandlerResolver { get; }
 
@@ -56,9 +56,12 @@ namespace JustSaying.Messaging.Middleware
         /// <returns>The current HandlerMiddlewareBuilder.</returns>
         public HandlerMiddlewareBuilder Use(HandleMessageMiddleware middleware)
         {
+            if (middleware == null) throw new ArgumentNullException(nameof(middleware));
+
             _middlewares.Add(() => middleware);
             return this;
         }
+
 
         /// <summary>
         /// Adds a middleware to the pipeline. The Func&lt;HandleMessageMiddleware&gt; will be called once
@@ -69,6 +72,8 @@ namespace JustSaying.Messaging.Middleware
         /// <returns>The current HandlerMiddlewareBuilder.</returns>
         public HandlerMiddlewareBuilder Use(Func<HandleMessageMiddleware> middlewareFactory)
         {
+            if (middlewareFactory == null) throw new ArgumentNullException(nameof(middlewareFactory));
+
             _middlewares.Add(middlewareFactory);
             return this;
         }
@@ -106,35 +111,39 @@ namespace JustSaying.Messaging.Middleware
         /// <param name="configure">An <see cref="Action{HandlerMiddlewareBuilder}"/> that customises
         /// the pipeline.</param>
         /// <returns></returns>
+
         public HandlerMiddlewareBuilder Configure(
             Action<HandlerMiddlewareBuilder> configure)
         {
-            _configure = configure;
+            _configure = configure ?? throw new ArgumentNullException(nameof(configure));
             return this;
         }
 
         /// <summary>
         /// Produces a callable middleware chain from the configured middlewares.
+        ///
         /// </summary>
         /// <returns>A callable <see cref="HandleMessageMiddleware"/></returns>
         public HandleMessageMiddleware Build()
         {
             _configure?.Invoke(this);
 
-            if (_handlerMiddleware != null)
-            {
-                // Handler middleware needs to be last in the chain, so we keep an explicit reference to
-                // it and add it here
-                _middlewares.Add(() => _handlerMiddleware);
-            }
-
             // We reverse the middleware array so that the declaration order matches the execution order
             // (i.e. russian doll).
             var middlewares =
                 _middlewares
-                    .Select(m => m()).Reverse().ToArray();
+                    .Select(m => m())
+                    .Reverse()
+                    .ToList();
 
-            return MiddlewareBuilder.BuildAsync(middlewares);
+            if (_handlerMiddleware != null)
+            {
+                // Handler middleware needs to be last in the chain, so we keep an explicit reference to
+                // it and add it here
+                middlewares.Insert(0, _handlerMiddleware);
+            }
+
+            return MiddlewareBuilder.BuildAsync(middlewares.ToArray());
         }
     }
 }

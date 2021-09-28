@@ -15,13 +15,9 @@ namespace JustSaying.IntegrationTests.TestHandlers
 
         public TaskCompletionSource<object> DoneSignal { get; private set; }
 
-        public async Task<bool> Handle(SimpleMessage message)
+        public Task<bool> Handle(SimpleMessage message)
         {
             MessageReceived = message;
-
-            await Task.Delay(0);
-            TaskHelpers.DelaySendDone(DoneSignal);
-
             throw new TestException("ThrowingHandler has thrown");
         }
     }

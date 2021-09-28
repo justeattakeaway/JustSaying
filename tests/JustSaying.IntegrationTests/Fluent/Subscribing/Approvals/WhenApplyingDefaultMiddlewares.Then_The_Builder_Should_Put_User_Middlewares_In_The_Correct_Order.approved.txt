@@ -1,0 +1,19 @@
+{
+  "Middlewares": [
+    {
+      "MessageType": "SimpleMessage",
+      "QueueName": "TestQueueName",
+      "MiddlewareChain": [
+        "OuterTestMiddleware",
+        "InnerTestMiddleware",
+        "MessageContextAccessorMiddleware",
+        "ErrorHandlerMiddleware",
+        "LoggingMiddleware",
+        "StopwatchMiddleware",
+        "SqsPostProcessorMiddleware",
+        "AfterTestMiddleware",
+        "HandlerInvocationMiddleware`1"
+      ]
+    }
+  ]
+}

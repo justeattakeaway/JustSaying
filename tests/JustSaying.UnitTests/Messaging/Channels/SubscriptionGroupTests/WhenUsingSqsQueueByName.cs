@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -39,7 +40,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
                 _client,
                 retryCount,
                 LoggerFactory);
-            queue.ExistsAsync().Wait();
+            queue.ExistsAsync(CancellationToken.None).Wait();
 
             _queue = queue;
 

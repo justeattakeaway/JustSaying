@@ -23,14 +23,17 @@ namespace JustSaying.Messaging.Middleware
             return await RunInnerAsync(context,
                 async ct =>
                 {
-                    if (_next == null)
-                    {
-                        return await func(ct).ConfigureAwait(false);
-                    }
-                    else
+                    if (_next != null)
                     {
                         return await _next.RunAsync(context, func, ct).ConfigureAwait(false);
                     }
+
+                    if (func != null)
+                    {
+                        return await func(ct).ConfigureAwait(false);
+                    }
+
+                    else return default(TOut);
                 },
                 stoppingToken).ConfigureAwait(false);
         }

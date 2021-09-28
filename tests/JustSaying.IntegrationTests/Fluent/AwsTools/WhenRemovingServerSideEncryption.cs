@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
@@ -38,7 +39,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
 
             // Act
             await queue.UpdateQueueAttributeAsync(
-                new SqsBasicConfiguration { ServerSideEncryption = null });
+                new SqsBasicConfiguration { ServerSideEncryption = null }, CancellationToken.None);
 
             // Assert
             queue.ServerSideEncryption.ShouldBeNull();

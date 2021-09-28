@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -29,7 +30,6 @@ namespace JustSaying.Messaging.Channels.Receive
         private readonly ILogger _logger;
 
         private readonly HashSet<string> _requestMessageAttributeNames = new HashSet<string>();
-        private readonly string _backoffStrategyName;
 
         public ChannelReader<IQueueMessageContext> Reader => _channel.Reader;
 
@@ -43,8 +43,7 @@ namespace JustSaying.Messaging.Channels.Receive
             ISqsQueue sqsQueue,
             MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware,
             IMessageMonitor monitor,
-            ILogger<IMessageReceiveBuffer> logger,
-            IMessageBackoffStrategy messageBackoffStrategy = null)
+            ILogger<IMessageReceiveBuffer> logger)
         {
             _prefetch = prefetch;
             _bufferSize = bufferSize;
@@ -55,14 +54,10 @@ namespace JustSaying.Messaging.Channels.Receive
             _sqsMiddleware = sqsMiddleware ?? throw new ArgumentNullException(nameof(sqsMiddleware));
             _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _backoffStrategyName = messageBackoffStrategy?.GetType()?.Name;
 
             _channel = Channel.CreateBounded<IQueueMessageContext>(bufferSize);
 
-            if (messageBackoffStrategy != null)
-            {
-                _requestMessageAttributeNames.Add(MessageSystemAttributeName.ApproximateReceiveCount);
-            }
+            _requestMessageAttributeNames.Add(MessageSystemAttributeName.ApproximateReceiveCount);
         }
 
         /// <summary>
@@ -101,12 +96,16 @@ namespace JustSaying.Messaging.Channels.Receive
                         }
                     }
 
+                    if (_logger.IsEnabled(LogLevel.Trace))
+                    {
+                        _logger.LogTrace("Downloaded {MessageCount} messages from queue {QueueName}.", messages.Count, _sqsQueueReader.QueueName);
+                    }
+
                     foreach (Message message in messages)
                     {
                         IQueueMessageContext messageContext = _sqsQueueReader.ToMessageContext(message);
 
-                        // Complete all messages in the batch, rather than observing the CancellationToken to stop
-                        await writer.WriteAsync(messageContext, CancellationToken.None).ConfigureAwait(false);
+                        await writer.WriteAsync(messageContext, stoppingToken).ConfigureAwait(false);
                     }
                 }
             }
@@ -142,7 +141,7 @@ namespace JustSaying.Messaging.Channels.Receive
                 messages = await _sqsMiddleware.RunAsync(context,
                         async ct =>
                             await _sqsQueueReader
-                                .GetMessagesAsync(count, _sqsWaitTime, _requestMessageAttributeNames, ct)
+                                .GetMessagesAsync(count, _sqsWaitTime, _requestMessageAttributeNames.ToList(), ct)
                                 .ConfigureAwait(false),
                         linkedCts.Token)
                     .ConfigureAwait(false);
@@ -169,7 +168,6 @@ namespace JustSaying.Messaging.Channels.Receive
                 _sqsQueueReader.QueueName,
                 Region = _sqsQueueReader.RegionSystemName,
                 Prefetch = _prefetch,
-                BackoffStrategyName = _backoffStrategyName,
             });
         }
     }

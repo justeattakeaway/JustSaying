@@ -3,6 +3,11 @@ using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Middleware.Backoff;
+using JustSaying.Messaging.Middleware.ErrorHandling;
+using JustSaying.Messaging.Middleware.Logging;
+using JustSaying.Messaging.Middleware.MessageContext;
+using JustSaying.Messaging.Middleware.PostProcessing;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Naming;
 using StructureMap;
@@ -35,6 +40,9 @@ namespace JustSaying
             For<MessageContextAccessor>().Use<MessageContextAccessor>().Singleton();
             For<IMessageContextAccessor>().Use(context => context.GetInstance<MessageContextAccessor>());
             For<IMessageContextReader>().Use(context => context.GetInstance<MessageContextAccessor>());
+
+            For<LoggingMiddleware>().Singleton();
+            For<SqsPostProcessorMiddleware>().Singleton();
 
             For<IMessageSerializationRegister>()
                 .Use(

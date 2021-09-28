@@ -59,7 +59,8 @@ namespace JustSaying.Fluent.Subscribing.Newtonsoft
                         .AddMessageAttribute("content2", "somemorecontent");
                     await publisher.PublishAsync(new SimpleMessage(), metadata, cancellationToken);
 
-                    await Patiently.AssertThatAsync(OutputHelper, () => handler.HandledMessages.Count > 0, TimeSpan.FromSeconds(5));
+                    await Patiently.AssertThatAsync(OutputHelper,
+                        () => handler.HandledMessages.Count > 0, TimeSpan.FromSeconds(5));
 
                     handler.HandledMessages.Count.ShouldBe(1);
                     handler.HandledMessages[0].context.MessageAttributes.Get("content1").StringValue.ShouldBe("somecontent");

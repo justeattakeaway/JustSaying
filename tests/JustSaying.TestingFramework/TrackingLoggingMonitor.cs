@@ -37,7 +37,7 @@ namespace JustSaying.TestingFramework
         public void HandleException(Type messageType)
         {
             HandledExceptions.Add(messageType);
-            _logger.LogInformation("Handled Exception of type {ExceptionType}", messageType.FullName);
+            _logger.LogInformation("Exception occurred when handling message of type {MessageType}", messageType.FullName);
         }
 
         public void HandleError(Exception ex, Message message)

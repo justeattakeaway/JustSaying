@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
@@ -30,7 +31,7 @@ namespace JustSaying.AwsTools
             };
         }
 
-        public override async Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig)
+        public override async Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig, CancellationToken cancellationToken)
         {
             if (!QueueNeedsUpdating(queueConfig))
             {
@@ -48,7 +49,7 @@ namespace JustSaying.AwsTools
                 }
             };
 
-            var response = await Client.SetQueueAttributesAsync(request).ConfigureAwait(false);
+            var response = await Client.SetQueueAttributesAsync(request, cancellationToken).ConfigureAwait(false);
 
             if (response.HttpStatusCode == HttpStatusCode.OK)
             {

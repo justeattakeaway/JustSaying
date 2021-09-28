@@ -14,10 +14,14 @@ namespace JustSaying.Fluent
     internal sealed class DefaultServiceResolver : IServiceResolver
     {
         /// <inheritdoc />
-        public T ResolveService<T>()
-            => (T)ResolveService(typeof(T));
+        public T ResolveService<T>() where T : class
+            => (T)TryResolveService(typeof(T)) ??
+                throw new NotSupportedException($"Resolving a service of type {typeof(T).Name} is not supported.");
 
-        private object ResolveService(Type desiredType)
+        public T ResolveOptionalService<T>() where T : class
+            => (T)TryResolveService(typeof(T));
+
+        private object TryResolveService(Type desiredType)
         {
             if (desiredType == typeof(ILoggerFactory))
             {
@@ -58,7 +62,7 @@ namespace JustSaying.Fluent
                 return new DefaultNamingConventions();
             }
 
-            throw new NotSupportedException($"Resolving a service of type {desiredType.Name} is not supported.");
+            return null;
         }
     }
 }

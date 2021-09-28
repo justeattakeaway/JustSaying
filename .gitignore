@@ -25,3 +25,4 @@ BenchmarkDotNet.Artifacts
 TestResult.xml
 UpgradeLog*.htm
 !3rdparty/*/bin
+*.received.txt

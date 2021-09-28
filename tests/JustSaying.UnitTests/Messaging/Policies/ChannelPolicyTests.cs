@@ -79,14 +79,13 @@ namespace JustSaying.UnitTests.Messaging.Policies
 
         private static ISqsQueue TestQueue(Action spy = null)
         {
-            ReceiveMessageResponse GetMessages()
+            IEnumerable<Message> GetMessages()
             {
                 spy?.Invoke();
                 throw new InvalidOperationException();
             }
 
-            var sqs = new FakeAmazonSqs(() => GetMessages().Infinite());
-            var queue = new FakeSqsQueue("test-queue", sqs);
+            var queue = new FakeSqsQueue(ct => Task.FromResult(GetMessages()), "test-queue");
 
             return queue;
         }

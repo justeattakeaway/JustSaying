@@ -2,6 +2,7 @@ using System;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
+using JustSaying.Fluent.ServiceResolver;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
@@ -19,7 +20,7 @@ namespace JustSaying
         /// <summary>
         /// Gets the <see cref="IServiceResolver"/> to use.
         /// </summary>
-        internal IServiceResolver ServiceResolver { get; private set; } = new DefaultServiceResolver();
+        internal IServiceResolver ServiceResolver { get; private set; }
 
         /// <summary>
         /// Gets or sets the builder to use for services.
@@ -29,12 +30,12 @@ namespace JustSaying
         /// <summary>
         /// Gets or sets the builder to use for creating an AWS client factory.
         /// </summary>
-        private AwsClientFactoryBuilder ClientFactoryBuilder { get; set; }
+        internal AwsClientFactoryBuilder ClientFactoryBuilder { get; set; }
 
         /// <summary>
         /// Gets or sets the builder to use to configure messaging.
         /// </summary>
-        private MessagingConfigurationBuilder MessagingConfig { get; set; }
+        internal MessagingConfigurationBuilder MessagingConfig { get; set; }
 
         /// <summary>
         /// Gets or sets the builder to use for publications.
@@ -45,6 +46,22 @@ namespace JustSaying
         /// Gets or sets the builder to use for subscriptions.
         /// </summary>
         private SubscriptionsBuilder SubscriptionBuilder { get; set; }
+
+        /// <summary>
+        /// Provides an <see cref="IServiceResolver"/> interface over the <see cref="ServicesBuilder"/> builder
+        /// so that services can be obtained in a consistent way
+        /// </summary>
+        private ServiceBuilderServiceResolver ServiceBuilderServiceResolver { get; set; }
+
+        public MessagingBusBuilder()
+        {
+            ServicesBuilder = new ServicesBuilder(this);
+            ServiceBuilderServiceResolver = new ServiceBuilderServiceResolver(ServicesBuilder);
+            ServiceResolver =
+                new CompoundServiceResolver(ServiceBuilderServiceResolver, new DefaultServiceResolver());
+            SubscriptionBuilder = new SubscriptionsBuilder(this);
+            MessagingConfig = new MessagingConfigurationBuilder(this);
+        }
 
         /// <summary>
         /// Configures the factory for AWS clients.
@@ -144,11 +161,6 @@ namespace JustSaying
                 throw new ArgumentNullException(nameof(configure));
             }
 
-            if (ServicesBuilder == null)
-            {
-                ServicesBuilder = new ServicesBuilder(this);
-            }
-
             configure(ServicesBuilder);
 
             return this;
@@ -171,11 +183,6 @@ namespace JustSaying
                 throw new ArgumentNullException(nameof(configure));
             }
 
-            if (SubscriptionBuilder == null)
-            {
-                SubscriptionBuilder = new SubscriptionsBuilder(this);
-            }
-
             configure(SubscriptionBuilder);
 
             return this;
@@ -193,7 +200,9 @@ namespace JustSaying
         /// </exception>
         public MessagingBusBuilder WithServiceResolver(IServiceResolver serviceResolver)
         {
-            ServiceResolver = serviceResolver ?? throw new ArgumentNullException(nameof(serviceResolver));
+            if (serviceResolver == null) throw new ArgumentNullException(nameof(serviceResolver));
+
+            ServiceResolver = new CompoundServiceResolver(ServiceBuilderServiceResolver, serviceResolver);
             return this;
         }
 
@@ -216,12 +225,11 @@ namespace JustSaying
         /// </returns>
         public IMessagePublisher BuildPublisher()
         {
-            IMessagingConfig config = CreateConfig();
+            IMessagingConfig config = MessagingConfig.Build();
 
             config.Validate();
 
-            ILoggerFactory loggerFactory =
-                ServicesBuilder?.LoggerFactory?.Invoke() ?? ServiceResolver.ResolveService<ILoggerFactory>();
+            ILoggerFactory loggerFactory = ServiceResolver.ResolveService<ILoggerFactory>();
 
             JustSayingBus bus = CreateBus(config, loggerFactory);
             IAwsClientFactoryProxy proxy = CreateFactoryProxy();
@@ -242,48 +250,29 @@ namespace JustSaying
         /// </returns>
         public IMessagingBus BuildSubscribers()
         {
-            IMessagingConfig config = CreateConfig();
+            IMessagingConfig config = MessagingConfig.Build();
 
             config.Validate();
 
-            ILoggerFactory loggerFactory =
-                ServicesBuilder?.LoggerFactory?.Invoke() ?? ServiceResolver.ResolveService<ILoggerFactory>();
+            ILoggerFactory loggerFactory = ServiceResolver.ResolveService<ILoggerFactory>();
 
             JustSayingBus bus = CreateBus(config, loggerFactory);
             IAwsClientFactoryProxy proxy = CreateFactoryProxy();
-            IVerifyAmazonQueues creator = CreateQueueCreator(proxy, loggerFactory);
+            IVerifyAmazonQueues creator = new AmazonQueueCreator(proxy, loggerFactory);
 
-            if (ServicesBuilder?.MessageContextAccessor != null)
-            {
-                bus.MessageContextAccessor = ServicesBuilder.MessageContextAccessor();
-            }
-
-            if (SubscriptionBuilder != null)
-            {
-                SubscriptionBuilder.Configure(bus, ServiceResolver, creator, proxy, loggerFactory);
-            }
+            SubscriptionBuilder.Configure(bus, ServiceResolver, creator, proxy, loggerFactory);
 
             return bus;
         }
 
         private JustSayingBus CreateBus(IMessagingConfig config, ILoggerFactory loggerFactory)
         {
-            IMessageSerializationRegister register =
-                ServicesBuilder?.SerializationRegister?.Invoke() ?? ServiceResolver.ResolveService<IMessageSerializationRegister>();
+            IMessageSerializationRegister register = ServiceResolver.ResolveService<IMessageSerializationRegister>();
+            IMessageMonitor monitor = ServiceResolver.ResolveOptionalService<IMessageMonitor>() ?? new NullOpMessageMonitor();
 
-            var bus = new JustSayingBus(config, register, loggerFactory);
-
-            bus.Monitor = CreateMessageMonitor();
-            bus.MessageContextAccessor = CreateMessageContextAccessor();
+            var bus = new JustSayingBus(config, register, loggerFactory, monitor);
 
             return bus;
-        }
-
-        private IMessagingConfig CreateConfig()
-        {
-            return MessagingConfig != null ?
-                MessagingConfig.Build() :
-                ServiceResolver.ResolveService<IMessagingConfig>();
         }
 
         private IAwsClientFactoryProxy CreateFactoryProxy()
@@ -291,23 +280,6 @@ namespace JustSaying
             return ClientFactoryBuilder != null ?
                 new AwsClientFactoryProxy(new Lazy<IAwsClientFactory>(ClientFactoryBuilder.Build)) :
                 ServiceResolver.ResolveService<IAwsClientFactoryProxy>();
-        }
-
-        private IMessageMonitor CreateMessageMonitor()
-        {
-            return ServicesBuilder?.MessageMonitoring?.Invoke() ?? ServiceResolver.ResolveService<IMessageMonitor>();
-        }
-
-        private IMessageContextAccessor CreateMessageContextAccessor()
-        {
-            return ServicesBuilder?.MessageContextAccessor?.Invoke() ?? ServiceResolver.ResolveService<IMessageContextAccessor>();
-        }
-
-        private IVerifyAmazonQueues CreateQueueCreator(IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
-        {
-            IVerifyAmazonQueues queueCreator = new AmazonQueueCreator(proxy, loggerFactory);
-
-            return queueCreator;
         }
     }
 }

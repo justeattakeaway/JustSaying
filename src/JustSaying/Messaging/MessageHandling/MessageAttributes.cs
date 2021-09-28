@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using JustSaying.Messaging.MessageSerialization;
 
-namespace JustSaying.Messaging.Channels.Context
+namespace JustSaying.Messaging.MessageHandling
 {
     /// <summary>
     /// A collection of <see cref="MessageAttributeValue"/> values returned by <see cref="IMessageSerializationRegister"/>.

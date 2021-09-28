@@ -10,7 +10,7 @@ namespace JustSaying.Messaging.Middleware
     /// <summary>
     /// This middleware measures the handler's execution duration and reports the results to an <see cref="IMessageMonitor"/>.
     /// </summary>
-    public class StopwatchMiddleware : MiddlewareBase<HandleMessageContext, bool>
+    public sealed class StopwatchMiddleware : MiddlewareBase<HandleMessageContext, bool>
     {
         private readonly IMessageMonitor _monitor;
         private readonly Type _handlerType;
@@ -31,13 +31,18 @@ namespace JustSaying.Messaging.Middleware
         {
             var watch = Stopwatch.StartNew();
 
-            bool result = await func(stoppingToken).ConfigureAwait(false);
-
-            watch.Stop();
-
-            _monitor.HandlerExecutionTime(_handlerType, context.MessageType, watch.Elapsed);
-
-            return result;
+            try
+            {
+                using (_monitor.MeasureDispatch())
+                {
+                    return await func(stoppingToken).ConfigureAwait(false);
+                }
+            }
+            finally
+            {
+                watch.Stop();
+                _monitor.HandlerExecutionTime(_handlerType, context.MessageType, watch.Elapsed);
+            }
         }
     }
 }

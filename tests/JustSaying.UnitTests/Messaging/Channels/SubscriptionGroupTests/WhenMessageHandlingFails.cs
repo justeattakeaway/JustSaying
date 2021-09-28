@@ -7,7 +7,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
     public class WhenMessageHandlingFails : BaseSubscriptionGroupTests
     {
-        private FakeAmazonSqs _sqsClient;
+        private FakeSqsQueue _queue;
 
         public WhenMessageHandlingFails(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
@@ -16,10 +16,9 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 
         protected override void Given()
         {
-            var queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage());
-            _sqsClient = queue.FakeClient;
+            _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage());
 
-            Queues.Add(queue);
+            Queues.Add(_queue);
             Handler.ShouldSucceed = false;
         }
 
@@ -32,7 +31,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
         [Fact]
         public void FailedMessageIsNotRemovedFromQueue()
         {
-            _sqsClient.DeleteMessageRequests.ShouldBeEmpty();
+            _queue.DeleteMessageRequests.ShouldBeEmpty();
         }
 
         [Fact]

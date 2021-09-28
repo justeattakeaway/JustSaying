@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.Middleware;
+using JustSaying.Messaging.Middleware.PostProcessing;
 using JustSaying.Models;
 using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
@@ -38,6 +39,9 @@ namespace JustSaying.Fluent
         /// Gets the tags to add to the queue.
         /// </summary>
         private Dictionary<string, string> Tags { get; } = new(StringComparer.Ordinal);
+
+        private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
+
 
         /// <summary>
         /// Configures that the <see cref="ITopicNamingConvention"/> will create the topic name that should be used.
@@ -106,6 +110,13 @@ namespace JustSaying.Fluent
             return this;
         }
 
+        /// <inheritdoc />
+        public ISubscriptionBuilder<T> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
+        {
+            MiddlewareConfiguration = middlewareConfiguration;
+            return this;
+        }
+
         /// <summary>
         /// Creates a tag with no value that will be assigned to the SQS queue.
         /// </summary>
@@ -169,14 +180,11 @@ namespace JustSaying.Fluent
             subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
             subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
             subscriptionConfig.PublishEndpoint = subscriptionConfig.TopicName;
-            subscriptionConfig.MiddlewareConfiguration = subscriptionConfig.MiddlewareConfiguration;
             subscriptionConfig.Validate();
 
             var queueWithStartup = creator.EnsureTopicExistsWithQueueSubscribed(
                 region,
-                bus.SerializationRegister,
-                subscriptionConfig,
-                config.MessageSubjectProvider);
+                subscriptionConfig);
 
             bus.AddStartupTask(queueWithStartup.StartupTask);
             bus.AddQueue(subscriptionConfig.SubscriptionGroupName, queueWithStartup.Queue);
@@ -195,11 +203,8 @@ namespace JustSaying.Fluent
             }
 
             var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver);
-
             var handlerMiddleware = middlewareBuilder
-                .UseHandler<T>()
-                .UseStopwatch(proposedHandler.GetType())
-                .Configure(subscriptionConfig.MiddlewareConfiguration)
+                .Configure(MiddlewareConfiguration ?? (builder => builder.UseDefaults<T>(proposedHandler.GetType())) )
                 .Build();
 
             bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, handlerMiddleware);

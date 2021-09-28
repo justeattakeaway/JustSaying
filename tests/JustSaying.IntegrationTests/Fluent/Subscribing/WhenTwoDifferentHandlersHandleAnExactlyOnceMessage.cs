@@ -27,9 +27,11 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
                 .AddSingleton<IMessageLockAsync>(messageLock)
                 .ConfigureJustSaying((builder) =>
                     builder.WithLoopbackTopic<SimpleMessage>(UniqueName,
-                        t => t.WithReadConfiguration(rc =>
-                            rc.WithMiddlewareConfiguration(m =>
-                                m.UseExactlyOnce<SimpleMessage>("some-key")))))
+                        t => t.WithMiddlewareConfiguration(m =>
+                        {
+                            m.UseExactlyOnce<SimpleMessage>("some-key");
+                            m.UseDefaults<SimpleMessage>(handler1.GetType());
+                        })))
                 .AddJustSayingHandlers(new[] { handler1, handler2 });
 
             await WhenAsync(
@@ -43,11 +45,14 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing
 
                     // Act
                     await publisher.PublishAsync(message, cancellationToken);
-                    await Task.Delay(1.Seconds(), cancellationToken);
 
                     // Assert
-                    handler1.ReceivedMessages.ShouldHaveSingleItem().Id.ShouldBe(message.Id);
-                    handler2.ReceivedMessages.ShouldHaveSingleItem().Id.ShouldBe(message.Id);
+                    await Patiently.AssertThatAsync(OutputHelper,
+                        () =>
+                        {
+                            handler1.ReceivedMessages.ShouldHaveSingleItem().Id.ShouldBe(message.Id);
+                            handler2.ReceivedMessages.ShouldHaveSingleItem().Id.ShouldBe(message.Id);
+                        });
                 });
         }
     }

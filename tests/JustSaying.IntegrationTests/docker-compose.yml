@@ -1,8 +1,8 @@
 version: "2"
 services:
-  goaws:
+  localstack:
     container_name: localstack
     restart: unless-stopped
-    image: localstack/localstack
+    image: localstack/localstack:0.12.15
     ports:
       - 4566:4566

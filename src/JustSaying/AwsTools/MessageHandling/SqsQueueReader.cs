@@ -31,34 +31,24 @@ namespace JustSaying.AwsTools.MessageHandling
         internal async Task<IList<Message>> GetMessagesAsync(
             int maximumCount,
             TimeSpan waitTime,
-            IEnumerable<string> requestMessageAttributeNames,
+            ICollection<string> requestMessageAttributeNames,
             CancellationToken cancellationToken)
         {
-            var request = new ReceiveMessageRequest
-            {
-                QueueUrl = _sqsQueue.Uri.AbsoluteUri,
-                MaxNumberOfMessages = maximumCount,
-                WaitTimeSeconds = (int)waitTime.TotalSeconds,
-                AttributeNames = requestMessageAttributeNames.ToList()
-            };
+            var sqsMessageResponse =
+                await _sqsQueue.ReceiveMessagesAsync(_sqsQueue.Uri.AbsoluteUri,
+                    maximumCount,
+                    (int)waitTime.TotalSeconds,
+                    requestMessageAttributeNames.ToList(),
+                    cancellationToken).ConfigureAwait(false);
 
-            ReceiveMessageResponse sqsMessageResponse =
-                await _sqsQueue.Client.ReceiveMessageAsync(request, cancellationToken).ConfigureAwait(false);
-
-            return sqsMessageResponse?.Messages;
+            return sqsMessageResponse;
         }
 
         internal async Task DeleteMessageAsync(
             string receiptHandle,
             CancellationToken cancellationToken)
         {
-            var deleteRequest = new DeleteMessageRequest
-            {
-                QueueUrl = _sqsQueue.Uri.AbsoluteUri,
-                ReceiptHandle = receiptHandle,
-            };
-
-            await _sqsQueue.Client.DeleteMessageAsync(deleteRequest, cancellationToken).ConfigureAwait(false);
+            await _sqsQueue.DeleteMessageAsync(_sqsQueue.Uri.ToString(), receiptHandle, cancellationToken).ConfigureAwait(false);
         }
 
         internal async Task ChangeMessageVisibilityAsync(
@@ -66,14 +56,11 @@ namespace JustSaying.AwsTools.MessageHandling
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
-            var visibilityRequest = new ChangeMessageVisibilityRequest
-            {
-                QueueUrl = _sqsQueue.Uri.ToString(),
-                ReceiptHandle = receiptHandle,
-                VisibilityTimeout = (int)timeout.TotalSeconds,
-            };
-
-            await _sqsQueue.Client.ChangeMessageVisibilityAsync(visibilityRequest, cancellationToken).ConfigureAwait(false);
+            await _sqsQueue.ChangeMessageVisibilityAsync(
+                _sqsQueue.Uri.ToString(),
+                receiptHandle,
+                (int)timeout.TotalSeconds,
+                cancellationToken).ConfigureAwait(false);
         }
     }
 }

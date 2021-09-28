@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
@@ -42,7 +43,7 @@ namespace JustSaying.IntegrationTests.Fluent.AwsTools
 
             // Act
             await queue.UpdateQueueAttributeAsync(
-                new SqsBasicConfiguration { MessageRetention = newRetentionPeriod });
+                new SqsBasicConfiguration { MessageRetention = newRetentionPeriod }, CancellationToken.None);
 
             // Assert
             queue.MessageRetentionPeriod.ShouldBe(newRetentionPeriod);

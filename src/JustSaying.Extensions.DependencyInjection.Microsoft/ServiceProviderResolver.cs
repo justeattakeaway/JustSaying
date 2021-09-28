@@ -80,6 +80,8 @@ namespace JustSaying
         }
 
         /// <inheritdoc />
-        public T ResolveService<T>() => ServiceProvider.GetRequiredService<T>();
+        public T ResolveService<T>() where T : class => ServiceProvider.GetRequiredService<T>();
+
+        public T ResolveOptionalService<T>() where T : class => ServiceProvider.GetService<T>();
     }
 }
