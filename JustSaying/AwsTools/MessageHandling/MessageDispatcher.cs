@@ -9,6 +9,7 @@ using JustSaying.Messaging.Monitoring;
 using Message = JustSaying.Models.Message;
 using SQSMessage = Amazon.SQS.Model.Message;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -44,19 +45,16 @@ namespace JustSaying.AwsTools.MessageHandling
         public async Task DispatchMessage(SQSMessage message)
         {
             Message typedMessage;
-            try
-            {
-                typedMessage = _serialisationRegister.DeserializeMessage(message.Body);
+            try{
+                typedMessage = _serialisationRegister.DeserializeMessage(JsonConvert.SerializeObject(message));
             }
-            catch (MessageFormatNotSupportedException ex)
-            {
+            catch (MessageFormatNotSupportedException ex){
                 _log.LogTrace($"Didn't handle message [{message.Body ?? string.Empty}]. No serialiser setup");
                 await DeleteMessageFromQueue(message.ReceiptHandle).ConfigureAwait(false);
                 _onError(ex, message);
                 return;
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex){
                 _log.LogError(0, ex, "Error deserialising message");
                 _onError(ex, message);
                 return;
@@ -65,27 +63,22 @@ namespace JustSaying.AwsTools.MessageHandling
             var handlingSucceeded = false;
             Exception lastException = null;
 
-            try
-            {
-                if (typedMessage != null)
-                {
+            try{
+                if (typedMessage != null){
                     typedMessage.ReceiptHandle = message.ReceiptHandle;
                     typedMessage.QueueUrl = _queue.Url;
                     handlingSucceeded = await CallMessageHandler(typedMessage).ConfigureAwait(false);
                 }
 
-                if (handlingSucceeded)
-                {
+                if (handlingSucceeded){
                     await DeleteMessageFromQueue(message.ReceiptHandle).ConfigureAwait(false);
                 }
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex){
                 var errorText = $"Error handling message [{message.Body}]";
                 _log.LogError(0, ex, errorText);
 
-                if (typedMessage != null)
-                {
+                if (typedMessage != null){
                     _messagingMonitor.HandleException(typedMessage.GetType());
                 }
 
@@ -93,11 +86,10 @@ namespace JustSaying.AwsTools.MessageHandling
 
                 lastException = ex;
             }
-            finally
-            {
-                if (!handlingSucceeded && _messageBackoffStrategy != null)
-                {
-                    await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage, lastException).ConfigureAwait(false);
+            finally{
+                if (!handlingSucceeded && _messageBackoffStrategy != null){
+                    await UpdateMessageVisibilityTimeout(message, message.ReceiptHandle, typedMessage, lastException)
+                        .ConfigureAwait(false);
                 }
             }
         }
@@ -106,9 +98,10 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             var handler = _handlerMap.Get(message.GetType());
 
-            if (handler == null)
-            {
-                _log.LogError("Failed to dispatch. Handler for message of type '{MessageTypeName}' not found in handler map.", message.GetType().FullName);
+            if (handler == null){
+                _log.LogError(
+                    "Failed to dispatch. Handler for message of type '{MessageTypeName}' not found in handler map.",
+                    message.GetType().FullName);
                 return false;
             }
 
@@ -133,15 +126,15 @@ namespace JustSaying.AwsTools.MessageHandling
 
             await _queue.Client.DeleteMessageAsync(deleteRequest).ConfigureAwait(false);
         }
-        
-        private async Task UpdateMessageVisibilityTimeout(SQSMessage message, string receiptHandle, Message typedMessage, Exception lastException)
-        {
-            if (TryGetApproxReceiveCount(message.Attributes, out int approxReceiveCount))
-            {
-                var visibilityTimeoutSeconds = (int)_messageBackoffStrategy.GetBackoffDuration(typedMessage, approxReceiveCount, lastException).TotalSeconds;
 
-                try
-                {
+        private async Task UpdateMessageVisibilityTimeout(SQSMessage message, string receiptHandle,
+            Message typedMessage, Exception lastException)
+        {
+            if (TryGetApproxReceiveCount(message.Attributes, out int approxReceiveCount)){
+                var visibilityTimeoutSeconds = (int)_messageBackoffStrategy
+                    .GetBackoffDuration(typedMessage, approxReceiveCount, lastException).TotalSeconds;
+
+                try{
                     var visibilityRequest = new ChangeMessageVisibilityRequest
                     {
                         QueueUrl = _queue.Url,
@@ -151,9 +144,9 @@ namespace JustSaying.AwsTools.MessageHandling
 
                     await _queue.Client.ChangeMessageVisibilityAsync(visibilityRequest).ConfigureAwait(false);
                 }
-                catch (Exception ex)
-                {
-                    _log.LogError(0, ex, $"Failed to update message visibility timeout by {visibilityTimeoutSeconds} seconds");
+                catch (Exception ex){
+                    _log.LogError(0, ex,
+                        $"Failed to update message visibility timeout by {visibilityTimeoutSeconds} seconds");
                     _onError(ex, message);
                 }
             }
@@ -163,7 +156,8 @@ namespace JustSaying.AwsTools.MessageHandling
         {
             approxReceiveCount = 0;
 
-            return attributes.TryGetValue(MessageSystemAttributeName.ApproximateReceiveCount, out string rawApproxReceiveCount) && int.TryParse(rawApproxReceiveCount, out approxReceiveCount);
+            return attributes.TryGetValue(MessageSystemAttributeName.ApproximateReceiveCount,
+                out string rawApproxReceiveCount) && int.TryParse(rawApproxReceiveCount, out approxReceiveCount);
         }
     }
 }
