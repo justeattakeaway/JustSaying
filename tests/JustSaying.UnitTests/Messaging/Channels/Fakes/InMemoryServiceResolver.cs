@@ -7,47 +7,46 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.Fakes
-{
-    public class InMemoryServiceResolver : IServiceResolver, IHandlerResolver
-    {
-        private readonly IServiceProvider _provider;
+namespace JustSaying.UnitTests.Messaging.Channels.Fakes;
 
-        private static readonly Action<IServiceCollection, ITestOutputHelper, IMessageMonitor> Configure = (sc, outputHelper, monitor) =>
-            sc.AddLogging(l => l.AddXUnit(outputHelper))
+public class InMemoryServiceResolver : IServiceResolver, IHandlerResolver
+{
+    private readonly IServiceProvider _provider;
+
+    private static readonly Action<IServiceCollection, ITestOutputHelper, IMessageMonitor> Configure = (sc, outputHelper, monitor) =>
+        sc.AddLogging(l => l.AddXUnit(outputHelper))
             .AddSingleton<IMessageMonitor>(monitor)
             .AddSingleton<LoggingMiddleware>()
             .AddSingleton<SqsPostProcessorMiddleware>()
             .AddSingleton<IMessageContextAccessor>(new MessageContextAccessor());
 
-        public InMemoryServiceResolver(ITestOutputHelper outputHelper, IMessageMonitor monitor, Action<IServiceCollection> configure = null) :
-            this(sc =>
-            {
-                Configure(sc, outputHelper, monitor);
-                configure?.Invoke(sc);
-            })
-        { }
-
-        public InMemoryServiceResolver(Action<IServiceCollection> configure = null)
+    public InMemoryServiceResolver(ITestOutputHelper outputHelper, IMessageMonitor monitor, Action<IServiceCollection> configure = null) :
+        this(sc =>
         {
-            var collection = new ServiceCollection();
-            configure?.Invoke(collection);
-            _provider = collection.BuildServiceProvider();
-        }
+            Configure(sc, outputHelper, monitor);
+            configure?.Invoke(sc);
+        })
+    { }
 
-        public IHandlerAsync<T> ResolveHandler<T>(HandlerResolutionContext context)
-        {
-            return (IHandlerAsync<T>) _provider.GetService(typeof(IHandlerAsync<T>));
-        }
+    public InMemoryServiceResolver(Action<IServiceCollection> configure = null)
+    {
+        var collection = new ServiceCollection();
+        configure?.Invoke(collection);
+        _provider = collection.BuildServiceProvider();
+    }
 
-        public T ResolveService<T>() where T : class
-        {
-            return _provider.GetRequiredService<T>();
-        }
+    public IHandlerAsync<T> ResolveHandler<T>(HandlerResolutionContext context)
+    {
+        return (IHandlerAsync<T>) _provider.GetService(typeof(IHandlerAsync<T>));
+    }
 
-        public T ResolveOptionalService<T>() where T : class
-        {
-            return _provider.GetService<T>();
-        }
+    public T ResolveService<T>() where T : class
+    {
+        return _provider.GetRequiredService<T>();
+    }
+
+    public T ResolveOptionalService<T>() where T : class
+    {
+        return _provider.GetService<T>();
     }
 }

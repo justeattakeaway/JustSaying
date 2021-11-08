@@ -5,51 +5,50 @@ using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.Publishing
+namespace JustSaying.IntegrationTests.Fluent.Publishing;
+
+public class WhenAMessageIsPublishedToATopicWithSystemTextJson : IntegrationTestBase
 {
-    public class WhenAMessageIsPublishedToATopicWithSystemTextJson : IntegrationTestBase
+    public WhenAMessageIsPublishedToATopicWithSystemTextJson(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
-        public WhenAMessageIsPublishedToATopicWithSystemTextJson(ITestOutputHelper outputHelper)
-            : base(outputHelper)
+    }
+
+    [AwsFact]
+    public async Task Then_The_Message_Is_Handled()
+    {
+        // Arrange
+        var handler = new InspectableHandler<SimpleMessage>();
+
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(
+                (builder) => builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
+            .AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>()
+            .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
+
+        string content = Guid.NewGuid().ToString();
+
+        var message = new SimpleMessage()
         {
-        }
+            Content = content
+        };
 
-        [AwsFact]
-        public async Task Then_The_Message_Is_Handled()
-        {
-            // Arrange
-            var handler = new InspectableHandler<SimpleMessage>();
-
-            var services = GivenJustSaying()
-                .ConfigureJustSaying(
-                    (builder) => builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
-                .AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>()
-                .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
-
-            string content = Guid.NewGuid().ToString();
-
-            var message = new SimpleMessage()
+        await WhenAsync(
+            services,
+            async (publisher, listener, cancellationToken) =>
             {
-                Content = content
-            };
+                await listener.StartAsync(cancellationToken);
+                await publisher.StartAsync(cancellationToken);
 
-            await WhenAsync(
-                services,
-                async (publisher, listener, cancellationToken) =>
-                {
-                    await listener.StartAsync(cancellationToken);
-                    await publisher.StartAsync(cancellationToken);
+                // Act
+                await publisher.PublishAsync(message, cancellationToken);
 
-                    // Act
-                    await publisher.PublishAsync(message, cancellationToken);
-
-                    // Assert
-                    await Patiently.AssertThatAsync(OutputHelper,
-                        () =>
-                        {
-                            handler.ReceivedMessages.ShouldHaveSingleItem().Content.ShouldBe(content);
-                        });
-                });
-        }
+                // Assert
+                await Patiently.AssertThatAsync(OutputHelper,
+                    () =>
+                    {
+                        handler.ReceivedMessages.ShouldHaveSingleItem().Content.ShouldBe(content);
+                    });
+            });
     }
 }

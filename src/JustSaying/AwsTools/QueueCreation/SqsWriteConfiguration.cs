@@ -1,13 +1,12 @@
-namespace JustSaying.AwsTools.QueueCreation
+namespace JustSaying.AwsTools.QueueCreation;
+
+public class SqsWriteConfiguration : SqsBasicConfiguration
 {
-    public class SqsWriteConfiguration : SqsBasicConfiguration
+    public SqsWriteConfiguration()
     {
-        public SqsWriteConfiguration()
-        {
-            MessageRetention = JustSayingConstants.DefaultRetentionPeriod;
-            ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod;
-            VisibilityTimeout = JustSayingConstants.DefaultVisibilityTimeout;
-            RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
-        }
+        MessageRetention = JustSayingConstants.DefaultRetentionPeriod;
+        ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod;
+        VisibilityTimeout = JustSayingConstants.DefaultVisibilityTimeout;
+        RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
     }
 }

@@ -8,79 +8,78 @@ using Xunit;
 using Xunit.Abstractions;
 #pragma warning disable 618
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
+
+public sealed class WhenUsingSqsQueueByName : BaseSubscriptionGroupTests, IDisposable
 {
-    public sealed class WhenUsingSqsQueueByName : BaseSubscriptionGroupTests, IDisposable
+    private ISqsQueue _queue;
+    private IAmazonSQS _client;
+    readonly string MessageTypeString = typeof(SimpleMessage).ToString();
+    const string MessageBody = "object";
+
+    public WhenUsingSqsQueueByName(ITestOutputHelper testOutputHelper)
+        : base(testOutputHelper)
+    { }
+
+    protected override void Given()
     {
-        private ISqsQueue _queue;
-        private IAmazonSQS _client;
-        readonly string MessageTypeString = typeof(SimpleMessage).ToString();
-        const string MessageBody = "object";
+        int retryCount = 1;
 
-        public WhenUsingSqsQueueByName(ITestOutputHelper testOutputHelper)
-            : base(testOutputHelper)
-        { }
-
-        protected override void Given()
+        _client = new FakeAmazonSqs(() =>
         {
-            int retryCount = 1;
+            return new[] { GenerateResponseMessages(MessageTypeString, Guid.NewGuid()) }
+                .Concat(new ReceiveMessageResponse().Infinite());
+        });
 
-            _client = new FakeAmazonSqs(() =>
+        var queue = new SqsQueueByName(RegionEndpoint.EUWest1,
+            "some-queue-name",
+            _client,
+            retryCount,
+            LoggerFactory);
+        queue.ExistsAsync(CancellationToken.None).Wait();
+
+        _queue = queue;
+
+        Queues.Add(_queue);
+    }
+
+    [Fact]
+    public void HandlerReceivesMessage()
+    {
+        Handler.ReceivedMessages.Contains(SerializationRegister.DefaultDeserializedMessage())
+            .ShouldBeTrue();
+    }
+
+    private static ReceiveMessageResponse GenerateResponseMessages(
+        string messageType,
+        Guid messageId)
+    {
+        return new ReceiveMessageResponse
+        {
+            Messages = new List<Message>
             {
-                return new[] { GenerateResponseMessages(MessageTypeString, Guid.NewGuid()) }
-                    .Concat(new ReceiveMessageResponse().Infinite());
-            });
-
-            var queue = new SqsQueueByName(RegionEndpoint.EUWest1,
-                "some-queue-name",
-                _client,
-                retryCount,
-                LoggerFactory);
-            queue.ExistsAsync(CancellationToken.None).Wait();
-
-            _queue = queue;
-
-            Queues.Add(_queue);
-        }
-
-        [Fact]
-        public void HandlerReceivesMessage()
-        {
-            Handler.ReceivedMessages.Contains(SerializationRegister.DefaultDeserializedMessage())
-                .ShouldBeTrue();
-        }
-
-        private static ReceiveMessageResponse GenerateResponseMessages(
-            string messageType,
-            Guid messageId)
-        {
-            return new ReceiveMessageResponse
-            {
-                Messages = new List<Message>
+                new Message
                 {
-                    new Message
-                    {
-                        MessageId = messageId.ToString(),
-                        Body = SqsMessageBody(messageType)
-                    },
-                    new Message
-                    {
-                        MessageId = messageId.ToString(),
-                        Body = "{\"Subject\":\"SOME_UNKNOWN_MESSAGE\"," +
-                            "\"Message\":\"SOME_RANDOM_MESSAGE\"}"
-                    }
+                    MessageId = messageId.ToString(),
+                    Body = SqsMessageBody(messageType)
+                },
+                new Message
+                {
+                    MessageId = messageId.ToString(),
+                    Body = "{\"Subject\":\"SOME_UNKNOWN_MESSAGE\"," +
+                           "\"Message\":\"SOME_RANDOM_MESSAGE\"}"
                 }
-            };
-        }
+            }
+        };
+    }
 
-        private static string SqsMessageBody(string messageType)
-        {
-            return "{\"Subject\":\"" + messageType + "\"," + "\"Message\":\"" + MessageBody + "\"}";
-        }
+    private static string SqsMessageBody(string messageType)
+    {
+        return "{\"Subject\":\"" + messageType + "\"," + "\"Message\":\"" + MessageBody + "\"}";
+    }
 
-        public void Dispose()
-        {
-            _client.Dispose();
-        }
+    public void Dispose()
+    {
+        _client.Dispose();
     }
 }

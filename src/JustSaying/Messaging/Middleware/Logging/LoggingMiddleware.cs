@@ -1,63 +1,62 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Messaging.Middleware.Logging
+namespace JustSaying.Messaging.Middleware.Logging;
+
+/// <summary>
+/// A middleware that logs a rich information or warning event when a message is handled.
+/// </summary>
+public sealed class LoggingMiddleware : MiddlewareBase<HandleMessageContext, bool>
 {
+    private readonly ILogger<LoggingMiddleware> _logger;
+
     /// <summary>
-    /// A middleware that logs a rich information or warning event when a message is handled.
+    /// Constructs a <see cref="LoggingMiddleware"/>.
     /// </summary>
-    public sealed class LoggingMiddleware : MiddlewareBase<HandleMessageContext, bool>
+    /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to write logs to.</param>
+    public LoggingMiddleware(ILoggerFactory loggerFactory)
     {
-        private readonly ILogger<LoggingMiddleware> _logger;
+        _logger = loggerFactory?.CreateLogger<LoggingMiddleware>() ??
+                  throw new ArgumentNullException(nameof(loggerFactory));
+    }
 
-        /// <summary>
-        /// Constructs a <see cref="LoggingMiddleware"/>.
-        /// </summary>
-        /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to write logs to.</param>
-        public LoggingMiddleware(ILoggerFactory loggerFactory)
+    private const string MessageTemplate = "{Status} handling message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}ms.";
+    private const string Succeeded = nameof(Succeeded);
+    private const string Failed = nameof(Failed);
+
+    protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
+    {
+        using var disposable = _logger.BeginScope(new Dictionary<string, object>()
         {
-            _logger = loggerFactory?.CreateLogger<LoggingMiddleware>() ??
-                throw new ArgumentNullException(nameof(loggerFactory));
+            ["MessageSource"] = context.QueueName,
+            ["SourceType"] = "Queue"
+        });
+
+        var watch = Stopwatch.StartNew();
+        bool dispatchSuccessful = false;
+        try
+        {
+            dispatchSuccessful = await func(stoppingToken).ConfigureAwait(false);
+            watch.Stop();
+            return dispatchSuccessful;
         }
-
-        private const string MessageTemplate = "{Status} handling message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}ms.";
-        private const string Succeeded = nameof(Succeeded);
-        private const string Failed = nameof(Failed);
-
-        protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
+        finally
         {
-            using var disposable = _logger.BeginScope(new Dictionary<string, object>()
+            if (dispatchSuccessful)
             {
-                ["MessageSource"] = context.QueueName,
-                ["SourceType"] = "Queue"
-            });
-
-            var watch = Stopwatch.StartNew();
-            bool dispatchSuccessful = false;
-            try
-            {
-                dispatchSuccessful = await func(stoppingToken).ConfigureAwait(false);
-                watch.Stop();
-                return dispatchSuccessful;
+                _logger.LogInformation(MessageTemplate,
+                    Succeeded,
+                    context.Message.Id,
+                    context.MessageType.FullName,
+                    watch.ElapsedMilliseconds);
             }
-            finally
+            else
             {
-                if (dispatchSuccessful)
-                {
-                    _logger.LogInformation(MessageTemplate,
-                        Succeeded,
-                        context.Message.Id,
-                        context.MessageType.FullName,
-                        watch.ElapsedMilliseconds);
-                }
-                else
-                {
-                    _logger.LogWarning(MessageTemplate,
-                        Failed,
-                        context.Message.Id,
-                        context.MessageType.FullName,
-                        watch.ElapsedMilliseconds);
-                }
+                _logger.LogWarning(MessageTemplate,
+                    Failed,
+                    context.Message.Id,
+                    context.MessageType.FullName,
+                    watch.ElapsedMilliseconds);
             }
         }
     }

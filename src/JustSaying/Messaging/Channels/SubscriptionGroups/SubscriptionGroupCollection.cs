@@ -1,70 +1,69 @@
 using JustSaying.Messaging.Interrogation;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Messaging.Channels.SubscriptionGroups
-{
-    /// <inheritdoc />
-    public class SubscriptionGroupCollection : ISubscriptionGroup
-    {
-        private readonly ILogger _logger;
-        private readonly IList<ISubscriptionGroup> _subscriptionGroups;
+namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 
-        /// <summary>
-        /// Runs multiple instances of <see cref="SubscriptionGroup"/>.
-        /// </summary>
-        /// <param name="subscriptionGroups">The collection of <see cref="SubscriptionGroup"/> instances to run.</param>
-        /// <param name="logger">The <see cref="ILogger"/> to use.</param>
-        public SubscriptionGroupCollection(
-            IList<ISubscriptionGroup> subscriptionGroups,
-            ILogger<SubscriptionGroupCollection> logger)
+/// <inheritdoc />
+public class SubscriptionGroupCollection : ISubscriptionGroup
+{
+    private readonly ILogger _logger;
+    private readonly IList<ISubscriptionGroup> _subscriptionGroups;
+
+    /// <summary>
+    /// Runs multiple instances of <see cref="SubscriptionGroup"/>.
+    /// </summary>
+    /// <param name="subscriptionGroups">The collection of <see cref="SubscriptionGroup"/> instances to run.</param>
+    /// <param name="logger">The <see cref="ILogger"/> to use.</param>
+    public SubscriptionGroupCollection(
+        IList<ISubscriptionGroup> subscriptionGroups,
+        ILogger<SubscriptionGroupCollection> logger)
+    {
+        _subscriptionGroups = subscriptionGroups ?? throw new System.ArgumentNullException(nameof(subscriptionGroups));
+        _logger = logger ?? throw new System.ArgumentNullException(nameof(logger));
+    }
+
+    private Task _completion;
+    private bool _started;
+    private readonly object _startLock = new object();
+
+    /// <inheritdoc />
+    public Task RunAsync(CancellationToken stoppingToken)
+    {
+        if (stoppingToken.IsCancellationRequested)
         {
-            _subscriptionGroups = subscriptionGroups ?? throw new System.ArgumentNullException(nameof(subscriptionGroups));
-            _logger = logger ?? throw new System.ArgumentNullException(nameof(logger));
+            return Task.CompletedTask;
         }
 
-        private Task _completion;
-        private bool _started;
-        private readonly object _startLock = new object();
-
-        /// <inheritdoc />
-        public Task RunAsync(CancellationToken stoppingToken)
+        if (!_started)
         {
-            if (stoppingToken.IsCancellationRequested)
+            lock (_startLock)
             {
-                return Task.CompletedTask;
-            }
-
-            if (!_started)
-            {
-                lock (_startLock)
+                if (!_started)
                 {
-                    if (!_started)
-                    {
-                        _completion = RunImplAsync(stoppingToken);
-                        _started = true;
-                    }
+                    _completion = RunImplAsync(stoppingToken);
+                    _started = true;
                 }
             }
-
-            return _completion;
         }
 
-        /// <inheritdoc />
-        public InterrogationResult Interrogate()
+        return _completion;
+    }
+
+    /// <inheritdoc />
+    public InterrogationResult Interrogate()
+    {
+        return new InterrogationResult(new
         {
-            return new InterrogationResult(new
-            {
-                Groups = _subscriptionGroups.Select(group => group.Interrogate()).ToArray(),
-            });
-        }
+            Groups = _subscriptionGroups.Select(group => group.Interrogate()).ToArray(),
+        });
+    }
 
-        private Task RunImplAsync(CancellationToken stoppingToken)
-        {
-            IEnumerable<Task> completionTasks = _subscriptionGroups.Select(group => group.RunAsync(stoppingToken)).ToList();
+    private Task RunImplAsync(CancellationToken stoppingToken)
+    {
+        IEnumerable<Task> completionTasks = _subscriptionGroups.Select(group => group.RunAsync(stoppingToken)).ToList();
 
-            _logger.LogInformation("Subscription group collection successfully started");
+        _logger.LogInformation("Subscription group collection successfully started");
 
-            return Task.WhenAll(completionTasks);
-        }
+        return Task.WhenAll(completionTasks);
     }
 }

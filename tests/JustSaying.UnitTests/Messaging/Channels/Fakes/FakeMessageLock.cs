@@ -1,40 +1,39 @@
 using JustSaying.Messaging.MessageHandling;
 
-namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers
+namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers;
+
+public class FakeMessageLock : IMessageLockAsync
 {
-    public class FakeMessageLock : IMessageLockAsync
+    private readonly bool _exclusive;
+
+    public FakeMessageLock(bool exclusive = true)
     {
-        private readonly bool _exclusive;
+        _exclusive = exclusive;
+        MessageLockRequests = new List<(string key, TimeSpan howLong, bool isPermanent)>();
+    }
 
-        public FakeMessageLock(bool exclusive = true)
+    public IList<(string key, TimeSpan howLong, bool isPermanent)> MessageLockRequests { get; }
+
+    public Task<MessageLockResponse> TryAcquireLockPermanentlyAsync(string key)
+    {
+        MessageLockRequests.Add((key, TimeSpan.MaxValue, true));
+        return Task.FromResult(new MessageLockResponse
         {
-            _exclusive = exclusive;
-            MessageLockRequests = new List<(string key, TimeSpan howLong, bool isPermanent)>();
-        }
+            DoIHaveExclusiveLock = _exclusive
+        });
+    }
 
-        public IList<(string key, TimeSpan howLong, bool isPermanent)> MessageLockRequests { get; }
-
-        public Task<MessageLockResponse> TryAcquireLockPermanentlyAsync(string key)
+    public Task<MessageLockResponse> TryAcquireLockAsync(string key, TimeSpan howLong)
+    {
+        MessageLockRequests.Add((key, howLong, false));
+        return Task.FromResult(new MessageLockResponse
         {
-            MessageLockRequests.Add((key, TimeSpan.MaxValue, true));
-            return Task.FromResult(new MessageLockResponse
-            {
-                DoIHaveExclusiveLock = _exclusive
-            });
-        }
+            DoIHaveExclusiveLock = _exclusive
+        });
+    }
 
-        public Task<MessageLockResponse> TryAcquireLockAsync(string key, TimeSpan howLong)
-        {
-            MessageLockRequests.Add((key, howLong, false));
-            return Task.FromResult(new MessageLockResponse
-            {
-                DoIHaveExclusiveLock = _exclusive
-            });
-        }
-
-        public Task ReleaseLockAsync(string key)
-        {
-            return Task.CompletedTask;
-        }
+    public Task ReleaseLockAsync(string key)
+    {
+        return Task.CompletedTask;
     }
 }

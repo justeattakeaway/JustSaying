@@ -3,32 +3,31 @@ using JustSaying.AwsTools.QueueCreation;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.UnitTests
+namespace JustSaying.UnitTests;
+
+public class WhenPublishEndpointIsNotProvided : XBehaviourTest<SqsReadConfiguration>
 {
-    public class WhenPublishEndpointIsNotProvided : XBehaviourTest<SqsReadConfiguration>
+    protected override void Given()
     {
-        protected override void Given()
-        {
-            RecordAnyExceptionsThrown();
-        }
-
-        protected override void WhenAction()
-        {
-            SystemUnderTest.Validate();
-        }
-
-        [Fact]
-        public void ThrowsException()
-        {
-            ThrownException.ShouldNotBeNull();
-        }
-
-        protected override SqsReadConfiguration CreateSystemUnderTest()
-            => new SqsReadConfiguration(SubscriptionType.ToTopic)
-            {
-                MessageRetention = JustSayingConstants.MinimumRetentionPeriod.Add(TimeSpan.FromSeconds(1)),
-                TopicName = "ATopic",
-                PublishEndpoint = null
-            };
+        RecordAnyExceptionsThrown();
     }
+
+    protected override void WhenAction()
+    {
+        SystemUnderTest.Validate();
+    }
+
+    [Fact]
+    public void ThrowsException()
+    {
+        ThrownException.ShouldNotBeNull();
+    }
+
+    protected override SqsReadConfiguration CreateSystemUnderTest()
+        => new SqsReadConfiguration(SubscriptionType.ToTopic)
+        {
+            MessageRetention = JustSayingConstants.MinimumRetentionPeriod.Add(TimeSpan.FromSeconds(1)),
+            TopicName = "ATopic",
+            PublishEndpoint = null
+        };
 }

@@ -12,55 +12,54 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 #pragma warning disable 618
 
-namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;
+
+public class WhenPublishingAsyncExceptionCanBeThrown : WhenPublishingTestBase
 {
-    public class WhenPublishingAsyncExceptionCanBeThrown : WhenPublishingTestBase
+    private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
+    private const string TopicArn = "topicarn";
+
+    private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
-        private const string TopicArn = "topicarn";
+        var topic = new SnsMessagePublisher(TopicArn, Sns, _serializationRegister, NullLoggerFactory.Instance, Substitute.For<IMessageSubjectProvider>(), (_, _) => false);
+        return Task.FromResult(topic);
+    }
 
-        private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
-        {
-            var topic = new SnsMessagePublisher(TopicArn, Sns, _serializationRegister, NullLoggerFactory.Instance, Substitute.For<IMessageSubjectProvider>(), (_, _) => false);
-            return Task.FromResult(topic);
-        }
+    protected override void Given()
+    {
+        Sns.FindTopicAsync("TopicName")
+            .Returns(new Topic { TopicArn = TopicArn });
+    }
 
-        protected override void Given()
-        {
-            Sns.FindTopicAsync("TopicName")
-                .Returns(new Topic { TopicArn = TopicArn });
-        }
+    protected override Task WhenAsync()
+    {
+        Sns.PublishAsync(Arg.Any<PublishRequest>()).Returns(ThrowsException);
+        return Task.CompletedTask;
+    }
 
-        protected override Task WhenAsync()
-        {
-            Sns.PublishAsync(Arg.Any<PublishRequest>()).Returns(ThrowsException);
-            return Task.CompletedTask;
-        }
+    [Fact]
+    public async Task ExceptionIsThrown()
+    {
+        await Should.ThrowAsync<PublishException>(() => SystemUnderTest.PublishAsync(new SimpleMessage()));
+    }
 
-        [Fact]
-        public async Task ExceptionIsThrown()
+    [Fact]
+    public async Task ExceptionContainsContext()
+    {
+        try
         {
-            await Should.ThrowAsync<PublishException>(() => SystemUnderTest.PublishAsync(new SimpleMessage()));
+            await SystemUnderTest.PublishAsync(new SimpleMessage());
         }
+        catch (PublishException ex)
+        {
+            var inner = ex.InnerException as AmazonServiceException;
+            inner.ShouldNotBeNull();
+            inner.Message.ShouldBe("Operation timed out");
+        }
+    }
 
-        [Fact]
-        public async Task ExceptionContainsContext()
-        {
-            try
-            {
-                await SystemUnderTest.PublishAsync(new SimpleMessage());
-            }
-            catch (PublishException ex)
-            {
-                var inner = ex.InnerException as AmazonServiceException;
-                inner.ShouldNotBeNull();
-                inner.Message.ShouldBe("Operation timed out");
-            }
-        }
-
-        private static Task<PublishResponse> ThrowsException(CallInfo callInfo)
-        {
-            throw new AmazonServiceException("Operation timed out");
-        }
+    private static Task<PublishResponse> ThrowsException(CallInfo callInfo)
+    {
+        throw new AmazonServiceException("Operation timed out");
     }
 }

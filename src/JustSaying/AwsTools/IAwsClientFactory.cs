@@ -2,11 +2,10 @@ using Amazon;
 using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 
-namespace JustSaying.AwsTools
+namespace JustSaying.AwsTools;
+
+public interface IAwsClientFactory
 {
-    public interface IAwsClientFactory
-    {
-        IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region);
-        IAmazonSQS GetSqsClient(RegionEndpoint region);
-    }
+    IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region);
+    IAmazonSQS GetSqsClient(RegionEndpoint region);
 }

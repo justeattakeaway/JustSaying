@@ -1,8 +1,7 @@
-namespace JustSaying.AwsTools
+namespace JustSaying.AwsTools;
+
+public interface IAwsClientFactoryProxy
 {
-    public interface IAwsClientFactoryProxy
-    {
-        IAwsClientFactory GetAwsClientFactory();
-        void SetAwsClientFactory(Func<IAwsClientFactory> func);
-    }
+    IAwsClientFactory GetAwsClientFactory();
+    void SetAwsClientFactory(Func<IAwsClientFactory> func);
 }

@@ -1,7 +1,6 @@
-﻿namespace JustSaying.Tools.Commands
+﻿namespace JustSaying.Tools.Commands;
+
+public interface ICommand
 {
-    public interface ICommand
-    {
-        Task<bool> ExecuteAsync();
-    }
+    Task<bool> ExecuteAsync();
 }

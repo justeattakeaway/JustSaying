@@ -8,55 +8,54 @@ using Shouldly;
 using Xunit;
 #pragma warning disable 618
 
-namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
+
+public class WhenFetchingQueueByName
 {
-    public class WhenFetchingQueueByName
+    private readonly IAmazonSQS _client;
+    private readonly ILoggerFactory _log;
+    private const int RetryCount = 3;
+
+    public WhenFetchingQueueByName()
     {
-        private readonly IAmazonSQS _client;
-        private readonly ILoggerFactory _log;
-        private const int RetryCount = 3;
+        _client = Substitute.For<IAmazonSQS>();
 
-        public WhenFetchingQueueByName()
-        {
-            _client = Substitute.For<IAmazonSQS>();
+        _client.GetQueueUrlAsync(Arg.Any<string>())
+            .Returns(x =>
+            {
+                if (x.Arg<string>() == "some-queue-name")
+                    return new GetQueueUrlResponse
+                    {
+                        QueueUrl = "https://testqueues.com/some-queue-name"
+                    };
+                throw new QueueDoesNotExistException("some-queue-name not found");
+            });
+        _client.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>())
+            .Returns(new GetQueueAttributesResponse()
+            {
+                Attributes = new Dictionary<string, string> { { "QueueArn", "something:some-queue-name" } }
+            });
+        _log = Substitute.For<ILoggerFactory>();
+    }
 
-            _client.GetQueueUrlAsync(Arg.Any<string>())
-                .Returns(x =>
-                {
-                    if (x.Arg<string>() == "some-queue-name")
-                        return new GetQueueUrlResponse
-                        {
-                            QueueUrl = "https://testqueues.com/some-queue-name"
-                        };
-                    throw new QueueDoesNotExistException("some-queue-name not found");
-                });
-            _client.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>())
-                .Returns(new GetQueueAttributesResponse()
-                {
-                    Attributes = new Dictionary<string, string> { { "QueueArn", "something:some-queue-name" } }
-                });
-            _log = Substitute.For<ILoggerFactory>();
-        }
+    [Fact]
+    public async Task IncorrectQueueNameDoNotMatch()
+    {
+        var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name1", _client, RetryCount, _log);
+        (await sqsQueueByName.ExistsAsync(CancellationToken.None)).ShouldBeFalse();
+    }
 
-        [Fact]
-        public async Task IncorrectQueueNameDoNotMatch()
-        {
-            var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name1", _client, RetryCount, _log);
-            (await sqsQueueByName.ExistsAsync(CancellationToken.None)).ShouldBeFalse();
-        }
+    [Fact]
+    public async Task IncorrectPartialQueueNameDoNotMatch()
+    {
+        var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue", _client, RetryCount, _log);
+        (await sqsQueueByName.ExistsAsync(CancellationToken.None)).ShouldBeFalse();
+    }
 
-        [Fact]
-        public async Task IncorrectPartialQueueNameDoNotMatch()
-        {
-            var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue", _client, RetryCount, _log);
-            (await sqsQueueByName.ExistsAsync(CancellationToken.None)).ShouldBeFalse();
-        }
-
-        [Fact]
-        public async Task CorrectQueueNameShouldMatch()
-        {
-            var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name", _client, RetryCount, _log);
-            (await sqsQueueByName.ExistsAsync(CancellationToken.None)).ShouldBeTrue();
-        }
+    [Fact]
+    public async Task CorrectQueueNameShouldMatch()
+    {
+        var sqsQueueByName = new SqsQueueByName(RegionEndpoint.EUWest1, "some-queue-name", _client, RetryCount, _log);
+        (await sqsQueueByName.ExistsAsync(CancellationToken.None)).ShouldBeTrue();
     }
 }

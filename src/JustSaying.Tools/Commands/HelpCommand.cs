@@ -1,11 +1,10 @@
-namespace JustSaying.Tools.Commands
+namespace JustSaying.Tools.Commands;
+
+public class HelpCommand : ICommand
 {
-    public class HelpCommand : ICommand
+    public Task<bool> ExecuteAsync()
     {
-        public Task<bool> ExecuteAsync()
-        {
-            Console.WriteLine("Move -from \"sourceUrl\" -to \"destinationUrl\" -in \"region\" -count \"10\"");
-            return Task.FromResult(true);
-        }
+        Console.WriteLine("Move -from \"sourceUrl\" -to \"destinationUrl\" -in \"region\" -count \"10\"");
+        return Task.FromResult(true);
     }
 }

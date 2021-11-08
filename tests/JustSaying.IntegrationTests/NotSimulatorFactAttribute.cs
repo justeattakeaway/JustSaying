@@ -1,22 +1,21 @@
 using JustSaying.TestingFramework;
 using Xunit;
 
-namespace JustSaying.IntegrationTests
+namespace JustSaying.IntegrationTests;
+
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+public sealed class NotSimulatorFactAttribute : FactAttribute
 {
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public sealed class NotSimulatorFactAttribute : FactAttribute
+    public NotSimulatorFactAttribute()
+        : base()
     {
-        public NotSimulatorFactAttribute()
-            : base()
+        if (TestEnvironment.IsSimulatorConfigured)
         {
-            if (TestEnvironment.IsSimulatorConfigured)
-            {
-                Skip = "This test is not supported using an AWS simulator.";
-            }
-            else if (!TestEnvironment.HasCredentials)
-            {
-                Skip = "This test requires AWS credentials to be configured.";
-            }
+            Skip = "This test is not supported using an AWS simulator.";
+        }
+        else if (!TestEnvironment.HasCredentials)
+        {
+            Skip = "This test requires AWS credentials to be configured.";
         }
     }
 }

@@ -4,50 +4,49 @@ using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.Publishing
+namespace JustSaying.IntegrationTests.Fluent.Publishing;
+
+public class WhenAMessageIsPublishedToAQueueWithSystemTextJson : IntegrationTestBase
 {
-    public class WhenAMessageIsPublishedToAQueueWithSystemTextJson : IntegrationTestBase
+    public WhenAMessageIsPublishedToAQueueWithSystemTextJson(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
-        public WhenAMessageIsPublishedToAQueueWithSystemTextJson(ITestOutputHelper outputHelper)
-            : base(outputHelper)
+    }
+
+    [AwsFact]
+    public async Task Then_The_Message_Is_Handled()
+    {
+        // Arrange
+        var completionSource = new TaskCompletionSource<object>();
+        var handler = CreateHandler<SimpleMessage>(completionSource);
+
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(
+                (builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
+            .AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>()
+            .AddSingleton(handler);
+
+        string content = Guid.NewGuid().ToString();
+
+        var message = new SimpleMessage()
         {
-        }
+            Content = content
+        };
 
-        [AwsFact]
-        public async Task Then_The_Message_Is_Handled()
-        {
-            // Arrange
-            var completionSource = new TaskCompletionSource<object>();
-            var handler = CreateHandler<SimpleMessage>(completionSource);
-
-            var services = GivenJustSaying()
-                .ConfigureJustSaying(
-                    (builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
-                .AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>()
-                .AddSingleton(handler);
-
-            string content = Guid.NewGuid().ToString();
-
-            var message = new SimpleMessage()
+        await WhenAsync(
+            services,
+            async (publisher, listener, cancellationToken) =>
             {
-                Content = content
-            };
+                await listener.StartAsync(cancellationToken);
+                await publisher.StartAsync(cancellationToken);
 
-            await WhenAsync(
-                services,
-                async (publisher, listener, cancellationToken) =>
-                {
-                    await listener.StartAsync(cancellationToken);
-                    await publisher.StartAsync(cancellationToken);
+                // Act
+                await publisher.PublishAsync(message, cancellationToken);
 
-                    // Act
-                    await publisher.PublishAsync(message, cancellationToken);
+                // Assert
+                completionSource.Task.Wait(cancellationToken);
 
-                    // Assert
-                    completionSource.Task.Wait(cancellationToken);
-
-                    await handler.Received().Handle(Arg.Is<SimpleMessage>((m) => m.Content == content));
-                });
-        }
+                await handler.Received().Handle(Arg.Is<SimpleMessage>((m) => m.Content == content));
+            });
     }
 }

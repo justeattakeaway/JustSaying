@@ -3,39 +3,38 @@ using JustSaying.Sample.Restaurant.Models;
 using JustSaying.Sample.Restaurant.OrderingApi.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JustSaying.Sample.Restaurant.OrderingApi.Controllers
+namespace JustSaying.Sample.Restaurant.OrderingApi.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class OrdersController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class OrdersController : ControllerBase
+    private readonly IMessagePublisher _publisher;
+    private readonly ILogger<OrdersController> _log;
+
+    public OrdersController(IMessagePublisher publisher, ILogger<OrdersController> log)
     {
-        private readonly IMessagePublisher _publisher;
-        private readonly ILogger<OrdersController> _log;
+        _publisher = publisher;
+        _log = log;
+    }
 
-        public OrdersController(IMessagePublisher publisher, ILogger<OrdersController> log)
+    // POST api/orders
+    [HttpPost]
+    public async Task PostAsync([FromBody] CustomerOrderModel order)
+    {
+        _log.LogInformation("Order received for {description}", order.Description);
+
+        // Save order to database generating OrderId
+        var orderId = new Random().Next(1, 100);
+
+        var message = new OrderPlacedEvent
         {
-            _publisher = publisher;
-            _log = log;
-        }
+            OrderId = orderId,
+            Description = order.Description
+        };
 
-        // POST api/orders
-        [HttpPost]
-        public async Task PostAsync([FromBody] CustomerOrderModel order)
-        {
-            _log.LogInformation("Order received for {description}", order.Description);
+        await _publisher.PublishAsync(message);
 
-            // Save order to database generating OrderId
-            var orderId = new Random().Next(1, 100);
-
-            var message = new OrderPlacedEvent
-            {
-                OrderId = orderId,
-                Description = order.Description
-            };
-
-            await _publisher.PublishAsync(message);
-
-            _log.LogInformation("Order {orderId} placed", orderId);
-        }
+        _log.LogInformation("Order {orderId} placed", orderId);
     }
 }

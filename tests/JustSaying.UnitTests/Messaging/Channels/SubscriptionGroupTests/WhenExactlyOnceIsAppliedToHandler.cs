@@ -10,75 +10,74 @@ using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
+namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
+
+public class WhenExactlyOnceIsAppliedToHandler : BaseSubscriptionGroupTests
 {
-    public class WhenExactlyOnceIsAppliedToHandler : BaseSubscriptionGroupTests
+    private ISqsQueue _queue;
+    private readonly int _expectedTimeout = 5;
+    private FakeMessageLock _messageLock;
+
+    public WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelper)
+        : base(testOutputHelper)
+    { }
+
+    protected override void Given()
     {
-        private ISqsQueue _queue;
-        private readonly int _expectedTimeout = 5;
-        private FakeMessageLock _messageLock;
+        _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
 
-        public WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelper)
-            : base(testOutputHelper)
-        { }
+        Queues.Add(_queue);
 
-        protected override void Given()
+        _messageLock = new FakeMessageLock();
+
+        var serviceResolver = new InMemoryServiceResolver(sc =>
+            sc.AddSingleton<IMessageLockAsync>(_messageLock)
+                .AddSingleton<IHandlerAsync<SimpleMessage>>(Handler)
+                .AddLogging(x => x.AddXUnit(OutputHelper)));
+
+        var middlewareBuilder = new HandlerMiddlewareBuilder(serviceResolver, serviceResolver);
+
+        var middleware = middlewareBuilder.Configure(pipe =>
         {
-            _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
+            pipe.UseExactlyOnce<SimpleMessage>("a-unique-lock-key", TimeSpan.FromSeconds(5));
+            pipe.UseHandler<SimpleMessage>();
+        }).Build();
 
-            Queues.Add(_queue);
+        Middleware = middleware;
+    }
 
-            _messageLock = new FakeMessageLock();
+    protected override async Task WhenAsync()
+    {
+        MiddlewareMap.Add<SimpleMessage>(_queue.QueueName, Middleware);
 
-            var serviceResolver = new InMemoryServiceResolver(sc =>
-                sc.AddSingleton<IMessageLockAsync>(_messageLock)
-                    .AddSingleton<IHandlerAsync<SimpleMessage>>(Handler)
-                    .AddLogging(x => x.AddXUnit(OutputHelper)));
+        using var cts = new CancellationTokenSource();
 
-            var middlewareBuilder = new HandlerMiddlewareBuilder(serviceResolver, serviceResolver);
+        var completion = SystemUnderTest.RunAsync(cts.Token);
 
-            var middleware = middlewareBuilder.Configure(pipe =>
-            {
-                pipe.UseExactlyOnce<SimpleMessage>("a-unique-lock-key", TimeSpan.FromSeconds(5));
-                pipe.UseHandler<SimpleMessage>();
-            }).Build();
+        // wait until it's done
+        await Patiently.AssertThatAsync(OutputHelper,
+            () => Handler.ReceivedMessages.Any());
 
-            Middleware = middleware;
-        }
+        cts.Cancel();
 
-        protected override async Task WhenAsync()
-        {
-            MiddlewareMap.Add<SimpleMessage>(_queue.QueueName, Middleware);
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
+    }
 
-            using var cts = new CancellationTokenSource();
+    [Fact]
+    public void ProcessingIsPassedToTheHandler()
+    {
+        Handler.ReceivedMessages.ShouldNotBeEmpty();
+    }
 
-            var completion = SystemUnderTest.RunAsync(cts.Token);
+    [Fact]
+    public void MessageIsLocked()
+    {
+        var messageId = SerializationRegister.DefaultDeserializedMessage().Id.ToString();
 
-            // wait until it's done
-            await Patiently.AssertThatAsync(OutputHelper,
-                () => Handler.ReceivedMessages.Any());
-
-            cts.Cancel();
-
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
-        }
-
-        [Fact]
-        public void ProcessingIsPassedToTheHandler()
-        {
-            Handler.ReceivedMessages.ShouldNotBeEmpty();
-        }
-
-        [Fact]
-        public void MessageIsLocked()
-        {
-            var messageId = SerializationRegister.DefaultDeserializedMessage().Id.ToString();
-
-            var tempLockRequests = _messageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
-            tempLockRequests.Count().ShouldBeGreaterThan(0);
-            tempLockRequests.ShouldAllBe(pair =>
-                pair.key.Contains(messageId, StringComparison.OrdinalIgnoreCase) &&
-                pair.howLong == TimeSpan.FromSeconds(_expectedTimeout));
-        }
+        var tempLockRequests = _messageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
+        tempLockRequests.Count().ShouldBeGreaterThan(0);
+        tempLockRequests.ShouldAllBe(pair =>
+            pair.key.Contains(messageId, StringComparison.OrdinalIgnoreCase) &&
+            pair.howLong == TimeSpan.FromSeconds(_expectedTimeout));
     }
 }

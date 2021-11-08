@@ -1,8 +1,7 @@
-namespace JustSaying.Messaging.MessageProcessingStrategies
+namespace JustSaying.Messaging.MessageProcessingStrategies;
+
+public static class MessageDefaults
 {
-    public static class MessageDefaults
-    {
-        public static int MaxAmazonMessageCap => 10;
-        public static int ParallelHandlerExecutionPerCore => 4;
-    }
+    public static int MaxAmazonMessageCap => 10;
+    public static int ParallelHandlerExecutionPerCore => 4;
 }

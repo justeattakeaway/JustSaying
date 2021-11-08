@@ -1,13 +1,12 @@
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Models;
 
-namespace JustSaying
+namespace JustSaying;
+
+public interface IPublishConfiguration
 {
-    public interface IPublishConfiguration
-    {
-        int PublishFailureReAttempts { get; set; }
-        TimeSpan PublishFailureBackoff { get; set; }
-        Action<MessageResponse, Message> MessageResponseLogger { get; set; }
-        IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
-    }
+    int PublishFailureReAttempts { get; set; }
+    TimeSpan PublishFailureBackoff { get; set; }
+    Action<MessageResponse, Message> MessageResponseLogger { get; set; }
+    IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
 }

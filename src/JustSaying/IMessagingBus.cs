@@ -1,17 +1,16 @@
 using JustSaying.Messaging.Interrogation;
 
-namespace JustSaying
+namespace JustSaying;
+
+/// <summary>
+/// Defines a messaging bus.
+/// </summary>
+public interface IMessagingBus : IInterrogable
 {
     /// <summary>
-    /// Defines a messaging bus.
+    /// Starts the message bus as an asynchronous operation.
     /// </summary>
-    public interface IMessagingBus : IInterrogable
-    {
-        /// <summary>
-        /// Starts the message bus as an asynchronous operation.
-        /// </summary>
-        /// <param name="stoppingToken">A <see cref="CancellationToken"/> which will stop the bus when signalled.</param>
-        /// <returns>A <see cref="Task"/> that completes when the bus is canceled.</returns>
-        Task StartAsync(CancellationToken stoppingToken);
-    }
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/> which will stop the bus when signalled.</param>
+    /// <returns>A <see cref="Task"/> that completes when the bus is canceled.</returns>
+    Task StartAsync(CancellationToken stoppingToken);
 }

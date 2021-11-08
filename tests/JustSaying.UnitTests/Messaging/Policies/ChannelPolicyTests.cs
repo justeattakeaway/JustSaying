@@ -13,77 +13,76 @@ using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Policies
+namespace JustSaying.UnitTests.Messaging.Policies;
+
+public class ChannelPolicyTests
 {
-    public class ChannelPolicyTests
+    private ILoggerFactory LoggerFactory { get; }
+    private IMessageMonitor MessageMonitor { get; }
+    private readonly ITestOutputHelper _outputHelper;
+
+    public ChannelPolicyTests(ITestOutputHelper testOutputHelper)
     {
-        private ILoggerFactory LoggerFactory { get; }
-        private IMessageMonitor MessageMonitor { get; }
-        private readonly ITestOutputHelper _outputHelper;
+        _outputHelper = testOutputHelper;
+        LoggerFactory = testOutputHelper.ToLoggerFactory();
+        MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
+    }
 
-        public ChannelPolicyTests(ITestOutputHelper testOutputHelper)
+    [Fact]
+    public async Task ErrorHandlingAroundSqs_WithCustomPolicy_CanSwallowExceptions()
+    {
+        // Arrange
+        int queueCalledCount = 0;
+        int dispatchedMessageCount = 0;
+        var sqsQueue = TestQueue(() => Interlocked.Increment(ref queueCalledCount));
+
+        var queues = new List<ISqsQueue> { sqsQueue };
+
+        var config = new SubscriptionGroupSettingsBuilder()
+            .WithDefaultConcurrencyLimit(8);
+        config.WithCustomMiddleware(
+            new ErrorHandlingMiddleware<ReceiveMessagesContext, IList<Message>, InvalidOperationException>());
+
+        var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
         {
-            _outputHelper = testOutputHelper;
-            LoggerFactory = testOutputHelper.ToLoggerFactory();
-            MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
-        }
+            { "test", new SubscriptionGroupConfigBuilder("test").AddQueues(queues) },
+        };
 
-        [Fact]
-        public async Task ErrorHandlingAroundSqs_WithCustomPolicy_CanSwallowExceptions()
-        {
-            // Arrange
-            int queueCalledCount = 0;
-            int dispatchedMessageCount = 0;
-            var sqsQueue = TestQueue(() => Interlocked.Increment(ref queueCalledCount));
+        IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref dispatchedMessageCount));
 
-            var queues = new List<ISqsQueue> { sqsQueue };
+        var groupFactory = new SubscriptionGroupFactory(
+            dispatcher,
+            MessageMonitor,
+            LoggerFactory);
 
-            var config = new SubscriptionGroupSettingsBuilder()
-                .WithDefaultConcurrencyLimit(8);
-            config.WithCustomMiddleware(
-                new ErrorHandlingMiddleware<ReceiveMessagesContext, IList<Message>, InvalidOperationException>());
+        ISubscriptionGroup collection = groupFactory.Create(config, settings);
 
-            var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
+        var cts = new CancellationTokenSource();
+        var completion = collection.RunAsync(cts.Token);
+
+        await Patiently.AssertThatAsync(_outputHelper,
+            () =>
             {
-                { "test", new SubscriptionGroupConfigBuilder("test").AddQueues(queues) },
-            };
+                queueCalledCount.ShouldBeGreaterThan(1);
+                dispatchedMessageCount.ShouldBe(0);
+            });
 
-            IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref dispatchedMessageCount));
+        cts.Cancel();
+        // Act and Assert
 
-            var groupFactory = new SubscriptionGroupFactory(
-                dispatcher,
-                MessageMonitor,
-                LoggerFactory);
+        await completion.HandleCancellation();
+    }
 
-            ISubscriptionGroup collection = groupFactory.Create(config, settings);
-
-            var cts = new CancellationTokenSource();
-            var completion = collection.RunAsync(cts.Token);
-
-            await Patiently.AssertThatAsync(_outputHelper,
-                () =>
-                {
-                    queueCalledCount.ShouldBeGreaterThan(1);
-                    dispatchedMessageCount.ShouldBe(0);
-                });
-
-            cts.Cancel();
-            // Act and Assert
-
-            await completion.HandleCancellation();
-        }
-
-        private static ISqsQueue TestQueue(Action spy = null)
+    private static ISqsQueue TestQueue(Action spy = null)
+    {
+        IEnumerable<Message> GetMessages()
         {
-            IEnumerable<Message> GetMessages()
-            {
-                spy?.Invoke();
-                throw new InvalidOperationException();
-            }
-
-            var queue = new FakeSqsQueue(ct => Task.FromResult(GetMessages()), "test-queue");
-
-            return queue;
+            spy?.Invoke();
+            throw new InvalidOperationException();
         }
+
+        var queue = new FakeSqsQueue(ct => Task.FromResult(GetMessages()), "test-queue");
+
+        return queue;
     }
 }

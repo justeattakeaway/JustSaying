@@ -1,10 +1,9 @@
-namespace JustSaying.Messaging.MessageHandling
+namespace JustSaying.Messaging.MessageHandling;
+
+public interface IMessageContextReader
 {
-    public interface IMessageContextReader
-    {
-        /// <summary>
-        /// Gets the context metadata about the SQS message currently being processed.
-        /// </summary>
-        MessageContext MessageContext { get; }
-    }
+    /// <summary>
+    /// Gets the context metadata about the SQS message currently being processed.
+    /// </summary>
+    MessageContext MessageContext { get; }
 }

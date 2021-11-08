@@ -4,79 +4,78 @@ using JustSaying.UnitTests.Messaging.Channels.Fakes;
 using Shouldly;
 using Xunit;
 
-namespace JustSaying.UnitTests.Messaging.Middleware
+namespace JustSaying.UnitTests.Messaging.Middleware;
+
+public class HandlerMiddlewareBuilderTests
 {
-    public class HandlerMiddlewareBuilderTests
+    private readonly InMemoryServiceResolver _resolver;
+
+    public HandlerMiddlewareBuilderTests()
     {
-        private readonly InMemoryServiceResolver _resolver;
+        _resolver = new InMemoryServiceResolver();
+    }
 
-        public HandlerMiddlewareBuilderTests()
-        {
-            _resolver = new InMemoryServiceResolver();
-        }
+    [Fact]
+    public async Task ThreeMiddlewares_ShouldExecuteInCorrectOrder()
+    {
+        var callRecord = new List<string>();
 
-        [Fact]
-        public async Task ThreeMiddlewares_ShouldExecuteInCorrectOrder()
-        {
-            var callRecord = new List<string>();
+        void Before(string id) => callRecord.Add($"Before_{id}");
+        void After(string id) => callRecord.Add($"After_{id}");
 
-            void Before(string id) => callRecord.Add($"Before_{id}");
-            void After(string id) => callRecord.Add($"After_{id}");
+        var outer = new TrackingMiddleware("outer", Before, After);
+        var middle = new TrackingMiddleware("middle", Before, After);
+        var inner = new TrackingMiddleware("inner", Before, After);
 
-            var outer = new TrackingMiddleware("outer", Before, After);
-            var middle = new TrackingMiddleware("middle", Before, After);
-            var inner = new TrackingMiddleware("inner", Before, After);
+        var middleware = new HandlerMiddlewareBuilder(_resolver, _resolver)
+            .Configure(pipe =>
+            {
+                pipe.Use(outer);
+                pipe.Use(middle);
+                pipe.Use(inner);
+            }).Build();
 
-            var middleware = new HandlerMiddlewareBuilder(_resolver, _resolver)
-                .Configure(pipe =>
-                {
-                    pipe.Use(outer);
-                    pipe.Use(middle);
-                    pipe.Use(inner);
-                }).Build();
+        var context = TestHandleContexts.From<SimpleMessage>();
 
-            var context = TestHandleContexts.From<SimpleMessage>();
+        await middleware.RunAsync(context,
+            ct =>
+            {
+                callRecord.Add("HandledMessage");
+                return Task.FromResult(true);
+            },
+            CancellationToken.None);
 
-            await middleware.RunAsync(context,
-                ct =>
-                {
-                    callRecord.Add("HandledMessage");
-                    return Task.FromResult(true);
-                },
-                CancellationToken.None);
+        var record = string.Join(Environment.NewLine, callRecord);
 
-            var record = string.Join(Environment.NewLine, callRecord);
+        record.ShouldMatchApproved(c => c.SubFolder("Approvals"));
+    }
 
-            record.ShouldMatchApproved(c => c.SubFolder("Approvals"));
-        }
+    [Fact]
+    public async Task MiddlewareBuilder_WithoutDefaults_ShouldExecute()
+    {
+        var callRecord = new List<string>();
 
-        [Fact]
-        public async Task MiddlewareBuilder_WithoutDefaults_ShouldExecute()
-        {
-            var callRecord = new List<string>();
+        void Before(string id) => callRecord.Add($"Before_{id}");
+        void After(string id) => callRecord.Add($"After_{id}");
 
-            void Before(string id) => callRecord.Add($"Before_{id}");
-            void After(string id) => callRecord.Add($"After_{id}");
+        var outer = new TrackingMiddleware("outer", Before, After);
+        var inner = new TrackingMiddleware("inner", Before, After);
 
-            var outer = new TrackingMiddleware("outer", Before, After);
-            var inner = new TrackingMiddleware("inner", Before, After);
+        var handler = new InspectableHandler<SimpleMessage>();
 
-            var handler = new InspectableHandler<SimpleMessage>();
+        var middlewareBuilder = new HandlerMiddlewareBuilder(_resolver, _resolver)
+            .Configure(hmb =>
+                hmb.Use(outer)
+                    .Use(inner)
+                    .UseHandler(ctx => handler));
 
-            var middlewareBuilder = new HandlerMiddlewareBuilder(_resolver, _resolver)
-                .Configure(hmb =>
-                    hmb.Use(outer)
-                        .Use(inner)
-                        .UseHandler(ctx => handler));
+        var handlerMiddleware = middlewareBuilder.Build();
 
-            var handlerMiddleware = middlewareBuilder.Build();
+        var context = TestHandleContexts.From<SimpleMessage>();
 
-            var context = TestHandleContexts.From<SimpleMessage>();
+        await handlerMiddleware.RunAsync(context, null, CancellationToken.None);
 
-            await handlerMiddleware.RunAsync(context, null, CancellationToken.None);
-
-            callRecord.ShouldBe(new[] { "Before_outer", "Before_inner", "After_inner", "After_outer" });
-            handler.ReceivedMessages.ShouldHaveSingleItem();
-        }
+        callRecord.ShouldBe(new[] { "Before_outer", "Before_inner", "After_inner", "After_outer" });
+        handler.ReceivedMessages.ShouldHaveSingleItem();
     }
 }

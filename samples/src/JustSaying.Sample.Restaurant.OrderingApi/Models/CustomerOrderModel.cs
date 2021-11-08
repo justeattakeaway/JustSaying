@@ -1,7 +1,6 @@
-namespace JustSaying.Sample.Restaurant.OrderingApi.Models
+namespace JustSaying.Sample.Restaurant.OrderingApi.Models;
+
+public class CustomerOrderModel
 {
-    public class CustomerOrderModel
-    {
-        public string Description { get; set; }
-    }
+    public string Description { get; set; }
 }

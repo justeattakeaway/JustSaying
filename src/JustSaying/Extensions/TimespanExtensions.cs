@@ -1,17 +1,16 @@
 using System.ComponentModel;
 using System.Globalization;
 
-namespace JustSaying.Extensions
+namespace JustSaying.Extensions;
+
+[EditorBrowsable(EditorBrowsableState.Never)]
+internal static class TimespanExtensions
 {
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    internal static class TimespanExtensions
+    // Convert the duration from TimeSpan
+    // to an integer number of seconds, in a string
+    // As AWS requires
+    public static string AsSecondsString(this TimeSpan value)
     {
-        // Convert the duration from TimeSpan
-        // to an integer number of seconds, in a string
-        // As AWS requires
-        public static string AsSecondsString(this TimeSpan value)
-        {
-            return value.TotalSeconds.ToString("F0", CultureInfo.InvariantCulture);
-        }
+        return value.TotalSeconds.ToString("F0", CultureInfo.InvariantCulture);
     }
 }

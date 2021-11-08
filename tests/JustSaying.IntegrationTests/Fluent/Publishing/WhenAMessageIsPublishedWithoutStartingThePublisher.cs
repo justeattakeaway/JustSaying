@@ -3,37 +3,36 @@ using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.Publishing
+namespace JustSaying.IntegrationTests.Fluent.Publishing;
+
+public class WhenAMessageIsPublishedWithoutStartingThePublisher : IntegrationTestBase
 {
-    public class WhenAMessageIsPublishedWithoutStartingThePublisher : IntegrationTestBase
+    public WhenAMessageIsPublishedWithoutStartingThePublisher(ITestOutputHelper outputHelper) : base(
+        outputHelper)
+    { }
+
+    [AwsFact]
+    public async Task Then_The_PushlishShouldThrow()
     {
-        public WhenAMessageIsPublishedWithoutStartingThePublisher(ITestOutputHelper outputHelper) : base(
-            outputHelper)
-        { }
+        // Arrange
+        var completionSource = new TaskCompletionSource<object>();
+        var handler = CreateHandler<SimpleMessage>(completionSource);
 
-        [AwsFact]
-        public async Task Then_The_PushlishShouldThrow()
+        var services = GivenJustSaying()
+            .ConfigureJustSaying((builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
+            .AddSingleton(handler);
+
+        var message = new SimpleMessage()
         {
-            // Arrange
-            var completionSource = new TaskCompletionSource<object>();
-            var handler = CreateHandler<SimpleMessage>(completionSource);
+            Content = Guid.NewGuid().ToString()
+        };
 
-            var services = GivenJustSaying()
-                .ConfigureJustSaying((builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
-                .AddSingleton(handler);
-
-            var message = new SimpleMessage()
+        await WhenAsync(
+            services,
+            async (publisher, listener, cancellationToken) =>
             {
-                Content = Guid.NewGuid().ToString()
-            };
-
-            await WhenAsync(
-                services,
-                async (publisher, listener, cancellationToken) =>
-                {
-                     await Assert.ThrowsAsync<InvalidOperationException>(
-                         () => publisher.PublishAsync(message, cancellationToken));
-                });
-        }
+                await Assert.ThrowsAsync<InvalidOperationException>(
+                    () => publisher.PublishAsync(message, cancellationToken));
+            });
     }
 }

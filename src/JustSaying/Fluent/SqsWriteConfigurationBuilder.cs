@@ -1,48 +1,47 @@
 using JustSaying.AwsTools.QueueCreation;
 
-namespace JustSaying.Fluent
+namespace JustSaying.Fluent;
+
+/// <summary>
+/// A class representing a builder for configuring instances of <see cref="SqsWriteConfiguration"/>. This class cannot be inherited.
+/// </summary>
+public sealed class SqsWriteConfigurationBuilder : SqsConfigurationBuilder<SqsWriteConfiguration, SqsWriteConfigurationBuilder>
 {
+    /// <inheritdoc />
+    protected override SqsWriteConfigurationBuilder Self => this;
+
     /// <summary>
-    /// A class representing a builder for configuring instances of <see cref="SqsWriteConfiguration"/>. This class cannot be inherited.
+    /// Gets or sets the queue name to use.
     /// </summary>
-    public sealed class SqsWriteConfigurationBuilder : SqsConfigurationBuilder<SqsWriteConfiguration, SqsWriteConfigurationBuilder>
+    private string QueueName { get; set; }
+
+    /// <summary>
+    /// Configures the queue name to use.
+    /// </summary>
+    /// <param name="name">The value to use for the queue name.</param>
+    /// <returns>
+    /// The current <see cref="SqsWriteConfigurationBuilder"/>.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="name"/> is <see langword="null"/>.
+    /// </exception>
+    public SqsWriteConfigurationBuilder WithQueueName(string name)
     {
-        /// <inheritdoc />
-        protected override SqsWriteConfigurationBuilder Self => this;
+        QueueName = name ?? throw new ArgumentNullException(nameof(name));
+        return this;
+    }
 
-        /// <summary>
-        /// Gets or sets the queue name to use.
-        /// </summary>
-        private string QueueName { get; set; }
-
-        /// <summary>
-        /// Configures the queue name to use.
-        /// </summary>
-        /// <param name="name">The value to use for the queue name.</param>
-        /// <returns>
-        /// The current <see cref="SqsWriteConfigurationBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="name"/> is <see langword="null"/>.
-        /// </exception>
-        public SqsWriteConfigurationBuilder WithQueueName(string name)
+    /// <summary>
+    /// Configures the specified <see cref="SqsWriteConfiguration"/>.
+    /// </summary>
+    /// <param name="config">The configuration to configure.</param>
+    internal override void Configure(SqsWriteConfiguration config)
+    {
+        if (QueueName != null)
         {
-            QueueName = name ?? throw new ArgumentNullException(nameof(name));
-            return this;
+            config.QueueName = QueueName;
         }
 
-        /// <summary>
-        /// Configures the specified <see cref="SqsWriteConfiguration"/>.
-        /// </summary>
-        /// <param name="config">The configuration to configure.</param>
-        internal override void Configure(SqsWriteConfiguration config)
-        {
-            if (QueueName != null)
-            {
-                config.QueueName = QueueName;
-            }
-
-            base.Configure(config);
-        }
+        base.Configure(config);
     }
 }

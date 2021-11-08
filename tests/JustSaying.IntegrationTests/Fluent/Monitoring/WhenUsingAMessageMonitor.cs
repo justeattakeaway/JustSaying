@@ -8,53 +8,52 @@ using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit.Abstractions;
 
-namespace JustSaying.Fluent.Monitoring
+namespace JustSaying.Fluent.Monitoring;
+
+public class WhenUsingAMessageMonitor : IntegrationTestBase
 {
-    public class WhenUsingAMessageMonitor : IntegrationTestBase
+    public WhenUsingAMessageMonitor(ITestOutputHelper outputHelper) : base(outputHelper)
+    { }
+
+    [AwsFact]
+    public async Task MonitorShouldBeCalled()
     {
-        public WhenUsingAMessageMonitor(ITestOutputHelper outputHelper) : base(outputHelper)
-        { }
+        // Arrange
+        var future = new Future<SimpleMessage>();
 
-        [AwsFact]
-        public async Task MonitorShouldBeCalled()
+        var monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
+
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(
+                (builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
+            .AddSingleton(future)
+            .AddSingleton<IMessageMonitor>(monitor)
+            .AddJustSayingHandler<SimpleMessage, HandlerWithMessageContext>();
+
+        string content = Guid.NewGuid().ToString();
+
+        var message = new SimpleMessage
         {
-            // Arrange
-            var future = new Future<SimpleMessage>();
+            Content = content
+        };
 
-            var monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
-
-            var services = GivenJustSaying()
-                .ConfigureJustSaying(
-                    (builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
-                .AddSingleton(future)
-                .AddSingleton<IMessageMonitor>(monitor)
-                .AddJustSayingHandler<SimpleMessage, HandlerWithMessageContext>();
-
-            string content = Guid.NewGuid().ToString();
-
-            var message = new SimpleMessage
+        await WhenAsync(
+            services,
+            async (publisher, listener, serviceProvider, cancellationToken) =>
             {
-                Content = content
-            };
+                await listener.StartAsync(cancellationToken);
+                await publisher.StartAsync(cancellationToken);
 
-            await WhenAsync(
-                services,
-                async (publisher, listener, serviceProvider, cancellationToken) =>
-                {
-                    await listener.StartAsync(cancellationToken);
-                    await publisher.StartAsync(cancellationToken);
+                // Act
+                await publisher.PublishAsync(message, cancellationToken);
 
-                    // Act
-                    await publisher.PublishAsync(message, cancellationToken);
+                // Assert
+                await future.DoneSignal;
 
-                    // Assert
-                    await future.DoneSignal;
-
-                    monitor.HandledTimes.ShouldHaveSingleItem().ShouldBeGreaterThan(TimeSpan.Zero);
-                    monitor.PublishMessageTimes.ShouldHaveSingleItem().ShouldBeGreaterThan(TimeSpan.Zero);
-                    monitor.ReceiveMessageTimes.ShouldHaveSingleItem().duration
-                        .ShouldBeGreaterThan(TimeSpan.Zero);
-                });
-        }
+                monitor.HandledTimes.ShouldHaveSingleItem().ShouldBeGreaterThan(TimeSpan.Zero);
+                monitor.PublishMessageTimes.ShouldHaveSingleItem().ShouldBeGreaterThan(TimeSpan.Zero);
+                monitor.ReceiveMessageTimes.ShouldHaveSingleItem().duration
+                    .ShouldBeGreaterThan(TimeSpan.Zero);
+            });
     }
 }

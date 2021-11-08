@@ -1,9 +1,8 @@
 using JustSaying.Messaging.MessageHandling;
 
-namespace JustSaying
+namespace JustSaying;
+
+public interface IHandlerResolver
 {
-    public interface IHandlerResolver
-    {
-        IHandlerAsync<T> ResolveHandler<T>(HandlerResolutionContext context);
-    }
+    IHandlerAsync<T> ResolveHandler<T>(HandlerResolutionContext context);
 }

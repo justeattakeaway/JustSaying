@@ -9,55 +9,54 @@ using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
+namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests;
+
+public class WhenThereAreNoSubscribers
 {
-    public class WhenThereAreNoSubscribers
+    protected class TestMessage : Message
+    { }
+
+    private int _callCount;
+    private readonly MessageReceiveBuffer _messageReceiveBuffer;
+    private readonly ITestOutputHelper _outputHelper;
+
+    public WhenThereAreNoSubscribers(ITestOutputHelper testOutputHelper)
     {
-        protected class TestMessage : Message
-        { }
+        _outputHelper = testOutputHelper;
+        var loggerFactory = testOutputHelper.ToLoggerFactory();
 
-        private int _callCount;
-        private readonly MessageReceiveBuffer _messageReceiveBuffer;
-        private readonly ITestOutputHelper _outputHelper;
+        MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware =
+            new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>();
 
-        public WhenThereAreNoSubscribers(ITestOutputHelper testOutputHelper)
+        var messages = new List<Message> { new TestMessage() };
+        var queue = new FakeSqsQueue(ct =>
         {
-            _outputHelper = testOutputHelper;
-            var loggerFactory = testOutputHelper.ToLoggerFactory();
+            Interlocked.Increment(ref _callCount);
+            return Task.FromResult(messages.AsEnumerable());
+        });
 
-            MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware =
-                new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>();
+        var monitor = new TrackingLoggingMonitor(
+            loggerFactory.CreateLogger<TrackingLoggingMonitor>());
 
-            var messages = new List<Message> { new TestMessage() };
-            var queue = new FakeSqsQueue(ct =>
-            {
-                Interlocked.Increment(ref _callCount);
-                return Task.FromResult(messages.AsEnumerable());
-            });
+        _messageReceiveBuffer = new MessageReceiveBuffer(
+            10,
+            10,
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromSeconds(1),
+            queue,
+            sqsMiddleware,
+            monitor,
+            loggerFactory.CreateLogger<IMessageReceiveBuffer>());
+    }
 
-            var monitor = new TrackingLoggingMonitor(
-                loggerFactory.CreateLogger<TrackingLoggingMonitor>());
+    [Fact]
+    public async Task Buffer_Is_Filled()
+    {
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+        var _ = _messageReceiveBuffer.RunAsync(cts.Token);
 
-            _messageReceiveBuffer = new MessageReceiveBuffer(
-                10,
-                10,
-                TimeSpan.FromSeconds(1),
-                TimeSpan.FromSeconds(1),
-                queue,
-                sqsMiddleware,
-                monitor,
-                loggerFactory.CreateLogger<IMessageReceiveBuffer>());
-        }
+        await Patiently.AssertThatAsync(_outputHelper, () => _callCount > 0);
 
-        [Fact]
-        public async Task Buffer_Is_Filled()
-        {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
-            var _ = _messageReceiveBuffer.RunAsync(cts.Token);
-
-            await Patiently.AssertThatAsync(_outputHelper, () => _callCount > 0);
-
-            _callCount.ShouldBeGreaterThan(0);
-        }
+        _callCount.ShouldBeGreaterThan(0);
     }
 }

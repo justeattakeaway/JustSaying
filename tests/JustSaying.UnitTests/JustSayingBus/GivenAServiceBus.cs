@@ -6,75 +6,74 @@ using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.JustSayingBus
+namespace JustSaying.UnitTests.JustSayingBus;
+
+public abstract class GivenAServiceBus : IAsyncLifetime
 {
-    public abstract class GivenAServiceBus : IAsyncLifetime
+    protected IMessagingConfig Config;
+    protected TrackingLoggingMonitor Monitor;
+    protected ILoggerFactory LoggerFactory;
+    private bool _recordThrownExceptions;
+
+    public ITestOutputHelper OutputHelper { get; private set; }
+    protected Exception ThrownException { get; private set; }
+
+    protected JustSaying.JustSayingBus SystemUnderTest { get; private set; }
+
+    protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
+
+
+    public GivenAServiceBus(ITestOutputHelper outputHelper)
     {
-        protected IMessagingConfig Config;
-        protected TrackingLoggingMonitor Monitor;
-        protected ILoggerFactory LoggerFactory;
-        private bool _recordThrownExceptions;
+        OutputHelper = outputHelper;
+        LoggerFactory = outputHelper.ToLoggerFactory();
+    }
 
-        public ITestOutputHelper OutputHelper { get; private set; }
-        protected Exception ThrownException { get; private set; }
+    public virtual async Task InitializeAsync()
+    {
+        Given();
 
-        protected JustSaying.JustSayingBus SystemUnderTest { get; private set; }
-
-        protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
-
-
-        public GivenAServiceBus(ITestOutputHelper outputHelper)
+        try
         {
-            OutputHelper = outputHelper;
-            LoggerFactory = outputHelper.ToLoggerFactory();
+            SystemUnderTest = CreateSystemUnderTest();
+            await WhenAsync().ConfigureAwait(false);
         }
-
-        public virtual async Task InitializeAsync()
+        catch (Exception ex) when (_recordThrownExceptions)
         {
-            Given();
-
-            try
-            {
-                SystemUnderTest = CreateSystemUnderTest();
-                await WhenAsync().ConfigureAwait(false);
-            }
-            catch (Exception ex) when (_recordThrownExceptions)
-            {
-                ThrownException = ex;
-            }
+            ThrownException = ex;
         }
+    }
 
-        public virtual Task DisposeAsync()
-        {
-            return Task.CompletedTask;
-        }
+    public virtual Task DisposeAsync()
+    {
+        return Task.CompletedTask;
+    }
 
-        protected virtual void Given()
-        {
-            Config = Substitute.For<IMessagingConfig>();
-            Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
-        }
+    protected virtual void Given()
+    {
+        Config = Substitute.For<IMessagingConfig>();
+        Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
+    }
 
-        protected abstract Task WhenAsync();
+    protected abstract Task WhenAsync();
 
-        private JustSaying.JustSayingBus CreateSystemUnderTest()
-        {
-            var serializerRegister = new FakeSerializationRegister();
-            var bus = new JustSaying.JustSayingBus(Config,
-                serializerRegister,
-                LoggerFactory,
-                Monitor);
+    private JustSaying.JustSayingBus CreateSystemUnderTest()
+    {
+        var serializerRegister = new FakeSerializationRegister();
+        var bus = new JustSaying.JustSayingBus(Config,
+            serializerRegister,
+            LoggerFactory,
+            Monitor);
 
-            bus.SetGroupSettings(new SubscriptionGroupSettingsBuilder()
-                    .WithDefaultConcurrencyLimit(8),
-                new Dictionary<string, SubscriptionGroupConfigBuilder>());
+        bus.SetGroupSettings(new SubscriptionGroupSettingsBuilder()
+                .WithDefaultConcurrencyLimit(8),
+            new Dictionary<string, SubscriptionGroupConfigBuilder>());
 
-            return bus;
-        }
+        return bus;
+    }
 
-        public void RecordAnyExceptionsThrown()
-        {
-            _recordThrownExceptions = true;
-        }
+    public void RecordAnyExceptionsThrown()
+    {
+        _recordThrownExceptions = true;
     }
 }

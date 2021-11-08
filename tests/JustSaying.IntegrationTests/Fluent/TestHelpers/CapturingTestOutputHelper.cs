@@ -1,31 +1,30 @@
 using System.Text;
 using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.Subscribing
+namespace JustSaying.IntegrationTests.Fluent.Subscribing;
+
+public class CapturingTestOutputHelper : ITestOutputHelper
 {
-    public class CapturingTestOutputHelper : ITestOutputHelper
+    private readonly ITestOutputHelper _inner;
+    private readonly StringBuilder _sb;
+
+    public string Output => _sb.ToString();
+
+    public CapturingTestOutputHelper(ITestOutputHelper inner)
     {
-        private readonly ITestOutputHelper _inner;
-        private readonly StringBuilder _sb;
+        _inner = inner;
+        _sb = new StringBuilder();
+    }
 
-        public string Output => _sb.ToString();
+    public void WriteLine(string message)
+    {
+        _sb.AppendLine(message);
+        _inner.WriteLine(message);
+    }
 
-        public CapturingTestOutputHelper(ITestOutputHelper inner)
-        {
-            _inner = inner;
-            _sb = new StringBuilder();
-        }
-
-        public void WriteLine(string message)
-        {
-            _sb.AppendLine(message);
-            _inner.WriteLine(message);
-        }
-
-        public void WriteLine(string format, params object[] args)
-        {
-            _sb.AppendLine(string.Format(format, args));
-            _inner.WriteLine(format, args);
-        }
+    public void WriteLine(string format, params object[] args)
+    {
+        _sb.AppendLine(string.Format(format, args));
+        _inner.WriteLine(format, args);
     }
 }
