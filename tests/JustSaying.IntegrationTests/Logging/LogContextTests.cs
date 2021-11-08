@@ -84,7 +84,9 @@ public class LogContextTests : IntegrationTestBase
     [InlineData(true, LogLevel.Information, "Succeeded", null)]
     [InlineData(false, LogLevel.Warning, "Failed", null)]
     [InlineData(false, LogLevel.Warning, "Failed", "Something went wrong!")]
+#pragma warning disable xUnit1008
     public async Task HandleMessageFromQueueLogs_ShouldHaveContext(bool handlerShouldSucceed, LogLevel level, string status, string exceptionMessage)
+#pragma warning restore xUnit1008
     {
         var handler = new InspectableHandler<SimpleMessage>()
         {

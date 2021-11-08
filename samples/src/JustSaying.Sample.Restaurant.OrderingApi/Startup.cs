@@ -1,6 +1,5 @@
 using JustSaying.Sample.Restaurant.Models;
 using JustSaying.Sample.Restaurant.OrderingApi.Handlers;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using Serilog;
 
@@ -17,8 +16,7 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddControllers()
-            .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+        services.AddControllers();
 
         services.AddJustSaying(config =>
         {
