@@ -1,4 +1,7 @@
 <Project>
+    <ItemGroup>
+      <Using Remove="System.Net.Http" />
+    </ItemGroup>
     <Target Name="AppVeyorPR" AfterTargets="MinVer" Condition="'$(APPVEYOR_PULL_REQUEST_NUMBER)' != '' AND '$(MinVerSkip)' != 'true' " >
         <PropertyGroup>
             <PackageVersion>$(MinVerMajor).$(MinVerMinor).$(MinVerPatch)-pr.$(APPVEYOR_PULL_REQUEST_NUMBER)</PackageVersion>

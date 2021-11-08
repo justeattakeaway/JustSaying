@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using JustSaying.Messaging.MessageHandling;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing

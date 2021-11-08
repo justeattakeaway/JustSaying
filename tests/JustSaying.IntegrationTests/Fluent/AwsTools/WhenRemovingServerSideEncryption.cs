@@ -1,9 +1,6 @@
-using System.Threading;
-using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit.Abstractions;

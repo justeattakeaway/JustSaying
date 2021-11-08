@@ -1,4 +1,3 @@
-using System;
 using JustSaying.Messaging.Monitoring;
 
 namespace JustSaying.Messaging.Middleware.ErrorHandling

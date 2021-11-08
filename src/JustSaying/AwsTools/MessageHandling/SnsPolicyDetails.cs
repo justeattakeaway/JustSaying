@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace JustSaying.AwsTools.MessageHandling
+﻿namespace JustSaying.AwsTools.MessageHandling
 {
     internal class SnsPolicyDetails
     {

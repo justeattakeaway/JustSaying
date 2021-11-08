@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace JustSaying.AwsTools.MessageHandling
+﻿namespace JustSaying.AwsTools.MessageHandling
 {
     internal interface ITopicArnProvider
     {

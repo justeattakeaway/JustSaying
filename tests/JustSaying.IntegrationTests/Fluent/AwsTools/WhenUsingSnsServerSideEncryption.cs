@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.TestingFramework;

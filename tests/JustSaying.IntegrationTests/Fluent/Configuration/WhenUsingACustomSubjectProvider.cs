@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using JustSaying.IntegrationTests.Fluent;
 using JustSaying.IntegrationTests.Fluent.Subscribing;
 using JustSaying.Messaging.MessageHandling;

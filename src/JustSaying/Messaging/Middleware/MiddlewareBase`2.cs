@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace JustSaying.Messaging.Middleware
 {
     public abstract class MiddlewareBase<TContext, TOut>

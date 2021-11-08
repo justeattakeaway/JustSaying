@@ -1,4 +1,3 @@
-using System.Linq;
 using JustSaying.TestingFramework;
 using Shouldly;
 using Xunit;

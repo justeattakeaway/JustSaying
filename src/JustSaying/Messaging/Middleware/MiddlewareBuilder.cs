@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-
 namespace JustSaying.Messaging.Middleware
 {
     /// <summary>

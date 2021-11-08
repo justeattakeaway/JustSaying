@@ -1,5 +1,3 @@
-using System;
-
 namespace JustSaying.Messaging.Channels.SubscriptionGroups
 {
     /// <summary>

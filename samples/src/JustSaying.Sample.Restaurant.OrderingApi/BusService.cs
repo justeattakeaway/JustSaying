@@ -1,8 +1,4 @@
-using System.Threading;
-using System.Threading.Tasks;
 using JustSaying.Messaging;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Sample.Restaurant.OrderingApi
 {

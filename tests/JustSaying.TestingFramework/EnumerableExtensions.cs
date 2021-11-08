@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace JustSaying.TestingFramework
 {
     public static class EnumerableExtensions

@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using JustSaying.AwsTools.MessageHandling;
 using NSubstitute;

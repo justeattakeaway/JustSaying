@@ -1,5 +1,3 @@
-using System.Threading;
-
 namespace JustSaying.Messaging.MessageHandling
 {
     public class MessageContextAccessor : IMessageContextReader, IMessageContextAccessor

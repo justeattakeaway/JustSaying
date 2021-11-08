@@ -1,6 +1,4 @@
-using System;
 using System.Net;
-using System.Threading.Tasks;
 using Amazon.Runtime;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;

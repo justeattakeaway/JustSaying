@@ -1,4 +1,3 @@
-using System;
 using Amazon.SimpleNotificationService;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;

@@ -1,5 +1,3 @@
-using System;
-
 namespace JustSaying.Models
 {
     public abstract class Message

@@ -3,8 +3,6 @@
  */
 
 
-using System.Collections.Generic;
-
 namespace JustSaying.Messaging
 {
     /// <summary>

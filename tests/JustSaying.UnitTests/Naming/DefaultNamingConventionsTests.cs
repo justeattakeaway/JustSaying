@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using JustSaying.Naming;
 using JustSaying.TestingFramework;
 using Shouldly;

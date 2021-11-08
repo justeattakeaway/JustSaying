@@ -1,4 +1,3 @@
-using System;
 using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware.Receive;

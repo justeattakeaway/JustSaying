@@ -1,5 +1,3 @@
-using System;
-
 namespace JustSaying.Benchmark
 {
     public class MessageMetric

@@ -1,5 +1,3 @@
-using System;
-
 namespace JustSaying.AwsTools
 {
     public static class JustSayingConstants

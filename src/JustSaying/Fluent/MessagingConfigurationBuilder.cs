@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using Amazon;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;

@@ -1,5 +1,3 @@
-using System;
-using JustSaying.Messaging.Channels.Context;
 using SQSMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying.Messaging.MessageHandling

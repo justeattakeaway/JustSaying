@@ -1,4 +1,3 @@
-using System;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using Shouldly;

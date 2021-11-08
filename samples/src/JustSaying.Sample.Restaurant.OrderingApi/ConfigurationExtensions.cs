@@ -1,6 +1,4 @@
-using System;
 using Amazon;
-using Microsoft.Extensions.Configuration;
 
 namespace JustSaying.Sample.Restaurant.OrderingApi
 {

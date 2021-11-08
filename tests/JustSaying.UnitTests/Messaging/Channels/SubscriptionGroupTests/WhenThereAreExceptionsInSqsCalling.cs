@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.TestingFramework;

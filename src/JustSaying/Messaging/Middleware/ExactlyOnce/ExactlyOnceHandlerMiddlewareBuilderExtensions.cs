@@ -1,4 +1,3 @@
-using System;
 using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.Logging;
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;

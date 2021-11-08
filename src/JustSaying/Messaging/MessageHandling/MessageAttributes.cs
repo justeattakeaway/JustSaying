@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using JustSaying.Messaging.MessageSerialization;
 
 namespace JustSaying.Messaging.MessageHandling

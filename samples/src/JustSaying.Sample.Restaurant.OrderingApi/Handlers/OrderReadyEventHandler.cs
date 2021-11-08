@@ -1,9 +1,7 @@
 using System.Security.Cryptography;
-using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Sample.Restaurant.Models;
-using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Sample.Restaurant.OrderingApi.Handlers
 {

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using JustSaying.Messaging.MessageSerialization;
 using Shouldly;
 using Xunit;

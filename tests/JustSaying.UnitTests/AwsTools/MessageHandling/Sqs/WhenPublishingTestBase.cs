@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
 using NSubstitute;

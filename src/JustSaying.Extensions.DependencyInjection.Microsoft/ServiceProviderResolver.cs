@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using JustSaying.Fluent;
 using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.DependencyInjection;

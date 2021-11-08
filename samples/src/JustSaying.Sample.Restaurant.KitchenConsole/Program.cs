@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using JustSaying.Sample.Restaurant.KitchenConsole.Handlers;
 using JustSaying.Sample.Restaurant.Models;
 using Microsoft.Extensions.Configuration;

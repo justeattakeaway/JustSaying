@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;

@@ -1,13 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Threading;
-using System.Threading.Tasks;
-using Amazon.Runtime;
-using Amazon.SQS;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;

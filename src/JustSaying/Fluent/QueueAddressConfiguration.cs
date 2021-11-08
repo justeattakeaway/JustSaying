@@ -1,4 +1,3 @@
-using System;
 using JustSaying.Messaging.Middleware;
 
 namespace JustSaying.Fluent

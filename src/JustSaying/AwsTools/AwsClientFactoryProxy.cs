@@ -1,5 +1,3 @@
-using System;
-
 namespace JustSaying.AwsTools
 {
     public class AwsClientFactoryProxy : IAwsClientFactoryProxy

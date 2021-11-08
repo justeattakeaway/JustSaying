@@ -1,5 +1,3 @@
-using System;
-
 namespace JustSaying.Naming
 {
     public static class NamingConventionExtensions

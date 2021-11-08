@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests
 {
     public class FakeReceiveMessagesRequest

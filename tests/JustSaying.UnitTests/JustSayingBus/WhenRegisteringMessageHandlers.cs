@@ -1,5 +1,3 @@
-using System.Threading;
-using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;

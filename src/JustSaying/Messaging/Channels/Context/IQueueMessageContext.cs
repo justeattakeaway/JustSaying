@@ -1,4 +1,3 @@
-using System;
 using Amazon.SQS.Model;
 
 namespace JustSaying.Messaging.Channels.Context

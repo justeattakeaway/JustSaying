@@ -1,4 +1,3 @@
-using System;
 using Amazon;
 
 namespace JustSaying.Fluent

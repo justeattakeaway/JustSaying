@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.AwsTools.MessageHandling;

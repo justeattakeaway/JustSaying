@@ -1,4 +1,3 @@
-using System;
 using AutoFixture;
 
 namespace JustSaying.UnitTests

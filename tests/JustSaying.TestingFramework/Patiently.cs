@@ -1,6 +1,4 @@
-using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using NSubstitute.Exceptions;
 using Shouldly;
 using Xunit.Abstractions;

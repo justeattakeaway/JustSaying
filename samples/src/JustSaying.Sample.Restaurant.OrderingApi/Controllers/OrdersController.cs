@@ -1,10 +1,7 @@
-using System;
-using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.Sample.Restaurant.Models;
 using JustSaying.Sample.Restaurant.OrderingApi.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Sample.Restaurant.OrderingApi.Controllers
 {

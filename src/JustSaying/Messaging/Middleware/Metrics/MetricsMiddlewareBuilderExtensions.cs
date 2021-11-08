@@ -1,4 +1,3 @@
-using System;
 using JustSaying.Messaging.Monitoring;
 
 // ReSharper disable once CheckNamespace

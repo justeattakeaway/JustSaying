@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace JustSaying.AwsTools.MessageHandling
+﻿namespace JustSaying.AwsTools.MessageHandling
 {
     internal class SqsPolicyDetails
     {

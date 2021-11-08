@@ -1,4 +1,3 @@
-using System;
 using JustSaying.Naming;
 
 namespace JustSaying.AwsTools.QueueCreation

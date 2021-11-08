@@ -1,4 +1,3 @@
-using System;
 using JustSaying.TestingFramework;
 using Xunit;
 

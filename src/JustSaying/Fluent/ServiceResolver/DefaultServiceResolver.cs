@@ -1,4 +1,3 @@
-using System;
 using JustSaying.AwsTools;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;

@@ -1,10 +1,5 @@
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.MessageSerialization;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Shouldly;

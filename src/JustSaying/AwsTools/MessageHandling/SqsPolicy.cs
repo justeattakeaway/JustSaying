@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 

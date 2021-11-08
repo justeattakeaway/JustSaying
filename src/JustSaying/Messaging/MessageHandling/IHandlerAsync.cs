@@ -1,5 +1,3 @@
-using System.Threading.Tasks;
-
 namespace JustSaying.Messaging.MessageHandling
 {
     /// <summary>

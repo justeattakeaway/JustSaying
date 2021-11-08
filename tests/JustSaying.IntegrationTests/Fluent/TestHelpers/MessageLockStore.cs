@@ -1,7 +1,4 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing

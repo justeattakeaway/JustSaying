@@ -1,6 +1,4 @@
-using System.Threading;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.MessageSerialization;
 
 namespace JustSaying.AwsTools.QueueCreation
 {

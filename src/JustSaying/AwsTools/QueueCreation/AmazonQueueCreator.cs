@@ -1,11 +1,7 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Amazon;
 using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.QueueCreation

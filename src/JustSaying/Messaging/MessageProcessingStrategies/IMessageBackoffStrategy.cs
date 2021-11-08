@@ -1,5 +1,4 @@
-﻿using System;
-using JustSaying.Models;
+﻿using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageProcessingStrategies
 {

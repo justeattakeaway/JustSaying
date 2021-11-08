@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;

@@ -1,6 +1,3 @@
-using System;
-using System.Threading.Tasks;
-
 namespace JustSaying.Benchmark
 {
     public interface IReportConsumerMetric

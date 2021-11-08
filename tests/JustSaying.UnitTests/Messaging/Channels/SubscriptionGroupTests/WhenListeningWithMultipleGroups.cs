@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using Newtonsoft.Json;

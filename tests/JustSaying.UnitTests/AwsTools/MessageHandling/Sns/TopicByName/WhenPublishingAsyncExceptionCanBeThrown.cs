@@ -1,11 +1,8 @@
-using System.Threading.Tasks;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.Messaging;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
-using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.Core;
 using Shouldly;

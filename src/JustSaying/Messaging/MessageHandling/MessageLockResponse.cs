@@ -1,5 +1,3 @@
-using System;
-
 namespace JustSaying.Messaging.MessageHandling
 {
     public class MessageLockResponse

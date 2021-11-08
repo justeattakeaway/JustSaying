@@ -1,6 +1,3 @@
-using System;
-using System.Threading.Tasks;
-using Amazon;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
 using JustSaying.AwsTools.MessageHandling;
