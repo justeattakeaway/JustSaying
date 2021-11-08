@@ -1,43 +1,34 @@
-using System.Diagnostics.CodeAnalysis;
+using JustSaying.Sample.Restaurant.OrderingApi;
 using Serilog;
 using Serilog.Events;
 
-namespace JustSaying.Sample.Restaurant.OrderingApi;
+const string appName = "OrderingApi";
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("System", LogEventLevel.Warning)
+    .MinimumLevel.Debug()
+    .Enrich.WithProperty("AppName", appName)
+    .CreateLogger();
 
-[SuppressMessage("ReSharper", "CA1031",
-    Justification = "We want to catch Exception so we can log fatals before shutting down")]
-public static class Program
+Console.Title = "OrderingApi";
+
+try
 {
-    public static void Main(string[] args)
-    {
-        Log.Logger = new LoggerConfiguration()
-            .WriteTo.Console()
-            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-            .MinimumLevel.Override("System", LogEventLevel.Warning)
-            .MinimumLevel.Debug()
-            .Enrich.WithProperty("AppName", nameof(OrderingApi))
-            .CreateLogger();
+    CreateHostBuilder(args).Build().Run();
+}
+catch (Exception e)
+{
+    Log.Fatal(e, "Error occurred during startup: {Message}", e.Message);
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
-        Console.Title = "OrderingApi";
-
-        try
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
-        catch (Exception e)
-        {
-            Log.Fatal(e, "Error occurred during startup: {Message}", e.Message);
-        }
-        finally
-        {
-            Log.CloseAndFlush();
-        }
-    }
-
-    public static IHostBuilder CreateHostBuilder(string[] args)
-    {
-        return Host.CreateDefaultBuilder(args)
-            .UseSerilog()
-            .ConfigureWebHostDefaults((builder) => builder.UseStartup<Startup>());
-    }
+static IHostBuilder CreateHostBuilder(string[] args)
+{
+    return Host.CreateDefaultBuilder(args)
+        .UseSerilog()
+        .ConfigureWebHostDefaults((builder) => builder.UseStartup<Startup>());
 }
