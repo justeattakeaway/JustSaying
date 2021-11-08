@@ -95,7 +95,7 @@ try
             app.Logger.LogInformation("Order received for {description}", order.Description);
 
             // Save order to database generating OrderId
-            var orderId = new Random().Next(1, 100);
+            var orderId = Random.Shared.Next(1, 100);
 
             var message = new OrderPlacedEvent
             {
