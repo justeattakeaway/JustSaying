@@ -6,8 +6,7 @@ using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using NSubstitute.Core;
-using Shouldly;
-using Xunit;
+
 #pragma warning disable 618
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;

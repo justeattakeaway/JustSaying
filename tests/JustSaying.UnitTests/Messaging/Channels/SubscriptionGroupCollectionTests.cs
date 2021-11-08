@@ -7,10 +7,6 @@ using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using Shouldly;
-using Xunit;
-using Xunit.Abstractions;
-
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
 namespace JustSaying.UnitTests.Messaging.Channels;

@@ -8,8 +8,7 @@ using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using Xunit;
-using Xunit.Abstractions;
+
 #pragma warning disable 618
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;

@@ -1,9 +1,6 @@
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using Newtonsoft.Json;
-using Shouldly;
-using Xunit;
-using Xunit.Abstractions;
 using Message = Amazon.SQS.Model.Message;
 
 namespace JustSaying.UnitTests.JustSayingBus;

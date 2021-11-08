@@ -8,7 +8,6 @@ using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent;
 

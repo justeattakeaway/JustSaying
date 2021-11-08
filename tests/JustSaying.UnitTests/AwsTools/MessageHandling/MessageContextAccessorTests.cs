@@ -1,6 +1,5 @@
 using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageHandling;
-using Xunit;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling;
 

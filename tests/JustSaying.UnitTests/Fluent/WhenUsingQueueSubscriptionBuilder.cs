@@ -1,8 +1,6 @@
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
 using JustSaying.TestingFramework;
-using Shouldly;
-using Xunit;
 
 namespace JustSaying.UnitTests.Fluent;
 

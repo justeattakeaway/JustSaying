@@ -1,5 +1,4 @@
 using JustSaying.Messaging.MessageSerialization;
-using Xunit;
 
 namespace JustSaying.UnitTests.Messaging.Serialization.SerializationRegister;
 

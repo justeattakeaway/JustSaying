@@ -13,9 +13,6 @@ using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Shouldly;
-using Xunit;
-using Xunit.Abstractions;
 
 // ReSharper disable PossibleNullReferenceException
 #pragma warning disable 4014

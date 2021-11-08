@@ -2,8 +2,6 @@ using JustSaying.Messaging.Middleware;
 using JustSaying.UnitTests.Messaging.Policies.ExamplePolicies;
 using Polly;
 using Polly.CircuitBreaker;
-using Shouldly;
-using Xunit;
 
 namespace JustSaying.UnitTests.Messaging.Policies;
 

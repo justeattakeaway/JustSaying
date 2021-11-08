@@ -3,8 +3,6 @@ using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using Shouldly;
-using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 

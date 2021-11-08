@@ -5,8 +5,6 @@ using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using NSubstitute;
 using NSubstitute.Core;
-using Shouldly;
-using Xunit;
 using Amazon.Runtime;
 using Microsoft.Extensions.Logging.Abstractions;
 

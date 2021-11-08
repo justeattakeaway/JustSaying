@@ -8,8 +8,6 @@ using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.Core;
-using Shouldly;
-using Xunit;
 using Message = JustSaying.Models.Message;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;

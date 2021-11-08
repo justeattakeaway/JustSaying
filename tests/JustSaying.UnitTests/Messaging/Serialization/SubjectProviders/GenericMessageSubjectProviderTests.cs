@@ -1,6 +1,4 @@
 using JustSaying.Messaging.MessageSerialization;
-using Shouldly;
-using Xunit;
 
 namespace JustSaying.UnitTests.Messaging.Serialization.SubjectProviders;
 

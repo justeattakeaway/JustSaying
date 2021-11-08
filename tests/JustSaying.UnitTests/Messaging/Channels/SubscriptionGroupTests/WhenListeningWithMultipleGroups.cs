@@ -1,9 +1,6 @@
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using Newtonsoft.Json;
-using Shouldly;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 

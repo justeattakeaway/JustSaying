@@ -1,7 +1,5 @@
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
-using Shouldly;
-using Xunit;
 
 namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft;
 

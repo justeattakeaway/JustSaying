@@ -1,7 +1,5 @@
 using JustSaying.Naming;
 using JustSaying.TestingFramework;
-using Shouldly;
-using Xunit;
 
 namespace JustSaying.UnitTests.Naming;
 

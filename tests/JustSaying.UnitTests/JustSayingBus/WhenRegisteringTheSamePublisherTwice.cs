@@ -1,9 +1,6 @@
 using JustSaying.Messaging;
 using JustSaying.Models;
 using NSubstitute;
-using Shouldly;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 

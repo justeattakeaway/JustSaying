@@ -1,6 +1,4 @@
 using JustSaying.AwsTools.QueueCreation;
-using Shouldly;
-using Xunit;
 
 namespace JustSaying.UnitTests.AwsTools.QueueCreation;
 

@@ -1,7 +1,4 @@
 using JustSaying.TestingFramework;
-using Shouldly;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 

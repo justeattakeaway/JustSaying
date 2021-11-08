@@ -1,7 +1,6 @@
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 

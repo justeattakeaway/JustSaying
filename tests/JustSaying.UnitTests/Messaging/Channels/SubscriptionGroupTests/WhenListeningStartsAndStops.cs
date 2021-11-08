@@ -1,9 +1,6 @@
 using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using Microsoft.Extensions.Logging;
-using Shouldly;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 

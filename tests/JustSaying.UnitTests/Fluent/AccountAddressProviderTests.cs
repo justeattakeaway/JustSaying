@@ -1,7 +1,6 @@
 using JustSaying.Fluent;
 using JustSaying.Naming;
 using JustSaying.TestingFramework;
-using Xunit;
 
 namespace JustSaying.UnitTests.Fluent;
 

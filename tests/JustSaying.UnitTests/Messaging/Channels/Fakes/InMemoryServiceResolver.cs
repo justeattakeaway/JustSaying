@@ -5,7 +5,6 @@ using JustSaying.Messaging.Middleware.PostProcessing;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.Fakes;
 

@@ -6,9 +6,6 @@ using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using JustSaying.UnitTests.Messaging.Middleware;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Shouldly;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.MessageHandling;
 

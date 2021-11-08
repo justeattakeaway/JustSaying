@@ -3,7 +3,6 @@ using JustSaying.AwsTools.QueueCreation;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
-using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 

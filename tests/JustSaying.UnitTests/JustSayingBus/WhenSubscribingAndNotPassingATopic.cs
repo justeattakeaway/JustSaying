@@ -1,7 +1,3 @@
-using Shouldly;
-using Xunit;
-using Xunit.Abstractions;
-
 namespace JustSaying.UnitTests.JustSayingBus;
 
 public class WhenSubscribingAndNotPassingATopic : GivenAServiceBus

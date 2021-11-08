@@ -4,8 +4,6 @@ using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Shouldly;
-using Xunit;
 
 namespace JustSaying.UnitTests.Fluent;
 

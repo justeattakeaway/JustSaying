@@ -1,8 +1,6 @@
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
-using Shouldly;
-using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 

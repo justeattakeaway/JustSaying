@@ -5,7 +5,6 @@ using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using Xunit;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 

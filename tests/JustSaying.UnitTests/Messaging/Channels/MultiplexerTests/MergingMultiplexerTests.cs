@@ -2,8 +2,6 @@ using System.Threading.Channels;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.TestingFramework;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Channels.MultiplexerTests;
 

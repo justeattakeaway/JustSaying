@@ -1,7 +1,7 @@
 using Amazon.SimpleNotificationService;
 using JustSaying.AwsTools.MessageHandling;
 using NSubstitute;
-using Xunit;
+
 #pragma warning disable 618
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;

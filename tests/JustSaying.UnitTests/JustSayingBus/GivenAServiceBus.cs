@@ -3,8 +3,6 @@ using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 

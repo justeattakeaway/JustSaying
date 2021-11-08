@@ -2,8 +2,7 @@ using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.MessageHandling;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
-using Shouldly;
-using Xunit;
+
 #pragma warning disable 618
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;

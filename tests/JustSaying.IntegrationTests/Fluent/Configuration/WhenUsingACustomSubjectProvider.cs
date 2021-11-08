@@ -5,8 +5,6 @@ using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using Shouldly;
-using Xunit.Abstractions;
 
 namespace JustSaying.Fluent.Configuration;
 

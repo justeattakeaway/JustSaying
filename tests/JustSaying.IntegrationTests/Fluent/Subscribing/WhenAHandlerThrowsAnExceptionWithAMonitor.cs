@@ -4,8 +4,6 @@ using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
-using Shouldly;
-using Xunit.Abstractions;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 

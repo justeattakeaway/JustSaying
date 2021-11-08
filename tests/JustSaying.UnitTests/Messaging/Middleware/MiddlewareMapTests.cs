@@ -1,8 +1,6 @@
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.AwsTools.MessageHandling;
-using Shouldly;
-using Xunit;
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
 namespace JustSaying.UnitTests.Messaging.Middleware;

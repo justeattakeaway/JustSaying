@@ -3,10 +3,6 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 using JustSaying.UnitTests.AwsTools.MessageHandling;
 using NSubstitute;
-using Shouldly;
-using Xunit;
-using Xunit.Abstractions;
-
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
 

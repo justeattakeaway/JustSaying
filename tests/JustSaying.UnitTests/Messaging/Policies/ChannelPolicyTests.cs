@@ -9,9 +9,6 @@ using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using JustSaying.UnitTests.Messaging.Policies.ExamplePolicies;
 using Microsoft.Extensions.Logging;
-using Shouldly;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace JustSaying.UnitTests.Messaging.Policies;
 

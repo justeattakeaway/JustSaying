@@ -4,9 +4,7 @@ using JustSaying.AwsTools.MessageHandling;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-using Shouldly;
-using Xunit;
-using Xunit.Abstractions;
+
 #pragma warning disable 618
 
 namespace JustSaying.UnitTests.AwsTools.TopicCreation;
