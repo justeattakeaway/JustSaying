@@ -14,4 +14,7 @@
   <ItemGroup>
     <PackageReference Include="StructureMap" Version="4.6.0" />
   </ItemGroup>
+  <ItemGroup>
+      <Using Remove="System.Net.Http" />
+    </ItemGroup>
 </Project>
