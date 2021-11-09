@@ -30,7 +30,7 @@ public class SystemTextJsonSerializer : IMessageSerializer
         {
             options = new JsonSerializerOptions
             {
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                IgnoreNullValues = true
             };
 
             options.Converters.Add(new JsonStringEnumConverter());
