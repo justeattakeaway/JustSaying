@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 
@@ -27,12 +28,12 @@ public class SystemTextJsonSerializer : IMessageSerializer
     {
         if (options == null)
         {
-            options = new JsonSerializerOptions()
+            options = new JsonSerializerOptions
             {
-                IgnoreNullValues = true,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
             };
 
-            options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+            options.Converters.Add(new JsonStringEnumConverter());
         }
 
         _options = options;
