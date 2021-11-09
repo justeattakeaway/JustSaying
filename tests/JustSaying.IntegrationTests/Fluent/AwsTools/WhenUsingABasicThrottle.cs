@@ -25,9 +25,7 @@ public class WhenUsingABasicThrottle : IntegrationTestBase
     [AwsTheory]
     [InlineData(100)]
     [InlineData(1000)]
-#pragma warning disable xUnit1008
     public async Task Messages_Are_Throttled_But_Still_Delivered(int throttleMessageCount)
-#pragma warning restore xUnit1008
     {
         // Arrange
         ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
