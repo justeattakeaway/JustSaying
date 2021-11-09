@@ -1,9 +1,8 @@
 using JustSaying.Models;
 
-namespace JustSaying.Messaging.MessageSerialization
+namespace JustSaying.Messaging.MessageSerialization;
+
+public interface IMessageSerializationFactory
 {
-    public interface IMessageSerializationFactory
-    {
-        IMessageSerializer GetSerializer<T>() where T : Message;
-    }
+    IMessageSerializer GetSerializer<T>() where T : Message;
 }

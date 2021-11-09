@@ -1,99 +1,88 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Amazon.SQS;
 using Amazon.SQS.Model;
-using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Middleware.Receive;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using Microsoft.Extensions.Logging;
-using NSubstitute;
-using Shouldly;
-using Xunit;
-using Xunit.Abstractions;
 
-namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests
+namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests;
+
+public class WhenSqsIsSlow
 {
-    public class WhenSqsIsSlow
+    protected class TestMessage : Message { }
+
+    private int _callCount;
+    private readonly MessageReceiveBuffer _messageReceiveBuffer;
+
+    public WhenSqsIsSlow(ITestOutputHelper testOutputHelper)
     {
-        protected class TestMessage : Message { }
+        var loggerFactory = testOutputHelper.ToLoggerFactory();
 
-        private int _callCount;
-        private readonly MessageReceiveBuffer _messageReceiveBuffer;
+        MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware =
+            new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>();
 
-        public WhenSqsIsSlow(ITestOutputHelper testOutputHelper)
+        var messages = new List<Message> { new TestMessage() };
+        var queue = new FakeSqsQueue(async ct =>
         {
-            var loggerFactory = testOutputHelper.ToLoggerFactory();
+            await Task.Delay(100);
+            Interlocked.Increment(ref _callCount);
+            return messages;
+        });
 
-            MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware =
-                new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>();
+        var monitor = new TrackingLoggingMonitor(
+            loggerFactory.CreateLogger<TrackingLoggingMonitor>());
 
-            var messages = new List<Message> { new TestMessage() };
-            var queue = new FakeSqsQueue(async ct =>
-            {
-                await Task.Delay(100);
-                Interlocked.Increment(ref _callCount);
-                return messages;
-            });
+        _messageReceiveBuffer = new MessageReceiveBuffer(
+            10,
+            10,
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromSeconds(1),
+            queue,
+            sqsMiddleware,
+            monitor,
+            loggerFactory.CreateLogger<IMessageReceiveBuffer>());
+    }
 
-            var monitor = new TrackingLoggingMonitor(
-                loggerFactory.CreateLogger<TrackingLoggingMonitor>());
+    protected async Task<int> Messages()
+    {
+        int messagesProcessed = 0;
 
-            _messageReceiveBuffer = new MessageReceiveBuffer(
-                10,
-                10,
-                TimeSpan.FromSeconds(1),
-                TimeSpan.FromSeconds(1),
-                queue,
-                sqsMiddleware,
-                monitor,
-                loggerFactory.CreateLogger<IMessageReceiveBuffer>());
-        }
-
-        protected async Task<int> Messages()
+        while (true)
         {
-            int messagesProcessed = 0;
+            var couldRead = await _messageReceiveBuffer.Reader.WaitToReadAsync();
+            if (!couldRead) break;
 
-            while (true)
+            while (_messageReceiveBuffer.Reader.TryRead(out var _))
             {
-                var couldRead = await _messageReceiveBuffer.Reader.WaitToReadAsync();
-                if (!couldRead) break;
-
-                while (_messageReceiveBuffer.Reader.TryRead(out var _))
-                {
-                    messagesProcessed++;
-                }
+                messagesProcessed++;
             }
-
-            return messagesProcessed;
         }
 
-        [Fact]
-        public async Task All_Messages_Are_Processed()
-        {
-            using var cts = new CancellationTokenSource();
-            var _ = _messageReceiveBuffer.RunAsync(cts.Token);
-            var readTask = Messages();
+        return messagesProcessed;
+    }
 
-            // Read messages for a while
-            await Task.Delay(TimeSpan.FromSeconds(2));
+    [Fact]
+    public async Task All_Messages_Are_Processed()
+    {
+        using var cts = new CancellationTokenSource();
+        var _ = _messageReceiveBuffer.RunAsync(cts.Token);
+        var readTask = Messages();
 
-            // Cancel token
-            cts.Cancel();
+        // Read messages for a while
+        await Task.Delay(TimeSpan.FromSeconds(2));
 
-            // Ensure buffer completes
-            await _messageReceiveBuffer.Reader.Completion;
+        // Cancel token
+        cts.Cancel();
 
-            // Get the number of messages we read
-            var messagesRead = await readTask;
+        // Ensure buffer completes
+        await _messageReceiveBuffer.Reader.Completion;
 
-            // Make sure that number makes sense
-            messagesRead.ShouldBeGreaterThan(0);
-            messagesRead.ShouldBeLessThanOrEqualTo(_callCount);
-        }
+        // Get the number of messages we read
+        var messagesRead = await readTask;
+
+        // Make sure that number makes sense
+        messagesRead.ShouldBeGreaterThan(0);
+        messagesRead.ShouldBeLessThanOrEqualTo(_callCount);
     }
 }

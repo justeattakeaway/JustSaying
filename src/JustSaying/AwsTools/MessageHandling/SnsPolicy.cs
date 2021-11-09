@@ -1,18 +1,16 @@
-using System;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 
-namespace JustSaying.AwsTools.MessageHandling
+namespace JustSaying.AwsTools.MessageHandling;
+
+internal static class SnsPolicy
 {
-    internal static class SnsPolicy
+    internal static async Task SaveAsync(SnsPolicyDetails policyDetails, IAmazonSimpleNotificationService client)
     {
-        internal static async Task SaveAsync(SnsPolicyDetails policyDetails, IAmazonSimpleNotificationService client)
-        {
-            var sourceAccountId = ExtractSourceAccountId(policyDetails.SourceArn);
-            var policyJson = $@"{{
+        var sourceAccountId = ExtractSourceAccountId(policyDetails.SourceArn);
+        var policyJson = $@"{{
     ""Version"" : ""2012-10-17"",
     ""Statement"" : [
         {{
@@ -48,16 +46,15 @@ namespace JustSaying.AwsTools.MessageHandling
         }}
     ]
 }}";
-            var setQueueAttributesRequest = new SetTopicAttributesRequest(policyDetails.SourceArn, "Policy", policyJson);
+        var setQueueAttributesRequest = new SetTopicAttributesRequest(policyDetails.SourceArn, "Policy", policyJson);
 
-            await client.SetTopicAttributesAsync(setQueueAttributesRequest).ConfigureAwait(false);
-        }
+        await client.SetTopicAttributesAsync(setQueueAttributesRequest).ConfigureAwait(false);
+    }
 
-        private static string ExtractSourceAccountId(string sourceArn)
-        {
-            //Sns Arn pattern: arn:aws:sns:region:account-id:topic
-            var match = Regex.Match(sourceArn, "(.*?):(.*?):(.*?):(.*?):(.*?):(.*?)", RegexOptions.None, Regex.InfiniteMatchTimeout);
-            return match.Groups[5].Value;
-        }
+    private static string ExtractSourceAccountId(string sourceArn)
+    {
+        //Sns Arn pattern: arn:aws:sns:region:account-id:topic
+        var match = Regex.Match(sourceArn, "(.*?):(.*?):(.*?):(.*?):(.*?):(.*?)", RegexOptions.None, Regex.InfiniteMatchTimeout);
+        return match.Groups[5].Value;
     }
 }

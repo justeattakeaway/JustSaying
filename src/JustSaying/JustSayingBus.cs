@@ -1,17 +1,10 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Interrogation;
-using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
@@ -19,284 +12,283 @@ using Microsoft.Extensions.Logging;
 
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
-namespace JustSaying
+namespace JustSaying;
+
+public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposable
 {
-    public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposable
+    private readonly ILogger _log;
+    private readonly ILoggerFactory _loggerFactory;
+
+    private readonly SemaphoreSlim _startLock = new SemaphoreSlim(1, 1);
+    private bool _busStarted;
+    private readonly List<Func<CancellationToken, Task>> _startupTasks;
+
+    private ConcurrentDictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings;
+    private SubscriptionGroupSettingsBuilder _defaultSubscriptionGroupSettings;
+    private readonly Dictionary<Type, IMessagePublisher> _publishersByType;
+
+    public IMessagingConfig Config { get; }
+
+    private IMessageMonitor _monitor;
+
+    private ISubscriptionGroup SubscriptionGroups { get; set; }
+    public IMessageSerializationRegister SerializationRegister { get; }
+
+    internal MiddlewareMap MiddlewareMap { get; }
+
+    public Task Completion { get; private set; }
+
+    public JustSayingBus(
+        IMessagingConfig config,
+        IMessageSerializationRegister serializationRegister,
+        ILoggerFactory loggerFactory,
+        IMessageMonitor monitor)
     {
-        private readonly ILogger _log;
-        private readonly ILoggerFactory _loggerFactory;
+        _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+        _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
 
-        private readonly SemaphoreSlim _startLock = new SemaphoreSlim(1, 1);
-        private bool _busStarted;
-        private readonly List<Func<CancellationToken, Task>> _startupTasks;
+        _startupTasks = new List<Func<CancellationToken, Task>>();
+        _log = _loggerFactory.CreateLogger("JustSaying");
 
-        private ConcurrentDictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings;
-        private SubscriptionGroupSettingsBuilder _defaultSubscriptionGroupSettings;
-        private readonly Dictionary<Type, IMessagePublisher> _publishersByType;
+        Config = config;
+        SerializationRegister = serializationRegister;
+        MiddlewareMap = new MiddlewareMap();
 
-        public IMessagingConfig Config { get; }
+        _publishersByType = new Dictionary<Type, IMessagePublisher>();
+        _subscriptionGroupSettings =
+            new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
+        _defaultSubscriptionGroupSettings = new SubscriptionGroupSettingsBuilder();
+    }
 
-        private IMessageMonitor _monitor;
-
-        private ISubscriptionGroup SubscriptionGroups { get; set; }
-        public IMessageSerializationRegister SerializationRegister { get; }
-
-        internal MiddlewareMap MiddlewareMap { get; }
-
-        public Task Completion { get; private set; }
-
-        public JustSayingBus(
-            IMessagingConfig config,
-            IMessageSerializationRegister serializationRegister,
-            ILoggerFactory loggerFactory,
-            IMessageMonitor monitor)
+    public void AddQueue(string subscriptionGroup, ISqsQueue queue)
+    {
+        if (string.IsNullOrWhiteSpace(subscriptionGroup))
         {
-            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
-            _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
-
-            _startupTasks = new List<Func<CancellationToken, Task>>();
-            _log = _loggerFactory.CreateLogger("JustSaying");
-
-            Config = config;
-            SerializationRegister = serializationRegister;
-            MiddlewareMap = new MiddlewareMap();
-
-            _publishersByType = new Dictionary<Type, IMessagePublisher>();
-            _subscriptionGroupSettings =
-                new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
-            _defaultSubscriptionGroupSettings = new SubscriptionGroupSettingsBuilder();
+            throw new ArgumentException("Cannot be null or empty.", nameof(subscriptionGroup));
         }
 
-        public void AddQueue(string subscriptionGroup, ISqsQueue queue)
+        if (queue == null)
         {
-            if (string.IsNullOrWhiteSpace(subscriptionGroup))
+            throw new ArgumentNullException(nameof(queue));
+        }
+
+        SubscriptionGroupConfigBuilder builder = _subscriptionGroupSettings.GetOrAdd(
+            subscriptionGroup,
+            _ => new SubscriptionGroupConfigBuilder(subscriptionGroup));
+
+        builder.AddQueue(queue);
+    }
+
+    internal void AddStartupTask(Func<CancellationToken, Task> task)
+    {
+        _startupTasks.Add(task);
+    }
+
+    public void SetGroupSettings(
+        SubscriptionGroupSettingsBuilder defaults,
+        IDictionary<string, SubscriptionGroupConfigBuilder> settings)
+    {
+        _defaultSubscriptionGroupSettings = defaults;
+        _subscriptionGroupSettings =
+            new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(settings);
+    }
+
+    public void AddMessageMiddleware<T>(string queueName, HandleMessageMiddleware middleware)
+        where T : Message
+    {
+        SerializationRegister.AddSerializer<T>();
+        MiddlewareMap.Add<T>(queueName, middleware);
+    }
+
+    public void AddMessagePublisher<T>(IMessagePublisher messagePublisher) where T : Message
+    {
+        if (Config.PublishFailureReAttempts == 0)
+        {
+            _log.LogWarning(
+                "You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages.");
+        }
+
+        _publishersByType[typeof(T)] = messagePublisher;
+    }
+
+    public async Task StartAsync(CancellationToken stoppingToken)
+    {
+        if (stoppingToken.IsCancellationRequested) return;
+
+        // Double check lock to ensure single-start
+        if (!_busStarted)
+        {
+            await _startLock.WaitAsync(stoppingToken).ConfigureAwait(false);
+            try
             {
-                throw new ArgumentException("Cannot be null or empty.", nameof(subscriptionGroup));
-            }
-
-            if (queue == null)
-            {
-                throw new ArgumentNullException(nameof(queue));
-            }
-
-            SubscriptionGroupConfigBuilder builder = _subscriptionGroupSettings.GetOrAdd(
-                subscriptionGroup,
-                _ => new SubscriptionGroupConfigBuilder(subscriptionGroup));
-
-            builder.AddQueue(queue);
-        }
-
-        internal void AddStartupTask(Func<CancellationToken, Task> task)
-        {
-            _startupTasks.Add(task);
-        }
-
-        public void SetGroupSettings(
-            SubscriptionGroupSettingsBuilder defaults,
-            IDictionary<string, SubscriptionGroupConfigBuilder> settings)
-        {
-            _defaultSubscriptionGroupSettings = defaults;
-            _subscriptionGroupSettings =
-                new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(settings);
-        }
-
-        public void AddMessageMiddleware<T>(string queueName, HandleMessageMiddleware middleware)
-            where T : Message
-        {
-            SerializationRegister.AddSerializer<T>();
-            MiddlewareMap.Add<T>(queueName, middleware);
-        }
-
-        public void AddMessagePublisher<T>(IMessagePublisher messagePublisher) where T : Message
-        {
-            if (Config.PublishFailureReAttempts == 0)
-            {
-                _log.LogWarning(
-                    "You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages.");
-            }
-
-            _publishersByType[typeof(T)] = messagePublisher;
-        }
-
-        public async Task StartAsync(CancellationToken stoppingToken)
-        {
-            if (stoppingToken.IsCancellationRequested) return;
-
-            // Double check lock to ensure single-start
-            if (!_busStarted)
-            {
-                await _startLock.WaitAsync(stoppingToken).ConfigureAwait(false);
-                try
+                if (!_busStarted)
                 {
-                    if (!_busStarted)
+                    using (_log.Time("Starting bus"))
                     {
-                        using (_log.Time("Starting bus"))
+                        // We want consumers to wait for the startup tasks, but not the run
+                        using (_log.Time("Running {TaskCount} startup tasks", _startupTasks.Count))
                         {
-                            // We want consumers to wait for the startup tasks, but not the run
-                            using (_log.Time("Running {TaskCount} startup tasks", _startupTasks.Count))
+                            foreach (var startupTask in _startupTasks)
                             {
-                                foreach (var startupTask in _startupTasks)
-                                {
-                                    await startupTask.Invoke(stoppingToken).ConfigureAwait(false);
-                                }
+                                await startupTask.Invoke(stoppingToken).ConfigureAwait(false);
                             }
-
-                            Completion = RunImplAsync(stoppingToken);
-                            _busStarted = true;
                         }
+
+                        Completion = RunImplAsync(stoppingToken);
+                        _busStarted = true;
                     }
                 }
-                finally
-                {
-                    _startLock.Release();
-                }
+            }
+            finally
+            {
+                _startLock.Release();
             }
         }
+    }
 
-        private async Task RunImplAsync(CancellationToken stoppingToken)
+    private async Task RunImplAsync(CancellationToken stoppingToken)
+    {
+        var dispatcher = new MessageDispatcher(
+            SerializationRegister,
+            _monitor,
+            MiddlewareMap,
+            _loggerFactory);
+
+        var subscriptionGroupFactory = new SubscriptionGroupFactory(
+            dispatcher,
+            _monitor,
+            _loggerFactory);
+
+        SubscriptionGroups =
+            subscriptionGroupFactory.Create(_defaultSubscriptionGroupSettings,
+                _subscriptionGroupSettings);
+
+        _log.LogInformation("Starting bus with settings: {@Response}", SubscriptionGroups.Interrogate());
+
+        try
         {
-            var dispatcher = new MessageDispatcher(
-                SerializationRegister,
-                _monitor,
-                MiddlewareMap,
-                _loggerFactory);
+            await SubscriptionGroups.RunAsync(stoppingToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            _log.LogDebug("Suppressed an exception of type {ExceptionType} which likely " +
+                          "means the bus is shutting down.", nameof(OperationCanceledException));
+            // Don't bubble cancellation up to Completion task
+        }
+    }
 
-            var subscriptionGroupFactory = new SubscriptionGroupFactory(
-                dispatcher,
-                _monitor,
-                _loggerFactory);
+    public async Task PublishAsync(Message message, CancellationToken cancellationToken)
+        => await PublishAsync(message, null, cancellationToken).ConfigureAwait(false);
 
-            SubscriptionGroups =
-                subscriptionGroupFactory.Create(_defaultSubscriptionGroupSettings,
-                    _subscriptionGroupSettings);
-
-            _log.LogInformation("Starting bus with settings: {@Response}", SubscriptionGroups.Interrogate());
-
-            try
-            {
-                await SubscriptionGroups.RunAsync(stoppingToken).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                _log.LogDebug("Suppressed an exception of type {ExceptionType} which likely " +
-                    "means the bus is shutting down.", nameof(OperationCanceledException));
-                // Don't bubble cancellation up to Completion task
-            }
+    public async Task PublishAsync(
+        Message message,
+        PublishMetadata metadata,
+        CancellationToken cancellationToken)
+    {
+        if (!_busStarted && _startupTasks.Count > 0)
+        {
+            throw new InvalidOperationException("There are pending startup tasks that must be executed by calling StartAsync before messages may be published.");
         }
 
-        public async Task PublishAsync(Message message, CancellationToken cancellationToken)
-            => await PublishAsync(message, null, cancellationToken).ConfigureAwait(false);
+        IMessagePublisher publisher = GetPublisherForMessage(message);
+        await PublishAsync(publisher, message, metadata, 0, cancellationToken)
+            .ConfigureAwait(false);
+    }
 
-        public async Task PublishAsync(
-            Message message,
-            PublishMetadata metadata,
-            CancellationToken cancellationToken)
+    private IMessagePublisher GetPublisherForMessage(Message message)
+    {
+        if (_publishersByType.Count == 0)
         {
-            if (!_busStarted && _startupTasks.Count > 0)
-            {
-                throw new InvalidOperationException("There are pending startup tasks that must be executed by calling StartAsync before messages may be published.");
-            }
-
-            IMessagePublisher publisher = GetPublisherForMessage(message);
-            await PublishAsync(publisher, message, metadata, 0, cancellationToken)
-                .ConfigureAwait(false);
+            var errorMessage =
+                "Error publishing message, no publishers registered. Has the bus been started?";
+            _log.LogError(errorMessage);
+            throw new InvalidOperationException(errorMessage);
         }
 
-        private IMessagePublisher GetPublisherForMessage(Message message)
+        var messageType = message.GetType();
+
+        var publishersFound =
+            _publishersByType.TryGetValue(messageType, out var publisher);
+        if (!publishersFound)
         {
-            if (_publishersByType.Count == 0)
-            {
-                var errorMessage =
-                    "Error publishing message, no publishers registered. Has the bus been started?";
-                _log.LogError(errorMessage);
-                throw new InvalidOperationException(errorMessage);
-            }
+            _log.LogError(
+                "Error publishing message. No publishers registered for message type '{MessageType}'.",
+                messageType);
 
-            var messageType = message.GetType();
-
-            var publishersFound =
-                _publishersByType.TryGetValue(messageType, out var publisher);
-            if (!publishersFound)
-            {
-                _log.LogError(
-                    "Error publishing message. No publishers registered for message type '{MessageType}'.",
-                    messageType);
-
-                throw new InvalidOperationException(
-                    $"Error publishing message, no publishers registered for message type '{messageType}'.");
-            }
-
-            return publisher;
+            throw new InvalidOperationException(
+                $"Error publishing message, no publishers registered for message type '{messageType}'.");
         }
 
-        private async Task PublishAsync(
-            IMessagePublisher publisher,
-            Message message,
-            PublishMetadata metadata,
-            int attemptCount,
-            CancellationToken cancellationToken)
+        return publisher;
+    }
+
+    private async Task PublishAsync(
+        IMessagePublisher publisher,
+        Message message,
+        PublishMetadata metadata,
+        int attemptCount,
+        CancellationToken cancellationToken)
+    {
+        attemptCount++;
+        try
         {
-            attemptCount++;
-            try
+            using (_monitor.MeasurePublish())
             {
-                using (_monitor.MeasurePublish())
-                {
-                    await publisher.PublishAsync(message, metadata, cancellationToken)
-                        .ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                var messageType = message.GetType();
-
-                if (attemptCount >= Config.PublishFailureReAttempts)
-                {
-                    _monitor.IssuePublishingMessage();
-
-                    _log.LogError(
-                        ex,
-                        "Failed to publish a message of type '{MessageType}'. Halting after attempt number {PublishAttemptCount}.",
-                        messageType,
-                        attemptCount);
-
-                    throw;
-                }
-
-                _log.LogWarning(
-                    ex,
-                    "Failed to publish a message of type '{MessageType}'. Retrying after attempt number {PublishAttemptCount} of {PublishFailureReattempts}.",
-                    messageType,
-                    attemptCount,
-                    Config.PublishFailureReAttempts);
-
-                var delayForAttempt =
-                    TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
-                await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);
-
-                await PublishAsync(publisher, message, metadata, attemptCount, cancellationToken)
+                await publisher.PublishAsync(message, metadata, cancellationToken)
                     .ConfigureAwait(false);
             }
         }
-
-        public InterrogationResult Interrogate()
+        catch (Exception ex)
         {
-            var publisherDescriptions =
-                _publishersByType.Select(publisher =>
-                    publisher.Key.Name).ToArray();
+            var messageType = message.GetType();
 
-            return new InterrogationResult(new
+            if (attemptCount >= Config.PublishFailureReAttempts)
             {
-                Config.Region,
-                Middleware = MiddlewareMap.Interrogate(),
-                PublishedMessageTypes = publisherDescriptions,
-                SubscriptionGroups = SubscriptionGroups?.Interrogate()
-            });
-        }
+                _monitor.IssuePublishingMessage();
 
-        public void Dispose()
-        {
-            _startLock?.Dispose();
-            _loggerFactory?.Dispose();
+                _log.LogError(
+                    ex,
+                    "Failed to publish a message of type '{MessageType}'. Halting after attempt number {PublishAttemptCount}.",
+                    messageType,
+                    attemptCount);
+
+                throw;
+            }
+
+            _log.LogWarning(
+                ex,
+                "Failed to publish a message of type '{MessageType}'. Retrying after attempt number {PublishAttemptCount} of {PublishFailureReattempts}.",
+                messageType,
+                attemptCount,
+                Config.PublishFailureReAttempts);
+
+            var delayForAttempt =
+                TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
+            await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);
+
+            await PublishAsync(publisher, message, metadata, attemptCount, cancellationToken)
+                .ConfigureAwait(false);
         }
+    }
+
+    public InterrogationResult Interrogate()
+    {
+        var publisherDescriptions =
+            _publishersByType.Select(publisher =>
+                publisher.Key.Name).ToArray();
+
+        return new InterrogationResult(new
+        {
+            Config.Region,
+            Middleware = MiddlewareMap.Interrogate(),
+            PublishedMessageTypes = publisherDescriptions,
+            SubscriptionGroups = SubscriptionGroups?.Interrogate()
+        });
+    }
+
+    public void Dispose()
+    {
+        _startLock?.Dispose();
+        _loggerFactory?.Dispose();
     }
 }

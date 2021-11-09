@@ -1,47 +1,43 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using JustSaying.Messaging.Monitoring;
 
-namespace JustSaying.Messaging.Middleware.ErrorHandling
+namespace JustSaying.Messaging.Middleware.ErrorHandling;
+
+/// <summary>
+/// A middleware that calls members of an <see cref="IMessageMonitor"/> at correct times during message processing.
+/// This middleware calls HandleException(Type messageType), HandleError(Exception ex, Amazon.SQS.Model.Message message),
+/// and Handled(JustSaying.Models.Message message).
+/// </summary>
+public sealed class ErrorHandlerMiddleware : MiddlewareBase<HandleMessageContext, bool>
 {
+    private readonly IMessageMonitor _monitor;
+
     /// <summary>
-    /// A middleware that calls members of an <see cref="IMessageMonitor"/> at correct times during message processing.
-    /// This middleware calls HandleException(Type messageType), HandleError(Exception ex, Amazon.SQS.Model.Message message),
-    /// and Handled(JustSaying.Models.Message message).
+    /// Constructs an <see cref="ErrorHandlerMiddleware"/>.
     /// </summary>
-    public sealed class ErrorHandlerMiddleware : MiddlewareBase<HandleMessageContext, bool>
+    /// <param name="monitor">The <see cref="IMessageMonitor"/> to use to record errors.</param>
+    /// <exception cref="ArgumentNullException">When the <see cref="IMessageMonitor"/> is null.</exception>
+    public ErrorHandlerMiddleware(IMessageMonitor monitor)
     {
-        private readonly IMessageMonitor _monitor;
+        _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
+    }
 
-        /// <summary>
-        /// Constructs an <see cref="ErrorHandlerMiddleware"/>.
-        /// </summary>
-        /// <param name="monitor">The <see cref="IMessageMonitor"/> to use to record errors.</param>
-        /// <exception cref="ArgumentNullException">When the <see cref="IMessageMonitor"/> is null.</exception>
-        public ErrorHandlerMiddleware(IMessageMonitor monitor)
+    protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
+    {
+        try
         {
-            _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
+            return await func(stoppingToken).ConfigureAwait(false);
         }
-
-        protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
+        catch (Exception e)
         {
-            try
-            {
-                return await func(stoppingToken).ConfigureAwait(false);
-            }
-            catch (Exception e)
-            {
-                _monitor.HandleException(context.MessageType);
-                _monitor.HandleError(e, context.RawMessage);
+            _monitor.HandleException(context.MessageType);
+            _monitor.HandleError(e, context.RawMessage);
 
-                context.SetException(e);
-                return false;
-            }
-            finally
-            {
-                _monitor.Handled(context.Message);
-            }
+            context.SetException(e);
+            return false;
+        }
+        finally
+        {
+            _monitor.Handled(context.Message);
         }
     }
 }

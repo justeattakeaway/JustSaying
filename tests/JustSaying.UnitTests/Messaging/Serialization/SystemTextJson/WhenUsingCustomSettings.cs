@@ -2,48 +2,45 @@ using System.Text.Json;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Newtonsoft.Json;
-using Shouldly;
-using Xunit;
 
-namespace JustSaying.UnitTests.Messaging.Serialization.SystemTextJson
+namespace JustSaying.UnitTests.Messaging.Serialization.SystemTextJson;
+
+public class WhenUsingCustomSettings : XBehaviourTest<SystemTextJsonSerializer>
 {
-    public class WhenUsingCustomSettings : XBehaviourTest<SystemTextJsonSerializer>
+    private MessageWithEnum _messageOut;
+    private string _jsonMessage;
+
+    protected override SystemTextJsonSerializer CreateSystemUnderTest()
     {
-        private MessageWithEnum _messageOut;
-        private string _jsonMessage;
+        return new SystemTextJsonSerializer(new JsonSerializerOptions());
+    }
 
-        protected override SystemTextJsonSerializer CreateSystemUnderTest()
-        {
-            return new SystemTextJsonSerializer(new JsonSerializerOptions());
-        }
+    protected override void Given()
+    {
+        _messageOut = new MessageWithEnum() { EnumVal = Value.Two };
+    }
 
-        protected override void Given()
-        {
-            _messageOut = new MessageWithEnum() { EnumVal = Value.Two };
-        }
+    public string GetMessageInContext(MessageWithEnum message)
+    {
+        var context = new { Subject = message.GetType().Name, Message = SystemUnderTest.Serialize(message, false, message.GetType().Name) };
+        return JsonConvert.SerializeObject(context);
+    }
 
-        public string GetMessageInContext(MessageWithEnum message)
-        {
-            var context = new { Subject = message.GetType().Name, Message = SystemUnderTest.Serialize(message, false, message.GetType().Name) };
-            return JsonConvert.SerializeObject(context);
-        }
+    protected override void WhenAction()
+    {
+        _jsonMessage = GetMessageInContext(_messageOut);
+    }
 
-        protected override void WhenAction()
-        {
-            _jsonMessage = GetMessageInContext(_messageOut);
-        }
+    [Fact]
+    public void MessageHasBeenCreated()
+    {
+        _messageOut.ShouldNotBeNull();
+    }
 
-        [Fact]
-        public void MessageHasBeenCreated()
-        {
-            _messageOut.ShouldNotBeNull();
-        }
-
-        [Fact]
-        public void EnumsAreNotRepresentedAsStrings()
-        {
-            _jsonMessage.ShouldContain("EnumVal");
-            _jsonMessage.ShouldNotContain("Two");
-        }
+    [Fact]
+    public void EnumsAreNotRepresentedAsStrings()
+    {
+        _jsonMessage.ShouldContain("EnumVal");
+        _jsonMessage.ShouldNotContain("Two");
     }
 }

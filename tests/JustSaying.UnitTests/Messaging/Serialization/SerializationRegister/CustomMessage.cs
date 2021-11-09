@@ -1,8 +1,7 @@
 using JustSaying.Models;
 
-namespace JustSaying.UnitTests.Messaging.Serialization.SerializationRegister
+namespace JustSaying.UnitTests.Messaging.Serialization.SerializationRegister;
+
+public class CustomMessage : Message
 {
-    public class CustomMessage : Message
-    {
-    }
 }

@@ -1,69 +1,67 @@
-using System;
 using JustSaying.Naming;
 
-namespace JustSaying.AwsTools.QueueCreation
+namespace JustSaying.AwsTools.QueueCreation;
+
+public class SqsBasicConfiguration
 {
-    public class SqsBasicConfiguration
+    public TimeSpan MessageRetention { get; set; }
+    public TimeSpan ErrorQueueRetentionPeriod { get; set; }
+    public TimeSpan VisibilityTimeout { get; set; }
+    public TimeSpan DeliveryDelay { get; set; }
+    public int RetryCountBeforeSendingToErrorQueue { get; set; }
+    public bool ErrorQueueOptOut { get; set; }
+    public ServerSideEncryption ServerSideEncryption { get; set; }
+    public string QueueName { get; set; }
+
+    public void ApplyQueueNamingConvention<T>(IQueueNamingConvention namingConvention)
     {
-        public TimeSpan MessageRetention { get; set; }
-        public TimeSpan ErrorQueueRetentionPeriod { get; set; }
-        public TimeSpan VisibilityTimeout { get; set; }
-        public TimeSpan DeliveryDelay { get; set; }
-        public int RetryCountBeforeSendingToErrorQueue { get; set; }
-        public bool ErrorQueueOptOut { get; set; }
-        public ServerSideEncryption ServerSideEncryption { get; set; }
-        public string QueueName { get; set; }
+        QueueName = namingConvention.Apply<T>(QueueName);
+    }
 
-        public void ApplyQueueNamingConvention<T>(IQueueNamingConvention namingConvention)
+    public SqsBasicConfiguration()
+    {
+        MessageRetention = JustSayingConstants.DefaultRetentionPeriod;
+        ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod;
+        VisibilityTimeout = JustSayingConstants.DefaultVisibilityTimeout;
+        RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
+        DeliveryDelay = JustSayingConstants.MinimumDeliveryDelay;
+    }
+
+    public void Validate()
+    {
+        if (MessageRetention < JustSayingConstants.MinimumRetentionPeriod ||
+            MessageRetention > JustSayingConstants.MaximumRetentionPeriod)
         {
-            QueueName = namingConvention.Apply<T>(QueueName);
+            throw new ConfigurationErrorsException(
+                $"Invalid configuration. {nameof(MessageRetention)} must be between {JustSayingConstants.MinimumRetentionPeriod} and {JustSayingConstants.MaximumRetentionPeriod}.");
         }
 
-        public SqsBasicConfiguration()
+        if (ErrorQueueRetentionPeriod < JustSayingConstants.MinimumRetentionPeriod ||
+            ErrorQueueRetentionPeriod > JustSayingConstants.MaximumRetentionPeriod)
         {
-            MessageRetention = JustSayingConstants.DefaultRetentionPeriod;
-            ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod;
-            VisibilityTimeout = JustSayingConstants.DefaultVisibilityTimeout;
-            RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
-            DeliveryDelay = JustSayingConstants.MinimumDeliveryDelay;
+            throw new ConfigurationErrorsException(
+                $"Invalid configuration. {nameof(ErrorQueueRetentionPeriod)} must be between {JustSayingConstants.MinimumRetentionPeriod} and {JustSayingConstants.MaximumRetentionPeriod}.");
         }
 
-        public void Validate()
+        if (DeliveryDelay < JustSayingConstants.MinimumDeliveryDelay ||
+            DeliveryDelay > JustSayingConstants.MaximumDeliveryDelay)
         {
-            if (MessageRetention < JustSayingConstants.MinimumRetentionPeriod ||
-                MessageRetention > JustSayingConstants.MaximumRetentionPeriod)
-            {
-                throw new ConfigurationErrorsException(
-                    $"Invalid configuration. {nameof(MessageRetention)} must be between {JustSayingConstants.MinimumRetentionPeriod} and {JustSayingConstants.MaximumRetentionPeriod}.");
-            }
-
-            if (ErrorQueueRetentionPeriod < JustSayingConstants.MinimumRetentionPeriod ||
-                ErrorQueueRetentionPeriod > JustSayingConstants.MaximumRetentionPeriod)
-            {
-                throw new ConfigurationErrorsException(
-                    $"Invalid configuration. {nameof(ErrorQueueRetentionPeriod)} must be between {JustSayingConstants.MinimumRetentionPeriod} and {JustSayingConstants.MaximumRetentionPeriod}.");
-            }
-
-            if (DeliveryDelay < JustSayingConstants.MinimumDeliveryDelay ||
-                DeliveryDelay > JustSayingConstants.MaximumDeliveryDelay)
-            {
-                throw new ConfigurationErrorsException(
-                    $"Invalid configuration. {nameof(DeliveryDelay)} must be between {JustSayingConstants.MinimumDeliveryDelay} and {JustSayingConstants.MaximumDeliveryDelay}.");
-            }
-
-            if (string.IsNullOrWhiteSpace(QueueName))
-            {
-                throw new ConfigurationErrorsException("Invalid configuration. QueueName must be provided.");
-            }
-
-            OnValidating();
+            throw new ConfigurationErrorsException(
+                $"Invalid configuration. {nameof(DeliveryDelay)} must be between {JustSayingConstants.MinimumDeliveryDelay} and {JustSayingConstants.MaximumDeliveryDelay}.");
         }
 
-        /// <summary>
-        /// Allows a derived class to implement custom validation.
-        /// </summary>
-        protected virtual void OnValidating()
+        if (string.IsNullOrWhiteSpace(QueueName))
         {
+            throw new ConfigurationErrorsException("Invalid configuration. QueueName must be provided.");
         }
+
+        OnValidating();
+    }
+
+    /// <summary>
+    /// Allows a derived class to implement custom validation.
+    /// </summary>
+    protected virtual void OnValidating()
+    {
     }
 }

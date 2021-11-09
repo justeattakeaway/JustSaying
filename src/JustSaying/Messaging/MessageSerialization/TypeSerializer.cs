@@ -1,16 +1,13 @@
-using System;
+namespace JustSaying.Messaging.MessageSerialization;
 
-namespace JustSaying.Messaging.MessageSerialization
+public class TypeSerializer
 {
-    public class TypeSerializer
-    {
-        public Type Type { get; private set; }
-        public IMessageSerializer Serializer { get; private set; }
+    public Type Type { get; private set; }
+    public IMessageSerializer Serializer { get; private set; }
 
-        public TypeSerializer(Type type, IMessageSerializer serializer)
-        {
-            Type = type;
-            Serializer = serializer;
-        }
+    public TypeSerializer(Type type, IMessageSerializer serializer)
+    {
+        Type = type;
+        Serializer = serializer;
     }
 }

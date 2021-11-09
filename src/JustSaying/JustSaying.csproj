@@ -19,4 +19,7 @@
     <PackageReference Include="System.Text.Json" Version="4.6.0" />
     <PackageReference Include="System.Threading.Channels" Version="4.5.0" />
   </ItemGroup>
+  <ItemGroup>
+      <Using Remove="System.Net.Http" />
+    </ItemGroup>
 </Project>

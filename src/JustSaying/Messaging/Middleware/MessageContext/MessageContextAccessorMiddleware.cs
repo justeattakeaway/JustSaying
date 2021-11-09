@@ -1,38 +1,34 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 
-namespace JustSaying.Messaging.Middleware.MessageContext
+namespace JustSaying.Messaging.Middleware.MessageContext;
+
+/// <summary>
+/// A middleware that sets context that is available in message handlers by resolving an `IMessageContextAccessor`.
+/// </summary>
+public sealed class MessageContextAccessorMiddleware : MiddlewareBase<HandleMessageContext, bool>
 {
+    private readonly IMessageContextAccessor _messageContextAccessor;
+
     /// <summary>
-    /// A middleware that sets context that is available in message handlers by resolving an `IMessageContextAccessor`.
+    /// Creates an instance of <see cref="MessageContextAccessorMiddleware"/>.
     /// </summary>
-    public sealed class MessageContextAccessorMiddleware : MiddlewareBase<HandleMessageContext, bool>
+    /// <param name="messageContextAccessor">The <see cref="IMessageContextAccessor"/> to set.</param>
+    public MessageContextAccessorMiddleware(IMessageContextAccessor messageContextAccessor)
     {
-        private readonly IMessageContextAccessor _messageContextAccessor;
+        _messageContextAccessor = messageContextAccessor ?? throw new ArgumentNullException(nameof(messageContextAccessor));
+    }
 
-        /// <summary>
-        /// Creates an instance of <see cref="MessageContextAccessorMiddleware"/>.
-        /// </summary>
-        /// <param name="messageContextAccessor">The <see cref="IMessageContextAccessor"/> to set.</param>
-        public MessageContextAccessorMiddleware(IMessageContextAccessor messageContextAccessor)
+    protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
+    {
+        _messageContextAccessor.MessageContext = new MessageHandling.MessageContext(context.RawMessage, context.QueueUri, context.MessageAttributes);
+
+        try
         {
-            _messageContextAccessor = messageContextAccessor ?? throw new ArgumentNullException(nameof(messageContextAccessor));
+            return await func(stoppingToken).ConfigureAwait(false);
         }
-
-        protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
+        finally
         {
-            _messageContextAccessor.MessageContext = new MessageHandling.MessageContext(context.RawMessage, context.QueueUri, context.MessageAttributes);
-
-            try
-            {
-                return await func(stoppingToken).ConfigureAwait(false);
-            }
-            finally
-            {
-                _messageContextAccessor.MessageContext = null;
-            }
+            _messageContextAccessor.MessageContext = null;
         }
     }
 }

@@ -1,17 +1,15 @@
-using System;
-using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 
-namespace JustSaying.AwsTools.MessageHandling
-{
-    internal static class SqsPolicy
-    {
-        internal static async Task SaveAsync(SqsPolicyDetails policyDetails, IAmazonSQS client)
-        {
-            var topicArnWildcard = CreateTopicArnWildcard(policyDetails.SourceArn);
+namespace JustSaying.AwsTools.MessageHandling;
 
-            var policyJson = $@"{{
+internal static class SqsPolicy
+{
+    internal static async Task SaveAsync(SqsPolicyDetails policyDetails, IAmazonSQS client)
+    {
+        var topicArnWildcard = CreateTopicArnWildcard(policyDetails.SourceArn);
+
+        var policyJson = $@"{{
     ""Version"" : ""2012-10-17"",
     ""Statement"" : [
         {{
@@ -31,33 +29,32 @@ namespace JustSaying.AwsTools.MessageHandling
     ]
 }}";
 
-            var setQueueAttributesRequest = new SetQueueAttributesRequest
-            {
-                QueueUrl = policyDetails.QueueUri.AbsoluteUri,
-                Attributes =
-                {
-                    ["Policy"] = policyJson
-                }
-            };
-
-            await client.SetQueueAttributesAsync(setQueueAttributesRequest).ConfigureAwait(false);
-        }
-
-        private static string CreateTopicArnWildcard(string topicArn)
+        var setQueueAttributesRequest = new SetQueueAttributesRequest
         {
-            if (string.IsNullOrWhiteSpace(topicArn))
+            QueueUrl = policyDetails.QueueUri.AbsoluteUri,
+            Attributes =
             {
-                // todo should not get here?
-                return "*";
+                ["Policy"] = policyJson
             }
+        };
 
-            var index = topicArn.LastIndexOf(":", StringComparison.OrdinalIgnoreCase);
-            if (index > 0)
-            {
-                topicArn = topicArn.Substring(0, index + 1);
-            }
+        await client.SetQueueAttributesAsync(setQueueAttributesRequest).ConfigureAwait(false);
+    }
 
-            return topicArn + "*";
+    private static string CreateTopicArnWildcard(string topicArn)
+    {
+        if (string.IsNullOrWhiteSpace(topicArn))
+        {
+            // todo should not get here?
+            return "*";
         }
+
+        var index = topicArn.LastIndexOf(":", StringComparison.OrdinalIgnoreCase);
+        if (index > 0)
+        {
+            topicArn = topicArn.Substring(0, index + 1);
+        }
+
+        return topicArn + "*";
     }
 }

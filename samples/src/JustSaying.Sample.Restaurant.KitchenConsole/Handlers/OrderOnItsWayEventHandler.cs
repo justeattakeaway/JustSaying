@@ -1,37 +1,35 @@
 using System.Security.Cryptography;
-using System.Threading.Tasks;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Sample.Restaurant.Models;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Sample.Restaurant.KitchenConsole.Handlers
+namespace JustSaying.Sample.Restaurant.KitchenConsole.Handlers;
+
+public class OrderOnItsWayEventHandler : IHandlerAsync<OrderOnItsWayEvent>
 {
-    public class OrderOnItsWayEventHandler : IHandlerAsync<OrderOnItsWayEvent>
+    private readonly IMessagePublisher _publisher;
+    private readonly ILogger<OrderOnItsWayEventHandler> _logger;
+
+    public OrderOnItsWayEventHandler(IMessagePublisher publisher, ILogger<OrderOnItsWayEventHandler> logger)
     {
-        private readonly IMessagePublisher _publisher;
-        private readonly ILogger<OrderOnItsWayEventHandler> _logger;
+        _publisher = publisher;
+        _logger = logger;
+    }
 
-        public OrderOnItsWayEventHandler(IMessagePublisher publisher, ILogger<OrderOnItsWayEventHandler> logger)
+    public async Task<bool> Handle(OrderOnItsWayEvent message)
+    {
+        await Task.Delay(RandomNumberGenerator.GetInt32(50, 100));
+
+        var orderDeliveredEvent = new OrderDeliveredEvent()
         {
-            _publisher = publisher;
-            _logger = logger;
-        }
+            OrderId = message.OrderId
+        };
 
-        public async Task<bool> Handle(OrderOnItsWayEvent message)
-        {
-            await Task.Delay(RandomNumberGenerator.GetInt32(50, 100));
+        _logger.LogInformation("Order {OrderId} is on its way!", message.OrderId);
 
-            var orderDeliveredEvent = new OrderDeliveredEvent()
-            {
-                OrderId = message.OrderId
-            };
+        await _publisher.PublishAsync(orderDeliveredEvent);
 
-            _logger.LogInformation("Order {OrderId} is on its way!", message.OrderId);
-
-            await _publisher.PublishAsync(orderDeliveredEvent);
-
-            return true;
-        }
+        return true;
     }
 }

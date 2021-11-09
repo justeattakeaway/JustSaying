@@ -1,15 +1,12 @@
-using System.Threading;
+namespace JustSaying.Messaging.MessageHandling;
 
-namespace JustSaying.Messaging.MessageHandling
+public class MessageContextAccessor : IMessageContextReader, IMessageContextAccessor
 {
-    public class MessageContextAccessor : IMessageContextReader, IMessageContextAccessor
-    {
-        private static readonly AsyncLocal<MessageContext> Context = new AsyncLocal<MessageContext>();
+    private static readonly AsyncLocal<MessageContext> Context = new AsyncLocal<MessageContext>();
 
-        public MessageContext MessageContext
-        {
-            get => Context.Value;
-            set => Context.Value = value;
-        }
+    public MessageContext MessageContext
+    {
+        get => Context.Value;
+        set => Context.Value = value;
     }
 }

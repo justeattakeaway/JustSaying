@@ -1,61 +1,57 @@
-using System;
-using System.Threading.Tasks;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
-using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.AwsTools
+namespace JustSaying.IntegrationTests.Fluent.AwsTools;
+
+public class WhenUsingSnsServerSideEncryption : IntegrationTestBase
 {
-    public class WhenUsingSnsServerSideEncryption : IntegrationTestBase
+    public WhenUsingSnsServerSideEncryption(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
-        public WhenUsingSnsServerSideEncryption(ITestOutputHelper outputHelper)
-            : base(outputHelper)
-        {
-        }
+    }
 
-        [NotSimulatorFact]
-        public async Task Then_The_Message_Is_Published()
-        {
-            // Arrange
-            var completionSource = new TaskCompletionSource<object>();
-            var handler = CreateHandler<SimpleMessage>(completionSource);
+    [NotSimulatorFact]
+    public async Task Then_The_Message_Is_Published()
+    {
+        // Arrange
+        var completionSource = new TaskCompletionSource<object>();
+        var handler = CreateHandler<SimpleMessage>(completionSource);
 
-            string masterSnsKeyId = JustSayingConstants.DefaultSnsAttributeEncryptionKeyId;
+        string masterSnsKeyId = JustSayingConstants.DefaultSnsAttributeEncryptionKeyId;
 
-            var services = GivenJustSaying()
-                .ConfigureJustSaying(
-                    (builder) => builder.Publications((options) => options.WithQueue<SimpleMessage>(
+        var services = GivenJustSaying()
+            .ConfigureJustSaying(
+                (builder) => builder.Publications((options) => options.WithQueue<SimpleMessage>(
                         (queue) => queue.WithWriteConfiguration(
                             (config) => config.WithQueueName(UniqueName)))
-                        .WithTopic<SimpleMessage>(topic => topic.WithWriteConfiguration(writeConfig => writeConfig.Encryption = new ServerSideEncryption { KmsMasterKeyId = masterSnsKeyId }))))
-                .ConfigureJustSaying(
-                    (builder) => builder.Subscriptions((options) => options.ForTopic<SimpleMessage>(topic => topic.WithName(UniqueName))))
-                .AddSingleton(handler);
+                    .WithTopic<SimpleMessage>(topic => topic.WithWriteConfiguration(writeConfig => writeConfig.Encryption = new ServerSideEncryption { KmsMasterKeyId = masterSnsKeyId }))))
+            .ConfigureJustSaying(
+                (builder) => builder.Subscriptions((options) => options.ForTopic<SimpleMessage>(topic => topic.WithName(UniqueName))))
+            .AddSingleton(handler);
 
-            string content = Guid.NewGuid().ToString();
+        string content = Guid.NewGuid().ToString();
 
-            var message = new SimpleMessage
+        var message = new SimpleMessage
+        {
+            Content = content
+        };
+
+        await WhenAsync(
+            services,
+            async (publisher, listener, cancellationToken) =>
             {
-                Content = content
-            };
+                await listener.StartAsync(cancellationToken);
 
-            await WhenAsync(
-                services,
-                async (publisher, listener, cancellationToken) =>
-                {
-                    await listener.StartAsync(cancellationToken);
+                // Act
+                await publisher.PublishAsync(message, cancellationToken);
 
-                    // Act
-                    await publisher.PublishAsync(message, cancellationToken);
+                // Assert
+                completionSource.Task.Wait(cancellationToken);
 
-                    // Assert
-                    completionSource.Task.Wait(cancellationToken);
-
-                    await handler.Received().Handle(Arg.Is<SimpleMessage>((m) => m.Content == content));
-                });
-        }
+                await handler.Received().Handle(Arg.Is<SimpleMessage>((m) => m.Content == content));
+            });
     }
 }

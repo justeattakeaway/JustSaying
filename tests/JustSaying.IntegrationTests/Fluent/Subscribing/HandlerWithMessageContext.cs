@@ -1,45 +1,42 @@
-using System;
-using System.Threading.Tasks;
 using JustSaying.IntegrationTests.TestHandlers;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.IntegrationTests.Fluent.Subscribing
+namespace JustSaying.IntegrationTests.Fluent.Subscribing;
+
+internal class HandlerWithMessageContext : IHandlerAsync<SimpleMessage>
 {
-    internal class HandlerWithMessageContext : IHandlerAsync<SimpleMessage>
+    private readonly ILogger<HandlerWithMessageContext> _logger;
+    private readonly IMessageContextReader _messageContextReader;
+
+    public HandlerWithMessageContext(
+        IMessageContextReader messageContextReader,
+        Future<SimpleMessage> future,
+        ILogger<HandlerWithMessageContext> logger)
     {
-        private readonly ILogger<HandlerWithMessageContext> _logger;
-        private readonly IMessageContextReader _messageContextReader;
+        _messageContextReader = messageContextReader;
+        Future = future;
+        _logger = logger;
+    }
 
-        public HandlerWithMessageContext(
-            IMessageContextReader messageContextReader,
-            Future<SimpleMessage> future,
-            ILogger<HandlerWithMessageContext> logger)
+    public Future<SimpleMessage> Future { get; }
+
+    public async Task<bool> Handle(SimpleMessage message)
+    {
+        var messageContext = _messageContextReader.MessageContext;
+
+        if (messageContext == null)
         {
-            _messageContextReader = messageContextReader;
-            Future = future;
-            _logger = logger;
+            throw new InvalidOperationException("Message context was not found");
         }
 
-        public Future<SimpleMessage> Future { get; }
+        _logger.LogInformation(
+            "Message context found with queue URI {QueueUri} and message body {MessageBody}.",
+            messageContext.QueueUri,
+            messageContext.Message.Body);
 
-        public async Task<bool> Handle(SimpleMessage message)
-        {
-            var messageContext = _messageContextReader.MessageContext;
-
-            if (messageContext == null)
-            {
-                throw new InvalidOperationException("Message context was not found");
-            }
-
-            _logger.LogInformation(
-                "Message context found with queue URI {QueueUri} and message body {MessageBody}.",
-                messageContext.QueueUri,
-                messageContext.Message.Body);
-
-            await Future.Complete(message);
-            return true;
-        }
+        await Future.Complete(message);
+        return true;
     }
 }

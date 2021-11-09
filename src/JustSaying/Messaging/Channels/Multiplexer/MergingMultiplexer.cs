@@ -1,133 +1,128 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Channels;
-using System.Threading.Tasks;
 using JustSaying.Extensions;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.Interrogation;
 using Microsoft.Extensions.Logging;
 
-namespace JustSaying.Messaging.Channels.Multiplexer
+namespace JustSaying.Messaging.Channels.Multiplexer;
+
+internal sealed class MergingMultiplexer : IMultiplexer, IDisposable
 {
-    internal sealed class MergingMultiplexer : IMultiplexer, IDisposable
+    private readonly ILogger<MergingMultiplexer> _logger;
+
+    private bool _started;
+    private CancellationToken _stoppingToken;
+    private Task _completion;
+
+    private readonly IList<ChannelReader<IQueueMessageContext>> _readers;
+    private readonly Channel<IQueueMessageContext> _targetChannel;
+    private readonly int _channelCapacity;
+
+    private readonly SemaphoreSlim _readersLock = new SemaphoreSlim(1, 1);
+    private readonly object _startLock = new object();
+
+    public MergingMultiplexer(
+        int channelCapacity,
+        ILogger<MergingMultiplexer> logger)
     {
-        private readonly ILogger<MergingMultiplexer> _logger;
+        _readers = new List<ChannelReader<IQueueMessageContext>>();
+        _logger = logger;
 
-        private bool _started;
-        private CancellationToken _stoppingToken;
-        private Task _completion;
+        _channelCapacity = channelCapacity;
+        _targetChannel = Channel.CreateBounded<IQueueMessageContext>(_channelCapacity);
+    }
 
-        private readonly IList<ChannelReader<IQueueMessageContext>> _readers;
-        private readonly Channel<IQueueMessageContext> _targetChannel;
-        private readonly int _channelCapacity;
-
-        private readonly SemaphoreSlim _readersLock = new SemaphoreSlim(1, 1);
-        private readonly object _startLock = new object();
-
-        public MergingMultiplexer(
-            int channelCapacity,
-            ILogger<MergingMultiplexer> logger)
+    public Task RunAsync(CancellationToken stoppingToken)
+    {
+        if (!_started)
         {
-            _readers = new List<ChannelReader<IQueueMessageContext>>();
-            _logger = logger;
-
-            _channelCapacity = channelCapacity;
-            _targetChannel = Channel.CreateBounded<IQueueMessageContext>(_channelCapacity);
-        }
-
-        public Task RunAsync(CancellationToken stoppingToken)
-        {
-            if (!_started)
+            lock (_startLock)
             {
-                lock (_startLock)
+                if (!_started)
                 {
-                    if (!_started)
-                    {
-                        _stoppingToken = stoppingToken;
-                        _completion = RunImplAsync();
-                        _started = true;
-                    }
+                    _stoppingToken = stoppingToken;
+                    _completion = RunImplAsync();
+                    _started = true;
                 }
             }
-
-            return _completion;
         }
 
-        private async Task RunImplAsync()
+        return _completion;
+    }
+
+    private async Task RunImplAsync()
+    {
+        await Task.Yield();
+
+        await _readersLock.WaitAsync(_stoppingToken).ConfigureAwait(false);
+
+        try
         {
-            await Task.Yield();
+            _logger.LogDebug(
+                "Starting up channel multiplexer with a queue capacity of {Capacity}",
+                _channelCapacity);
 
-            await _readersLock.WaitAsync(_stoppingToken).ConfigureAwait(false);
-
-            try
-            {
-                _logger.LogDebug(
-                    "Starting up channel multiplexer with a queue capacity of {Capacity}",
-                    _channelCapacity);
-
-                _ = ChannelExtensions.MergeAsync(_readers, _targetChannel.Writer, _stoppingToken);
-            }
-            finally
-            {
-                _readersLock.Release();
-            }
+            _ = ChannelExtensions.MergeAsync(_readers, _targetChannel.Writer, _stoppingToken);
         }
-
-        public InterrogationResult Interrogate()
+        finally
         {
-            return new InterrogationResult(new
-            {
-                ChannelCapacity = _channelCapacity,
-                ReaderCount = _readers.Count,
-            });
+            _readersLock.Release();
         }
+    }
 
-        public void ReadFrom(ChannelReader<IQueueMessageContext> reader)
+    public InterrogationResult Interrogate()
+    {
+        return new InterrogationResult(new
         {
-            if (reader == null) throw new ArgumentNullException(nameof(reader));
+            ChannelCapacity = _channelCapacity,
+            ReaderCount = _readers.Count,
+        });
+    }
 
-            _readersLock.Wait(_stoppingToken);
+    public void ReadFrom(ChannelReader<IQueueMessageContext> reader)
+    {
+        if (reader == null) throw new ArgumentNullException(nameof(reader));
 
-            try
-            {
-                if (_started)
-                    throw new InvalidOperationException("Cannot add readers once the multiplexer has started.");
+        _readersLock.Wait(_stoppingToken);
 
-                _readers.Add(reader);
-            }
-            finally
-            {
-                _readersLock.Release();
-            }
+        try
+        {
+            if (_started)
+                throw new InvalidOperationException("Cannot add readers once the multiplexer has started.");
+
+            _readers.Add(reader);
         }
-
-        public async IAsyncEnumerable<IQueueMessageContext> GetMessagesAsync()
+        finally
         {
-            if (!_started)
-                throw new InvalidOperationException("Multiplexer must be started before listening to messages.");
+            _readersLock.Release();
+        }
+    }
 
-            async IAsyncEnumerable<T> ReadAllAsync<T>(ChannelReader<T> reader)
+    public async IAsyncEnumerable<IQueueMessageContext> GetMessagesAsync()
+    {
+        if (!_started)
+            throw new InvalidOperationException("Multiplexer must be started before listening to messages.");
+
+        async IAsyncEnumerable<T> ReadAllAsync<T>(ChannelReader<T> reader)
+        {
+            while (await reader.WaitToReadAsync(_stoppingToken).ConfigureAwait(false))
             {
-                while (await reader.WaitToReadAsync(_stoppingToken).ConfigureAwait(false))
+                while (reader.TryRead(out T item))
                 {
-                    while (reader.TryRead(out T item))
-                    {
-                        yield return item;
-                    }
+                    yield return item;
                 }
             }
-
-            await foreach (IQueueMessageContext msg in ReadAllAsync(_targetChannel.Reader))
-                yield return msg;
         }
 
-        public void Dispose()
-        {
-            _completion?.Dispose();
-            _readersLock?.Dispose();
+        await foreach (IQueueMessageContext msg in ReadAllAsync(_targetChannel.Reader))
+            yield return msg;
+    }
 
-            _completion = null;
-        }
+    public void Dispose()
+    {
+        _completion?.Dispose();
+        _readersLock?.Dispose();
+
+        _completion = null;
     }
 }

@@ -1,14 +1,13 @@
 using JustSaying.Models;
 
-namespace JustSaying.IntegrationTests.TestHandlers
-{
-    public class OrderPlaced : Message
-    {
-        public OrderPlaced(string orderId)
-        {
-            OrderId = orderId;
-        }
+namespace JustSaying.IntegrationTests.TestHandlers;
 
-        public string OrderId { get; private set; }
+public class OrderPlaced : Message
+{
+    public OrderPlaced(string orderId)
+    {
+        OrderId = orderId;
     }
+
+    public string OrderId { get; private set; }
 }

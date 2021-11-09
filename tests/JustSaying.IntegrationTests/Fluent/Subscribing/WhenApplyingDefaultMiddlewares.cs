@@ -1,98 +1,87 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
-using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using Shouldly;
-using Xunit.Abstractions;
 
-namespace JustSaying.IntegrationTests.Fluent.Subscribing
+namespace JustSaying.IntegrationTests.Fluent.Subscribing;
+
+public class WhenApplyingDefaultMiddlewares : IntegrationTestBase
 {
-    public class WhenApplyingDefaultMiddlewares : IntegrationTestBase
+    public WhenApplyingDefaultMiddlewares(ITestOutputHelper outputHelper) : base(outputHelper)
+    { }
+
+    class OuterTestMiddleware : InspectableMiddleware<SimpleMessage>
+    { }
+
+    class InnerTestMiddleware : InspectableMiddleware<SimpleMessage>
+    { }
+
+    class AfterTestMiddleware : InspectableMiddleware<SimpleMessage>
+    { }
+
+    [AwsFact]
+    public async Task Then_The_Defaults_Are_The_Defaults_For_Sure()
     {
-        public WhenApplyingDefaultMiddlewares(ITestOutputHelper outputHelper) : base(outputHelper)
-        { }
+        // Arrange
+        var handler = new InspectableHandler<SimpleMessage>();
 
-        class OuterTestMiddleware : InspectableMiddleware<SimpleMessage>
-        { }
+        var services = GivenJustSaying()
+            .ConfigureJustSaying((builder) =>
+                builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
+            .AddJustSayingHandlers(new[] { handler });
 
-        class InnerTestMiddleware : InspectableMiddleware<SimpleMessage>
-        { }
+        string json = "";
+        await WhenAsync(
+            services,
+            (_, listener, _, _) =>
+            {
+                dynamic interrogation = listener.Interrogate();
+                dynamic middlewares = interrogation.Data.Middleware;
 
-        class AfterTestMiddleware : InspectableMiddleware<SimpleMessage>
-        { }
+                json = JsonConvert.SerializeObject(middlewares, Formatting.Indented)
+                    .Replace(UniqueName, "TestQueueName");
 
-        [AwsFact]
-        public async Task Then_The_Defaults_Are_The_Defaults_For_Sure()
-        {
-            // Arrange
-            var handler = new InspectableHandler<SimpleMessage>();
+                return Task.CompletedTask;
+            });
 
-            var services = GivenJustSaying()
-                .ConfigureJustSaying((builder) =>
-                    builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
-                .AddJustSayingHandlers(new[] { handler });
+        json.ShouldMatchApproved(c => c.SubFolder("Approvals"));
+    }
 
-            string json = "";
-            await WhenAsync(
-                services,
-                (_, listener, _, _) =>
-                {
-                    dynamic interrogation = listener.Interrogate();
-                    dynamic middlewares = interrogation.Data.Middleware;
+    [AwsFact]
+    public async Task Then_The_Builder_Should_Put_User_Middlewares_In_The_Correct_Order()
+    {
+        // Arrange
+        var handler = new InspectableHandler<SimpleMessage>();
+        var outerMiddleware = new OuterTestMiddleware();
+        var innerMiddleware = new InnerTestMiddleware();
+        var afterMiddleware = new AfterTestMiddleware();
 
-                    json = JsonConvert.SerializeObject(middlewares, Formatting.Indented)
-                        .Replace(UniqueName, "TestQueueName");
+        var services = GivenJustSaying()
+            .ConfigureJustSaying((builder) =>
+                builder.WithLoopbackTopic<SimpleMessage>(UniqueName,
+                    c => c.WithMiddlewareConfiguration(m =>
+                    {
+                        m.Use(outerMiddleware);
+                        m.Use(innerMiddleware);
+                        m.UseDefaults<SimpleMessage>(handler.GetType());
+                        m.Use(afterMiddleware);
+                    })))
+            .AddJustSayingHandlers(new[] { handler });
 
-                    return Task.CompletedTask;
-                });
+        string json = "";
+        await WhenAsync(
+            services,
+            (_, listener, _, _) =>
+            {
+                dynamic interrogation = listener.Interrogate();
+                dynamic middlewares = interrogation.Data.Middleware;
 
-            json.ShouldMatchApproved(c => c.SubFolder("Approvals"));
-        }
+                json = JsonConvert.SerializeObject(middlewares, Formatting.Indented)
+                    .Replace(UniqueName, "TestQueueName");
 
-        [AwsFact]
-        public async Task Then_The_Builder_Should_Put_User_Middlewares_In_The_Correct_Order()
-        {
-            // Arrange
-            var handler = new InspectableHandler<SimpleMessage>();
-            var outerMiddleware = new OuterTestMiddleware();
-            var innerMiddleware = new InnerTestMiddleware();
-            var afterMiddleware = new AfterTestMiddleware();
+                return Task.CompletedTask;
+            });
 
-            var services = GivenJustSaying()
-                .ConfigureJustSaying((builder) =>
-                    builder.WithLoopbackTopic<SimpleMessage>(UniqueName,
-                        c => c.WithMiddlewareConfiguration(m =>
-                        {
-                            m.Use(outerMiddleware);
-                            m.Use(innerMiddleware);
-                            m.UseDefaults<SimpleMessage>(handler.GetType());
-                            m.Use(afterMiddleware);
-                        })))
-                .AddJustSayingHandlers(new[] { handler });
-
-            string json = "";
-            await WhenAsync(
-                services,
-                (_, listener, _, _) =>
-                {
-                    dynamic interrogation = listener.Interrogate();
-                    dynamic middlewares = interrogation.Data.Middleware;
-
-                    json = JsonConvert.SerializeObject(middlewares, Formatting.Indented)
-                        .Replace(UniqueName, "TestQueueName");
-
-                    return Task.CompletedTask;
-                });
-
-            json.ShouldMatchApproved(c => c.SubFolder($"Approvals"));
-        }
+        json.ShouldMatchApproved(c => c.SubFolder($"Approvals"));
     }
 }
-

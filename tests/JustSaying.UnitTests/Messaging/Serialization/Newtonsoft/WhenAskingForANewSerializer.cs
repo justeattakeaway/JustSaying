@@ -1,28 +1,25 @@
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
-using Shouldly;
-using Xunit;
 
-namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft
+namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft;
+
+public class WhenAskingForANewSerializer : XBehaviourTest<NewtonsoftSerializationFactory>
 {
-    public class WhenAskingForANewSerializer : XBehaviourTest<NewtonsoftSerializationFactory>
+    private IMessageSerializer _result;
+
+    protected override void Given()
     {
-        private IMessageSerializer _result;
 
-        protected override void Given()
-        {
+    }
 
-        }
+    protected override void WhenAction()
+    {
+        _result = SystemUnderTest.GetSerializer<SimpleMessage>();
+    }
 
-        protected override void WhenAction()
-        {
-            _result = SystemUnderTest.GetSerializer<SimpleMessage>();
-        }
-
-        [Fact]
-        public void OneIsProvided()
-        {
-            _result.ShouldNotBeNull();
-        }
+    [Fact]
+    public void OneIsProvided()
+    {
+        _result.ShouldNotBeNull();
     }
 }

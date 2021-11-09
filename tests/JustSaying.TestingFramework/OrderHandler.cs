@@ -1,11 +1,9 @@
-using System.Threading.Tasks;
 using JustSaying.Messaging.MessageHandling;
 
-namespace JustSaying.TestingFramework
+namespace JustSaying.TestingFramework;
+
+public class OrderHandler : IHandlerAsync<Order>
 {
-    public class OrderHandler : IHandlerAsync<Order>
-    {
-        public Task<bool> Handle(Order message)
-            => Task.FromResult(true);
-    }
+    public Task<bool> Handle(Order message)
+        => Task.FromResult(true);
 }
