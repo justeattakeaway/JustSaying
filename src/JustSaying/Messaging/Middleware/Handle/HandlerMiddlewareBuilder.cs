@@ -40,6 +40,9 @@ public sealed class HandlerMiddlewareBuilder
     /// <returns>The current HandlerMiddlewareBuilder.</returns>
     public HandlerMiddlewareBuilder Use<TMiddleware>() where TMiddleware : MiddlewareBase<HandleMessageContext, bool>
     {
+        var newMiddleware = ServiceResolver.ResolveService<TMiddleware>();
+        if (newMiddleware.HasNext) throw new InvalidOperationException("Middlewares must be registered as Transient");
+
         _middlewares.Add(() => ServiceResolver.ResolveService<TMiddleware>());
         return this;
     }
