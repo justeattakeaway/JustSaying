@@ -43,7 +43,7 @@ public sealed class HandlerMiddlewareBuilder
         var newMiddleware = ServiceResolver.ResolveService<TMiddleware>();
         if (newMiddleware.HasNext) throw new InvalidOperationException("Middlewares must be registered as Transient");
 
-        _middlewares.Add(() => ServiceResolver.ResolveService<TMiddleware>());
+        _middlewares.Add(() => newMiddleware);
         return this;
     }
 
