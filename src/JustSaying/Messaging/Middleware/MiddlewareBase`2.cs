@@ -10,7 +10,7 @@ public abstract class MiddlewareBase<TContext, TOut>
         return this;
     }
 
-    public bool HasNext => _next != null;
+    internal bool HasNext => _next != null;
 
     public async Task<TOut> RunAsync(
         TContext context,
