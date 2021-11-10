@@ -42,7 +42,13 @@ public sealed class HandlerMiddlewareBuilder
     public HandlerMiddlewareBuilder Use<TMiddleware>() where TMiddleware : MiddlewareBase<HandleMessageContext, bool>
     {
         var newMiddleware = ServiceResolver.ResolveService<TMiddleware>();
-        if (newMiddleware.HasNext) throw new InvalidOperationException("Middlewares must be registered as Transient.");
+        if (newMiddleware.HasNext)
+        {
+            throw new InvalidOperationException(
+                @"Middlewares must be registered into your DI container such that each resolution creates a new instance.
+For StructureMap use Transient(), and for Microsoft.Extensions.DependencyInjection, use AddTransient().
+Please check the documentation for your container for more details.");
+        }
 
         _middlewares.Add(() => newMiddleware);
         return this;
