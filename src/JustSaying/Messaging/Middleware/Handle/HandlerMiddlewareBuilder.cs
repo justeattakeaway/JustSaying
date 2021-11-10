@@ -38,10 +38,11 @@ public sealed class HandlerMiddlewareBuilder
     /// </summary>
     /// <typeparam name="TMiddleware">The type of the middleware to add.</typeparam>
     /// <returns>The current HandlerMiddlewareBuilder.</returns>
+    /// <exception cref="InvalidOperationException">When the middleware is not registered as Transient, an exception will be thrown if the resolved middleware is already part of a pipeline.</exception>
     public HandlerMiddlewareBuilder Use<TMiddleware>() where TMiddleware : MiddlewareBase<HandleMessageContext, bool>
     {
         var newMiddleware = ServiceResolver.ResolveService<TMiddleware>();
-        if (newMiddleware.HasNext) throw new InvalidOperationException("Middlewares must be registered as Transient");
+        if (newMiddleware.HasNext) throw new InvalidOperationException("Middlewares must be registered as Transient.");
 
         _middlewares.Add(() => newMiddleware);
         return this;
