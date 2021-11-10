@@ -38,8 +38,8 @@ internal sealed class JustSayingRegistry : Registry
         For<IMessageContextAccessor>().Use(context => context.GetInstance<MessageContextAccessor>());
         For<IMessageContextReader>().Use(context => context.GetInstance<MessageContextAccessor>());
 
-        For<LoggingMiddleware>().Singleton();
-        For<SqsPostProcessorMiddleware>().Singleton();
+        For<LoggingMiddleware>().Transient();
+        For<SqsPostProcessorMiddleware>().Transient();
 
         For<IMessageSerializationRegister>()
             .Use(

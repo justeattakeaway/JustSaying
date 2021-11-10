@@ -116,7 +116,7 @@ public static class IServiceCollectionExtensions
         {
             throw new ArgumentNullException(nameof(configure));
         }
-
+        
         // Register as self so the same singleton instance implements two different interfaces
         services.TryAddSingleton((p) => new ServiceProviderResolver(p));
         services.TryAddSingleton<IHandlerResolver>((p) => p.GetRequiredService<ServiceProviderResolver>());
@@ -127,8 +127,8 @@ public static class IServiceCollectionExtensions
         services.TryAddSingleton<IMessagingConfig, MessagingConfig>();
         services.TryAddSingleton<IMessageMonitor, NullOpMessageMonitor>();
 
-        services.TryAddSingleton<LoggingMiddleware>();
-        services.TryAddSingleton<SqsPostProcessorMiddleware>();
+        services.TryAddTransient<LoggingMiddleware>();
+        services.TryAddTransient<SqsPostProcessorMiddleware>();
 
         services.AddSingleton<MessageContextAccessor>();
         services.TryAddSingleton<IMessageContextAccessor>(serviceProvider => serviceProvider.GetRequiredService<MessageContextAccessor>());

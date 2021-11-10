@@ -38,9 +38,19 @@ public sealed class HandlerMiddlewareBuilder
     /// </summary>
     /// <typeparam name="TMiddleware">The type of the middleware to add.</typeparam>
     /// <returns>The current HandlerMiddlewareBuilder.</returns>
+    /// <exception cref="InvalidOperationException">When the middleware is not registered as Transient, an exception will be thrown if the resolved middleware is already part of a pipeline.</exception>
     public HandlerMiddlewareBuilder Use<TMiddleware>() where TMiddleware : MiddlewareBase<HandleMessageContext, bool>
     {
-        _middlewares.Add(() => ServiceResolver.ResolveService<TMiddleware>());
+        var newMiddleware = ServiceResolver.ResolveService<TMiddleware>();
+        if (newMiddleware.HasNext)
+        {
+            throw new InvalidOperationException(
+                @"Middlewares must be registered into your DI container such that each resolution creates a new instance.
+For StructureMap use Transient(), and for Microsoft.Extensions.DependencyInjection, use AddTransient().
+Please check the documentation for your container for more details.");
+        }
+
+        _middlewares.Add(() => newMiddleware);
         return this;
     }
 

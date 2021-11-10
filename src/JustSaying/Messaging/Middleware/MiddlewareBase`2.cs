@@ -10,6 +10,8 @@ public abstract class MiddlewareBase<TContext, TOut>
         return this;
     }
 
+    internal bool HasNext => _next != null;
+
     public async Task<TOut> RunAsync(
         TContext context,
         Func<CancellationToken, Task<TOut>> func,
