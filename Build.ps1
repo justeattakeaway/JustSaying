@@ -1,4 +1,4 @@
-#! /usr/bin/pwsh
+#! /usr/bin/env pwsh
 
 param(
     [Parameter(Mandatory = $false)][string] $Configuration = "Release",
@@ -153,8 +153,8 @@ ForEach ($libraryProject in $libraryProjects) {
 }
 
 if (($null -ne $env:CI) -And ($EnableIntegrationTests -eq $true)) {
-    & docker pull localstack/localstack:0.12.19
-    & docker run -d --name localstack -p 4566:4566 localstack/localstack:0.12.19
+    & docker pull --quiet localstack/localstack:latest
+    & docker run -d --name localstack -p 4566:4566 localstack/localstack:latest
     $env:AWS_SERVICE_URL = "http://localhost:4566"
 }
 
