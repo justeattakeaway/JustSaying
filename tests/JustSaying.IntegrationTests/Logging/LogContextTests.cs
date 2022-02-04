@@ -94,9 +94,7 @@ public class LogContextTests : IntegrationTestBase
 
         var services = GivenJustSaying(levelOverride: LogLevel.Information)
             .ConfigureJustSaying(
-                (builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName)
-                    .Subscriptions(sub => sub.WithDefaults(sgb =>
-                        sgb.WithDefaultConcurrencyLimit(10))))
+                (builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
         var sp = services.BuildServiceProvider();

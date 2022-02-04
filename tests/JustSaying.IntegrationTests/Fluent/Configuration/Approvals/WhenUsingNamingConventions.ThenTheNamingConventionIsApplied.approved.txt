@@ -1,0 +1,55 @@
+{
+  "Region": "eu-west-1",
+  "Middleware": {
+    "Middlewares": [
+      {
+        "MessageType": "SimpleMessage",
+        "QueueName": "beforequeue-simplemessage-afterqueue",
+        "MiddlewareChain": [
+          "MessageContextAccessorMiddleware",
+          "ErrorHandlerMiddleware",
+          "LoggingMiddleware",
+          "StopwatchMiddleware",
+          "SqsPostProcessorMiddleware",
+          "HandlerInvocationMiddleware`1"
+        ]
+      }
+    ]
+  },
+  "PublishedMessageTypes": {},
+  "SubscriptionGroups": {
+    "Groups": [
+      {
+        "Name": "beforequeue-simplemessage-afterqueue",
+        "ConcurrencyLimit": 10,
+        "Multiplexer": {
+          "ChannelCapacity": 100,
+          "ReaderCount": 1
+        },
+        "ReceiveBuffers": [
+          {
+            "BufferSize": 10,
+            "QueueName": "beforequeue-simplemessage-afterqueue",
+            "Region": "eu-west-1",
+            "Prefetch": 10
+          }
+        ]
+      }
+    ]
+  }
+}
+
+{
+  "Region": "eu-west-1",
+  "Middleware": {
+    "Middlewares": []
+  },
+  "PublishedMessageTypes": {
+    "SimpleMessage": {
+      "Arn": "arn:aws:sns:us-east-1:000000000000:beforetopic-simplemessage-aftertopic"
+    }
+  },
+  "SubscriptionGroups": {
+    "Groups": []
+  }
+}
