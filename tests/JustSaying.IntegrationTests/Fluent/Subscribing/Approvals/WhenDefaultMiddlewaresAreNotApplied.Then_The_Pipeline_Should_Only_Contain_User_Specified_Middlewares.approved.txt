@@ -4,8 +4,8 @@
       "MessageType": "SimpleMessage",
       "QueueName": "TestQueueName",
       "MiddlewareChain": [
-        "InspectableMiddleware`1",
-        "HandlerInvocationMiddleware`1"
+        "InspectableMiddleware`1[SimpleMessage]",
+        "HandlerInvocationMiddleware`1[JustSaying.TestingFramework.SimpleMessage]"
       ]
     }
   ]

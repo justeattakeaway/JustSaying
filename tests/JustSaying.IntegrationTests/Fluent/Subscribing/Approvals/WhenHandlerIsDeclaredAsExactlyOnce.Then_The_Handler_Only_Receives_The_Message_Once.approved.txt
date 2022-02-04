@@ -4,13 +4,13 @@
       "MessageType": "SimpleMessage",
       "QueueName": "TestQueueName",
       "MiddlewareChain": [
-        "ExactlyOnceMiddleware`1",
+        "ExactlyOnceMiddleware`1[JustSaying.TestingFramework.SimpleMessage]",
         "MessageContextAccessorMiddleware",
         "ErrorHandlerMiddleware",
         "LoggingMiddleware",
         "StopwatchMiddleware",
         "SqsPostProcessorMiddleware",
-        "HandlerInvocationMiddleware`1"
+        "HandlerInvocationMiddleware`1[JustSaying.TestingFramework.SimpleMessage]"
       ]
     }
   ]

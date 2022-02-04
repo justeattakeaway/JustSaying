@@ -4,15 +4,15 @@
       "MessageType": "SimpleMessage",
       "QueueName": "TestQueueName",
       "MiddlewareChain": [
-        "OuterTestMiddleware",
-        "InnerTestMiddleware",
+        "WhenApplyingDefaultMiddlewares+OuterTestMiddleware",
+        "WhenApplyingDefaultMiddlewares+InnerTestMiddleware",
         "MessageContextAccessorMiddleware",
         "ErrorHandlerMiddleware",
         "LoggingMiddleware",
         "StopwatchMiddleware",
         "SqsPostProcessorMiddleware",
-        "AfterTestMiddleware",
-        "HandlerInvocationMiddleware`1"
+        "WhenApplyingDefaultMiddlewares+AfterTestMiddleware",
+        "HandlerInvocationMiddleware`1[JustSaying.TestingFramework.SimpleMessage]"
       ]
     }
   ]

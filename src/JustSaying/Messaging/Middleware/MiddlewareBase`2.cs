@@ -1,3 +1,5 @@
+using JustSaying.Extensions;
+
 namespace JustSaying.Messaging.Middleware;
 
 public abstract class MiddlewareBase<TContext, TOut>
@@ -45,7 +47,7 @@ public abstract class MiddlewareBase<TContext, TOut>
         var thisType = GetType();
         if (thisType.IsGenericType && thisType.GetGenericTypeDefinition() == typeof(DelegateMiddleware<,>)) yield break;
 
-        yield return GetType().Name;
+        yield return GetType().ToSimpleName();
         if (_next == null) yield break;
 
         foreach (var middlewareName in _next.Interrogate())

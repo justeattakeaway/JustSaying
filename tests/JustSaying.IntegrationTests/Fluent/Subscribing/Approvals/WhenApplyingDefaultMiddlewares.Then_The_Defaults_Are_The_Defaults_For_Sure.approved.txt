@@ -9,7 +9,7 @@
         "LoggingMiddleware",
         "StopwatchMiddleware",
         "SqsPostProcessorMiddleware",
-        "HandlerInvocationMiddleware`1"
+        "HandlerInvocationMiddleware`1[JustSaying.TestingFramework.SimpleMessage]"
       ]
     }
   ]
