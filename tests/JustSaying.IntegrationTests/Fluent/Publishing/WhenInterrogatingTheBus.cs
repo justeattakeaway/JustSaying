@@ -31,6 +31,7 @@ public class WhenInterrogatingTheBus : IntegrationTestBase
             async (publisher, listener, cancellationToken) =>
             {
                 await listener.StartAsync(cancellationToken);
+                await publisher.StartAsync(cancellationToken);
 
                 var listenerJson = JsonConvert.SerializeObject(listener.Interrogate(), Formatting.Indented);
                 var publisherJson = JsonConvert.SerializeObject(publisher.Interrogate(), Formatting.Indented);

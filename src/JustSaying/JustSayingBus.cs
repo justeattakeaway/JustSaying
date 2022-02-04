@@ -274,8 +274,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     public InterrogationResult Interrogate()
     {
         var publisherDescriptions =
-            _publishersByType.Select(publisher =>
-                publisher.Key.Name).ToArray();
+            _publishersByType.ToDictionary(x => x.Key.Name, x => x.Value.Interrogate());
 
         return new InterrogationResult(new
         {

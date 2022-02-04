@@ -1,4 +1,5 @@
 using JustSaying.Messaging;
+using JustSaying.Messaging.Interrogation;
 using JustSaying.Models;
 using NSubstitute;
 
@@ -35,9 +36,9 @@ public class WhenRegisteringTheSamePublisherTwice : GivenAServiceBus
     {
         dynamic response = SystemUnderTest.Interrogate();
 
-        string[] publishedTypes = response.Data.PublishedMessageTypes;
+        Dictionary<string, InterrogationResult> publishedTypes = response.Data.PublishedMessageTypes;
 
-        publishedTypes.ShouldContain(nameof(Message));
+        publishedTypes.ShouldContainKey(nameof(Message));
     }
 
     public WhenRegisteringTheSamePublisherTwice(ITestOutputHelper outputHelper) : base(outputHelper)

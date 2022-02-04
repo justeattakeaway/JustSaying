@@ -16,7 +16,7 @@
       }
     ]
   },
-  "PublishedMessageTypes": [],
+  "PublishedMessageTypes": {},
   "SubscriptionGroups": {
     "Groups": [
       {
@@ -44,8 +44,12 @@
   "Middleware": {
     "Middlewares": []
   },
-  "PublishedMessageTypes": [
-    "SimpleMessage"
-  ],
-  "SubscriptionGroups": null
+  "PublishedMessageTypes": {
+    "SimpleMessage": {
+      "Arn": "arn:aws:sns:us-east-1:000000000000:simplemessage"
+    }
+  },
+  "SubscriptionGroups": {
+    "Groups": []
+  }
 }
