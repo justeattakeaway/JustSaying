@@ -21,7 +21,6 @@ public class WhenInterrogatingTheBus : IntegrationTestBase
             {
                 builder.WithLoopbackTopic<SimpleMessage>(UniqueName);
                 builder.Publications(p => p.WithTopic<SimpleMessage>());
-                builder.Subscriptions(s => s.WithDefaults(x => x.WithDefaultConcurrencyLimit(10)));
             })
             .AddSingleton(handler);
 

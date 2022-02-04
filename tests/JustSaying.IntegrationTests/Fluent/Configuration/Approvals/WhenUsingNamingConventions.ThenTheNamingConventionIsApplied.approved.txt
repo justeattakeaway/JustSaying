@@ -4,7 +4,7 @@
     "Middlewares": [
       {
         "MessageType": "SimpleMessage",
-        "QueueName": "integrationTestQueueName",
+        "QueueName": "beforequeue-simplemessage-afterqueue",
         "MiddlewareChain": [
           "MessageContextAccessorMiddleware",
           "ErrorHandlerMiddleware",
@@ -20,7 +20,7 @@
   "SubscriptionGroups": {
     "Groups": [
       {
-        "Name": "integrationTestQueueName",
+        "Name": "beforequeue-simplemessage-afterqueue",
         "ConcurrencyLimit": 10,
         "Multiplexer": {
           "ChannelCapacity": 100,
@@ -29,7 +29,7 @@
         "ReceiveBuffers": [
           {
             "BufferSize": 10,
-            "QueueName": "integrationTestQueueName",
+            "QueueName": "beforequeue-simplemessage-afterqueue",
             "Region": "eu-west-1",
             "Prefetch": 10
           }
@@ -46,7 +46,7 @@
   },
   "PublishedMessageTypes": {
     "SimpleMessage": {
-      "Arn": "arn:aws:sns:us-east-1:000000000000:simplemessage"
+      "Arn": "arn:aws:sns:us-east-1:000000000000:beforetopic-simplemessage-aftertopic"
     }
   },
   "SubscriptionGroups": {

@@ -3,21 +3,21 @@
     "MessageType": "OrderAccepted",
     "QueueName": "queue1",
     "MiddlewareChain": [
-      "InspectableMiddleware`1"
+      "InspectableMiddleware`1[OrderAccepted]"
     ]
   },
   {
     "MessageType": "OrderRejected",
     "QueueName": "queue1",
     "MiddlewareChain": [
-      "InspectableMiddleware`1"
+      "InspectableMiddleware`1[OrderRejected]"
     ]
   },
   {
     "MessageType": "SimpleMessage",
     "QueueName": "queue1",
     "MiddlewareChain": [
-      "InspectableMiddleware`1"
+      "InspectableMiddleware`1[SimpleMessage]"
     ]
   }
 ]

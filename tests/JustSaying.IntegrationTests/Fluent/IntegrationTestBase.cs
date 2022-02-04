@@ -70,6 +70,7 @@ public abstract class IntegrationTestBase
                             options.WithSessionCredentials(AccessKeyId, SecretAccessKey, SessionToken)
                                 .WithServiceUri(ServiceUri);
                         });
+                    builder.Subscriptions(sub => sub.WithDefaults(x => x.WithDefaultConcurrencyLimit(10)));
 
                     configure(builder, serviceProvider);
                 });
