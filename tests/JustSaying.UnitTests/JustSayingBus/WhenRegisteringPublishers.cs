@@ -1,4 +1,5 @@
 using JustSaying.Messaging;
+using JustSaying.Messaging.Interrogation;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 using NSubstitute;
@@ -51,10 +52,10 @@ public class WhenRegisteringPublishers : GivenAServiceBus
     {
         dynamic response = SystemUnderTest.Interrogate();
 
-        string[] publishedTypes = response.Data.PublishedMessageTypes;
+        Dictionary<string, InterrogationResult> publishedTypes = response.Data.PublishedMessageTypes;
 
-        publishedTypes.ShouldContain(nameof(OrderAccepted));
-        publishedTypes.ShouldContain(nameof(OrderRejected));
+        publishedTypes.ShouldContainKey(nameof(OrderAccepted));
+        publishedTypes.ShouldContainKey(nameof(OrderRejected));
     }
 
     public WhenRegisteringPublishers(ITestOutputHelper outputHelper) : base(outputHelper)

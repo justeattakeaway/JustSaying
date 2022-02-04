@@ -145,6 +145,9 @@ public class SnsMessagePublisher : IMessagePublisher, IInterrogable
 
     public virtual InterrogationResult Interrogate()
     {
-        return new InterrogationResult(InterrogationResult.Empty);
+        return new InterrogationResult(new
+        {
+            Arn
+        });
     }
 }

@@ -98,8 +98,9 @@ public class SqsMessagePublisher : IMessagePublisher
 
         if (metadata?.Delay != null)
         {
-            request.DelaySeconds = (int)metadata.Delay.Value.TotalSeconds;
+            request.DelaySeconds = (int) metadata.Delay.Value.TotalSeconds;
         }
+
         return request;
     }
 
@@ -107,6 +108,9 @@ public class SqsMessagePublisher : IMessagePublisher
 
     public InterrogationResult Interrogate()
     {
-        return InterrogationResult.Empty;
+        return new InterrogationResult(new
+        {
+            QueueUrl
+        });
     }
 }
