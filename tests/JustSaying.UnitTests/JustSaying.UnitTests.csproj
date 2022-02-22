@@ -13,7 +13,7 @@
   <ItemGroup>
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="$(AwsSdkSnsVersion)" />
     <PackageReference Include="AWSSDK.SQS" Version="$(AwsSdkSqsVersion)" />
-    <PackageReference Include="GitHubActionsTestLogger" Version="1.2.0" />
+    <PackageReference Include="GitHubActionsTestLogger" Version="1.3.0" />
     <PackageReference Include="MELT" Version="0.8.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(DotNetTestSdkVersion)" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
