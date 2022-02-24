@@ -201,7 +201,7 @@ public sealed class SubscriptionsBuilder
     /// Configures a topic subscription.
     /// </summary>
     /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
-    /// <param name="topicNameOverride">The name of the topic that will be subscribed to this queue. Overrides the default set by the <see cref="ITopicNamingConvention"/>.</param>
+    /// <param name="topicNameOverride">The name of the topic that this queue will be subscribed to. Overrides the default set by the <see cref="ITopicNamingConvention"/>.</param>
     /// <param name="configure">A delegate to a method to use to configure a topic subscription.</param>
     /// <returns>
     /// The current <see cref="SubscriptionsBuilder"/>.
