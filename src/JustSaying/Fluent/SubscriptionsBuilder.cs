@@ -224,8 +224,6 @@ public sealed class SubscriptionsBuilder
         return this;
     }
 
-
-
     /// <summary>
     /// Configures the subscriptions for the <see cref="JustSayingBus"/>.
     /// </summary>
