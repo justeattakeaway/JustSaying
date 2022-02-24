@@ -2,6 +2,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Models;
+using JustSaying.Naming;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
@@ -188,6 +189,33 @@ public sealed class SubscriptionsBuilder
         if (configure == null) throw new ArgumentNullException(nameof(configure));
 
         var builder = new TopicSubscriptionBuilder<T>();
+
+        configure(builder);
+
+        Subscriptions.Add(builder);
+
+        return this;
+    }
+
+    /// <summary>
+    /// Configures a topic subscription.
+    /// </summary>
+    /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+    /// <param name="topicNameOverride">The name of the topic that this queue will be subscribed to. Overrides the default set by the <see cref="ITopicNamingConvention"/>.</param>
+    /// <param name="configure">A delegate to a method to use to configure a topic subscription.</param>
+    /// <returns>
+    /// The current <see cref="SubscriptionsBuilder"/>.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="configure"/> is <see langword="null"/>.
+    /// </exception>
+    public SubscriptionsBuilder ForTopic<T>(string topicNameOverride, Action<TopicSubscriptionBuilder<T>> configure)
+        where T : Message
+    {
+        if (configure == null) throw new ArgumentNullException(nameof(configure));
+        if (topicNameOverride == null) throw new ArgumentNullException(nameof(topicNameOverride));
+
+        var builder = new TopicSubscriptionBuilder<T>().WithTopicName(topicNameOverride);
 
         configure(builder);
 

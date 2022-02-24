@@ -1,3 +1,4 @@
+using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging.Middleware;
@@ -27,6 +28,8 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// </summary>
     private string TopicName { get; set; } = string.Empty;
 
+    private string QueueName { get; set; } = string.Empty;
+
     /// <summary>
     /// Gets or sets a delegate to a method to use to configure SNS reads.
     /// </summary>
@@ -50,9 +53,9 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         => WithName(string.Empty);
 
     /// <summary>
-    /// Configures the name of the topic.
+    /// Configures the name of the queue that will be subscribed to.
     /// </summary>
-    /// <param name="name">The name of the topic to subscribe to.</param>
+    /// <param name="name">The name of the queue to subscribe to.</param>
     /// <returns>
     /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
     /// </returns>
@@ -60,6 +63,22 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// <paramref name="name"/> is <see langword="null"/>.
     /// </exception>
     public TopicSubscriptionBuilder<T> WithName(string name)
+    {
+        QueueName = name ?? throw new ArgumentNullException(nameof(name));
+        return this;
+    }
+
+    /// <summary>
+    /// Configures the name of the topic that this queue will be subscribed to.
+    /// </summary>
+    /// <param name="name">The name of the topic subscribe to.</param>
+    /// <returns>
+    /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="name"/> is <see langword="null"/>.
+    /// </exception>
+    public TopicSubscriptionBuilder<T> WithTopicName(string name)
     {
         TopicName = name ?? throw new ArgumentNullException(nameof(name));
         return this;
@@ -164,7 +183,8 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
 
         var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic)
         {
-            QueueName = TopicName,
+            QueueName = QueueName,
+            TopicName = TopicName,
             Tags = Tags
         };
 
