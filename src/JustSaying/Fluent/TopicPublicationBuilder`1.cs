@@ -33,6 +33,11 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     private Dictionary<string, string> Tags { get; } = new(StringComparer.Ordinal);
 
     /// <summary>
+    /// Gets or sets the topic name.
+    /// </summary>
+    private string TopicName { get; set; } = string.Empty;
+
+    /// <summary>
     /// Configures the SNS write configuration.
     /// </summary>
     /// <param name="configure">A delegate to a method to use to configure SNS writes.</param>
@@ -111,6 +116,23 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
         return this;
     }
 
+
+    /// <summary>
+    /// Configures the name of the topic
+    /// </summary>
+    /// <param name="name">The name of the topic to publish to.</param>
+    /// <returns>
+    /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="name"/> is <see langword="null"/>.
+    /// </exception>
+    public TopicPublicationBuilder<T> WithName(string name)
+    {
+        TopicName = name;
+        return this;
+    }
+
     /// <inheritdoc />
     void IPublicationBuilder<T>.Configure(
         JustSayingBus bus,
@@ -125,7 +147,10 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
         var config = bus.Config;
         var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
-        var readConfiguration = new SqsReadConfiguration(SubscriptionType.ToTopic);
+        var readConfiguration = new SqsReadConfiguration(SubscriptionType.ToTopic)
+        {
+            TopicName = TopicName
+        };
         var writeConfiguration = new SnsWriteConfiguration();
         ConfigureWrites?.Invoke(writeConfiguration);
         readConfiguration.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
