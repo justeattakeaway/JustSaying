@@ -116,7 +116,6 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
         return this;
     }
 
-
     /// <summary>
     /// Configures the name of the topic
     /// </summary>
