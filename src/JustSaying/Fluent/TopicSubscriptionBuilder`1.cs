@@ -69,7 +69,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     }
 
     /// <summary>
-    /// Configures the name of the topic that will be subscribed to this queue.
+    /// Configures the name of the topic that this queue will be subscribed to.
     /// </summary>
     /// <param name="name">The name of the topic subscribe to.</param>
     /// <returns>
