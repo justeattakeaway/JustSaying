@@ -128,7 +128,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// </exception>
     public TopicPublicationBuilder<T> WithName(string name)
     {
-        TopicName = name;
+        TopicName = name ?? throw new ArgumentNullException(nameof(name));
         return this;
     }
 

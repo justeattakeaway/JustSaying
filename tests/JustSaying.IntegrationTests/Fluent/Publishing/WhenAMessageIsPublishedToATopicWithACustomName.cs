@@ -20,8 +20,12 @@ public class WhenAMessageIsPublishedToATopicWithACustomName : IntegrationTestBas
 
         var services = GivenJustSaying()
             .ConfigureJustSaying((builder) =>
-                builder.Publications((options) => options.WithTopic<SimpleMessage>(configure => { configure.WithName("my-special-topic"); }))
-                    .Subscriptions((options) => options.ForTopic<SimpleMessage>("my-special-topic", subscriptionBuilder => { subscriptionBuilder.WithName(UniqueName); })))
+                builder
+                    .Publications((options) =>
+                        options.WithTopic<SimpleMessage>(configure => { configure.WithName("my-special-topic"); }))
+                    .Subscriptions((options) =>
+                        options.ForTopic<SimpleMessage>("my-special-topic",
+                            subscriptionBuilder => { subscriptionBuilder.WithName(UniqueName); })))
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
         string content = Guid.NewGuid().ToString();
