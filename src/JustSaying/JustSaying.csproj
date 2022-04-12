@@ -16,7 +16,7 @@
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
-    <PackageReference Include="System.Text.Json" Version="4.6.0" />
+    <PackageReference Include="System.Text.Json" Version="6.0.3" />
     <PackageReference Include="System.Threading.Channels" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
