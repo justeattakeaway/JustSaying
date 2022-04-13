@@ -4,7 +4,6 @@ JustSaying adopts [SemVer 2.0](https://semver.org/spec/v2.0.0.html), and uses [M
 
 ## Process for Releasing
 
-
 To create a new release go to the GitHub [releases tab](https://github.com/justeat/JustSaying/releases) and click `Draft a new release`.
 
 The tag should be in the format:
@@ -13,7 +12,7 @@ The tag should be in the format:
 
 For example `v7.0.0`.
 
-Once the AppVeyor build has completed, you can deploy to NuGet via the AppVeyor UI.
+A GitHub Actions build will queue automatically when the tag is created, and publish the packages to NuGet.org.
 
 ## Example Release Pattern
 
