@@ -8,6 +8,14 @@ on:
     branches: [main]
   workflow_dispatch:
 
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_SYSTEM_CONSOLE_ALLOW_ANSI_COLOR_REDIRECTION: 1
+  NUGET_XMLDOC_MODE: skip
+  TERM: xterm
+
 jobs:
   build:
     name: ${{ matrix.os }}
@@ -38,20 +46,11 @@ jobs:
         if: ${{ runner.os != 'linux' }}
         shell: pwsh
         run: ./Build.ps1
-        env:
-          DOTNET_CLI_TELEMETRY_OPTOUT: true
-          DOTNET_NOLOGO: true
-          DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
-          NUGET_XMLDOC_MODE: skip
 
       - name: Build, Test, IntegrationTest and Package
         if: ${{ runner.os == 'linux' }}
         shell: pwsh
         run: ./Build.ps1 -EnableIntegrationTests
-        env:
-          DOTNET_CLI_TELEMETRY_OPTOUT: true
-          DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
-          NUGET_XMLDOC_MODE: skip
 
       - uses: codecov/codecov-action@v1
         name: Upload coverage to Codecov
