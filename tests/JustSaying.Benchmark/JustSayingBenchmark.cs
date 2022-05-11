@@ -107,7 +107,7 @@ public class JustSayingBenchmark
 
             config.Publications(x => { x.WithTopic<BenchmarkMessage>(); });
 
-            config.Subscriptions(x => { x.ForTopic<BenchmarkMessage>(cfg => cfg.WithName("justsaying-benchmark")); });
+            config.Subscriptions(x => { x.ForTopic<BenchmarkMessage>(cfg => cfg.WithQueueName("justsaying-benchmark")); });
         });
 
         services.AddJustSayingHandler<BenchmarkMessage, BenchmarkMessageHander>();

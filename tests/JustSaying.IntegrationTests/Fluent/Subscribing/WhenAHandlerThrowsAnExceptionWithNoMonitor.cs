@@ -27,7 +27,7 @@ public class WhenAHandlerThrowsAnExceptionWithNoMonitor : IntegrationTestBase
             .ConfigureJustSaying(
                 (builder) => builder.Subscriptions(
                         (options) => options.ForQueue<SimpleMessage>(
-                            (queue) => queue.WithName(UniqueName)))
+                            (queue) => queue.WithQueueName(UniqueName)))
                     .Services(c => c.WithMessageMonitoring(() => monitor)))
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 

@@ -13,7 +13,7 @@ internal static class MessagingBusBuilderTestExtensions
             .Publications((options) => options.WithQueue<T>(o => o.WithName(name)))
             .Subscriptions((options) => options.ForQueue<T>(subscriptionBuilder =>
             {
-                subscriptionBuilder.WithName(name);
+                subscriptionBuilder.WithQueueName(name);
                 configure?.Invoke(subscriptionBuilder);
             }));
     }
@@ -26,7 +26,7 @@ internal static class MessagingBusBuilderTestExtensions
             .Publications((options) => options.WithTopic<T>())
             .Subscriptions((options) => options.ForTopic<T>(subscriptionBuilder =>
             {
-                subscriptionBuilder.WithName(name);
+                subscriptionBuilder.WithQueueName(name);
                 configure?.Invoke(subscriptionBuilder);
             }));
     }

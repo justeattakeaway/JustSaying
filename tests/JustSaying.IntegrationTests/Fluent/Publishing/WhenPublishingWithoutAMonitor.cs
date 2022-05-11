@@ -47,7 +47,7 @@ public class WhenPublishingWithoutAMonitor : IntegrationTestBase
 
                     builder.Subscriptions(
                         (subscription) => subscription.ForTopic<SimpleMessage>(
-                            (topic) => topic.WithName(UniqueName)));
+                            (topic) => topic.WithQueueName(UniqueName)));
                 })
             .AddSingleton(handler);
 
