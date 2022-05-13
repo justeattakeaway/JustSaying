@@ -12,7 +12,7 @@ namespace JustSaying.Fluent;
 
 internal class DynamicMessagePublisher : IMessagePublisher
 {
-    private readonly Dictionary<string, IMessagePublisher> _publisherCache = new();
+    private readonly ConcurrentDictionary<string, IMessagePublisher> _publisherCache = new();
     private readonly Func<Message, string> _topicNameCustomizer;
     private readonly Func<string, StaticPublicationConfiguration> _staticConfigBuilder;
 
@@ -64,7 +64,7 @@ internal class DynamicMessagePublisher : IMessagePublisher
         _logger.LogDebug("Executing startup task for topic {TopicName}", topicName);
         await config.StartupTask(cancellationToken).ConfigureAwait(false);
 
-        _publisherCache.Add(topicName, config.Publisher);
+        _publisherCache.TryAdd(topicName, config.Publisher);
 
         _logger.LogDebug("Publishing message on newly created topic {TopicName}", topicName);
         await config.Publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);

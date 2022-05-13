@@ -6,3 +6,5 @@ services:
     image: localstack/localstack:latest
     ports:
       - 4566:4566
+    environment:
+      LS_LOG: debug

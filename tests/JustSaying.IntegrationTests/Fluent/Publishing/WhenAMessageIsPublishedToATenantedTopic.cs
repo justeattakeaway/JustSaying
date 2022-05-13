@@ -30,9 +30,9 @@ public class WhenAMessageIsPublishedToATenantedTopic
                 .Publications(pub => pub.WithTopic<SimpleMessage>(c =>
                     c.WithTopicName(msg => topicNameTemplate.Replace("{tenant}", msg.Tenant))))
                 .Subscriptions(sub =>
-                    sub.ForTopic<SimpleMessage>(c => c.WithTopicName("uk-tenanted-topic").WithQueueName("uk-queue"))
-                        .ForTopic<SimpleMessage>(c => c.WithTopicName("it-tenanted-topic").WithQueueName("it-queue"))
-                        .ForTopic<SimpleMessage>(c => c.WithTopicName("es-tenanted-topic").WithQueueName("es-queue")))
+                    sub.ForTopic<SimpleMessage>(c => c.WithTopicName("uk-tenanted-topic").WithQueueName($"uk-queue-{testId}"))
+                        .ForTopic<SimpleMessage>(c => c.WithTopicName("it-tenanted-topic").WithQueueName($"it-queue-{testId}"))
+                        .ForTopic<SimpleMessage>(c => c.WithTopicName("es-tenanted-topic").WithQueueName($"es-queue-{testId}")))
             )
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
