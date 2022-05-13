@@ -29,14 +29,17 @@ public class WhenAMessageIsPublishedToATenantedTopic
             .ConfigureJustSaying((builder) => builder
                 .Publications(pub => pub.WithTopic<SimpleMessage>(c =>
                     c.WithTopicName(msg => topicNameTemplate.Replace("{tenant}", msg.Tenant))))
-                .Subscriptions(sub => sub.ForTopic<SimpleMessage>()))
+                .Subscriptions(sub =>
+                    sub.ForTopic<SimpleMessage>(c => c.WithTopicName("uk-tenanted-topic").WithQueueName("uk-queue"))
+                        .ForTopic<SimpleMessage>(c => c.WithTopicName("it-tenanted-topic").WithQueueName("it-queue"))
+                        .ForTopic<SimpleMessage>(c => c.WithTopicName("es-tenanted-topic").WithQueueName("es-queue")))
+            )
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
-        string content = Guid.NewGuid().ToString();
-
-        var message = new SimpleMessage()
+        Message CreateMessage(string tenant) => new SimpleMessage()
         {
-            Content = content
+            Content = testId,
+            Tenant = tenant
         };
 
         await WhenAsync(
@@ -46,16 +49,25 @@ public class WhenAMessageIsPublishedToATenantedTopic
                 await listener.StartAsync(cancellationToken);
                 await publisher.StartAsync(cancellationToken);
 
+
+                // Act
+                await publisher.PublishAsync(CreateMessage("uk"), cancellationToken);
+                await publisher.PublishAsync(CreateMessage("es"), cancellationToken);
+                await publisher.PublishAsync(CreateMessage("it"), cancellationToken);
+
                 OutputHelper.WriteLine(JsonConvert.SerializeObject(publisher.Interrogate()));
                 OutputHelper.WriteLine(JsonConvert.SerializeObject(listener.Interrogate()));
 
-                // Act
-                await publisher.PublishAsync(message, cancellationToken);
 
                 // Assert
-
                 await Patiently.AssertThatAsync(OutputHelper,
-                    () => handler.ReceivedMessages.ShouldHaveSingleItem().Content.ShouldBe(content));
+                    () =>
+                    {
+                        var received = handler.ReceivedMessages;
+                        received.ShouldContain(x => x.Content == testId && x.Tenant == "uk");
+                        received.ShouldContain(x => x.Content == testId && x.Tenant == "it");
+                        received.ShouldContain(x => x.Content == testId && x.Tenant == "es");
+                    });
             });
     }
 }

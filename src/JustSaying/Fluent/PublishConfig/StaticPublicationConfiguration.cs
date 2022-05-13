@@ -1,29 +1,37 @@
 using Amazon;
 using Amazon.Internal;
+using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
+
 #pragma warning disable CS0618
 
 namespace JustSaying.Fluent;
 
-internal class StaticPublicationConfiguration
+internal class StaticPublicationConfiguration : TopicPublisher
 {
     public Func<CancellationToken, Task> StartupTask { get; }
     public IMessagePublisher Publisher { get; }
-    public string TopicName { get; }
 
-    public StaticPublicationConfiguration(Func<CancellationToken, Task> startupTask, IMessagePublisher publisher, string topicName)
+    public StaticPublicationConfiguration(
+        Func<CancellationToken, Task> startupTask,
+        IMessagePublisher publisher)
     {
         StartupTask = startupTask;
         Publisher = publisher;
-        TopicName = topicName;
     }
 
-    public static StaticPublicationConfiguration Build<T>(string topicName, Dictionary<string, string> tags, string region, SnsWriteConfiguration writeConfiguration, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory, JustSayingBus bus)
+    public static StaticPublicationConfiguration Build<T>(
+        string topicName,
+        Dictionary<string, string> tags,
+        string region,
+        SnsWriteConfiguration writeConfiguration,
+        IAwsClientFactoryProxy proxy,
+        ILoggerFactory loggerFactory,
+        JustSayingBus bus)
     {
         var readConfiguration = new SqsReadConfiguration(SubscriptionType.ToTopic)
         {
@@ -41,7 +49,6 @@ internal class StaticPublicationConfiguration
             MessageResponseLogger = bus.Config.MessageResponseLogger,
         };
 
-#pragma warning disable 618
         var snsTopic = new SnsTopicByName(
             readConfiguration.TopicName,
             proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
@@ -49,7 +56,6 @@ internal class StaticPublicationConfiguration
         {
             Tags = tags
         };
-#pragma warning restore 618
 
         async Task StartupTask(CancellationToken cancellationToken)
         {
@@ -69,8 +75,13 @@ internal class StaticPublicationConfiguration
             await snsTopic.ApplyTagsAsync(cancellationToken).ConfigureAwait(false);
 
             eventPublisher.Arn = snsTopic.Arn;
+
+            loggerFactory.CreateLogger<StaticPublicationConfiguration>().LogInformation(
+                "Created SNS topic publisher on topic '{TopicName}' for message type '{MessageType}'.",
+                snsTopic.TopicName,
+                typeof(T));
         }
 
-        return new StaticPublicationConfiguration(StartupTask, eventPublisher, snsTopic.TopicName);
+        return new StaticPublicationConfiguration(StartupTask, eventPublisher);
     }
 }

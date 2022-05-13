@@ -38,6 +38,8 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// </summary>
     private string TopicName { get; set; } = string.Empty;
 
+    public Func<Message,string> TopicNameCustomizer { get; set; }
+
     /// <summary>
     /// Configures the SNS write configuration.
     /// </summary>
@@ -135,6 +137,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
 
     public TopicPublicationBuilder<T> WithTopicName(Func<Message, string> topicNameCustomizer)
     {
+        TopicNameCustomizer = topicNameCustomizer;
         return this;
     }
 
@@ -154,16 +157,22 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
         var writeConfiguration = new SnsWriteConfiguration();
         ConfigureWrites?.Invoke(writeConfiguration);
 
-        var config = StaticPublicationConfiguration.Build<T>(TopicName, Tags, region, writeConfiguration, proxy, loggerFactory, bus);
+        StaticPublicationConfiguration BuildConfiguration(string topicName)
+            => StaticPublicationConfiguration.Build<T>(topicName,
+                Tags,
+                region,
+                writeConfiguration,
+                proxy,
+                loggerFactory,
+                bus);
+
+        TopicPublisher config = TopicNameCustomizer != null
+            ? DynamicPublicationConfiguration.Build<T>(TopicNameCustomizer, BuildConfiguration, loggerFactory)
+            : BuildConfiguration(TopicName);
 
         bus.AddStartupTask(config.StartupTask);
         bus.AddMessagePublisher<T>(config.Publisher);
 
         bus.SerializationRegister.AddSerializer<T>();
-
-        logger.LogInformation(
-            "Created SNS topic publisher on topic '{TopicName}' for message type '{MessageType}'.",
-            config.TopicName,
-            typeof(T));
     }
 }
