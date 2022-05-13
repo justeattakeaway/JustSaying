@@ -42,33 +42,32 @@ internal class DynamicMessagePublisher : IMessagePublisher
     public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
     {
         var topicName = _topicNameCustomizer(message);
-        if (_publisherCache.ContainsKey(topicName))
+        if (_publisherCache.TryGetValue(topicName, out var publisher))
         {
-            await _publisherCache[topicName].PublishAsync(message, metadata, cancellationToken);
+            await publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
             return;
         }
 
         var lockObj = _topicCreationLocks.GetOrAdd(topicName, _ => new SemaphoreSlim(1, 1));
 
-
         _logger.LogDebug("Publisher for topic {TopicName} not found, waiting on creation lock", topicName);
-        await lockObj.WaitAsync(cancellationToken);
-        if (_publisherCache.ContainsKey(topicName))
+        await lockObj.WaitAsync(cancellationToken).ConfigureAwait(false);
+        if (_publisherCache.TryGetValue(topicName, out var thePublisher))
         {
             _logger.LogDebug("Lock re-entrancy detected, returning existing publisher");
-            await _publisherCache[topicName].PublishAsync(message, metadata, cancellationToken);
+            await thePublisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
             return;
         }
 
         _logger.LogDebug("Lock acquired to init topic {TopicName}", topicName);
         var config = _staticConfigBuilder(topicName);
         _logger.LogDebug("Executing startup task for topic {TopicName}", topicName);
-        await config.StartupTask(cancellationToken);
+        await config.StartupTask(cancellationToken).ConfigureAwait(false);
 
         _publisherCache.Add(topicName, config.Publisher);
 
         _logger.LogDebug("Publishing message on newly created topic {TopicName}", topicName);
-        await _publisherCache[topicName].PublishAsync(message, metadata, cancellationToken);
+        await config.Publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
     }
 
     public Task PublishAsync(Message message, CancellationToken cancellationToken)
