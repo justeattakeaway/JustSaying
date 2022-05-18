@@ -153,8 +153,8 @@ ForEach ($libraryProject in $libraryProjects) {
 }
 
 if (($null -ne $env:CI) -And ($EnableIntegrationTests -eq $true)) {
-    & docker pull --quiet localstack/localstack:latest
-    & docker run -d --name localstack -p 4566:4566 localstack/localstack:latest
+    & docker pull --quiet localstack/localstack:0.14.2
+    & docker run -d --name localstack -p 4566:4566 localstack/localstack:0.14.2
     $env:AWS_SERVICE_URL = "http://localhost:4566"
 }
 
