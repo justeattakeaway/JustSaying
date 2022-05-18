@@ -58,8 +58,8 @@ public class WhenHandlingAMessageWithStringAttributes : IntegrationTestBase
                     () => handler.HandledMessages.Count > 0, TimeSpan.FromSeconds(5));
 
                 handler.HandledMessages.Count.ShouldBe(1);
-                handler.HandledMessages[0].context.MessageAttributes.Get("content1").StringValue.ShouldBe("somecontent");
-                handler.HandledMessages[0].context.MessageAttributes.Get("content2").StringValue.ShouldBe("somemorecontent");
+                handler.HandledMessages[0].context.MessageAttributes.Get("content1").ShouldNotBeNull().StringValue.ShouldBe("somecontent");
+                handler.HandledMessages[0].context.MessageAttributes.Get("content2").ShouldNotBeNull().StringValue.ShouldBe("somemorecontent");
             });
     }
 }
