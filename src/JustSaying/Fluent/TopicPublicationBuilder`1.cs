@@ -157,12 +157,13 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
         var writeConfiguration = new SnsWriteConfiguration();
         ConfigureWrites?.Invoke(writeConfiguration);
 
+        var client = proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region));
+
         StaticPublicationConfiguration BuildConfiguration(string topicName)
             => StaticPublicationConfiguration.Build<T>(topicName,
                 Tags,
-                region,
                 writeConfiguration,
-                proxy,
+                client,
                 loggerFactory,
                 bus);
 

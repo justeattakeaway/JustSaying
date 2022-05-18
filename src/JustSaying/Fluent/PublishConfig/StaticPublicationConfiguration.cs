@@ -1,5 +1,6 @@
 using Amazon;
 using Amazon.Internal;
+using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
@@ -27,9 +28,8 @@ internal class StaticPublicationConfiguration : TopicPublisher
     public static StaticPublicationConfiguration Build<T>(
         string topicName,
         Dictionary<string, string> tags,
-        string region,
         SnsWriteConfiguration writeConfiguration,
-        IAwsClientFactoryProxy proxy,
+        IAmazonSimpleNotificationService snsClient,
         ILoggerFactory loggerFactory,
         JustSayingBus bus)
     {
@@ -41,7 +41,7 @@ internal class StaticPublicationConfiguration : TopicPublisher
         readConfiguration.ApplyTopicNamingConvention<T>(bus.Config.TopicNamingConvention);
 
         var eventPublisher = new SnsMessagePublisher(
-            proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
+            snsClient,
             bus.SerializationRegister,
             loggerFactory,
             bus.Config.MessageSubjectProvider)
@@ -51,7 +51,7 @@ internal class StaticPublicationConfiguration : TopicPublisher
 
         var snsTopic = new SnsTopicByName(
             readConfiguration.TopicName,
-            proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
+            snsClient,
             loggerFactory)
         {
             Tags = tags
