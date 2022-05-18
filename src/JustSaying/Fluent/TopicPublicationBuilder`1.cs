@@ -135,6 +135,17 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
         return this;
     }
 
+    /// <summary>
+    /// Configures the name of the topic by calling this func at publish time to determine the name of the topic.
+    /// If the topic doesn't exist, it will be created on first publish.
+    /// </summary>
+    /// <param name="topicNameCustomizer">Function that will be called at publish time to determine the name of the target topic for this <see cref="T"/>.
+    /// <para>
+    /// For example: WithTopicName(msg => $"{msg.Tenant}-mymessage") with msg.Tenant of [uk, au] would
+    /// create topics "uk-mymessage" and "au-mymessage" when a message is published with those tenants.
+    /// </para>
+    /// </param>
+    /// <returns></returns>
     public TopicPublicationBuilder<T> WithTopicName(Func<Message, string> topicNameCustomizer)
     {
         TopicNameCustomizer = topicNameCustomizer;
@@ -167,7 +178,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
                 loggerFactory,
                 bus);
 
-        TopicPublisher config = TopicNameCustomizer != null
+        ITopicPublisher config = TopicNameCustomizer != null
             ? DynamicPublicationConfiguration.Build<T>(TopicNameCustomizer, BuildConfiguration, loggerFactory)
             : BuildConfiguration(TopicName);
 

@@ -23,22 +23,22 @@ public sealed class MessagingConfigurationBuilder
     public MessagingBusBuilder BusBuilder { get; }
 
     /// <summary>
-    /// Gets or sets the optional value to use for <see cref="TopicPublisher.AdditionalSubscriberAccounts"/>
+    /// Gets or sets the optional value to use for <see cref="IPublishConfiguration.AdditionalSubscriberAccounts"/>
     /// </summary>
     private List<string> AdditionalSubscriberAccounts { get; set; }
 
     /// <summary>
-    /// Gets or sets the optional value to use for <see cref="TopicPublisher.MessageResponseLogger"/>
+    /// Gets or sets the optional value to use for <see cref="IPublishConfiguration.MessageResponseLogger"/>
     /// </summary>
     private Action<MessageResponse, Message> MessageResponseLogger { get; set; }
 
     /// <summary>
-    /// Gets or sets the optional value to use for <see cref="TopicPublisher.PublishFailureBackoff"/>
+    /// Gets or sets the optional value to use for <see cref="IPublishConfiguration.PublishFailureBackoff"/>
     /// </summary>
     private TimeSpan? PublishFailureBackoff { get; set; }
 
     /// <summary>
-    /// Gets or sets the optional value to use for <see cref="TopicPublisher.PublishFailureReAttempts"/>
+    /// Gets or sets the optional value to use for <see cref="IPublishConfiguration.PublishFailureReAttempts"/>
     /// </summary>
     private int? PublishFailureReAttempts { get; set; }
 
