@@ -42,6 +42,8 @@ public class WhenAMessageIsPublishedToATenantedTopic
             Tenant = tenant
         };
 
+        string json = string.Empty;
+
         await WhenAsync(
             services,
             async (publisher, listener, cancellationToken) =>
@@ -49,15 +51,14 @@ public class WhenAMessageIsPublishedToATenantedTopic
                 await listener.StartAsync(cancellationToken);
                 await publisher.StartAsync(cancellationToken);
 
-
                 // Act
                 await publisher.PublishAsync(CreateMessage("uk"), cancellationToken);
                 await publisher.PublishAsync(CreateMessage("es"), cancellationToken);
                 await publisher.PublishAsync(CreateMessage("it"), cancellationToken);
 
-                OutputHelper.WriteLine(JsonConvert.SerializeObject(publisher.Interrogate()));
-                OutputHelper.WriteLine(JsonConvert.SerializeObject(listener.Interrogate()));
+                var publisherJson = JsonConvert.SerializeObject(publisher.Interrogate(), Formatting.Indented);
 
+                json = publisherJson.Replace(UniqueName, "integrationTestQueueName", StringComparison.Ordinal);
 
                 // Assert
                 await Patiently.AssertThatAsync(OutputHelper,
@@ -69,5 +70,8 @@ public class WhenAMessageIsPublishedToATenantedTopic
                         received.ShouldContain(x => x.Content == testId && x.Tenant == "es");
                     });
             });
+
+        json.ShouldMatchApproved(opt => opt.SubFolder("Approvals"));
+
     }
 }

@@ -62,7 +62,6 @@ public sealed class MessagingConfigurationBuilder
     /// </summary>
     private IQueueNamingConvention QueueNamingConvention { get; set; }
 
-
     /// <summary>
     /// Specifies additional subscriber account(s) to use.
     /// </summary>

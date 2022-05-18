@@ -24,9 +24,12 @@ internal class DynamicMessagePublisher : IMessagePublisher
 
     public InterrogationResult Interrogate()
     {
+        var pairs = _publisherCache.Keys.OrderBy(x => x)
+            .ToDictionary(x => x, x => _publisherCache[x].Interrogate());
+
         return new InterrogationResult(new
         {
-
+            Publishers = pairs
         });
     }
 
