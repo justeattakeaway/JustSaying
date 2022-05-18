@@ -55,6 +55,8 @@ public class WhenAMessageIsPublishedToATenantedTopic
                 await publisher.PublishAsync(CreateMessage("uk"), cancellationToken);
                 await publisher.PublishAsync(CreateMessage("uk"), cancellationToken);
                 await publisher.PublishAsync(CreateMessage("es"), cancellationToken);
+                await publisher.PublishAsync(CreateMessage("es"), cancellationToken);
+                await publisher.PublishAsync(CreateMessage("it"), cancellationToken);
                 await publisher.PublishAsync(CreateMessage("it"), cancellationToken);
 
                 var publisherJson = JsonConvert.SerializeObject(publisher.Interrogate(), Formatting.Indented);
@@ -67,8 +69,8 @@ public class WhenAMessageIsPublishedToATenantedTopic
                     {
                         var received = handler.ReceivedMessages;
                         received.ShouldContain(x => x.Content == testId && x.Tenant == "uk", 2);
-                        received.ShouldContain(x => x.Content == testId && x.Tenant == "it");
-                        received.ShouldContain(x => x.Content == testId && x.Tenant == "es");
+                        received.ShouldContain(x => x.Content == testId && x.Tenant == "it", 2);
+                        received.ShouldContain(x => x.Content == testId && x.Tenant == "es", 2);
                     });
             });
 
