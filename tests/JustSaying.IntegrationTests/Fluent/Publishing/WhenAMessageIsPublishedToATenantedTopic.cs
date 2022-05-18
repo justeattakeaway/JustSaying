@@ -53,6 +53,7 @@ public class WhenAMessageIsPublishedToATenantedTopic
 
                 // Act
                 await publisher.PublishAsync(CreateMessage("uk"), cancellationToken);
+                await publisher.PublishAsync(CreateMessage("uk"), cancellationToken);
                 await publisher.PublishAsync(CreateMessage("es"), cancellationToken);
                 await publisher.PublishAsync(CreateMessage("it"), cancellationToken);
 
@@ -65,7 +66,7 @@ public class WhenAMessageIsPublishedToATenantedTopic
                     () =>
                     {
                         var received = handler.ReceivedMessages;
-                        received.ShouldContain(x => x.Content == testId && x.Tenant == "uk");
+                        received.ShouldContain(x => x.Content == testId && x.Tenant == "uk", 2);
                         received.ShouldContain(x => x.Content == testId && x.Tenant == "it");
                         received.ShouldContain(x => x.Content == testId && x.Tenant == "es");
                     });
