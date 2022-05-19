@@ -63,7 +63,7 @@ internal sealed class DynamicMessagePublisher : IMessagePublisher
         _logger.LogDebug("Executing startup task for topic {TopicName}", topicName);
         await config.StartupTask(cancellationToken).ConfigureAwait(false);
 
-        _publisherCache.TryAdd(topicName, config.Publisher);
+        _ = _publisherCache.TryAdd(topicName, config.Publisher);
 
         _logger.LogDebug("Publishing message on newly created topic {TopicName}", topicName);
         await config.Publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
