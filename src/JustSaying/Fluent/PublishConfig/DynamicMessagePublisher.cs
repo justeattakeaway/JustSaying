@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
 
-internal class DynamicMessagePublisher : IMessagePublisher
+internal sealed class DynamicMessagePublisher : IMessagePublisher
 {
     private readonly ConcurrentDictionary<string, IMessagePublisher> _publisherCache = new();
     private readonly Func<Message, string> _topicNameCustomizer;
