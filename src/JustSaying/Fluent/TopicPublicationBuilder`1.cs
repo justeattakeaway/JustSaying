@@ -141,7 +141,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
 
     /// <summary>
     /// Configures the name of the topic by calling this func at publish time to determine the name of the topic.
-    /// If the topic doesn't exist, it will be created on first publish.
+    /// If the topic does not exist, it will be created on first publish.
     /// </summary>
     /// <param name="topicNameCustomizer">Function that will be called at publish time to determine the name of the target topic for this <see cref="T"/>.
     /// <para>
