@@ -149,7 +149,9 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// create topics <c>"uk-mymessage"</c> and <c>"au-mymessage"</c> when a message is published with those tenants.
     /// </para>
     /// </param>
-    /// <returns></returns>
+    /// <returns>
+    /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
+    /// </returns>
     public TopicPublicationBuilder<T> WithTopicName(Func<Message, string> topicNameCustomizer)
     {
         TopicNameCustomizer = topicNameCustomizer;
