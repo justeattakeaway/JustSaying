@@ -3,6 +3,8 @@ services:
   localstack:
     container_name: localstack
     restart: unless-stopped
-    image: localstack/localstack:latest
+    image: localstack/localstack:0.14
     ports:
       - 4566:4566
+    environment:
+      LS_LOG: debug

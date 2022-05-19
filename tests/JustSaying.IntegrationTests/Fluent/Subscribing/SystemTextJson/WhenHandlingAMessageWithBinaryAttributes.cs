@@ -63,7 +63,7 @@ public class WhenHandlingAMessageWithBinaryAttributes : IntegrationTestBase
                 handler.HandledMessages.Count.ShouldBe(1);
                 handler.HandledMessages[0].context.MessageAttributes.Get("content").StringValue.ShouldBe("somecontent");
 
-                var binaryData = handler.HandledMessages[0].context.MessageAttributes.Get("binarycontent").BinaryValue;
+                var binaryData = handler.HandledMessages[0].context.MessageAttributes.Get("binarycontent").ShouldNotBeNull().BinaryValue;
                 Encoding.UTF8.GetString(binaryData.ToArray()).ShouldBe("somebinarydata");
             });
     }

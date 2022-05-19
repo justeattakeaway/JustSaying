@@ -27,10 +27,14 @@ public class MessageSerializationRegister : IMessageSerializationRegister
     public MessageWithAttributes DeserializeMessage(string body)
     {
 
+        // Custom deserialisation from alternate payload into JustSaying payload
+
+
+        // Can we remove this loop and simplify how this works?
         foreach (var pair in _map)
         {
             TypeSerializer typeSerializer = pair.Value;
-            string messageSubject = typeSerializer.Serializer.GetMessageSubject(body);
+            string messageSubject = typeSerializer.Serializer.GetMessageSubject(body); // Custom serializer pulls this from cloud event event type
 
             if (string.IsNullOrWhiteSpace(messageSubject))
             {

@@ -50,7 +50,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
     /// </returns>
     public QueueSubscriptionBuilder<T> WithDefaultQueue()
-        => WithName(string.Empty);
+        => WithQueueName(string.Empty);
 
     /// <summary>
     /// Configures the name of the queue.
@@ -62,7 +62,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="name"/> is <see langword="null"/>.
     /// </exception>
-    public QueueSubscriptionBuilder<T> WithName(string name)
+    public QueueSubscriptionBuilder<T> WithQueueName(string name)
     {
         QueueName = name ?? throw new ArgumentNullException(nameof(name));
         return this;

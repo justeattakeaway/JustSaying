@@ -1,4 +1,5 @@
 using Amazon;
+using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
@@ -36,6 +37,12 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// Gets or sets the topic name.
     /// </summary>
     private string TopicName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Function that will produce a topic name dynamically from a Message at publish time.
+    /// If the topic doesn't exist, it will be created at that point.
+    /// </summary>
+    public Func<Message,string> TopicNameCustomizer { get; set; }
 
     /// <summary>
     /// Configures the SNS write configuration.
@@ -126,9 +133,28 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="name"/> is <see langword="null"/>.
     /// </exception>
-    public TopicPublicationBuilder<T> WithName(string name)
+    public TopicPublicationBuilder<T> WithTopicName(string name)
     {
         TopicName = name ?? throw new ArgumentNullException(nameof(name));
+        return this;
+    }
+
+    /// <summary>
+    /// Configures the name of the topic by calling this func at publish time to determine the name of the topic.
+    /// If the topic does not exist, it will be created on first publish.
+    /// </summary>
+    /// <param name="topicNameCustomizer">Function that will be called at publish time to determine the name of the target topic for this <see cref="T"/>.
+    /// <para>
+    /// For example: <c>WithTopicName(msg => $"{msg.Tenant}-mymessage")</c> with <c>msg.Tenant</c> of <c>["uk", "au"]</c> would
+    /// create topics <c>"uk-mymessage"</c> and <c>"au-mymessage"</c> when a message is published with those tenants.
+    /// </para>
+    /// </param>
+    /// <returns>
+    /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
+    /// </returns>
+    public TopicPublicationBuilder<T> WithTopicName(Func<Message, string> topicNameCustomizer)
+    {
+        TopicNameCustomizer = topicNameCustomizer;
         return this;
     }
 
@@ -143,65 +169,28 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
         logger.LogInformation("Adding SNS publisher for message type '{MessageType}'.",
             typeof(T));
 
-        var config = bus.Config;
-        var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
+        var region = bus.Config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(bus.Config.Region)} property.");
 
-        var readConfiguration = new SqsReadConfiguration(SubscriptionType.ToTopic)
-        {
-            TopicName = TopicName
-        };
         var writeConfiguration = new SnsWriteConfiguration();
         ConfigureWrites?.Invoke(writeConfiguration);
-        readConfiguration.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
+
+        var client = proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region));
+
+        StaticPublicationConfiguration BuildConfiguration(string topicName)
+            => StaticPublicationConfiguration.Build<T>(topicName,
+                Tags,
+                writeConfiguration,
+                client,
+                loggerFactory,
+                bus);
+
+        ITopicPublisher config = TopicNameCustomizer != null
+            ? DynamicPublicationConfiguration.Build<T>(TopicNameCustomizer, BuildConfiguration, loggerFactory)
+            : BuildConfiguration(TopicName);
+
+        bus.AddStartupTask(config.StartupTask);
+        bus.AddMessagePublisher<T>(config.Publisher);
 
         bus.SerializationRegister.AddSerializer<T>();
-
-        var eventPublisher = new SnsMessagePublisher(
-            proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
-            bus.SerializationRegister,
-            loggerFactory,
-            config.MessageSubjectProvider)
-        {
-            MessageResponseLogger = config.MessageResponseLogger,
-        };
-
-#pragma warning disable 618
-        var snsTopic = new SnsTopicByName(
-            readConfiguration.TopicName,
-            proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region)),
-            loggerFactory)
-        {
-            Tags = Tags
-        };
-#pragma warning restore 618
-
-        async Task StartupTask(CancellationToken cancellationToken)
-        {
-            if (writeConfiguration.Encryption != null)
-            {
-                await snsTopic.CreateWithEncryptionAsync(writeConfiguration.Encryption, cancellationToken)
-                    .ConfigureAwait(false);
-            }
-            else
-            {
-                await snsTopic.CreateAsync(cancellationToken).ConfigureAwait(false);
-            }
-
-            await snsTopic.EnsurePolicyIsUpdatedAsync(config.AdditionalSubscriberAccounts)
-                .ConfigureAwait(false);
-
-            await snsTopic.ApplyTagsAsync(cancellationToken).ConfigureAwait(false);
-
-            eventPublisher.Arn = snsTopic.Arn;
-        }
-
-        bus.AddStartupTask(StartupTask);
-
-        bus.AddMessagePublisher<T>(eventPublisher);
-
-        logger.LogInformation(
-            "Created SNS topic publisher on topic '{TopicName}' for message type '{MessageType}'.",
-            readConfiguration.TopicName,
-            typeof(T));
     }
 }
