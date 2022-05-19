@@ -40,7 +40,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
 
     /// <summary>
     /// Function that will produce a topic name dynamically from a Message at publish time.
-    /// If the topic doesn't exist, it'll be created at that point.
+    /// If the topic doesn't exist, it will be created at that point.
     /// </summary>
     public Func<Message,string> TopicNameCustomizer { get; set; }
 
