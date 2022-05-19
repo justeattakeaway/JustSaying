@@ -145,7 +145,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// </summary>
     /// <param name="topicNameCustomizer">Function that will be called at publish time to determine the name of the target topic for this <see cref="T"/>.
     /// <para>
-    /// For example: WithTopicName(msg => $"{msg.Tenant}-mymessage") with msg.Tenant of [uk, au] would
+    /// For example: <c>WithTopicName(msg => $"{msg.Tenant}-mymessage")</c> with <c>msg.Tenant</c> of <c>["uk", "au"]</c> would
     /// create topics "uk-mymessage" and "au-mymessage" when a message is published with those tenants.
     /// </para>
     /// </param>
