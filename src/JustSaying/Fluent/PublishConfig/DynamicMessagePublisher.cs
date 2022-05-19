@@ -60,7 +60,7 @@ internal sealed class DynamicMessagePublisher : IMessagePublisher
 
         _logger.LogDebug("Lock acquired to init topic {TopicName}", topicName);
         var config = _staticConfigBuilder(topicName);
-        _logger.LogDebug("Executing startup task for topic {Top ame}", topicName);
+        _logger.LogDebug("Executing startup task for topic {TopicName}", topicName);
         await config.StartupTask(cancellationToken).ConfigureAwait(false);
 
         _publisherCache.TryAdd(topicName, config.Publisher);
