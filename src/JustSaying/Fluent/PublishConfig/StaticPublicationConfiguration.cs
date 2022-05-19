@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
 
-internal class StaticPublicationConfiguration : ITopicPublisher
+internal sealed class StaticPublicationConfiguration : ITopicPublisher
 {
     public Func<CancellationToken, Task> StartupTask { get; }
     public IMessagePublisher Publisher { get; }
