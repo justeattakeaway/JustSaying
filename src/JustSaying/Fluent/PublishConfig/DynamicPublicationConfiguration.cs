@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
 
-internal class DynamicPublicationConfiguration : ITopicPublisher
+internal sealed class DynamicPublicationConfiguration : ITopicPublisher
 {
     public DynamicPublicationConfiguration(IMessagePublisher publisher)
     {
