@@ -44,7 +44,7 @@ public sealed class LoggingMiddleware : MiddlewareBase<HandleMessageContext, boo
         {
             if (dispatchSuccessful)
             {
-                _logger.LogInformation(MessageTemplate,
+                _logger.LogInformation(context.HandledException, MessageTemplate,
                     Succeeded,
                     context.Message.Id,
                     context.MessageType.FullName,
@@ -52,7 +52,7 @@ public sealed class LoggingMiddleware : MiddlewareBase<HandleMessageContext, boo
             }
             else
             {
-                _logger.LogWarning(MessageTemplate,
+                _logger.LogWarning(context.HandledException, MessageTemplate,
                     Failed,
                     context.Message.Id,
                     context.MessageType.FullName,
