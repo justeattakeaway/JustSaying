@@ -65,10 +65,10 @@ public static class HandlerMiddlewareBuilderExtensions
         if (handlerType == null) throw new ArgumentNullException(nameof(handlerType), "HandlerType is used here to");
 
         builder.UseMessageContextAccessor();
-        builder.UseErrorHandler();
         builder.Use<LoggingMiddleware>();
         builder.UseStopwatch(handlerType);
         builder.Use<SqsPostProcessorMiddleware>();
+        builder.UseErrorHandler();
         builder.UseHandler<TMessage>();
 
         return builder;

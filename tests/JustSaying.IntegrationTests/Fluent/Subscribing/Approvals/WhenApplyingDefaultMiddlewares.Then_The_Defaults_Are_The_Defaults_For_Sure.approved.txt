@@ -5,10 +5,10 @@
       "QueueName": "TestQueueName",
       "MiddlewareChain": [
         "MessageContextAccessorMiddleware",
-        "ErrorHandlerMiddleware",
         "LoggingMiddleware",
         "StopwatchMiddleware",
         "SqsPostProcessorMiddleware",
+        "ErrorHandlerMiddleware",
         "HandlerInvocationMiddleware`1[JustSaying.TestingFramework.SimpleMessage]"
       ]
     }

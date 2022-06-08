@@ -7,10 +7,10 @@
         "WhenApplyingDefaultMiddlewares+OuterTestMiddleware",
         "WhenApplyingDefaultMiddlewares+InnerTestMiddleware",
         "MessageContextAccessorMiddleware",
-        "ErrorHandlerMiddleware",
         "LoggingMiddleware",
         "StopwatchMiddleware",
         "SqsPostProcessorMiddleware",
+        "ErrorHandlerMiddleware",
         "WhenApplyingDefaultMiddlewares+AfterTestMiddleware",
         "HandlerInvocationMiddleware`1[JustSaying.TestingFramework.SimpleMessage]"
       ]
