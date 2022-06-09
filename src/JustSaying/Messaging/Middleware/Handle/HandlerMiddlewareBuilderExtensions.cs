@@ -36,7 +36,7 @@ public static class HandlerMiddlewareBuilderExtensions
     /// <summary>
     /// <para>
     /// Applies a set of default middlewares in order. Adding other middlewares before this will add them
-    /// to the top of the stack, and are run first and last.
+    /// to the top of the stack, and are run first to last.
     /// Adding other middleware after this will add them to the bottom of the stack, just before the
     /// handler itself is invoked.
     /// </para>
@@ -44,10 +44,10 @@ public static class HandlerMiddlewareBuilderExtensions
     /// <list type="bullet">
     /// <item>MessageContextAccessorMiddleware</item>
     /// <item>BackoffMiddleware (only if an <see cref="IMessageBackoffStrategy"/> is available)</item>
-    /// <item>ErrorHandlerMiddleware</item>
     /// <item>LoggingMiddleware</item>
     /// <item>StopwatchMiddleware</item>
     /// <item>SqsPostProcessorMiddleware</item>
+    /// <item>ErrorHandlerMiddleware</item>
     /// <item>HandlerInvocationMiddleware`1</item>
     /// </list>
     /// </summary>
@@ -65,10 +65,10 @@ public static class HandlerMiddlewareBuilderExtensions
         if (handlerType == null) throw new ArgumentNullException(nameof(handlerType), "HandlerType is used here to");
 
         builder.UseMessageContextAccessor();
-        builder.UseErrorHandler();
         builder.Use<LoggingMiddleware>();
         builder.UseStopwatch(handlerType);
         builder.Use<SqsPostProcessorMiddleware>();
+        builder.UseErrorHandler();
         builder.UseHandler<TMessage>();
 
         return builder;

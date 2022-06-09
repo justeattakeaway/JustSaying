@@ -37,16 +37,16 @@ public interface ISubscriptionBuilder<out T>
     /// <li>Before_SomeCustomMiddleware</li>
     /// <li>Before_SomeOtherCustomMiddleware</li>
     /// <li>Before_MessageContextAccessorMiddleware</li>
-    /// <li>Before_ErrorHandlerMiddleware</li>
     /// <li>Before_LoggingMiddleware</li>
     /// <li>Before_StopwatchMiddleware</li>
     /// <li>Before_SqsPostProcessorMiddleware</li>
+    /// <li>Before_ErrorHandlerMiddleware</li>
     /// <li>Before_HandlerInvocationMiddleware</li>
     /// <li>After_HandlerInvocationMiddleware</li>
+    /// <li>After_ErrorHandlerMiddleware</li>
     /// <li>After_SqsPostProcessorMiddleware</li>
     /// <li>After_StopwatchMiddleware</li>
     /// <li>After_LoggingMiddleware</li>
-    /// <li>After_ErrorHandlerMiddleware</li>
     /// <li>After_MessageContextAccessorMiddleware</li>
     /// <li>After_SomeOtherCustomMiddleware</li>
     /// <li>After_SomeCustomMiddleware</li>

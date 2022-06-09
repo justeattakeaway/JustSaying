@@ -122,7 +122,12 @@ public class LogContextTests : IntegrationTestBase
             handleMessage.ShouldNotBeNull();
 
             handleMessage.LogLevel.ShouldBe(level);
-            handleMessage.Exception?.Message.ShouldBe(exceptionMessage);
+
+            if (exceptionMessage != null)
+            {
+                handleMessage.Exception.ShouldNotBeNull();
+                handleMessage.Exception.Message.ShouldBe(exceptionMessage);
+            }
 
             var propertyMap = new Dictionary<string, object>(handleMessage.Properties);
             propertyMap.ShouldContainKeyAndValue("Status", status);

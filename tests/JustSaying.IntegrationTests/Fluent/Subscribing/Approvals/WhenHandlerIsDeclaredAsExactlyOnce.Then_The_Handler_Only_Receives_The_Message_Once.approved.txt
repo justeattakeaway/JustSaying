@@ -6,10 +6,10 @@
       "MiddlewareChain": [
         "ExactlyOnceMiddleware`1[JustSaying.TestingFramework.SimpleMessage]",
         "MessageContextAccessorMiddleware",
-        "ErrorHandlerMiddleware",
         "LoggingMiddleware",
         "StopwatchMiddleware",
         "SqsPostProcessorMiddleware",
+        "ErrorHandlerMiddleware",
         "HandlerInvocationMiddleware`1[JustSaying.TestingFramework.SimpleMessage]"
       ]
     }
