@@ -11,6 +11,8 @@ internal sealed class LogOperation : IDisposable
     private readonly Stopwatch _watch;
     private readonly LogLevel _logLevel;
 
+    private const string MessageTemplate = " finished in {0:0}ms";
+
     public LogOperation(ILogger logger, LogLevel logLevel, string message, params object[] args)
     {
         _logger = logger;
@@ -24,27 +26,28 @@ internal sealed class LogOperation : IDisposable
     {
         _watch.Stop();
 
-        var args = _args.Concat(new object[] { _watch.Elapsed }).ToArray();
+        var message = $"{_message}{MessageTemplate}";
+        var args = _args.Concat(new object[] { _watch.Elapsed.TotalMilliseconds }).ToArray();
 
         switch (_logLevel)
         {
             case LogLevel.Trace:
-                _logger.LogTrace(_message, args);
+                _logger.LogTrace(message, args);
                 return;
             case LogLevel.Debug:
-                _logger.LogDebug(_message, args);
+                _logger.LogDebug(message, args);
                 return;
             case LogLevel.Information:
-                _logger.LogInformation(_message, args);
+                _logger.LogInformation(message, args);
                 return;
             case LogLevel.Warning:
-                _logger.LogWarning(_message, args);
+                _logger.LogWarning(message, args);
                 return;
             case LogLevel.Error:
-                _logger.LogError(_message, args);
+                _logger.LogError(message, args);
                 return;
             case LogLevel.Critical:
-                _logger.LogCritical(_message, args);
+                _logger.LogCritical(message, args);
                 return;
             case LogLevel.None:
                 return;
