@@ -36,13 +36,6 @@ if ($OutputPath -eq "") {
     $OutputPath = Join-Path "$(Convert-Path "$PSScriptRoot")" "artifacts"
 }
 
-if ($null -ne $env:CI) {
-    if (($VersionSuffix -eq "" -and $env:APPVEYOR_REPO_TAG -eq "false" -and $env:APPVEYOR_BUILD_NUMBER -ne "") -eq $true) {
-        $ThisVersion = $env:APPVEYOR_BUILD_NUMBER -as [int]
-        $VersionSuffix = "beta" + $ThisVersion.ToString("0000")
-    }
-}
-
 $installDotNetSdk = $false;
 
 if (($null -eq (Get-Command "dotnet" -ErrorAction SilentlyContinue)) -and ($null -eq (Get-Command "dotnet.exe" -ErrorAction SilentlyContinue))) {
