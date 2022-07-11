@@ -50,6 +50,12 @@ public class SqsBasicConfiguration
                 $"Invalid configuration. {nameof(DeliveryDelay)} must be between {JustSayingConstants.MinimumDeliveryDelay} and {JustSayingConstants.MaximumDeliveryDelay}.");
         }
 
+        if (ServerSideEncryption.KmsDataKeyReusePeriod.TotalSeconds is > 86400 or < 60)
+        {
+            throw new ConfigurationErrorsException(
+                $"Invalid configuration. {nameof(ServerSideEncryption.KmsDataKeyReusePeriod)} must be between 1 minute and 24 hours.");
+        }
+
         if (string.IsNullOrWhiteSpace(QueueName))
         {
             throw new ConfigurationErrorsException("Invalid configuration. QueueName must be provided.");

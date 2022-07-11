@@ -17,7 +17,7 @@ public static class JustSayingConstants
     public static TimeSpan DefaultVisibilityTimeout => TimeSpan.FromSeconds(30);
 
     /// <summary>
-    /// Number of times a handler will retry a message until a message 
+    /// Number of times a handler will retry a message until a message
     /// is sent to error queue
     /// </summary>
     public static int DefaultHandlerRetryCount => 5;
@@ -28,7 +28,7 @@ public static class JustSayingConstants
     public static int DefaultPublisherRetryCount => 3;
 
     /// <summary>
-    /// Every time a publisher is not able to deliver a message, it will 
+    /// Every time a publisher is not able to deliver a message, it will
     /// wait {interval} * {attemptCount} before retrying,
     /// </summary>
     public static TimeSpan DefaultPublisherRetryInterval => TimeSpan.FromMilliseconds(100);
@@ -71,5 +71,5 @@ public static class JustSayingConstants
     /// <summary>
     /// Default length of time, in seconds, for which Amazon SQS can reuse a data key to encrypt/decrypt messages before calling AWS KMS again
     /// </summary>
-    public static string DefaultAttributeEncryptionKeyReusePeriodSecond => "300";  //5 minutes
+    public static TimeSpan DefaultAttributeEncryptionKeyReusePeriod => TimeSpan.FromMinutes(5);
 }

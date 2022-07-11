@@ -7,14 +7,10 @@ public class ServerSideEncryption
 {
     public ServerSideEncryption()
     {
-        KmsDataKeyReusePeriodSeconds = JustSayingConstants.DefaultAttributeEncryptionKeyReusePeriodSecond;
+        KmsDataKeyReusePeriod = JustSayingConstants.DefaultAttributeEncryptionKeyReusePeriod;
     }
 
-    [JsonProperty("kmsMasterKeyId")]
-    [JsonPropertyName("kmsMasterKeyId")]
     public string KmsMasterKeyId { get; set; }
 
-    [JsonProperty("kmsDataKeyReusePeriodSeconds")]
-    [JsonPropertyName("kmsDataKeyReusePeriodSeconds")]
-    public string KmsDataKeyReusePeriodSeconds { get; set; }
+    public TimeSpan KmsDataKeyReusePeriod { get; set; }
 }

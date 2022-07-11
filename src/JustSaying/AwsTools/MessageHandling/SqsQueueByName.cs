@@ -163,7 +163,7 @@ public class SqsQueueByName : SqsQueueByNameBase
         if (queueConfig.ServerSideEncryption != null)
         {
             policy.Add(JustSayingConstants.AttributeEncryptionKeyId, queueConfig.ServerSideEncryption.KmsMasterKeyId);
-            policy.Add(JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId, queueConfig.ServerSideEncryption.KmsDataKeyReusePeriodSeconds);
+            policy.Add(JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId, queueConfig.ServerSideEncryption.KmsDataKeyReusePeriod.AsSecondsString());
         }
 
         return policy;
