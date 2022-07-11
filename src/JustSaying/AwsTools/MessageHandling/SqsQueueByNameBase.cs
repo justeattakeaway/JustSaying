@@ -203,7 +203,7 @@ public abstract class SqsQueueByNameBase : ISqsQueue
             if (queueConfig.ServerSideEncryption != null)
             {
                 attributes.Add(JustSayingConstants.AttributeEncryptionKeyId, queueConfig.ServerSideEncryption.KmsMasterKeyId);
-                attributes.Add(JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId, queueConfig.ServerSideEncryption.KmsDataKeyReusePeriodSeconds);
+                attributes.Add(JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId, queueConfig.ServerSideEncryption.KmsDataKeyReusePeriod.AsSecondsString());
             }
 
             if (queueConfig.ServerSideEncryption == null)
@@ -247,7 +247,7 @@ public abstract class SqsQueueByNameBase : ISqsQueue
         if (ServerSideEncryption != null && queueConfig.ServerSideEncryption != null)
         {
             return ServerSideEncryption.KmsMasterKeyId != queueConfig.ServerSideEncryption.KmsMasterKeyId ||
-                   ServerSideEncryption.KmsDataKeyReusePeriodSeconds != queueConfig.ServerSideEncryption.KmsDataKeyReusePeriodSeconds;
+                   ServerSideEncryption.KmsDataKeyReusePeriod != queueConfig.ServerSideEncryption.KmsDataKeyReusePeriod;
         }
 
         return true;
@@ -273,7 +273,7 @@ public abstract class SqsQueueByNameBase : ISqsQueue
         return new ServerSideEncryption
         {
             KmsMasterKeyId = encryptionKeyId,
-            KmsDataKeyReusePeriodSeconds = queueAttributes[JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId]
+            KmsDataKeyReusePeriod = queueAttributes[JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId].FromSecondsString()
         };
     }
 

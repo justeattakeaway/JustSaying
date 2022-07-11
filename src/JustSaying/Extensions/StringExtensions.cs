@@ -15,6 +15,11 @@ internal static class StringExtensions
         return s;
     }
 
+    public static TimeSpan FromSecondsString(this string seconds)
+    {
+        return TimeSpan.FromSeconds(int.Parse(seconds, NumberStyles.None));
+    }
+
     private static int GetInvariantHashCode(this string value)
     {
         return value.Aggregate(5381, (current, character) => (current * 397) ^ character);
