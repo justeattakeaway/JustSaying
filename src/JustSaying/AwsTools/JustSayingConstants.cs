@@ -69,7 +69,7 @@ public static class JustSayingConstants
     public static string DefaultSnsAttributeEncryptionKeyId => "alias/aws/sns";
 
     /// <summary>
-    /// Default length of time, in seconds, for which Amazon SQS can reuse a data key to encrypt/decrypt messages before calling AWS KMS again
+    /// Default length of time for which Amazon SQS can reuse a data key to encrypt/decrypt messages before calling AWS KMS again.
     /// </summary>
     public static TimeSpan DefaultAttributeEncryptionKeyReusePeriod => TimeSpan.FromMinutes(5);
 }
