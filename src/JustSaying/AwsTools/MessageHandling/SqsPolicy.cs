@@ -45,7 +45,6 @@ internal static class SqsPolicy
     {
         if (string.IsNullOrWhiteSpace(topicArn))
         {
-            // todo should not get here?
             return "*";
         }
 

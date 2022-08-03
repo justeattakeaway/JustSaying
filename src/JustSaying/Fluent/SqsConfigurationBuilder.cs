@@ -145,17 +145,12 @@ public abstract class SqsConfigurationBuilder<TConfiguration, TBuilder>
     /// <param name="config">The configuration to configure.</param>
     internal virtual void Configure(TConfiguration config)
     {
-        // TODO Which ones should be configurable? All, or just the important ones?
-        // config.BaseQueueName = default;
-        // config.BaseTopicName = default;
-        // config.DeliveryDelay = default;
-        // config.ErrorQueueRetentionPeriod = default;
-        // config.FilterPolicy = default;
-        // config.MessageBackoffStrategy = default;
-        // config.MessageProcessingStrategy = default;
-        // config.PublishEndpoint = default;
-        // config.RetryCountBeforeSendingToErrorQueue = default;
-        // config.Topic = default;
+        // These properties are not currently set. We could
+        // configure them in the future if needed.
+        ////config.DeliveryDelay = default;
+        ////config.ErrorQueueRetentionPeriod = default;
+        ////config.QueueName = default;
+        ////config.RetryCountBeforeSendingToErrorQueue = default;
 
         if (Encryption != null)
         {

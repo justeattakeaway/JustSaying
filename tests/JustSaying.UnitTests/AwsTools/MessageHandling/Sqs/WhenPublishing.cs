@@ -41,7 +41,6 @@ public class WhenPublishing : WhenPublishingTestBase
     [Fact]
     public void MessageIsPublishedToQueue()
     {
-        // ToDo: Could be better...
         Sqs.Received().SendMessageAsync(Arg.Is<SendMessageRequest>(
             x => x.MessageBody.Equals("serialized_contents", StringComparison.OrdinalIgnoreCase)));
     }
