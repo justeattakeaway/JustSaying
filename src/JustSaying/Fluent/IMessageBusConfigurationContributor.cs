@@ -1,5 +1,4 @@
 namespace JustSaying.Fluent;
-//// TODO I don't like this name, but we can give it a better name later
 
 /// <summary>
 /// Defines a method for configuring an instance of <see cref="MessagingBusBuilder"/>.

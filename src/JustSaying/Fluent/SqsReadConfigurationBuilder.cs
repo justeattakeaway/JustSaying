@@ -50,19 +50,19 @@ public sealed class SqsReadConfigurationBuilder : SqsConfigurationBuilder<SqsRea
     /// <param name="config">The configuration to configure.</param>
     internal override void Configure(SqsReadConfiguration config)
     {
-        // TODO Which ones should be configurable? All, or just the important ones?
-        // config.BaseQueueName = default;
-        // config.BaseTopicName = default;
-        // config.DeliveryDelay = default;
-        // config.ErrorQueueRetentionPeriod = default;
-        // config.FilterPolicy = default;
-        // config.MessageBackoffStrategy = default;
-        // config.MessageProcessingStrategy = default;
-        // config.PublishEndpoint = default;
-        // config.QueueName = default;
-        // config.RetryCountBeforeSendingToErrorQueue = default;
-        // config.ServerSideEncryption = default;
-        // config.Topic = default;
+        // These properties are not currently set. We could
+        // configure them in the future if needed.
+        ////config.DeliveryDelay = default;
+        ////config.ErrorQueueOptOut = default;
+        ////config.ErrorQueueRetentionPeriod = default;
+        ////config.FilterPolicy = default;
+        ////config.MessageRetention = default;
+        ////config.PublishEndpoint = default;
+        ////config.QueueName = default;
+        ////config.RetryCountBeforeSendingToErrorQueue = default;
+        ////config.ServerSideEncryption = default;
+        ////config.Tags = default;
+        ////config.TopicName = default;
 
         base.Configure(config);
 

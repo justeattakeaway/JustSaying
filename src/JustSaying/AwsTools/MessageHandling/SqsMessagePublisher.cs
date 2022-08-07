@@ -37,7 +37,6 @@ public class SqsMessagePublisher : IMessagePublisher
         _logger = loggerFactory.CreateLogger("JustSaying.Publish");
     }
 
-    // TODO: This type shouldn't be an IMessagePublisher
     public Task StartAsync(CancellationToken cancellationToken)
     {
         return Task.CompletedTask;

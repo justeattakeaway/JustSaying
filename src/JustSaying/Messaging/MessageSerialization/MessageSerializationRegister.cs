@@ -26,9 +26,7 @@ public class MessageSerializationRegister : IMessageSerializationRegister
 
     public MessageWithAttributes DeserializeMessage(string body)
     {
-
         // Custom deserialisation from alternate payload into JustSaying payload
-
 
         // Can we remove this loop and simplify how this works?
         foreach (var pair in _map)
@@ -53,9 +51,13 @@ public class MessageSerializationRegister : IMessageSerializationRegister
             return new MessageWithAttributes(message, attributes);
         }
 
-        // TODO Maybe we should log the body separately (at debug/trace?), rather than include it in the exception message. Then they're easier to filter.
-        throw new MessageFormatNotSupportedException(
-            $"Message can not be handled - type undetermined. Message body: '{body}'");
+        var exception = new MessageFormatNotSupportedException("Message can not be handled - type undetermined.");
+
+        // Put the message's body into the exception data so anyone catching
+        // it can inspect it for other purposes, such as for logging.
+        exception.Data["MessageBody"] = body;
+
+        throw exception;
     }
 
     public string Serialize(Message message, bool serializeForSnsPublishing)
@@ -64,7 +66,6 @@ public class MessageSerializationRegister : IMessageSerializationRegister
 
         if (!_map.TryGetValue(messageType, out TypeSerializer typeSerializer))
         {
-            // TODO Log out what *is* registered at debug?
             throw new MessageFormatNotSupportedException($"Failed to serialize message of type {messageType} because it is not registered for serialization.");
         }
 

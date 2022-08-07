@@ -1,6 +1,6 @@
 using Amazon.SQS.Model;
-using JustSaying.Messaging;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -41,7 +41,6 @@ public class WhenPublishingAsync : WhenPublishingTestBase
     [Fact]
     public void MessageIsPublishedToQueue()
     {
-        // ToDo: Could be better...
         Sqs.Received().SendMessageAsync(Arg.Is<SendMessageRequest>(
             x => x.MessageBody.Equals("serialized_contents", StringComparison.OrdinalIgnoreCase)));
     }
