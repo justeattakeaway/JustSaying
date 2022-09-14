@@ -1,5 +1,4 @@
 using JustSaying.Messaging.Channels.Context;
-using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
@@ -37,7 +36,7 @@ public class MessageDispatcher : IMessageDispatcher
             return;
         }
 
-        (bool success, Message typedMessage, MessageAttributes attributes) =
+        (bool success, Message typedMessage) =
             await DeserializeMessage(messageContext, cancellationToken).ConfigureAwait(false);
 
         if (!success)
@@ -63,23 +62,22 @@ public class MessageDispatcher : IMessageDispatcher
             messageType,
             messageContext,
             messageContext,
-            messageContext.QueueUri,
-            attributes);
+            messageContext.QueueUri);
 
         await middleware.RunAsync(handleContext, null, cancellationToken)
             .ConfigureAwait(false);
 
     }
 
-    private async Task<(bool success, Message typedMessage, MessageAttributes attributes)>
+    private async Task<(bool success, Message typedMessage)>
         DeserializeMessage(IQueueMessageContext messageContext, CancellationToken cancellationToken)
     {
         try
         {
             _logger.LogDebug("Attempting to deserialize message with serialization register {Type}",
                 _serializationRegister.GetType().FullName);
-            var messageWithAttributes = _serializationRegister.DeserializeMessage(messageContext.Message.Body);
-            return (true, messageWithAttributes.Message, messageWithAttributes.MessageAttributes);
+            var message = _serializationRegister.DeserializeMessage(messageContext.Message.Body);
+            return (true, message);
         }
         catch (MessageFormatNotSupportedException ex)
         {
@@ -91,7 +89,7 @@ public class MessageDispatcher : IMessageDispatcher
             await messageContext.DeleteMessage(cancellationToken).ConfigureAwait(false);
             _messagingMonitor.HandleError(ex, messageContext.Message);
 
-            return (false, null, null);
+            return (false, null);
         }
 #pragma warning disable CA1031
         catch (Exception ex)
@@ -105,7 +103,7 @@ public class MessageDispatcher : IMessageDispatcher
 
             _messagingMonitor.HandleError(ex, messageContext.Message);
 
-            return (false, null, null);
+            return (false, null);
         }
     }
 }

@@ -24,7 +24,7 @@ public class MessageSerializationRegister : IMessageSerializationRegister
         }
     }
 
-    public MessageWithAttributes DeserializeMessage(string body)
+    public Message DeserializeMessage(string body)
     {
         // Custom deserialisation from alternate payload into JustSaying payload
 
@@ -46,9 +46,8 @@ public class MessageSerializationRegister : IMessageSerializationRegister
                 continue;
             }
 
-            var attributes = typeSerializer.Serializer.GetMessageAttributes(body);
             var message = typeSerializer.Serializer.Deserialize(body, matchedType);
-            return new MessageWithAttributes(message, attributes);
+            return message;
         }
 
         var exception = new MessageFormatNotSupportedException("Message can not be handled - type undetermined.");

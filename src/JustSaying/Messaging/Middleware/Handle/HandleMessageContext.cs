@@ -18,7 +18,7 @@ public sealed class HandleMessageContext
     /// <param name="messageDeleter">The <see cref="IMessageDeleter"/> to use to remove a message from the queue on success.</param>
     public HandleMessageContext(string queueName, Amazon.SQS.Model.Message rawMessage, Message message,
         Type messageType, IMessageVisibilityUpdater visibilityUpdater, IMessageDeleter messageDeleter,
-        Uri queueUri, MessageAttributes messageAttributes)
+        Uri queueUri)
     {
         Message = message;
         MessageType = messageType;
@@ -26,7 +26,6 @@ public sealed class HandleMessageContext
         VisibilityUpdater = visibilityUpdater;
         MessageDeleter = messageDeleter;
         QueueUri = queueUri;
-        MessageAttributes = messageAttributes;
         RawMessage = rawMessage;
     }
 
@@ -49,11 +48,6 @@ public sealed class HandleMessageContext
     /// The Absolute Uri of the queue this message came from.
     /// </summary>
     public Uri QueueUri { get; }
-
-    /// <summary>
-    /// A <see cref="MessageAttributes"/> collection of attributes that were downloaded with this message.
-    /// </summary>
-    public MessageAttributes MessageAttributes { get; }
 
     /// <summary>
     /// The raw SQS message that was downloaded from the queue.

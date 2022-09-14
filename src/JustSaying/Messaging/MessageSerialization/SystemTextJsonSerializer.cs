@@ -55,34 +55,6 @@ public class SystemTextJsonSerializer : IMessageSerializer
         }
     }
 
-    public MessageAttributes GetMessageAttributes(string message)
-    {
-        var jsonDocument = JsonDocument.Parse(message);
-
-        if (!jsonDocument.RootElement.TryGetProperty("MessageAttributes", out var attributesElement))
-        {
-            return new MessageAttributes();
-        }
-
-        var attributes = new Dictionary<string, MessageAttributeValue>();
-        foreach(var obj in attributesElement.EnumerateObject())
-        {
-            var dataType = obj.Value.GetProperty("Type").GetString();
-            var dataValue = obj.Value.GetProperty("Value").GetString();
-
-            var isString = dataType == "String";
-
-            attributes.Add(obj.Name, new MessageAttributeValue()
-            {
-                DataType = dataType,
-                StringValue = isString ? dataValue : null,
-                BinaryValue = !isString ? Convert.FromBase64String(dataValue) : null
-            });
-        }
-
-        return new MessageAttributes(attributes);
-    }
-
     /// <inheritdoc />
     public Message Deserialize(string message, Type type)
     {

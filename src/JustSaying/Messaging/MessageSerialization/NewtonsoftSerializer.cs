@@ -52,38 +52,6 @@ public class NewtonsoftSerializer : IMessageSerializer
         return JsonConvert.SerializeObject(context, _settings);
     }
 
-    public MessageAttributes GetMessageAttributes(string message)
-    {
-        var props = JObject.Parse(message).Value<JObject>("MessageAttributes")?.Properties();
-        if (props == null)
-        {
-            return new MessageAttributes();
-        }
-
-        var dict = new Dictionary<string, MessageAttributeValue>();
-
-        foreach (var prop in props)
-        {
-            var propData = prop.Value;
-            if (propData == null) continue;
-
-            var dataType = propData["Type"].ToString();
-            var dataValue = propData["Value"].ToString();
-
-            var isString = dataType == "String";
-
-            var mav = new MessageAttributeValue
-            {
-                DataType = dataType,
-                StringValue = isString ? dataValue : null,
-                BinaryValue = !isString ? Convert.FromBase64String(dataValue) : null
-            };
-            dict.Add(prop.Name, mav);
-        }
-
-        return new MessageAttributes(dict);
-    }
-
     public string GetMessageSubject(string sqsMessage)
     {
         if (string.IsNullOrWhiteSpace(sqsMessage)) return string.Empty;

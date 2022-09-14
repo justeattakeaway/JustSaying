@@ -1,4 +1,3 @@
-using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialization;
@@ -6,8 +5,6 @@ namespace JustSaying.Messaging.MessageSerialization;
 public interface IMessageSerializer
 {
     string GetMessageSubject(string sqsMessage);
-
-    MessageAttributes GetMessageAttributes(string message);
 
     Message Deserialize(string message, Type type);
 
