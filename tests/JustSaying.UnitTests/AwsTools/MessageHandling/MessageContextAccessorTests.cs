@@ -117,7 +117,7 @@ public class MessageContextAccessorTests
             Body = "test message " + uniqueness
         };
 
-        return new MessageContext(sqsMessage, queueUri, new MessageAttributes());
+        return new MessageContext(sqsMessage, queueUri);
     }
 
     private static IMessageContextAccessor MakeAccessor()

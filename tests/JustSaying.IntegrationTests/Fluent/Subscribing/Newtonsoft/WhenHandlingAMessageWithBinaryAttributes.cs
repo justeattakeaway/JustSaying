@@ -58,9 +58,9 @@ public class WhenHandlingAMessageWithBinaryAttributes : IntegrationTestBase
                 await Patiently.AssertThatAsync(OutputHelper, () => handler.HandledMessages.Count > 0, TimeSpan.FromSeconds(5));
 
                 handler.HandledMessages.Count.ShouldBe(1);
-                handler.HandledMessages[0].context.MessageAttributes.Get("content").ShouldNotBeNull().StringValue.ShouldBe("somecontent");
+                handler.HandledMessages[0].context.Message.MessageAttributes["content"].ShouldNotBeNull().StringValue.ShouldBe("somecontent");
 
-                var binaryData = handler.HandledMessages[0].context.MessageAttributes.Get("binarycontent").ShouldNotBeNull().BinaryValue;
+                var binaryData = handler.HandledMessages[0].context.Message.MessageAttributes["binarycontent"].ShouldNotBeNull().BinaryValue;
                 Encoding.UTF8.GetString(binaryData.ToArray()).ShouldBe("somebinarydata");
             });
     }

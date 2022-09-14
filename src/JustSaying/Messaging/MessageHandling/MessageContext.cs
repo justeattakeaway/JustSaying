@@ -12,12 +12,10 @@ public class MessageContext
     /// </summary>
     /// <param name="message">The <see cref="Amazon.SQS.Model.Message"/> currently being processed.</param>
     /// <param name="queueUri">The URI of the SQS queue the message is from.</param>
-    /// <param name="messageAttributes">The <see cref="MessageAttributes"/> from the message.</param>
-    public MessageContext(SQSMessage message, Uri queueUri, MessageAttributes messageAttributes)
+    public MessageContext(SQSMessage message, Uri queueUri)
     {
         Message = message ?? throw new ArgumentNullException(nameof(message));
         QueueUri = queueUri ?? throw new ArgumentNullException(nameof(queueUri));
-        MessageAttributes = messageAttributes ?? throw new ArgumentNullException(nameof(messageAttributes));
     }
 
     /// <summary>
@@ -29,9 +27,4 @@ public class MessageContext
     /// Gets the SQS Queue that the message was received on.
     /// </summary>
     public Uri QueueUri { get; }
-
-    /// <summary>
-    /// Gets a collection of <see cref="MessageAttributeValue"/>'s that were sent with this message.
-    /// </summary>
-    public MessageAttributes MessageAttributes { get; }
 }
