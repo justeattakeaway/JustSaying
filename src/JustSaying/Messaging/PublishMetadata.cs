@@ -17,7 +17,7 @@ public class PublishMetadata
         }
 
         var mav = new MessageAttributeValue();
-        mav.BinaryValue = new MemoryStream(data.ToArray());
+        mav.BinaryValue = new MemoryStream(data.ToArray(), false);
         mav.DataType = "Binary";
 
         MessageAttributes[key] = mav;
