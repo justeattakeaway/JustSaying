@@ -1,4 +1,5 @@
 using System.Globalization;
+using Amazon.SimpleNotificationService.Model;
 
 namespace JustSaying.Messaging;
 
@@ -16,7 +17,7 @@ public class PublishMetadata
         }
 
         var mav = new MessageAttributeValue();
-        mav.BinaryValue = data;
+        mav.BinaryValue = new MemoryStream(data.ToArray());
         mav.DataType = "Binary";
 
         MessageAttributes[key] = mav;

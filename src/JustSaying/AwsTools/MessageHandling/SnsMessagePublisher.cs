@@ -124,7 +124,7 @@ public class SnsMessagePublisher : IMessagePublisher, IInterrogable
             source => BuildMessageAttributeValue(source.Value));
     }
 
-    private static MessageAttributeValue BuildMessageAttributeValue(Messaging.MessageAttributeValue value)
+    private static MessageAttributeValue BuildMessageAttributeValue(MessageAttributeValue value)
     {
         if (value == null)
         {
