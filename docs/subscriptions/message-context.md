@@ -41,7 +41,7 @@ On the `MessageContext` type, there are the following places to get attributes:
 
 **Context.MessageAttributes**
 
-Message attributes are user defined attributes, and the attributes here are retrieved from the message body.
+Message attributes are user-defined attributes, and the attributes here are retrieved from the message body.
 
 **Context.Message.MessageAttributes**
 
