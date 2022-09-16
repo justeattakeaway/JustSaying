@@ -26,7 +26,7 @@ public class OrderAccepter {
     public OrderAccepter(IMessagePublisher publisher) {
         _publisher = publisher;
     }
-    
+
     public Task Accept() {
         // do some accepty type things here
         _publisher.PublishAsync(new OrderAccepted());
@@ -43,7 +43,7 @@ Handlers should implement the interface `IHandlerAsync<T>` which JustSaying will
 ```csharp
 public class OrderReadyEventHandler : IHandlerAsync<OrderReadyEvent>
 {
-    public Task<bool> Handle(OrderReadyEvent message)
+    public async Task<bool> Handle(OrderReadyEvent message)
     {
         // Do something here
         return true;
@@ -53,7 +53,7 @@ public class OrderReadyEventHandler : IHandlerAsync<OrderReadyEvent>
 
 #### Return value
 
-Note that the handler returns a `bool`. Handlers should return true if the message was handled successfully, and false if not. If false is returned, then the message won't be deleted from SQS, and will be re-processed by another worker when its visibility timeout expires. 
+Note that the handler returns a `bool`. Handlers should return true if the message was handled successfully, and false if not. If false is returned, then the message won't be deleted from SQS, and will be re-processed by another worker when its visibility timeout expires.
 
 **If an exception is thrown, it is equivalent to the handler returning false.**
 
@@ -82,14 +82,14 @@ public void ConfigureServices(IServiceCollection services)
                 // Configures which AWS Region to operate in
                 x.WithRegion(_configuration.GetAWSRegion());
             });
-                
+
             config.Publications(x =>
             {
                 // Creates the following if they do not already exist
                 //  - a SNS topic of name `orderplacedevent`
                 x.WithTopic<OrderPlacedEvent>();
             });
-                
+
             config.Subscriptions(x =>
             {
                 // Creates the following if they do not already exist
@@ -100,7 +100,7 @@ public void ConfigureServices(IServiceCollection services)
                 x.ForTopic<OrderReadyEvent>();
             });
         });
-        
+
     services.AddJustSayingHandler<OrderReadyEvent, OrderReadyEventHandler>();
 
 }
@@ -110,7 +110,7 @@ Note that the `AddJustSaying` extension method requires installing the [JustSayi
 
 ### Startup
 
-Now that we've created an event and handler, and wired it into the DI container, let's start the bus. How this is done is up to you, but here's an example using the built in `IHostedService` that comes with .NET Core. 
+Now that we've created an event and handler, and wired it into the DI container, let's start the bus. How this is done is up to you, but here's an example using the built in `IHostedService` that comes with .NET Core.
 
 _`BackgroundService` is a built-in type that implements `IHostedService` to provide a simple `ExecuteAsync` method with a `CancellationToken`._
 
