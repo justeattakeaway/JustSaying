@@ -49,4 +49,4 @@ Message attributes are user-defined attributes, and the attributes here are retr
 
 **Context.Message.Attributes**
 
-These are the "system attributes" for the message, in JustSaying we request for the `ApproximateReceiveCount` system attribute to be included, so this should be the only present attribute here, and will always be available.
+These are the _"system attributes"_ for the message, in JustSaying we request for the `ApproximateReceiveCount` system attribute to be included, so this should be the only present attribute here, and will always be available.
