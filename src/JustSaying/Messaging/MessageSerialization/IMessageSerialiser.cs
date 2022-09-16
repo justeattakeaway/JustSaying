@@ -1,10 +1,13 @@
-using JustSaying.Models;
+using Amazon.SQS.Model;
+using Message = JustSaying.Models.Message;
 
 namespace JustSaying.Messaging.MessageSerialization;
 
 public interface IMessageSerializer
 {
     string GetMessageSubject(string sqsMessage);
+
+    Dictionary<string, MessageAttributeValue> GetMessageAttributes(string message);
 
     Message Deserialize(string message, Type type);
 

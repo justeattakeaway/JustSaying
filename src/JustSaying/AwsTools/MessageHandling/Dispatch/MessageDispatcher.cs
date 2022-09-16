@@ -76,7 +76,15 @@ public class MessageDispatcher : IMessageDispatcher
         {
             _logger.LogDebug("Attempting to deserialize message with serialization register {Type}",
                 _serializationRegister.GetType().FullName);
-            var message = _serializationRegister.DeserializeMessage(messageContext.Message.Body);
+            var (message, attributes) = _serializationRegister.DeserializeMessage(messageContext.Message.Body);
+            if (attributes != null)
+            {
+                foreach (var attribute in attributes)
+                {
+                    messageContext.Message.MessageAttributes[attribute.Key] = attribute.Value;
+                }
+            }
+
             return (true, message);
         }
         catch (MessageFormatNotSupportedException ex)

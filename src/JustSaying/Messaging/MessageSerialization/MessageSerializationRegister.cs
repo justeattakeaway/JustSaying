@@ -24,9 +24,9 @@ public class MessageSerializationRegister : IMessageSerializationRegister
         }
     }
 
-    public Message DeserializeMessage(string body)
+    public MessageWithAttributes DeserializeMessage(string body)
     {
-        // Custom deserialisation from alternate payload into JustSaying payload
+        // Custom deserialization from alternate payload into JustSaying payload
 
         // Can we remove this loop and simplify how this works?
         foreach (var pair in _map)
@@ -46,8 +46,10 @@ public class MessageSerializationRegister : IMessageSerializationRegister
                 continue;
             }
 
+            var attributes = typeSerializer.Serializer.GetMessageAttributes(body);
             var message = typeSerializer.Serializer.Deserialize(body, matchedType);
-            return message;
+
+            return new MessageWithAttributes(message, attributes);
         }
 
         var exception = new MessageFormatNotSupportedException("Message can not be handled - type undetermined.");

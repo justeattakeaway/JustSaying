@@ -1,7 +1,8 @@
+using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Message = JustSaying.Models.Message;
 
 namespace JustSaying.Messaging.MessageSerialization;
 
@@ -50,6 +51,37 @@ public class NewtonsoftSerializer : IMessageSerializer
         // For direct publishing to SQS, add Subject and Message properties manually
         var context = new { Subject = subject, Message = json };
         return JsonConvert.SerializeObject(context, _settings);
+    }
+
+    public Dictionary<string, MessageAttributeValue> GetMessageAttributes(string message)
+    {
+        var attributes = new Dictionary<string, MessageAttributeValue>();
+        var props = JObject.Parse(message).Value<JObject>("MessageAttributes")?.Properties();
+
+        if (props == null)
+        {
+            return attributes;
+        }
+
+        foreach (var prop in props)
+        {
+            var propData = prop.Value;
+
+            var dataType = propData["Type"].ToString();
+            var dataValue = propData["Value"].ToString();
+
+            var isString = dataType == "String";
+
+            var mav = new MessageAttributeValue
+            {
+                DataType = dataType,
+                StringValue = isString ? dataValue : null,
+                BinaryValue = !isString ? new MemoryStream(Convert.FromBase64String(dataValue), false) : null
+            };
+            attributes.Add(prop.Name, mav);
+        }
+
+        return attributes;
     }
 
     public string GetMessageSubject(string sqsMessage)

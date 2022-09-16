@@ -80,7 +80,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
             Uri = new Uri(ExpectedQueueUrl)
         };
         _serializationRegister.DeserializeMessage(Arg.Any<string>())
-            .Returns(_typedMessage);
+            .Returns(new MessageWithAttributes(_typedMessage, null));
     }
 
     private async Task When()

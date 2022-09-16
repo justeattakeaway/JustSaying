@@ -10,7 +10,7 @@ public interface IMessageSerializationRegister
     /// </summary>
     /// <param name="body">Message must always have Subject and Message properties</param>
     /// <returns>The <see cref="JustSaying.Models.Message"/> returned from the body of the SQS message.</returns>
-    Message DeserializeMessage(string body);
+    MessageWithAttributes DeserializeMessage(string body);
 
     /// <summary>
     /// Serializes a message for publishing

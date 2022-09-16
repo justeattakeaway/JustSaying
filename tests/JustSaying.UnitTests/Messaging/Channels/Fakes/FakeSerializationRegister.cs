@@ -22,10 +22,10 @@ public class FakeSerializationRegister : IMessageSerializationRegister
         ReceivedDeserializationRequests = new List<string>();
     }
 
-    public Message DeserializeMessage(string body)
+    public MessageWithAttributes DeserializeMessage(string body)
     {
         ReceivedDeserializationRequests.Add(body);
-        return DefaultDeserializedMessage();
+        return new MessageWithAttributes(DefaultDeserializedMessage(), null);
     }
 
     public string Serialize(Message message, bool serializeForSnsPublishing)

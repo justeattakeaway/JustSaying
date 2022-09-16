@@ -1,7 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Amazon.SQS.Model;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Models;
+using Message = JustSaying.Models.Message;
 
 namespace JustSaying.Messaging.MessageSerialization;
 
@@ -53,6 +54,34 @@ public class SystemTextJsonSerializer : IMessageSerializer
 
             return subject;
         }
+    }
+
+    public Dictionary<string, MessageAttributeValue> GetMessageAttributes(string message)
+    {
+        var attributes = new Dictionary<string, MessageAttributeValue>();
+
+        var jsonDocument = JsonDocument.Parse(message);
+        if (!jsonDocument.RootElement.TryGetProperty("MessageAttributes", out var attributesElement))
+        {
+            return attributes;
+        }
+
+        foreach(var obj in attributesElement.EnumerateObject())
+        {
+            var dataType = obj.Value.GetProperty("Type").GetString();
+            var dataValue = obj.Value.GetProperty("Value").GetString();
+
+            var isString = dataType == "String";
+
+            attributes.Add(obj.Name, new MessageAttributeValue
+            {
+                DataType = dataType,
+                StringValue = isString ? dataValue : null,
+                BinaryValue = !isString ? new MemoryStream(Convert.FromBase64String(dataValue), false) : null
+            });
+        }
+
+        return attributes;
     }
 
     /// <inheritdoc />
