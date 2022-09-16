@@ -19,7 +19,7 @@
 * [Middleware](subscriptions/middleware/README.md)
   * [Custom Middleware](subscriptions/middleware/custom-middleware.md)
 * [Dead Letter Queues](subscriptions/dead-letter-queues.md)
-* [Message Context](messaging-configur/message-context.md)
+* [Message Context](subscriptions/message-context.md)
 
 ## Publications <a id="publishing"></a>
 
