@@ -34,3 +34,19 @@ public class OrderReadyEventHandler : IHandlerAsync<OrderReadyEvent>
     }
 }
 ```
+
+### Attributes
+
+On the `MessageContext` type, there are the following places to get attributes:
+
+**Context.MessageAttributes**
+
+Message attributes are user defined attributes, and the attributes here are retrieved from the message body.
+
+**Context.Message.MessageAttributes**
+
+`Message` is the AWS SQS SDK type, the `MessageAttributes` here are the ones that present in the `MessageAttributes` XML payload that the message is wrapped in. When using JustSaying, this property will always be empty as we populate `Context.MessageAttributes` from the message body, so don't request to include any message attributes in the reponse object.
+
+**Context.Message.Attributes**
+
+These are the "system attributes" for the message, in JustSaying we request for the `ApproximateReceiveCount` system attribute to be included, so this should be only present attribute here, and will always be available.
