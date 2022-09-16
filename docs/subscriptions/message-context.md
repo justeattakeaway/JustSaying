@@ -4,7 +4,7 @@ When creating a handler for a message, you provide an `IHandler<T>` implementati
 
 JustSaying allows you to get access to this through the type `MessageContext`, which you can access by injecting an `IMessageContextAccessor` into your handler.
 
-`IMessageContextAccessor` internally stores the `MessageContext` for the current message being processed in an `AsyncLocal<MessageContext>`, so the appropriate instance will be available anywhere in the logical call stack while handling a message.
+`IMessageContextAccessor` internally stores the `MessageContext` for the current message being processed in an [`AsyncLocal<MessageContext>`](https://docs.microsoft.com/en-us/dotnet/api/system.threading.asynclocal-1), so the appropriate instance will be available anywhere in the logical call stack while handling a message.
 
 ### Example usage:
 ```csharp
