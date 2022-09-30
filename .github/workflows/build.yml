@@ -63,7 +63,7 @@ jobs:
           flags: ${{ matrix.os_name }}
 
       - name: Publish NuGet packages
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: packages-${{ matrix.os_name }}
           path: ./artifacts/packages
