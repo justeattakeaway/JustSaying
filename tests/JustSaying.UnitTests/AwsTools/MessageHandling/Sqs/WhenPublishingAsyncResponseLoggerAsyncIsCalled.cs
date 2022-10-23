@@ -8,7 +8,7 @@ using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.Core;
-using Message=JustSaying.Models.Message;
+using Message = JustSaying.Models.Message;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
