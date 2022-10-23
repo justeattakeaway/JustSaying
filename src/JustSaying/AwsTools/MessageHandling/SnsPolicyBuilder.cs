@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.RegularExpressions;
+using Amazon;
 
 namespace JustSaying.AwsTools.MessageHandling;
 
@@ -7,8 +8,9 @@ internal static class SnsPolicyBuilder
 {
     internal static string BuildPolicyJson(SnsPolicyDetails policyDetails)
     {
-        var sourceAccountId = ExtractSourceAccountId(policyDetails.SourceArn);
-        var policyJson = $@"{{
+        var arn = Arn.Parse(policyDetails.SourceArn);
+        var accountId = arn.AccountId;
+        return $@"{{
     ""Version"" : ""2012-10-17"",
     ""Statement"" : [
         {{
@@ -29,7 +31,7 @@ internal static class SnsPolicyBuilder
             ""Resource""  : ""{policyDetails.SourceArn}"",
             ""Condition"" : {{
                 ""StringEquals"" : {{
-                    ""AWS:SourceOwner"" : ""{sourceAccountId}""
+                    ""AWS:SourceOwner"" : ""{accountId}""
                 }}
             }}
         }},
@@ -44,13 +46,5 @@ internal static class SnsPolicyBuilder
         }}
     ]
 }}";
-        return policyJson;
-    }
-
-    private static string ExtractSourceAccountId(string sourceArn)
-    {
-        //Sns Arn pattern: arn:aws:sns:region:account-id:topic
-        var match = Regex.Match(sourceArn, "(.*?):(.*?):(.*?):(.*?):(.*?):(.*?)", RegexOptions.None, Regex.InfiniteMatchTimeout);
-        return match.Groups[5].Value;
     }
 }
