@@ -1,6 +1,6 @@
 using Amazon.SQS.Model;
-using JustSaying.Messaging;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;

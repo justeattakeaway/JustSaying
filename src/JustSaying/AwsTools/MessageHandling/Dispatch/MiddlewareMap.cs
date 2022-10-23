@@ -1,6 +1,5 @@
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Models;
-
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
 namespace JustSaying.AwsTools.MessageHandling.Dispatch;

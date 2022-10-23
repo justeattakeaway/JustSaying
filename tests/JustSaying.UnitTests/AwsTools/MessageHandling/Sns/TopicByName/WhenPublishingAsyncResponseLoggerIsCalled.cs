@@ -1,8 +1,8 @@
 using System.Net;
 using Amazon.Runtime;
 using Amazon.SimpleNotificationService.Model;
-using JustSaying.Messaging;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.TestingFramework;

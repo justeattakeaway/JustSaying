@@ -1,7 +1,3 @@
-using System.ComponentModel;
-using System.Xml.Linq;
-using JustSaying.AwsTools;
-using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;

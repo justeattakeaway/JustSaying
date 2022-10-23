@@ -4,7 +4,6 @@ using JustSaying.Naming;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using NSubstitute;
 
 namespace JustSaying.Fluent.Configuration;
 

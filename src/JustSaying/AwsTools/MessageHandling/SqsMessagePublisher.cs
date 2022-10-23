@@ -5,7 +5,7 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
-using Message = JustSaying.Models.Message;
+using Message=JustSaying.Models.Message;
 
 namespace JustSaying.AwsTools.MessageHandling;
 
