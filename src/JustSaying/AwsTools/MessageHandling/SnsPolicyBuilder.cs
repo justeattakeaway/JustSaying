@@ -8,7 +8,10 @@ internal static class SnsPolicyBuilder
 {
     internal static string BuildPolicyJson(SnsPolicyDetails policyDetails)
     {
-        var arn = Arn.Parse(policyDetails.SourceArn);
+        if (!Arn.IsArn(policyDetails.SourceArn) || !Arn.TryParse(policyDetails.SourceArn, out var arn))
+        {
+            throw new ArgumentException("Must be a valid ARN.", nameof(policyDetails));
+        }
         var accountId = arn.AccountId;
         return $@"{{
     ""Version"" : ""2012-10-17"",

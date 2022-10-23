@@ -6,7 +6,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.Policy;
 public class SnsPolicyBuilderTests
 {
     [Fact]
-    public void WhenGeneratingPolicy_ForSnsTopic_ThenTheApprovedJsonShouldBeReturned()
+    public void ShouldGenerateApprovedIamPolicy()
     {
         // arrange
         var sourceArn = "arn:aws:sns:ap-southeast-2:123456789012:topic";
@@ -22,6 +22,8 @@ public class SnsPolicyBuilderTests
         policy.ShouldMatchApproved(c =>
         {
             c.SubFolder("Approvals");
+            // Sids are generated from guids on each invocation so must be ignored
+            // when performing approval tests
             c.WithScrubber(ScrubSids);
         });
     }
@@ -32,5 +34,21 @@ public class SnsPolicyBuilderTests
         return iamPolicy
             .Replace(json["Statement"]![0]!["Sid"]!.ToString(), "<sid1>")
             .Replace(json["Statement"]![1]!["Sid"]!.ToString(), "<sid2>");
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    [InlineData("arn:aws:service:region:123456789012")] // missing topic
+    public void ShouldThrowArgumentExceptionWhenUsingInvalidArn(string sourceArn)
+    {
+        // arrange
+        var snsPolicyDetails = new SnsPolicyDetails
+        {
+            SourceArn = sourceArn
+        };
+
+        // Act + Assert
+        Should.Throw<ArgumentException>(() => SnsPolicyBuilder.BuildPolicyJson(snsPolicyDetails));
     }
 }
