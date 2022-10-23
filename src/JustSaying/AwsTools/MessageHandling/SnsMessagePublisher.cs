@@ -6,7 +6,7 @@ using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
-using MessageAttributeValue=Amazon.SimpleNotificationService.Model.MessageAttributeValue;
+using MessageAttributeValue = Amazon.SimpleNotificationService.Model.MessageAttributeValue;
 
 namespace JustSaying.AwsTools.MessageHandling;
 
