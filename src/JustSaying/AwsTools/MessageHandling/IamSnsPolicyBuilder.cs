@@ -4,7 +4,7 @@ using Amazon;
 
 namespace JustSaying.AwsTools.MessageHandling;
 
-internal static class SnsPolicyBuilder
+internal static class IamSnsPolicyBuilder
 {
     internal static string BuildPolicyJson(SnsPolicyDetails policyDetails)
     {

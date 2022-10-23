@@ -1,9 +1,9 @@
 ﻿using JustSaying.AwsTools.MessageHandling;
 using Newtonsoft.Json.Linq;
 
-namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs.Policy;
+namespace JustSaying.UnitTests.AwsTools.MessageHandling.Iam;
 
-public class SqsPolicyBuilderTests
+public class IamSqsPolicyBuilderTests
 {
     [Fact]
     public void ShouldGenerateApprovedIamPolicy()
@@ -15,7 +15,7 @@ public class SqsPolicyBuilderTests
         };
 
         // act
-        var policy = SqsPolicyBuilder.BuildPolicyJson(sqsPolicyDetails);
+        var policy = IamSqsPolicyBuilder.BuildPolicyJson(sqsPolicyDetails);
 
         // assert
         policy.ShouldMatchApproved(c =>
@@ -37,20 +37,20 @@ public class SqsPolicyBuilderTests
         };
 
         // act
-        var policy = SqsPolicyBuilder.BuildPolicyJson(sqsPolicyDetails);
+        var policy = IamSqsPolicyBuilder.BuildPolicyJson(sqsPolicyDetails);
 
         // assert
         policy.ShouldMatchApproved(c =>
         {
             c.SubFolder("Approvals");
-            // Sids are generated from guids on each invocation so must be ignored
-            // when performing approval tests
             c.WithScrubber(ScrubSids);
         });
     }
 
     private static string ScrubSids(string iamPolicy)
     {
+        // Sids are generated from guids on each invocation so must be ignored
+        // when performing approval tests
         var json = JObject.Parse(iamPolicy);
         return iamPolicy
             .Replace(json["Statement"]![0]!["Sid"]!.ToString(), "<sid>");

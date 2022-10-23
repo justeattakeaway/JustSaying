@@ -2,7 +2,7 @@
 
 namespace JustSaying.AwsTools.MessageHandling;
 
-internal static class SqsPolicyBuilder{
+internal static class IamSqsPolicyBuilder{
 
     public static string BuildPolicyJson(SqsPolicyDetails policyDetails)
     {
