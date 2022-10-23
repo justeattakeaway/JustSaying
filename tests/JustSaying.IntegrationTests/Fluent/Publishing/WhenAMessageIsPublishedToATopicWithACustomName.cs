@@ -2,7 +2,6 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 

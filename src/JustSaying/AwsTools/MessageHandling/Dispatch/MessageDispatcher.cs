@@ -3,8 +3,8 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
+using JustSaying.Models;
 using Microsoft.Extensions.Logging;
-using Message = JustSaying.Models.Message;
 
 namespace JustSaying.AwsTools.MessageHandling.Dispatch;
 

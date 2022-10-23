@@ -1,12 +1,12 @@
+using Amazon.Runtime;
 using Amazon.SimpleNotificationService.Model;
-using JustSaying.Messaging;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using NSubstitute.Core;
-using Amazon.Runtime;
-using Microsoft.Extensions.Logging.Abstractions;
 
 #pragma warning disable 618
 

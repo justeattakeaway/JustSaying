@@ -1,6 +1,6 @@
 using Amazon.SimpleNotificationService.Model;
-using JustSaying.Messaging;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging.Abstractions;

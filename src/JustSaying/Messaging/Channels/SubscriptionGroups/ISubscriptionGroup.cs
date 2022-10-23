@@ -1,6 +1,6 @@
-using JustSaying.Messaging.Interrogation;
-using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.Dispatch;
+using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Interrogation;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 

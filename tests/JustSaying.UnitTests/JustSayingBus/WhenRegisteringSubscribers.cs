@@ -1,7 +1,7 @@
+using Amazon.SQS.Model;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using Newtonsoft.Json;
-using Message = Amazon.SQS.Model.Message;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
