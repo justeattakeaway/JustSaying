@@ -10,7 +10,7 @@ public class BusService : BackgroundService
 {
     private readonly IMessagingBus _bus;
     private readonly ILogger<BusService> _logger;
-    private IMessagePublisher _publisher;
+    private readonly IMessagePublisher _publisher;
 
     public BusService(IMessagingBus bus, ILogger<BusService> logger, IMessagePublisher publisher)
     {
