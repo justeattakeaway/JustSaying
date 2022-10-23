@@ -29,7 +29,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
 
     public IMessagingConfig Config { get; }
 
-    private IMessageMonitor _monitor;
+    private readonly IMessageMonitor _monitor;
 
     private ISubscriptionGroup SubscriptionGroups { get; set; }
     public IMessageSerializationRegister SerializationRegister { get; }
