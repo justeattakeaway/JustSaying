@@ -12,7 +12,8 @@ public class SnsPolicyBuilderTests
         var sourceArn = "arn:aws:sns:ap-southeast-2:123456789012:topic";
         var snsPolicyDetails = new SnsPolicyDetails
         {
-            SourceArn = sourceArn
+            SourceArn = sourceArn,
+            AccountIds = new[] { "123456789012" }
         };
 
         // act
@@ -39,7 +40,7 @@ public class SnsPolicyBuilderTests
     [Theory]
     [InlineData("")]
     [InlineData(null)]
-    [InlineData("arn:aws:service:region:123456789012")] // missing topic
+    [InlineData("arn:aws:service:region:123456789012")]// missing topic
     public void ShouldThrowArgumentExceptionWhenUsingInvalidArn(string sourceArn)
     {
         // arrange

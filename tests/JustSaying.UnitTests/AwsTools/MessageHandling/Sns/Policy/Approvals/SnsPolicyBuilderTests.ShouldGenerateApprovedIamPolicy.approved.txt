@@ -27,7 +27,7 @@
             "Sid" : "<sid2>",
             "Effect" : "Allow",
             "Principal" : {
-                "AWS" : null
+                "AWS" : ["123456789012"]
             },
             "Action"    : "sns:Subscribe",
             "Resource"  : "arn:aws:sns:ap-southeast-2:123456789012:topic"
