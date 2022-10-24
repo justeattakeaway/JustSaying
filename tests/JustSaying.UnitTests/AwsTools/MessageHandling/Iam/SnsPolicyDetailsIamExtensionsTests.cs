@@ -3,7 +3,7 @@ using Newtonsoft.Json.Linq;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Iam;
 
-public class IamSnsPolicyBuilderTests
+public class SnsPolicyDetailsIamExtensionsTests
 {
     [Fact]
     public void ShouldGenerateApprovedIamPolicy()
@@ -16,7 +16,7 @@ public class IamSnsPolicyBuilderTests
         };
 
         // act
-        var policy = IamSnsPolicyBuilder.BuildPolicyJson(snsPolicyDetails);
+        var policy = snsPolicyDetails.BuildIamPolicyJson();
 
         // assert
         policy.ShouldMatchApproved(c =>
@@ -38,8 +38,8 @@ public class IamSnsPolicyBuilderTests
             SourceArn = sourceArn
         };
 
-        // Act + Assert
-        Should.Throw<ArgumentException>(() => IamSnsPolicyBuilder.BuildPolicyJson(snsPolicyDetails));
+        // act + assert
+        Should.Throw<ArgumentException>(() => snsPolicyDetails.BuildIamPolicyJson());
     }
 
     private static string ScrubSids(string iamPolicy)

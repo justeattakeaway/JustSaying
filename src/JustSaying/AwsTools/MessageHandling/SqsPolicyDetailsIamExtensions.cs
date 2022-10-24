@@ -2,9 +2,9 @@
 
 namespace JustSaying.AwsTools.MessageHandling;
 
-internal static class IamSqsPolicyBuilder{
-
-    public static string BuildPolicyJson(SqsPolicyDetails policyDetails)
+internal static class SqsPolicyDetailsIamExtensions
+{
+    internal static string BuildIamPolicyJson(this SqsPolicyDetails policyDetails)
     {
         var sid = Guid.NewGuid().ToString().Replace("-", "");
 

@@ -1,12 +1,11 @@
 ﻿using System.Text.Json;
-using System.Text.RegularExpressions;
 using Amazon;
 
 namespace JustSaying.AwsTools.MessageHandling;
 
-internal static class IamSnsPolicyBuilder
+internal static class SnsPolicyDetailsIamExtensions
 {
-    internal static string BuildPolicyJson(SnsPolicyDetails policyDetails)
+    internal static string BuildIamPolicyJson(this SnsPolicyDetails policyDetails)
     {
         if (!Arn.IsArn(policyDetails.SourceArn) || !Arn.TryParse(policyDetails.SourceArn, out var arn))
         {

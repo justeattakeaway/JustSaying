@@ -7,7 +7,7 @@ internal static class SqsPolicy
 {
     internal static async Task SaveAsync(SqsPolicyDetails policyDetails, IAmazonSQS client)
     {
-        var policyJson = IamSqsPolicyBuilder.BuildPolicyJson(policyDetails);
+        var policyJson = policyDetails.BuildIamPolicyJson();
 
         var setQueueAttributesRequest = new SetQueueAttributesRequest
         {

@@ -7,7 +7,7 @@ internal static class SnsPolicy
 {
     internal static async Task SaveAsync(SnsPolicyDetails policyDetails, IAmazonSimpleNotificationService client)
     {
-        var policyJson = IamSnsPolicyBuilder.BuildPolicyJson(policyDetails);
+        var policyJson = policyDetails.BuildIamPolicyJson();
         var setQueueAttributesRequest = new SetTopicAttributesRequest(policyDetails.SourceArn, "Policy", policyJson);
         await client.SetTopicAttributesAsync(setQueueAttributesRequest).ConfigureAwait(false);
     }
