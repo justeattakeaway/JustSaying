@@ -13,7 +13,7 @@
   <ItemGroup>
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.0" />
     <PackageReference Include="AWSSDK.SQS" Version="3.7.0" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.1" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageReference Include="System.Text.Json" Version="4.6.0" />
