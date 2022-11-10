@@ -1,5 +1,7 @@
 using System.Text.RegularExpressions;
 using Amazon;
+using Amazon.SQS.Endpoints;
+using Amazon.SQS.Internal;
 
 namespace JustSaying.Fluent;
 
@@ -79,11 +81,12 @@ internal sealed class QueueAddress
         if (!Arn.TryParse(queueArn, out var arn)) throw new ArgumentException("Must be a valid ARN.", nameof(queueArn));
         if (!string.Equals(arn.Service, "sqs", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Must be an ARN for an SQS queue.", nameof(queueArn));
 
-        var hostname = RegionEndpoint.GetBySystemName(arn.Region)
-            .GetEndpointForService("sqs")
-            .Hostname;
+        var endpoint = new AmazonSQSEndpointProvider().ResolveEndpoint(new SQSEndpointParameters
+        {
+            Region = arn.Region
+        });
 
-        var queueUrl = new UriBuilder("https", hostname)
+        var queueUrl = new UriBuilder(endpoint.URL)
         {
             Path = FormattableString.Invariant($"{arn.AccountId}/{arn.Resource}")
         }.Uri;
