@@ -3,7 +3,7 @@ using Newtonsoft.Json.Linq;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Iam;
 
-public class SnsPolicyDetailsIamExtensionsTests
+public class IamPolicyExtensionsSnsTests
 {
     [Fact]
     public void ShouldGenerateApprovedIamPolicy()
