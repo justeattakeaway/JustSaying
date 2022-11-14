@@ -6,9 +6,10 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
 
-internal sealed class DynamicMessagePublisher : IMessagePublisher
+internal sealed class DynamicMessagePublisher : IMessagePublisher, IMessageBatchPublisher
 {
     private readonly ConcurrentDictionary<string, IMessagePublisher> _publisherCache = new();
+    private readonly ConcurrentDictionary<string, IMessageBatchPublisher> _batchPublisherCache = new();
     private readonly Func<Message, string> _topicNameCustomizer;
     private readonly Func<string, StaticPublicationConfiguration> _staticConfigBuilder;
 
@@ -71,4 +72,47 @@ internal sealed class DynamicMessagePublisher : IMessagePublisher
 
     public Task PublishAsync(Message message, CancellationToken cancellationToken)
         => PublishAsync(message, null, cancellationToken);
+
+    public Task PublishAsync(IEnumerable<Message> messages, CancellationToken cancellationToken)
+        => PublishAsync(messages, null, cancellationToken);
+
+    public async Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
+    {
+        var publisherTask = new List<Task>();
+        foreach (var group in messages.GroupBy(x => x.GetType()))
+        {
+            var batchMessages = group.ToList();
+            var message = batchMessages[0];
+
+            var topicName = _topicNameCustomizer(message);
+            if (_batchPublisherCache.TryGetValue(topicName, out var publisher))
+            {
+                publisherTask.Add(publisher.PublishAsync(batchMessages, metadata, cancellationToken));
+                continue;
+            }
+
+            var lockObj = _topicCreationLocks.GetOrAdd(topicName, _ => new SemaphoreSlim(1, 1));
+            _logger.LogDebug("Publisher for topic {TopicName} not found, waiting on creation lock", topicName);
+            await lockObj.WaitAsync(cancellationToken).ConfigureAwait(false);
+            if (_batchPublisherCache.TryGetValue(topicName, out publisher))
+            {
+                _logger.LogDebug("Lock re-entrancy detected, returning existing publisher");
+                publisherTask.Add(publisher.PublishAsync(batchMessages, metadata, cancellationToken));
+                continue;
+            }
+
+            _logger.LogDebug("Lock acquired to initialize topic {TopicName}", topicName);
+            var config = _staticConfigBuilder(topicName);
+            _logger.LogDebug("Executing startup task for topic {TopicName}", topicName);
+            await config.StartupTask(cancellationToken).ConfigureAwait(false);
+
+
+            _ = _batchPublisherCache.TryAdd(topicName, config.BatchPublisher);
+
+            _logger.LogDebug("Publishing message on newly created topic {TopicName}", topicName);
+            publisherTask.Add(config.BatchPublisher.PublishAsync(batchMessages, metadata, cancellationToken));
+        }
+
+        await Task.WhenAll(publisherTask).ConfigureAwait(false);
+    }
 }

@@ -16,6 +16,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
 {
     private readonly TopicAddress _topicAddress;
     private Func<Exception,Message,bool> _exceptionHandler;
+    private Func<Exception, IEnumerable<Message>, bool> _exceptionBatchHandler;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TopicAddressPublicationBuilder{T}"/> class.
@@ -42,6 +43,22 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
         return this;
     }
 
+    /// <summary>
+    /// Configures an exception handler to use.
+    /// </summary>
+    /// <param name="exceptionBatchHandler">A delegate to invoke if an exception is thrown while publishing in batch.</param>
+    /// <returns>
+    /// The current <see cref="TopicAddressPublicationBuilder{T}"/>.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="exceptionBatchHandler"/> is <see langword="null"/>.
+    /// </exception>
+    public TopicAddressPublicationBuilder<T> WithExceptionHandler(Func<Exception, IEnumerable<Message>, bool> exceptionBatchHandler)
+    {
+        _exceptionBatchHandler = exceptionBatchHandler ?? throw new ArgumentNullException(nameof(exceptionBatchHandler));
+        return this;
+    }
+
     /// <inheritdoc />
     public void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
     {
@@ -60,6 +77,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
             config.MessageSubjectProvider,
             bus.SerializationRegister,
             _exceptionHandler,
+            _exceptionBatchHandler,
             _topicAddress);
         bus.AddMessagePublisher<T>(eventPublisher);
 

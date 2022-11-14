@@ -13,7 +13,7 @@ using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<J
 
 namespace JustSaying;
 
-public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposable
+public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBatchPublisher, IDisposable
 {
     private readonly ILogger _log;
     private readonly ILoggerFactory _loggerFactory;
@@ -25,6 +25,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     private ConcurrentDictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings;
     private SubscriptionGroupSettingsBuilder _defaultSubscriptionGroupSettings;
     private readonly Dictionary<Type, IMessagePublisher> _publishersByType;
+    private readonly Dictionary<Type, IMessageBatchPublisher> _batchPublishersByType;
 
     public IMessagingConfig Config { get; }
 
@@ -54,6 +55,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         MiddlewareMap = new MiddlewareMap();
 
         _publishersByType = new Dictionary<Type, IMessagePublisher>();
+        _batchPublishersByType = new Dictionary<Type, IMessageBatchPublisher>();
         _subscriptionGroupSettings =
             new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
         _defaultSubscriptionGroupSettings = new SubscriptionGroupSettingsBuilder();
@@ -108,7 +110,26 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         }
 
         _publishersByType[typeof(T)] = messagePublisher;
+        if(messagePublisher is IMessageBatchPublisher batchPublisher)
+        {
+            _batchPublishersByType[typeof(T)] = batchPublisher;
+        }
     }
+
+    public void AddMessageBatchPublisher<T>(IMessageBatchPublisher messageBatchPublisher) where T : Message
+    {
+        if (Config.PublishFailureReAttempts == 0)
+        {
+            _log.LogWarning("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages.");
+        }
+
+        _batchPublishersByType[typeof(T)] = messageBatchPublisher;
+        if(messageBatchPublisher is IMessagePublisher messagePublisher)
+        {
+            _publishersByType[typeof(T)] = messagePublisher;
+        }
+    }
+
 
     public async Task StartAsync(CancellationToken stoppingToken)
     {
@@ -171,7 +192,8 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         catch (OperationCanceledException)
         {
             _log.LogDebug("Suppressed an exception of type {ExceptionType} which likely " +
-                          "means the bus is shutting down.", nameof(OperationCanceledException));
+                          "means the bus is shutting down.",
+                nameof(OperationCanceledException));
             // Don't bubble cancellation up to Completion task
         }
     }
@@ -198,8 +220,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     {
         if (_publishersByType.Count == 0)
         {
-            var errorMessage =
-                "Error publishing message, no publishers registered. Has the bus been started?";
+            const string errorMessage = "Error publishing message, no publishers registered. Has the bus been started?";
             _log.LogError(errorMessage);
             throw new InvalidOperationException(errorMessage);
         }
@@ -288,5 +309,87 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     {
         _startLock?.Dispose();
         _loggerFactory?.Dispose();
+    }
+
+    public Task PublishAsync(IEnumerable<Message> messages, CancellationToken cancellationToken)
+        => PublishAsync(messages, null, cancellationToken);
+
+    public Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
+    {
+        if (!_busStarted && _startupTasks.Count > 0)
+        {
+            throw new InvalidOperationException("There are pending startup tasks that must be executed by calling StartAsync before messages may be published.");
+        }
+
+        var tasks = (from @group in messages.GroupBy(x => x.GetType())
+            let publisher = GetBatchPublishersForMessageType(@group.Key)
+            select PublishAsync(publisher, @group.ToList(), metadata, 0, @group.Key, cancellationToken))
+            .ToList();
+
+        return Task.WhenAll(tasks);
+    }
+
+    private IMessageBatchPublisher GetBatchPublishersForMessageType(Type messageType)
+    {
+        if (_publishersByType.Count == 0)
+        {
+            const string errorMessage = "Error publishing message, no publishers registered. Has the bus been started?";
+            _log.LogError(errorMessage);
+            throw new InvalidOperationException(errorMessage);
+        }
+
+        if (!_batchPublishersByType.TryGetValue(messageType, out var publisher))
+        {
+            _log.LogError("Error publishing message. No publishers registered for message type '{MessageType}'.", messageType);
+            throw new InvalidOperationException($"Error publishing message, no publishers registered for message type '{messageType}'.");
+        }
+
+        return publisher;
+    }
+
+    private async Task PublishAsync(
+        IMessageBatchPublisher publisher,
+        List<Message> messages,
+        PublishBatchMetadata metadata,
+        int attemptCount,
+        Type messageType,
+        CancellationToken cancellationToken)
+    {
+        attemptCount++;
+        try
+        {
+            using (_monitor.MeasurePublish())
+            {
+                await publisher.PublishAsync(messages, metadata, cancellationToken).ConfigureAwait(false);
+            }
+        }
+        catch (Exception ex)
+        {
+            if (attemptCount >= Config.PublishFailureReAttempts)
+            {
+                _monitor.IssuePublishingMessage();
+
+
+                _log.LogError(
+                    ex,
+                    "Failed to publish a message of type '{MessageType}'. Halting after attempt number {PublishAttemptCount}.",
+                    messageType,
+                    attemptCount);
+
+                throw;
+            }
+
+            _log.LogWarning(
+                ex,
+                "Failed to publish a message of type '{MessageType}'. Retrying after attempt number {PublishAttemptCount} of {PublishFailureReattempts}.",
+                messageType,
+                attemptCount,
+                Config.PublishFailureReAttempts);
+
+            var delayForAttempt = TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
+            await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);
+
+            await PublishAsync(publisher, messages, metadata, attemptCount, messageType, cancellationToken).ConfigureAwait(false);
+        }
     }
 }

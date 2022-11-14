@@ -12,13 +12,16 @@ internal sealed class StaticPublicationConfiguration : ITopicPublisher
 {
     public Func<CancellationToken, Task> StartupTask { get; }
     public IMessagePublisher Publisher { get; }
+    public IMessageBatchPublisher BatchPublisher { get; }
 
     public StaticPublicationConfiguration(
         Func<CancellationToken, Task> startupTask,
-        IMessagePublisher publisher)
+        IMessagePublisher publisher,
+        IMessageBatchPublisher batchPublisher)
     {
         StartupTask = startupTask;
         Publisher = publisher;
+        BatchPublisher = batchPublisher;
     }
 
     public static StaticPublicationConfiguration Build<T>(
@@ -43,6 +46,7 @@ internal sealed class StaticPublicationConfiguration : ITopicPublisher
             bus.Config.MessageSubjectProvider)
         {
             MessageResponseLogger = bus.Config.MessageResponseLogger,
+            MessageBatchResponseLogger = bus.Config.MessageBatchResponseLogger
         };
 
         var snsTopic = new SnsTopicByName(
@@ -78,6 +82,6 @@ internal sealed class StaticPublicationConfiguration : ITopicPublisher
                 typeof(T));
         }
 
-        return new StaticPublicationConfiguration(StartupTask, eventPublisher);
+        return new StaticPublicationConfiguration(StartupTask, eventPublisher, eventPublisher);
     }
 }
