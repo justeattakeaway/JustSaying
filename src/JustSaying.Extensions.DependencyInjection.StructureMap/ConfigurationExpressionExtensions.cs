@@ -45,7 +45,7 @@ public static class ConfigurationExpressionExtensions
 
         if (string.IsNullOrWhiteSpace(region))
         {
-            throw new ArgumentException("region must not be null or empty" ,nameof(region));
+            throw new ArgumentException("region must not be null or empty", nameof(region));
         }
 
         registry.AddJustSaying(
@@ -129,6 +129,17 @@ public static class ConfigurationExpressionExtensions
                 {
                     var builder = context.GetInstance<MessagingBusBuilder>();
                     return builder.BuildPublisher();
+                });
+
+        registry
+            .For<IMessageBatchPublisher>()
+            .Singleton()
+            .Use(
+                nameof(IMessageBatchPublisher),
+                context =>
+                {
+                    var builder = context.GetInstance<MessagingBusBuilder>();
+                    return builder.BuildBatchPublisher();
                 });
 
         registry

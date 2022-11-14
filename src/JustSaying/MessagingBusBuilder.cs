@@ -241,6 +241,31 @@ public sealed class MessagingBusBuilder
     }
 
     /// <summary>
+    /// Creates a new instance of <see cref="IMessageBatchPublisher"/>.
+    /// </summary>
+    /// <returns>
+    /// The created instance of <see cref="IMessagePublisher"/>
+    /// </returns>
+    public IMessageBatchPublisher BuildBatchPublisher()
+    {
+        IMessagingConfig config = MessagingConfig.Build();
+
+        config.Validate();
+
+        ILoggerFactory loggerFactory = ServiceResolver.ResolveService<ILoggerFactory>();
+
+        JustSayingBus bus = CreateBus(config, loggerFactory);
+        IAwsClientFactoryProxy proxy = CreateFactoryProxy();
+
+        if (PublicationsBuilder != null)
+        {
+            PublicationsBuilder.Configure(bus, proxy, loggerFactory);
+        }
+
+        return bus;
+    }
+
+    /// <summary>
     /// Creates a new instance of <see cref="IMessagingBus"/>.
     /// </summary>
     /// <returns>
