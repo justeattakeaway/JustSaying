@@ -35,7 +35,7 @@ public class WhenPublishingInBatch : WhenPublishingTestBase
             .Returns(new GetQueueAttributesResponse());
 
         _serializationRegister.Serialize(Arg.Any<SimpleMessage>(), false)
-            .Returns("serialized_contents");
+            .Returns(x => $"serialized_contents_{((SimpleMessage)x.Args()[0]).Content}" );
     }
 
     protected override async Task WhenAsync()
@@ -52,8 +52,26 @@ public class WhenPublishingInBatch : WhenPublishingTestBase
     [Fact]
     public void MessageIsPublishedToQueue()
     {
-        Sqs.Received().SendMessageBatchAsync(Arg.Is<SendMessageBatchRequest>(x => x.Entries.Count == 10
-            && x.Entries.All(e => e.MessageBody.Equals("serialized_contents"))));
+        Sqs.Received().SendMessageBatchAsync(Arg.Is<SendMessageBatchRequest>(x => AssertMessageIsPublishedToQueue(x)));
+    }
+
+    private static bool AssertMessageIsPublishedToQueue(SendMessageBatchRequest request)
+    {
+        if (!request.Entries.Count.Equals(10))
+        {
+            return false;
+        }
+
+        for (var i = 0; i < 10; i++)
+        {
+            var entry = request.Entries[i];
+            if (!entry.MessageBody.Equals($"serialized_contents_Message_{i}"))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     [Fact]

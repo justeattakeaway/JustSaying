@@ -31,7 +31,7 @@ public class SnsMessagePublisher : IMessagePublisher, IInterrogable, IMessageBat
         IMessageSubjectProvider messageSubjectProvider,
         Func<Exception, Message, bool> handleException = null,
         Func<Exception, IEnumerable<Message>, bool> handleBatchException = null)
-        : this(client, serializationRegister, loggerFactory, messageSubjectProvider, handleException)
+        : this(client, serializationRegister, loggerFactory, messageSubjectProvider, handleException, handleBatchException)
     {
         Arn = topicArn;
     }
