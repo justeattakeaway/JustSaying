@@ -254,6 +254,7 @@ public class SnsMessagePublisher : IMessagePublisher, IInterrogable, IMessageBat
             TopicArn = Arn,
             PublishBatchRequestEntries = message.Select(message => new PublishBatchRequestEntry
                 {
+                    Id = message.UniqueKey(),
                     Subject = _messageSubjectProvider.GetSubjectForType(message.GetType()),
                     Message = _serializationRegister.Serialize(message, serializeForSnsPublishing: true),
                     MessageAttributes = BuildMessageAttributes(metadata)

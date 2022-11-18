@@ -215,6 +215,7 @@ public class SqsMessagePublisher : IMessagePublisher, IMessageBatchPublisher
             {
                 var entry = new SendMessageBatchRequestEntry
                 {
+                    Id = message.UniqueKey(),
                     MessageBody = GetMessageInContext(message)
                 };
 

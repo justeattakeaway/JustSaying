@@ -116,7 +116,7 @@ public static class IServiceCollectionExtensions
         {
             throw new ArgumentNullException(nameof(configure));
         }
-        
+
         // Register as self so the same singleton instance implements two different interfaces
         services.TryAddSingleton((p) => new ServiceProviderResolver(p));
         services.TryAddSingleton<IHandlerResolver>((p) => p.GetRequiredService<ServiceProviderResolver>());
@@ -168,6 +168,13 @@ public static class IServiceCollectionExtensions
             {
                 var builder = serviceProvider.GetRequiredService<MessagingBusBuilder>();
                 return builder.BuildPublisher();
+            });
+
+        services.TryAddSingleton(
+            (serviceProvider) =>
+            {
+                var builder = serviceProvider.GetRequiredService<MessagingBusBuilder>();
+                return builder.BuildBatchPublisher();
             });
 
         services.TryAddSingleton(

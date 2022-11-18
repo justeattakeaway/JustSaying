@@ -15,6 +15,14 @@ public class WhenRegisteringAPublisherForRegion : IntegrationTestBase
     [AwsFact]
     public async Task Then_A_Topic_Is_Created_In_That_Region()
     {
+        await ThenATopicIsCreatedInThatRegion<IMessagePublisher>();
+        await ThenATopicIsCreatedInThatRegion<IMessageBatchPublisher>();
+    }
+
+    private async Task ThenATopicIsCreatedInThatRegion<T>()
+        where T : IStartable
+    {
+
         // Arrange
         var region = RegionEndpoint.EUWest1;
 
@@ -26,7 +34,7 @@ public class WhenRegisteringAPublisherForRegion : IntegrationTestBase
 
         // Act
         using var source = new CancellationTokenSource(Timeout);
-        var publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+        var publisher = serviceProvider.GetRequiredService<T>();
         await publisher.StartAsync(source.Token);
 
         // Assert
