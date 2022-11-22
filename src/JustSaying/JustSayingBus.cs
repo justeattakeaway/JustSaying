@@ -110,7 +110,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         }
 
         _publishersByType[typeof(T)] = messagePublisher;
-        if(messagePublisher is IMessageBatchPublisher batchPublisher)
+        if (messagePublisher is IMessageBatchPublisher batchPublisher)
         {
             _batchPublishersByType[typeof(T)] = batchPublisher;
         }
@@ -120,11 +120,11 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     {
         if (Config.PublishFailureReAttempts == 0)
         {
-            _log.LogWarning("You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages.");
+            _log.LogWarning("You have not set a re-attempt value for publish failures. If the publish location is not available you may lose messages.");
         }
 
         _batchPublishersByType[typeof(T)] = messageBatchPublisher;
-        if(messageBatchPublisher is IMessagePublisher messagePublisher)
+        if (messageBatchPublisher is IMessagePublisher messagePublisher)
         {
             _publishersByType[typeof(T)] = messagePublisher;
         }
@@ -321,10 +321,12 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
             throw new InvalidOperationException("There are pending startup tasks that must be executed by calling StartAsync before messages may be published.");
         }
 
-        var tasks = (from @group in messages.GroupBy(x => x.GetType())
-            let publisher = GetBatchPublishersForMessageType(@group.Key)
-            select PublishAsync(publisher, @group.ToList(), metadata, 0, @group.Key, cancellationToken))
-            .ToList();
+        var tasks = new List<Task>();
+        foreach (IGrouping<Type, Message> group in messages.GroupBy(x => x.GetType()))
+        {
+            IMessageBatchPublisher publisher = GetBatchPublishersForMessageType(group.Key);
+            tasks.Add(PublishAsync(publisher, group.ToList(), metadata, 0, group.Key, cancellationToken));
+        }
 
         return Task.WhenAll(tasks);
     }

@@ -1,7 +1,4 @@
 using Amazon;
-using Amazon.Runtime.Endpoints;
-using Amazon.SQS.Endpoints;
-using Amazon.SQS.Internal;
 using JustSaying.Naming;
 
 namespace JustSaying.Fluent;
@@ -109,12 +106,8 @@ public sealed class AccountAddressProvider
     /// <returns>The <see cref="Uri"/> for this queue.</returns>
     public Uri GetQueueUri(string queueName)
     {
-        var endpoint = new AmazonSQSEndpointProvider().ResolveEndpoint(new SQSEndpointParameters
-        {
-            Region = _regionEndpoint.SystemName
-        });
-
-        return new UriBuilder(endpoint.URL)
+        var hostname = _regionEndpoint.GetEndpointForService("sqs").Hostname;
+        return new UriBuilder("https", hostname)
         {
             Path = $"{_accountId}/{queueName}"
         }.Uri;

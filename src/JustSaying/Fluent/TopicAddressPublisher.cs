@@ -16,7 +16,7 @@ internal sealed class TopicAddressPublisher : SnsMessagePublisher
         IMessageSubjectProvider subjectProvider,
         IMessageSerializationRegister serializationRegister,
         Func<Exception, Message, bool> handleException,
-        Func<Exception, IEnumerable<Message>, bool> handleBatchException,
+        Func<Exception, IReadOnlyCollection<Message>, bool> handleBatchException,
         TopicAddress topicAddress)
         : base(topicAddress.TopicArn, snsClient, serializationRegister, loggerFactory, subjectProvider, handleException, handleBatchException)
     { }

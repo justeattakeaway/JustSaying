@@ -16,7 +16,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
 {
     private readonly TopicAddress _topicAddress;
     private Func<Exception,Message,bool> _exceptionHandler;
-    private Func<Exception, IEnumerable<Message>, bool> _exceptionBatchHandler;
+    private Func<Exception, IReadOnlyCollection<Message>, bool> _exceptionBatchHandler;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TopicAddressPublicationBuilder{T}"/> class.
@@ -46,14 +46,14 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     /// <summary>
     /// Configures an exception handler to use.
     /// </summary>
-    /// <param name="exceptionBatchHandler">A delegate to invoke if an exception is thrown while publishing in batch.</param>
+    /// <param name="exceptionBatchHandler">A delegate to invoke if an exception is thrown while publishing a batch.</param>
     /// <returns>
     /// The current <see cref="TopicAddressPublicationBuilder{T}"/>.
     /// </returns>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="exceptionBatchHandler"/> is <see langword="null"/>.
     /// </exception>
-    public TopicAddressPublicationBuilder<T> WithExceptionHandler(Func<Exception, IEnumerable<Message>, bool> exceptionBatchHandler)
+    public TopicAddressPublicationBuilder<T> WithExceptionHandler(Func<Exception, IReadOnlyCollection<Message>, bool> exceptionBatchHandler)
     {
         _exceptionBatchHandler = exceptionBatchHandler ?? throw new ArgumentNullException(nameof(exceptionBatchHandler));
         return this;

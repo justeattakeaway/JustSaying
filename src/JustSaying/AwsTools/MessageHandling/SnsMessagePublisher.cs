@@ -16,9 +16,9 @@ public class SnsMessagePublisher : IMessagePublisher, IInterrogable, IMessageBat
     private readonly IMessageSerializationRegister _serializationRegister;
     private readonly IMessageSubjectProvider _messageSubjectProvider;
     private readonly Func<Exception, Message, bool> _handleException;
-    private readonly Func<Exception, IEnumerable<Message>, bool> _handleBatchException;
+    private readonly Func<Exception, IReadOnlyCollection<Message>, bool> _handleBatchException;
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
-    public Action<MessageBatchResponse, IEnumerable<Message>> MessageBatchResponseLogger { get; set; }
+    public Action<MessageBatchResponse, IReadOnlyCollection<Message>> MessageBatchResponseLogger { get; set; }
     public string Arn { get; internal set; }
     protected IAmazonSimpleNotificationService Client { get; }
     private readonly ILogger _logger;
@@ -30,7 +30,7 @@ public class SnsMessagePublisher : IMessagePublisher, IInterrogable, IMessageBat
         ILoggerFactory loggerFactory,
         IMessageSubjectProvider messageSubjectProvider,
         Func<Exception, Message, bool> handleException = null,
-        Func<Exception, IEnumerable<Message>, bool> handleBatchException = null)
+        Func<Exception, IReadOnlyCollection<Message>, bool> handleBatchException = null)
         : this(client, serializationRegister, loggerFactory, messageSubjectProvider, handleException, handleBatchException)
     {
         Arn = topicArn;
@@ -42,7 +42,7 @@ public class SnsMessagePublisher : IMessagePublisher, IInterrogable, IMessageBat
         ILoggerFactory loggerFactory,
         IMessageSubjectProvider messageSubjectProvider,
         Func<Exception, Message, bool> handleException = null,
-        Func<Exception, IEnumerable<Message>, bool> handleBatchException = null)
+        Func<Exception, IReadOnlyCollection<Message>, bool> handleBatchException = null)
     {
         Client = client;
         _serializationRegister = serializationRegister;
@@ -166,9 +166,9 @@ public class SnsMessagePublisher : IMessagePublisher, IInterrogable, IMessageBat
         var size = metadata?.BatchSize ?? 10;
         size = Math.Min(size, 10);
 
-        foreach (var chuck in messages.Chunk(size))
+        foreach (var chunk in messages.Chunk(size))
         {
-            var request = BuildPublishBatchRequest(chuck, metadata);
+            var request = BuildPublishBatchRequest(chunk, metadata);
             PublishBatchResponse response = null;
             try
             {
@@ -176,7 +176,7 @@ public class SnsMessagePublisher : IMessagePublisher, IInterrogable, IMessageBat
             }
             catch (AmazonServiceException ex)
             {
-                if (!ClientExceptionHandler(ex, chuck))
+                if (!ClientExceptionHandler(ex, chunk))
                 {
                     throw new PublishBatchException($"Failed to publish batch of messages to SNS. Topic ARN: '{request.TopicArn}'.", ex);
                 }
@@ -189,7 +189,7 @@ public class SnsMessagePublisher : IMessagePublisher, IInterrogable, IMessageBat
                            ["AwsRequestId"] = response.ResponseMetadata?.RequestId
                        }))
                 {
-                    if (response.Successful.Count > 0)
+                    if (response.Successful.Count > 0 && _logger.IsEnabled(LogLevel.Information))
                     {
                         _logger.LogInformation(
                             "Published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
@@ -208,7 +208,7 @@ public class SnsMessagePublisher : IMessagePublisher, IInterrogable, IMessageBat
                         }
                     }
 
-                    if (response.Failed.Count > 0)
+                    if (response.Failed.Count > 0 && _logger.IsEnabled(LogLevel.Error))
                     {
                         _logger.LogError(
                             "Fail to published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
@@ -234,18 +234,18 @@ public class SnsMessagePublisher : IMessagePublisher, IInterrogable, IMessageBat
             {
                 var responseData = new MessageBatchResponse
                 {
-                    SuccessfulMessageIds = response?.Successful.Select(x => x.MessageId),
-                    FailedMessageIds = response?.Failed.Select(x => x.Id),
+                    SuccessfulMessageIds = response?.Successful.Select(x => x.MessageId).ToArray(),
+                    FailedMessageIds = response?.Failed.Select(x => x.Id).ToArray(),
                     ResponseMetadata = response?.ResponseMetadata,
                     HttpStatusCode = response?.HttpStatusCode,
                 };
 
-                MessageBatchResponseLogger(responseData, chuck);
+                MessageBatchResponseLogger(responseData, chunk);
             }
         }
     }
 
-    private bool ClientExceptionHandler(Exception ex, IEnumerable<Message> messages) => _handleBatchException?.Invoke(ex, messages) ?? false;
+    private bool ClientExceptionHandler(Exception ex, IReadOnlyCollection<Message> messages) => _handleBatchException?.Invoke(ex, messages) ?? false;
 
     private PublishBatchRequest BuildPublishBatchRequest(Message[] message, PublishMetadata metadata)
     {

@@ -16,7 +16,7 @@ public class SqsMessagePublisher : IMessagePublisher, IMessageBatchPublisher
     private readonly IMessageSerializationRegister _serializationRegister;
     private readonly ILogger _logger;
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
-    public Action<MessageBatchResponse, IEnumerable<Message>> MessageBatchResponseLogger { get; set; }
+    public Action<MessageBatchResponse, IReadOnlyCollection<Message>> MessageBatchResponseLogger { get; set; }
 
     public Uri QueueUrl { get; internal set; }
 
@@ -128,9 +128,9 @@ public class SqsMessagePublisher : IMessagePublisher, IMessageBatchPublisher
         var size = metadata?.BatchSize ?? 10;
         size = Math.Min(size, 10);
 
-        foreach (var chuck in messages.Chunk(size))
+        foreach (var chunk in messages.Chunk(size))
         {
-            var request = BuildSendMessageBatchRequest(chuck, metadata);
+            var request = BuildSendMessageBatchRequest(chunk, metadata);
             SendMessageBatchResponse response;
             try
             {
@@ -150,7 +150,7 @@ public class SqsMessagePublisher : IMessagePublisher, IMessageBatchPublisher
                     ["AwsRequestId"] = response.ResponseMetadata?.RequestId
                 }))
                 {
-                    if (response.Successful.Count > 0)
+                    if (response.Successful.Count > 0 && _logger.IsEnabled(LogLevel.Information))
                     {
                         _logger.LogInformation(
                             "Published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
@@ -169,7 +169,7 @@ public class SqsMessagePublisher : IMessagePublisher, IMessageBatchPublisher
                         }
                     }
 
-                    if (response.Failed.Count > 0)
+                    if (response.Failed.Count > 0 && _logger.IsEnabled(LogLevel.Error))
                     {
                         _logger.LogError(
                             "Fail to published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
@@ -195,13 +195,13 @@ public class SqsMessagePublisher : IMessagePublisher, IMessageBatchPublisher
             {
                 var responseData = new MessageBatchResponse
                 {
-                    SuccessfulMessageIds = response?.Successful.Select(x => x.MessageId),
-                    FailedMessageIds = response?.Failed.Select(x => x.Id),
+                    SuccessfulMessageIds = response?.Successful.Select(x => x.MessageId).ToArray(),
+                    FailedMessageIds = response?.Failed.Select(x => x.Id).ToArray(),
                     ResponseMetadata = response?.ResponseMetadata,
                     HttpStatusCode = response?.HttpStatusCode,
                 };
 
-                MessageBatchResponseLogger(responseData, chuck);
+                MessageBatchResponseLogger(responseData, chunk);
             }
         }
     }
@@ -219,9 +219,9 @@ public class SqsMessagePublisher : IMessagePublisher, IMessageBatchPublisher
                     MessageBody = GetMessageInContext(message)
                 };
 
-                if (metadata?.Delay != null)
+                if (metadata?.Delay is { } delay)
                 {
-                    entry.DelaySeconds = (int)metadata.Delay.Value.TotalSeconds;
+                    entry.DelaySeconds = (int)delay.TotalSeconds;
                 }
 
                 return entry;
