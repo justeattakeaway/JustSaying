@@ -83,7 +83,7 @@ public class MessageDispatcher : IMessageDispatcher
         }
         catch (MessageFormatNotSupportedException ex)
         {
-            _logger.LogTrace(ex,
+            _logger.LogWarning(ex,
                 "Could not handle message with Id '{MessageId}' because a deserializer for the content is not configured. Message body: '{MessageBody}'.",
                 messageContext.Message.MessageId,
                 messageContext.Message.Body);
