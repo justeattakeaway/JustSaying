@@ -85,7 +85,7 @@ internal sealed class QueueAddress
 
         var queueUrl = new UriBuilder("https", hostname)
         {
-            Path = arn.AccountId + "/" + arn.Resource
+            Path = FormattableString.Invariant($"{arn.AccountId}/{arn.Resource}")
         }.Uri;
 
         return new QueueAddress
