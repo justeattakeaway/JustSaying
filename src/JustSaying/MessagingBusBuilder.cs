@@ -252,9 +252,10 @@ public sealed class MessagingBusBuilder
 
         config.Validate();
 
+        var publishBatchConfiguration = MessagingConfig.BuildPublishBatchConfiguration();
         ILoggerFactory loggerFactory = ServiceResolver.ResolveService<ILoggerFactory>();
 
-        JustSayingBus bus = CreateBus(config, loggerFactory);
+        JustSayingBus bus = CreateBus(config, loggerFactory, publishBatchConfiguration);
         IAwsClientFactoryProxy proxy = CreateFactoryProxy();
 
         if (PublicationsBuilder != null)
@@ -288,12 +289,12 @@ public sealed class MessagingBusBuilder
         return bus;
     }
 
-    private JustSayingBus CreateBus(IMessagingConfig config, ILoggerFactory loggerFactory)
+    private JustSayingBus CreateBus(IMessagingConfig config, ILoggerFactory loggerFactory, IPublishBatchConfiguration publishBatchConfiguration = null)
     {
         IMessageSerializationRegister register = ServiceResolver.ResolveService<IMessageSerializationRegister>();
         IMessageMonitor monitor = ServiceResolver.ResolveOptionalService<IMessageMonitor>() ?? new NullOpMessageMonitor();
 
-        var bus = new JustSayingBus(config, register, loggerFactory, monitor);
+        var bus = new JustSayingBus(config, register, loggerFactory, monitor, publishBatchConfiguration);
 
         return bus;
     }

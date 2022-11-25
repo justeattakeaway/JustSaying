@@ -28,6 +28,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     private readonly Dictionary<Type, IMessageBatchPublisher> _batchPublishersByType;
 
     public IMessagingConfig Config { get; }
+    public IPublishBatchConfiguration PublishBatchConfiguration { get; }
 
     private readonly IMessageMonitor _monitor;
 
@@ -43,6 +44,17 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         IMessageSerializationRegister serializationRegister,
         ILoggerFactory loggerFactory,
         IMessageMonitor monitor)
+        : this(config, serializationRegister, loggerFactory, monitor, config as IPublishBatchConfiguration)
+    {
+
+    }
+
+    public JustSayingBus(
+        IMessagingConfig config,
+        IMessageSerializationRegister serializationRegister,
+        ILoggerFactory loggerFactory,
+        IMessageMonitor monitor,
+        IPublishBatchConfiguration publishBatchConfiguration)
     {
         _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
         _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
@@ -51,6 +63,8 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         _log = _loggerFactory.CreateLogger("JustSaying");
 
         Config = config;
+        PublishBatchConfiguration = publishBatchConfiguration ?? new MessagingConfig();
+
         SerializationRegister = serializationRegister;
         MiddlewareMap = new MiddlewareMap();
 
@@ -118,7 +132,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
 
     public void AddMessageBatchPublisher<T>(IMessageBatchPublisher messageBatchPublisher) where T : Message
     {
-        if (Config.PublishFailureReAttempts == 0)
+        if (PublishBatchConfiguration.PublishFailureReAttempts == 0)
         {
             _log.LogWarning("You have not set a re-attempt value for publish failures. If the publish location is not available you may lose messages.");
         }
@@ -367,7 +381,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         }
         catch (Exception ex)
         {
-            if (attemptCount >= Config.PublishFailureReAttempts)
+            if (attemptCount >= PublishBatchConfiguration.PublishFailureReAttempts)
             {
                 _monitor.IssuePublishingMessage();
 
@@ -386,7 +400,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
                 "Failed to publish a message of type '{MessageType}'. Retrying after attempt number {PublishAttemptCount} of {PublishFailureReattempts}.",
                 messageType,
                 attemptCount,
-                Config.PublishFailureReAttempts);
+                PublishBatchConfiguration.PublishFailureReAttempts);
 
             var delayForAttempt = TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
             await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);

@@ -46,7 +46,7 @@ internal sealed class StaticPublicationConfiguration : ITopicPublisher
             bus.Config.MessageSubjectProvider)
         {
             MessageResponseLogger = bus.Config.MessageResponseLogger,
-            MessageBatchResponseLogger = bus.Config.MessageBatchResponseLogger
+            MessageBatchResponseLogger = bus.PublishBatchConfiguration?.MessageBatchResponseLogger
         };
 
         var snsTopic = new SnsTopicByName(

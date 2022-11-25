@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Security;
 using JustSaying;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
@@ -124,7 +125,10 @@ public static class IServiceCollectionExtensions
 
         services.TryAddSingleton<IAwsClientFactory, DefaultAwsClientFactory>();
         services.TryAddSingleton<IAwsClientFactoryProxy>((p) => new AwsClientFactoryProxy(p.GetRequiredService<IAwsClientFactory>));
-        services.TryAddSingleton<IMessagingConfig, MessagingConfig>();
+
+        services.TryAddSingleton<MessagingConfig>();
+        services.TryAddSingleton<IMessagingConfig>(provider => provider.GetRequiredService<MessagingConfig>());
+        services.TryAddSingleton<IPublishConfiguration>(provider => provider.GetRequiredService<MessagingConfig>());
         services.TryAddSingleton<IMessageMonitor, NullOpMessageMonitor>();
 
         services.TryAddTransient<LoggingMiddleware>();

@@ -37,8 +37,10 @@ public static class MessagePublisherExtensions
 
     public static Task PublishAsync(this IMessagePublisher publisher, IEnumerable<Message> messages)
         => publisher.PublishAsync(messages, null, CancellationToken.None);
+
     public static Task PublishAsync(this IMessagePublisher publisher, IEnumerable<Message> messages, CancellationToken cancellationToken)
         => publisher.PublishAsync(messages, null, cancellationToken);
+
     public static Task PublishAsync(this IMessagePublisher publisher, IEnumerable<Message> messages, PublishBatchMetadata metadata)
         => publisher.PublishAsync(messages, metadata, CancellationToken.None);
 
