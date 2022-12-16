@@ -129,6 +129,7 @@ public static class IServiceCollectionExtensions
         services.TryAddSingleton<MessagingConfig>();
         services.TryAddSingleton<IMessagingConfig>(provider => provider.GetRequiredService<MessagingConfig>());
         services.TryAddSingleton<IPublishConfiguration>(provider => provider.GetRequiredService<MessagingConfig>());
+        services.TryAddSingleton<IPublishBatchConfiguration>(provider => provider.GetRequiredService<MessagingConfig>());
         services.TryAddSingleton<IMessageMonitor, NullOpMessageMonitor>();
 
         services.TryAddTransient<LoggingMiddleware>();

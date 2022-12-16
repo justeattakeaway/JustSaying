@@ -371,41 +371,46 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         Type messageType,
         CancellationToken cancellationToken)
     {
+        var batchSize = metadata?.BatchSize ?? 10;
+        batchSize = Math.Min(batchSize, 10);
         attemptCount++;
-        try
+
+        foreach (var chunk in messages.Chunk(batchSize))
         {
-            using (_monitor.MeasurePublish())
+            try
             {
-                await publisher.PublishAsync(messages, metadata, cancellationToken).ConfigureAwait(false);
+                using (_monitor.MeasurePublish())
+                {
+                    await publisher.PublishAsync(chunk, metadata, cancellationToken).ConfigureAwait(false);
+                }
             }
-        }
-        catch (Exception ex)
-        {
-            if (attemptCount >= PublishBatchConfiguration.PublishFailureReAttempts)
+            catch (Exception ex)
             {
-                _monitor.IssuePublishingMessage();
+                if (attemptCount >= PublishBatchConfiguration.PublishFailureReAttempts)
+                {
+                    _monitor.IssuePublishingMessage();
 
+                    _log.LogError(
+                        ex,
+                        "Failed to publish a message of type '{MessageType}'. Halting after attempt number {PublishAttemptCount}.",
+                        messageType,
+                        attemptCount);
 
-                _log.LogError(
+                    throw;
+                }
+
+                _log.LogWarning(
                     ex,
-                    "Failed to publish a message of type '{MessageType}'. Halting after attempt number {PublishAttemptCount}.",
+                    "Failed to publish a message of type '{MessageType}'. Retrying after attempt number {PublishAttemptCount} of {PublishFailureReattempts}.",
                     messageType,
-                    attemptCount);
+                    attemptCount,
+                    PublishBatchConfiguration.PublishFailureReAttempts);
 
-                throw;
+                var delayForAttempt = TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
+                await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);
+
+                await PublishAsync(publisher, messages, metadata, attemptCount, messageType, cancellationToken).ConfigureAwait(false);
             }
-
-            _log.LogWarning(
-                ex,
-                "Failed to publish a message of type '{MessageType}'. Retrying after attempt number {PublishAttemptCount} of {PublishFailureReattempts}.",
-                messageType,
-                attemptCount,
-                PublishBatchConfiguration.PublishFailureReAttempts);
-
-            var delayForAttempt = TimeSpan.FromMilliseconds(Config.PublishFailureBackoff.TotalMilliseconds * attemptCount);
-            await Task.Delay(delayForAttempt, cancellationToken).ConfigureAwait(false);
-
-            await PublishAsync(publisher, messages, metadata, attemptCount, messageType, cancellationToken).ConfigureAwait(false);
         }
     }
 }
