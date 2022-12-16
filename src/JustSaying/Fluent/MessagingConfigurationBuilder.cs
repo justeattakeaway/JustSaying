@@ -33,14 +33,29 @@ public sealed class MessagingConfigurationBuilder
     private Action<MessageResponse, Message> MessageResponseLogger { get; set; }
 
     /// <summary>
+    /// Gets or sets the optional value to use for <see cref="IPublishBatchConfiguration.MessageBatchResponseLogger"/>
+    /// </summary>
+    private Action<MessageBatchResponse, IReadOnlyCollection<Message>> MessageBatchResponseLogger { get; set; }
+
+    /// <summary>
     /// Gets or sets the optional value to use for <see cref="IPublishConfiguration.PublishFailureBackoff"/>
     /// </summary>
     private TimeSpan? PublishFailureBackoff { get; set; }
 
     /// <summary>
+    /// Gets or sets the optional value to use for <see cref="IPublishConfiguration.PublishFailureBackoff"/>
+    /// </summary>
+    private TimeSpan? PublishFailureBackoffForBatch { get; set; }
+
+    /// <summary>
     /// Gets or sets the optional value to use for <see cref="IPublishConfiguration.PublishFailureReAttempts"/>
     /// </summary>
     private int? PublishFailureReAttempts { get; set; }
+
+    /// <summary>
+    /// Gets or sets the optional value to use for <see cref="IPublishConfiguration.PublishFailureReAttempts"/>
+    /// </summary>
+    private int? PublishFailureReAttemptsForBatch { get; set; }
 
     /// <summary>
     /// Gets or sets the optional value to use for <see cref="IMessagingConfig.Region"/>
@@ -140,6 +155,22 @@ public sealed class MessagingConfigurationBuilder
     }
 
     /// <summary>
+    /// Specifies a delegate to use to log message batch responses.
+    /// </summary>
+    /// <param name="logger">A delegate to a method to use to log message batch responses.</param>
+    /// <returns>
+    /// The current <see cref="MessagingConfigurationBuilder"/>.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="logger"/> is <see langword="null"/>.
+    /// </exception>
+    public MessagingConfigurationBuilder WithMessageResponseLogger(Action<MessageBatchResponse, IReadOnlyCollection<Message>> logger)
+    {
+        MessageBatchResponseLogger = logger ?? throw new ArgumentNullException(nameof(logger));
+        return this;
+    }
+
+    /// <summary>
     /// Specifies the <see cref="IMessageSubjectProvider"/> to use.
     /// </summary>
     /// <param name="subjectProvider">The <see cref="IMessageSubjectProvider"/> to use.</param>
@@ -169,6 +200,19 @@ public sealed class MessagingConfigurationBuilder
     }
 
     /// <summary>
+    /// Specifies the back-off period to use if message publishing fails in batch.
+    /// </summary>
+    /// <param name="value">The back-off period to use.</param>
+    /// <returns>
+    /// The current <see cref="MessagingConfigurationBuilder"/>.
+    /// </returns>
+    public MessagingConfigurationBuilder WithPublishFailureBackoffForBatch(TimeSpan value)
+    {
+        PublishFailureBackoffForBatch = value;
+        return this;
+    }
+
+    /// <summary>
     /// Specifies the number of publish re-attempts to use if message publishing fails.
     /// </summary>
     /// <param name="value">The number of re-attempts.</param>
@@ -181,6 +225,18 @@ public sealed class MessagingConfigurationBuilder
         return this;
     }
 
+    /// <summary>
+    /// Specifies the number of publish re-attempts to use if message publishing fails in batch.
+    /// </summary>
+    /// <param name="value">The number of re-attempts.</param>
+    /// <returns>
+    /// The current <see cref="MessagingConfigurationBuilder"/>.
+    /// </returns>
+    public MessagingConfigurationBuilder WithPublishFailureReattemptsForBatch(int value)
+    {
+        PublishFailureReAttemptsForBatch = value;
+        return this;
+    }
 
     /// <summary>
     /// Specifies an AWS region to use.
@@ -331,6 +387,29 @@ public sealed class MessagingConfigurationBuilder
         {
             config.PublishFailureReAttempts = PublishFailureReAttempts.Value;
         }
+
+        return config;
+    }
+
+    public IPublishBatchConfiguration BuildPublishBatchConfiguration()
+    {
+        var config = BusBuilder.ServiceResolver.ResolveService<IPublishBatchConfiguration>();
+
+        if (PublishFailureBackoffForBatch.HasValue)
+        {
+            config.PublishFailureBackoff = PublishFailureBackoffForBatch.Value;
+        }
+
+        if (PublishFailureReAttemptsForBatch.HasValue)
+        {
+            config.PublishFailureReAttempts = PublishFailureReAttemptsForBatch.Value;
+        }
+
+        if (MessageBatchResponseLogger != null)
+        {
+            config.MessageBatchResponseLogger = MessageBatchResponseLogger;
+        }
+
 
         return config;
     }

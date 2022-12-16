@@ -179,7 +179,7 @@ public class SqsMessagePublisher : IMessagePublisher, IMessageBatchPublisher
 
                         foreach (var message in response.Failed)
                         {
-                            _logger.LogWarning(
+                            _logger.LogError(
                                 "Fail to published message {MessageId} to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
                                 message.Id,
                                 "Queue",
