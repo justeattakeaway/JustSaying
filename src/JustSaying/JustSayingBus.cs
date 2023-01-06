@@ -63,15 +63,25 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         _log = _loggerFactory.CreateLogger("JustSaying");
 
         Config = config;
-        PublishBatchConfiguration = publishBatchConfiguration ?? new MessagingConfig();
+        PublishBatchConfiguration = publishBatchConfiguration;
+        if (PublishBatchConfiguration == null)
+        {
+            if (config is IPublishBatchConfiguration batchConfig)
+            {
+                PublishBatchConfiguration = batchConfig;
+            }
+            else
+            {
+                PublishBatchConfiguration = new MessagingConfig();
+            }
+        }
 
         SerializationRegister = serializationRegister;
         MiddlewareMap = new MiddlewareMap();
 
         _publishersByType = new Dictionary<Type, IMessagePublisher>();
         _batchPublishersByType = new Dictionary<Type, IMessageBatchPublisher>();
-        _subscriptionGroupSettings =
-            new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
+        _subscriptionGroupSettings = new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
         _defaultSubscriptionGroupSettings = new SubscriptionGroupSettingsBuilder();
     }
 
