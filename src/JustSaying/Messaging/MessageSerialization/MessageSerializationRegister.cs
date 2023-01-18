@@ -7,7 +7,8 @@ public class MessageSerializationRegister : IMessageSerializationRegister
 {
     private readonly IMessageSubjectProvider _messageSubjectProvider;
     private readonly IMessageSerializationFactory _serializationFactory;
-    private readonly IDictionary<Type, TypeSerializer> _map = new ConcurrentDictionary<Type, TypeSerializer>();
+    private readonly ConcurrentDictionary<string, Lazy<TypeSerializer>> _map = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<IMessageSerializer> _messageSerializers = new();
 
     public MessageSerializationRegister(IMessageSubjectProvider messageSubjectProvider, IMessageSerializationFactory serializationFactory)
     {
@@ -17,37 +18,37 @@ public class MessageSerializationRegister : IMessageSerializationRegister
 
     public void AddSerializer<T>() where T : Message
     {
-        Type key = typeof(T);
-        if (!_map.ContainsKey(key))
-        {
-            _map[key] = new TypeSerializer(typeof(T), _serializationFactory.GetSerializer<T>());
-        }
+        string key = _messageSubjectProvider.GetSubjectForType(typeof(T));
+
+        var serializer = _map.GetOrAdd(key,
+            _ => new Lazy<TypeSerializer>(
+                () => new TypeSerializer(typeof(T), _serializationFactory.GetSerializer<T>())
+            )
+        ).Value;
+
+        _messageSerializers.Add(serializer.Serializer);
     }
 
     public MessageWithAttributes DeserializeMessage(string body)
     {
-        // Custom deserialisation from alternate payload into JustSaying payload
-
-        // Can we remove this loop and simplify how this works?
-        foreach (var pair in _map)
+        // Can we remove this loop rather than try each serializer?
+        foreach (var messageSerializer in _messageSerializers)
         {
-            TypeSerializer typeSerializer = pair.Value;
-            string messageSubject = typeSerializer.Serializer.GetMessageSubject(body); // Custom serializer pulls this from cloud event event type
+            string messageSubject = messageSerializer.GetMessageSubject(body); // Custom serializer pulls this from cloud event type
 
             if (string.IsNullOrWhiteSpace(messageSubject))
             {
                 continue;
             }
 
-            Type matchedType = typeSerializer.Type;
-
-            if (!string.Equals(_messageSubjectProvider.GetSubjectForType(matchedType), messageSubject, StringComparison.OrdinalIgnoreCase))
+            if (!_map.TryGetValue(messageSubject, out var lazyTypeSerializer))
             {
                 continue;
             }
 
+            TypeSerializer typeSerializer = lazyTypeSerializer.Value;
             var attributes = typeSerializer.Serializer.GetMessageAttributes(body);
-            var message = typeSerializer.Serializer.Deserialize(body, matchedType);
+            var message = typeSerializer.Serializer.Deserialize(body, typeSerializer.Type);
             return new MessageWithAttributes(message, attributes);
         }
 
@@ -63,13 +64,15 @@ public class MessageSerializationRegister : IMessageSerializationRegister
     public string Serialize(Message message, bool serializeForSnsPublishing)
     {
         var messageType = message.GetType();
+        string subject = _messageSubjectProvider.GetSubjectForType(messageType);
 
-        if (!_map.TryGetValue(messageType, out TypeSerializer typeSerializer))
+        if (!_map.TryGetValue(subject, out var lazyTypeSerializer))
         {
             throw new MessageFormatNotSupportedException($"Failed to serialize message of type {messageType} because it is not registered for serialization.");
         }
 
+        var typeSerializer = lazyTypeSerializer.Value;
         IMessageSerializer messageSerializer = typeSerializer.Serializer;
-        return messageSerializer.Serialize(message, serializeForSnsPublishing, _messageSubjectProvider.GetSubjectForType(messageType));
+        return messageSerializer.Serialize(message, serializeForSnsPublishing, subject);
     }
 }
