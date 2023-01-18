@@ -7,7 +7,7 @@ public class MessageSerializationRegister : IMessageSerializationRegister
 {
     private readonly IMessageSubjectProvider _messageSubjectProvider;
     private readonly IMessageSerializationFactory _serializationFactory;
-    private readonly ConcurrentDictionary<string, Lazy<TypeSerializer>> _map = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, Lazy<TypeSerializer>> _typeSerializersBySubject = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<IMessageSerializer> _messageSerializers = new();
 
     public MessageSerializationRegister(IMessageSubjectProvider messageSubjectProvider, IMessageSerializationFactory serializationFactory)
@@ -20,13 +20,13 @@ public class MessageSerializationRegister : IMessageSerializationRegister
     {
         string key = _messageSubjectProvider.GetSubjectForType(typeof(T));
 
-        var serializer = _map.GetOrAdd(key,
+        var typeSerializer = _typeSerializersBySubject.GetOrAdd(key,
             _ => new Lazy<TypeSerializer>(
                 () => new TypeSerializer(typeof(T), _serializationFactory.GetSerializer<T>())
             )
         ).Value;
 
-        _messageSerializers.Add(serializer.Serializer);
+        _messageSerializers.Add(typeSerializer.Serializer);
     }
 
     public MessageWithAttributes DeserializeMessage(string body)
@@ -41,7 +41,7 @@ public class MessageSerializationRegister : IMessageSerializationRegister
                 continue;
             }
 
-            if (!_map.TryGetValue(messageSubject, out var lazyTypeSerializer))
+            if (!_typeSerializersBySubject.TryGetValue(messageSubject, out var lazyTypeSerializer))
             {
                 continue;
             }
@@ -66,7 +66,7 @@ public class MessageSerializationRegister : IMessageSerializationRegister
         var messageType = message.GetType();
         string subject = _messageSubjectProvider.GetSubjectForType(messageType);
 
-        if (!_map.TryGetValue(subject, out var lazyTypeSerializer))
+        if (!_typeSerializersBySubject.TryGetValue(subject, out var lazyTypeSerializer))
         {
             throw new MessageFormatNotSupportedException($"Failed to serialize message of type {messageType} because it is not registered for serialization.");
         }
