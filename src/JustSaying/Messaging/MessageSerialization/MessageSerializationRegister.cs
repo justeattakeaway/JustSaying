@@ -31,7 +31,7 @@ public class MessageSerializationRegister : IMessageSerializationRegister
 
     public MessageWithAttributes DeserializeMessage(string body)
     {
-        // Can we remove this loop rather than try each serializer?
+        // TODO Can we remove this loop rather than try each serializer?
         foreach (var messageSerializer in _messageSerializers)
         {
             string messageSubject = messageSerializer.GetMessageSubject(body); // Custom serializer pulls this from cloud event type
