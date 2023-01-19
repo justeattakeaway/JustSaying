@@ -4,6 +4,7 @@ using JustSaying;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware.Logging;
@@ -178,6 +179,13 @@ public static class IServiceCollectionExtensions
         services.TryAddSingleton(
             (serviceProvider) =>
             {
+                var publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+
+                if (publisher is IMessageBatchPublisher batchPublisher)
+                {
+                    return batchPublisher;
+                }
+
                 var builder = serviceProvider.GetRequiredService<MessagingBusBuilder>();
                 return builder.BuildBatchPublisher();
             });

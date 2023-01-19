@@ -74,10 +74,7 @@ try
     builder.Services.AddHostedService<BusService>();
 
     builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen(c =>
-    {
-        c.SwaggerDoc("v1", new OpenApiInfo { Title = "Restaurant Ordering API", Version = "v1" });
-    });
+    builder.Services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo { Title = "Restaurant Ordering API", Version = "v1" }); });
 
     var app = builder.Build();
     app.UseSerilogRequestLogging();
@@ -106,6 +103,29 @@ try
             await publisher.PublishAsync(message);
 
             app.Logger.LogInformation("Order {orderId} placed", orderId);
+        });
+
+    app.MapPost("api/multi-orders",
+        async (IReadOnlyCollection<CustomerOrderModel> orders, IMessageBatchPublisher publisher) =>
+        {
+            app.Logger.LogInformation("Orders received: {@Orders}", orders);
+
+            // Save order to database generating OrderId
+
+            var message = orders.Select(order =>
+                {
+                    var orderId = Random.Shared.Next(1, 100);
+                    return new OrderPlacedEvent
+                    {
+                        OrderId = orderId,
+                        Description = order.Description
+                    };
+                })
+                .ToList();
+
+            await publisher.PublishAsync(message);
+
+            app.Logger.LogInformation("Order {@OrderIds} placed", message.Select(x => x.OrderId));
         });
 
     await app.RunAsync();

@@ -138,6 +138,12 @@ public static class ConfigurationExpressionExtensions
                 nameof(IMessageBatchPublisher),
                 context =>
                 {
+                    var publisher = context.GetInstance<IMessagePublisher>();
+                    if (publisher is IMessageBatchPublisher batchPublisher)
+                    {
+                        return batchPublisher;
+                    }
+
                     var builder = context.GetInstance<MessagingBusBuilder>();
                     return builder.BuildBatchPublisher();
                 });
