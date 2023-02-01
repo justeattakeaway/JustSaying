@@ -4,7 +4,7 @@ JustSaying adopts [SemVer 2.0](https://semver.org/spec/v2.0.0.html), and uses [M
 
 ## Process for Releasing
 
-To create a new release go to the GitHub [releases tab](https://github.com/justeat/JustSaying/releases) and click `Draft a new release`.
+To create a new release go to the GitHub [releases tab](https://github.com/justeattakeaway/JustSaying/releases) and click `Draft a new release`.
 
 The tag should be in the format:
 

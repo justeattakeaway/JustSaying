@@ -44,7 +44,7 @@
     <NoWarn>$(NoWarn);CA1062;CA1303</NoWarn>
     <PackageIcon>package-icon.png</PackageIcon>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/justeat/JustSaying</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/justeattakeaway/JustSaying</PackageProjectUrl>
     <PackageReleaseNotes>$(PackageProjectUrl)/releases</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageTags>aws,sns,sqs</PackageTags>

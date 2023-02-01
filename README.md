@@ -1,10 +1,10 @@
 # JustSaying
 
 [![NuGet](https://img.shields.io/nuget/v/JustSaying.svg?maxAge=3600)](https://www.nuget.org/packages/JustSaying/)
-[![GitHub Discussions](https://img.shields.io/github/discussions/justeat/JustSaying)](https://github.com/justeat/JustSaying/discussions)
+[![GitHub Discussions](https://img.shields.io/github/discussions/justeattakeaway/JustSaying)](https://github.com/justeattakeaway/JustSaying/discussions)
 
-[![Build status](https://img.shields.io/github/actions/workflow/status/justeat/JustSaying/build.yml?branch=main&logo=github)](https://github.com/justeat/JustSaying/actions?query=workflow%3Abuild+branch%3Amain)
-[![codecov](https://codecov.io/gh/justeat/JustSaying/branch/main/graph/badge.svg)](https://codecov.io/gh/justeat/JustSaying)
+[![Build status](https://img.shields.io/github/actions/workflow/status/justeattakeaway/JustSaying/build.yml?branch=main&logo=github)](https://github.com/justeattakeaway/JustSaying/actions?query=workflow%3Abuild+branch%3Amain)
+[![codecov](https://codecov.io/gh/justeattakeaway/JustSaying/branch/main/graph/badge.svg)](https://codecov.io/gh/justeattakeaway/JustSaying)
 
 A helpful library for publishing and consuming events / messages over SNS (SNS / SQS as a message bus).
 
