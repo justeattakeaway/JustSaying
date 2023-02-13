@@ -31,7 +31,7 @@ try
             {
                 // The AWS client SDK allows specifying a custom HTTP endpoint.
                 // For testing purposes it is useful to specify a value that
-                // points to a docker image such as `p4tin/goaws` or `localstack/localstack`
+                // points to a docker image such as `localstack/localstack`
                 x.WithServiceUri(configuration.GetAWSServiceUri())
                     .WithAnonymousCredentials();
             }
