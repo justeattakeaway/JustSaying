@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <DotNetTestSdkVersion>17.4.1</DotNetTestSdkVersion>
+    <DotNetTestSdkVersion>17.5.0</DotNetTestSdkVersion>
     <MicrosoftExtensionsDependencyInjectionVersion>7.0.0</MicrosoftExtensionsDependencyInjectionVersion>
     <MicrosoftExtensionsDependencyInjectionVersionAbstraction>7.0.0</MicrosoftExtensionsDependencyInjectionVersionAbstraction>
     <NewtonsoftJsonVersion>13.0.1</NewtonsoftJsonVersion>
