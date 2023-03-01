@@ -23,7 +23,7 @@ public class PollyJustSayingMiddleware : MiddlewareBase<HandleMessageContext, bo
 
         try
         {
-            return await _policy.ExecuteAsync(() => func(stoppingToken));
+            return await _policy.ExecuteAsync(func, stoppingToken);
         }
         finally
         {
