@@ -10,8 +10,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 
-Console.Title = "Middleware Example";
-
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .MinimumLevel.Information()
@@ -45,6 +43,8 @@ catch (Exception e)
 finally
 {
     Log.CloseAndFlush();
+
+    Console.Title = string.Empty;
 }
 
 static IHost BuildHost()

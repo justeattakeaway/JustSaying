@@ -8,7 +8,7 @@ By default, all subscriptions will have a standard set of a middleware added whi
 
 * Wire up the `IHandlerAsync<T>` for your message
 * Emit logs and metrics for message handling
-* Deletion of a message if your handler returns successful
+* Deletes a message if your handler returns successfully
 
 When you add your own middleware, you will most likely want to ensure the above behaviour is maintained. This can be achieved as follows;
 
@@ -25,4 +25,4 @@ x.ForTopic<SampleMessage>((cfg) =>
 });
 ```
 
-If you don't call `UseDefaults<T>(...)` then messages won't pass through your handler, nor will they be deleted from their queues so its strongly recommended to use it.
+If you don't call `UseDefaults<T>(...)` then messages won't pass through your handler, nor will they be deleted from their queues, so it's strongly recommended to use it.
