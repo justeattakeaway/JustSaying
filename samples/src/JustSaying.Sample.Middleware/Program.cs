@@ -43,8 +43,6 @@ catch (Exception e)
 finally
 {
     Log.CloseAndFlush();
-
-    Console.Title = string.Empty;
 }
 
 static IHost BuildHost()
