@@ -75,6 +75,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Extensions.Depen
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.Benchmark", "tests\JustSaying.Benchmark\JustSaying.Benchmark.csproj", "{83B43FC1-1F1C-4838-B67B-CE70D16870AF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.Sample.Middleware", "samples\src\JustSaying.Sample.Middleware\JustSaying.Sample.Middleware.csproj", "{38DAC394-0A6E-4BB6-BCFC-8C21D2C64B3A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -133,6 +135,10 @@ Global
 		{83B43FC1-1F1C-4838-B67B-CE70D16870AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{83B43FC1-1F1C-4838-B67B-CE70D16870AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{83B43FC1-1F1C-4838-B67B-CE70D16870AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{38DAC394-0A6E-4BB6-BCFC-8C21D2C64B3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{38DAC394-0A6E-4BB6-BCFC-8C21D2C64B3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{38DAC394-0A6E-4BB6-BCFC-8C21D2C64B3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{38DAC394-0A6E-4BB6-BCFC-8C21D2C64B3A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -155,6 +161,7 @@ Global
 		{A4D0E032-3AF1-437F-AF6B-4B602B8D4C49} = {77C93C37-DE5B-448F-9A23-6C9D0C8465CA}
 		{6AF4E086-6784-489C-9AB1-36F637A30094} = {E22A50F2-9952-4483-8AD1-09BE354FB3E4}
 		{83B43FC1-1F1C-4838-B67B-CE70D16870AF} = {E22A50F2-9952-4483-8AD1-09BE354FB3E4}
+		{38DAC394-0A6E-4BB6-BCFC-8C21D2C64B3A} = {77C93C37-DE5B-448F-9A23-6C9D0C8465CA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {18FBDF85-C124-4444-9F03-D0D4F2B3A612}
