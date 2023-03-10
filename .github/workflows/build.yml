@@ -49,12 +49,12 @@ jobs:
       - name: Build, Test and Package
         if: ${{ runner.os != 'linux' }}
         shell: pwsh
-        run: ./Build.ps1
+        run: ./build.ps1
 
       - name: Build, Test, IntegrationTest and Package
         if: ${{ runner.os == 'linux' }}
         shell: pwsh
-        run: ./Build.ps1 -EnableIntegrationTests
+        run: ./build.ps1 -EnableIntegrationTests
 
       - uses: codecov/codecov-action@v3
         name: Upload coverage to Codecov
