@@ -26,4 +26,7 @@
     <Using Include="Xunit" />
     <Using Include="Xunit.Abstractions" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="AwsTools\MessageHandling\Sqs\Policy" />
+  </ItemGroup>
 </Project>
