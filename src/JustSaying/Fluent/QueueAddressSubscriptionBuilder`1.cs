@@ -11,11 +11,11 @@ namespace JustSaying.Fluent;
 /// <summary>
 /// A class representing a builder for a queue subscription to an existing queue. This class cannot be inherited.
 /// </summary>
-/// <typeparam name="T">
+/// <typeparam name="TMessage">
 /// The type of the message.
 /// </typeparam>
-public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
-    where T : class
+public sealed class QueueAddressSubscriptionBuilder<TMessage> : ISubscriptionBuilder<TMessage>
+    where TMessage : class
 {
     private readonly QueueAddress _queueAddress;
 
@@ -43,21 +43,21 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
-    public QueueAddressSubscriptionBuilder<T> WithReadConfiguration(Action<QueueAddressConfiguration> configure)
+    public QueueAddressSubscriptionBuilder<TMessage> WithReadConfiguration(Action<QueueAddressConfiguration> configure)
     {
         ConfigureReads = configure ?? throw new ArgumentNullException(nameof(configure));
         return this;
     }
 
     /// <inheritdoc />
-    public ISubscriptionBuilder<T> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
+    public ISubscriptionBuilder<TMessage> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
     {
         MiddlewareConfiguration = middlewareConfiguration;
         return this;
     }
 
     /// <inheritdoc />
-    void ISubscriptionBuilder<T>.Configure(
+    void ISubscriptionBuilder<TMessage>.Configure(
         JustSayingBus bus,
         IHandlerResolver handlerResolver,
         IServiceResolver serviceResolver,
@@ -65,7 +65,7 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         IAwsClientFactoryProxy awsClientFactoryProxy,
         ILoggerFactory loggerFactory)
     {
-        var logger = loggerFactory.CreateLogger<QueueSubscriptionBuilder<T>>();
+        var logger = loggerFactory.CreateLogger<QueueSubscriptionBuilder<TMessage>>();
 
         var attachedQueueConfig = new QueueAddressConfiguration();
 
@@ -84,25 +84,25 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
 
         logger.LogInformation(
             "Created SQS queue subscription for '{MessageType}' on '{QueueName}'",
-            typeof(T), queue.QueueName);
+            typeof(TMessage), queue.QueueName);
 
         var resolutionContext = new HandlerResolutionContext(queue.QueueName);
-        var proposedHandler = handlerResolver.ResolveHandler<T>(resolutionContext);
+        var proposedHandler = handlerResolver.ResolveHandler<TMessage>(resolutionContext);
         if (proposedHandler == null)
         {
             throw new HandlerNotRegisteredWithContainerException(
-                $"There is no handler for '{typeof(T)}' messages.");
+                $"There is no handler for '{typeof(TMessage)}' messages.");
         }
 
         var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver);
         var handlerMiddleware = middlewareBuilder
-            .Configure(MiddlewareConfiguration ?? (b => b.UseDefaults<T>(proposedHandler.GetType())))
+            .Configure(MiddlewareConfiguration ?? (b => b.UseDefaults<TMessage>(proposedHandler.GetType())))
             .Build();
 
-        bus.AddMessageMiddleware<T>(queue.QueueName, handlerMiddleware);
+        bus.AddMessageMiddleware<TMessage>(queue.QueueName, handlerMiddleware);
 
         logger.LogInformation(
             "Added a message handler for message type for '{MessageType}' on queue '{QueueName}'",
-            typeof(T), queue.QueueName);
+            typeof(TMessage), queue.QueueName);
     }
 }

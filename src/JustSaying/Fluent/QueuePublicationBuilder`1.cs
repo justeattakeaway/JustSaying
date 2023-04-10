@@ -2,7 +2,6 @@ using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
@@ -10,11 +9,11 @@ namespace JustSaying.Fluent;
 /// <summary>
 /// A class representing a builder for a queue publication. This class cannot be inherited.
 /// </summary>
-/// <typeparam name="T">
+/// <typeparam name="TMessage">
 /// The type of the message published to the queue.
 /// </typeparam>
-public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
-    where T : class
+public sealed class QueuePublicationBuilder<TMessage> : IPublicationBuilder
+    where TMessage : class
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="QueuePublicationBuilder{T}"/> class.
@@ -37,7 +36,7 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
-    public QueuePublicationBuilder<T> WithWriteConfiguration(
+    public QueuePublicationBuilder<TMessage> WithWriteConfiguration(
         Action<SqsWriteConfigurationBuilder> configure)
     {
         if (configure == null)
@@ -63,7 +62,7 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
-    public QueuePublicationBuilder<T> WithWriteConfiguration(Action<SqsWriteConfiguration> configure)
+    public QueuePublicationBuilder<TMessage> WithWriteConfiguration(Action<SqsWriteConfiguration> configure)
     {
         ConfigureWrites = configure ?? throw new ArgumentNullException(nameof(configure));
         return this;
@@ -76,35 +75,35 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
     /// <returns>
     /// The current <see cref="QueuePublicationBuilder{T}"/>.
     /// </returns>
-    public QueuePublicationBuilder<T> WithName(string queueName)
+    public QueuePublicationBuilder<TMessage> WithName(string queueName)
     {
         return this.WithWriteConfiguration(r => r.WithQueueName(queueName));
     }
 
     /// <inheritdoc />
-    void IPublicationBuilder<T>.Configure(
+    void IPublicationBuilder.Configure(
         JustSayingBus bus,
         IAwsClientFactoryProxy proxy,
         ILoggerFactory loggerFactory)
     {
-        var logger = loggerFactory.CreateLogger<QueuePublicationBuilder<T>>();
+        var logger = loggerFactory.CreateLogger<QueuePublicationBuilder<TMessage>>();
 
         logger.LogInformation("Adding SQS publisher for message type '{MessageType}'.",
-            typeof(T));
+            typeof(TMessage));
 
         var config = bus.Config;
         var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
         var writeConfiguration = new SqsWriteConfiguration();
         ConfigureWrites?.Invoke(writeConfiguration);
-        writeConfiguration.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
+        writeConfiguration.ApplyQueueNamingConvention<TMessage>(config.QueueNamingConvention);
 
-        bus.SerializationRegister.AddSerializer<T>();
+        bus.SerializationRegister.AddSerializer<TMessage>();
 
         var regionEndpoint = RegionEndpoint.GetBySystemName(region);
         var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
 
-        var eventPublisher = new SqsMessagePublisher<T>(
+        var eventPublisher = new SqsMessagePublisher<TMessage>(
             sqsClient,
             bus.SerializationRegister,
             loggerFactory)
@@ -133,11 +132,11 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
 
         bus.AddStartupTask(StartupTask);
 
-        bus.AddMessagePublisher<T>(eventPublisher);
+        bus.AddMessagePublisher<TMessage>(eventPublisher);
 
         logger.LogInformation(
             "Created SQS publisher for message type '{MessageType}' on queue '{QueueName}'.",
-            typeof(T),
+            typeof(TMessage),
             writeConfiguration.QueueName);
     }
 }

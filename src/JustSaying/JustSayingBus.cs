@@ -98,7 +98,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         MiddlewareMap.Add<T>(queueName, middleware);
     }
 
-    public void AddMessagePublisher<T>(IMessagePublisher<T> messagePublisher) where T : class
+    public void AddMessagePublisher<TMessage>(IMessagePublisher<TMessage> messagePublisher) where TMessage : class
     {
         if (Config.PublishFailureReAttempts == 0)
         {
@@ -106,7 +106,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
                 "You have not set a re-attempt value for publish failures. If the publish location is 'down' you may lose messages.");
         }
 
-        _publishersByType[typeof(T)] = messagePublisher;
+        _publishersByType[typeof(TMessage)] = messagePublisher;
     }
 
     public async Task StartAsync(CancellationToken stoppingToken)
@@ -193,7 +193,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
             .ConfigureAwait(false);
     }
 
-    private IMessagePublisher<T> GetPublisherForMessage<T>(T message) where T : class
+    private IMessagePublisher<TMessage> GetPublisherForMessage<TMessage>(TMessage message) where TMessage : class
     {
         if (_publishersByType.Count == 0)
         {
@@ -203,7 +203,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
             throw new InvalidOperationException(errorMessage);
         }
 
-        var messageType = typeof(T);
+        var messageType = typeof(TMessage);
 
         var publishersFound =
             _publishersByType.TryGetValue(messageType, out var publisher);
@@ -217,7 +217,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
                 $"Error publishing message, no publishers registered for message type '{messageType}'.");
         }
 
-        return publisher as IMessagePublisher<T> ?? throw new InvalidOperationException($"Error publishing message, registered publisher was of unexpected type for message type '{messageType}'.");
+        return publisher as IMessagePublisher<TMessage> ?? throw new InvalidOperationException($"Error publishing message, registered publisher was of unexpected type for message type '{messageType}'.");
     }
 
     private async Task PublishAsync<TMessage>(

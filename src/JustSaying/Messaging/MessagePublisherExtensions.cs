@@ -5,9 +5,9 @@ namespace JustSaying.Messaging;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class MessagePublisherExtensions
 {
-    public static Task PublishAsync<T>(this IMessagePublisher<T> publisher, T message) where T : class
+    public static Task PublishAsync<TMessage>(this IMessagePublisher<TMessage> publisher, TMessage message) where TMessage : class
     {
-        return publisher.PublishAsync<T>(message, CancellationToken.None);
+        return publisher.PublishAsync<TMessage>(message, CancellationToken.None);
     }
 
     public static async Task PublishAsync<TMessage>(this IMessagePublisher<TMessage> publisher,

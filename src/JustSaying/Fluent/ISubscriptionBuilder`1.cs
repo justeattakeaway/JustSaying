@@ -9,11 +9,11 @@ namespace JustSaying.Fluent;
 /// <summary>
 /// Defines a builder for a subscription.
 /// </summary>
-/// <typeparam name="T">
+/// <typeparam name="TMessage">
 /// The type of the messages to subscribe to.
 /// </typeparam>
-public interface ISubscriptionBuilder<out T>
-    where T : class
+public interface ISubscriptionBuilder<out TMessage>
+    where TMessage : class
 {
     /// <summary>
     /// Configures the middleware pipeline for this subscription.
@@ -53,7 +53,7 @@ public interface ISubscriptionBuilder<out T>
     /// </ul>
     /// </example>
     /// <returns>The current <see cref="SqsReadConfigurationBuilder"/>.</returns>
-    public ISubscriptionBuilder<T> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration);
+    public ISubscriptionBuilder<TMessage> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration);
 
 
     /// <summary>

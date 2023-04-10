@@ -27,6 +27,6 @@ public interface IMessageSerializationRegister
     /// <summary>
     /// Register a serializer for the given type, if one does not already exist.
     /// </summary>
-    /// <typeparam name="T">The type to register a serializer for.</typeparam>
-    void AddSerializer<T>() where T : class;
+    /// <typeparam name="TMessage">The type to register a serializer for.</typeparam>
+    void AddSerializer<TMessage>() where TMessage : class;
 }

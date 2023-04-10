@@ -4,5 +4,5 @@ namespace JustSaying.Messaging.MessageSerialization;
 
 public interface IMessageSerializationFactory
 {
-    IMessageSerializer GetSerializer<T>() where T : class;
+    IMessageSerializer GetSerializer<TMessage>() where TMessage : class;
 }

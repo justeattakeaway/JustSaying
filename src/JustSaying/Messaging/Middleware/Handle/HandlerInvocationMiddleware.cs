@@ -7,12 +7,12 @@ namespace JustSaying.Messaging.Middleware;
 /// <summary>
 /// This middleware is responsible for resolving a message handler and calling it.
 /// </summary>
-/// <typeparam name="T">The type of the message that the message handler handles.</typeparam>
-public sealed class HandlerInvocationMiddleware<T> : MiddlewareBase<HandleMessageContext, bool> where T : class
+/// <typeparam name="TMessage">The type of the message that the message handler handles.</typeparam>
+public sealed class HandlerInvocationMiddleware<TMessage> : MiddlewareBase<HandleMessageContext, bool> where TMessage : class
 {
-    private readonly Func<HandlerResolutionContext, IHandlerAsync<T>> _handlerResolver;
+    private readonly Func<HandlerResolutionContext, IHandlerAsync<TMessage>> _handlerResolver;
 
-    public HandlerInvocationMiddleware(Func<HandlerResolutionContext, IHandlerAsync<T>> handlerResolver)
+    public HandlerInvocationMiddleware(Func<HandlerResolutionContext, IHandlerAsync<TMessage>> handlerResolver)
     {
         _handlerResolver = handlerResolver ?? throw new ArgumentNullException(nameof(handlerResolver));
     }
@@ -28,8 +28,8 @@ public sealed class HandlerInvocationMiddleware<T> : MiddlewareBase<HandleMessag
 
         var resolutionContext = new HandlerResolutionContext(context.QueueName);
 
-        IHandlerAsync<T> handler = _handlerResolver(resolutionContext);
+        IHandlerAsync<TMessage> handler = _handlerResolver(resolutionContext);
 
-        return await handler.Handle(context.MessageAs<T>()).ConfigureAwait(false);
+        return await handler.Handle(context.MessageAs<TMessage>()).ConfigureAwait(false);
     }
 }

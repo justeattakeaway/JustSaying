@@ -48,15 +48,15 @@ public sealed class MiddlewareMap : IInterrogable
     /// Adds a middleware chain to be executed when a message arrives in a queue.
     /// If the middleware is already registered for a queue, it will not be added again.
     /// </summary>
-    /// <typeparam name="T">The type of the message to handle on this queue.</typeparam>
+    /// <typeparam name="TMessage">The type of the message to handle on this queue.</typeparam>
     /// <param name="queueName">The queue to register the middleware for.</param>
     /// <param name="middleware">The factory function to create middleware with.</param>
-    public MiddlewareMap Add<T>(string queueName, HandleMessageMiddleware middleware) where T : class
+    public MiddlewareMap Add<TMessage>(string queueName, HandleMessageMiddleware middleware) where TMessage : class
     {
         if (queueName is null) throw new ArgumentNullException(nameof(queueName));
         if (middleware is null) throw new ArgumentNullException(nameof(middleware));
 
-        _middlewares[(queueName, typeof(T))] = middleware;
+        _middlewares[(queueName, typeof(TMessage))] = middleware;
 
         return this;
     }

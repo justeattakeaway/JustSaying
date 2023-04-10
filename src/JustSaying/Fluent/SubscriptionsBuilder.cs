@@ -56,20 +56,20 @@ public sealed class SubscriptionsBuilder
     /// <summary>
     /// Configures a queue subscription for the default queue.
     /// </summary>
-    /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+    /// <typeparam name="TMessage">The type of the message to subscribe to.</typeparam>
     /// <returns>
     /// The current <see cref="SubscriptionsBuilder"/>.
     /// </returns>
-    public SubscriptionsBuilder ForQueue<T>()
-        where T : class
+    public SubscriptionsBuilder ForQueue<TMessage>()
+        where TMessage : class
     {
-        return ForQueue<T>((p) => p.WithDefaultQueue());
+        return ForQueue<TMessage>((p) => p.WithDefaultQueue());
     }
 
     /// <summary>
     /// Configures a queue subscription.
     /// </summary>
-    /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+    /// <typeparam name="TMessage">The type of the message to subscribe to.</typeparam>
     /// <param name="configure">A delegate to a method to use to configure a queue subscription.</param>
     /// <returns>
     /// The current <see cref="SubscriptionsBuilder"/>.
@@ -77,12 +77,12 @@ public sealed class SubscriptionsBuilder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
-    public SubscriptionsBuilder ForQueue<T>(Action<QueueSubscriptionBuilder<T>> configure)
-        where T : class
+    public SubscriptionsBuilder ForQueue<TMessage>(Action<QueueSubscriptionBuilder<TMessage>> configure)
+        where TMessage : class
     {
         if (configure == null) throw new ArgumentNullException(nameof(configure));
 
-        var builder = new QueueSubscriptionBuilder<T>();
+        var builder = new QueueSubscriptionBuilder<TMessage>();
 
         configure(builder);
 
@@ -96,15 +96,15 @@ public sealed class SubscriptionsBuilder
     /// </summary>
     /// <param name="queueArn">The ARN of the queue to subscribe to.</param>
     /// <param name="configure">An optional delegate to configure a queue subscription.</param>
-    /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+    /// <typeparam name="TMessage">The type of the message to subscribe to.</typeparam>
     /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
-    public SubscriptionsBuilder ForQueueArn<T>(string queueArn, Action<QueueAddressSubscriptionBuilder<T>> configure = null)
-        where T : class
+    public SubscriptionsBuilder ForQueueArn<TMessage>(string queueArn, Action<QueueAddressSubscriptionBuilder<TMessage>> configure = null)
+        where TMessage : class
     {
         if (queueArn == null) throw new ArgumentNullException(nameof(queueArn));
 
         var queueAddress = QueueAddress.FromArn(queueArn);
-        var builder = new QueueAddressSubscriptionBuilder<T>(queueAddress);
+        var builder = new QueueAddressSubscriptionBuilder<TMessage>(queueAddress);
 
         configure?.Invoke(builder);
 
@@ -119,15 +119,15 @@ public sealed class SubscriptionsBuilder
     /// <param name="queueUrl">The URL of the queue to subscribe to.</param>
     /// <param name="regionName">The AWS region the queue is in.</param>
     /// <param name="configure">An optional delegate to configure a queue subscription.</param>
-    /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+    /// <typeparam name="TMessage">The type of the message to subscribe to.</typeparam>
     /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
-    public SubscriptionsBuilder ForQueueUrl<T>(string queueUrl, string regionName = null, Action<QueueAddressSubscriptionBuilder<T>> configure = null)
-        where T : class
+    public SubscriptionsBuilder ForQueueUrl<TMessage>(string queueUrl, string regionName = null, Action<QueueAddressSubscriptionBuilder<TMessage>> configure = null)
+        where TMessage : class
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
         var queueAddress = QueueAddress.FromUrl(queueUrl, regionName);
-        var builder = new QueueAddressSubscriptionBuilder<T>(queueAddress);
+        var builder = new QueueAddressSubscriptionBuilder<TMessage>(queueAddress);
 
         configure?.Invoke(builder);
 
@@ -142,15 +142,15 @@ public sealed class SubscriptionsBuilder
     /// <param name="queueUrl">The URL of the queue to subscribe to.</param>
     /// <param name="regionName">The AWS region the queue is in.</param>
     /// <param name="configure">An optional delegate to configure a queue subscription.</param>
-    /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+    /// <typeparam name="TMessage">The type of the message to subscribe to.</typeparam>
     /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
-    public SubscriptionsBuilder ForQueueUri<T>(Uri queueUrl, string regionName = null, Action<QueueAddressSubscriptionBuilder<T>> configure = null)
-        where T : class
+    public SubscriptionsBuilder ForQueueUri<TMessage>(Uri queueUrl, string regionName = null, Action<QueueAddressSubscriptionBuilder<TMessage>> configure = null)
+        where TMessage : class
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
         var queueAddress = QueueAddress.FromUri(queueUrl, regionName);
-        var builder = new QueueAddressSubscriptionBuilder<T>(queueAddress);
+        var builder = new QueueAddressSubscriptionBuilder<TMessage>(queueAddress);
 
         configure?.Invoke(builder);
 
@@ -162,20 +162,20 @@ public sealed class SubscriptionsBuilder
     /// <summary>
     /// Configures a topic subscription for the default topic name.
     /// </summary>
-    /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+    /// <typeparam name="TMessage">The type of the message to subscribe to.</typeparam>
     /// <returns>
     /// The current <see cref="SubscriptionsBuilder"/>.
     /// </returns>
-    public SubscriptionsBuilder ForTopic<T>()
-        where T : class
+    public SubscriptionsBuilder ForTopic<TMessage>()
+        where TMessage : class
     {
-        return ForTopic<T>((p) => p.IntoDefaultTopic());
+        return ForTopic<TMessage>((p) => p.IntoDefaultTopic());
     }
 
     /// <summary>
     /// Configures a topic subscription.
     /// </summary>
-    /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+    /// <typeparam name="TMessage">The type of the message to subscribe to.</typeparam>
     /// <param name="configure">A delegate to a method to use to configure a topic subscription.</param>
     /// <returns>
     /// The current <see cref="SubscriptionsBuilder"/>.
@@ -183,12 +183,12 @@ public sealed class SubscriptionsBuilder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
-    public SubscriptionsBuilder ForTopic<T>(Action<TopicSubscriptionBuilder<T>> configure)
-        where T : class
+    public SubscriptionsBuilder ForTopic<TMessage>(Action<TopicSubscriptionBuilder<TMessage>> configure)
+        where TMessage : class
     {
         if (configure == null) throw new ArgumentNullException(nameof(configure));
 
-        var builder = new TopicSubscriptionBuilder<T>();
+        var builder = new TopicSubscriptionBuilder<TMessage>();
 
         configure(builder);
 
@@ -200,7 +200,7 @@ public sealed class SubscriptionsBuilder
     /// <summary>
     /// Configures a topic subscription.
     /// </summary>
-    /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
+    /// <typeparam name="TMessage">The type of the message to subscribe to.</typeparam>
     /// <param name="topicNameOverride">The name of the topic that this queue will be subscribed to. Overrides the default set by the <see cref="ITopicNamingConvention"/>.</param>
     /// <param name="configure">A delegate to a method to use to configure a topic subscription.</param>
     /// <returns>
@@ -209,13 +209,13 @@ public sealed class SubscriptionsBuilder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
-    public SubscriptionsBuilder ForTopic<T>(string topicNameOverride, Action<TopicSubscriptionBuilder<T>> configure)
-        where T : class
+    public SubscriptionsBuilder ForTopic<TMessage>(string topicNameOverride, Action<TopicSubscriptionBuilder<TMessage>> configure)
+        where TMessage : class
     {
         if (configure == null) throw new ArgumentNullException(nameof(configure));
         if (topicNameOverride == null) throw new ArgumentNullException(nameof(topicNameOverride));
 
-        var builder = new TopicSubscriptionBuilder<T>().WithTopicName(topicNameOverride);
+        var builder = new TopicSubscriptionBuilder<TMessage>().WithTopicName(topicNameOverride);
 
         configure(builder);
 

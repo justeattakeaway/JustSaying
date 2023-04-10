@@ -9,11 +9,11 @@ namespace JustSaying.Fluent;
 /// <summary>
 /// A class representing a builder for a topic publication. This class cannot be inherited.
 /// </summary>
-/// <typeparam name="T">
+/// <typeparam name="TMessage">
 /// The type of the message.
 /// </typeparam>
-public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
-    where T : class
+public sealed class TopicPublicationBuilder<TMessage> : IPublicationBuilder
+    where TMessage : class
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TopicPublicationBuilder{T}"/> class.
@@ -40,7 +40,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// Function that will produce a topic name dynamically from a Message at publish time.
     /// If the topic doesn't exist, it will be created at that point.
     /// </summary>
-    public Func<T,string> TopicNameCustomizer { get; set; }
+    public Func<TMessage,string> TopicNameCustomizer { get; set; }
 
     /// <summary>
     /// Configures the SNS write configuration.
@@ -52,7 +52,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
-    public TopicPublicationBuilder<T> WithWriteConfiguration(
+    public TopicPublicationBuilder<TMessage> WithWriteConfiguration(
         Action<SnsWriteConfigurationBuilder> configure)
     {
         if (configure == null)
@@ -78,7 +78,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
-    public TopicPublicationBuilder<T> WithWriteConfiguration(Action<SnsWriteConfiguration> configure)
+    public TopicPublicationBuilder<TMessage> WithWriteConfiguration(Action<SnsWriteConfiguration> configure)
     {
         ConfigureWrites = configure ?? throw new ArgumentNullException(nameof(configure));
         return this;
@@ -95,7 +95,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// <exception cref="ArgumentException">
     /// <paramref name="key"/> is <see langword="null"/> or whitespace.
     /// </exception>
-    public TopicPublicationBuilder<T> WithTag(string key) => WithTag(key, null);
+    public TopicPublicationBuilder<TMessage> WithTag(string key) => WithTag(key, null);
 
     /// <summary>
     /// Creates a tag with a value that will be assigned to the SNS topic.
@@ -109,7 +109,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// <exception cref="ArgumentException">
     /// <paramref name="key"/> is <see langword="null"/> or whitespace.
     /// </exception>
-    public TopicPublicationBuilder<T> WithTag(string key, string value)
+    public TopicPublicationBuilder<TMessage> WithTag(string key, string value)
     {
         if (string.IsNullOrWhiteSpace(key))
         {
@@ -131,7 +131,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="name"/> is <see langword="null"/>.
     /// </exception>
-    public TopicPublicationBuilder<T> WithTopicName(string name)
+    public TopicPublicationBuilder<TMessage> WithTopicName(string name)
     {
         TopicName = name ?? throw new ArgumentNullException(nameof(name));
         return this;
@@ -141,7 +141,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// Configures the name of the topic by calling this func at publish time to determine the name of the topic.
     /// If the topic does not exist, it will be created on first publish.
     /// </summary>
-    /// <param name="topicNameCustomizer">Function that will be called at publish time to determine the name of the target topic for this <see cref="T"/>.
+    /// <param name="topicNameCustomizer">Function that will be called at publish time to determine the name of the target topic for this <see cref="TMessage"/>.
     /// <para>
     /// For example: <c>WithTopicName(msg => $"{msg.Tenant}-mymessage")</c> with <c>msg.Tenant</c> of <c>["uk", "au"]</c> would
     /// create topics <c>"uk-mymessage"</c> and <c>"au-mymessage"</c> when a message is published with those tenants.
@@ -150,22 +150,22 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// <returns>
     /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
     /// </returns>
-    public TopicPublicationBuilder<T> WithTopicName(Func<T, string> topicNameCustomizer)
+    public TopicPublicationBuilder<TMessage> WithTopicName(Func<TMessage, string> topicNameCustomizer)
     {
         TopicNameCustomizer = topicNameCustomizer;
         return this;
     }
 
     /// <inheritdoc />
-    void IPublicationBuilder<T>.Configure(
+    void IPublicationBuilder.Configure(
         JustSayingBus bus,
         IAwsClientFactoryProxy proxy,
         ILoggerFactory loggerFactory)
     {
-        var logger = loggerFactory.CreateLogger<TopicPublicationBuilder<T>>();
+        var logger = loggerFactory.CreateLogger<TopicPublicationBuilder<TMessage>>();
 
         logger.LogInformation("Adding SNS publisher for message type '{MessageType}'.",
-            typeof(T));
+            typeof(TMessage));
 
         var region = bus.Config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(bus.Config.Region)} property.");
 
@@ -174,21 +174,21 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
 
         var client = proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region));
 
-        StaticPublicationConfiguration<T> BuildConfiguration(string topicName)
-            => StaticPublicationConfiguration<T>.Build(topicName,
+        StaticPublicationConfiguration<TMessage> BuildConfiguration(string topicName)
+            => StaticPublicationConfiguration<TMessage>.Build(topicName,
                 Tags,
                 writeConfiguration,
                 client,
                 loggerFactory,
                 bus);
 
-        ITopicPublisher<T> config = TopicNameCustomizer != null
-            ? DynamicPublicationConfiguration<T>.Build(TopicNameCustomizer, BuildConfiguration, loggerFactory)
+        ITopicPublisher<TMessage> config = TopicNameCustomizer != null
+            ? DynamicPublicationConfiguration<TMessage>.Build(TopicNameCustomizer, BuildConfiguration, loggerFactory)
             : BuildConfiguration(TopicName);
 
         bus.AddStartupTask(config.StartupTask);
         bus.AddMessagePublisher(config.Publisher);
 
-        bus.SerializationRegister.AddSerializer<T>();
+        bus.SerializationRegister.AddSerializer<TMessage>();
     }
 }

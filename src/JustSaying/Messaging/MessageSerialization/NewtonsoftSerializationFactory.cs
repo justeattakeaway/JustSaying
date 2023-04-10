@@ -17,5 +17,5 @@ public class NewtonsoftSerializationFactory : IMessageSerializationFactory
         _serializer = new NewtonsoftSerializer(settings);
     }
 
-    public IMessageSerializer GetSerializer<T>() where T : class => _serializer;
+    public IMessageSerializer GetSerializer<TMessage>() where TMessage : class => _serializer;
 }
