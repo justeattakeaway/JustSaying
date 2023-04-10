@@ -96,7 +96,7 @@ public class SystemTextJsonSerializer : IMessageSerializer
     }
 
     /// <inheritdoc />
-    public string Serialize(object message, bool serializeForSnsPublishing, string subject)
+    public string Serialize<TMessage>(TMessage message, bool serializeForSnsPublishing, string subject) where TMessage : class
     {
         string json = JsonSerializer.Serialize(message, message.GetType(), _options);
 
