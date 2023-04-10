@@ -4,9 +4,9 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;
 
-public abstract class WhenPublishingTestBase : IAsyncLifetime
+public abstract class WhenPublishingTestBase<T> : IAsyncLifetime where T : class
 {
-    private protected SnsMessagePublisher SystemUnderTest { get; private set; }
+    private protected SnsMessagePublisher<T> SystemUnderTest { get; private set; }
 
     public IAmazonSimpleNotificationService Sns { get; private set; } = Substitute.For<IAmazonSimpleNotificationService>();
 
@@ -26,7 +26,7 @@ public abstract class WhenPublishingTestBase : IAsyncLifetime
     }
 
     protected abstract void Given();
-    private protected abstract Task<SnsMessagePublisher> CreateSystemUnderTestAsync();
+    private protected abstract Task<SnsMessagePublisher<T>> CreateSystemUnderTestAsync();
 
     protected abstract Task WhenAsync();
 }

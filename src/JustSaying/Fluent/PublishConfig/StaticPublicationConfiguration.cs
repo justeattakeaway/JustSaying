@@ -8,20 +8,20 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
 
-internal sealed class StaticPublicationConfiguration : ITopicPublisher
+internal sealed class StaticPublicationConfiguration<T> : ITopicPublisher<T>  where T : class
 {
     public Func<CancellationToken, Task> StartupTask { get; }
-    public IMessagePublisher Publisher { get; }
+    public IMessagePublisher<T> Publisher { get; }
 
     public StaticPublicationConfiguration(
         Func<CancellationToken, Task> startupTask,
-        IMessagePublisher publisher)
+        IMessagePublisher<T> publisher)
     {
         StartupTask = startupTask;
         Publisher = publisher;
     }
 
-    public static StaticPublicationConfiguration Build<T>(
+    public static StaticPublicationConfiguration<T> Build(
         string topicName,
         Dictionary<string, string> tags,
         SnsWriteConfiguration writeConfiguration,
@@ -36,7 +36,7 @@ internal sealed class StaticPublicationConfiguration : ITopicPublisher
 
         readConfiguration.ApplyTopicNamingConvention<T>(bus.Config.TopicNamingConvention);
 
-        var eventPublisher = new SnsMessagePublisher(
+        var eventPublisher = new SnsMessagePublisher<T>(
             snsClient,
             bus.SerializationRegister,
             loggerFactory,
@@ -72,12 +72,12 @@ internal sealed class StaticPublicationConfiguration : ITopicPublisher
 
             eventPublisher.Arn = snsTopic.Arn;
 
-            loggerFactory.CreateLogger<StaticPublicationConfiguration>().LogInformation(
+            loggerFactory.CreateLogger<StaticPublicationConfiguration<T>>().LogInformation(
                 "Created SNS topic publisher on topic '{TopicName}' for message type '{MessageType}'.",
                 snsTopic.TopicName,
                 typeof(T));
         }
 
-        return new StaticPublicationConfiguration(StartupTask, eventPublisher);
+        return new StaticPublicationConfiguration<T>(StartupTask, eventPublisher);
     }
 }

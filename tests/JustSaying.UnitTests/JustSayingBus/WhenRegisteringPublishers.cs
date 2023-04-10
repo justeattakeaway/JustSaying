@@ -8,12 +8,12 @@ namespace JustSaying.UnitTests.JustSayingBus;
 
 public class WhenRegisteringPublishers : GivenAServiceBus
 {
-    private IMessagePublisher _publisher;
+    private IMessagePublisher<Message> _publisher;
 
     protected override void Given()
     {
         base.Given();
-        _publisher = Substitute.For<IMessagePublisher>();
+        _publisher = Substitute.For<IMessagePublisher<Message>>();
     }
 
     protected override async Task WhenAsync()

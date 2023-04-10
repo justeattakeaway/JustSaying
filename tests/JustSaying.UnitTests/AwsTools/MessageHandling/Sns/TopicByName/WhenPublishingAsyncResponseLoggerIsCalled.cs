@@ -14,7 +14,7 @@ using NSubstitute.Core;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;
 
-public class WhenPublishingAsyncResultLoggerIsCalled : WhenPublishingTestBase
+public class WhenPublishingAsyncResultLoggerIsCalled : WhenPublishingTestBase<SimpleMessage>
 {
     private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
     private const string TopicArn = "topicarn";
@@ -25,9 +25,9 @@ public class WhenPublishingAsyncResultLoggerIsCalled : WhenPublishingTestBase
     private static MessageResponse _response;
     private static Message _message;
 
-    private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
+    private protected override Task<SnsMessagePublisher<SimpleMessage>> CreateSystemUnderTestAsync()
     {
-        var topic = new SnsMessagePublisher(TopicArn, Sns, _serializationRegister, NullLoggerFactory.Instance, Substitute.For<IMessageSubjectProvider>())
+        var topic = new SnsMessagePublisher<SimpleMessage>(TopicArn, Sns, _serializationRegister, NullLoggerFactory.Instance, Substitute.For<IMessageSubjectProvider>())
         {
             MessageResponseLogger = (r, m) =>
             {

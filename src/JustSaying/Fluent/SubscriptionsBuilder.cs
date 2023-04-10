@@ -31,7 +31,7 @@ public sealed class SubscriptionsBuilder
     /// <summary>
     /// Gets the configured subscription builders.
     /// </summary>
-    private IList<ISubscriptionBuilder<Message>> Subscriptions { get; } = new List<ISubscriptionBuilder<Message>>();
+    private IList<ISubscriptionBuilder<object>> Subscriptions { get; } = new List<ISubscriptionBuilder<object>>();
 
     private IDictionary<string, SubscriptionGroupConfigBuilder> SubscriptionGroupSettings { get; } =
         new Dictionary<string, SubscriptionGroupConfigBuilder>();
@@ -61,7 +61,7 @@ public sealed class SubscriptionsBuilder
     /// The current <see cref="SubscriptionsBuilder"/>.
     /// </returns>
     public SubscriptionsBuilder ForQueue<T>()
-        where T : Message
+        where T : class
     {
         return ForQueue<T>((p) => p.WithDefaultQueue());
     }
@@ -78,7 +78,7 @@ public sealed class SubscriptionsBuilder
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
     public SubscriptionsBuilder ForQueue<T>(Action<QueueSubscriptionBuilder<T>> configure)
-        where T : Message
+        where T : class
     {
         if (configure == null) throw new ArgumentNullException(nameof(configure));
 
@@ -99,7 +99,7 @@ public sealed class SubscriptionsBuilder
     /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
     /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
     public SubscriptionsBuilder ForQueueArn<T>(string queueArn, Action<QueueAddressSubscriptionBuilder<T>> configure = null)
-        where T : Message
+        where T : class
     {
         if (queueArn == null) throw new ArgumentNullException(nameof(queueArn));
 
@@ -122,7 +122,7 @@ public sealed class SubscriptionsBuilder
     /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
     /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
     public SubscriptionsBuilder ForQueueUrl<T>(string queueUrl, string regionName = null, Action<QueueAddressSubscriptionBuilder<T>> configure = null)
-        where T : Message
+        where T : class
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
@@ -145,7 +145,7 @@ public sealed class SubscriptionsBuilder
     /// <typeparam name="T">The type of the message to subscribe to.</typeparam>
     /// <returns>The current <see cref="SubscriptionsBuilder"/>.</returns>
     public SubscriptionsBuilder ForQueueUri<T>(Uri queueUrl, string regionName = null, Action<QueueAddressSubscriptionBuilder<T>> configure = null)
-        where T : Message
+        where T : class
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
@@ -167,7 +167,7 @@ public sealed class SubscriptionsBuilder
     /// The current <see cref="SubscriptionsBuilder"/>.
     /// </returns>
     public SubscriptionsBuilder ForTopic<T>()
-        where T : Message
+        where T : class
     {
         return ForTopic<T>((p) => p.IntoDefaultTopic());
     }
@@ -184,7 +184,7 @@ public sealed class SubscriptionsBuilder
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
     public SubscriptionsBuilder ForTopic<T>(Action<TopicSubscriptionBuilder<T>> configure)
-        where T : Message
+        where T : class
     {
         if (configure == null) throw new ArgumentNullException(nameof(configure));
 
@@ -210,7 +210,7 @@ public sealed class SubscriptionsBuilder
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
     public SubscriptionsBuilder ForTopic<T>(string topicNameOverride, Action<TopicSubscriptionBuilder<T>> configure)
-        where T : Message
+        where T : class
     {
         if (configure == null) throw new ArgumentNullException(nameof(configure));
         if (topicNameOverride == null) throw new ArgumentNullException(nameof(topicNameOverride));

@@ -10,12 +10,12 @@ using MessageAttributeValue = Amazon.SimpleNotificationService.Model.MessageAttr
 
 namespace JustSaying.AwsTools.MessageHandling;
 
-public class SnsMessagePublisher : IMessagePublisher, IInterrogable
+public class SnsMessagePublisher<TMessage> : IMessagePublisher<TMessage>, IInterrogable where TMessage : class
 {
     private readonly IMessageSerializationRegister _serializationRegister;
     private readonly IMessageSubjectProvider _messageSubjectProvider;
-    private readonly Func<Exception, Message, bool> _handleException;
-    public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
+    private readonly Func<Exception, TMessage, bool> _handleException;
+    public Action<MessageResponse, TMessage> MessageResponseLogger { get; set; }
     public string Arn { get; internal set; }
     protected IAmazonSimpleNotificationService Client { get; }
     private readonly ILogger _logger;
@@ -26,7 +26,7 @@ public class SnsMessagePublisher : IMessagePublisher, IInterrogable
         IMessageSerializationRegister serializationRegister,
         ILoggerFactory loggerFactory,
         IMessageSubjectProvider messageSubjectProvider,
-        Func<Exception, Message, bool> handleException = null)
+        Func<Exception, TMessage, bool> handleException = null)
         : this(client, serializationRegister, loggerFactory, messageSubjectProvider, handleException)
     {
         Arn = topicArn;
@@ -37,7 +37,7 @@ public class SnsMessagePublisher : IMessagePublisher, IInterrogable
         IMessageSerializationRegister serializationRegister,
         ILoggerFactory loggerFactory,
         IMessageSubjectProvider messageSubjectProvider,
-        Func<Exception, Message, bool> handleException = null)
+        Func<Exception, TMessage, bool> handleException = null)
     {
         Client = client;
         _serializationRegister = serializationRegister;
@@ -51,10 +51,10 @@ public class SnsMessagePublisher : IMessagePublisher, IInterrogable
         return Task.CompletedTask;
     }
 
-    public Task PublishAsync(Message message, CancellationToken cancellationToken)
+    public Task PublishAsync(TMessage message, CancellationToken cancellationToken)
         => PublishAsync(message, null, cancellationToken);
 
-    public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
+    public async Task PublishAsync(TMessage message, PublishMetadata metadata, CancellationToken cancellationToken)
     {
         var request = BuildPublishRequest(message, metadata);
         PublishResponse response = null;
@@ -79,7 +79,7 @@ public class SnsMessagePublisher : IMessagePublisher, IInterrogable
         {
             _logger.LogInformation(
                 "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
-                message.Id,
+                (message as Message)?.Id.ToString() ?? "<unknown>",
                 message.GetType().FullName,
                 "Topic",
                 request.TopicArn);
@@ -97,9 +97,9 @@ public class SnsMessagePublisher : IMessagePublisher, IInterrogable
         }
     }
 
-    private bool ClientExceptionHandler(Exception ex, Message message) => _handleException?.Invoke(ex, message) ?? false;
+    private bool ClientExceptionHandler(Exception ex, TMessage message) => _handleException?.Invoke(ex, message) ?? false;
 
-    private PublishRequest BuildPublishRequest(Message message, PublishMetadata metadata)
+    private PublishRequest BuildPublishRequest(TMessage message, PublishMetadata metadata)
     {
         var messageToSend = _serializationRegister.Serialize(message, serializeForSnsPublishing: true);
         var messageType = _messageSubjectProvider.GetSubjectForType(message.GetType());

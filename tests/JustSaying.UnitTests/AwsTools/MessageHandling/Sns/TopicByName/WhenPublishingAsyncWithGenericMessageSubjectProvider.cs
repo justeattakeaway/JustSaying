@@ -10,7 +10,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;
 
-public class WhenPublishingAsyncWithGenericMessageSubjectProvider : WhenPublishingTestBase
+public class WhenPublishingAsyncWithGenericMessageSubjectProvider : WhenPublishingTestBase<Message>
 {
     public class MessageWithTypeParameters<TA, TB> : Message
     {
@@ -20,9 +20,9 @@ public class WhenPublishingAsyncWithGenericMessageSubjectProvider : WhenPublishi
     private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
     private const string TopicArn = "topicarn";
 
-    private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
+    private protected override Task<SnsMessagePublisher<Message>> CreateSystemUnderTestAsync()
     {
-        var topic = new SnsMessagePublisher(TopicArn, Sns, _serializationRegister, NullLoggerFactory.Instance, new GenericMessageSubjectProvider());
+        var topic = new SnsMessagePublisher<Message>(TopicArn, Sns, _serializationRegister, NullLoggerFactory.Instance, new GenericMessageSubjectProvider());
         return Task.FromResult(topic);
     }
 

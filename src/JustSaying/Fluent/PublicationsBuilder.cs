@@ -26,7 +26,7 @@ public sealed class PublicationsBuilder
     /// <summary>
     /// Gets the configured publication builders.
     /// </summary>
-    private IList<IPublicationBuilder<Message>> Publications { get; } = new List<IPublicationBuilder<Message>>();
+    private IList<IPublicationBuilder<object>> Publications { get; } = new List<IPublicationBuilder<object>>();
 
     /// <summary>
     /// Configures a publisher for a queue.
@@ -36,7 +36,7 @@ public sealed class PublicationsBuilder
     /// The current <see cref="PublicationsBuilder"/>.
     /// </returns>
     public PublicationsBuilder WithQueue<T>()
-        where T : Message
+        where T : class
     {
         Publications.Add(new QueuePublicationBuilder<T>());
         return this;
@@ -54,7 +54,7 @@ public sealed class PublicationsBuilder
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
     public PublicationsBuilder WithQueue<T>(Action<QueuePublicationBuilder<T>> configure)
-        where T : Message
+        where T : class
     {
         if (configure == null)
         {
@@ -78,7 +78,7 @@ public sealed class PublicationsBuilder
     /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
     /// <exception cref="ArgumentNullException"></exception>
     public PublicationsBuilder WithQueueArn<T>(string queueArn)
-        where T : Message
+        where T : class
     {
         if (queueArn == null) throw new ArgumentNullException(nameof(queueArn));
 
@@ -97,7 +97,7 @@ public sealed class PublicationsBuilder
     /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
     /// <exception cref="ArgumentNullException"></exception>
     public PublicationsBuilder WithQueueUrl<T>(string queueUrl)
-        where T : Message
+        where T : class
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
@@ -116,7 +116,7 @@ public sealed class PublicationsBuilder
     /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
     /// <exception cref="ArgumentNullException"></exception>
     public PublicationsBuilder WithQueueUri<T>(Uri queueUrl)
-        where T : Message
+        where T : class
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
@@ -135,7 +135,7 @@ public sealed class PublicationsBuilder
     /// The current <see cref="PublicationsBuilder"/>.
     /// </returns>
     public PublicationsBuilder WithTopic<T>()
-        where T : Message
+        where T : class
     {
         Publications.Add(new TopicPublicationBuilder<T>());
         return this;
@@ -153,7 +153,7 @@ public sealed class PublicationsBuilder
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
     public PublicationsBuilder WithTopic<T>(Action<TopicPublicationBuilder<T>> configure)
-        where T : Message
+        where T : class
     {
         if (configure == null)
         {
@@ -178,7 +178,7 @@ public sealed class PublicationsBuilder
     /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
     /// <exception cref="ArgumentNullException"></exception>
     public PublicationsBuilder WithTopicArn<T>(string topicArn, Action<TopicAddressPublicationBuilder<T>> configure = null)
-        where T : Message
+        where T : class
     {
         if (topicArn == null) throw new ArgumentNullException(nameof(topicArn));
 

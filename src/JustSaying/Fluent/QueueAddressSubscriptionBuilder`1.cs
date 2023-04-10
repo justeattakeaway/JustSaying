@@ -15,7 +15,7 @@ namespace JustSaying.Fluent;
 /// The type of the message.
 /// </typeparam>
 public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
-    where T : Message
+    where T : class
 {
     private readonly QueueAddress _queueAddress;
 

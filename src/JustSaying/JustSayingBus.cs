@@ -7,7 +7,6 @@ using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
@@ -24,7 +23,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
 
     private ConcurrentDictionary<string, SubscriptionGroupConfigBuilder> _subscriptionGroupSettings;
     private SubscriptionGroupSettingsBuilder _defaultSubscriptionGroupSettings;
-    private readonly Dictionary<Type, IMessagePublisher> _publishersByType;
+    private readonly Dictionary<Type, object> _publishersByType; // TODO could make generic to store per T
 
     public IMessagingConfig Config { get; }
 
@@ -53,7 +52,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         SerializationRegister = serializationRegister;
         MiddlewareMap = new MiddlewareMap();
 
-        _publishersByType = new Dictionary<Type, IMessagePublisher>();
+        _publishersByType = new Dictionary<Type, object>();
         _subscriptionGroupSettings =
             new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
         _defaultSubscriptionGroupSettings = new SubscriptionGroupSettingsBuilder();
@@ -93,13 +92,13 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     }
 
     public void AddMessageMiddleware<T>(string queueName, HandleMessageMiddleware middleware)
-        where T : Message
+        where T : class
     {
         SerializationRegister.AddSerializer<T>();
         MiddlewareMap.Add<T>(queueName, middleware);
     }
 
-    public void AddMessagePublisher<T>(IMessagePublisher messagePublisher) where T : Message
+    public void AddMessagePublisher<T>(IMessagePublisher<T> messagePublisher) where T : class
     {
         if (Config.PublishFailureReAttempts == 0)
         {
@@ -176,25 +175,25 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         }
     }
 
-    public async Task PublishAsync(Message message, CancellationToken cancellationToken)
+    public async Task PublishAsync<TMessage>(TMessage message, CancellationToken cancellationToken) where TMessage : class
         => await PublishAsync(message, null, cancellationToken).ConfigureAwait(false);
 
-    public async Task PublishAsync(
-        Message message,
+    public async Task PublishAsync<TMessage>(
+        TMessage message,
         PublishMetadata metadata,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken) where TMessage : class
     {
         if (!_busStarted && _startupTasks.Count > 0)
         {
             throw new InvalidOperationException("There are pending startup tasks that must be executed by calling StartAsync before messages may be published.");
         }
 
-        IMessagePublisher publisher = GetPublisherForMessage(message);
+        IMessagePublisher<TMessage> publisher = GetPublisherForMessage(message);
         await PublishAsync(publisher, message, metadata, 0, cancellationToken)
             .ConfigureAwait(false);
     }
 
-    private IMessagePublisher GetPublisherForMessage(Message message)
+    private IMessagePublisher<T> GetPublisherForMessage<T>(T message) where T : class
     {
         if (_publishersByType.Count == 0)
         {
@@ -204,7 +203,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
             throw new InvalidOperationException(errorMessage);
         }
 
-        var messageType = message.GetType();
+        var messageType = typeof(T);
 
         var publishersFound =
             _publishersByType.TryGetValue(messageType, out var publisher);
@@ -218,15 +217,15 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
                 $"Error publishing message, no publishers registered for message type '{messageType}'.");
         }
 
-        return publisher;
+        return publisher as IMessagePublisher<T> ?? throw new InvalidOperationException($"Error publishing message, registered publisher was of unexpected type for message type '{messageType}'.");
     }
 
-    private async Task PublishAsync(
-        IMessagePublisher publisher,
-        Message message,
+    private async Task PublishAsync<TMessage>(
+        IMessagePublisher<TMessage> publisher,
+        TMessage message,
         PublishMetadata metadata,
         int attemptCount,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken) where TMessage : class
     {
         attemptCount++;
         try
@@ -273,7 +272,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     public InterrogationResult Interrogate()
     {
         var publisherDescriptions =
-            _publishersByType.ToDictionary(x => x.Key.Name, x => x.Value.Interrogate());
+            _publishersByType.ToDictionary(x => x.Key.Name, x => ((IInterrogable)x.Value).Interrogate());
 
         return new InterrogationResult(new
         {

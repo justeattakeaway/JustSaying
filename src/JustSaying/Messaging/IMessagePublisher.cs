@@ -1,10 +1,15 @@
 using JustSaying.Messaging.Interrogation;
-using JustSaying.Models;
 
 namespace JustSaying.Messaging;
 
+public interface IMessagePublisher<in TMessage> : IInterrogable where TMessage : class
+{
+    Task PublishAsync(TMessage message, CancellationToken cancellationToken);
+    Task PublishAsync(TMessage message, PublishMetadata metadata, CancellationToken cancellationToken);
+}
+
 public interface IMessagePublisher : IInterrogable, IStartable
 {
-    Task PublishAsync(Message message, CancellationToken cancellationToken);
-    Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken);
+    Task PublishAsync<TMessage>(TMessage message, CancellationToken cancellationToken) where TMessage : class;
+    Task PublishAsync<TMessage>(TMessage message, PublishMetadata metadata, CancellationToken cancellationToken) where TMessage : class;
 }

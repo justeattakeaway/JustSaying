@@ -11,15 +11,15 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;
 
-public class WhenPublishing : WhenPublishingTestBase
+public class WhenPublishing : WhenPublishingTestBase<SimpleMessage>
 {
     private const string Message = "the_message_in_json";
     private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
     private const string TopicArn = "topicarn";
 
-    private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
+    private protected override Task<SnsMessagePublisher<SimpleMessage>> CreateSystemUnderTestAsync()
     {
-        var topic = new SnsMessagePublisher(TopicArn, Sns, _serializationRegister, NullLoggerFactory.Instance, new NonGenericMessageSubjectProvider());
+        var topic = new SnsMessagePublisher<SimpleMessage>(TopicArn, Sns, _serializationRegister, NullLoggerFactory.Instance, new NonGenericMessageSubjectProvider());
         return Task.FromResult(topic);
     }
 

@@ -17,5 +17,5 @@ public class SystemTextJsonSerializationFactory : IMessageSerializationFactory
         _serializer = new SystemTextJsonSerializer(options);
     }
 
-    public IMessageSerializer GetSerializer<T>() where T : Message => _serializer;
+    public IMessageSerializer GetSerializer<T>() where T : class => _serializer;
 }

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Messaging.Middleware.Logging;
@@ -42,11 +43,12 @@ public sealed class LoggingMiddleware : MiddlewareBase<HandleMessageContext, boo
         }
         finally
         {
+            var messageId = (context.Message as Message)?.Id.ToString() ?? "<unknown>";
             if (dispatchSuccessful)
             {
                 _logger.LogInformation(context.HandledException, MessageTemplate,
                     Succeeded,
-                    context.Message.Id,
+                    messageId,
                     context.MessageType.FullName,
                     watch.ElapsedMilliseconds);
             }
@@ -54,7 +56,7 @@ public sealed class LoggingMiddleware : MiddlewareBase<HandleMessageContext, boo
             {
                 _logger.LogWarning(context.HandledException, MessageTemplate,
                     Failed,
-                    context.Message.Id,
+                    messageId,
                     context.MessageType.FullName,
                     watch.ElapsedMilliseconds);
             }

@@ -14,7 +14,7 @@ namespace JustSaying.Fluent;
 /// The type of the message.
 /// </typeparam>
 public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
-    where T : Message
+    where T : class
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="QueueSubscriptionBuilder{T}"/> class.

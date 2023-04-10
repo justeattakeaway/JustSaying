@@ -3,7 +3,6 @@ using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Monitoring;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling.Dispatch;
@@ -37,7 +36,7 @@ public class MessageDispatcher : IMessageDispatcher
             return;
         }
 
-        (bool success, Message typedMessage, MessageAttributes attributes) =
+        (bool success, object typedMessage, MessageAttributes attributes) =
             await DeserializeMessage(messageContext, cancellationToken).ConfigureAwait(false);
 
         if (!success)
@@ -71,7 +70,8 @@ public class MessageDispatcher : IMessageDispatcher
 
     }
 
-    private async Task<(bool success, Message typedMessage, MessageAttributes attributes)>
+    // TODO rename typedMessage to messageInstance
+    private async Task<(bool success, object typedMessage, MessageAttributes attributes)>
         DeserializeMessage(IQueueMessageContext messageContext, CancellationToken cancellationToken)
     {
         try

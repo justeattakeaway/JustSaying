@@ -13,7 +13,7 @@ namespace JustSaying.Fluent;
 /// The type of the message.
 /// </typeparam>
 public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
-    where T : Message
+    where T : class
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TopicPublicationBuilder{T}"/> class.
@@ -40,7 +40,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// Function that will produce a topic name dynamically from a Message at publish time.
     /// If the topic doesn't exist, it will be created at that point.
     /// </summary>
-    public Func<Message,string> TopicNameCustomizer { get; set; }
+    public Func<T,string> TopicNameCustomizer { get; set; }
 
     /// <summary>
     /// Configures the SNS write configuration.
@@ -150,7 +150,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// <returns>
     /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
     /// </returns>
-    public TopicPublicationBuilder<T> WithTopicName(Func<Message, string> topicNameCustomizer)
+    public TopicPublicationBuilder<T> WithTopicName(Func<T, string> topicNameCustomizer)
     {
         TopicNameCustomizer = topicNameCustomizer;
         return this;
@@ -174,20 +174,20 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
 
         var client = proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region));
 
-        StaticPublicationConfiguration BuildConfiguration(string topicName)
-            => StaticPublicationConfiguration.Build<T>(topicName,
+        StaticPublicationConfiguration<T> BuildConfiguration(string topicName)
+            => StaticPublicationConfiguration<T>.Build(topicName,
                 Tags,
                 writeConfiguration,
                 client,
                 loggerFactory,
                 bus);
 
-        ITopicPublisher config = TopicNameCustomizer != null
-            ? DynamicPublicationConfiguration.Build<T>(TopicNameCustomizer, BuildConfiguration, loggerFactory)
+        ITopicPublisher<T> config = TopicNameCustomizer != null
+            ? DynamicPublicationConfiguration<T>.Build(TopicNameCustomizer, BuildConfiguration, loggerFactory)
             : BuildConfiguration(TopicName);
 
         bus.AddStartupTask(config.StartupTask);
-        bus.AddMessagePublisher<T>(config.Publisher);
+        bus.AddMessagePublisher(config.Publisher);
 
         bus.SerializationRegister.AddSerializer<T>();
     }

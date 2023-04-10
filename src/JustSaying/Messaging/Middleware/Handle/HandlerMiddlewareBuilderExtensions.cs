@@ -59,7 +59,7 @@ public static class HandlerMiddlewareBuilderExtensions
     public static HandlerMiddlewareBuilder UseDefaults<TMessage>(
         this HandlerMiddlewareBuilder builder,
         Type handlerType)
-        where TMessage : Message
+        where TMessage : class
     {
         if (builder == null) throw new ArgumentNullException(nameof(builder));
         if (handlerType == null) throw new ArgumentNullException(nameof(handlerType), "HandlerType is used here to");

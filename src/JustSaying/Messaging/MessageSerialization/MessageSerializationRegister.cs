@@ -16,7 +16,7 @@ public class MessageSerializationRegister : IMessageSerializationRegister
         _serializationFactory = serializationFactory;
     }
 
-    public void AddSerializer<T>() where T : Message
+    public void AddSerializer<T>() where T : class
     {
         string key = _messageSubjectProvider.GetSubjectForType(typeof(T));
 
@@ -61,7 +61,7 @@ public class MessageSerializationRegister : IMessageSerializationRegister
         throw exception;
     }
 
-    public string Serialize(Message message, bool serializeForSnsPublishing)
+    public string Serialize(object message, bool serializeForSnsPublishing)
     {
         var messageType = message.GetType();
         string subject = _messageSubjectProvider.GetSubjectForType(messageType);

@@ -14,7 +14,7 @@ namespace JustSaying.Fluent;
 /// The type of the message published to the queue.
 /// </typeparam>
 public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
-    where T : Message
+    where T : class
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="QueuePublicationBuilder{T}"/> class.
@@ -104,7 +104,7 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
         var regionEndpoint = RegionEndpoint.GetBySystemName(region);
         var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
 
-        var eventPublisher = new SqsMessagePublisher(
+        var eventPublisher = new SqsMessagePublisher<T>(
             sqsClient,
             bus.SerializationRegister,
             loggerFactory)

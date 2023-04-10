@@ -8,16 +8,16 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
-public class WhenPublishingAsync : WhenPublishingTestBase
+public class WhenPublishingAsync : WhenPublishingTestBase<SimpleMessage>
 {
     private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
     private const string Url = "https://blablabla/" + QueueName;
     private readonly SimpleMessage _message = new SimpleMessage { Content = "Hello" };
     private const string QueueName = "queuename";
 
-    private protected override Task<SqsMessagePublisher> CreateSystemUnderTestAsync()
+    private protected override Task<SqsMessagePublisher<SimpleMessage>> CreateSystemUnderTestAsync()
     {
-        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _serializationRegister, Substitute.For<ILoggerFactory>());
+        var sqs = new SqsMessagePublisher<SimpleMessage>(new Uri(Url), Sqs, _serializationRegister, Substitute.For<ILoggerFactory>());
         return Task.FromResult(sqs);
     }
 

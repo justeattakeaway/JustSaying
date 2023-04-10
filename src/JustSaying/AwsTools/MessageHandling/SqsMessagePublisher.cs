@@ -9,12 +9,12 @@ using Message = JustSaying.Models.Message;
 
 namespace JustSaying.AwsTools.MessageHandling;
 
-public class SqsMessagePublisher : IMessagePublisher
+public class SqsMessagePublisher<TMessage> : IMessagePublisher<TMessage>  where TMessage : class
 {
     private readonly IAmazonSQS _client;
     private readonly IMessageSerializationRegister _serializationRegister;
     private readonly ILogger _logger;
-    public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
+    public Action<MessageResponse, TMessage> MessageResponseLogger { get; set; }
 
     public Uri QueueUrl { get; internal set; }
 
@@ -42,10 +42,10 @@ public class SqsMessagePublisher : IMessagePublisher
         return Task.CompletedTask;
     }
 
-    public async Task PublishAsync(Message message, CancellationToken cancellationToken)
+    public async Task PublishAsync(TMessage message, CancellationToken cancellationToken)
         => await PublishAsync(message, null, cancellationToken).ConfigureAwait(false);
 
-    public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
+    public async Task PublishAsync(TMessage message, PublishMetadata metadata, CancellationToken cancellationToken)
     {
         if (QueueUrl is null) throw new PublishException("Queue URL was null, perhaps you need to call `StartAsync` on the `IMessagePublisher` before publishing.");
 
@@ -69,7 +69,7 @@ public class SqsMessagePublisher : IMessagePublisher
         {
             _logger.LogInformation(
                 "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
-                message.Id,
+                (message as Message)?.Id.ToString() ?? "<unknown>",
                 message.GetType().FullName,
                 "Queue",
                 request.QueueUrl);
@@ -87,7 +87,7 @@ public class SqsMessagePublisher : IMessagePublisher
         }
     }
 
-    private SendMessageRequest BuildSendMessageRequest(Message message, PublishMetadata metadata)
+    private SendMessageRequest BuildSendMessageRequest(TMessage message, PublishMetadata metadata)
     {
         var request = new SendMessageRequest
         {
@@ -103,7 +103,7 @@ public class SqsMessagePublisher : IMessagePublisher
         return request;
     }
 
-    public string GetMessageInContext(Message message) => _serializationRegister.Serialize(message, serializeForSnsPublishing: false);
+    public string GetMessageInContext(TMessage message) => _serializationRegister.Serialize(message, serializeForSnsPublishing: false);
 
     public InterrogationResult Interrogate()
     {

@@ -7,7 +7,7 @@ namespace JustSaying.UnitTests.JustSayingBus;
 
 public class WhenPublishingFails : GivenAServiceBus
 {
-    private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
+    private readonly IMessagePublisher<SimpleMessage> _publisher = Substitute.For<IMessagePublisher<SimpleMessage>>();
     private const int PublishAttempts = 2;
 
     protected override void Given()
@@ -18,7 +18,7 @@ public class WhenPublishingFails : GivenAServiceBus
         Config.PublishFailureBackoff.Returns(TimeSpan.Zero);
         RecordAnyExceptionsThrown();
 
-        _publisher.When(x => x.PublishAsync(Arg.Any<Message>(),
+        _publisher.When(x => x.PublishAsync(Arg.Any<SimpleMessage>(),
                 Arg.Any<PublishMetadata>(),
                 Arg.Any<CancellationToken>()))
             .Do(x => { throw new TestException("Thrown by test WhenPublishingFails"); });
@@ -39,7 +39,7 @@ public class WhenPublishingFails : GivenAServiceBus
     {
         _publisher
             .Received(PublishAttempts)
-            .PublishAsync(Arg.Any<Message>(), Arg.Any<PublishMetadata>(), Arg.Any<CancellationToken>());
+            .PublishAsync(Arg.Any<SimpleMessage>(), Arg.Any<PublishMetadata>(), Arg.Any<CancellationToken>());
     }
 
     public WhenPublishingFails(ITestOutputHelper outputHelper) : base(outputHelper)

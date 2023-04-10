@@ -1,5 +1,4 @@
 using JustSaying.Messaging.Interrogation;
-using JustSaying.Models;
 using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
 namespace JustSaying.AwsTools.MessageHandling.Dispatch;
@@ -52,7 +51,7 @@ public sealed class MiddlewareMap : IInterrogable
     /// <typeparam name="T">The type of the message to handle on this queue.</typeparam>
     /// <param name="queueName">The queue to register the middleware for.</param>
     /// <param name="middleware">The factory function to create middleware with.</param>
-    public MiddlewareMap Add<T>(string queueName, HandleMessageMiddleware middleware) where T : Message
+    public MiddlewareMap Add<T>(string queueName, HandleMessageMiddleware middleware) where T : class
     {
         if (queueName is null) throw new ArgumentNullException(nameof(queueName));
         if (middleware is null) throw new ArgumentNullException(nameof(middleware));

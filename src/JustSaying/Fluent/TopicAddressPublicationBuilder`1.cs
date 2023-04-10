@@ -12,10 +12,10 @@ namespace JustSaying.Fluent;
 /// The type of the message.
 /// </typeparam>
 public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
-    where T : Message
+    where T : class
 {
     private readonly TopicAddress _topicAddress;
-    private Func<Exception,Message,bool> _exceptionHandler;
+    private Func<Exception,T,bool> _exceptionHandler;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TopicAddressPublicationBuilder{T}"/> class.
@@ -36,7 +36,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="exceptionHandler"/> is <see langword="null"/>.
     /// </exception>
-    public TopicAddressPublicationBuilder<T> WithExceptionHandler(Func<Exception, Message, bool> exceptionHandler)
+    public TopicAddressPublicationBuilder<T> WithExceptionHandler(Func<Exception, T, bool> exceptionHandler)
     {
         _exceptionHandler = exceptionHandler ?? throw new ArgumentNullException(nameof(exceptionHandler));
         return this;
@@ -54,7 +54,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
 
         bus.SerializationRegister.AddSerializer<T>();
 
-        var eventPublisher = new TopicAddressPublisher(
+        var eventPublisher = new TopicAddressPublisher<T>(
             proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(arn.Region)),
             loggerFactory,
             config.MessageSubjectProvider,

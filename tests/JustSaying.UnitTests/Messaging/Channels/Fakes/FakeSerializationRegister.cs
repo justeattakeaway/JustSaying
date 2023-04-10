@@ -1,6 +1,5 @@
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
-using JustSaying.Models;
 using JustSaying.TestingFramework;
 
 namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers;
@@ -28,11 +27,11 @@ public class FakeSerializationRegister : IMessageSerializationRegister
         return new MessageWithAttributes(DefaultDeserializedMessage(), new MessageAttributes());
     }
 
-    public string Serialize(Message message, bool serializeForSnsPublishing)
+    public string Serialize(object message, bool serializeForSnsPublishing)
     {
         return "";
     }
 
-    public void AddSerializer<T>() where T : Message
+    public void AddSerializer<T>() where T : class
     { }
 }

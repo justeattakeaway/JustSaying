@@ -13,7 +13,7 @@ namespace JustSaying.Fluent;
 /// The type of the message published to the queue.
 /// </typeparam>
 public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
-    where T : Message
+    where T : class
 {
     private readonly QueueAddress _queueAddress;
 
@@ -35,7 +35,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
 
         bus.SerializationRegister.AddSerializer<T>();
 
-        var eventPublisher = new SqsMessagePublisher(
+        var eventPublisher = new SqsMessagePublisher<T>(
             _queueAddress.QueueUrl,
             proxy.GetAwsClientFactory().GetSqsClient(RegionEndpoint.GetBySystemName(_queueAddress.RegionName)),
             bus.SerializationRegister,
