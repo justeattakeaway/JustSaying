@@ -27,7 +27,7 @@ public class FakeSerializationRegister : IMessageSerializationRegister
         return new MessageWithAttributes(DefaultDeserializedMessage(), new MessageAttributes());
     }
 
-    public string Serialize(object message, bool serializeForSnsPublishing)
+    public string Serialize<TMessage>(TMessage message, bool serializeForSnsPublishing) where TMessage : class
     {
         return "";
     }

@@ -22,7 +22,7 @@ public interface IMessageSerializationRegister
     /// AWS SNS service adds these automatically, so for publishing to topics don't add these properties
     /// </param>
     /// <returns>The serialized message for publishing.</returns>
-    string Serialize(object message, bool serializeForSnsPublishing);
+    string Serialize<TMessage>(TMessage message, bool serializeForSnsPublishing) where TMessage : class;
 
     /// <summary>
     /// Register a serializer for the given type, if one does not already exist.

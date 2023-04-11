@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialization;
 
@@ -61,7 +60,7 @@ public class MessageSerializationRegister : IMessageSerializationRegister
         throw exception;
     }
 
-    public string Serialize(object message, bool serializeForSnsPublishing)
+    public string Serialize<TMessage>(TMessage message, bool serializeForSnsPublishing) where TMessage : class
     {
         var messageType = message.GetType();
         string subject = _messageSubjectProvider.GetSubjectForType(messageType);
