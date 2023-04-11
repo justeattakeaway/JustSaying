@@ -36,7 +36,7 @@ public class MessageDispatcher : IMessageDispatcher
             return;
         }
 
-        (bool success, object typedMessage, MessageAttributes attributes) =
+        (bool success, object messageInstance, MessageAttributes attributes) =
             await DeserializeMessage(messageContext, cancellationToken).ConfigureAwait(false);
 
         if (!success)
@@ -44,21 +44,21 @@ public class MessageDispatcher : IMessageDispatcher
             return;
         }
 
-        var messageType = typedMessage.GetType();
+        var messageType = messageInstance.GetType();
         var middleware = _middlewareMap.Get(messageContext.QueueName, messageType);
 
         if (middleware == null)
         {
             _logger.LogError(
                 "Failed to dispatch. Middleware for message of type '{MessageTypeName}' not found in middleware map.",
-                typedMessage.GetType().FullName);
+                messageInstance.GetType().FullName);
             return;
         }
 
         var handleContext = new HandleMessageContext(
             messageContext.QueueName,
             messageContext.Message,
-            typedMessage,
+            messageInstance,
             messageType,
             messageContext,
             messageContext,
@@ -70,9 +70,7 @@ public class MessageDispatcher : IMessageDispatcher
 
     }
 
-    // TODO rename typedMessage to messageInstance
-    private async Task<(bool success, object typedMessage, MessageAttributes attributes)>
-        DeserializeMessage(IQueueMessageContext messageContext, CancellationToken cancellationToken)
+    private async Task<(bool success, object messageInstance, MessageAttributes attributes)> DeserializeMessage(IQueueMessageContext messageContext, CancellationToken cancellationToken)
     {
         try
         {
