@@ -12,7 +12,7 @@ namespace JustSaying.Fluent;
 /// <typeparam name="TMessage">
 /// The type of the messages to subscribe to.
 /// </typeparam>
-public interface ISubscriptionBuilder<out TMessage>
+public interface ISubscriptionBuilder<TMessage>
     where TMessage : class
 {
     /// <summary>
