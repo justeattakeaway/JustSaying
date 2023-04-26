@@ -10,7 +10,7 @@ If you find a bug, have a feature request or even want to contribute an enhancem
 * Check the [GitHub issue tracker](http://github.com/justeattakeaway/JustSaying/issues/ "JustSaying issues") to see if anyone else has reported the same issue.
 * Make sure you are using the latest version of JustSaying
 * If you are still having an issue, create an issue including:
-  * Information needrf to reproduce and diagnose the problem
+  * Information needed to reproduce and diagnose the problem
 
 ## If you want to contribute an enhancement or a fix:
 
