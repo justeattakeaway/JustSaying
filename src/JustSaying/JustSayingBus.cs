@@ -3,6 +3,7 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Extensions;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageSerialization;
@@ -28,6 +29,8 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
 
     public IMessagingConfig Config { get; }
 
+    private readonly IMessageReceiveController _messageReceiveController;
+
     private readonly IMessageMonitor _monitor;
 
     private ISubscriptionGroup SubscriptionGroups { get; set; }
@@ -40,6 +43,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     public JustSayingBus(
         IMessagingConfig config,
         IMessageSerializationRegister serializationRegister,
+        IMessageReceiveController messageReceiveController,
         ILoggerFactory loggerFactory,
         IMessageMonitor monitor)
     {
@@ -52,6 +56,8 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         Config = config;
         SerializationRegister = serializationRegister;
         MiddlewareMap = new MiddlewareMap();
+
+        _messageReceiveController = messageReceiveController;
 
         _publishersByType = new Dictionary<Type, IMessagePublisher>();
         _subscriptionGroupSettings =
@@ -155,6 +161,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
 
         var subscriptionGroupFactory = new SubscriptionGroupFactory(
             dispatcher,
+            _messageReceiveController,
             _monitor,
             _loggerFactory);
 

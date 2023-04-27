@@ -3,6 +3,7 @@ using JustSaying;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
+using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware.Logging;
@@ -116,7 +117,7 @@ public static class IServiceCollectionExtensions
         {
             throw new ArgumentNullException(nameof(configure));
         }
-        
+
         // Register as self so the same singleton instance implements two different interfaces
         services.TryAddSingleton((p) => new ServiceProviderResolver(p));
         services.TryAddSingleton<IHandlerResolver>((p) => p.GetRequiredService<ServiceProviderResolver>());
@@ -144,6 +145,8 @@ public static class IServiceCollectionExtensions
                 var serializerFactory = p.GetRequiredService<IMessageSerializationFactory>();
                 return new MessageSerializationRegister(config.MessageSubjectProvider, serializerFactory);
             });
+
+        services.TryAddSingleton<IMessageReceiveController, MessageReceiveController>();
 
         services.TryAddSingleton(
             (serviceProvider) =>

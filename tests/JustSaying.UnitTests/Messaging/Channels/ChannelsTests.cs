@@ -21,19 +21,21 @@ namespace JustSaying.UnitTests.Messaging.Channels;
 
 public class ChannelsTests
 {
+    private IMessageReceiveController MessageReceiveController { get; }
     private ILoggerFactory LoggerFactory { get; }
     private IMessageMonitor MessageMonitor { get; }
+    private ITestOutputHelper OutputHelper { get; }
+    private readonly TimeSpan _timeoutPeriod = TimeSpan.FromSeconds(1);
 
     public ChannelsTests(ITestOutputHelper testOutputHelper)
     {
+        MessageReceiveController = new MessageReceiveController();
         OutputHelper = testOutputHelper;
         LoggerFactory = new LoggerFactory().AddXUnit(testOutputHelper, LogLevel.Trace);
         MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
     }
 
-    public TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
 
-    public ITestOutputHelper OutputHelper { get; set; }
 
     [Fact]
     public async Task QueueCanBeAssignedToOnePump()
@@ -76,7 +78,7 @@ public class ChannelsTests
         consumer1.Subscribe(multiplexer.GetMessagesAsync());
         consumer2.Subscribe(multiplexer.GetMessagesAsync());
 
-        using var cts = new CancellationTokenSource(TimeoutPeriod);
+        using var cts = new CancellationTokenSource(_timeoutPeriod);
 
         // consumers
         var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
@@ -112,7 +114,7 @@ public class ChannelsTests
         consumer1.Subscribe(multiplexer.GetMessagesAsync());
 
         var cts = new CancellationTokenSource();
-        cts.CancelAfter(TimeoutPeriod);
+        cts.CancelAfter(_timeoutPeriod);
 
         // consumers
         var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
@@ -228,7 +230,7 @@ public class ChannelsTests
         var bus = CreateSubscriptionGroup(queues, dispatcher);
 
         var cts = new CancellationTokenSource();
-        cts.CancelAfter(TimeoutPeriod);
+        cts.CancelAfter(_timeoutPeriod);
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => bus.RunAsync(cts.Token));
     }
@@ -258,7 +260,7 @@ public class ChannelsTests
 
         var runTask = bus.RunAsync(cts.Token);
 
-        cts.CancelAfter(TimeoutPeriod);
+        cts.CancelAfter(_timeoutPeriod);
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => runTask);
 
@@ -291,7 +293,7 @@ public class ChannelsTests
 
         var runTask = bus.RunAsync(cts.Token);
 
-        cts.CancelAfter(TimeoutPeriod);
+        cts.CancelAfter(_timeoutPeriod);
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await runTask);
 
@@ -343,7 +345,7 @@ public class ChannelsTests
             TimeSpan.FromSeconds(1),
             sqsQueue,
             new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>(),
-            new MessageReceiveController(),
+            MessageReceiveController,
             MessageMonitor,
             LoggerFactory.CreateLogger<MessageReceiveBuffer>());
     }
@@ -367,6 +369,7 @@ public class ChannelsTests
 
         var consumerGroupFactory = new SubscriptionGroupFactory(
             dispatcher,
+            MessageReceiveController,
             MessageMonitor,
             LoggerFactory);
 

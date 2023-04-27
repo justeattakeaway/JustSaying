@@ -1,5 +1,6 @@
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
@@ -13,13 +14,15 @@ namespace JustSaying.UnitTests.Messaging.Channels;
 
 public class SubscriptionGroupCollectionTests
 {
+    private IMessageReceiveController MessageReceiveController { get; }
     private ILoggerFactory LoggerFactory { get; }
     private IMessageMonitor MessageMonitor { get; }
-    private ITestOutputHelper _outputHelper;
+    private readonly ITestOutputHelper _outputHelper;
 
 
     public SubscriptionGroupCollectionTests(ITestOutputHelper testOutputHelper)
     {
+        MessageReceiveController = new MessageReceiveController();
         _outputHelper = testOutputHelper;
         LoggerFactory = testOutputHelper.ToLoggerFactory();
         MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
@@ -83,7 +86,7 @@ public class SubscriptionGroupCollectionTests
             new NonGenericMessageSubjectProvider(),
             new NewtonsoftSerializationFactory());
 
-        var bus = new JustSaying.JustSayingBus(config, serializationRegister, LoggerFactory, MessageMonitor);
+        var bus = new JustSaying.JustSayingBus(config, serializationRegister, MessageReceiveController, LoggerFactory, MessageMonitor);
 
         var defaultSubscriptionSettings = new SubscriptionGroupSettingsBuilder()
             .WithDefaultMultiplexerCapacity(1)

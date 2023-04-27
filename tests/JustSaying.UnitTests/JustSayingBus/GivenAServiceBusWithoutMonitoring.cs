@@ -1,3 +1,4 @@
+using JustSaying.Messaging.Channels.Receive;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
@@ -6,6 +7,7 @@ namespace JustSaying.UnitTests.JustSayingBus;
 public abstract class GivenAServiceBusWithoutMonitoring : IAsyncLifetime
 {
     protected IMessagingConfig Config;
+    protected IMessageReceiveController MessageReceiveController;
     protected ILoggerFactory LoggerFactory;
 
     protected JustSaying.JustSayingBus SystemUnderTest { get; private set; }
@@ -27,6 +29,7 @@ public abstract class GivenAServiceBusWithoutMonitoring : IAsyncLifetime
     protected virtual void Given()
     {
         Config = Substitute.For<IMessagingConfig>();
+        MessageReceiveController = Substitute.For<IMessageReceiveController>();
         LoggerFactory = Substitute.For<ILoggerFactory>();
     }
 
@@ -34,6 +37,6 @@ public abstract class GivenAServiceBusWithoutMonitoring : IAsyncLifetime
 
     private JustSaying.JustSayingBus CreateSystemUnderTest()
     {
-        return new JustSaying.JustSayingBus(Config, null, LoggerFactory, null);
+        return new JustSaying.JustSayingBus(Config, null, MessageReceiveController, LoggerFactory, null);
     }
 }

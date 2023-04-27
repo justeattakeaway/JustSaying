@@ -18,6 +18,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 public class SubscriptionGroupFactory : ISubscriptionGroupFactory
 {
     private readonly IMessageDispatcher _messageDispatcher;
+    private readonly IMessageReceiveController _messageReceiveController;
     private readonly IMessageMonitor _monitor;
     private readonly ILoggerFactory _loggerFactory;
     private readonly ReceiveMiddleware _defaultSqsMiddleware;
@@ -30,10 +31,12 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
     /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to use.</param>
     public SubscriptionGroupFactory(
         IMessageDispatcher messageDispatcher,
+        IMessageReceiveController messageReceiveController,
         IMessageMonitor monitor,
         ILoggerFactory loggerFactory)
     {
         _messageDispatcher = messageDispatcher;
+        _messageReceiveController = messageReceiveController;
         _monitor = monitor;
         _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
         _defaultSqsMiddleware =
@@ -103,6 +106,7 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
                 subscriptionGroupSettings.ReceiveMessagesWaitTime,
                 queue,
                 receiveMiddleware,
+                _messageReceiveController,
                 _monitor,
                 logger);
 

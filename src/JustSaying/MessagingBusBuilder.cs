@@ -3,6 +3,7 @@ using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
 using JustSaying.Fluent.ServiceResolver;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
@@ -266,9 +267,10 @@ public sealed class MessagingBusBuilder
     private JustSayingBus CreateBus(IMessagingConfig config, ILoggerFactory loggerFactory)
     {
         IMessageSerializationRegister register = ServiceResolver.ResolveService<IMessageSerializationRegister>();
+        IMessageReceiveController messageReceiveController = ServiceResolver.ResolveService<IMessageReceiveController>();
         IMessageMonitor monitor = ServiceResolver.ResolveOptionalService<IMessageMonitor>() ?? new NullOpMessageMonitor();
 
-        var bus = new JustSayingBus(config, register, loggerFactory, monitor);
+        var bus = new JustSayingBus(config, register, messageReceiveController, loggerFactory, monitor);
 
         return bus;
     }

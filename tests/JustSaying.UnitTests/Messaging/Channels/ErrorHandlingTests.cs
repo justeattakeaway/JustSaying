@@ -1,6 +1,7 @@
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
@@ -12,14 +13,15 @@ namespace JustSaying.UnitTests.Messaging.Channels;
 
 public class ErrorHandlingTests
 {
-    public ILoggerFactory LoggerFactory { get; }
+    private IMessageReceiveController MessageReceiveController { get; }
+    private ILoggerFactory LoggerFactory { get; }
     private IMessageMonitor MessageMonitor { get; }
-
     private readonly ITestOutputHelper _outputHelper;
 
     public ErrorHandlingTests(ITestOutputHelper testOutputHelper)
     {
         _outputHelper = testOutputHelper;
+        MessageReceiveController = new MessageReceiveController();
         LoggerFactory = testOutputHelper.ToLoggerFactory();
         MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
     }
@@ -55,6 +57,7 @@ public class ErrorHandlingTests
 
         var subscriptionGroupFactory = new SubscriptionGroupFactory(
             dispatcher,
+            MessageReceiveController,
             MessageMonitor,
             LoggerFactory);
 
@@ -103,6 +106,7 @@ public class ErrorHandlingTests
 
         var subscriptionGroupFactory = new SubscriptionGroupFactory(
             dispatcher,
+            MessageReceiveController,
             MessageMonitor,
             LoggerFactory);
 

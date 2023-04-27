@@ -1,3 +1,4 @@
+using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
@@ -9,6 +10,7 @@ namespace JustSaying.UnitTests.JustSayingBus;
 public abstract class GivenAServiceBus : IAsyncLifetime
 {
     protected IMessagingConfig Config;
+    protected IMessageReceiveController MessageReceiveController;
     protected TrackingLoggingMonitor Monitor;
     protected ILoggerFactory LoggerFactory;
     private bool _recordThrownExceptions;
@@ -50,6 +52,7 @@ public abstract class GivenAServiceBus : IAsyncLifetime
     protected virtual void Given()
     {
         Config = Substitute.For<IMessagingConfig>();
+        MessageReceiveController = Substitute.For<IMessageReceiveController>();
         Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
     }
 
@@ -60,6 +63,7 @@ public abstract class GivenAServiceBus : IAsyncLifetime
         var serializerRegister = new FakeSerializationRegister();
         var bus = new JustSaying.JustSayingBus(Config,
             serializerRegister,
+            MessageReceiveController,
             LoggerFactory,
             Monitor);
 
