@@ -20,6 +20,7 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
     private readonly TimeSpan _sqsWaitTime;
     private readonly SqsQueueReader _sqsQueueReader;
     private readonly MiddlewareBase<ReceiveMessagesContext, IList<Message>> _sqsMiddleware;
+    private readonly IMessageReceiveController _messageReceiveController;
     private readonly IMessageMonitor _monitor;
     private readonly ILogger _logger;
 
@@ -36,6 +37,7 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         TimeSpan sqsWaitTime,
         ISqsQueue sqsQueue,
         MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware,
+        IMessageReceiveController messageReceiveController,
         IMessageMonitor monitor,
         ILogger<IMessageReceiveBuffer> logger)
     {
@@ -46,6 +48,7 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         if (sqsQueue == null) throw new ArgumentNullException(nameof(sqsQueue));
         _sqsQueueReader = new SqsQueueReader(sqsQueue);
         _sqsMiddleware = sqsMiddleware ?? throw new ArgumentNullException(nameof(sqsMiddleware));
+        _messageReceiveController = messageReceiveController ?? throw new ArgumentNullException(nameof(messageReceiveController));
         _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -69,6 +72,11 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
             while (true)
             {
                 stoppingToken.ThrowIfCancellationRequested();
+
+                if (_messageReceiveController.Stopped())
+                {
+                    continue;
+                }
 
                 using (_monitor.MeasureThrottle())
                 {

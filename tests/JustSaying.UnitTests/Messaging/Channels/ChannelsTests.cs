@@ -343,6 +343,7 @@ public class ChannelsTests
             TimeSpan.FromSeconds(1),
             sqsQueue,
             new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>(),
+            new MessageReceiveController(),
             MessageMonitor,
             LoggerFactory.CreateLogger<MessageReceiveBuffer>());
     }
