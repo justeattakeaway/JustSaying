@@ -73,10 +73,7 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
             {
                 stoppingToken.ThrowIfCancellationRequested();
 
-                if (_messageReceiveController.Stopped())
-                {
-                    continue;
-                }
+                await CheckMessageReceiveControllerStatus(stoppingToken);
 
                 using (_monitor.MeasureThrottle())
                 {
@@ -160,6 +157,22 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         }
 
         return messages;
+    }
+
+    private async Task CheckMessageReceiveControllerStatus(CancellationToken stoppingToken)
+    {
+        if (_messageReceiveController.Stopped())
+        {
+            while (true)
+            {
+                if (!_messageReceiveController.Stopped())
+                {
+                    break;
+                }
+                // Delay to decrease CPU usage while polling. The interval will actually be the resolution of the system clock
+                await Task.Delay(TimeSpan.FromMilliseconds(1), stoppingToken);
+            }
+        }
     }
 
     public InterrogationResult Interrogate()

@@ -68,14 +68,14 @@ public class WhenReceivingShouldStop
     [Fact]
     public async Task No_Messages_Are_Processed()
     {
-        //Signal stop receiving messages
+        // Signal stop receiving messages
         _messageReceiveController.Stop();
 
         using var cts = new CancellationTokenSource();
         var _ = _messageReceiveBuffer.RunAsync(cts.Token);
         var readTask = Messages();
 
-        // Read messages for a while
+        // Check if we can start receiving for a while
         await Task.Delay(TimeSpan.FromSeconds(2));
 
         // Cancel token
@@ -95,19 +95,20 @@ public class WhenReceivingShouldStop
     [Fact]
     public async Task All_Message_Are_Processed_After_Starting()
     {
-        //Signal stop receiving messages
+        // Signal stop receiving messages
         _messageReceiveController.Stop();
 
         using var cts = new CancellationTokenSource();
         var _ = _messageReceiveBuffer.RunAsync(cts.Token);
         var readTask = Messages();
 
-        // Read messages for a while
+        // Check if we can start receiving for a while
         await Task.Delay(TimeSpan.FromSeconds(1));
 
-        //Signal start receiving messages
+        // Signal start receiving messages
         _messageReceiveController.Start();
 
+        // Read messages for a while
         await Task.Delay(TimeSpan.FromSeconds(1));
 
         // Cancel token
