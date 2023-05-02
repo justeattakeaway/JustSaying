@@ -163,13 +163,15 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
     {
         if (_messageReceiveController.Stopped())
         {
+            _logger.LogInformation("Paused listening for messages from queue '{QueueName}'.", QueueName);
             while (true)
             {
                 if (!_messageReceiveController.Stopped())
                 {
+                    _logger.LogInformation("Started listening for messages from queue '{QueueName}' after pausing.", QueueName);
                     break;
                 }
-                // Delay to decrease CPU usage while polling. The interval will actually be the resolution of the system clock
+                // Delay to decrease CPU usage while polling. The actual interval will be the resolution of the system clock
                 await Task.Delay(TimeSpan.FromMilliseconds(1), stoppingToken);
             }
         }
