@@ -161,12 +161,12 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
 
     private async Task CheckMessageReceiveControllerStatus(CancellationToken stoppingToken)
     {
-        if (_messageReceiveController.Stopped())
+        if (_messageReceiveController.ShouldStopReceiving)
         {
             _logger.LogInformation("Paused listening for messages from queue '{QueueName}'.", QueueName);
             while (true)
             {
-                if (!_messageReceiveController.Stopped())
+                if (!_messageReceiveController.ShouldStopReceiving)
                 {
                     _logger.LogInformation("Started listening for messages from queue '{QueueName}' after pausing.", QueueName);
                     break;

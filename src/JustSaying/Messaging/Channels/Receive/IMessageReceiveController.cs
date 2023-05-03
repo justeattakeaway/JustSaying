@@ -18,5 +18,5 @@ public interface IMessageReceiveController
     /// <summary>
     /// Indicates if receiving should be stopped
     /// </summary>
-    bool Stopped();
+    bool ShouldStopReceiving { get; }
 }

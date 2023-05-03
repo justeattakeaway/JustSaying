@@ -9,7 +9,7 @@ public class MessageReceiveControllerTests
     {
         var messageReceiveController = new MessageReceiveController();
 
-        var result = messageReceiveController.Stopped();
+        var result = messageReceiveController.ShouldStopReceiving;
 
         Assert.False(result);
     }
@@ -21,7 +21,7 @@ public class MessageReceiveControllerTests
 
         messageReceiveController.Stop();
 
-        var result = messageReceiveController.Stopped();
+        var result = messageReceiveController.ShouldStopReceiving;
 
         Assert.True(result);
     }
@@ -33,7 +33,7 @@ public class MessageReceiveControllerTests
 
         messageReceiveController.Start();
 
-        var result = messageReceiveController.Stopped();
+        var result = messageReceiveController.ShouldStopReceiving;
 
         Assert.False(result);
     }

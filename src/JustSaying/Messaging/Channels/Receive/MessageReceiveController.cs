@@ -2,20 +2,15 @@
 
 public class MessageReceiveController : IMessageReceiveController
 {
-    private bool _stopped;
-
     public void Stop()
     {
-        _stopped = true;
+        ShouldStopReceiving = true;
     }
 
     public void Start()
     {
-        _stopped = false;
+        ShouldStopReceiving = false;
     }
 
-    public bool Stopped()
-    {
-        return _stopped;
-    }
+    public bool ShouldStopReceiving { get; private set; }
 }
