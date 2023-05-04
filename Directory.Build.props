@@ -1,8 +1,8 @@
 <Project>
   <PropertyGroup>
     <DotNetTestSdkVersion>17.5.0</DotNetTestSdkVersion>
-    <MicrosoftExtensionsDependencyInjectionVersion>7.0.0</MicrosoftExtensionsDependencyInjectionVersion>
-    <MicrosoftExtensionsDependencyInjectionVersionAbstraction>7.0.0</MicrosoftExtensionsDependencyInjectionVersionAbstraction>
+    <MicrosoftExtensionsDependencyInjectionVersion>8.0.0-preview.3.23177.8</MicrosoftExtensionsDependencyInjectionVersion>
+    <MicrosoftExtensionsDependencyInjectionVersionAbstraction>8.0.0-preview.3.23177.8</MicrosoftExtensionsDependencyInjectionVersionAbstraction>
     <NewtonsoftJsonVersion>13.0.1</NewtonsoftJsonVersion>
   </PropertyGroup>
   <PropertyGroup>
