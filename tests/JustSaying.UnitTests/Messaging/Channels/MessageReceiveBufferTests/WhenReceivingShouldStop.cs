@@ -12,13 +12,13 @@ public class WhenReceivingShouldStop
 {
     private class TestMessage : Message { }
 
-    private readonly ITestOutputHelper _testOutputHelper;
     private int _callCount;
     private MessageReceiveController _messageReceiveController;
     private ILoggerFactory _loggerFactory;
     private TrackingLoggingMonitor _monitor;
     private MiddlewareBase<ReceiveMessagesContext, IList<Message>> _sqsMiddleware;
     private FakeSqsQueue _queue;
+    private readonly ITestOutputHelper _testOutputHelper;
 
     public WhenReceivingShouldStop(ITestOutputHelper testOutputHelper)
     {
