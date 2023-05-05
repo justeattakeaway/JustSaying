@@ -73,7 +73,7 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
             {
                 stoppingToken.ThrowIfCancellationRequested();
 
-                await CheckMessageReceiveControllerStatus(stoppingToken);
+                CheckMessageReceiveControllerStatus(stoppingToken);
 
                 using (_monitor.MeasureThrottle())
                 {
@@ -159,21 +159,15 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         return messages;
     }
 
-    private async Task CheckMessageReceiveControllerStatus(CancellationToken stoppingToken)
+    private void CheckMessageReceiveControllerStatus(CancellationToken stoppingToken)
     {
         if (_messageReceiveController.ShouldStopReceiving)
         {
             _logger.LogInformation("Paused listening for messages from queue '{QueueName}'.", QueueName);
-            while (true)
-            {
-                if (!_messageReceiveController.ShouldStopReceiving)
-                {
-                    _logger.LogInformation("Started listening for messages from queue '{QueueName}' after pausing.", QueueName);
-                    break;
-                }
-                // Delay to decrease CPU usage while polling. The actual interval will be the resolution of the system clock
-                await Task.Delay(TimeSpan.FromMilliseconds(1), stoppingToken);
-            }
+
+            ((IMessageReceiveThreadPausingController)_messageReceiveController).PauseThreads(stoppingToken);
+
+            _logger.LogInformation("Unpaused listening for messages from queue '{QueueName}'.", QueueName);
         }
     }
 
