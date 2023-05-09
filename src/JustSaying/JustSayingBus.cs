@@ -43,7 +43,6 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     public JustSayingBus(
         IMessagingConfig config,
         IMessageSerializationRegister serializationRegister,
-        IMessageReceiveController messageReceiveController,
         ILoggerFactory loggerFactory,
         IMessageMonitor monitor)
     {
@@ -57,12 +56,20 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         SerializationRegister = serializationRegister;
         MiddlewareMap = new MiddlewareMap();
 
-        _messageReceiveController = messageReceiveController;
-
         _publishersByType = new Dictionary<Type, IMessagePublisher>();
         _subscriptionGroupSettings =
             new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
         _defaultSubscriptionGroupSettings = new SubscriptionGroupSettingsBuilder();
+    }
+
+    public JustSayingBus(
+        IMessagingConfig config,
+        IMessageSerializationRegister serializationRegister,
+        IMessageReceiveController messageReceiveController,
+        ILoggerFactory loggerFactory,
+        IMessageMonitor monitor) : this(config, serializationRegister, loggerFactory, monitor)
+    {
+        _messageReceiveController = messageReceiveController;
     }
 
     public void AddQueue(string subscriptionGroup, ISqsQueue queue)
