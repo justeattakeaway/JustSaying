@@ -1,8 +1,8 @@
 ﻿namespace JustSaying.Messaging.Channels.Receive;
 
-public class MessageReceiveController : IMessageReceiveController, IMessageReceiveThreadPausingController
+public class MessageReceiveController : IMessageReceiveController, IMessageReceiveThreadPausingController, IDisposable
 {
-    private readonly ManualResetEvent _manualResetEvent = new(false);
+    private readonly ManualResetEventSlim _manualResetEvent = new(false);
 
     public void Stop()
     {
@@ -18,8 +18,13 @@ public class MessageReceiveController : IMessageReceiveController, IMessageRecei
 
     public void PauseThreads(CancellationToken cancellationToken)
     {
-        WaitHandle.WaitAny(new[] { _manualResetEvent, cancellationToken.WaitHandle });
+        WaitHandle.WaitAny(new[] { _manualResetEvent.WaitHandle, cancellationToken.WaitHandle });
     }
 
     public bool ShouldStopReceiving { get; private set; }
+
+    public void Dispose()
+    {
+        _manualResetEvent?.Dispose();
+    }
 }
