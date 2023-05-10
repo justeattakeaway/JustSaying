@@ -76,7 +76,12 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
             {
                 stoppingToken.ThrowIfCancellationRequested();
 
-                await CheckMessageReceiveStatus(stoppingToken);
+                if (_messageReceiveStatusSetter.Status.Equals(MessageReceiveStatus.NotReceiving))
+                {
+                    await Task.Delay(_notReceivingBusyWaitInterval, stoppingToken);
+
+                    continue;
+                }
 
                 using (_monitor.MeasureThrottle())
                 {
