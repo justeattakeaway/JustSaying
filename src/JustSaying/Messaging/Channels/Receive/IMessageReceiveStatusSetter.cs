@@ -3,7 +3,7 @@
 /// <summary>
 /// Allows stopping and starting the receiving of messages in all instances of the <see cref="MessageReceiveBuffer"/>
 /// </summary>
-public interface IMessageReceiveController
+public interface IMessageReceiveStatusSetter
 {
     /// <summary>
     /// Sets status to stop receiving
@@ -16,7 +16,7 @@ public interface IMessageReceiveController
     void Start();
 
     /// <summary>
-    /// Indicates if receiving should be stopped
+    /// Value of <see cref="MessageReceiveStatus"/> which indicates receiving status
     /// </summary>
-    bool ShouldStopReceiving { get; }
+    MessageReceiveStatus Status { get; }
 }

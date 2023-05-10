@@ -13,7 +13,7 @@ public class WhenReceivingShouldStop
     private class TestMessage : Message { }
 
     private int _callCount;
-    private readonly IMessageReceiveController _messageReceiveController;
+    private readonly IMessageReceiveStatusSetter _messageReceiveStatusSetter;
     private readonly MessageReceiveBuffer _messageReceiveBuffer;
 
     public WhenReceivingShouldStop(ITestOutputHelper testOutputHelper)
@@ -30,7 +30,7 @@ public class WhenReceivingShouldStop
             return Task.FromResult(messages.AsEnumerable());
         });
 
-        _messageReceiveController = new MessageReceiveController();
+        _messageReceiveStatusSetter = new MessageReceiveStatusSetter();
 
         var monitor = new TrackingLoggingMonitor(
             loggerFactory.CreateLogger<TrackingLoggingMonitor>());
@@ -42,7 +42,8 @@ public class WhenReceivingShouldStop
             TimeSpan.FromSeconds(1),
             queue,
             sqsMiddleware,
-            _messageReceiveController,
+            _messageReceiveStatusSetter,
+            TimeSpan.FromMilliseconds(100),
             monitor,
             loggerFactory.CreateLogger<IMessageReceiveBuffer>());
     }
@@ -69,7 +70,7 @@ public class WhenReceivingShouldStop
     public async Task No_Messages_Are_Processed()
     {
         // Signal stop receiving messages
-        _messageReceiveController.Stop();
+        _messageReceiveStatusSetter.Stop();
 
         using var cts = new CancellationTokenSource();
         var _ = _messageReceiveBuffer.RunAsync(cts.Token);
@@ -96,7 +97,7 @@ public class WhenReceivingShouldStop
     public async Task All_Message_Are_Processed_After_Starting()
     {
         // Signal stop receiving messages
-        _messageReceiveController.Stop();
+        _messageReceiveStatusSetter.Stop();
 
         using var cts = new CancellationTokenSource();
         var _ = _messageReceiveBuffer.RunAsync(cts.Token);
@@ -106,7 +107,7 @@ public class WhenReceivingShouldStop
         await Task.Delay(TimeSpan.FromSeconds(1));
 
         // Signal start receiving messages
-        _messageReceiveController.Start();
+        _messageReceiveStatusSetter.Start();
 
         // Read messages for a while
         await Task.Delay(TimeSpan.FromSeconds(1));

@@ -1,4 +1,5 @@
 using JustSaying.Messaging.Channels.Multiplexer;
+using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware.Receive;
 using ReceiveMiddleware =
@@ -20,6 +21,7 @@ public class SubscriptionGroupSettingsBuilder : ISubscriptionGroupSettings
         MultiplexerCapacity = 100;
         Prefetch = 10;
         ConcurrencyLimit = Environment.ProcessorCount * MessageDefaults.ParallelHandlerExecutionPerCore;
+        NotReceivingBusyWaitInterval = TimeSpan.FromMilliseconds(100);
     }
 
     /// <summary>
@@ -57,6 +59,13 @@ public class SubscriptionGroupSettingsBuilder : ISubscriptionGroupSettings
     /// Gets the default <see cref="ReceiveMiddleware"/> to be used by the receive pipeline.
     /// </summary>
     public ReceiveMiddleware SqsMiddleware { get; private set; }
+
+    /// <summary>
+    /// Interval of <see cref="System.Threading.Tasks.Task.Delay(TimeSpan)"/> to use during busy wait when
+    /// <see cref="MessageReceiveStatus"/> is set to not receive messages.
+    /// A larger value may reduce CPU usage while waiting to start receiving messages.
+    /// </summary>
+    public TimeSpan NotReceivingBusyWaitInterval { get; private set; }
 
     /// <summary>
     /// Specifies the default maximum amount of time to wait for messages to be available on each SQS queue in a
@@ -144,6 +153,19 @@ public class SubscriptionGroupSettingsBuilder : ISubscriptionGroupSettings
     public SubscriptionGroupSettingsBuilder WithCustomMiddleware(ReceiveMiddleware middleware)
     {
         SqsMiddleware = middleware;
+        return this;
+    }
+
+    /// <summary>
+    /// Specifies the default interval of <see cref="System.Threading.Tasks.Task.Delay(TimeSpan)"/> to use during busy
+    /// wait when <see cref="MessageReceiveStatus"/> is set to not receive messages, for each queue
+    /// in a <see cref="ISubscriptionGroup"/>. Defaults to 100ms
+    /// </summary>
+    /// <param name="notReceivingBusyWaitInterval">The delay intervals to use while busy waiting.</param>
+    /// <returns>This builder object.</returns>
+    public SubscriptionGroupSettingsBuilder WithDefaultNotReceivingBusyWaitInterval(TimeSpan notReceivingBusyWaitInterval)
+    {
+        NotReceivingBusyWaitInterval = notReceivingBusyWaitInterval;
         return this;
     }
 }

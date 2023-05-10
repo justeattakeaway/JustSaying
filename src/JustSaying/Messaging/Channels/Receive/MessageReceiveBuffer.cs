@@ -20,7 +20,8 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
     private readonly TimeSpan _sqsWaitTime;
     private readonly SqsQueueReader _sqsQueueReader;
     private readonly MiddlewareBase<ReceiveMessagesContext, IList<Message>> _sqsMiddleware;
-    private readonly IMessageReceiveController _messageReceiveController;
+    private readonly IMessageReceiveStatusSetter _messageReceiveStatusSetter;
+    private readonly TimeSpan _notReceivingBusyWaitInterval;
     private readonly IMessageMonitor _monitor;
     private readonly ILogger _logger;
 
@@ -37,7 +38,8 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         TimeSpan sqsWaitTime,
         ISqsQueue sqsQueue,
         MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware,
-        IMessageReceiveController messageReceiveController,
+        IMessageReceiveStatusSetter messageReceiveStatusSetter,
+        TimeSpan notReceivingBusyWaitInterval,
         IMessageMonitor monitor,
         ILogger<IMessageReceiveBuffer> logger)
     {
@@ -48,7 +50,8 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         if (sqsQueue == null) throw new ArgumentNullException(nameof(sqsQueue));
         _sqsQueueReader = new SqsQueueReader(sqsQueue);
         _sqsMiddleware = sqsMiddleware ?? throw new ArgumentNullException(nameof(sqsMiddleware));
-        _messageReceiveController = messageReceiveController ?? throw new ArgumentNullException(nameof(messageReceiveController));
+        _messageReceiveStatusSetter = messageReceiveStatusSetter ?? throw new ArgumentNullException(nameof(messageReceiveStatusSetter));
+        _notReceivingBusyWaitInterval = notReceivingBusyWaitInterval;
         _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -73,7 +76,7 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
             {
                 stoppingToken.ThrowIfCancellationRequested();
 
-                await CheckMessageReceiveControllerStatus(stoppingToken);
+                await CheckMessageReceiveStatus(stoppingToken);
 
                 using (_monitor.MeasureThrottle())
                 {
@@ -159,20 +162,20 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         return messages;
     }
 
-    private async Task CheckMessageReceiveControllerStatus(CancellationToken stoppingToken)
+    private async Task CheckMessageReceiveStatus(CancellationToken stoppingToken)
     {
-        if (_messageReceiveController.ShouldStopReceiving)
+        if (_messageReceiveStatusSetter.Status.Equals(MessageReceiveStatus.NotReceiving))
         {
             _logger.LogInformation("Paused listening for messages from queue '{QueueName}'.", QueueName);
             while (true)
             {
-                if (!_messageReceiveController.ShouldStopReceiving)
+                if (!_messageReceiveStatusSetter.Status.Equals(MessageReceiveStatus.Receiving))
                 {
                     _logger.LogInformation("Started listening for messages from queue '{QueueName}' after pausing.", QueueName);
                     break;
                 }
-                // Delay to decrease CPU usage while polling. The actual interval will be the resolution of the system clock
-                await Task.Delay(TimeSpan.FromMilliseconds(1), stoppingToken);
+                // Delay to decrease CPU usage while polling
+                await Task.Delay(_notReceivingBusyWaitInterval, stoppingToken);
             }
         }
     }

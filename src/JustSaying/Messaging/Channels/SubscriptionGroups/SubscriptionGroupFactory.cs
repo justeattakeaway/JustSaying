@@ -18,7 +18,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 public class SubscriptionGroupFactory : ISubscriptionGroupFactory
 {
     private readonly IMessageDispatcher _messageDispatcher;
-    private readonly IMessageReceiveController _messageReceiveController;
+    private readonly IMessageReceiveStatusSetter _messageReceiveStatusSetter;
     private readonly IMessageMonitor _monitor;
     private readonly ILoggerFactory _loggerFactory;
     private readonly ReceiveMiddleware _defaultSqsMiddleware;
@@ -45,16 +45,16 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
     /// Creates an instance of <see cref="SubscriptionGroupFactory"/>.
     /// </summary>
     /// <param name="messageDispatcher">The <see cref="IMessageDispatcher"/> to use to dispatch messages.</param>
-    /// <param name="messageReceiveController">The <see cref="IMessageReceiveController"/> used by the <see cref="IMessageReceiveBuffer"/>.</param>
+    /// <param name="messageReceiveStatusSetter">The <see cref="IMessageReceiveStatusSetter"/> used by the <see cref="IMessageReceiveBuffer"/>.</param>
     /// <param name="monitor">The <see cref="IMessageMonitor"/> used by the <see cref="IMessageReceiveBuffer"/>.</param>
     /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to use.</param>
     public SubscriptionGroupFactory(
         IMessageDispatcher messageDispatcher,
-        IMessageReceiveController messageReceiveController,
+        IMessageReceiveStatusSetter messageReceiveStatusSetter,
         IMessageMonitor monitor,
         ILoggerFactory loggerFactory) : this(messageDispatcher, monitor, loggerFactory)
     {
-        _messageReceiveController = messageReceiveController;
+        _messageReceiveStatusSetter = messageReceiveStatusSetter;
     }
 
     /// <summary>
@@ -120,7 +120,8 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
                 subscriptionGroupSettings.ReceiveMessagesWaitTime,
                 queue,
                 receiveMiddleware,
-                _messageReceiveController,
+                _messageReceiveStatusSetter,
+                subscriptionGroupSettings.NotReceivingBusyWaitInterval,
                 _monitor,
                 logger);
 

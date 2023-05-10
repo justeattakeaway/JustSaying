@@ -1,3 +1,5 @@
+using JustSaying.Messaging.Channels.Receive;
+
 namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 
 /// <summary>
@@ -35,4 +37,11 @@ public interface ISubscriptionGroupSettings
     /// Gets the maxiumum number of messages to fetch from SQS in each request.
     /// </summary>
     public int Prefetch { get; }
+
+    /// <summary>
+    /// Interval of <see cref="System.Threading.Tasks.Task.Delay(TimeSpan)"/> to use during busy wait when
+    /// <see cref="MessageReceiveStatus"/> is set to not receive messages.
+    /// A larger value may reduce CPU usage while waiting to start receiving messages.
+    /// </summary>
+    public TimeSpan NotReceivingBusyWaitInterval { get; }
 }

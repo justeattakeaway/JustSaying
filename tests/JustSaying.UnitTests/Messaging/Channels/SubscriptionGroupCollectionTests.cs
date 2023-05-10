@@ -14,7 +14,7 @@ namespace JustSaying.UnitTests.Messaging.Channels;
 
 public class SubscriptionGroupCollectionTests
 {
-    private IMessageReceiveController MessageReceiveController { get; }
+    private IMessageReceiveStatusSetter MessageReceiveStatusSetter { get; }
     private ILoggerFactory LoggerFactory { get; }
     private IMessageMonitor MessageMonitor { get; }
     private readonly ITestOutputHelper _outputHelper;
@@ -22,7 +22,7 @@ public class SubscriptionGroupCollectionTests
 
     public SubscriptionGroupCollectionTests(ITestOutputHelper testOutputHelper)
     {
-        MessageReceiveController = new MessageReceiveController();
+        MessageReceiveStatusSetter = new MessageReceiveStatusSetter();
         _outputHelper = testOutputHelper;
         LoggerFactory = testOutputHelper.ToLoggerFactory();
         MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
@@ -86,7 +86,7 @@ public class SubscriptionGroupCollectionTests
             new NonGenericMessageSubjectProvider(),
             new NewtonsoftSerializationFactory());
 
-        var bus = new JustSaying.JustSayingBus(config, serializationRegister, MessageReceiveController, LoggerFactory, MessageMonitor);
+        var bus = new JustSaying.JustSayingBus(config, serializationRegister, MessageReceiveStatusSetter, LoggerFactory, MessageMonitor);
 
         var defaultSubscriptionSettings = new SubscriptionGroupSettingsBuilder()
             .WithDefaultMultiplexerCapacity(1)

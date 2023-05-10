@@ -2,5 +2,6 @@
 
 public enum MessageReceiveStatus
 {
-    
+    Receiving,
+    NotReceiving
 }

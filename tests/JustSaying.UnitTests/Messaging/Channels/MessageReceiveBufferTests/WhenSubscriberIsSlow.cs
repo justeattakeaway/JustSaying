@@ -39,7 +39,8 @@ public class WhenSubscriberIsSlow
             TimeSpan.FromSeconds(1),
             queue,
             sqsMiddleware,
-            new MessageReceiveController(),
+            new MessageReceiveStatusSetter(),
+            TimeSpan.FromMilliseconds(100),
             monitor,
             loggerFactory.CreateLogger<IMessageReceiveBuffer>());
     }
