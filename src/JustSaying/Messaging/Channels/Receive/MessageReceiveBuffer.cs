@@ -167,24 +167,6 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         return messages;
     }
 
-    private async Task CheckMessageReceiveStatus(CancellationToken stoppingToken)
-    {
-        if (_messageReceiveStatusSetter.Status.Equals(MessageReceiveStatus.NotReceiving))
-        {
-            _logger.LogInformation("Paused listening for messages from queue '{QueueName}'.", QueueName);
-            while (true)
-            {
-                if (!_messageReceiveStatusSetter.Status.Equals(MessageReceiveStatus.Receiving))
-                {
-                    _logger.LogInformation("Started listening for messages from queue '{QueueName}' after pausing.", QueueName);
-                    break;
-                }
-                // Delay to decrease CPU usage while polling
-                await Task.Delay(_notReceivingBusyWaitInterval, stoppingToken);
-            }
-        }
-    }
-
     public InterrogationResult Interrogate()
     {
         return new InterrogationResult(new
