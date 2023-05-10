@@ -73,7 +73,8 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
     public IReadOnlyCollection<ISqsQueue> Queues { get; }
 
     /// <summary>
-    /// Interval of Task.Delay to use during busy wait when <see cref="MessageReceiveStatus"/> is set to not receive messages.
+    /// Interval of <see cref="System.Threading.Tasks.Task.Delay(TimeSpan)"/> to use during busy wait when
+    /// <see cref="MessageReceiveStatus"/> is set to not receive messages.
     /// A larger value may reduce CPU usage while waiting to start receiving messages.
     /// </summary>
     public TimeSpan NotReceivingBusyWaitInterval { get; }
