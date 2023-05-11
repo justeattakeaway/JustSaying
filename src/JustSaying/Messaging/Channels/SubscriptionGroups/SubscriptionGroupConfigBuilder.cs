@@ -20,7 +20,7 @@ public class SubscriptionGroupConfigBuilder
     private int? _concurrencyLimit;
     private int? _multiplexerCapacity;
     private int? _prefetch;
-    private TimeSpan? _notReceivingBusyWaitInterval;
+    private TimeSpan? _pauseReceivingBusyWaitInterval;
 
     private readonly string _groupName;
 
@@ -132,11 +132,11 @@ public class SubscriptionGroupConfigBuilder
     /// Specifies the default delay interval to use during busy wait when <see cref="IMessageReceivePauseSignal"/>
     /// is set to pause receiving, for each queue in this <see cref="ISubscriptionGroup"/>. Defaults to 100ms.
     /// </summary>
-    /// <param name="notReceivingBusyWaitInterval">The delay intervals to use while busy waiting.</param>
+    /// <param name="pauseReceivingBusyWaitInterval">The delay intervals to use while busy waiting.</param>
     /// <returns>This builder object.</returns>
-    public SubscriptionGroupConfigBuilder WithNotReceivingBusyWaitInterval(TimeSpan notReceivingBusyWaitInterval)
+    public SubscriptionGroupConfigBuilder WithPauseReceivingBusyWaitInterval(TimeSpan pauseReceivingBusyWaitInterval)
     {
-        _notReceivingBusyWaitInterval = notReceivingBusyWaitInterval;
+        _pauseReceivingBusyWaitInterval = pauseReceivingBusyWaitInterval;
         return this;
     }
 
@@ -160,7 +160,7 @@ public class SubscriptionGroupConfigBuilder
             _multiplexerCapacity ?? defaults.MultiplexerCapacity,
             _prefetch ?? defaults.Prefetch,
             _sqsQueues,
-            _notReceivingBusyWaitInterval ?? defaults.NotReceivingBusyWaitInterval);
+            _pauseReceivingBusyWaitInterval ?? defaults.PauseReceivingBusyWaitInterval);
 
         settings.Validate();
 

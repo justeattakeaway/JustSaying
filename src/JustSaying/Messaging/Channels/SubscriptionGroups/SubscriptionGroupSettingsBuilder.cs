@@ -21,7 +21,7 @@ public class SubscriptionGroupSettingsBuilder : ISubscriptionGroupSettings
         MultiplexerCapacity = 100;
         Prefetch = 10;
         ConcurrencyLimit = Environment.ProcessorCount * MessageDefaults.ParallelHandlerExecutionPerCore;
-        NotReceivingBusyWaitInterval = TimeSpan.FromMilliseconds(100);
+        PauseReceivingBusyWaitInterval = TimeSpan.FromMilliseconds(100);
     }
 
     /// <summary>
@@ -64,7 +64,7 @@ public class SubscriptionGroupSettingsBuilder : ISubscriptionGroupSettings
     /// Delay interval to use during busy wait when <see cref="IMessageReceivePauseSignal"/> is set to pause receiving.
     /// A larger value may reduce CPU usage while paused, but may delay when messages start being received.
     /// </summary>
-    public TimeSpan NotReceivingBusyWaitInterval { get; private set; }
+    public TimeSpan PauseReceivingBusyWaitInterval { get; private set; }
 
     /// <summary>
     /// Specifies the default maximum amount of time to wait for messages to be available on each SQS queue in a
@@ -159,11 +159,11 @@ public class SubscriptionGroupSettingsBuilder : ISubscriptionGroupSettings
     /// Specifies the default delay interval to use during busy wait when <see cref="IMessageReceivePauseSignal"/>
     /// is set to pause receiving, for each queue in a <see cref="ISubscriptionGroup"/>. Defaults to 100ms.
     /// </summary>
-    /// <param name="notReceivingBusyWaitInterval">The delay intervals to use while busy waiting.</param>
+    /// <param name="pauseReceivingBusyWaitInterval">The delay intervals to use while busy waiting.</param>
     /// <returns>This builder object.</returns>
-    public SubscriptionGroupSettingsBuilder WithDefaultNotReceivingBusyWaitInterval(TimeSpan notReceivingBusyWaitInterval)
+    public SubscriptionGroupSettingsBuilder WithDefaultPauseReceivingBusyWaitInterval(TimeSpan pauseReceivingBusyWaitInterval)
     {
-        NotReceivingBusyWaitInterval = notReceivingBusyWaitInterval;
+        PauseReceivingBusyWaitInterval = pauseReceivingBusyWaitInterval;
         return this;
     }
 }

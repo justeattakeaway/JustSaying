@@ -121,7 +121,7 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
                 queue,
                 receiveMiddleware,
                 _messageReceivePauseSignal,
-                subscriptionGroupSettings.NotReceivingBusyWaitInterval,
+                subscriptionGroupSettings.PauseReceivingBusyWaitInterval,
                 _monitor,
                 logger);
 

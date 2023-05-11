@@ -18,7 +18,7 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
         int multiplexerCapacity,
         int prefetch,
         IReadOnlyCollection<ISqsQueue> queues,
-        TimeSpan notReceivingBusyWaitInterval)
+        TimeSpan pauseReceivingBusyWaitInterval)
     {
         ConcurrencyLimit = concurrencyLimit;
         BufferSize = bufferSize;
@@ -28,7 +28,7 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
         Prefetch = prefetch;
         Queues = queues;
         Name = name;
-        NotReceivingBusyWaitInterval = notReceivingBusyWaitInterval;
+        PauseReceivingBusyWaitInterval = pauseReceivingBusyWaitInterval;
     }
 
     /// <summary>
@@ -76,5 +76,5 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
     /// Delay interval to use during busy wait when <see cref="IMessageReceivePauseSignal"/> is set to pause receiving.
     /// A larger value may reduce CPU usage while paused, but may delay when messages start being received.
     /// </summary>
-    public TimeSpan NotReceivingBusyWaitInterval { get; }
+    public TimeSpan PauseReceivingBusyWaitInterval { get; }
 }
