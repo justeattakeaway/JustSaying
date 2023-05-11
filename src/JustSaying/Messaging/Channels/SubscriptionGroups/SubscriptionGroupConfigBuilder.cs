@@ -129,9 +129,8 @@ public class SubscriptionGroupConfigBuilder
     }
 
     /// <summary>
-    /// Specifies the default delay interval to use during busy
-    /// wait when <see cref="IMessageReceivePauseSignal"/> is set to not receive messages, for each queue
-    /// in this <see cref="ISubscriptionGroup"/>. Defaults to 100ms.
+    /// Specifies the default delay interval to use during busy wait when <see cref="IMessageReceivePauseSignal"/>
+    /// is set to pause receiving, for each queue in this <see cref="ISubscriptionGroup"/>. Defaults to 100ms.
     /// </summary>
     /// <param name="notReceivingBusyWaitInterval">The delay intervals to use while busy waiting.</param>
     /// <returns>This builder object.</returns>

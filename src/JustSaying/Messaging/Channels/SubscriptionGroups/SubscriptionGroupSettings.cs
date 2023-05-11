@@ -73,8 +73,8 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
     public IReadOnlyCollection<ISqsQueue> Queues { get; }
 
     /// <summary>
-    /// Delay interval to use during busy wait when <see cref="IMessageReceivePauseSignal"/> is set to not receive messages.
-    /// A larger value may reduce CPU usage while waiting to start receiving messages, but may delay when messages start being received.
+    /// Delay interval to use during busy wait when <see cref="IMessageReceivePauseSignal"/> is set to pause receiving.
+    /// A larger value may reduce CPU usage while paused, but may delay when messages start being received.
     /// </summary>
     public TimeSpan NotReceivingBusyWaitInterval { get; }
 }
