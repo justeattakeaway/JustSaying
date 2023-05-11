@@ -18,7 +18,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 public class SubscriptionGroupFactory : ISubscriptionGroupFactory
 {
     private readonly IMessageDispatcher _messageDispatcher;
-    private readonly IMessageReceiveToggle _messageReceiveToggle;
+    private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;
     private readonly IMessageMonitor _monitor;
     private readonly ILoggerFactory _loggerFactory;
     private readonly ReceiveMiddleware _defaultSqsMiddleware;
@@ -45,16 +45,16 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
     /// Creates an instance of <see cref="SubscriptionGroupFactory"/>.
     /// </summary>
     /// <param name="messageDispatcher">The <see cref="IMessageDispatcher"/> to use to dispatch messages.</param>
-    /// <param name="messageReceiveToggle">The <see cref="IMessageReceiveToggle"/> used by the <see cref="IMessageReceiveBuffer"/>.</param>
+    /// <param name="messageReceivePauseSignal">The <see cref="IMessageReceivePauseSignal"/> used by the <see cref="IMessageReceiveBuffer"/>.</param>
     /// <param name="monitor">The <see cref="IMessageMonitor"/> used by the <see cref="IMessageReceiveBuffer"/>.</param>
     /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to use.</param>
     public SubscriptionGroupFactory(
         IMessageDispatcher messageDispatcher,
-        IMessageReceiveToggle messageReceiveToggle,
+        IMessageReceivePauseSignal messageReceivePauseSignal,
         IMessageMonitor monitor,
         ILoggerFactory loggerFactory) : this(messageDispatcher, monitor, loggerFactory)
     {
-        _messageReceiveToggle = messageReceiveToggle;
+        _messageReceivePauseSignal = messageReceivePauseSignal;
     }
 
     /// <summary>
@@ -120,7 +120,7 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
                 subscriptionGroupSettings.ReceiveMessagesWaitTime,
                 queue,
                 receiveMiddleware,
-                _messageReceiveToggle,
+                _messageReceivePauseSignal,
                 subscriptionGroupSettings.NotReceivingBusyWaitInterval,
                 _monitor,
                 logger);

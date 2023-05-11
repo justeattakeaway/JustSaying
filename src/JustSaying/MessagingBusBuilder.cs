@@ -267,10 +267,10 @@ public sealed class MessagingBusBuilder
     private JustSayingBus CreateBus(IMessagingConfig config, ILoggerFactory loggerFactory)
     {
         IMessageSerializationRegister register = ServiceResolver.ResolveService<IMessageSerializationRegister>();
-        IMessageReceiveToggle messageReceiveToggle = ServiceResolver.ResolveService<IMessageReceiveToggle>();
+        IMessageReceivePauseSignal messageReceivePauseSignal = ServiceResolver.ResolveService<IMessageReceivePauseSignal>();
         IMessageMonitor monitor = ServiceResolver.ResolveOptionalService<IMessageMonitor>() ?? new NullOpMessageMonitor();
 
-        var bus = new JustSayingBus(config, register, messageReceiveToggle, loggerFactory, monitor);
+        var bus = new JustSayingBus(config, register, messageReceivePauseSignal, loggerFactory, monitor);
 
         return bus;
     }

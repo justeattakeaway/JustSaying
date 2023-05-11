@@ -21,7 +21,7 @@ namespace JustSaying.UnitTests.Messaging.Channels;
 
 public class ChannelsTests
 {
-    private IMessageReceiveToggle MessageReceiveToggle { get; }
+    private IMessageReceivePauseSignal MessageReceivePauseSignal { get; }
     private ILoggerFactory LoggerFactory { get; }
     private IMessageMonitor MessageMonitor { get; }
     private ITestOutputHelper OutputHelper { get; }
@@ -29,7 +29,7 @@ public class ChannelsTests
 
     public ChannelsTests(ITestOutputHelper testOutputHelper)
     {
-        MessageReceiveToggle = new MessageReceiveToggle();
+        MessageReceivePauseSignal = new MessageReceivePauseSignal();
         OutputHelper = testOutputHelper;
         LoggerFactory = new LoggerFactory().AddXUnit(testOutputHelper, LogLevel.Trace);
         MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
@@ -345,7 +345,7 @@ public class ChannelsTests
             TimeSpan.FromSeconds(1),
             sqsQueue,
             new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>(),
-            MessageReceiveToggle,
+            MessageReceivePauseSignal,
             TimeSpan.FromMilliseconds(100),
             MessageMonitor,
             LoggerFactory.CreateLogger<MessageReceiveBuffer>());
@@ -370,7 +370,7 @@ public class ChannelsTests
 
         var consumerGroupFactory = new SubscriptionGroupFactory(
             dispatcher,
-            MessageReceiveToggle,
+            MessageReceivePauseSignal,
             MessageMonitor,
             LoggerFactory);
 

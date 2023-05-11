@@ -29,7 +29,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
 
     public IMessagingConfig Config { get; }
 
-    private readonly IMessageReceiveToggle _messageReceiveToggle;
+    private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;
 
     private readonly IMessageMonitor _monitor;
 
@@ -65,11 +65,11 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     public JustSayingBus(
         IMessagingConfig config,
         IMessageSerializationRegister serializationRegister,
-        IMessageReceiveToggle messageReceiveToggle,
+        IMessageReceivePauseSignal messageReceivePauseSignal,
         ILoggerFactory loggerFactory,
         IMessageMonitor monitor) : this(config, serializationRegister, loggerFactory, monitor)
     {
-        _messageReceiveToggle = messageReceiveToggle;
+        _messageReceivePauseSignal = messageReceivePauseSignal;
     }
 
     public void AddQueue(string subscriptionGroup, ISqsQueue queue)
@@ -168,7 +168,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
 
         var subscriptionGroupFactory = new SubscriptionGroupFactory(
             dispatcher,
-            _messageReceiveToggle,
+            _messageReceivePauseSignal,
             _monitor,
             _loggerFactory);
 

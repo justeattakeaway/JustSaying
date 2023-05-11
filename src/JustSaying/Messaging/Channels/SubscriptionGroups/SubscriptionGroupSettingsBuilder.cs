@@ -61,9 +61,8 @@ public class SubscriptionGroupSettingsBuilder : ISubscriptionGroupSettings
     public ReceiveMiddleware SqsMiddleware { get; private set; }
 
     /// <summary>
-    /// Interval of <see cref="System.Threading.Tasks.Task.Delay(TimeSpan)"/> to use during busy wait when
-    /// <see cref="MessageReceiveStatus"/> is set to not receive messages.
-    /// A larger value may reduce CPU usage while waiting to start receiving messages.
+    /// Delay interval to use during busy wait when <see cref="IMessageReceivePauseSignal"/> is set to not receive messages.
+    /// A larger value may reduce CPU usage while waiting to start receiving messages, but may delay when messages start being received.
     /// </summary>
     public TimeSpan NotReceivingBusyWaitInterval { get; private set; }
 
@@ -157,9 +156,9 @@ public class SubscriptionGroupSettingsBuilder : ISubscriptionGroupSettings
     }
 
     /// <summary>
-    /// Specifies the default interval of <see cref="System.Threading.Tasks.Task.Delay(TimeSpan)"/> to use during busy
-    /// wait when <see cref="MessageReceiveStatus"/> is set to not receive messages, for each queue
-    /// in a <see cref="ISubscriptionGroup"/>. Defaults to 100ms
+    /// Specifies the default delay interval to use during busy
+    /// wait when <see cref="IMessageReceivePauseSignal"/> is set to not receive messages, for each queue
+    /// in a <see cref="ISubscriptionGroup"/>. Defaults to 100ms.
     /// </summary>
     /// <param name="notReceivingBusyWaitInterval">The delay intervals to use while busy waiting.</param>
     /// <returns>This builder object.</returns>

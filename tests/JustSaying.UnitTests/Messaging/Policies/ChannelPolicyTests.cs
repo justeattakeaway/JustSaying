@@ -15,14 +15,14 @@ namespace JustSaying.UnitTests.Messaging.Policies;
 
 public class ChannelPolicyTests
 {
-    private IMessageReceiveToggle MessageReceiveToggle { get; }
+    private IMessageReceivePauseSignal MessageReceivePauseSignal { get; }
     private ILoggerFactory LoggerFactory { get; }
     private IMessageMonitor MessageMonitor { get; }
     private readonly ITestOutputHelper _outputHelper;
 
     public ChannelPolicyTests(ITestOutputHelper testOutputHelper)
     {
-        MessageReceiveToggle = new MessageReceiveToggle();
+        MessageReceivePauseSignal = new MessageReceivePauseSignal();
         _outputHelper = testOutputHelper;
         LoggerFactory = testOutputHelper.ToLoggerFactory();
         MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
@@ -52,7 +52,7 @@ public class ChannelPolicyTests
 
         var groupFactory = new SubscriptionGroupFactory(
             dispatcher,
-            MessageReceiveToggle,
+            MessageReceivePauseSignal,
             MessageMonitor,
             LoggerFactory);
 

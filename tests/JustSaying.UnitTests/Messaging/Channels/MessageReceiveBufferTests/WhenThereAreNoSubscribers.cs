@@ -42,7 +42,7 @@ public class WhenThereAreNoSubscribers
             TimeSpan.FromSeconds(1),
             queue,
             sqsMiddleware,
-            new MessageReceiveToggle(),
+            null,
             TimeSpan.FromMilliseconds(100),
             monitor,
             loggerFactory.CreateLogger<IMessageReceiveBuffer>());

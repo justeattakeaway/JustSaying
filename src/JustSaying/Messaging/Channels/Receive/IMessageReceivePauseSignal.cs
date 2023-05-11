@@ -3,12 +3,12 @@
 /// <summary>
 /// Allows stopping and starting the receiving of messages in all instances of the <see cref="MessageReceiveBuffer"/>
 /// </summary>
-public interface IMessageReceiveToggle
+public interface IMessageReceivePauseSignal
 {
     /// <summary>
     /// Sets status to stop receiving
     /// </summary>
-    void Stop();
+    void Pause();
 
     /// <summary>
     /// Sets status to start receiving
@@ -16,7 +16,7 @@ public interface IMessageReceiveToggle
     void Start();
 
     /// <summary>
-    /// Value of <see cref="MessageReceiveStatus"/> which indicates receiving status
+    /// Indicates receiving of messages is paused
     /// </summary>
-    MessageReceiveStatus Status { get; }
+    bool IsPaused { get; }
 }
