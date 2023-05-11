@@ -2,14 +2,14 @@
 
 namespace JustSaying.UnitTests.Messaging.Channels;
 
-public class MessageReceiveStatusSetterTests
+public class MessageReceiveToggleTests
 {
     [Fact]
     public void WhenInitialized_ReturnsStatusReceiving()
     {
-        var messageReceiveStatusSetter = new MessageReceiveStatusSetter();
+        var messageReceiveToggle = new MessageReceiveToggle();
 
-        var result = messageReceiveStatusSetter.Status;
+        var result = messageReceiveToggle.Status;
 
         Assert.Equal(MessageReceiveStatus.Receiving, result);
     }
@@ -17,11 +17,11 @@ public class MessageReceiveStatusSetterTests
     [Fact]
     public void WhenStopped_ReturnsStatusNotReceiving()
     {
-        var messageReceiveStatusSetter = new MessageReceiveStatusSetter();
+        var messageReceiveToggle = new MessageReceiveToggle();
 
-        messageReceiveStatusSetter.Stop();
+        messageReceiveToggle.Stop();
 
-        var result = messageReceiveStatusSetter.Status;
+        var result = messageReceiveToggle.Status;
 
         Assert.Equal(MessageReceiveStatus.NotReceiving, result);
     }
@@ -29,11 +29,11 @@ public class MessageReceiveStatusSetterTests
     [Fact]
     public void WhenStarted_ReturnsStatusReceiving()
     {
-        var messageReceiveStatusSetter = new MessageReceiveStatusSetter();
+        var messageReceiveToggle = new MessageReceiveToggle();
 
-        messageReceiveStatusSetter.Start();
+        messageReceiveToggle.Start();
 
-        var result = messageReceiveStatusSetter.Status;
+        var result = messageReceiveToggle.Status;
 
         Assert.Equal(MessageReceiveStatus.Receiving, result);
     }

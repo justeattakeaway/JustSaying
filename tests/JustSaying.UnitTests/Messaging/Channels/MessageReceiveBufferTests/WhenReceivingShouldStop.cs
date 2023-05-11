@@ -13,7 +13,7 @@ public class WhenReceivingShouldStop
     private class TestMessage : Message { }
 
     private int _callCount;
-    private readonly IMessageReceiveStatusSetter _messageReceiveStatusSetter;
+    private readonly IMessageReceiveToggle _messageReceiveToggle;
     private readonly MessageReceiveBuffer _messageReceiveBuffer;
 
     public WhenReceivingShouldStop(ITestOutputHelper testOutputHelper)
@@ -30,7 +30,7 @@ public class WhenReceivingShouldStop
             return Task.FromResult(messages.AsEnumerable());
         });
 
-        _messageReceiveStatusSetter = new MessageReceiveStatusSetter();
+        _messageReceiveToggle = new MessageReceiveToggle();
 
         var monitor = new TrackingLoggingMonitor(
             loggerFactory.CreateLogger<TrackingLoggingMonitor>());
@@ -42,7 +42,7 @@ public class WhenReceivingShouldStop
             TimeSpan.FromSeconds(1),
             queue,
             sqsMiddleware,
-            _messageReceiveStatusSetter,
+            _messageReceiveToggle,
             TimeSpan.FromMilliseconds(100),
             monitor,
             loggerFactory.CreateLogger<IMessageReceiveBuffer>());
@@ -70,7 +70,7 @@ public class WhenReceivingShouldStop
     public async Task No_Messages_Are_Processed()
     {
         // Signal stop receiving messages
-        _messageReceiveStatusSetter.Stop();
+        _messageReceiveToggle.Stop();
 
         using var cts = new CancellationTokenSource();
         var _ = _messageReceiveBuffer.RunAsync(cts.Token);
@@ -97,7 +97,7 @@ public class WhenReceivingShouldStop
     public async Task All_Message_Are_Processed_After_Starting()
     {
         // Signal stop receiving messages
-        _messageReceiveStatusSetter.Stop();
+        _messageReceiveToggle.Stop();
 
         using var cts = new CancellationTokenSource();
         var _ = _messageReceiveBuffer.RunAsync(cts.Token);
@@ -107,7 +107,7 @@ public class WhenReceivingShouldStop
         await Task.Delay(TimeSpan.FromSeconds(1));
 
         // Signal start receiving messages
-        _messageReceiveStatusSetter.Start();
+        _messageReceiveToggle.Start();
 
         // Read messages for a while
         await Task.Delay(TimeSpan.FromSeconds(1));

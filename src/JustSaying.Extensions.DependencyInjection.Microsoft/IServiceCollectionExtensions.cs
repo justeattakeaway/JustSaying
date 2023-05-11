@@ -146,7 +146,7 @@ public static class IServiceCollectionExtensions
                 return new MessageSerializationRegister(config.MessageSubjectProvider, serializerFactory);
             });
 
-        services.TryAddSingleton<IMessageReceiveStatusSetter, MessageReceiveStatusSetter>();
+        services.TryAddSingleton<IMessageReceiveToggle, MessageReceiveToggle>();
 
         services.TryAddSingleton(
             (serviceProvider) =>

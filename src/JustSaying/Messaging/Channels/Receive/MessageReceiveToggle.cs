@@ -1,6 +1,6 @@
 ﻿namespace JustSaying.Messaging.Channels.Receive;
 
-public class MessageReceiveStatusSetter : IMessageReceiveStatusSetter
+public class MessageReceiveToggle : IMessageReceiveToggle
 {
     public void Stop()
     {

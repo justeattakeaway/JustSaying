@@ -13,7 +13,7 @@ namespace JustSaying.UnitTests.Messaging.Channels;
 
 public class ErrorHandlingTests
 {
-    private IMessageReceiveStatusSetter MessageReceiveStatusSetter { get; }
+    private IMessageReceiveToggle MessageReceiveToggle { get; }
     private ILoggerFactory LoggerFactory { get; }
     private IMessageMonitor MessageMonitor { get; }
     private readonly ITestOutputHelper _outputHelper;
@@ -21,7 +21,7 @@ public class ErrorHandlingTests
     public ErrorHandlingTests(ITestOutputHelper testOutputHelper)
     {
         _outputHelper = testOutputHelper;
-        MessageReceiveStatusSetter = new MessageReceiveStatusSetter();
+        MessageReceiveToggle = new MessageReceiveToggle();
         LoggerFactory = testOutputHelper.ToLoggerFactory();
         MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
     }
@@ -57,7 +57,7 @@ public class ErrorHandlingTests
 
         var subscriptionGroupFactory = new SubscriptionGroupFactory(
             dispatcher,
-            MessageReceiveStatusSetter,
+            MessageReceiveToggle,
             MessageMonitor,
             LoggerFactory);
 
@@ -106,7 +106,7 @@ public class ErrorHandlingTests
 
         var subscriptionGroupFactory = new SubscriptionGroupFactory(
             dispatcher,
-            MessageReceiveStatusSetter,
+            MessageReceiveToggle,
             MessageMonitor,
             LoggerFactory);
 

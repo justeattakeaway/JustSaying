@@ -29,11 +29,11 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
     protected ILoggerFactory LoggerFactory { get; }
     protected ILogger Logger { get; }
 
-    private readonly IMessageReceiveStatusSetter _messageReceiveStatusSetter;
+    private readonly IMessageReceiveToggle _messageReceiveToggle;
 
     public BaseSubscriptionGroupTests(ITestOutputHelper testOutputHelper)
     {
-        _messageReceiveStatusSetter = new MessageReceiveStatusSetter();
+        _messageReceiveToggle = new MessageReceiveToggle();
         OutputHelper = testOutputHelper;
         LoggerFactory = testOutputHelper.ToLoggerFactory();
         Logger = LoggerFactory.CreateLogger(GetType());
@@ -112,7 +112,7 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
 
         var subscriptionGroupFactory = new SubscriptionGroupFactory(
             dispatcher,
-            _messageReceiveStatusSetter,
+            _messageReceiveToggle,
             Monitor,
             LoggerFactory);
 

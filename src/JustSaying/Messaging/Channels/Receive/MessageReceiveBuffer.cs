@@ -20,7 +20,7 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
     private readonly TimeSpan _sqsWaitTime;
     private readonly SqsQueueReader _sqsQueueReader;
     private readonly MiddlewareBase<ReceiveMessagesContext, IList<Message>> _sqsMiddleware;
-    private readonly IMessageReceiveStatusSetter _messageReceiveStatusSetter;
+    private readonly IMessageReceiveToggle _messageReceiveToggle;
     private readonly TimeSpan _notReceivingBusyWaitInterval;
     private readonly IMessageMonitor _monitor;
     private readonly ILogger _logger;
@@ -38,7 +38,7 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         TimeSpan sqsWaitTime,
         ISqsQueue sqsQueue,
         MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware,
-        IMessageReceiveStatusSetter messageReceiveStatusSetter,
+        IMessageReceiveToggle messageReceiveToggle,
         TimeSpan notReceivingBusyWaitInterval,
         IMessageMonitor monitor,
         ILogger<IMessageReceiveBuffer> logger)
@@ -50,7 +50,7 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         if (sqsQueue == null) throw new ArgumentNullException(nameof(sqsQueue));
         _sqsQueueReader = new SqsQueueReader(sqsQueue);
         _sqsMiddleware = sqsMiddleware ?? throw new ArgumentNullException(nameof(sqsMiddleware));
-        _messageReceiveStatusSetter = messageReceiveStatusSetter ?? throw new ArgumentNullException(nameof(messageReceiveStatusSetter));
+        _messageReceiveToggle = messageReceiveToggle ?? throw new ArgumentNullException(nameof(messageReceiveToggle));
         _notReceivingBusyWaitInterval = notReceivingBusyWaitInterval;
         _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -76,7 +76,7 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
             {
                 stoppingToken.ThrowIfCancellationRequested();
 
-                if (_messageReceiveStatusSetter.Status.Equals(MessageReceiveStatus.NotReceiving))
+                if (_messageReceiveToggle.Status.Equals(MessageReceiveStatus.NotReceiving))
                 {
                     await Task.Delay(_notReceivingBusyWaitInterval, stoppingToken);
 
