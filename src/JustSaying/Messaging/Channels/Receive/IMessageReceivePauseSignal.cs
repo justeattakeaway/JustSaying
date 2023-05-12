@@ -1,7 +1,7 @@
 ﻿namespace JustSaying.Messaging.Channels.Receive;
 
 /// <summary>
-/// Allows stopping and starting the receiving of messages in all instances of the <see cref="MessageReceiveBuffer"/>
+/// Allows pausing and resuming the receipt of messages in all instances of the <see cref="MessageReceiveBuffer"/>
 /// </summary>
 public interface IMessageReceivePauseSignal
 {
@@ -11,9 +11,9 @@ public interface IMessageReceivePauseSignal
     void Pause();
 
     /// <summary>
-    /// Sets status to start receiving
+    /// Sets status to resume receiving
     /// </summary>
-    void Start();
+    void Resume();
 
     /// <summary>
     /// Indicates receiving of messages is paused

@@ -106,7 +106,7 @@ public class WhenReceivingShouldStop
         await Task.Delay(TimeSpan.FromSeconds(1));
 
         // Signal start receiving messages
-        _messageReceivePauseSignal.Start();
+        _messageReceivePauseSignal.Resume();
 
         // Read messages for a while
         await Task.Delay(TimeSpan.FromSeconds(1));

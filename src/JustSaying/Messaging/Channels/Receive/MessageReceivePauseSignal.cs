@@ -7,7 +7,7 @@ public sealed class MessageReceivePauseSignal : IMessageReceivePauseSignal
         IsPaused = true;
     }
 
-    public void Start()
+    public void Resume()
     {
         IsPaused = false;
     }

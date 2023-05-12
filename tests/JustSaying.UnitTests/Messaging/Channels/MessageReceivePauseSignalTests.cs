@@ -31,7 +31,7 @@ public class MessageReceivePauseSignalTests
     {
         var messageReceivePauseSignal = new MessageReceivePauseSignal();
 
-        messageReceivePauseSignal.Start();
+        messageReceivePauseSignal.Resume();
 
         var result = messageReceivePauseSignal.IsPaused;
 
