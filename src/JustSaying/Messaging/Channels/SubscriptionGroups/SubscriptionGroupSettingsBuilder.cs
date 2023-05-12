@@ -11,7 +11,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 /// <summary>
 /// Configures the default settings for all subscription groups.
 /// </summary>
-public class SubscriptionGroupSettingsBuilder : ISubscriptionGroupSettings, ISubscriptionGroupSettingPauseReceivingBusyWaitInterval
+public class SubscriptionGroupSettingsBuilder : ISubscriptionGroupSettings
 {
     public SubscriptionGroupSettingsBuilder()
     {

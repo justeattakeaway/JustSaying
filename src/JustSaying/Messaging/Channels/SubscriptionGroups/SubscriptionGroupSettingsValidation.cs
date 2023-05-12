@@ -3,7 +3,7 @@ using JustSaying.Messaging.MessageProcessingStrategies;
 namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 
 /// <summary>
-/// Contains validation for <see cref="SubscriptionGroupSettings"/> and related interfaces.
+/// Contains validation for <see cref="ISubscriptionGroupSettings"/>.
 /// </summary>
 public static class SubscriptionGroupSettingsValidation
 {
@@ -57,45 +57,6 @@ public static class SubscriptionGroupSettingsValidation
         if (settings.BufferSize < 0)
         {
             throw new InvalidOperationException($"{nameof(settings.BufferSize)} cannot be negative.");
-        }
-    }
-
-    /// <summary>
-    /// Runs validation on the given instance of <see cref="SubscriptionGroupSettings"/>.
-    /// </summary>
-    /// <param name="settings">The settings to validate</param>
-    public static void Validate(this SubscriptionGroupSettings settings)
-    {
-        if (settings is null)
-        {
-            throw new ArgumentNullException(nameof(settings));
-        }
-
-        if (settings is ISubscriptionGroupSettings)
-        {
-            ((ISubscriptionGroupSettings) settings).Validate();
-        }
-
-        if (settings is ISubscriptionGroupSettingPauseReceivingBusyWaitInterval)
-        {
-            ((ISubscriptionGroupSettingPauseReceivingBusyWaitInterval) settings).Validate();
-        }
-    }
-
-    /// <summary>
-    /// Runs validation on the given instance of <see cref="ISubscriptionGroupSettingPauseReceivingBusyWaitInterval"/>.
-    /// </summary>
-    /// <param name="setting">The setting to validate</param>
-    public static void Validate(this ISubscriptionGroupSettingPauseReceivingBusyWaitInterval setting)
-    {
-        if (setting is null)
-        {
-            throw new ArgumentNullException(nameof(setting));
-        }
-
-        if (setting.PauseReceivingBusyWaitInterval < TimeSpan.Zero)
-        {
-            throw new InvalidOperationException($"{nameof(setting.PauseReceivingBusyWaitInterval)} cannot be negative.");
         }
     }
 }

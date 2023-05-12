@@ -250,8 +250,7 @@ public sealed class SubscriptionsBuilder
             throw new InvalidOperationException($"No {nameof(IHandlerResolver)} is registered.");
         }
 
-        ((ISubscriptionGroupSettings)Defaults).Validate();
-        ((ISubscriptionGroupSettingPauseReceivingBusyWaitInterval)Defaults).Validate();
+        Defaults.Validate();
         bus.SetGroupSettings(Defaults, SubscriptionGroupSettings);
 
         foreach (ISubscriptionBuilder<Message> builder in Subscriptions)

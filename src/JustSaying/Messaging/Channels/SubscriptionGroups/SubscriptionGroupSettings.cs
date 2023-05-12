@@ -7,7 +7,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 /// The settings used by <see cref="SubscriptionGroupFactory"/> to be create
 /// a <see cref="ISubscriptionGroup"/>.
 /// </summary>
-public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings, ISubscriptionGroupSettingPauseReceivingBusyWaitInterval
+public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
 {
     internal SubscriptionGroupSettings(
         string name,
