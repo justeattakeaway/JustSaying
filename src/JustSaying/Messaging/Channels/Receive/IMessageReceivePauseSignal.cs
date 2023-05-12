@@ -6,7 +6,7 @@
 public interface IMessageReceivePauseSignal
 {
     /// <summary>
-    /// Sets status to stop receiving
+    /// Sets status to pause receiving
     /// </summary>
     void Pause();
 

@@ -43,7 +43,6 @@ public class WhenReceivingShouldStop
             queue,
             sqsMiddleware,
             _messageReceivePauseSignal,
-            TimeSpan.FromMilliseconds(100),
             monitor,
             loggerFactory.CreateLogger<IMessageReceiveBuffer>());
     }

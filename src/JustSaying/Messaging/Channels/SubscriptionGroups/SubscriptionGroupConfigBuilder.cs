@@ -1,6 +1,5 @@
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels.Multiplexer;
-using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Interrogation;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups;
@@ -20,7 +19,6 @@ public class SubscriptionGroupConfigBuilder
     private int? _concurrencyLimit;
     private int? _multiplexerCapacity;
     private int? _prefetch;
-    private TimeSpan? _pauseReceivingBusyWaitInterval;
 
     private readonly string _groupName;
 
@@ -129,18 +127,6 @@ public class SubscriptionGroupConfigBuilder
     }
 
     /// <summary>
-    /// Specifies the default delay interval to use during busy wait when <see cref="IMessageReceivePauseSignal"/>
-    /// is set to pause receiving, for each queue in this <see cref="ISubscriptionGroup"/>. Defaults to 100ms.
-    /// </summary>
-    /// <param name="pauseReceivingBusyWaitInterval">The delay intervals to use while busy waiting.</param>
-    /// <returns>This builder object.</returns>
-    public SubscriptionGroupConfigBuilder WithPauseReceivingBusyWaitInterval(TimeSpan pauseReceivingBusyWaitInterval)
-    {
-        _pauseReceivingBusyWaitInterval = pauseReceivingBusyWaitInterval;
-        return this;
-    }
-
-    /// <summary>
     /// Given a set of defaults and overrides from this builder, builds a concrete <see cref="SubscriptionGroupSettings"/>
     /// that can be passed to an <see cref="ISubscriptionGroupFactory"/> to build an <see cref="ISubscriptionGroup"/>.
     /// </summary>
@@ -159,8 +145,7 @@ public class SubscriptionGroupConfigBuilder
             _receiveMessagesWaitTime ?? defaults.ReceiveMessagesWaitTime,
             _multiplexerCapacity ?? defaults.MultiplexerCapacity,
             _prefetch ?? defaults.Prefetch,
-            _sqsQueues,
-            _pauseReceivingBusyWaitInterval ?? defaults.PauseReceivingBusyWaitInterval);
+            _sqsQueues);
 
         settings.Validate();
 

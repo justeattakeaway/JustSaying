@@ -1,5 +1,4 @@
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.Channels.Receive;
 
 namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 
@@ -17,8 +16,7 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
         TimeSpan receiveMessagesWaitTime,
         int multiplexerCapacity,
         int prefetch,
-        IReadOnlyCollection<ISqsQueue> queues,
-        TimeSpan pauseReceivingBusyWaitInterval)
+        IReadOnlyCollection<ISqsQueue> queues)
     {
         ConcurrencyLimit = concurrencyLimit;
         BufferSize = bufferSize;
@@ -28,7 +26,6 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
         Prefetch = prefetch;
         Queues = queues;
         Name = name;
-        PauseReceivingBusyWaitInterval = pauseReceivingBusyWaitInterval;
     }
 
     /// <summary>
@@ -71,10 +68,4 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
     /// A collection of <see cref="ISqsQueue"/> to read messages from.
     /// </summary>
     public IReadOnlyCollection<ISqsQueue> Queues { get; }
-
-    /// <summary>
-    /// Delay interval to use during busy wait when <see cref="IMessageReceivePauseSignal"/> is set to pause receiving.
-    /// A larger value may reduce CPU usage while paused, but may delay when messages start being received.
-    /// </summary>
-    public TimeSpan PauseReceivingBusyWaitInterval { get; }
 }

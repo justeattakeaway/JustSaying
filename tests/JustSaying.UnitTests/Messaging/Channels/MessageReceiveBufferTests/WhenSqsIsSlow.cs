@@ -41,7 +41,6 @@ public class WhenSqsIsSlow
             queue,
             sqsMiddleware,
             null,
-            TimeSpan.FromMilliseconds(100),
             monitor,
             loggerFactory.CreateLogger<IMessageReceiveBuffer>());
     }

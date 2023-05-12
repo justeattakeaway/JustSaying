@@ -346,7 +346,6 @@ public class ChannelsTests
             sqsQueue,
             new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>(),
             MessageReceivePauseSignal,
-            TimeSpan.FromMilliseconds(100),
             MessageMonitor,
             LoggerFactory.CreateLogger<MessageReceiveBuffer>());
     }

@@ -13,6 +13,8 @@ namespace JustSaying.Messaging.Channels.Receive;
 
 internal class MessageReceiveBuffer : IMessageReceiveBuffer
 {
+    private static readonly TimeSpan PauseReceivingBusyWaitDelay = TimeSpan.FromMilliseconds(100);
+
     private readonly Channel<IQueueMessageContext> _channel;
     private readonly int _prefetch;
     private readonly int _bufferSize;
@@ -21,7 +23,6 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
     private readonly SqsQueueReader _sqsQueueReader;
     private readonly MiddlewareBase<ReceiveMessagesContext, IList<Message>> _sqsMiddleware;
     private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;
-    private readonly TimeSpan _pauseReceivingBusyWaitInterval;
     private readonly IMessageMonitor _monitor;
     private readonly ILogger _logger;
 
@@ -39,7 +40,6 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         ISqsQueue sqsQueue,
         MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware,
         IMessageReceivePauseSignal messageReceivePauseSignal,
-        TimeSpan pauseReceivingBusyWaitInterval,
         IMessageMonitor monitor,
         ILogger<IMessageReceiveBuffer> logger)
     {
@@ -51,7 +51,6 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         _sqsQueueReader = new SqsQueueReader(sqsQueue);
         _sqsMiddleware = sqsMiddleware ?? throw new ArgumentNullException(nameof(sqsMiddleware));
         _messageReceivePauseSignal = messageReceivePauseSignal;
-        _pauseReceivingBusyWaitInterval = pauseReceivingBusyWaitInterval;
         _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -78,7 +77,7 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
 
                 if (_messageReceivePauseSignal?.IsPaused == true)
                 {
-                    await Task.Delay(_pauseReceivingBusyWaitInterval, stoppingToken);
+                    await Task.Delay(PauseReceivingBusyWaitDelay, stoppingToken);
 
                     continue;
                 }

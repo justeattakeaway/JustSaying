@@ -1,5 +1,4 @@
 using JustSaying.Messaging.Channels.Multiplexer;
-using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.Middleware.Receive;
 using ReceiveMiddleware =
@@ -21,7 +20,6 @@ public class SubscriptionGroupSettingsBuilder : ISubscriptionGroupSettings
         MultiplexerCapacity = 100;
         Prefetch = 10;
         ConcurrencyLimit = Environment.ProcessorCount * MessageDefaults.ParallelHandlerExecutionPerCore;
-        PauseReceivingBusyWaitInterval = TimeSpan.FromMilliseconds(100);
     }
 
     /// <summary>
@@ -59,12 +57,6 @@ public class SubscriptionGroupSettingsBuilder : ISubscriptionGroupSettings
     /// Gets the default <see cref="ReceiveMiddleware"/> to be used by the receive pipeline.
     /// </summary>
     public ReceiveMiddleware SqsMiddleware { get; private set; }
-
-    /// <summary>
-    /// Delay interval to use during busy wait when <see cref="IMessageReceivePauseSignal"/> is set to pause receiving.
-    /// A larger value may reduce CPU usage while paused, but may delay when messages start being received.
-    /// </summary>
-    public TimeSpan PauseReceivingBusyWaitInterval { get; private set; }
 
     /// <summary>
     /// Specifies the default maximum amount of time to wait for messages to be available on each SQS queue in a
@@ -152,18 +144,6 @@ public class SubscriptionGroupSettingsBuilder : ISubscriptionGroupSettings
     public SubscriptionGroupSettingsBuilder WithCustomMiddleware(ReceiveMiddleware middleware)
     {
         SqsMiddleware = middleware;
-        return this;
-    }
-
-    /// <summary>
-    /// Specifies the default delay interval to use during busy wait when <see cref="IMessageReceivePauseSignal"/>
-    /// is set to pause receiving, for each queue in a <see cref="ISubscriptionGroup"/>. Defaults to 100ms.
-    /// </summary>
-    /// <param name="pauseReceivingBusyWaitInterval">The delay intervals to use while busy waiting.</param>
-    /// <returns>This builder object.</returns>
-    public SubscriptionGroupSettingsBuilder WithDefaultPauseReceivingBusyWaitInterval(TimeSpan pauseReceivingBusyWaitInterval)
-    {
-        PauseReceivingBusyWaitInterval = pauseReceivingBusyWaitInterval;
         return this;
     }
 }
