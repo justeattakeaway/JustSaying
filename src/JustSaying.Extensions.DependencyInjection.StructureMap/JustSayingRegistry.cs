@@ -1,6 +1,7 @@
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
+using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware.Logging;
@@ -51,6 +52,8 @@ internal sealed class JustSayingRegistry : Registry
                     return new MessageSerializationRegister(config.MessageSubjectProvider, serializerFactory);
                 })
             .Singleton();
+
+        For<IMessageReceivePauseSignal>().Use<MessageReceivePauseSignal>().Singleton();
 
         For<DefaultNamingConventions>().Singleton();
         For<ITopicNamingConvention>().Use(context => context.GetInstance<DefaultNamingConventions>());
