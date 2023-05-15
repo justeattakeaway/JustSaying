@@ -89,11 +89,10 @@ public class WhenReceivingShouldStop
 
         // Make sure that number makes sense
         messagesRead.ShouldBe(0);
-        messagesRead.ShouldBeLessThanOrEqualTo(_callCount);
     }
 
     [Fact]
-    public async Task All_Message_Are_Processed_After_Starting()
+    public async Task All_Messages_Are_Processed_After_Starting()
     {
         // Signal stop receiving messages
         _messageReceivePauseSignal.Pause();

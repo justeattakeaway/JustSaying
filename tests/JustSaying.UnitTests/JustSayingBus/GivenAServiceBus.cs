@@ -10,7 +10,6 @@ namespace JustSaying.UnitTests.JustSayingBus;
 public abstract class GivenAServiceBus : IAsyncLifetime
 {
     protected IMessagingConfig Config;
-    protected IMessageReceivePauseSignal MessageReceivePauseSignal;
     protected TrackingLoggingMonitor Monitor;
     protected ILoggerFactory LoggerFactory;
     private bool _recordThrownExceptions;
@@ -52,7 +51,6 @@ public abstract class GivenAServiceBus : IAsyncLifetime
     protected virtual void Given()
     {
         Config = Substitute.For<IMessagingConfig>();
-        MessageReceivePauseSignal = Substitute.For<IMessageReceivePauseSignal>();
         Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
     }
 
@@ -61,9 +59,10 @@ public abstract class GivenAServiceBus : IAsyncLifetime
     private JustSaying.JustSayingBus CreateSystemUnderTest()
     {
         var serializerRegister = new FakeSerializationRegister();
+        var messageReceivePauseSignal = new MessageReceivePauseSignal();
         var bus = new JustSaying.JustSayingBus(Config,
             serializerRegister,
-            MessageReceivePauseSignal,
+            messageReceivePauseSignal,
             LoggerFactory,
             Monitor);
 

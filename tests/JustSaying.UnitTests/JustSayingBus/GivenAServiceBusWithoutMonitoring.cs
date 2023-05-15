@@ -7,7 +7,6 @@ namespace JustSaying.UnitTests.JustSayingBus;
 public abstract class GivenAServiceBusWithoutMonitoring : IAsyncLifetime
 {
     protected IMessagingConfig Config;
-    protected IMessageReceivePauseSignal MessageReceivePauseSignal;
     protected ILoggerFactory LoggerFactory;
 
     protected JustSaying.JustSayingBus SystemUnderTest { get; private set; }
@@ -29,7 +28,6 @@ public abstract class GivenAServiceBusWithoutMonitoring : IAsyncLifetime
     protected virtual void Given()
     {
         Config = Substitute.For<IMessagingConfig>();
-        MessageReceivePauseSignal = Substitute.For<IMessageReceivePauseSignal>();
         LoggerFactory = Substitute.For<ILoggerFactory>();
     }
 
@@ -37,6 +35,6 @@ public abstract class GivenAServiceBusWithoutMonitoring : IAsyncLifetime
 
     private JustSaying.JustSayingBus CreateSystemUnderTest()
     {
-        return new JustSaying.JustSayingBus(Config, null, MessageReceivePauseSignal, LoggerFactory, null);
+        return new JustSaying.JustSayingBus(Config, null, new MessageReceivePauseSignal(), LoggerFactory, null);
     }
 }
