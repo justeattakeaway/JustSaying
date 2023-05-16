@@ -15,7 +15,7 @@
     <PackageReference Include="AWSSDK.SQS" Version="$(AwsSdkSqsVersion)" />
     <PackageReference Include="GitHubActionsTestLogger" Version="2.0.2" />
     <PackageReference Include="MELT" Version="0.8.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(DotNetTestSdkVersion)" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageReference Include="Polly" Version="7.2.3" />
     <PackageReference Include="xunit" Version="2.4.2" />
