@@ -2,7 +2,6 @@
 
 param(
     [Parameter(Mandatory = $false)][string] $Configuration = "Release",
-    [Parameter(Mandatory = $false)][string] $VersionSuffix = "",
     [Parameter(Mandatory = $false)][string] $OutputPath = "",
     [Parameter(Mandatory = $false)][switch] $SkipTests,
     [Parameter(Mandatory = $false)][switch] $EnableIntegrationTests
@@ -11,23 +10,23 @@ param(
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
-$solutionPath = Split-Path $MyInvocation.MyCommand.Definition
+$solutionPath = $PSScriptRoot
 $sdkFile = Join-Path $solutionPath "global.json"
 
 $libraryProjects = @(
-    (Join-Path $solutionPath "src\JustSaying\JustSaying.csproj"),
-    (Join-Path $solutionPath "src\JustSaying.Models\JustSaying.Models.csproj"),
-    (Join-Path $solutionPath "src\JustSaying.Extensions.DependencyInjection.Microsoft\JustSaying.Extensions.DependencyInjection.Microsoft.csproj"),
-    (Join-Path $solutionPath "src\JustSaying.Extensions.DependencyInjection.StructureMap\JustSaying.Extensions.DependencyInjection.StructureMap.csproj")
+    (Join-Path $solutionPath "src" "JustSaying" "JustSaying.csproj"),
+    (Join-Path $solutionPath "src" "JustSaying.Models" "JustSaying.Models.csproj"),
+    (Join-Path $solutionPath "src" "JustSaying.Extensions.DependencyInjection.Microsoft" "JustSaying.Extensions.DependencyInjection.Microsoft.csproj"),
+    (Join-Path $solutionPath "src" "JustSaying.Extensions.DependencyInjection.StructureMap" "JustSaying.Extensions.DependencyInjection.StructureMap.csproj")
 )
 
 $testProjects = @(
-    (Join-Path $solutionPath "tests\JustSaying.UnitTests\JustSaying.UnitTests.csproj")
+    (Join-Path $solutionPath "tests" "JustSaying.UnitTests" "JustSaying.UnitTests.csproj")
 )
 
 if ($EnableIntegrationTests -eq $true) {
-    $testProjects += (Join-Path $solutionPath "tests\JustSaying.IntegrationTests\JustSaying.IntegrationTests.csproj");
-    $testProjects += (Join-Path $solutionPath "tests\JustSaying.Extensions.DependencyInjection.StructureMap.Tests\JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj");
+    $testProjects += (Join-Path $solutionPath "tests" "JustSaying.IntegrationTests" "JustSaying.IntegrationTests.csproj");
+    $testProjects += (Join-Path $solutionPath "tests" "JustSaying.Extensions.DependencyInjection.StructureMap.Tests" "JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj");
 }
 
 $dotnetVersion = (Get-Content $sdkFile | Out-String | ConvertFrom-Json).sdk.version
@@ -137,7 +136,7 @@ if (($null -ne $env:CI) -And ($EnableIntegrationTests -eq $true)) {
 
 if ($SkipTests -eq $false) {
     Write-Host "Running tests..." -ForegroundColor Green
-    Remove-Item -Path (Join-Path $OutputPath "coverage.json") -Force -ErrorAction SilentlyContinue | Out-Null
+    Remove-Item -Path (Join-Path $OutputPath "coverage" "coverage.json") -Force -ErrorAction SilentlyContinue | Out-Null
     ForEach ($testProject in $testProjects) {
         DotNetTest $testProject
     }
