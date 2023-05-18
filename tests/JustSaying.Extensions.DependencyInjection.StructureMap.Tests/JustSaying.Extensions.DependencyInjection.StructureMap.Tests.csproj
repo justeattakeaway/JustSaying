@@ -15,6 +15,7 @@
   <ItemGroup>
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="$(AwsSdkSnsVersion)" />
     <PackageReference Include="AWSSDK.SQS" Version="$(AwsSdkSqsVersion)" />
+    <PackageReference Include="GitHubActionsTestLogger" Version="2.1.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsDependencyInjectionVersion)" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />

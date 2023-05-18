@@ -5,7 +5,7 @@ on:
     branches: [main]
     tags: [v*]
   pull_request:
-    branches: [main]
+    branches: [main, dotnet-vnext]
   workflow_dispatch:
 
 permissions:
@@ -66,7 +66,7 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3.1.4
         with:
-          file: ./artifacts/coverage.cobertura.xml
+          file: ./artifacts/coverage/coverage.cobertura.xml
           flags: ${{ matrix.os_name }}
 
       - name: Publish NuGet packages
@@ -74,6 +74,7 @@ jobs:
         with:
           name: packages-${{ matrix.os_name }}
           path: ./artifacts/packages
+          if-no-files-found: error
 
   validate-packages:
     needs: build
