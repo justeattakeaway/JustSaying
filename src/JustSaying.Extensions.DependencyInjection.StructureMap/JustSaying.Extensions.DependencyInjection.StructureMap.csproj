@@ -12,7 +12,7 @@
     <ProjectReference Include="..\JustSaying\JustSaying.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="StructureMap" Version="4.6.0" />
+    <PackageReference Include="StructureMap" />
   </ItemGroup>
   <ItemGroup>
     <Using Remove="System.Net.Http" />

@@ -1,20 +1,10 @@
 <Project>
-  <PropertyGroup>
-    <DotNetTestSdkVersion>17.5.0</DotNetTestSdkVersion>
-    <MicrosoftExtensionsDependencyInjectionVersion>7.0.0</MicrosoftExtensionsDependencyInjectionVersion>
-    <MicrosoftExtensionsDependencyInjectionVersionAbstraction>7.0.0</MicrosoftExtensionsDependencyInjectionVersionAbstraction>
-    <NewtonsoftJsonVersion>13.0.1</NewtonsoftJsonVersion>
-  </PropertyGroup>
-  <PropertyGroup>
-    <AwsSdkSnsVersion>3.7.0</AwsSdkSnsVersion>
-    <AwsSdkSqsVersion>3.7.0</AwsSdkSqsVersion>
-  </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="coverlet.msbuild" Version="3.2.0" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-    <PackageReference Include="ReportGenerator" Version="5.1.20" PrivateAssets="All" />
-    <PackageReference Include="MinVer" Version="4.3.0" PrivateAssets="All" />
+    <PackageReference Include="coverlet.msbuild" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+    <PackageReference Include="ReportGenerator" PrivateAssets="All" />
+    <PackageReference Include="MinVer" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
     <SourceRoot Include="$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)'))" />
@@ -38,6 +28,7 @@
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <EnableSourceControlManagerQueries>$(EnableSourceLink)</EnableSourceControlManagerQueries>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <NoWarn>$(NoWarn);CA1062;CA1303</NoWarn>
     <PackageIcon>package-icon.png</PackageIcon>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
