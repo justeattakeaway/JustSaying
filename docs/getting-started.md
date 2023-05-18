@@ -106,7 +106,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-Note that the `AddJustSaying` extension method requires installing the [JustSaying.Extensions.DependencyInjection](https://www.nuget.org/packages/JustSaying.Extensions.DependencyInjection.Microsoft/7.0.0-beta.1) package, which is currently in pre-release.
+Note that the `AddJustSaying` extension method requires installing the [JustSaying.Extensions.DependencyInjection](https://www.nuget.org/packages/JustSaying.Extensions.DependencyInjection.Microsoft) package.
 
 ### Startup
 
