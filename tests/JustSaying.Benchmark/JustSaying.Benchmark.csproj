@@ -6,15 +6,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="CommandLineParser" Version="2.9.1" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsDependencyInjectionVersion)" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(MicrosoftExtensionsDependencyInjectionVersionAbstraction)" />
-      <PackageReference Include="morelinq" Version="3.4.2" />
-      <PackageReference Include="Serilog" Version="2.12.0" />
-      <PackageReference Include="Serilog.Extensions.Logging" Version="7.0.0" />
-      <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
-      <PackageReference Include="Serilog.Sinks.Seq" Version="5.2.2" />
-      <PackageReference Include="SerilogTimings" Version="3.0.1" />
+      <PackageReference Include="CommandLineParser" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+      <PackageReference Include="morelinq" />
+      <PackageReference Include="Serilog" />
+      <PackageReference Include="Serilog.Extensions.Logging" />
+      <PackageReference Include="Serilog.Sinks.Console" />
+      <PackageReference Include="Serilog.Sinks.Seq" />
+      <PackageReference Include="SerilogTimings" />
     </ItemGroup>
 
     <ItemGroup>
