@@ -13,6 +13,8 @@ namespace JustSaying.Messaging.Channels.Receive;
 
 internal class MessageReceiveBuffer : IMessageReceiveBuffer
 {
+    private static readonly TimeSpan PauseReceivingBusyWaitDelay = TimeSpan.FromMilliseconds(100);
+
     private readonly Channel<IQueueMessageContext> _channel;
     private readonly int _prefetch;
     private readonly int _bufferSize;
@@ -20,6 +22,7 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
     private readonly TimeSpan _sqsWaitTime;
     private readonly SqsQueueReader _sqsQueueReader;
     private readonly MiddlewareBase<ReceiveMessagesContext, IList<Message>> _sqsMiddleware;
+    private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;
     private readonly IMessageMonitor _monitor;
     private readonly ILogger _logger;
 
@@ -36,6 +39,7 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         TimeSpan sqsWaitTime,
         ISqsQueue sqsQueue,
         MiddlewareBase<ReceiveMessagesContext, IList<Message>> sqsMiddleware,
+        IMessageReceivePauseSignal messageReceivePauseSignal,
         IMessageMonitor monitor,
         ILogger<IMessageReceiveBuffer> logger)
     {
@@ -46,6 +50,7 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         if (sqsQueue == null) throw new ArgumentNullException(nameof(sqsQueue));
         _sqsQueueReader = new SqsQueueReader(sqsQueue);
         _sqsMiddleware = sqsMiddleware ?? throw new ArgumentNullException(nameof(sqsMiddleware));
+        _messageReceivePauseSignal = messageReceivePauseSignal;
         _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -69,6 +74,13 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
             while (true)
             {
                 stoppingToken.ThrowIfCancellationRequested();
+
+                if (_messageReceivePauseSignal?.IsPaused == true)
+                {
+                    await Task.Delay(PauseReceivingBusyWaitDelay, stoppingToken);
+
+                    continue;
+                }
 
                 using (_monitor.MeasureThrottle())
                 {

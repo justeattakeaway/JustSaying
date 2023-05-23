@@ -1,6 +1,7 @@
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
@@ -20,8 +21,7 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
     protected TrackingLoggingMonitor Monitor;
     protected FakeSerializationRegister SerializationRegister;
     protected int ConcurrencyLimit = 8;
-
-    public ITestOutputHelper OutputHelper { get; }
+    protected ITestOutputHelper OutputHelper { get; }
 
     protected HandleMessageMiddleware Middleware;
     protected InspectableHandler<SimpleMessage> Handler;
@@ -29,8 +29,11 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
     protected ILoggerFactory LoggerFactory { get; }
     protected ILogger Logger { get; }
 
+    private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;
+
     public BaseSubscriptionGroupTests(ITestOutputHelper testOutputHelper)
     {
+        _messageReceivePauseSignal = new MessageReceivePauseSignal();
         OutputHelper = testOutputHelper;
         LoggerFactory = testOutputHelper.ToLoggerFactory();
         Logger = LoggerFactory.CreateLogger(GetType());
@@ -109,6 +112,7 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
 
         var subscriptionGroupFactory = new SubscriptionGroupFactory(
             dispatcher,
+            _messageReceivePauseSignal,
             Monitor,
             LoggerFactory);
 

@@ -8,14 +8,15 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.UnitTests.Messaging.Channels.MessageReceiveBufferTests;
 
-public class WhenSqsIsSlow
+public class WhenReceivingShouldStop
 {
-    protected class TestMessage : Message { }
+    private class TestMessage : Message { }
 
     private int _callCount;
+    private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;
     private readonly MessageReceiveBuffer _messageReceiveBuffer;
 
-    public WhenSqsIsSlow(ITestOutputHelper testOutputHelper)
+    public WhenReceivingShouldStop(ITestOutputHelper testOutputHelper)
     {
         var loggerFactory = testOutputHelper.ToLoggerFactory();
 
@@ -23,12 +24,13 @@ public class WhenSqsIsSlow
             new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>();
 
         var messages = new List<Message> { new TestMessage() };
-        var queue = new FakeSqsQueue(async ct =>
+        var queue = new FakeSqsQueue(ct =>
         {
-            await Task.Delay(100);
             Interlocked.Increment(ref _callCount);
-            return messages;
+            return Task.FromResult(messages.AsEnumerable());
         });
+
+        _messageReceivePauseSignal = new MessageReceivePauseSignal();
 
         var monitor = new TrackingLoggingMonitor(
             loggerFactory.CreateLogger<TrackingLoggingMonitor>());
@@ -40,12 +42,12 @@ public class WhenSqsIsSlow
             TimeSpan.FromSeconds(1),
             queue,
             sqsMiddleware,
-            null,
+            _messageReceivePauseSignal,
             monitor,
             loggerFactory.CreateLogger<IMessageReceiveBuffer>());
     }
 
-    protected async Task<int> Messages()
+    private async Task<int> Messages()
     {
         int messagesProcessed = 0;
 
@@ -54,7 +56,7 @@ public class WhenSqsIsSlow
             var couldRead = await _messageReceiveBuffer.Reader.WaitToReadAsync();
             if (!couldRead) break;
 
-            while (_messageReceiveBuffer.Reader.TryRead(out var _))
+            while (_messageReceiveBuffer.Reader.TryRead(out _))
             {
                 messagesProcessed++;
             }
@@ -64,14 +66,49 @@ public class WhenSqsIsSlow
     }
 
     [Fact]
-    public async Task All_Messages_Are_Processed()
+    public async Task No_Messages_Are_Processed()
     {
+        // Signal stop receiving messages
+        _messageReceivePauseSignal.Pause();
+
         using var cts = new CancellationTokenSource();
         var _ = _messageReceiveBuffer.RunAsync(cts.Token);
         var readTask = Messages();
 
-        // Read messages for a while
+        // Check if we can start receiving for a while
         await Task.Delay(TimeSpan.FromSeconds(2));
+
+        // Cancel token
+        cts.Cancel();
+
+        // Ensure buffer completes
+        await _messageReceiveBuffer.Reader.Completion;
+
+        // Get the number of messages we read
+        var messagesRead = await readTask;
+
+        // Make sure that number makes sense
+        messagesRead.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task All_Messages_Are_Processed_After_Starting()
+    {
+        // Signal stop receiving messages
+        _messageReceivePauseSignal.Pause();
+
+        using var cts = new CancellationTokenSource();
+        var _ = _messageReceiveBuffer.RunAsync(cts.Token);
+        var readTask = Messages();
+
+        // Check if we can start receiving for a while
+        await Task.Delay(TimeSpan.FromSeconds(1));
+
+        // Signal start receiving messages
+        _messageReceivePauseSignal.Resume();
+
+        // Read messages for a while
+        await Task.Delay(TimeSpan.FromSeconds(1));
 
         // Cancel token
         cts.Cancel();

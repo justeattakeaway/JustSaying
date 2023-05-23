@@ -1,3 +1,4 @@
+using JustSaying.Messaging.Channels.Receive;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
@@ -34,6 +35,6 @@ public abstract class GivenAServiceBusWithoutMonitoring : IAsyncLifetime
 
     private JustSaying.JustSayingBus CreateSystemUnderTest()
     {
-        return new JustSaying.JustSayingBus(Config, null, LoggerFactory, null);
+        return new JustSaying.JustSayingBus(Config, null, new MessageReceivePauseSignal(), LoggerFactory, null);
     }
 }

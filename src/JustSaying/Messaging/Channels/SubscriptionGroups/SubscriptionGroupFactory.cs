@@ -18,6 +18,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 public class SubscriptionGroupFactory : ISubscriptionGroupFactory
 {
     private readonly IMessageDispatcher _messageDispatcher;
+    private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;
     private readonly IMessageMonitor _monitor;
     private readonly ILoggerFactory _loggerFactory;
     private readonly ReceiveMiddleware _defaultSqsMiddleware;
@@ -38,6 +39,22 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
         _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
         _defaultSqsMiddleware =
             new DefaultReceiveMessagesMiddleware(_loggerFactory.CreateLogger<DefaultReceiveMessagesMiddleware>());
+    }
+
+    /// <summary>
+    /// Creates an instance of <see cref="SubscriptionGroupFactory"/>.
+    /// </summary>
+    /// <param name="messageDispatcher">The <see cref="IMessageDispatcher"/> to use to dispatch messages.</param>
+    /// <param name="messageReceivePauseSignal">The <see cref="IMessageReceivePauseSignal"/> used by the <see cref="IMessageReceiveBuffer"/>.</param>
+    /// <param name="monitor">The <see cref="IMessageMonitor"/> used by the <see cref="IMessageReceiveBuffer"/>.</param>
+    /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to use.</param>
+    public SubscriptionGroupFactory(
+        IMessageDispatcher messageDispatcher,
+        IMessageReceivePauseSignal messageReceivePauseSignal,
+        IMessageMonitor monitor,
+        ILoggerFactory loggerFactory) : this(messageDispatcher, monitor, loggerFactory)
+    {
+        _messageReceivePauseSignal = messageReceivePauseSignal;
     }
 
     /// <summary>
@@ -103,6 +120,7 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
                 subscriptionGroupSettings.ReceiveMessagesWaitTime,
                 queue,
                 receiveMiddleware,
+                _messageReceivePauseSignal,
                 _monitor,
                 logger);
 

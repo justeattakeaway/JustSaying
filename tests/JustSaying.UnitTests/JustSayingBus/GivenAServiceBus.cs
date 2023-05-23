@@ -1,3 +1,4 @@
+using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
@@ -58,8 +59,10 @@ public abstract class GivenAServiceBus : IAsyncLifetime
     private JustSaying.JustSayingBus CreateSystemUnderTest()
     {
         var serializerRegister = new FakeSerializationRegister();
+        var messageReceivePauseSignal = new MessageReceivePauseSignal();
         var bus = new JustSaying.JustSayingBus(Config,
             serializerRegister,
+            messageReceivePauseSignal,
             LoggerFactory,
             Monitor);
 

@@ -3,6 +3,7 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Extensions;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageSerialization;
@@ -27,6 +28,8 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     private readonly Dictionary<Type, IMessagePublisher> _publishersByType;
 
     public IMessagingConfig Config { get; }
+
+    private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;
 
     private readonly IMessageMonitor _monitor;
 
@@ -57,6 +60,16 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         _subscriptionGroupSettings =
             new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
         _defaultSubscriptionGroupSettings = new SubscriptionGroupSettingsBuilder();
+    }
+
+    public JustSayingBus(
+        IMessagingConfig config,
+        IMessageSerializationRegister serializationRegister,
+        IMessageReceivePauseSignal messageReceivePauseSignal,
+        ILoggerFactory loggerFactory,
+        IMessageMonitor monitor) : this(config, serializationRegister, loggerFactory, monitor)
+    {
+        _messageReceivePauseSignal = messageReceivePauseSignal;
     }
 
     public void AddQueue(string subscriptionGroup, ISqsQueue queue)
@@ -155,6 +168,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
 
         var subscriptionGroupFactory = new SubscriptionGroupFactory(
             dispatcher,
+            _messageReceivePauseSignal,
             _monitor,
             _loggerFactory);
 
