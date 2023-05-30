@@ -139,5 +139,6 @@ public class BusService : BackgroundService
 ```
 
 * Note here that we're calling `StartAsync` on both the `IMessagingBus`, and `IMessagePublisher`. Starting the `IMessagePublisher` ensures that all publish infrastructure is created and ready, while starting the `IMessagingBus` will firstly ensure that all subscription infrastructure is created and ready, and then begin consuming messages.
-* The only way to stop the bus is to cancel the cancellation token, which will tear down everything.
+* The only way to stop the bus is to cancel the cancellation token, which will tear down everything; however you can pause and resume listening on the bus by
+using the methods on `IMessageReceivePauseSignal` to control receiving of all messages, even while the bus is running.
 
