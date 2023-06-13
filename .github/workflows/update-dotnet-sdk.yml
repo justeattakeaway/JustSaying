@@ -12,7 +12,7 @@ jobs:
   update-sdk:
     uses: martincostello/update-dotnet-sdk/.github/workflows/update-dotnet-sdk.yml@ff9a6f247704ef1b77eb3c478070d8fa69c2360e # v2.2.3
     with:
-      include-nuget-packages: "Microsoft.AspNetCore.,Microsoft.NET.Test.Sdk"
+      include-nuget-packages: "Microsoft.AspNetCore.,Microsoft.Extensions.,Microsoft.NET.Test.Sdk"
       labels: "dependencies,.NET"
       user-email: ${{ vars.UPDATER_COMMIT_USER_EMAIL }}
       user-name: ${{ vars.UPDATER_COMMIT_USER_NAME }}
