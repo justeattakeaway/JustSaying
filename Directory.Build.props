@@ -22,7 +22,7 @@
     <Copyright>Copyright (c) Just Eat 2015-$([System.DateTime]::Now.ToString(yyyy))</Copyright>
     <Deterministic>true</Deterministic>
     <Description>A light-weight message bus on top of AWS SNS and SQS</Description>
-    <MinVerMinimumMajorMinor>7.0</MinVerMinimumMajorMinor>
+    <MinVerMinimumMajorMinor>7.1</MinVerMinimumMajorMinor>
     <MinVerTagPrefix>v</MinVerTagPrefix>
     <MinVerSkip Condition=" '$(Configuration)' == 'Debug' ">true</MinVerSkip>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
