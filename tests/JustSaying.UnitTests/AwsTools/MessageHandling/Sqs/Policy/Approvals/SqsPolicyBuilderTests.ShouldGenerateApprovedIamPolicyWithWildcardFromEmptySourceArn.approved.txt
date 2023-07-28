@@ -8,10 +8,10 @@
                 "AWS" : "*"
             },
             "Action"    : "sqs:SendMessage",
-            "Resource"  : "arn:aws:sqs:us-east-1:000000000000:<unique-name>",
+            "Resource"  : "",
             "Condition" : {
                 "ArnLike" : {
-                    "aws:SourceArn" : "arn:aws:sns:us-east-1:000000000000:<unique-name>-topic"
+                    "aws:SourceArn" : "*"
                 }
             }
         }

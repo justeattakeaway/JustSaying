@@ -1,0 +1,19 @@
+{
+    "Version" : "2012-10-17",
+    "Statement" : [
+        {
+            "Sid" : "<sid>",
+            "Effect" : "Allow",
+            "Principal" : {
+                "AWS" : "*"
+            },
+            "Action"    : "sqs:SendMessage",
+            "Resource"  : "",
+            "Condition" : {
+                "ArnLike" : {
+                    "aws:SourceArn" : "arn:aws:sqs:ap-southeast-2:123456789012:*"
+                }
+            }
+        }
+    ]
+}

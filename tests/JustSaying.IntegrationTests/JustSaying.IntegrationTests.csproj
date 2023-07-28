@@ -29,7 +29,6 @@
     <Using Include="Xunit.Abstractions" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Fluent\AwsTools\Approvals" />
     <Folder Include="Fluent\Publishing\Approvals" />
   </ItemGroup>
 </Project>

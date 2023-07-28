@@ -58,6 +58,16 @@ public class AmazonQueueCreator : IVerifyAmazonQueues
                     sqsClient,
                     queue.Uri,
                     queueConfig.FilterPolicy).ConfigureAwait(false);
+
+                var sqsDetails = new SqsPolicyDetails
+                {
+                    SourceArn = eventTopic.Arn,
+                    QueueArn = queue.Arn,
+                    QueueUri = queue.Uri
+                };
+                await SqsPolicy
+                    .SaveAsync(sqsDetails, sqsClient)
+                    .ConfigureAwait(false);
             }
         }
 
