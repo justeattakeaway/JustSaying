@@ -31,7 +31,7 @@
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.1.1" />
     <PackageVersion Include="MinVer" Version="4.3.0" />
     <PackageVersion Include="morelinq" Version="3.4.2" />
-    <PackageVersion Include="NSubstitute" Version="5.0.0" />
+    <PackageVersion Include="NSubstitute" Version="5.1.0" />
     <PackageVersion Include="Polly" Version="7.2.4" />
     <PackageVersion Include="ReportGenerator" Version="5.1.25" />
     <PackageVersion Include="Serilog" Version="3.0.1" />
