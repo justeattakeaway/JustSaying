@@ -38,3 +38,7 @@ updates:
     - ">= 4.7.a, < 4.8"
   - dependency-name: System.Text.Json
   - dependency-name: System.Threading.Channels
+  groups:
+    xunit:
+      patterns:
+        - xunit*
