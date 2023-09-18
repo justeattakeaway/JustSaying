@@ -32,8 +32,7 @@ public class MessageContextAccessorTests
         var accessor = MakeAccessor();
         accessor.MessageContext = data;
 
-        await Task.Delay(250)
-            .ConfigureAwait(false);
+        await Task.Delay(250);
 
         AssertSame(data, accessor.MessageContext);
     }
