@@ -2,12 +2,7 @@ using JustSaying.Models;
 
 namespace JustSaying.IntegrationTests.TestHandlers;
 
-public class OrderPlaced : Message
+public class OrderPlaced(string orderId) : Message
 {
-    public OrderPlaced(string orderId)
-    {
-        OrderId = orderId;
-    }
-
-    public string OrderId { get; private set; }
+    public string OrderId { get; private set; } = orderId;
 }

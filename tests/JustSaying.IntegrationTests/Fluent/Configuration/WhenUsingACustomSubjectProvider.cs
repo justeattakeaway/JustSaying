@@ -8,11 +8,8 @@ using Newtonsoft.Json;
 
 namespace JustSaying.Fluent.Configuration;
 
-public class WhenUsingACustomSubjectProvider : IntegrationTestBase
+public class WhenUsingACustomSubjectProvider(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenUsingACustomSubjectProvider(ITestOutputHelper outputHelper) : base(outputHelper)
-    { }
-
     [AwsFact]
     public async Task ThenItIsUsed()
     {
@@ -66,14 +63,9 @@ public class WhenUsingACustomSubjectProvider : IntegrationTestBase
             });
     }
 
-    public class ConstantSubjectProvider : IMessageSubjectProvider
+    public class ConstantSubjectProvider(string subject) : IMessageSubjectProvider
     {
-        private readonly string _subject;
-
-        public ConstantSubjectProvider(string subject)
-        {
-            _subject = subject;
-        }
+        private readonly string _subject = subject;
 
         public string GetSubjectForType(Type messageType)
         {

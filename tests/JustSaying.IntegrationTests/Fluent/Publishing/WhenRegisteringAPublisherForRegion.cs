@@ -6,12 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenRegisteringAPublisherForRegion : IntegrationTestBase
+public class WhenRegisteringAPublisherForRegion(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenRegisteringAPublisherForRegion(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    { }
-
     [AwsFact]
     public async Task Then_A_Topic_Is_Created_In_That_Region()
     {

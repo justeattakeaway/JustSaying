@@ -4,15 +4,10 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class WhenThereAreExceptionsInSqsCalling : BaseSubscriptionGroupTests
+public class WhenThereAreExceptionsInSqsCalling(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
 {
     private ISqsQueue _queue;
     private int _callCount;
-
-    public WhenThereAreExceptionsInSqsCalling(ITestOutputHelper testOutputHelper)
-        : base(testOutputHelper)
-    {
-    }
 
     protected override void Given()
     {

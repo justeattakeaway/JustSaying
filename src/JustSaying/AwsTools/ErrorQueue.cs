@@ -11,13 +11,12 @@ using Microsoft.Extensions.Logging;
 namespace JustSaying.AwsTools;
 
 [Obsolete("SqsQueueBase and related classes are not intended for general usage and may be removed in a future major release")]
-public class ErrorQueue : SqsQueueByNameBase
+public class ErrorQueue(
+    RegionEndpoint region,
+    string sourceQueueName,
+    IAmazonSQS client,
+    ILoggerFactory loggerFactory) : SqsQueueByNameBase(region, sourceQueueName + "_error", client, loggerFactory)
 {
-    public ErrorQueue(RegionEndpoint region, string sourceQueueName, IAmazonSQS client, ILoggerFactory loggerFactory)
-        : base(region, sourceQueueName + "_error", client, loggerFactory)
-    {
-    }
-
     protected override Dictionary<string, string> GetCreateQueueAttributes(SqsBasicConfiguration queueConfig)
     {
         return new Dictionary<string, string>

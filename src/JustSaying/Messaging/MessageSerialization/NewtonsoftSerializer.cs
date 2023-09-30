@@ -16,14 +16,11 @@ public class NewtonsoftSerializer : IMessageSerializer
 
     public NewtonsoftSerializer(JsonSerializerSettings settings)
     {
-        if (settings == null)
-        {
-            settings = new JsonSerializerSettings
+        settings ??= new JsonSerializerSettings
             {
                 NullValueHandling = NullValueHandling.Ignore,
                 Converters = new JsonConverter[] { new Newtonsoft.Json.Converters.StringEnumConverter() }
             };
-        }
 
         _settings = settings;
     }

@@ -69,7 +69,7 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
     {
         ReceiveMiddleware receiveMiddleware = defaults.SqsMiddleware ?? _defaultSqsMiddleware;
 
-        List<ISubscriptionGroup> groups = subscriptionGroupSettings
+        var groups = subscriptionGroupSettings
             .Values
             .Select(builder => Create(receiveMiddleware, builder.Build(defaults)))
             .ToList();
@@ -81,7 +81,7 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
 
     private ISubscriptionGroup Create(ReceiveMiddleware receiveMiddleware, SubscriptionGroupSettings settings)
     {
-        IMultiplexer multiplexer = CreateMultiplexer(settings.MultiplexerCapacity);
+        var multiplexer = CreateMultiplexer(settings.MultiplexerCapacity);
         ICollection<IMessageReceiveBuffer> receiveBuffers = CreateBuffers(receiveMiddleware, settings);
         ICollection<IMultiplexerSubscriber> subscribers = CreateSubscribers(settings);
 
@@ -103,11 +103,11 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
             _loggerFactory.CreateLogger<SubscriptionGroup>());
     }
 
-    private ICollection<IMessageReceiveBuffer> CreateBuffers(
+    private List<IMessageReceiveBuffer> CreateBuffers(
         ReceiveMiddleware receiveMiddleware,
         SubscriptionGroupSettings subscriptionGroupSettings)
     {
-        var buffers = new List<IMessageReceiveBuffer>();
+        List<IMessageReceiveBuffer> buffers = [];
 
         var logger = _loggerFactory.CreateLogger<MessageReceiveBuffer>();
 
@@ -130,14 +130,14 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
         return buffers;
     }
 
-    private IMultiplexer CreateMultiplexer(int channelCapacity)
+    private MergingMultiplexer CreateMultiplexer(int channelCapacity)
     {
         return new MergingMultiplexer(
             channelCapacity,
             _loggerFactory.CreateLogger<MergingMultiplexer>());
     }
 
-    private ICollection<IMultiplexerSubscriber> CreateSubscribers(SubscriptionGroupSettings settings)
+    private List<IMultiplexerSubscriber> CreateSubscribers(SubscriptionGroupSettings settings)
     {
         var logger = _loggerFactory.CreateLogger<MultiplexerSubscriber>();
 

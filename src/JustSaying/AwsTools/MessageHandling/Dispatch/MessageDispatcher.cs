@@ -93,9 +93,7 @@ public class MessageDispatcher : IMessageDispatcher
 
             return (false, null, null);
         }
-#pragma warning disable CA1031
         catch (Exception ex)
-#pragma warning restore CA1031
         {
             _logger.LogError(
                 ex,

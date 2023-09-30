@@ -24,9 +24,7 @@ internal class LocalTopicArnProvider : ITopicArnProvider
             _exists = true;
             return topic.TopicArn;
         }
-#pragma warning disable CA1031
-        catch
-#pragma warning restore CA1031
+        catch (Exception)
         {
             // ignored
         }

@@ -26,7 +26,7 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
     private readonly IMessageMonitor _monitor;
     private readonly ILogger _logger;
 
-    private readonly HashSet<string> _requestMessageAttributeNames = new HashSet<string>();
+    private readonly HashSet<string> _requestMessageAttributeNames = new();
 
     public ChannelReader<IQueueMessageContext> Reader => _channel.Reader;
 

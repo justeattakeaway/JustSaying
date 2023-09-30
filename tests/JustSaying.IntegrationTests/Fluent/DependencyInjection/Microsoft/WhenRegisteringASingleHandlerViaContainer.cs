@@ -5,13 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.DependencyInjection.Microsoft;
 
-public class WhenRegisteringASingleHandlerViaContainer : IntegrationTestBase
+public class WhenRegisteringASingleHandlerViaContainer(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenRegisteringASingleHandlerViaContainer(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
-
     [AwsFact]
     public async Task Then_The_Handler_Is_Resolved()
     {

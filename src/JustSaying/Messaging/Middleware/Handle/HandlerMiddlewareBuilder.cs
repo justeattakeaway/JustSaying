@@ -9,27 +9,19 @@ namespace JustSaying.Messaging.Middleware;
 /// <summary>
 /// A class representing a builder for a middleware pipeline.
 /// </summary>
-public sealed class HandlerMiddlewareBuilder
+/// <remarks>
+/// Creates a HandlerMiddlewareBuilder instance.
+/// </remarks>
+/// <param name="handlerResolver">An <see cref="IHandlerResolver"/> that can create handlers.</param>
+/// <param name="serviceResolver">An <see cref="IServiceResolver"/> that enables resolution of middlewares
+/// and middleware services.</param>
+public sealed class HandlerMiddlewareBuilder(IHandlerResolver handlerResolver, IServiceResolver serviceResolver)
 {
     private Action<HandlerMiddlewareBuilder> _configure;
-    internal IServiceResolver ServiceResolver { get; }
-    private IHandlerResolver HandlerResolver { get; }
+    internal IServiceResolver ServiceResolver { get; } = serviceResolver;
 
-    private readonly List<Func<HandleMessageMiddleware>> _middlewares;
+    private readonly List<Func<HandleMessageMiddleware>> _middlewares = [];
     private HandleMessageMiddleware _handlerMiddleware;
-
-    /// <summary>
-    /// Creates a HandlerMiddlewareBuilder instance.
-    /// </summary>
-    /// <param name="handlerResolver">An <see cref="IHandlerResolver"/> that can create handlers.</param>
-    /// <param name="serviceResolver">An <see cref="IServiceResolver"/> that enables resolution of middlewares
-    /// and middleware services.</param>
-    public HandlerMiddlewareBuilder(IHandlerResolver handlerResolver, IServiceResolver serviceResolver)
-    {
-        ServiceResolver = serviceResolver;
-        HandlerResolver = handlerResolver;
-        _middlewares = new List<Func<HandleMessageMiddleware>>();
-    }
 
     /// <summary>
     /// Adds a middleware of type <typeparamref name="TMiddleware"/> to the pipeline which will be resolved from the
@@ -103,7 +95,7 @@ Please check the documentation for your container for more details.");
                 $"Handler middleware has already been specified for {typeof(TMessage).Name} on this queue.");
         }
 
-        _handlerMiddleware = new HandlerInvocationMiddleware<TMessage>(HandlerResolver.ResolveHandler<TMessage>);
+        _handlerMiddleware = new HandlerInvocationMiddleware<TMessage>(handlerResolver.ResolveHandler<TMessage>);
 
         return this;
     }

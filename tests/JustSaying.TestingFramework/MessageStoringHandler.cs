@@ -22,17 +22,10 @@ public class TestMessageStore<TMessage> : IMessageStore<TMessage>
     }
 }
 
-public class MessageStoringHandler<T> : IHandlerAsync<T>
+public class MessageStoringHandler<T>(IMessageStore<T> store, ILogger<MessageStoringHandler<T>> logger) : IHandlerAsync<T>
 {
-    private readonly ILogger<MessageStoringHandler<T>> _logger;
-    public IMessageStore<T> MessageStore { get; }
-
-
-    public MessageStoringHandler(IMessageStore<T> store, ILogger<MessageStoringHandler<T>> logger)
-    {
-        MessageStore = store;
-        _logger = logger;
-    }
+    private readonly ILogger<MessageStoringHandler<T>> _logger = logger;
+    public IMessageStore<T> MessageStore { get; } = store;
 
     public Task<bool> Handle(T message)
     {

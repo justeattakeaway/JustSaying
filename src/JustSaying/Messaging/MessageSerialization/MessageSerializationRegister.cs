@@ -3,18 +3,14 @@ using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialization;
 
-public class MessageSerializationRegister : IMessageSerializationRegister
+public class MessageSerializationRegister(
+    IMessageSubjectProvider messageSubjectProvider,
+    IMessageSerializationFactory serializationFactory) : IMessageSerializationRegister
 {
-    private readonly IMessageSubjectProvider _messageSubjectProvider;
-    private readonly IMessageSerializationFactory _serializationFactory;
+    private readonly IMessageSubjectProvider _messageSubjectProvider = messageSubjectProvider ?? throw new ArgumentNullException(nameof(messageSubjectProvider));
+    private readonly IMessageSerializationFactory _serializationFactory = serializationFactory;
     private readonly ConcurrentDictionary<string, Lazy<TypeSerializer>> _typeSerializersBySubject = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<IMessageSerializer> _messageSerializers = new();
-
-    public MessageSerializationRegister(IMessageSubjectProvider messageSubjectProvider, IMessageSerializationFactory serializationFactory)
-    {
-        _messageSubjectProvider = messageSubjectProvider ?? throw new ArgumentNullException(nameof(messageSubjectProvider));
-        _serializationFactory = serializationFactory;
-    }
 
     public void AddSerializer<T>() where T : Message
     {

@@ -8,19 +8,12 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests;
 
-public class MessagingBusBuilderTests
+public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
 {
-    public MessagingBusBuilderTests(ITestOutputHelper outputHelper)
-    {
-        OutputHelper = outputHelper;
-    }
+    private ITestOutputHelper OutputHelper { get; } = outputHelper;
 
-    private ITestOutputHelper OutputHelper { get; }
-
-    private class QueueStore : TestMessageStore<QueueMessage>
+    private class QueueStore(ILogger<TestMessageStore<QueueMessage>> logger) : TestMessageStore<QueueMessage>(logger)
     {
-        public QueueStore(ILogger<TestMessageStore<QueueMessage>> logger) : base(logger)
-        { }
     }
 
     [AwsFact]
@@ -94,21 +87,20 @@ public class MessagingBusBuilderTests
         IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
         IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
-        using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
-        {
-            // Act
-            await listener.StartAsync(source.Token);
-            await publisher.StartAsync(source.Token);
+        using var source = new CancellationTokenSource(TimeSpan.FromSeconds(20));
 
-            var message = new TopicMessage();
+        // Act
+        await listener.StartAsync(source.Token);
+        await publisher.StartAsync(source.Token);
 
-            await publisher.PublishAsync(message, source.Token);
+        var message = new TopicMessage();
 
-            var store = serviceProvider.GetService<IMessageStore<TopicMessage>>();
+        await publisher.PublishAsync(message, source.Token);
 
-            await Patiently.AssertThatAsync(OutputHelper,
-                () => store.Messages.Any(msg => msg.Id == message.Id));
-        }
+        var store = serviceProvider.GetService<IMessageStore<TopicMessage>>();
+
+        await Patiently.AssertThatAsync(OutputHelper,
+            () => store.Messages.Any(msg => msg.Id == message.Id));
     }
 
     [AwsFact]
@@ -125,12 +117,11 @@ public class MessagingBusBuilderTests
         IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
         IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
-        using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
-        {
-            // Act
-            await listener.StartAsync(source.Token);
-            await publisher.StartAsync(source.Token);
-        }
+        using var source = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+
+        // Act
+        await listener.StartAsync(source.Token);
+        await publisher.StartAsync(source.Token);
     }
 
     [AwsFact]
@@ -153,26 +144,25 @@ public class MessagingBusBuilderTests
         IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
         IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
-        using (var source = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
-        {
-            // Act
-            await listener.StartAsync(source.Token);
-            await publisher.StartAsync(source.Token);
+        using var source = new CancellationTokenSource(TimeSpan.FromSeconds(20));
 
-            var message = new QueueMessage();
+        // Act
+        await listener.StartAsync(source.Token);
+        await publisher.StartAsync(source.Token);
 
-            await publisher.PublishAsync(message, source.Token);
+        var message = new QueueMessage();
 
-            // Assert
-            var messageStore = serviceProvider.GetService<IMessageStore<QueueMessage>>();
+        await publisher.PublishAsync(message, source.Token);
 
-            await Patiently.AssertThatAsync(OutputHelper,
-                () =>
-                {
-                    messageStore.Messages.ShouldContain(msg =>
-                        msg.Id.Equals(message.Id));
-                });
-        }
+        // Assert
+        var messageStore = serviceProvider.GetService<IMessageStore<QueueMessage>>();
+
+        await Patiently.AssertThatAsync(OutputHelper,
+            () =>
+            {
+                messageStore.Messages.ShouldContain(msg =>
+                    msg.Id.Equals(message.Id));
+            });
     }
 
     private sealed class AwsContributor : IMessageBusConfigurationContributor
@@ -185,14 +175,9 @@ public class MessagingBusBuilderTests
         }
     }
 
-    private sealed class MessagingContributor : IMessageBusConfigurationContributor
+    private sealed class MessagingContributor(IServiceProvider serviceProvider) : IMessageBusConfigurationContributor
     {
-        public MessagingContributor(IServiceProvider serviceProvider)
-        {
-            ServiceProvider = serviceProvider;
-        }
-
-        private IServiceProvider ServiceProvider { get; }
+        private IServiceProvider ServiceProvider { get; } = serviceProvider;
 
         public void Configure(MessagingBusBuilder builder)
         {

@@ -2,14 +2,9 @@ using JustSaying.Messaging.MessageHandling;
 
 namespace JustSaying.Benchmark;
 
-public class BenchmarkMessageHander : IHandlerAsync<BenchmarkMessage>
+public class BenchmarkMessageHander(IReportConsumerMetric reporter) : IHandlerAsync<BenchmarkMessage>
 {
-    private readonly IReportConsumerMetric _reporter;
-
-    public BenchmarkMessageHander(IReportConsumerMetric reporter)
-    {
-        _reporter = reporter;
-    }
+    private readonly IReportConsumerMetric _reporter = reporter;
 
     public Task<bool> Handle(BenchmarkMessage message)
     {

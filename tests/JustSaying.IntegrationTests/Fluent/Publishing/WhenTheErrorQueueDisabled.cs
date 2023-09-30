@@ -4,13 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenTheErrorQueueDisabled : IntegrationTestBase
+public class WhenTheErrorQueueDisabled(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenTheErrorQueueDisabled(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
-
     [AwsFact]
     public async Task Then_The_Error_Queue_Does_Not_Exist()
     {

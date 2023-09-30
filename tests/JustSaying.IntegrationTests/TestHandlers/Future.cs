@@ -3,22 +3,16 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.IntegrationTests.TestHandlers;
 
-public class Future<TMessage>
+public class Future<TMessage>(Func<Task> action)
     where TMessage : Message
 {
-    private readonly TaskCompletionSource<object> _doneSignal = new TaskCompletionSource<object>();
-    private readonly Func<Task> _action;
-    private readonly List<TMessage> _messages = new List<TMessage>();
+    private readonly TaskCompletionSource<object> _doneSignal = new();
+    private readonly Func<Task> _action = action;
+    private readonly List<TMessage> _messages = new();
 
     public Future()
         : this(null)
     {
-    }
-
-    public Future(Func<Task> action)
-    {
-        _action = action;
-        ExpectedMessageCount = 1;
     }
 
     public async Task Complete(TMessage message)
@@ -43,7 +37,7 @@ public class Future<TMessage>
 
     public Task DoneSignal => _doneSignal.Task;
 
-    public int ExpectedMessageCount { get; set; }
+    public int ExpectedMessageCount { get; set; } = 1;
 
     public int ReceivedMessageCount => _messages.Count;
 

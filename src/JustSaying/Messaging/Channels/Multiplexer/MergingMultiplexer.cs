@@ -14,18 +14,18 @@ internal sealed class MergingMultiplexer : IMultiplexer, IDisposable
     private CancellationToken _stoppingToken;
     private Task _completion;
 
-    private readonly IList<ChannelReader<IQueueMessageContext>> _readers;
+    private readonly List<ChannelReader<IQueueMessageContext>> _readers;
     private readonly Channel<IQueueMessageContext> _targetChannel;
     private readonly int _channelCapacity;
 
-    private readonly SemaphoreSlim _readersLock = new SemaphoreSlim(1, 1);
-    private readonly object _startLock = new object();
+    private readonly SemaphoreSlim _readersLock = new(1, 1);
+    private readonly object _startLock = new();
 
     public MergingMultiplexer(
         int channelCapacity,
         ILogger<MergingMultiplexer> logger)
     {
-        _readers = new List<ChannelReader<IQueueMessageContext>>();
+        _readers = [];
         _logger = logger;
 
         _channelCapacity = channelCapacity;

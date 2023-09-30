@@ -4,31 +4,22 @@ using JustSaying.Messaging.Interrogation;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class FakeSqsQueue : ISqsQueue
+public class FakeSqsQueue(Func<CancellationToken, Task<IEnumerable<Message>>> messageProducer, string queueName = "fake-queue-name") : ISqsQueue
 {
-    private readonly Func<CancellationToken, Task<IEnumerable<Message>>> _messageProducer;
-
-    public FakeSqsQueue(Func<CancellationToken, Task<IEnumerable<Message>>> messageProducer, string queueName = "fake-queue-name")
-    {
-        _messageProducer = messageProducer;
-        QueueName = queueName;
-        RegionSystemName = "fake-region";
-        Uri = new Uri("http://test.com");
-        Arn = $"arn:aws:fake-region:123456789012:{queueName}";
-    }
+    private readonly Func<CancellationToken, Task<IEnumerable<Message>>> _messageProducer = messageProducer;
 
     public InterrogationResult Interrogate()
     {
         return InterrogationResult.Empty;
     }
 
-    public string QueueName { get; }
-    public string RegionSystemName { get; }
-    public Uri Uri { get; set; }
-    public string Arn { get; }
+    public string QueueName { get; } = queueName;
+    public string RegionSystemName { get; } = "fake-region";
+    public Uri Uri { get; set; } = new Uri("http://test.com");
+    public string Arn { get; } = $"arn:aws:fake-region:123456789012:{queueName}";
 
     public List<FakeDeleteMessageRequest> DeleteMessageRequests { get; } = new();
-    public List<FakeChangeMessageVisbilityRequest> ChangeMessageVisbilityRequests { get; } = new();
+    public List<FakeChangeMessageVisibilityRequest> ChangeMessageVisbilityRequests { get; } = new();
     public List<FakeTagQueueRequest> TagQueueRequests { get; } = new();
     public List<FakeReceiveMessagesRequest> ReceiveMessageRequests { get; } = new();
 
@@ -57,7 +48,7 @@ public class FakeSqsQueue : ISqsQueue
 
     public Task ChangeMessageVisibilityAsync(string queueUrl, string receiptHandle, int visibilityTimeoutInSeconds, CancellationToken cancellationToken)
     {
-        ChangeMessageVisbilityRequests.Add(new FakeChangeMessageVisbilityRequest(queueUrl, receiptHandle, visibilityTimeoutInSeconds));
+        ChangeMessageVisbilityRequests.Add(new FakeChangeMessageVisibilityRequest(queueUrl, receiptHandle, visibilityTimeoutInSeconds));
         return Task.CompletedTask;
     }
 }

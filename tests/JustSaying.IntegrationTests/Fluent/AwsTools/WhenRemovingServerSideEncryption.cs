@@ -7,13 +7,8 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenRemovingServerSideEncryption : IntegrationTestBase
+public class WhenRemovingServerSideEncryption(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenRemovingServerSideEncryption(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
-
     [NotSimulatorFact]
     public async Task Can_Remove_Encryption()
     {

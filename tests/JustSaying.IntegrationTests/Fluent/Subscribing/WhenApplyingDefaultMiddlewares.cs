@@ -5,11 +5,8 @@ using Newtonsoft.Json;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class WhenApplyingDefaultMiddlewares : IntegrationTestBase
+public class WhenApplyingDefaultMiddlewares(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenApplyingDefaultMiddlewares(ITestOutputHelper outputHelper) : base(outputHelper)
-    { }
-
     class OuterTestMiddleware : InspectableMiddleware<SimpleMessage>
     { }
 

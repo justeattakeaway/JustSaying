@@ -7,54 +7,40 @@ using Microsoft.Extensions.Logging;
 namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 
 /// <inheritdoc />
-internal class SubscriptionGroup : ISubscriptionGroup
+/// <summary>
+/// Coordinates reading messages from a collection of <see cref="IMessageReceiveBuffer"/>
+/// and dispatching using a collection of <see cref="IMultiplexerSubscriber"/>.
+/// </summary>
+/// <param name="settings">The <see cref="SubscriptionGroupSettings"/> to use.</param>
+/// <param name="receiveBuffers">The collection of <see cref="IMessageReceiveBuffer"/> to read from.</param>
+/// <param name="multiplexer">The <see cref="IMultiplexer"/> to aggregate all messages into one stream.</param>
+/// <param name="subscribers">The collection of <see cref="IMultiplexerSubscriber"/> that will dispatch the messages</param>
+/// <param name="logger">The <see cref="ILogger"/> to be used.</param>
+internal class SubscriptionGroup(
+    SubscriptionGroupSettings settings,
+    ICollection<IMessageReceiveBuffer> receiveBuffers,
+    IMultiplexer multiplexer,
+    ICollection<IMultiplexerSubscriber> subscribers,
+    ILogger<SubscriptionGroup> logger) : ISubscriptionGroup
 {
-    private readonly ICollection<IMessageReceiveBuffer> _receiveBuffers;
-    private readonly SubscriptionGroupSettings _settings;
-    private readonly IMultiplexer _multiplexer;
-    private readonly ICollection<IMultiplexerSubscriber> _subscribers;
-    private readonly ILogger<SubscriptionGroup> _logger;
-
-    /// <summary>
-    /// Coordinates reading messages from a collection of <see cref="IMessageReceiveBuffer"/>
-    /// and dispatching using a collection of <see cref="IMultiplexerSubscriber"/>.
-    /// </summary>
-    /// <param name="settings">The <see cref="SubscriptionGroupSettings"/> to use.</param>
-    /// <param name="receiveBuffers">The collection of <see cref="IMessageReceiveBuffer"/> to read from.</param>
-    /// <param name="multiplexer">The <see cref="IMultiplexer"/> to aggregate all messages into one stream.</param>
-    /// <param name="subscribers">The collection of <see cref="IMultiplexerSubscriber"/> that will dispatch the messages</param>
-    /// <param name="logger">The <see cref="ILogger"/> to be used.</param>
-    public SubscriptionGroup(
-        SubscriptionGroupSettings settings,
-        ICollection<IMessageReceiveBuffer> receiveBuffers,
-        IMultiplexer multiplexer,
-        ICollection<IMultiplexerSubscriber> subscribers,
-        ILogger<SubscriptionGroup> logger)
-    {
-        _receiveBuffers = receiveBuffers;
-        _settings = settings;
-        _multiplexer = multiplexer;
-        _subscribers = subscribers;
-        _logger = logger;
-    }
-
     /// <inheritdoc />
     public Task RunAsync(CancellationToken stoppingToken)
     {
-        var receiveBufferQueueNames = string.Join(",", _receiveBuffers.Select(rb => rb.QueueName));
+        var receiveBufferQueueNames = string.Join(",", receiveBuffers.Select(rb => rb.QueueName));
 
-        _logger.LogInformation(
-            "Starting up SubscriptionGroup {SubscriptionGroupName} for queues [{Queues}] with {ReceiveBuffferCount} receive buffers and {SubscriberCount} subscribers.",
-            _settings.Name,
+        logger.LogInformation(
+            "Starting up SubscriptionGroup {SubscriptionGroupName} for queues [{Queues}] with {ReceiveBufferCount} receive buffers and {SubscriberCount} subscribers.",
+            settings.Name,
             receiveBufferQueueNames,
-            _receiveBuffers.Count,
-            _subscribers.Count);
+            receiveBuffers.Count,
+            subscribers.Count);
 
-        var completionTasks = new List<Task>();
-
-        completionTasks.Add(_multiplexer.RunAsync(stoppingToken));
-        completionTasks.AddRange(_subscribers.Select(subscriber => subscriber.RunAsync(stoppingToken)));
-        completionTasks.AddRange(_receiveBuffers.Select(buffer => buffer.RunAsync(stoppingToken)));
+        var completionTasks = new List<Task>
+        {
+            multiplexer.RunAsync(stoppingToken)
+        };
+        completionTasks.AddRange(subscribers.Select(subscriber => subscriber.RunAsync(stoppingToken)));
+        completionTasks.AddRange(receiveBuffers.Select(buffer => buffer.RunAsync(stoppingToken)));
 
         return Task.WhenAll(completionTasks);
     }
@@ -64,10 +50,10 @@ internal class SubscriptionGroup : ISubscriptionGroup
     {
         return new InterrogationResult(new
         {
-            _settings.Name,
-            ConcurrencyLimit = _subscribers.Count,
-            Multiplexer = _multiplexer.Interrogate(),
-            ReceiveBuffers = _receiveBuffers.Select(rb => rb.Interrogate()).ToArray(),
+            settings.Name,
+            ConcurrencyLimit = subscribers.Count,
+            Multiplexer = multiplexer.Interrogate(),
+            ReceiveBuffers = receiveBuffers.Select(rb => rb.Interrogate()).ToArray(),
         });
     }
 }

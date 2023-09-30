@@ -9,9 +9,14 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 /// <see cref="SubscriptionGroupSettingsBuilder"/> are combined with overrides set here to create a final configuration
 /// that can be inspected via <see cref="IInterrogable"/>.
 /// </summary>
-public class SubscriptionGroupConfigBuilder
+/// <remarks>
+/// Creates an instance of <see cref="SubscriptionGroupConfigBuilder"/>.
+/// </remarks>
+/// <param name="groupName">The name of the subscription group.</param>
+public class SubscriptionGroupConfigBuilder(string groupName)
 {
-    private readonly List<ISqsQueue> _sqsQueues;
+    private readonly List<ISqsQueue> _sqsQueues = [];
+    private readonly string _groupName = groupName ?? throw new ArgumentNullException(nameof(groupName));
 
     private int? _bufferSize;
     private TimeSpan? _receiveBufferReadTimeout;
@@ -19,18 +24,6 @@ public class SubscriptionGroupConfigBuilder
     private int? _concurrencyLimit;
     private int? _multiplexerCapacity;
     private int? _prefetch;
-
-    private readonly string _groupName;
-
-    /// <summary>
-    /// Creates an instance of <see cref="SubscriptionGroupConfigBuilder"/>.
-    /// </summary>
-    /// <param name="groupName">The name of the subscription group.</param>
-    public SubscriptionGroupConfigBuilder(string groupName)
-    {
-        _groupName = groupName ?? throw new ArgumentNullException(nameof(groupName));
-        _sqsQueues = new List<ISqsQueue>();
-    }
 
     /// <summary>
     /// Adds an <see cref="ISqsQueue"/> to be consumed by this <see cref="ISubscriptionGroup"/>.

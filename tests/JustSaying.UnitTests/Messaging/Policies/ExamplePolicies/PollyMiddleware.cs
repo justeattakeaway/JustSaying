@@ -3,15 +3,8 @@ using Polly;
 
 namespace JustSaying.UnitTests.Messaging.Policies.ExamplePolicies;
 
-public class PollyMiddleware<TContext, TOut> : MiddlewareBase<TContext, TOut>
+public class PollyMiddleware<TContext, TOut>(ResiliencePipeline pipeline) : MiddlewareBase<TContext, TOut>
 {
-    private readonly ResiliencePipeline _pipeline;
-
-    public PollyMiddleware(ResiliencePipeline pipeline)
-    {
-        _pipeline = pipeline;
-    }
-
     protected override async Task<TOut> RunInnerAsync(
         TContext context,
         Func<CancellationToken, Task<TOut>> func,
@@ -22,7 +15,7 @@ public class PollyMiddleware<TContext, TOut> : MiddlewareBase<TContext, TOut>
 
         try
         {
-            return await _pipeline.ExecuteAsync(
+            return await pipeline.ExecuteAsync(
                 static async (context, func) =>
                     await func(context.CancellationToken), resilienceContext, func);
         }

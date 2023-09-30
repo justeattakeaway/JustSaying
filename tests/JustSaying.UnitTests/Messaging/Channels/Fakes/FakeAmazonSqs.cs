@@ -4,20 +4,12 @@ using Amazon.SQS.Model;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public sealed class FakeAmazonSqs : IAmazonSQS
+public sealed class FakeAmazonSqs(Func<IEnumerable<ReceiveMessageResponse>> getMessages) : IAmazonSQS
 {
-    private readonly Func<IEnumerable<ReceiveMessageResponse>> _getMessages;
+    private readonly Func<IEnumerable<ReceiveMessageResponse>> _getMessages = getMessages;
 
-    public IList<DeleteMessageRequest> DeleteMessageRequests { get; }
-    public IList<ReceiveMessageRequest> ReceiveMessageRequests { get; }
-
-
-    public FakeAmazonSqs(Func<IEnumerable<ReceiveMessageResponse>> getMessages)
-    {
-        _getMessages = getMessages;
-        DeleteMessageRequests = new List<DeleteMessageRequest>();
-        ReceiveMessageRequests = new List<ReceiveMessageRequest>();
-    }
+    public IList<DeleteMessageRequest> DeleteMessageRequests { get; } = new List<DeleteMessageRequest>();
+    public IList<ReceiveMessageRequest> ReceiveMessageRequests { get; } = new List<ReceiveMessageRequest>();
 
     public void Dispose()
     { }

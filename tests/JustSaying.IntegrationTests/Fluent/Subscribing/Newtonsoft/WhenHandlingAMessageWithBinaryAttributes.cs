@@ -7,27 +7,19 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.Fluent.Subscribing.Newtonsoft;
 
-public class WhenHandlingAMessageWithBinaryAttributes : IntegrationTestBase
+public class WhenHandlingAMessageWithBinaryAttributes(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenHandlingAMessageWithBinaryAttributes(ITestOutputHelper outputHelper) : base(outputHelper)
-    { }
-
-    public class SimpleMessageWithBinaryAttributesHandler : IHandlerAsync<SimpleMessage>
+    public class SimpleMessageWithBinaryAttributesHandler(IMessageContextAccessor contextAccessor) : IHandlerAsync<SimpleMessage>
     {
-        private readonly IMessageContextAccessor _contextAccessor;
+        private readonly IMessageContextAccessor _contextAccessor = contextAccessor;
 
-        public SimpleMessageWithBinaryAttributesHandler(IMessageContextAccessor contextAccessor)
-        {
-            _contextAccessor = contextAccessor;
-            HandledMessages = new List<(MessageContext, SimpleMessage)>();
-        }
         public Task<bool> Handle(SimpleMessage message)
         {
             HandledMessages.Add((_contextAccessor.MessageContext, message));
             return Task.FromResult(true);
         }
 
-        public List<(MessageContext context, SimpleMessage message)> HandledMessages { get; }
+        public List<(MessageContext context, SimpleMessage message)> HandledMessages { get; } = new List<(MessageContext, SimpleMessage)>();
     }
 
     [AwsFact]

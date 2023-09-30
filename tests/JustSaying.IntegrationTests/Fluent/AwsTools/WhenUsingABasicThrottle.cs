@@ -13,13 +13,8 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenUsingABasicThrottle : IntegrationTestBase
+public class WhenUsingABasicThrottle(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenUsingABasicThrottle(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
-
     protected override TimeSpan Timeout => TimeSpan.FromMinutes(5);
 
     [AwsTheory]

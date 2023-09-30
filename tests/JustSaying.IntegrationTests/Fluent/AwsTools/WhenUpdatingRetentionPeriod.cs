@@ -8,13 +8,8 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenUpdatingRetentionPeriod : IntegrationTestBase
+public class WhenUpdatingRetentionPeriod(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenUpdatingRetentionPeriod(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
-
     [AwsFact]
     public async Task Can_Update_Retention_Period()
     {

@@ -5,7 +5,7 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
 public sealed class MessageLockStore : IMessageLockAsync
 {
-    private readonly ConcurrentDictionary<string, int> _store = new ConcurrentDictionary<string, int>();
+    private readonly ConcurrentDictionary<string, int> _store = new();
 
     public Task<MessageLockResponse> TryAcquireLockAsync(string key, TimeSpan howLong)
     {

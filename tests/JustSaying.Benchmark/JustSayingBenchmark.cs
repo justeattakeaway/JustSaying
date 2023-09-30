@@ -99,7 +99,7 @@ public class JustSayingBenchmark
         DrawResponseTimeGraph(messageMetrics, m => m.ConsumeLatency);
     }
 
-    static void RegisterJustSaying(IServiceCollection services)
+    private static void RegisterJustSaying(IServiceCollection services)
     {
         services.AddJustSaying(config =>
         {
@@ -113,7 +113,7 @@ public class JustSayingBenchmark
         services.AddJustSayingHandler<BenchmarkMessage, BenchmarkMessageHander>();
     }
 
-    static void DrawResponseTimeGraph(MessageMetric[] metrics, Func<MessageMetric, long> selector)
+    private static void DrawResponseTimeGraph(MessageMetric[] metrics, Func<MessageMetric, long> selector)
     {
         long maxTime = metrics.Max(selector);
         long minTime = metrics.Min(selector);

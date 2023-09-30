@@ -13,7 +13,7 @@ public class WhenReceivingShouldStop
     private class TestMessage : Message { }
 
     private int _callCount;
-    private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;
+    private readonly MessageReceivePauseSignal _messageReceivePauseSignal;
     private readonly MessageReceiveBuffer _messageReceiveBuffer;
 
     public WhenReceivingShouldStop(ITestOutputHelper testOutputHelper)

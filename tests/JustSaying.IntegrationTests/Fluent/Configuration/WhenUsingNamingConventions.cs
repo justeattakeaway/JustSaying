@@ -7,12 +7,9 @@ using Newtonsoft.Json;
 
 namespace JustSaying.Fluent.Configuration;
 
-public class WhenUsingNamingConventions : IntegrationTestBase
+public class WhenUsingNamingConventions(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenUsingNamingConventions(ITestOutputHelper outputHelper) : base(outputHelper)
-    { }
-
-    class TestNamingConvention : ITopicNamingConvention, IQueueNamingConvention
+    private class TestNamingConvention : ITopicNamingConvention, IQueueNamingConvention
     {
         private readonly DefaultNamingConventions _default;
 
@@ -32,7 +29,7 @@ public class WhenUsingNamingConventions : IntegrationTestBase
         }
     }
 
-    [Fact]
+    [AwsFact]
     public async Task ThenTheNamingConventionIsApplied()
     {
         var services = GivenJustSaying()

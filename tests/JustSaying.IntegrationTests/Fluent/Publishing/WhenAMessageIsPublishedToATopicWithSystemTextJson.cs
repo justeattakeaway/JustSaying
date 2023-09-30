@@ -5,13 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenAMessageIsPublishedToATopicWithSystemTextJson : IntegrationTestBase
+public class WhenAMessageIsPublishedToATopicWithSystemTextJson(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenAMessageIsPublishedToATopicWithSystemTextJson(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
-
     [AwsFact]
     public async Task Then_The_Message_Is_Handled()
     {

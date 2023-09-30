@@ -1,11 +1,6 @@
 namespace JustSaying;
 
-public class HandlerResolutionContext
+public class HandlerResolutionContext(string queueName)
 {
-    public HandlerResolutionContext(string queueName)
-    {
-        QueueName = queueName;
-    }
-
-    public string QueueName { get; private set; }
+    public string QueueName { get; private set; } = queueName;
 }

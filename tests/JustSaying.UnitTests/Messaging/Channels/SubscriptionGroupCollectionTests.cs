@@ -8,7 +8,6 @@ using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
 namespace JustSaying.UnitTests.Messaging.Channels;
 
@@ -99,7 +98,7 @@ public class SubscriptionGroupCollectionTests
         return bus;
     }
 
-    private static ISqsQueue TestQueue(
+    private static FakeSqsQueue TestQueue(
         IMessageSerializationRegister messageSerializationRegister,
         string queueName,
         Action spy = null)

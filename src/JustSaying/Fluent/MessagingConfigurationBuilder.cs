@@ -114,10 +114,7 @@ public sealed class MessagingConfigurationBuilder
             throw new ArgumentNullException(nameof(accountId));
         }
 
-        if (AdditionalSubscriberAccounts == null)
-        {
-            AdditionalSubscriberAccounts = new List<string>();
-        }
+        AdditionalSubscriberAccounts ??= new List<string>();
 
         AdditionalSubscriberAccounts.Add(accountId);
         return this;

@@ -8,13 +8,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class WhenRegisteringASubscriberWithTags : IntegrationTestBase
+public class WhenRegisteringASubscriberWithTags(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
     private const string QueueName = "simple-message-queue-with-tags";
-
-    public WhenRegisteringASubscriberWithTags(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
 
     [NotSimulatorFact]
     public async Task Then_A_Queue_For_Topic_Subscription_Is_Created_With_The_Correct_Tags()

@@ -26,7 +26,7 @@ public sealed class PublicationsBuilder
     /// <summary>
     /// Gets the configured publication builders.
     /// </summary>
-    private IList<IPublicationBuilder<Message>> Publications { get; } = new List<IPublicationBuilder<Message>>();
+    private List<IPublicationBuilder<Message>> Publications { get; } = [];
 
     /// <summary>
     /// Configures a publisher for a queue.

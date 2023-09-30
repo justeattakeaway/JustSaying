@@ -2,19 +2,15 @@ using Amazon.SQS.Model;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class WhenMessageHandlingSucceeds : BaseSubscriptionGroupTests
+public class WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
 {
-    private string _messageBody = "Expected Message Body";
+    private const string MessageBody = "Expected Message Body";
     private FakeSqsQueue _queue;
-
-    public WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper)
-        : base(testOutputHelper)
-    { }
 
     protected override void Given()
     {
         _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(),
-            ct => Task.FromResult(new List<Message> { new TestMessage { Body = _messageBody } }.AsEnumerable()));
+            ct => Task.FromResult(new List<Message> { new TestMessage { Body = MessageBody } }.AsEnumerable()));
 
         Queues.Add(_queue);
     }
@@ -23,7 +19,7 @@ public class WhenMessageHandlingSucceeds : BaseSubscriptionGroupTests
     public void MessagesGetDeserializedByCorrectHandler()
     {
         SerializationRegister.ReceivedDeserializationRequests.ShouldAllBe(
-            msg => msg == _messageBody);
+            msg => msg == MessageBody);
     }
 
     [Fact]

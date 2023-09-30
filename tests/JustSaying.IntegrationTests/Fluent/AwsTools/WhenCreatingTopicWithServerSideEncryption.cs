@@ -7,13 +7,8 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenCreatingTopicWithServerSideEncryption : IntegrationTestBase
+public class WhenCreatingTopicWithServerSideEncryption(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenCreatingTopicWithServerSideEncryption(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
-
     [NotSimulatorFact]
     public async Task Can_Create_Topic_With_Encryption()
     {

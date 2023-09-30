@@ -7,13 +7,8 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenRemovingSnsServerSideEncryption : IntegrationTestBase
+public class WhenRemovingSnsServerSideEncryption(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenRemovingSnsServerSideEncryption(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
-
     [NotSimulatorFact]
     public async Task Can_Remove_Encryption()
     {
@@ -31,7 +26,7 @@ public class WhenRemovingSnsServerSideEncryption : IntegrationTestBase
         await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = JustSayingConstants.DefaultSnsAttributeEncryptionKeyId }, CancellationToken.None);
 
         // Act
-        await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = String.Empty }, CancellationToken.None);
+        await topic.CreateWithEncryptionAsync(new ServerSideEncryption { KmsMasterKeyId = string.Empty }, CancellationToken.None);
 
         // Assert
         topic.ServerSideEncryption.ShouldBeNull();

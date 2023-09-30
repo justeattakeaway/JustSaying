@@ -8,18 +8,12 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
 
-internal sealed class StaticPublicationConfiguration : ITopicPublisher
+internal sealed class StaticPublicationConfiguration(
+    Func<CancellationToken, Task> startupTask,
+    IMessagePublisher publisher) : ITopicPublisher
 {
-    public Func<CancellationToken, Task> StartupTask { get; }
-    public IMessagePublisher Publisher { get; }
-
-    public StaticPublicationConfiguration(
-        Func<CancellationToken, Task> startupTask,
-        IMessagePublisher publisher)
-    {
-        StartupTask = startupTask;
-        Publisher = publisher;
-    }
+    public Func<CancellationToken, Task> StartupTask { get; } = startupTask;
+    public IMessagePublisher Publisher { get; } = publisher;
 
     public static StaticPublicationConfiguration Build<T>(
         string topicName,

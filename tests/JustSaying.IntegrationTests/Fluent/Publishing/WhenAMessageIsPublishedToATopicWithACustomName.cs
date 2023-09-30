@@ -5,12 +5,8 @@ using Newtonsoft.Json;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenAMessageIsPublishedToATopicWithACustomName : IntegrationTestBase
+public class WhenAMessageIsPublishedToATopicWithACustomName(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenAMessageIsPublishedToATopicWithACustomName(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    { }
-
     [AwsFact]
     public async Task Then_The_Message_Is_Handled()
     {

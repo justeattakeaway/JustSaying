@@ -8,10 +8,7 @@ namespace JustSaying.Naming;
 /// </summary>
 public class DefaultNamingConventions : ITopicNamingConvention, IQueueNamingConvention
 {
-    private const int MaxTopicNameLength = 256;
-    private const int MaxQueueNameLength = 80;
-
-    private static readonly HashSet<Type> TypesToMapAutomatically = new HashSet<Type>
+    private static readonly HashSet<Type> TypesToMapAutomatically = new()
     {
         typeof(string),
         typeof(object),
@@ -34,9 +31,9 @@ public class DefaultNamingConventions : ITopicNamingConvention, IQueueNamingConv
         typeof(DateTimeOffset)
     };
 
-    public virtual string TopicName<T>() => CreateResourceName(typeof(T), MaxTopicNameLength);
+    public virtual string TopicName<T>() => CreateResourceName(typeof(T), maximumLength: 256);
 
-    public virtual string QueueName<T>() => CreateResourceName(typeof(T), MaxQueueNameLength);
+    public virtual string QueueName<T>() => CreateResourceName(typeof(T), maximumLength: 80);
 
     private static string CreateResourceName(Type type, int maximumLength)
     {

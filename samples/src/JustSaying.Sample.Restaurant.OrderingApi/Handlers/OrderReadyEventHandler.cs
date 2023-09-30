@@ -5,20 +5,11 @@ using JustSaying.Sample.Restaurant.Models;
 
 namespace JustSaying.Sample.Restaurant.OrderingApi.Handlers;
 
-public class OrderReadyEventHandler : IHandlerAsync<OrderReadyEvent>
+public class OrderReadyEventHandler(ILogger<OrderReadyEventHandler> logger, IMessagePublisher publisher) : IHandlerAsync<OrderReadyEvent>
 {
-    private readonly ILogger<OrderReadyEventHandler> _logger;
-    private readonly IMessagePublisher _publisher;
-
-    public OrderReadyEventHandler(ILogger<OrderReadyEventHandler> logger, IMessagePublisher publisher)
-    {
-        _logger = logger;
-        _publisher = publisher;
-    }
-
     public async Task<bool> Handle(OrderReadyEvent message)
     {
-        _logger.LogInformation("Order {orderId} ready", message.OrderId);
+        logger.LogInformation("Order {orderId} ready", message.OrderId);
 
         // This is where you would actually handle the order placement
         // Intentionally left empty for the sake of this being a sample application
@@ -30,7 +21,7 @@ public class OrderReadyEventHandler : IHandlerAsync<OrderReadyEvent>
             OrderId = message.OrderId
         };
 
-        await _publisher.PublishAsync(orderOnItsWayEvent);
+        await publisher.PublishAsync(orderOnItsWayEvent);
 
         // Returning true would indicate:
         //   The message was handled successfully

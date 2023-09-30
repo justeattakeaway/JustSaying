@@ -5,7 +5,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public class WhenPublishingFails : GivenAServiceBus
+public class WhenPublishingFails(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
 {
     private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
     private const int PublishAttempts = 2;
@@ -41,7 +41,4 @@ public class WhenPublishingFails : GivenAServiceBus
             .Received(PublishAttempts)
             .PublishAsync(Arg.Any<Message>(), Arg.Any<PublishMetadata>(), Arg.Any<CancellationToken>());
     }
-
-    public WhenPublishingFails(ITestOutputHelper outputHelper) : base(outputHelper)
-    { }
 }
