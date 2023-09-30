@@ -9,11 +9,12 @@ using Message = JustSaying.Models.Message;
 
 namespace JustSaying.AwsTools.MessageHandling;
 
-public class SqsMessagePublisher : IMessagePublisher
+public class SqsMessagePublisher(
+    IAmazonSQS client,
+    IMessageSerializationRegister serializationRegister,
+    ILoggerFactory loggerFactory) : IMessagePublisher
 {
-    private readonly IAmazonSQS _client;
-    private readonly IMessageSerializationRegister _serializationRegister;
-    private readonly ILogger _logger;
+    private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
 
     public Uri QueueUrl { get; internal set; }
@@ -25,16 +26,6 @@ public class SqsMessagePublisher : IMessagePublisher
         ILoggerFactory loggerFactory) : this(client, serializationRegister, loggerFactory)
     {
         QueueUrl = queueUrl;
-    }
-
-    public SqsMessagePublisher(
-        IAmazonSQS client,
-        IMessageSerializationRegister serializationRegister,
-        ILoggerFactory loggerFactory)
-    {
-        _client = client;
-        _serializationRegister = serializationRegister;
-        _logger = loggerFactory.CreateLogger("JustSaying.Publish");
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -53,7 +44,7 @@ public class SqsMessagePublisher : IMessagePublisher
         SendMessageResponse response;
         try
         {
-            response = await _client.SendMessageAsync(request, cancellationToken).ConfigureAwait(false);
+            response = await client.SendMessageAsync(request, cancellationToken).ConfigureAwait(false);
         }
         catch (AmazonServiceException ex)
         {
@@ -103,7 +94,7 @@ public class SqsMessagePublisher : IMessagePublisher
         return request;
     }
 
-    public string GetMessageInContext(Message message) => _serializationRegister.Serialize(message, serializeForSnsPublishing: false);
+    public string GetMessageInContext(Message message) => serializationRegister.Serialize(message, serializeForSnsPublishing: false);
 
     public InterrogationResult Interrogate()
     {

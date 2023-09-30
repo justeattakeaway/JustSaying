@@ -8,14 +8,9 @@ using Xunit.Abstractions;
 
 namespace JustSaying;
 
-public class WhenUsingStructureMap
+public class WhenUsingStructureMap(ITestOutputHelper outputHelper)
 {
-    public WhenUsingStructureMap(ITestOutputHelper outputHelper)
-    {
-        OutputHelper = outputHelper;
-    }
-
-    private ITestOutputHelper OutputHelper { get; }
+    private ITestOutputHelper OutputHelper { get; } = outputHelper;
 
     [AwsFact]
     public async Task Can_Create_Messaging_Bus_Fluently_For_A_Queue()

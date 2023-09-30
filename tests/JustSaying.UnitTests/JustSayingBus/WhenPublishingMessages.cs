@@ -5,7 +5,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public class WhenPublishingMessages : GivenAServiceBus
+public class WhenPublishingMessages(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
 {
     private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
 
@@ -30,7 +30,4 @@ public class WhenPublishingMessages : GivenAServiceBus
     {
         Monitor.PublishMessageTimes.ShouldHaveSingleItem();
     }
-
-    public WhenPublishingMessages(ITestOutputHelper outputHelper) : base(outputHelper)
-    { }
 }

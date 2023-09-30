@@ -1,17 +1,13 @@
 namespace JustSaying.IntegrationTests.Fluent;
 
-public class ActionRunnerTest : IntegrationTestBase
+public class ActionRunnerTest(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public ActionRunnerTest(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
-
     protected override TimeSpan Timeout => TimeSpan.FromSeconds(2);
 
     [Fact]
     public async Task TestRunnerWillSucceedOnSuccessfulTask()
     {
-        async Task SuccessTask(CancellationToken ctx) =>
+        static async Task SuccessTask(CancellationToken ctx) =>
             await Task.Delay(100, ctx);
 
         await RunActionWithTimeout(SuccessTask);
@@ -30,7 +26,7 @@ public class ActionRunnerTest : IntegrationTestBase
     [Fact]
     public async Task TestRunnerWillThrowOnFailure()
     {
-        async Task ThrowingTask(CancellationToken ctx)
+        static async Task ThrowingTask(CancellationToken ctx)
         {
             await Task.Delay(100, ctx);
             throw new InvalidOperationException();

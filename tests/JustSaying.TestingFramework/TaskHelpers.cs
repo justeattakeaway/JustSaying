@@ -2,11 +2,8 @@ namespace JustSaying.TestingFramework;
 
 public static class TaskHelpers
 {
-    private const int DefaultTimeoutMillis = 10000;
-    private const int DelaySendMillis = 200;
-
     public static async Task<bool> WaitWithTimeoutAsync(Task task)
-        => await WaitWithTimeoutAsync(task, TimeSpan.FromMilliseconds(DefaultTimeoutMillis))
+        => await WaitWithTimeoutAsync(task, TimeSpan.FromMilliseconds(10000))
             .ConfigureAwait(false);
 
     public static async Task<bool> WaitWithTimeoutAsync(Task task, TimeSpan timeoutDuration)
@@ -22,7 +19,7 @@ public static class TaskHelpers
     {
         Task.Run(async () =>
         {
-            await Task.Delay(DelaySendMillis).ConfigureAwait(false);
+            await Task.Delay(200).ConfigureAwait(false);
             doneSignal.SetResult(null);
         });
     }

@@ -13,8 +13,8 @@ public class WhenPublishingDelayedMessage : WhenPublishingTestBase
     private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
     private const string Url = "https://testurl.com/" + QueueName;
 
-    private readonly SimpleMessage _message = new SimpleMessage();
-    private readonly PublishMetadata _metadata = new PublishMetadata
+    private readonly SimpleMessage _message = new();
+    private readonly PublishMetadata _metadata = new()
     {
         Delay = TimeSpan.FromSeconds(1)
     };
@@ -29,7 +29,7 @@ public class WhenPublishingDelayedMessage : WhenPublishingTestBase
 
     protected override void Given()
     {
-        Sqs.ListQueuesAsync(Arg.Any<ListQueuesRequest>()).Returns(new ListQueuesResponse { QueueUrls = new List<string> { Url } });
+        Sqs.ListQueuesAsync(Arg.Any<ListQueuesRequest>()).Returns(new ListQueuesResponse { QueueUrls = [Url] });
         Sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>()).Returns(new GetQueueAttributesResponse());
     }
 

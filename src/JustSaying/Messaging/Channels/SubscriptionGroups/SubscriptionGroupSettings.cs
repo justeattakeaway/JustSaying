@@ -55,7 +55,7 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
     public int MultiplexerCapacity { get; }
 
     /// <summary>
-    /// Gets the maxiumum number of messages to fetch from SQS in each request.
+    /// Gets the maximum number of messages to fetch from SQS in each request.
     /// </summary>
     public int Prefetch { get; }
 

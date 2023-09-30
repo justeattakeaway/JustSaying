@@ -10,18 +10,14 @@ using Microsoft.Extensions.Logging;
 namespace JustSaying.AwsTools.MessageHandling;
 
 [Obsolete("SqsQueueBase and related classes are not intended for general usage and may be removed in a future major release")]
-public class SqsQueueByName : SqsQueueByNameBase
+public class SqsQueueByName(
+    RegionEndpoint region,
+    string queueName,
+    IAmazonSQS client,
+    int retryCountBeforeSendingToErrorQueue,
+    ILoggerFactory loggerFactory) : SqsQueueByNameBase(region, queueName, client, loggerFactory)
 {
-    private readonly int _retryCountBeforeSendingToErrorQueue;
-
-    internal ErrorQueue ErrorQueue { get; }
-
-    public SqsQueueByName(RegionEndpoint region, string queueName, IAmazonSQS client, int retryCountBeforeSendingToErrorQueue, ILoggerFactory loggerFactory)
-        : base(region, queueName, client, loggerFactory)
-    {
-        _retryCountBeforeSendingToErrorQueue = retryCountBeforeSendingToErrorQueue;
-        ErrorQueue = new ErrorQueue(region, queueName, client, loggerFactory);
-    }
+    internal ErrorQueue ErrorQueue { get; } = new ErrorQueue(region, queueName, client, loggerFactory);
 
     public override async Task<bool> CreateAsync(SqsBasicConfiguration queueConfig, int attempt = 0, CancellationToken cancellationToken = default)
     {
@@ -135,7 +131,7 @@ public class SqsQueueByName : SqsQueueByNameBase
 
     private async Task ApplyTagsAsync(ISqsQueue queue, Dictionary<string, string> tags, CancellationToken cancellationToken)
     {
-        if (tags == null || !tags.Any())
+        if (tags == null || tags.Count == 0)
         {
             return;
         }
@@ -157,7 +153,7 @@ public class SqsQueueByName : SqsQueueByNameBase
 
         if (NeedErrorQueue(queueConfig))
         {
-            policy.Add(JustSayingConstants.AttributeRedrivePolicy, new RedrivePolicy(_retryCountBeforeSendingToErrorQueue, ErrorQueue.Arn).ToString());
+            policy.Add(JustSayingConstants.AttributeRedrivePolicy, new RedrivePolicy(retryCountBeforeSendingToErrorQueue, ErrorQueue.Arn).ToString());
         }
 
         if (queueConfig.ServerSideEncryption != null)

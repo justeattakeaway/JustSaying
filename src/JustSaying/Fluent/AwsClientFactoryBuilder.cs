@@ -146,9 +146,7 @@ public sealed class AwsClientFactoryBuilder
     /// <exception cref="ArgumentException">
     /// <paramref name="url"/> is not an absolute URI.
     /// </exception>
-#pragma warning disable CA1054 // Uri parameters should not be strings
     public AwsClientFactoryBuilder WithServiceUrl(string url)
-#pragma warning restore CA1054 // Uri parameters should not be strings
     {
         if (url == null)
         {

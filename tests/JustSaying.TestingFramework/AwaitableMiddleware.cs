@@ -3,15 +3,10 @@ using Xunit.Abstractions;
 
 namespace JustSaying.TestingFramework;
 
-public class AwaitableMiddleware : MiddlewareBase<HandleMessageContext, bool>
+public class AwaitableMiddleware(ITestOutputHelper outputHelper) : MiddlewareBase<HandleMessageContext, bool>
 {
-    private readonly ITestOutputHelper _outputHelper;
+    private readonly ITestOutputHelper _outputHelper = outputHelper;
     public Task Complete { get; private set; }
-
-    public AwaitableMiddleware(ITestOutputHelper outputHelper)
-    {
-        _outputHelper = outputHelper;
-    }
 
     protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
     {

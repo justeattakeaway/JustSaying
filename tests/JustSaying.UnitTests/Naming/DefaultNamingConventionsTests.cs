@@ -5,7 +5,7 @@ namespace JustSaying.UnitTests.Naming;
 
 public class DefaultNamingConventionsTests
 {
-    private readonly DefaultNamingConventions Sut = new DefaultNamingConventions();
+    private readonly DefaultNamingConventions Sut = new();
 
     [Fact]
     public void WhenGeneratingTopicName_ForNonGenericType_ThenTheCorrectNameShouldBeReturned()

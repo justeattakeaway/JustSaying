@@ -77,7 +77,7 @@ public abstract class SqsQueueByNameBase : ISqsQueue
 
         Uri = new Uri(result.QueueUrl);
 
-        await SetQueuePropertiesAsync(cancellationToken).ConfigureAwait(false);
+        await SetQueuePropertiesAsync().ConfigureAwait(false);
         return true;
     }
 
@@ -96,7 +96,7 @@ public abstract class SqsQueueByNameBase : ISqsQueue
             {
                 Uri = new Uri(queueResponse.QueueUrl);
                 await Client.SetQueueAttributesAsync(queueResponse.QueueUrl, GetCreateQueueAttributes(queueConfig), cancellationToken).ConfigureAwait(false);
-                await SetQueuePropertiesAsync(cancellationToken).ConfigureAwait(false);
+                await SetQueuePropertiesAsync().ConfigureAwait(false);
 
                 Logger.LogInformation("Created queue '{QueueName}' with ARN '{Arn}'.", QueueName, Arn);
                 return true;
@@ -126,7 +126,7 @@ public abstract class SqsQueueByNameBase : ISqsQueue
                     maxAttempts);
 
                 await Task.Delay(CreateRetryDelay, cancellationToken).ConfigureAwait(false);
-                await CreateAsync(queueConfig, attempt + 1).ConfigureAwait(false);
+                _ = await CreateAsync(queueConfig, attempt + 1).ConfigureAwait(false);
             }
             else
             {
@@ -155,10 +155,10 @@ public abstract class SqsQueueByNameBase : ISqsQueue
         }
     }
 
-    private async Task SetQueuePropertiesAsync(CancellationToken cancellationToken)
+    private async Task SetQueuePropertiesAsync()
     {
-        var keys = new[]
-        {
+        string[] keys =
+        [
             JustSayingConstants.AttributeArn,
             JustSayingConstants.AttributeRedrivePolicy,
             JustSayingConstants.AttributePolicy,
@@ -167,8 +167,8 @@ public abstract class SqsQueueByNameBase : ISqsQueue
             JustSayingConstants.AttributeDeliveryDelay,
             JustSayingConstants.AttributeEncryptionKeyId,
             JustSayingConstants.AttributeEncryptionKeyReusePeriodSecondId
-        };
-        var attributes = await GetAttrsAsync(keys).ConfigureAwait(false);
+        ];
+        var attributes = await GetAttributesAsync(keys).ConfigureAwait(false);
         Arn = attributes.QueueARN;
         MessageRetentionPeriod = TimeSpan.FromSeconds(attributes.MessageRetentionPeriod);
         _visibilityTimeout = TimeSpan.FromSeconds(attributes.VisibilityTimeout);
@@ -178,7 +178,7 @@ public abstract class SqsQueueByNameBase : ISqsQueue
         ServerSideEncryption = ExtractServerSideEncryptionFromQueueAttributes(attributes.Attributes);
     }
 
-    private async Task<GetQueueAttributesResponse> GetAttrsAsync(IEnumerable<string> attrKeys)
+    private async Task<GetQueueAttributesResponse> GetAttributesAsync(IEnumerable<string> attrKeys)
     {
         var request = new GetQueueAttributesRequest
         {

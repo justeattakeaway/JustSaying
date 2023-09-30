@@ -19,7 +19,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     private readonly ILogger _log;
     private readonly ILoggerFactory _loggerFactory;
 
-    private readonly SemaphoreSlim _startLock = new SemaphoreSlim(1, 1);
+    private readonly SemaphoreSlim _startLock = new(1, 1);
     private bool _busStarted;
     private readonly List<Func<CancellationToken, Task>> _startupTasks;
 
@@ -49,14 +49,14 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
         _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
 
-        _startupTasks = new List<Func<CancellationToken, Task>>();
+        _startupTasks = [];
         _log = _loggerFactory.CreateLogger("JustSaying");
 
         Config = config;
         SerializationRegister = serializationRegister;
         MiddlewareMap = new MiddlewareMap();
 
-        _publishersByType = new Dictionary<Type, IMessagePublisher>();
+        _publishersByType = [];
         _subscriptionGroupSettings =
             new ConcurrentDictionary<string, SubscriptionGroupConfigBuilder>(StringComparer.Ordinal);
         _defaultSubscriptionGroupSettings = new SubscriptionGroupSettingsBuilder();
@@ -212,10 +212,8 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     {
         if (_publishersByType.Count == 0)
         {
-            var errorMessage =
-                "Error publishing message, no publishers registered. Has the bus been started?";
-            _log.LogError(errorMessage);
-            throw new InvalidOperationException(errorMessage);
+            _log.LogError("Error publishing message, no publishers registered. Has the bus been started?");
+            throw new InvalidOperationException("Error publishing message, no publishers registered. Has the bus been started?");
         }
 
         var messageType = message.GetType();

@@ -6,12 +6,7 @@ namespace JustSaying.UnitTests.Fluent;
 
 public class WhenUsingQueueSubscriptionBuilder
 {
-    private readonly QueueSubscriptionBuilder<Order> _sut;
-
-    public WhenUsingQueueSubscriptionBuilder()
-    {
-        _sut = new QueueSubscriptionBuilder<Order>();
-    }
+    private readonly QueueSubscriptionBuilder<Order> _sut = new();
 
     [Theory]
     [InlineData("")]

@@ -5,7 +5,6 @@ using JustSaying.Messaging.Middleware.Logging;
 using JustSaying.Messaging.Middleware.MessageContext;
 using JustSaying.Messaging.Middleware.PostProcessing;
 using JustSaying.Models;
-using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool>;
 
 // ReSharper disable once CheckNamespace
 namespace JustSaying.Messaging.Middleware;

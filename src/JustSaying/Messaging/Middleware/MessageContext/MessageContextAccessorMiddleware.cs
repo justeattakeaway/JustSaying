@@ -5,18 +5,13 @@ namespace JustSaying.Messaging.Middleware.MessageContext;
 /// <summary>
 /// A middleware that sets context that is available in message handlers by resolving an `IMessageContextAccessor`.
 /// </summary>
-public sealed class MessageContextAccessorMiddleware : MiddlewareBase<HandleMessageContext, bool>
+/// <remarks>
+/// Creates an instance of <see cref="MessageContextAccessorMiddleware"/>.
+/// </remarks>
+/// <param name="messageContextAccessor">The <see cref="IMessageContextAccessor"/> to set.</param>
+public sealed class MessageContextAccessorMiddleware(IMessageContextAccessor messageContextAccessor) : MiddlewareBase<HandleMessageContext, bool>
 {
-    private readonly IMessageContextAccessor _messageContextAccessor;
-
-    /// <summary>
-    /// Creates an instance of <see cref="MessageContextAccessorMiddleware"/>.
-    /// </summary>
-    /// <param name="messageContextAccessor">The <see cref="IMessageContextAccessor"/> to set.</param>
-    public MessageContextAccessorMiddleware(IMessageContextAccessor messageContextAccessor)
-    {
-        _messageContextAccessor = messageContextAccessor ?? throw new ArgumentNullException(nameof(messageContextAccessor));
-    }
+    private readonly IMessageContextAccessor _messageContextAccessor = messageContextAccessor ?? throw new ArgumentNullException(nameof(messageContextAccessor));
 
     protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
     {

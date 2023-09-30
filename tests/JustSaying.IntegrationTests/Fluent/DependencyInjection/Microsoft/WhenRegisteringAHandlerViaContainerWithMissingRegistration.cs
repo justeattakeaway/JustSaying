@@ -4,13 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.DependencyInjection.Microsoft;
 
-public class WhenRegisteringAHandlerViaContainerWithMissingRegistration : IntegrationTestBase
+public class WhenRegisteringAHandlerViaContainerWithMissingRegistration(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenRegisteringAHandlerViaContainerWithMissingRegistration(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
-
     [AwsFact]
     public void Then_An_Exception_Is_Thrown()
     {

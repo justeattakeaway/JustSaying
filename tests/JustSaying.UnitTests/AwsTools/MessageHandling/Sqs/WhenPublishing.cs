@@ -12,7 +12,7 @@ public class WhenPublishing : WhenPublishingTestBase
 {
     private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
     private const string Url = "https://blablabla/" + QueueName;
-    private readonly SimpleMessage _message = new SimpleMessage { Content = "Hello" };
+    private readonly SimpleMessage _message = new() { Content = "Hello" };
     private const string QueueName = "queuename";
 
     private protected override Task<SqsMessagePublisher> CreateSystemUnderTestAsync()

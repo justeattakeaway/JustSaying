@@ -4,27 +4,20 @@ using Microsoft.Extensions.Logging;
 namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 
 /// <inheritdoc />
-public class SubscriptionGroupCollection : ISubscriptionGroup
+/// <summary>
+/// Runs multiple instances of <see cref="SubscriptionGroup"/>.
+/// </summary>
+/// <param name="subscriptionGroups">The collection of <see cref="SubscriptionGroup"/> instances to run.</param>
+/// <param name="logger">The <see cref="ILogger"/> to use.</param>
+public class SubscriptionGroupCollection(
+    IList<ISubscriptionGroup> subscriptionGroups,
+    ILogger<SubscriptionGroupCollection> logger) : ISubscriptionGroup
 {
-    private readonly ILogger _logger;
-    private readonly IList<ISubscriptionGroup> _subscriptionGroups;
-
-    /// <summary>
-    /// Runs multiple instances of <see cref="SubscriptionGroup"/>.
-    /// </summary>
-    /// <param name="subscriptionGroups">The collection of <see cref="SubscriptionGroup"/> instances to run.</param>
-    /// <param name="logger">The <see cref="ILogger"/> to use.</param>
-    public SubscriptionGroupCollection(
-        IList<ISubscriptionGroup> subscriptionGroups,
-        ILogger<SubscriptionGroupCollection> logger)
-    {
-        _subscriptionGroups = subscriptionGroups ?? throw new System.ArgumentNullException(nameof(subscriptionGroups));
-        _logger = logger ?? throw new System.ArgumentNullException(nameof(logger));
-    }
-
+    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IList<ISubscriptionGroup> _subscriptionGroups = subscriptionGroups ?? throw new ArgumentNullException(nameof(subscriptionGroups));
     private Task _completion;
     private bool _started;
-    private readonly object _startLock = new object();
+    private readonly object _startLock = new();
 
     /// <inheritdoc />
     public Task RunAsync(CancellationToken stoppingToken)

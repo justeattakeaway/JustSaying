@@ -2,18 +2,11 @@ using JustSaying.Messaging.Middleware;
 
 namespace JustSaying.TestingFramework;
 
-public class TrackingMiddleware : MiddlewareBase<HandleMessageContext, bool>
+public class TrackingMiddleware(string id, Action<string> onBefore, Action<string> onAfter) : MiddlewareBase<HandleMessageContext, bool>
 {
-    private readonly Action<string> _onBefore;
-    private readonly Action<string> _onAfter;
-    private readonly string _id;
-
-    public TrackingMiddleware(string id, Action<string> onBefore, Action<string> onAfter)
-    {
-        _id = id;
-        _onBefore = onBefore;
-        _onAfter = onAfter;
-    }
+    private readonly Action<string> _onBefore = onBefore;
+    private readonly Action<string> _onAfter = onAfter;
+    private readonly string _id = id;
 
     protected override async Task<bool> RunInnerAsync(
         HandleMessageContext context,

@@ -3,18 +3,11 @@ using JustSaying.Messaging.Channels.Context;
 
 namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 
-internal class FakeDispatcher : IMessageDispatcher
+internal class FakeDispatcher(Action spy = null) : IMessageDispatcher
 {
-    private readonly Action _spy;
-
-    public FakeDispatcher(Action spy = null)
-    {
-        _spy = spy;
-    }
-
     public Task DispatchMessageAsync(IQueueMessageContext messageContext, CancellationToken cancellationToken)
     {
-        _spy?.Invoke();
+        spy?.Invoke();
         DispatchedMessages.Add(messageContext);
         return Task.CompletedTask;
     }

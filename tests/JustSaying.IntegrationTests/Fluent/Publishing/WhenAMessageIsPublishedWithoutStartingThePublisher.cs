@@ -3,12 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenAMessageIsPublishedWithoutStartingThePublisher : IntegrationTestBase
+public class WhenAMessageIsPublishedWithoutStartingThePublisher(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenAMessageIsPublishedWithoutStartingThePublisher(ITestOutputHelper outputHelper) : base(
-        outputHelper)
-    { }
-
     [AwsFact]
     public async Task Then_The_PushlishShouldThrow()
     {

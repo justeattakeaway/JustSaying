@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using System.Text.RegularExpressions;
+using System.Text.Json;
 using Amazon;
 
 namespace JustSaying.AwsTools.MessageHandling;

@@ -5,14 +5,9 @@ namespace JustSaying.Messaging.MessageHandling;
 /// <summary>
 /// A collection of <see cref="MessageAttributeValue"/> values returned by <see cref="IMessageSerializationRegister"/>.
 /// </summary>
-public class MessageAttributes
+public class MessageAttributes(Dictionary<string, MessageAttributeValue> attributes)
 {
-    private readonly IDictionary<string, MessageAttributeValue> _attributes;
-
-    public MessageAttributes(Dictionary<string, MessageAttributeValue> attributes)
-    {
-        _attributes = attributes ?? throw new ArgumentNullException(nameof(attributes));
-    }
+    private readonly Dictionary<string, MessageAttributeValue> _attributes = attributes ?? throw new ArgumentNullException(nameof(attributes));
 
     public MessageAttributes()
         : this(new Dictionary<string, MessageAttributeValue>())

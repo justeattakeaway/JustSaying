@@ -11,8 +11,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch;
 /// </summary>
 public sealed class MiddlewareMap : IInterrogable
 {
-    private readonly Dictionary<(string queueName, Type type), HandleMessageMiddleware> _middlewares
-        = new Dictionary<(string, Type), HandleMessageMiddleware>();
+    private readonly Dictionary<(string queueName, Type type), HandleMessageMiddleware> _middlewares = new();
 
     /// <summary>
     /// Checks if a middleware has been added for a given queue and message type.

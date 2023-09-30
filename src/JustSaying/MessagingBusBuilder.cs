@@ -79,10 +79,7 @@ public sealed class MessagingBusBuilder
             throw new ArgumentNullException(nameof(configure));
         }
 
-        if (ClientFactoryBuilder == null)
-        {
-            ClientFactoryBuilder = new AwsClientFactoryBuilder(this);
-        }
+        ClientFactoryBuilder ??= new AwsClientFactoryBuilder(this);
 
         configure(ClientFactoryBuilder);
 
@@ -106,10 +103,7 @@ public sealed class MessagingBusBuilder
             throw new ArgumentNullException(nameof(configure));
         }
 
-        if (MessagingConfig == null)
-        {
-            MessagingConfig = new MessagingConfigurationBuilder(this);
-        }
+        MessagingConfig ??= new MessagingConfigurationBuilder(this);
 
         configure(MessagingConfig);
 
@@ -133,10 +127,7 @@ public sealed class MessagingBusBuilder
             throw new ArgumentNullException(nameof(configure));
         }
 
-        if (PublicationsBuilder == null)
-        {
-            PublicationsBuilder = new PublicationsBuilder(this);
-        }
+        PublicationsBuilder ??= new PublicationsBuilder(this);
 
         configure(PublicationsBuilder);
 
@@ -233,10 +224,7 @@ public sealed class MessagingBusBuilder
         JustSayingBus bus = CreateBus(config, loggerFactory);
         IAwsClientFactoryProxy proxy = CreateFactoryProxy();
 
-        if (PublicationsBuilder != null)
-        {
-            PublicationsBuilder.Configure(bus, proxy, loggerFactory);
-        }
+        PublicationsBuilder?.Configure(bus, proxy, loggerFactory);
 
         return bus;
     }

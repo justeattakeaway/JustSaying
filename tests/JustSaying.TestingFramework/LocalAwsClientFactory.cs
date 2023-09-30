@@ -6,14 +6,9 @@ using JustSaying.AwsTools;
 
 namespace JustSaying.TestingFramework;
 
-public class LocalAwsClientFactory : IAwsClientFactory
+public class LocalAwsClientFactory(Uri serviceUrl) : IAwsClientFactory
 {
-    public LocalAwsClientFactory(Uri serviceUrl)
-    {
-        ServiceUrl = serviceUrl;
-    }
-
-    private Uri ServiceUrl { get; }
+    private Uri ServiceUrl { get; } = serviceUrl;
 
     public IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region)
     {

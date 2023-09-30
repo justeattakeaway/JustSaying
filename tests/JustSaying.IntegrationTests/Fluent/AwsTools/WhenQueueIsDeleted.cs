@@ -8,13 +8,8 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenQueueIsDeleted : IntegrationTestBase
+public class WhenQueueIsDeleted(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenQueueIsDeleted(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
-
     [AwsFact]
     public async Task Then_The_Error_Queue_Is_Deleted()
     {

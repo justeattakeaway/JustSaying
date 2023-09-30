@@ -25,7 +25,7 @@ public class WhenSqsIsSlow
         var messages = new List<Message> { new TestMessage() };
         var queue = new FakeSqsQueue(async ct =>
         {
-            await Task.Delay(100);
+            await Task.Delay(100, ct);
             Interlocked.Increment(ref _callCount);
             return messages;
         });

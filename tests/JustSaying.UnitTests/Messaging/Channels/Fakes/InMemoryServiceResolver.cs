@@ -14,7 +14,7 @@ public class InMemoryServiceResolver : IServiceResolver, IHandlerResolver
 
     private static readonly Action<IServiceCollection, ITestOutputHelper, IMessageMonitor> Configure = (sc, outputHelper, monitor) =>
         sc.AddLogging(l => l.AddXUnit(outputHelper))
-            .AddSingleton<IMessageMonitor>(monitor)
+            .AddSingleton(monitor)
             .AddSingleton<LoggingMiddleware>()
             .AddSingleton<SqsPostProcessorMiddleware>()
             .AddSingleton<IMessageContextAccessor>(new MessageContextAccessor());

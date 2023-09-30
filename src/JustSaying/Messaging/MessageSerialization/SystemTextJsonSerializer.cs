@@ -42,17 +42,15 @@ public class SystemTextJsonSerializer : IMessageSerializer
     /// <inheritdoc />
     public string GetMessageSubject(string sqsMessage)
     {
-        using (var body = JsonDocument.Parse(sqsMessage))
+        using var body = JsonDocument.Parse(sqsMessage);
+        string subject = string.Empty;
+
+        if (body.RootElement.TryGetProperty("Subject", out var value))
         {
-            string subject = string.Empty;
-
-            if (body.RootElement.TryGetProperty("Subject", out var value))
-            {
-                subject = value.GetString() ?? string.Empty;
-            }
-
-            return subject;
+            subject = value.GetString() ?? string.Empty;
         }
+
+        return subject;
     }
 
     public MessageAttributes GetMessageAttributes(string message)
@@ -86,13 +84,11 @@ public class SystemTextJsonSerializer : IMessageSerializer
     /// <inheritdoc />
     public Message Deserialize(string message, Type type)
     {
-        using (var document = JsonDocument.Parse(message))
-        {
-            JsonElement element = document.RootElement.GetProperty("Message");
-            string json = element.ToString();
+        using var document = JsonDocument.Parse(message);
+        JsonElement element = document.RootElement.GetProperty("Message");
+        string json = element.ToString();
 
-            return (Message)JsonSerializer.Deserialize(json, type, _options);
-        }
+        return (Message)JsonSerializer.Deserialize(json, type, _options);
     }
 
     /// <inheritdoc />

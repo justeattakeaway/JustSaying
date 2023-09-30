@@ -16,7 +16,7 @@ public class WhenPublishingAsyncResponseLoggerAsyncIsCalled : WhenPublishingTest
 {
     private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
     private const string Url = "https://blablabla/" + QueueName;
-    private readonly SimpleMessage _testMessage = new SimpleMessage { Content = "Hello" };
+    private readonly SimpleMessage _testMessage = new() { Content = "Hello" };
     private const string QueueName = "queuename";
 
     private const string MessageId = "TestMessage12345";

@@ -2,17 +2,12 @@ using JustSaying.Messaging.MessageHandling;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class RecordingMessageContextAccessor : IMessageContextAccessor, IMessageContextReader
+public class RecordingMessageContextAccessor(IMessageContextAccessor inner) : IMessageContextAccessor, IMessageContextReader
 {
-    private readonly IMessageContextAccessor _inner;
-    private readonly List<MessageContext> _valuesWritten = new List<MessageContext>();
+    private readonly IMessageContextAccessor _inner = inner;
+    private readonly List<MessageContext> _valuesWritten = new();
 
     public IReadOnlyCollection<MessageContext> ValuesWritten => _valuesWritten;
-
-    public RecordingMessageContextAccessor(IMessageContextAccessor inner)
-    {
-        _inner = inner;
-    }
 
     public MessageContext MessageContext
     {

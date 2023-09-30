@@ -10,15 +10,20 @@ using MessageAttributeValue = Amazon.SimpleNotificationService.Model.MessageAttr
 
 namespace JustSaying.AwsTools.MessageHandling;
 
-public class SnsMessagePublisher : IMessagePublisher, IInterrogable
+public class SnsMessagePublisher(
+    IAmazonSimpleNotificationService client,
+    IMessageSerializationRegister serializationRegister,
+    ILoggerFactory loggerFactory,
+    IMessageSubjectProvider messageSubjectProvider,
+    Func<Exception, Message, bool> handleException = null) : IMessagePublisher, IInterrogable
 {
-    private readonly IMessageSerializationRegister _serializationRegister;
-    private readonly IMessageSubjectProvider _messageSubjectProvider;
-    private readonly Func<Exception, Message, bool> _handleException;
+    private readonly IMessageSerializationRegister _serializationRegister = serializationRegister;
+    private readonly IMessageSubjectProvider _messageSubjectProvider = messageSubjectProvider;
+    private readonly Func<Exception, Message, bool> _handleException = handleException;
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
     public string Arn { get; internal set; }
-    protected IAmazonSimpleNotificationService Client { get; }
-    private readonly ILogger _logger;
+    protected IAmazonSimpleNotificationService Client { get; } = client;
+    private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
 
     public SnsMessagePublisher(
         string topicArn,
@@ -30,20 +35,6 @@ public class SnsMessagePublisher : IMessagePublisher, IInterrogable
         : this(client, serializationRegister, loggerFactory, messageSubjectProvider, handleException)
     {
         Arn = topicArn;
-    }
-
-    public SnsMessagePublisher(
-        IAmazonSimpleNotificationService client,
-        IMessageSerializationRegister serializationRegister,
-        ILoggerFactory loggerFactory,
-        IMessageSubjectProvider messageSubjectProvider,
-        Func<Exception, Message, bool> handleException = null)
-    {
-        Client = client;
-        _serializationRegister = serializationRegister;
-        _logger = loggerFactory.CreateLogger("JustSaying.Publish");
-        _handleException = handleException;
-        _messageSubjectProvider = messageSubjectProvider;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -132,7 +123,7 @@ public class SnsMessagePublisher : IMessagePublisher, IInterrogable
         }
 
         var binaryValueStream = value.BinaryValue != null
-            ? new MemoryStream(value.BinaryValue.ToArray(), false)
+            ? new MemoryStream([.. value.BinaryValue], false)
             : null;
 
         return new MessageAttributeValue

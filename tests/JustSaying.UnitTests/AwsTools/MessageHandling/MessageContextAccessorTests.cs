@@ -120,7 +120,7 @@ public class MessageContextAccessorTests
         return new MessageContext(sqsMessage, queueUri, new MessageAttributes());
     }
 
-    private static IMessageContextAccessor MakeAccessor()
+    private static MessageContextAccessor MakeAccessor()
     {
         return new MessageContextAccessor();
     }

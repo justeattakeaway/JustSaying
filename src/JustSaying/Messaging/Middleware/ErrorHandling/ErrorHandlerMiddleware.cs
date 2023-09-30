@@ -7,19 +7,14 @@ namespace JustSaying.Messaging.Middleware.ErrorHandling;
 /// This middleware calls HandleException(Type messageType), HandleError(Exception ex, Amazon.SQS.Model.Message message),
 /// and Handled(JustSaying.Models.Message message).
 /// </summary>
-public sealed class ErrorHandlerMiddleware : MiddlewareBase<HandleMessageContext, bool>
+/// <remarks>
+/// Constructs an <see cref="ErrorHandlerMiddleware"/>.
+/// </remarks>
+/// <param name="monitor">The <see cref="IMessageMonitor"/> to use to record errors.</param>
+/// <exception cref="ArgumentNullException">When the <see cref="IMessageMonitor"/> is null.</exception>
+public sealed class ErrorHandlerMiddleware(IMessageMonitor monitor) : MiddlewareBase<HandleMessageContext, bool>
 {
-    private readonly IMessageMonitor _monitor;
-
-    /// <summary>
-    /// Constructs an <see cref="ErrorHandlerMiddleware"/>.
-    /// </summary>
-    /// <param name="monitor">The <see cref="IMessageMonitor"/> to use to record errors.</param>
-    /// <exception cref="ArgumentNullException">When the <see cref="IMessageMonitor"/> is null.</exception>
-    public ErrorHandlerMiddleware(IMessageMonitor monitor)
-    {
-        _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
-    }
+    private readonly IMessageMonitor _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
 
     protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
     {

@@ -4,13 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenPublishingWithNoRegisteredMessages : IntegrationTestBase
+public class WhenPublishingWithNoRegisteredMessages(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenPublishingWithNoRegisteredMessages(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
-
     [AwsFact]
     public async Task Then_An_Exception_Is_Thrown()
     {

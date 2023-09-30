@@ -8,7 +8,7 @@ using HandleMessageMiddleware = JustSaying.Messaging.Middleware.MiddlewareBase<J
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public class WhenRegisteringMessageHandlers : GivenAServiceBus
+public class WhenRegisteringMessageHandlers(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
 {
     private ISqsQueue _queue;
     private IHandlerAsync<Message> _handler1;
@@ -46,7 +46,4 @@ public class WhenRegisteringMessageHandlers : GivenAServiceBus
     }
 
     public class Message2 : Message { }
-
-    public WhenRegisteringMessageHandlers(ITestOutputHelper outputHelper) : base(outputHelper)
-    { }
 }

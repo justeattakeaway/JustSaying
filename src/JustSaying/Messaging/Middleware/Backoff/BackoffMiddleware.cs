@@ -10,25 +10,18 @@ namespace JustSaying.Messaging.Middleware.Backoff;
 /// <summary>
 /// Implements a middleware that will execute an <see cref="IMessageBackoffStrategy"/> to delay message redelivery when a handler returns false or throws.
 /// </summary>
-public sealed class BackoffMiddleware : MiddlewareBase<HandleMessageContext, bool>
+/// <remarks>
+/// Constructs a <see cref="BackoffMiddleware"/> with a given backoff strategy and logger/monitor.
+/// </remarks>
+/// <param name="backoffStrategy">An <see cref="IMessageBackoffStrategy"/> to use to determine how long to delay message redelivery when a handler returns false or throws.</param>
+/// <param name="loggerFactory">An <see cref="ILoggerFactory"/> to use when logging request failures.</param>
+/// <param name="monitor">An <see cref="IMessageMonitor"/> to use when recording request failures.</param>
+public sealed class BackoffMiddleware(IMessageBackoffStrategy backoffStrategy, ILoggerFactory loggerFactory, IMessageMonitor monitor) : MiddlewareBase<HandleMessageContext, bool>
 {
-    private readonly IMessageBackoffStrategy _backoffStrategy;
-    private readonly ILogger<BackoffMiddleware> _logger;
-    private readonly IMessageMonitor _monitor;
-
-    /// <summary>
-    /// Constructs a <see cref="BackoffMiddleware"/> with a given backoff strategy and logger/monitor.
-    /// </summary>
-    /// <param name="backoffStrategy">An <see cref="IMessageBackoffStrategy"/> to use to determine how long to delay message redelivery when a handler returns false or throws.</param>
-    /// <param name="loggerFactory">An <see cref="ILoggerFactory"/> to use when logging request failures.</param>
-    /// <param name="monitor">An <see cref="IMessageMonitor"/> to use when recording request failures.</param>
-    public BackoffMiddleware(IMessageBackoffStrategy backoffStrategy, ILoggerFactory loggerFactory, IMessageMonitor monitor)
-    {
-        _backoffStrategy = backoffStrategy ?? throw new ArgumentNullException(nameof(backoffStrategy));
-        _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
-        _logger = loggerFactory?.CreateLogger<BackoffMiddleware>() ??
+    private readonly IMessageBackoffStrategy _backoffStrategy = backoffStrategy ?? throw new ArgumentNullException(nameof(backoffStrategy));
+    private readonly ILogger<BackoffMiddleware> _logger = loggerFactory?.CreateLogger<BackoffMiddleware>() ??
                   throw new ArgumentNullException(nameof(loggerFactory));
-    }
+    private readonly IMessageMonitor _monitor = monitor ?? throw new ArgumentNullException(nameof(monitor));
 
     protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
     {
@@ -70,7 +63,7 @@ public sealed class BackoffMiddleware : MiddlewareBase<HandleMessageContext, boo
     }
 
     private static bool TryGetApproxReceiveCount(
-        IDictionary<string, string> attributes,
+        Dictionary<string, string> attributes,
         out int approxReceiveCount)
     {
         approxReceiveCount = 0;

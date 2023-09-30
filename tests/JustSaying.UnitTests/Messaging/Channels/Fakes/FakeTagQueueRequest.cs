@@ -1,13 +1,7 @@
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class FakeTagQueueRequest
+public class FakeTagQueueRequest(string queueUrl, Dictionary<string, string> tags)
 {
-    public FakeTagQueueRequest(string queueUrl, Dictionary<string, string> tags)
-    {
-        QueueUrl = queueUrl;
-        Tags = tags;
-    }
-
-    public string QueueUrl { get; }
-    public Dictionary<string, string> Tags { get; }
+    public string QueueUrl { get; } = queueUrl;
+    public Dictionary<string, string> Tags { get; } = tags;
 }

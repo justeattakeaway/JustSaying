@@ -9,14 +9,9 @@ using NSubstitute.ExceptionExtensions;
 
 namespace JustSaying.UnitTests.AwsTools.TopicCreation;
 
-public class WhenCreatingTopicWithNoPermissions
+public class WhenCreatingTopicWithNoPermissions(ITestOutputHelper outputHelper)
 {
-    public WhenCreatingTopicWithNoPermissions(ITestOutputHelper outputHelper)
-    {
-        OutputHelper = outputHelper;
-    }
-
-    private ITestOutputHelper OutputHelper { get; }
+    private ITestOutputHelper OutputHelper { get; } = outputHelper;
 
     [Fact]
     public async Task Arn_Still_Retrieved_When_It_Already_Exists()

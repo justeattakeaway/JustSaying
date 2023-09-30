@@ -32,7 +32,7 @@ public abstract class MiddlewareBase<TContext, TOut>
                     return await func(ct).ConfigureAwait(false);
                 }
 
-                else return default(TOut);
+                else return default;
             },
             stoppingToken).ConfigureAwait(false);
     }

@@ -15,7 +15,7 @@ public static class TestHandleContexts
             new Message(),
             message ?? new TMessage(),
             typeof(TMessage),
-            new FakeVisbilityUpdater(),
+            new FakeVisibilityUpdater(),
             new FakeMessageDeleter(),
             new Uri("http://test-queue"),
             new MessageAttributes());

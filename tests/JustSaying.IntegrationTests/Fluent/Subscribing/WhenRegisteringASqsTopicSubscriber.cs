@@ -4,13 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class WhenRegisteringASqsTopicSubscriber : IntegrationTestBase
+public class WhenRegisteringASqsTopicSubscriber(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenRegisteringASqsTopicSubscriber(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
-
     [AwsFact]
     public async Task Then_A_Queue_Is_Created()
     {

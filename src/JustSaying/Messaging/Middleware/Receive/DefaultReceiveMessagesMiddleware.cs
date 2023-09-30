@@ -6,19 +6,12 @@ namespace JustSaying.Messaging.Middleware.Receive;
 /// <summary>
 /// The default middleware to use for the receive pipeline.
 /// </summary>
-public class DefaultReceiveMessagesMiddleware : MiddlewareBase<ReceiveMessagesContext, IList<Message>>
+/// <remarks>
+/// Creates an instance of <see cref="DefaultReceiveMessagesMiddleware"/>.
+/// </remarks>
+/// <param name="logger">The <see cref="ILogger"/> to use.</param>
+public class DefaultReceiveMessagesMiddleware(ILogger<DefaultReceiveMessagesMiddleware> logger) : MiddlewareBase<ReceiveMessagesContext, IList<Message>>
 {
-    private readonly ILogger<DefaultReceiveMessagesMiddleware> _logger;
-
-    /// <summary>
-    /// Creates an instance of <see cref="DefaultReceiveMessagesMiddleware"/>.
-    /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to use.</param>
-    public DefaultReceiveMessagesMiddleware(ILogger<DefaultReceiveMessagesMiddleware> logger)
-    {
-        _logger = logger;
-    }
-
     protected override async Task<IList<Message>> RunInnerAsync(
         ReceiveMessagesContext context,
         Func<CancellationToken, Task<IList<Message>>> func,
@@ -28,7 +21,7 @@ public class DefaultReceiveMessagesMiddleware : MiddlewareBase<ReceiveMessagesCo
         {
             var results = await func(stoppingToken).ConfigureAwait(false);
 
-            _logger.LogTrace(
+            logger.LogTrace(
                 "Polled for messages on queue '{QueueName}' in region '{Region}', and received {MessageCount} messages.",
                 context.QueueName,
                 context.RegionName,
@@ -38,7 +31,7 @@ public class DefaultReceiveMessagesMiddleware : MiddlewareBase<ReceiveMessagesCo
         }
         catch (OperationCanceledException ex)
         {
-            _logger.LogTrace(
+            logger.LogTrace(
                 ex,
                 "Request to get more messages from queue was canceled for queue '{QueueName}' in region '{Region}'," +
                 "likely because there are no messages in the queue. " +
@@ -46,11 +39,9 @@ public class DefaultReceiveMessagesMiddleware : MiddlewareBase<ReceiveMessagesCo
                 context.QueueName,
                 context.RegionName);
         }
-#pragma warning disable CA1031
         catch (Exception ex)
-#pragma warning restore CA1031
         {
-            _logger.LogError(
+            logger.LogError(
                 ex,
                 "Error receiving messages on queue '{QueueName}' in region '{Region}'.",
                 context.QueueName,

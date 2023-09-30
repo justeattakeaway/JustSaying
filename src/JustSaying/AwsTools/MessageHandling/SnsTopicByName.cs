@@ -8,47 +8,39 @@ using Microsoft.Extensions.Logging;
 namespace JustSaying.AwsTools.MessageHandling;
 
 [Obsolete("SnsTopicByName is not intended for general usage and may be removed in a future major release")]
-public sealed class SnsTopicByName : IInterrogable
+public sealed class SnsTopicByName(
+    string topicName,
+    IAmazonSimpleNotificationService client,
+    ILoggerFactory loggerFactory) : IInterrogable
 {
-    private readonly IAmazonSimpleNotificationService _client;
-    private readonly ILogger _logger;
+    private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying");
 
-    public string TopicName { get; }
+    public string TopicName { get; } = topicName;
     public string Arn { get; private set; }
     internal ServerSideEncryption ServerSideEncryption { get; set; }
     public IDictionary<string, string> Tags { get; set; }
 
-    public SnsTopicByName(
-        string topicName,
-        IAmazonSimpleNotificationService client,
-        ILoggerFactory loggerFactory)
-    {
-        _client = client;
-        TopicName = topicName;
-        _logger = loggerFactory.CreateLogger("JustSaying");
-    }
-
     public async Task EnsurePolicyIsUpdatedAsync(IReadOnlyCollection<string> additionalSubscriberAccounts)
     {
-        if (additionalSubscriberAccounts.Any())
+        if (additionalSubscriberAccounts.Count != 0)
         {
             var policyDetails = new SnsPolicyDetails
             {
                 AccountIds = additionalSubscriberAccounts,
                 SourceArn = Arn
             };
-            await SnsPolicy.SaveAsync(policyDetails, _client).ConfigureAwait(false);
+            await SnsPolicy.SaveAsync(policyDetails, client).ConfigureAwait(false);
         }
     }
 
     public async Task ApplyTagsAsync(CancellationToken cancellationToken)
     {
-        if (!Tags.Any())
+        if (Tags.Count < 1)
         {
             return;
         }
 
-        Tag CreateTag(KeyValuePair<string, string> tag) => new() { Key = tag.Key, Value = tag.Value };
+        static Tag CreateTag(KeyValuePair<string, string> tag) => new() { Key = tag.Key, Value = tag.Value };
 
         var tagRequest = new TagResourceRequest
         {
@@ -56,7 +48,7 @@ public sealed class SnsTopicByName : IInterrogable
             Tags = Tags.Select(CreateTag).ToList()
         };
 
-        await _client.TagResourceAsync(tagRequest, cancellationToken).ConfigureAwait(false);
+        await client.TagResourceAsync(tagRequest, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Added {TagCount} tags to topic {TopicName}", tagRequest.Tags.Count, TopicName);
     }
@@ -69,7 +61,7 @@ public sealed class SnsTopicByName : IInterrogable
         }
 
         _logger.LogInformation("Checking for existence of the topic '{TopicName}'.", TopicName);
-        var topic = await _client.FindTopicAsync(TopicName).ConfigureAwait(false);
+        var topic = await client.FindTopicAsync(TopicName).ConfigureAwait(false);
 
         if (topic != null)
         {
@@ -84,7 +76,7 @@ public sealed class SnsTopicByName : IInterrogable
     {
         try
         {
-            var response = await _client.CreateTopicAsync(new CreateTopicRequest(TopicName), cancellationToken)
+            var response = await client.CreateTopicAsync(new CreateTopicRequest(TopicName), cancellationToken)
                 .ConfigureAwait(false);
 
             if (string.IsNullOrEmpty(response.TopicArn))
@@ -121,7 +113,7 @@ public sealed class SnsTopicByName : IInterrogable
 
     private async Task<ServerSideEncryption> ExtractServerSideEncryptionFromTopicAttributes()
     {
-        var attributesResponse = await _client.GetTopicAttributesAsync(Arn).ConfigureAwait(false);
+        var attributesResponse = await client.GetTopicAttributesAsync(Arn).ConfigureAwait(false);
 
         if (!attributesResponse.Attributes.TryGetValue(
                 JustSayingConstants.AttributeEncryptionKeyId,
@@ -147,7 +139,7 @@ public sealed class SnsTopicByName : IInterrogable
                 AttributeValue = config?.KmsMasterKeyId ?? string.Empty
             };
 
-            var response = await _client.SetTopicAttributesAsync(request).ConfigureAwait(false);
+            var response = await client.SetTopicAttributesAsync(request).ConfigureAwait(false);
 
             if (response.HttpStatusCode == HttpStatusCode.OK)
             {

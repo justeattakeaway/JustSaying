@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class WhenListeningStartsAndStops : BaseSubscriptionGroupTests
+public class WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
 {
     private const string AttributeMessageContentsRunning = @"Message Contents Running";
     private const string AttributeMessageContentsAfterStop = @"Message Contents After Stop";
@@ -12,11 +12,6 @@ public class WhenListeningStartsAndStops : BaseSubscriptionGroupTests
     private int _expectedMaxMessageCount;
     private bool _running;
     private FakeSqsQueue _queue;
-
-    public WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper)
-        : base(testOutputHelper)
-    {
-    }
 
     protected override void Given()
     {
