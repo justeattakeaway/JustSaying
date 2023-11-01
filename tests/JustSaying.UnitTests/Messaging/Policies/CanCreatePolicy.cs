@@ -45,27 +45,30 @@ public class CanCreatePolicy
     [Fact]
     public async Task Can_Integrate_With_Polly_Policies_Async()
     {
-        var pollyPolicy = Policy
-            .Handle<CustomException>()
-            .CircuitBreakerAsync(
-                exceptionsAllowedBeforeBreaking: 2,
-                durationOfBreak: TimeSpan.FromSeconds(1));
+        var pipeline = new ResiliencePipelineBuilder()
+            .AddCircuitBreaker(new CircuitBreakerStrategyOptions
+            {
+                ShouldHandle = new PredicateBuilder().Handle<CustomException>(),
+                MinimumThroughput = 2,
+                BreakDuration = TimeSpan.FromSeconds(1),
+            })
+            .Build();
 
-        var policy = MiddlewareBuilder.BuildAsync(
-            new PollyMiddleware<string, int>(pollyPolicy));
+        var middleware = MiddlewareBuilder.BuildAsync(
+            new PollyMiddleware<string, int>(pipeline));
 
         var calledCount = 0;
-        await Assert.ThrowsAsync<CustomException>(() => policy.RunAsync("context", ct =>
+        await Assert.ThrowsAsync<CustomException>(() => middleware.RunAsync("context", ct =>
         {
             calledCount++;
             throw new CustomException();
         }, CancellationToken.None));
-        await Assert.ThrowsAsync<CustomException>(() => policy.RunAsync("context", ct =>
+        await Assert.ThrowsAsync<CustomException>(() => middleware.RunAsync("context", ct =>
         {
             calledCount++;
             throw new CustomException();
         }, CancellationToken.None));
-        await Assert.ThrowsAsync<BrokenCircuitException>(() => policy.RunAsync("context", ct =>
+        await Assert.ThrowsAsync<BrokenCircuitException>(() => middleware.RunAsync("context", ct =>
         {
             calledCount++;
             throw new CustomException();

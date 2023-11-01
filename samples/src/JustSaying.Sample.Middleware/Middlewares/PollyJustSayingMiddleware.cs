@@ -1,6 +1,7 @@
-﻿using JustSaying.Messaging.Middleware;
+using JustSaying.Messaging.Middleware;
 using JustSaying.Sample.Middleware.Exceptions;
 using Polly;
+using Polly.Retry;
 using Serilog;
 
 namespace JustSaying.Sample.Middleware.Middlewares;
@@ -10,11 +11,11 @@ namespace JustSaying.Sample.Middleware.Middlewares;
 /// </summary>
 public class PollyJustSayingMiddleware : MiddlewareBase<HandleMessageContext, bool>
 {
-    private readonly AsyncPolicy _policy;
+    private readonly ResiliencePipeline _pipeline;
 
     public PollyJustSayingMiddleware()
     {
-        _policy = CreateMessageRetryPolicy();
+        _pipeline = CreateResiliencePipeline();
     }
 
     protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
@@ -23,7 +24,19 @@ public class PollyJustSayingMiddleware : MiddlewareBase<HandleMessageContext, bo
 
         try
         {
-            return await _policy.ExecuteAsync(func, stoppingToken);
+            var pool = ResilienceContextPool.Shared;
+            var resilienceContext = pool.Get(stoppingToken);
+
+            try
+            {
+                return await _pipeline.ExecuteAsync(
+                    static async (context, func) =>
+                        await func(context.CancellationToken), resilienceContext, func);
+            }
+            finally
+            {
+                pool.Return(resilienceContext);
+            }
         }
         finally
         {
@@ -31,10 +44,21 @@ public class PollyJustSayingMiddleware : MiddlewareBase<HandleMessageContext, bo
         }
     }
 
-    private static AsyncPolicy CreateMessageRetryPolicy()
+    private static ResiliencePipeline CreateResiliencePipeline()
     {
-        return Policy.Handle<BusinessException>()
-            .WaitAndRetryAsync(3, count => TimeSpan.FromMilliseconds(Math.Max(count * 100, 1000)),
-                onRetry: (e, ts, retryCount, ctx) => Log.Information(e, "Retrying failed operation on count {RetryCount}", retryCount));
+        return new ResiliencePipelineBuilder()
+            .AddRetry(new RetryStrategyOptions
+            {
+                ShouldHandle = new PredicateBuilder().Handle<BusinessException>(),
+                Delay = TimeSpan.FromSeconds(1),
+                MaxRetryAttempts = 3,
+                BackoffType = DelayBackoffType.Exponential,
+                OnRetry = (args) =>
+                {
+                    Log.Information("Retrying failed operation on count {RetryCount}", args.AttemptNumber);
+                    return ValueTask.CompletedTask;
+                }
+            })
+            .Build();
     }
 }
