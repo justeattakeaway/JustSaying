@@ -295,7 +295,7 @@ public class ChannelsTests
 
         cts.CancelAfter(_timeoutPeriod);
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await runTask);
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => runTask);
 
         dispatchedBeforeCancelled.ShouldBeGreaterThan(0);
         dispatchedAfterCancelled.ShouldBe(0);
