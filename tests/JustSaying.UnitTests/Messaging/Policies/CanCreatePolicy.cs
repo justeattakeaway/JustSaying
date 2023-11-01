@@ -55,17 +55,17 @@ public class CanCreatePolicy
             new PollyMiddleware<string, int>(pollyPolicy));
 
         var calledCount = 0;
-        await Assert.ThrowsAsync<CustomException>(async () => await policy.RunAsync("context", ct =>
+        await Assert.ThrowsAsync<CustomException>(() => policy.RunAsync("context", ct =>
         {
             calledCount++;
             throw new CustomException();
         }, CancellationToken.None));
-        await Assert.ThrowsAsync<CustomException>(async () => await policy.RunAsync("context", ct =>
+        await Assert.ThrowsAsync<CustomException>(() => policy.RunAsync("context", ct =>
         {
             calledCount++;
             throw new CustomException();
         }, CancellationToken.None));
-        await Assert.ThrowsAsync<BrokenCircuitException>(async () => await policy.RunAsync("context", ct =>
+        await Assert.ThrowsAsync<BrokenCircuitException>(() => policy.RunAsync("context", ct =>
         {
             calledCount++;
             throw new CustomException();

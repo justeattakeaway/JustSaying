@@ -52,13 +52,13 @@ public class MergingMultiplexerTests
     }
 
     [Fact]
-    public void Cannot_Get_Messages_Before_Started()
+    public async Task Cannot_Get_Messages_Before_Started()
     {
         // Arrange
         using var multiplexer = new MergingMultiplexer(10, _outputHelper.ToLogger<MergingMultiplexer>());
 
         // Act and Assert
-        Assert.ThrowsAsync<InvalidOperationException>(async () => await ReadAllMessages(multiplexer));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => ReadAllMessages(multiplexer));
     }
 
     [Fact]
