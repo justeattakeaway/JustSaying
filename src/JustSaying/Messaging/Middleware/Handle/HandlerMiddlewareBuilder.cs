@@ -95,7 +95,7 @@ Please check the documentation for your container for more details.");
     /// <exception cref="InvalidOperationException">
     /// If a HandlerInvocationMiddleware already exists in this pipeline, it cannot be added again.
     /// </exception>
-    public HandlerMiddlewareBuilder UseHandler<TMessage>() where TMessage : Message
+    public HandlerMiddlewareBuilder UseHandler<TMessage>() where TMessage : class
     {
         if (_handlerMiddleware != null)
         {

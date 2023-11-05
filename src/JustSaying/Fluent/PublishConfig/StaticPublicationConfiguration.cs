@@ -8,20 +8,20 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
 
-internal sealed class StaticPublicationConfiguration : ITopicPublisher
+internal sealed class StaticPublicationConfiguration<TMessage> : ITopicPublisher<TMessage>  where TMessage : class
 {
     public Func<CancellationToken, Task> StartupTask { get; }
-    public IMessagePublisher Publisher { get; }
+    public IMessagePublisher<TMessage> Publisher { get; }
 
     public StaticPublicationConfiguration(
         Func<CancellationToken, Task> startupTask,
-        IMessagePublisher publisher)
+        IMessagePublisher<TMessage> publisher)
     {
         StartupTask = startupTask;
         Publisher = publisher;
     }
 
-    public static StaticPublicationConfiguration Build<T>(
+    public static StaticPublicationConfiguration<TMessage> Build(
         string topicName,
         Dictionary<string, string> tags,
         SnsWriteConfiguration writeConfiguration,
@@ -34,9 +34,9 @@ internal sealed class StaticPublicationConfiguration : ITopicPublisher
             TopicName = topicName
         };
 
-        readConfiguration.ApplyTopicNamingConvention<T>(bus.Config.TopicNamingConvention);
+        readConfiguration.ApplyTopicNamingConvention<TMessage>(bus.Config.TopicNamingConvention);
 
-        var eventPublisher = new SnsMessagePublisher(
+        var eventPublisher = new SnsMessagePublisher<TMessage>(
             snsClient,
             bus.SerializationRegister,
             loggerFactory,
@@ -72,12 +72,12 @@ internal sealed class StaticPublicationConfiguration : ITopicPublisher
 
             eventPublisher.Arn = snsTopic.Arn;
 
-            loggerFactory.CreateLogger<StaticPublicationConfiguration>().LogInformation(
+            loggerFactory.CreateLogger<StaticPublicationConfiguration<TMessage>>().LogInformation(
                 "Created SNS topic publisher on topic '{TopicName}' for message type '{MessageType}'.",
                 snsTopic.TopicName,
-                typeof(T));
+                typeof(TMessage));
         }
 
-        return new StaticPublicationConfiguration(StartupTask, eventPublisher);
+        return new StaticPublicationConfiguration<TMessage>(StartupTask, eventPublisher);
     }
 }

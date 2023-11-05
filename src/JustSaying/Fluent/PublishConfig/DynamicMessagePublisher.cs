@@ -6,20 +6,21 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
 
-internal sealed class DynamicMessagePublisher : IMessagePublisher
+// TODO review object vs generic type argument
+internal sealed class DynamicMessagePublisher<TMessage> : IMessagePublisher<TMessage> where TMessage : class
 {
-    private readonly ConcurrentDictionary<string, IMessagePublisher> _publisherCache = new();
-    private readonly Func<Message, string> _topicNameCustomizer;
-    private readonly Func<string, StaticPublicationConfiguration> _staticConfigBuilder;
+    private readonly ConcurrentDictionary<string, IMessagePublisher<TMessage>> _publisherCache = new();
+    private readonly Func<TMessage, string> _topicNameCustomizer;
+    private readonly Func<string, StaticPublicationConfiguration<TMessage>> _staticConfigBuilder;
 
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _topicCreationLocks = new();
-    private readonly ILogger<DynamicMessagePublisher> _logger;
+    private readonly ILogger<DynamicMessagePublisher<TMessage>> _logger;
 
-    public DynamicMessagePublisher(Func<Message, string> topicNameCustomizer, Func<string, StaticPublicationConfiguration> staticConfigBuilder, ILoggerFactory loggerFactory)
+    public DynamicMessagePublisher(Func<TMessage, string> topicNameCustomizer, Func<string, StaticPublicationConfiguration<TMessage>> staticConfigBuilder, ILoggerFactory loggerFactory)
     {
         _topicNameCustomizer = topicNameCustomizer;
         _staticConfigBuilder = staticConfigBuilder;
-        _logger = loggerFactory.CreateLogger<DynamicMessagePublisher>();
+        _logger = loggerFactory.CreateLogger<DynamicMessagePublisher<TMessage>>();
     }
 
     public InterrogationResult Interrogate()
@@ -38,7 +39,7 @@ internal sealed class DynamicMessagePublisher : IMessagePublisher
         return Task.CompletedTask;
     }
 
-    public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
+    public async Task PublishAsync(TMessage message, PublishMetadata metadata, CancellationToken cancellationToken)
     {
         var topicName = _topicNameCustomizer(message);
         if (_publisherCache.TryGetValue(topicName, out var publisher))
@@ -69,6 +70,6 @@ internal sealed class DynamicMessagePublisher : IMessagePublisher
         await config.Publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
     }
 
-    public Task PublishAsync(Message message, CancellationToken cancellationToken)
+    public Task PublishAsync(TMessage message, CancellationToken cancellationToken)
         => PublishAsync(message, null, cancellationToken);
 }

@@ -10,11 +10,11 @@ namespace JustSaying.Fluent;
 /// <summary>
 /// A class representing a builder for a topic subscription. This class cannot be inherited.
 /// </summary>
-/// <typeparam name="T">
+/// <typeparam name="TMessage">
 /// The type of the message.
 /// </typeparam>
-public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
-    where T : Message
+public sealed class TopicSubscriptionBuilder<TMessage> : ISubscriptionBuilder<TMessage>
+    where TMessage : class
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TopicSubscriptionBuilder{T}"/> class.
@@ -48,7 +48,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// <returns>
     /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
     /// </returns>
-    public TopicSubscriptionBuilder<T> IntoDefaultTopic()
+    public TopicSubscriptionBuilder<TMessage> IntoDefaultTopic()
         => WithQueueName(string.Empty);
 
     /// <summary>
@@ -61,7 +61,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="name"/> is <see langword="null"/>.
     /// </exception>
-    public TopicSubscriptionBuilder<T> WithQueueName(string name)
+    public TopicSubscriptionBuilder<TMessage> WithQueueName(string name)
     {
         QueueName = name ?? throw new ArgumentNullException(nameof(name));
         return this;
@@ -77,7 +77,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="name"/> is <see langword="null"/>.
     /// </exception>
-    public TopicSubscriptionBuilder<T> WithTopicName(string name)
+    public TopicSubscriptionBuilder<TMessage> WithTopicName(string name)
     {
         TopicName = name ?? throw new ArgumentNullException(nameof(name));
         return this;
@@ -93,7 +93,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
-    public TopicSubscriptionBuilder<T> WithReadConfiguration(
+    public TopicSubscriptionBuilder<TMessage> WithReadConfiguration(
         Action<SqsReadConfigurationBuilder> configure)
     {
         if (configure == null)
@@ -119,14 +119,14 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
-    public TopicSubscriptionBuilder<T> WithReadConfiguration(Action<SqsReadConfiguration> configure)
+    public TopicSubscriptionBuilder<TMessage> WithReadConfiguration(Action<SqsReadConfiguration> configure)
     {
         ConfigureReads = configure ?? throw new ArgumentNullException(nameof(configure));
         return this;
     }
 
     /// <inheritdoc />
-    public ISubscriptionBuilder<T> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
+    public ISubscriptionBuilder<TMessage> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
     {
         MiddlewareConfiguration = middlewareConfiguration;
         return this;
@@ -143,7 +143,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// <exception cref="ArgumentException">
     /// <paramref name="key"/> is <see langword="null"/> or whitespace.
     /// </exception>
-    public TopicSubscriptionBuilder<T> WithTag(string key) => WithTag(key, null);
+    public TopicSubscriptionBuilder<TMessage> WithTag(string key) => WithTag(key, null);
 
     /// <summary>
     /// Creates a tag with a value that will be assigned to the SQS queue.
@@ -157,7 +157,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// <exception cref="ArgumentException">
     /// <paramref name="key"/> is <see langword="null"/> or whitespace.
     /// </exception>
-    public TopicSubscriptionBuilder<T> WithTag(string key, string value)
+    public TopicSubscriptionBuilder<TMessage> WithTag(string key, string value)
     {
         if (string.IsNullOrWhiteSpace(key))
         {
@@ -170,7 +170,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     }
 
     /// <inheritdoc />
-    void ISubscriptionBuilder<T>.Configure(
+    void ISubscriptionBuilder<TMessage>.Configure(
         JustSayingBus bus,
         IHandlerResolver handlerResolver,
         IServiceResolver serviceResolver,
@@ -178,7 +178,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         IAwsClientFactoryProxy awsClientFactoryProxy,
         ILoggerFactory loggerFactory)
     {
-        var logger = loggerFactory.CreateLogger<TopicSubscriptionBuilder<T>>();
+        var logger = loggerFactory.CreateLogger<TopicSubscriptionBuilder<TMessage>>();
 
         var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic)
         {
@@ -192,8 +192,8 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
 
         ConfigureReads?.Invoke(subscriptionConfig);
 
-        subscriptionConfig.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
-        subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
+        subscriptionConfig.ApplyTopicNamingConvention<TMessage>(config.TopicNamingConvention);
+        subscriptionConfig.ApplyQueueNamingConvention<TMessage>(config.QueueNamingConvention);
         subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
         subscriptionConfig.PublishEndpoint = subscriptionConfig.TopicName;
         subscriptionConfig.Validate();
@@ -211,23 +211,23 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
             subscriptionConfig.QueueName);
 
         var resolutionContext = new HandlerResolutionContext(subscriptionConfig.QueueName);
-        var proposedHandler = handlerResolver.ResolveHandler<T>(resolutionContext);
+        var proposedHandler = handlerResolver.ResolveHandler<TMessage>(resolutionContext);
         if (proposedHandler == null)
         {
             throw new HandlerNotRegisteredWithContainerException(
-                $"There is no handler for '{typeof(T)}' messages.");
+                $"There is no handler for '{typeof(TMessage)}' messages.");
         }
 
         var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver);
         var handlerMiddleware = middlewareBuilder
-            .Configure(MiddlewareConfiguration ?? (builder => builder.UseDefaults<T>(proposedHandler.GetType())) )
+            .Configure(MiddlewareConfiguration ?? (builder => builder.UseDefaults<TMessage>(proposedHandler.GetType())) )
             .Build();
 
-        bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, handlerMiddleware);
+        bus.AddMessageMiddleware<TMessage>(subscriptionConfig.QueueName, handlerMiddleware);
 
         logger.LogInformation(
             "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",
-            typeof(T),
+            typeof(TMessage),
             subscriptionConfig.TopicName,
             subscriptionConfig.QueueName);
     }

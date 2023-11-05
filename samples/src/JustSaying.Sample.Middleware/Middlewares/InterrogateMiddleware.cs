@@ -1,4 +1,5 @@
 ﻿using JustSaying.Messaging.Middleware;
+using JustSaying.Models;
 using JustSaying.Sample.Middleware.Messages;
 using Serilog;
 
@@ -17,7 +18,8 @@ public sealed class InterrogateMiddleware : MiddlewareBase<HandleMessageContext,
         }
         else if (context.Message is UnreliableMessage unreliableMessage)
         {
-            Log.Information("[{MiddlewareName}] Hello UnreliableMessage! Hope you work this time....your Name is {Name} and Id is {Id}", nameof(InterrogateMiddleware),unreliableMessage.Name, context.Message.Id);
+            var messageId = (context.Message as Message)?.Id.ToString() ?? "<unknown>";
+            Log.Information("[{MiddlewareName}] Hello UnreliableMessage! Hope you work this time....your Name is {Name} and Id is {Id}", nameof(InterrogateMiddleware),unreliableMessage.Name, messageId);
         }
 
         return await func(stoppingToken);

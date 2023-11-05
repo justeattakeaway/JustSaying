@@ -4,9 +4,9 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
-public abstract class WhenPublishingTestBase : IAsyncLifetime
+public abstract class WhenPublishingTestBase<T> : IAsyncLifetime where T : class
 {
-    private protected SqsMessagePublisher SystemUnderTest { get; private set; }
+    private protected SqsMessagePublisher<T> SystemUnderTest { get; private set; }
     public IAmazonSQS Sqs { get; private set; } = Substitute.For<IAmazonSQS>();
 
     public virtual async Task InitializeAsync()
@@ -25,7 +25,7 @@ public abstract class WhenPublishingTestBase : IAsyncLifetime
     }
 
     protected abstract void Given();
-    private protected abstract Task<SqsMessagePublisher> CreateSystemUnderTestAsync();
+    private protected abstract Task<SqsMessagePublisher<T>> CreateSystemUnderTestAsync();
 
     protected abstract Task WhenAsync();
 }

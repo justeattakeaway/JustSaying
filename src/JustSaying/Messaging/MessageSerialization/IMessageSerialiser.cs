@@ -21,5 +21,5 @@ public interface IMessageSerializer
     /// AWS SNS service adds these automatically, so for publishing to topics don't add these properties
     /// </param>
     /// <returns></returns>
-    string Serialize(Message message, bool serializeForSnsPublishing, string subject);
+    string Serialize<TMessage>(TMessage message, bool serializeForSnsPublishing, string subject) where TMessage : class; // TODO this containing class should almost certainly be a generic type
 }

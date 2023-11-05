@@ -10,11 +10,11 @@ namespace JustSaying.Fluent;
 /// <summary>
 /// A class representing a builder for a queue subscription. This class cannot be inherited.
 /// </summary>
-/// <typeparam name="T">
+/// <typeparam name="TMessage">
 /// The type of the message.
 /// </typeparam>
-public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
-    where T : Message
+public sealed class QueueSubscriptionBuilder<TMessage> : ISubscriptionBuilder<TMessage>
+    where TMessage : class
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="QueueSubscriptionBuilder{T}"/> class.
@@ -49,7 +49,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// <returns>
     /// The current <see cref="QueueSubscriptionBuilder{T}"/>.
     /// </returns>
-    public QueueSubscriptionBuilder<T> WithDefaultQueue()
+    public QueueSubscriptionBuilder<TMessage> WithDefaultQueue()
         => WithQueueName(string.Empty);
 
     /// <summary>
@@ -62,7 +62,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="name"/> is <see langword="null"/>.
     /// </exception>
-    public QueueSubscriptionBuilder<T> WithQueueName(string name)
+    public QueueSubscriptionBuilder<TMessage> WithQueueName(string name)
     {
         QueueName = name ?? throw new ArgumentNullException(nameof(name));
         return this;
@@ -78,7 +78,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
-    public QueueSubscriptionBuilder<T> WithReadConfiguration(
+    public QueueSubscriptionBuilder<TMessage> WithReadConfiguration(
         Action<SqsReadConfigurationBuilder> configure)
     {
         if (configure == null)
@@ -104,7 +104,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
-    public QueueSubscriptionBuilder<T> WithReadConfiguration(Action<SqsReadConfiguration> configure)
+    public QueueSubscriptionBuilder<TMessage> WithReadConfiguration(Action<SqsReadConfiguration> configure)
     {
         ConfigureReads = configure ?? throw new ArgumentNullException(nameof(configure));
         return this;
@@ -121,7 +121,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// <exception cref="ArgumentException">
     /// <paramref name="key"/> is <see langword="null"/> or whitespace.
     /// </exception>
-    public QueueSubscriptionBuilder<T> WithTag(string key) => WithTag(key, null);
+    public QueueSubscriptionBuilder<TMessage> WithTag(string key) => WithTag(key, null);
 
     /// <summary>
     /// Creates a tag with a value that will be assigned to the SQS queue.
@@ -135,7 +135,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// <exception cref="ArgumentException">
     /// <paramref name="key"/> is <see langword="null"/> or whitespace.
     /// </exception>
-    public QueueSubscriptionBuilder<T> WithTag(string key, string value)
+    public QueueSubscriptionBuilder<TMessage> WithTag(string key, string value)
     {
         if (string.IsNullOrWhiteSpace(key))
         {
@@ -148,14 +148,14 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     }
 
     /// <inheritdoc />
-    public ISubscriptionBuilder<T> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
+    public ISubscriptionBuilder<TMessage> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
     {
         MiddlewareConfiguration = middlewareConfiguration;
         return this;
     }
 
     /// <inheritdoc />
-    void ISubscriptionBuilder<T>.Configure(
+    void ISubscriptionBuilder<TMessage>.Configure(
         JustSayingBus bus,
         IHandlerResolver handlerResolver,
         IServiceResolver serviceResolver,
@@ -163,7 +163,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         IAwsClientFactoryProxy awsClientFactoryProxy,
         ILoggerFactory loggerFactory)
     {
-        var logger = loggerFactory.CreateLogger<QueueSubscriptionBuilder<T>>();
+        var logger = loggerFactory.CreateLogger<QueueSubscriptionBuilder<TMessage>>();
 
         var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.PointToPoint)
         {
@@ -176,8 +176,8 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         var config = bus.Config;
         var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
-        subscriptionConfig.ApplyTopicNamingConvention<T>(config.TopicNamingConvention);
-        subscriptionConfig.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
+        subscriptionConfig.ApplyTopicNamingConvention<TMessage>(config.TopicNamingConvention);
+        subscriptionConfig.ApplyQueueNamingConvention<TMessage>(config.QueueNamingConvention);
         subscriptionConfig.SubscriptionGroupName ??= subscriptionConfig.QueueName;
         subscriptionConfig.Validate();
 
@@ -188,27 +188,27 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
 
         logger.LogInformation(
             "Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",
-            typeof(T),
+            typeof(TMessage),
             subscriptionConfig.QueueName);
 
         var resolutionContext = new HandlerResolutionContext(subscriptionConfig.QueueName);
-        var proposedHandler = handlerResolver.ResolveHandler<T>(resolutionContext);
+        var proposedHandler = handlerResolver.ResolveHandler<TMessage>(resolutionContext);
         if (proposedHandler == null)
         {
             throw new HandlerNotRegisteredWithContainerException(
-                $"There is no handler for '{typeof(T)}' messages.");
+                $"There is no handler for '{typeof(TMessage)}' messages.");
         }
 
         var middlewareBuilder = new HandlerMiddlewareBuilder(handlerResolver, serviceResolver);
         var handlerMiddleware = middlewareBuilder
-            .Configure(MiddlewareConfiguration ?? (b => b.UseDefaults<T>(proposedHandler.GetType())))
+            .Configure(MiddlewareConfiguration ?? (b => b.UseDefaults<TMessage>(proposedHandler.GetType())))
             .Build();
 
-        bus.AddMessageMiddleware<T>(subscriptionConfig.QueueName, handlerMiddleware);
+        bus.AddMessageMiddleware<TMessage>(subscriptionConfig.QueueName, handlerMiddleware);
 
         logger.LogInformation(
             "Added a message handler for message type for '{MessageType}' on topic '{TopicName}' and queue '{QueueName}'.",
-            typeof(T),
+            typeof(TMessage),
             subscriptionConfig.TopicName,
             subscriptionConfig.QueueName);
     }

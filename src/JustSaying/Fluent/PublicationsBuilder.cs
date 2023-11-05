@@ -1,5 +1,4 @@
 using JustSaying.AwsTools;
-using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
@@ -26,26 +25,26 @@ public sealed class PublicationsBuilder
     /// <summary>
     /// Gets the configured publication builders.
     /// </summary>
-    private IList<IPublicationBuilder<Message>> Publications { get; } = new List<IPublicationBuilder<Message>>();
+    private IList<IPublicationBuilder> Publications { get; } = new List<IPublicationBuilder>();
 
     /// <summary>
     /// Configures a publisher for a queue.
     /// </summary>
-    /// <typeparam name="T">The type of the message to publish.</typeparam>
+    /// <typeparam name="TMessage">The type of the message to publish.</typeparam>
     /// <returns>
     /// The current <see cref="PublicationsBuilder"/>.
     /// </returns>
-    public PublicationsBuilder WithQueue<T>()
-        where T : Message
+    public PublicationsBuilder WithQueue<TMessage>()
+        where TMessage : class
     {
-        Publications.Add(new QueuePublicationBuilder<T>());
+        Publications.Add(new QueuePublicationBuilder<TMessage>());
         return this;
     }
 
     /// <summary>
     /// Configures a publisher for a queue.
     /// </summary>
-    /// <typeparam name="T">The type of the message to publish.</typeparam>
+    /// <typeparam name="TMessage">The type of the message to publish.</typeparam>
     /// <param name="configure">A delegate to a method to use to configure a queue.</param>
     /// <returns>
     /// The current <see cref="PublicationsBuilder"/>.
@@ -53,15 +52,15 @@ public sealed class PublicationsBuilder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
-    public PublicationsBuilder WithQueue<T>(Action<QueuePublicationBuilder<T>> configure)
-        where T : Message
+    public PublicationsBuilder WithQueue<TMessage>(Action<QueuePublicationBuilder<TMessage>> configure)
+        where TMessage : class
     {
         if (configure == null)
         {
             throw new ArgumentNullException(nameof(configure));
         }
 
-        var builder = new QueuePublicationBuilder<T>();
+        var builder = new QueuePublicationBuilder<TMessage>();
 
         configure(builder);
 
@@ -74,15 +73,15 @@ public sealed class PublicationsBuilder
     /// Configures a publisher for a pre-existing topic.
     /// </summary>
     /// <param name="queueArn">The ARN of the queue to publish to.</param>
-    /// <typeparam name="T">The type of the message to publish to.</typeparam>
+    /// <typeparam name="TMessage">The type of the message to publish to.</typeparam>
     /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public PublicationsBuilder WithQueueArn<T>(string queueArn)
-        where T : Message
+    public PublicationsBuilder WithQueueArn<TMessage>(string queueArn)
+        where TMessage : class
     {
         if (queueArn == null) throw new ArgumentNullException(nameof(queueArn));
 
-        var builder = new QueueAddressPublicationBuilder<T>(QueueAddress.FromArn(queueArn));
+        var builder = new QueueAddressPublicationBuilder<TMessage>(QueueAddress.FromArn(queueArn));
 
         Publications.Add(builder);
 
@@ -93,15 +92,15 @@ public sealed class PublicationsBuilder
     /// Configures a publisher for a pre-existing topic.
     /// </summary>
     /// <param name="queueUrl">The URL of the queue to publish to.</param>
-    /// <typeparam name="T">The type of the message to publish to.</typeparam>
+    /// <typeparam name="TMessage">The type of the message to publish to.</typeparam>
     /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public PublicationsBuilder WithQueueUrl<T>(string queueUrl)
-        where T : Message
+    public PublicationsBuilder WithQueueUrl<TMessage>(string queueUrl)
+        where TMessage : class
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
-        var builder = new QueueAddressPublicationBuilder<T>(QueueAddress.FromUrl(queueUrl));
+        var builder = new QueueAddressPublicationBuilder<TMessage>(QueueAddress.FromUrl(queueUrl));
 
         Publications.Add(builder);
 
@@ -112,15 +111,15 @@ public sealed class PublicationsBuilder
     /// Configures a publisher for a pre-existing topic.
     /// </summary>
     /// <param name="queueUrl">The URL of the queue to publish to.</param>
-    /// <typeparam name="T">The type of the message to publish to.</typeparam>
+    /// <typeparam name="TMessage">The type of the message to publish to.</typeparam>
     /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public PublicationsBuilder WithQueueUri<T>(Uri queueUrl)
-        where T : Message
+    public PublicationsBuilder WithQueueUri<TMessage>(Uri queueUrl)
+        where TMessage : class
     {
         if (queueUrl == null) throw new ArgumentNullException(nameof(queueUrl));
 
-        var builder = new QueueAddressPublicationBuilder<T>(QueueAddress.FromUri(queueUrl));
+        var builder = new QueueAddressPublicationBuilder<TMessage>(QueueAddress.FromUri(queueUrl));
 
         Publications.Add(builder);
 
@@ -130,21 +129,21 @@ public sealed class PublicationsBuilder
     /// <summary>
     /// Configures a publisher for a topic.
     /// </summary>
-    /// <typeparam name="T">The type of the message to publish.</typeparam>
+    /// <typeparam name="TMessage">The type of the message to publish.</typeparam>
     /// <returns>
     /// The current <see cref="PublicationsBuilder"/>.
     /// </returns>
-    public PublicationsBuilder WithTopic<T>()
-        where T : Message
+    public PublicationsBuilder WithTopic<TMessage>()
+        where TMessage : class
     {
-        Publications.Add(new TopicPublicationBuilder<T>());
+        Publications.Add(new TopicPublicationBuilder<TMessage>());
         return this;
     }
 
     /// <summary>
     /// Configures a publisher for a topic.
     /// </summary>
-    /// <typeparam name="T">The type of the message to publish.</typeparam>
+    /// <typeparam name="TMessage">The type of the message to publish.</typeparam>
     /// <param name="configure">A delegate to a method to use to configure a topic.</param>
     /// <returns>
     /// The current <see cref="PublicationsBuilder"/>.
@@ -152,15 +151,15 @@ public sealed class PublicationsBuilder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
-    public PublicationsBuilder WithTopic<T>(Action<TopicPublicationBuilder<T>> configure)
-        where T : Message
+    public PublicationsBuilder WithTopic<TMessage>(Action<TopicPublicationBuilder<TMessage>> configure)
+        where TMessage : class
     {
         if (configure == null)
         {
             throw new ArgumentNullException(nameof(configure));
         }
 
-        var builder = new TopicPublicationBuilder<T>();
+        var builder = new TopicPublicationBuilder<TMessage>();
 
         configure(builder);
 
@@ -174,15 +173,15 @@ public sealed class PublicationsBuilder
     /// </summary>
     /// <param name="topicArn">The ARN of the topic to publish to.</param>
     /// <param name="configure">An optional delegate to configure a topic publisher.</param>
-    /// <typeparam name="T">The type of the message to publish to.</typeparam>
+    /// <typeparam name="TMessage">The type of the message to publish to.</typeparam>
     /// <returns>The current <see cref="PublicationsBuilder"/>.</returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public PublicationsBuilder WithTopicArn<T>(string topicArn, Action<TopicAddressPublicationBuilder<T>> configure = null)
-        where T : Message
+    public PublicationsBuilder WithTopicArn<TMessage>(string topicArn, Action<TopicAddressPublicationBuilder<TMessage>> configure = null)
+        where TMessage : class
     {
         if (topicArn == null) throw new ArgumentNullException(nameof(topicArn));
 
-        var builder = new TopicAddressPublicationBuilder<T>(TopicAddress.FromArn(topicArn));
+        var builder = new TopicAddressPublicationBuilder<TMessage>(TopicAddress.FromArn(topicArn));
 
         configure?.Invoke(builder);
 
@@ -199,7 +198,7 @@ public sealed class PublicationsBuilder
     /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> logger factory to use.</param>
     internal void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
     {
-        foreach (IPublicationBuilder<Message> builder in Publications)
+        foreach (IPublicationBuilder builder in Publications)
         {
             builder.Configure(bus, proxy, loggerFactory);
         }

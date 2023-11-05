@@ -8,7 +8,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
-public class WhenPublishingDelayedMessage : WhenPublishingTestBase
+public class WhenPublishingDelayedMessage : WhenPublishingTestBase<SimpleMessage>
 {
     private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
     private const string Url = "https://testurl.com/" + QueueName;
@@ -21,9 +21,9 @@ public class WhenPublishingDelayedMessage : WhenPublishingTestBase
 
     private const string QueueName = "queuename";
 
-    private protected override Task<SqsMessagePublisher> CreateSystemUnderTestAsync()
+    private protected override Task<SqsMessagePublisher<SimpleMessage>> CreateSystemUnderTestAsync()
     {
-        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _serializationRegister, Substitute.For<ILoggerFactory>());
+        var sqs = new SqsMessagePublisher<SimpleMessage>(new Uri(Url), Sqs, _serializationRegister, Substitute.For<ILoggerFactory>());
         return Task.FromResult(sqs);
     }
 

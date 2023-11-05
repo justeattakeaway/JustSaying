@@ -18,7 +18,7 @@ public class TrackingLoggingMonitor : IMessageMonitor
         PublishMessageTimes = new List<TimeSpan>();
         ReceiveMessageTimes = new List<(TimeSpan duration, string queue, string region)>();
         HandlerExecutionTimes = new List<(Type handlerType, Type messageType, TimeSpan duration)>();
-        HandledMessages = new List<Models.Message>();
+        HandledMessages = new List<object>();
     }
 
     public List<(Type handlerType, Type messageType, TimeSpan duration)> HandlerExecutionTimes { get; }
@@ -27,7 +27,7 @@ public class TrackingLoggingMonitor : IMessageMonitor
     public IList<TimeSpan> HandledTimes { get; }
     public IList<TimeSpan> HandledThrottlingTime { get; }
     public IList<TimeSpan> PublishMessageTimes { get; }
-    public IList<Models.Message> HandledMessages { get; }
+    public IList<object> HandledMessages { get; }
     public IList<(TimeSpan duration, string queue, string region)> ReceiveMessageTimes { get; }
     public int IssuesPublishingMessage { get; private set; }
     public int ThrottlingStatisticIncrements { get; private set; }
@@ -56,7 +56,7 @@ public class TrackingLoggingMonitor : IMessageMonitor
         _logger.LogInformation("Problem during publish");
     }
 
-    public void Handled(Models.Message message)
+    public void Handled(object message)
     {
         HandledMessages.Add(message);
         _logger.LogInformation("Handled message of type {MessageType}", message.GetType());

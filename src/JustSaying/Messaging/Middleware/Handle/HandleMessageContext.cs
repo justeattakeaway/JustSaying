@@ -1,6 +1,5 @@
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Models;
 
 
 // ReSharper disable once CheckNamespace
@@ -16,7 +15,7 @@ public sealed class HandleMessageContext
     /// <param name="queueName">The queue from which this message was received.</param>
     /// <param name="visibilityUpdater">The <see cref="IMessageVisibilityUpdater"/> to use to update message visibilities on failure.</param>
     /// <param name="messageDeleter">The <see cref="IMessageDeleter"/> to use to remove a message from the queue on success.</param>
-    public HandleMessageContext(string queueName, Amazon.SQS.Model.Message rawMessage, Message message,
+    public HandleMessageContext(string queueName, Amazon.SQS.Model.Message rawMessage, object message,
         Type messageType, IMessageVisibilityUpdater visibilityUpdater, IMessageDeleter messageDeleter,
         Uri queueUri, MessageAttributes messageAttributes)
     {
@@ -43,7 +42,7 @@ public sealed class HandleMessageContext
     /// <summary>
     /// The JustSaying message that was deserialized from SQS.
     /// </summary>
-    public Message Message { get; }
+    public object Message { get; } // TODO Review creating a generic HandleMessageContent
 
     /// <summary>
     /// The Absolute Uri of the queue this message came from.

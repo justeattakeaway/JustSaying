@@ -12,7 +12,7 @@ public static class HandleMessageContextExtensions
     /// <typeparam name="TMessage">The type of the message to try and get from the context.</typeparam>
     /// <returns>An instance of <typeparamref name="TMessage"/> or <see langword="null"/> if the message was not of type <typeparamref name="TMessage"/></returns>
     /// <exception cref="ArgumentNullException">The <see cref="context"/> object is <see langword="null"/>.</exception>
-    public static TMessage MessageAs<TMessage>(this HandleMessageContext context) where TMessage : Message
+    public static TMessage MessageAs<TMessage>(this HandleMessageContext context) where TMessage : class
     {
         if (context == null) throw new ArgumentNullException(nameof(context));
 

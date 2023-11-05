@@ -7,19 +7,19 @@ namespace JustSaying.UnitTests.JustSayingBus;
 
 public class WhenRegisteringTheSamePublisherTwice : GivenAServiceBus
 {
-    private IMessagePublisher _publisher;
+    private IMessagePublisher<Message> _publisher;
 
     protected override void Given()
     {
         base.Given();
-        _publisher = Substitute.For<IMessagePublisher>();
+        _publisher = Substitute.For<IMessagePublisher<Message>>();
         RecordAnyExceptionsThrown();
     }
 
     protected override Task WhenAsync()
     {
-        SystemUnderTest.AddMessagePublisher<Message>(_publisher);
-        SystemUnderTest.AddMessagePublisher<Message>(_publisher);
+        SystemUnderTest.AddMessagePublisher(_publisher);
+        SystemUnderTest.AddMessagePublisher(_publisher);
 
         return Task.CompletedTask;
     }

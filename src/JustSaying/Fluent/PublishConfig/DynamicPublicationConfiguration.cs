@@ -4,23 +4,23 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
 
-internal sealed class DynamicPublicationConfiguration : ITopicPublisher
+internal sealed class DynamicPublicationConfiguration<TMessage> : ITopicPublisher<TMessage>  where TMessage : class
 {
-    public DynamicPublicationConfiguration(IMessagePublisher publisher)
+    public DynamicPublicationConfiguration(IMessagePublisher<TMessage> publisher)
     {
         Publisher = publisher;
     }
 
     public Func<CancellationToken, Task> StartupTask => _ => Task.CompletedTask;
-    public IMessagePublisher Publisher { get; }
+    public IMessagePublisher<TMessage> Publisher { get; }
 
-    public static DynamicPublicationConfiguration Build<T>(
-        Func<Message, string> topicNameCustomizer,
-        Func<string, StaticPublicationConfiguration> staticConfigBuilder,
+    public static DynamicPublicationConfiguration<TMessage> Build(
+        Func<TMessage, string> topicNameCustomizer,
+        Func<string, StaticPublicationConfiguration<TMessage>> staticConfigBuilder,
         ILoggerFactory loggerFactory)
     {
-        var publisher = new DynamicMessagePublisher(topicNameCustomizer, staticConfigBuilder, loggerFactory);
+        var publisher = new DynamicMessagePublisher<TMessage>(topicNameCustomizer, staticConfigBuilder, loggerFactory);
 
-        return new DynamicPublicationConfiguration(publisher);
+        return new DynamicPublicationConfiguration<TMessage>(publisher);
     }
 }

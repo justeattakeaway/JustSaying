@@ -11,14 +11,14 @@ using NSubstitute.Core;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;
 
-public class WhenPublishingAsyncExceptionCanBeHandled : WhenPublishingTestBase
+public class WhenPublishingAsyncExceptionCanBeHandled : WhenPublishingTestBase<SimpleMessage>
 {
     private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
     private const string TopicArn = "topicarn";
 
-    private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
+    private protected override Task<SnsMessagePublisher<SimpleMessage>> CreateSystemUnderTestAsync()
     {
-        var topic = new SnsMessagePublisher(TopicArn, Sns, _serializationRegister, NullLoggerFactory.Instance, Substitute.For<IMessageSubjectProvider>(), (_, _) => true);
+        var topic = new SnsMessagePublisher<SimpleMessage>(TopicArn, Sns, _serializationRegister, NullLoggerFactory.Instance, Substitute.For<IMessageSubjectProvider>(), (_, _) => true);
 
         return Task.FromResult(topic);
     }

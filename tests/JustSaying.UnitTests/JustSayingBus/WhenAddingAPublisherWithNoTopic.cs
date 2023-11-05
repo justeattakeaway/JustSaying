@@ -13,7 +13,7 @@ public class WhenAddingAPublisherWithNoTopic : GivenAServiceBus
 
     protected override Task WhenAsync()
     {
-        SystemUnderTest.AddMessagePublisher<SimpleMessage>(Substitute.For<IMessagePublisher>());
+        SystemUnderTest.AddMessagePublisher(Substitute.For<IMessagePublisher<SimpleMessage>>());
 
         return Task.CompletedTask;
     }

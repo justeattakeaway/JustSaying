@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialization;
 
@@ -16,13 +15,13 @@ public class MessageSerializationRegister : IMessageSerializationRegister
         _serializationFactory = serializationFactory;
     }
 
-    public void AddSerializer<T>() where T : Message
+    public void AddSerializer<TMessage>() where TMessage : class
     {
-        string key = _messageSubjectProvider.GetSubjectForType(typeof(T));
+        string key = _messageSubjectProvider.GetSubjectForType(typeof(TMessage));
 
         var typeSerializer = _typeSerializersBySubject.GetOrAdd(key,
             _ => new Lazy<TypeSerializer>(
-                () => new TypeSerializer(typeof(T), _serializationFactory.GetSerializer<T>())
+                () => new TypeSerializer(typeof(TMessage), _serializationFactory.GetSerializer<TMessage>())
             )
         ).Value;
 
@@ -61,7 +60,7 @@ public class MessageSerializationRegister : IMessageSerializationRegister
         throw exception;
     }
 
-    public string Serialize(Message message, bool serializeForSnsPublishing)
+    public string Serialize<TMessage>(TMessage message, bool serializeForSnsPublishing) where TMessage : class
     {
         var messageType = message.GetType();
         string subject = _messageSubjectProvider.GetSubjectForType(messageType);

@@ -8,14 +8,14 @@ namespace JustSaying.Fluent;
 /// <summary>
 /// A class representing a builder for a topic publication to an existing topic. This class cannot be inherited.
 /// </summary>
-/// <typeparam name="T">
+/// <typeparam name="TMessage">
 /// The type of the message.
 /// </typeparam>
-public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
-    where T : Message
+public sealed class TopicAddressPublicationBuilder<TMessage> : IPublicationBuilder
+    where TMessage : class
 {
     private readonly TopicAddress _topicAddress;
-    private Func<Exception,Message,bool> _exceptionHandler;
+    private Func<Exception,TMessage,bool> _exceptionHandler;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TopicAddressPublicationBuilder{T}"/> class.
@@ -36,7 +36,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="exceptionHandler"/> is <see langword="null"/>.
     /// </exception>
-    public TopicAddressPublicationBuilder<T> WithExceptionHandler(Func<Exception, Message, bool> exceptionHandler)
+    public TopicAddressPublicationBuilder<TMessage> WithExceptionHandler(Func<Exception, TMessage, bool> exceptionHandler)
     {
         _exceptionHandler = exceptionHandler ?? throw new ArgumentNullException(nameof(exceptionHandler));
         return this;
@@ -45,27 +45,27 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     /// <inheritdoc />
     public void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
     {
-        var logger = loggerFactory.CreateLogger<TopicAddressPublicationBuilder<T>>();
+        var logger = loggerFactory.CreateLogger<TopicAddressPublicationBuilder<TMessage>>();
 
-        logger.LogInformation("Adding SNS publisher for message type '{MessageType}'", typeof(T));
+        logger.LogInformation("Adding SNS publisher for message type '{MessageType}'", typeof(TMessage));
 
         var config = bus.Config;
         var arn = Arn.Parse(_topicAddress.TopicArn);
 
-        bus.SerializationRegister.AddSerializer<T>();
+        bus.SerializationRegister.AddSerializer<TMessage>();
 
-        var eventPublisher = new TopicAddressPublisher(
+        var eventPublisher = new TopicAddressPublisher<TMessage>(
             proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(arn.Region)),
             loggerFactory,
             config.MessageSubjectProvider,
             bus.SerializationRegister,
             _exceptionHandler,
             _topicAddress);
-        bus.AddMessagePublisher<T>(eventPublisher);
+        bus.AddMessagePublisher<TMessage>(eventPublisher);
 
         logger.LogInformation(
             "Created SNS topic publisher on topic '{TopicName}' for message type '{MessageType}'",
             arn.Resource,
-            typeof(T));
+            typeof(TMessage));
     }
 }

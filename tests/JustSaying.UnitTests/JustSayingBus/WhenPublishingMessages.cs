@@ -7,11 +7,11 @@ namespace JustSaying.UnitTests.JustSayingBus;
 
 public class WhenPublishingMessages : GivenAServiceBus
 {
-    private readonly IMessagePublisher _publisher = Substitute.For<IMessagePublisher>();
+    private readonly IMessagePublisher<SimpleMessage> _publisher = Substitute.For<IMessagePublisher<SimpleMessage>>();
 
     protected override async Task WhenAsync()
     {
-        SystemUnderTest.AddMessagePublisher<SimpleMessage>(_publisher);
+        SystemUnderTest.AddMessagePublisher(_publisher);
 
         var cts = new CancellationTokenSource(TimeoutPeriod);
         await SystemUnderTest.StartAsync(cts.Token);
@@ -22,7 +22,7 @@ public class WhenPublishingMessages : GivenAServiceBus
     [Fact]
     public void PublisherIsCalledToPublish()
     {
-        _publisher.Received().PublishAsync(Arg.Any<Message>(),
+        _publisher.Received().PublishAsync(Arg.Any<SimpleMessage>(),
             Arg.Any<PublishMetadata>(), Arg.Any<CancellationToken>());
     }
     [Fact]

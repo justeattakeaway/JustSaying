@@ -1,5 +1,4 @@
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialization;
 
@@ -23,11 +22,11 @@ public interface IMessageSerializationRegister
     /// AWS SNS service adds these automatically, so for publishing to topics don't add these properties
     /// </param>
     /// <returns>The serialized message for publishing.</returns>
-    string Serialize(Message message, bool serializeForSnsPublishing);
+    string Serialize<TMessage>(TMessage message, bool serializeForSnsPublishing) where TMessage : class;
 
     /// <summary>
     /// Register a serializer for the given type, if one does not already exist.
     /// </summary>
-    /// <typeparam name="T">The type to register a serializer for.</typeparam>
-    void AddSerializer<T>() where T : Message;
+    /// <typeparam name="TMessage">The type to register a serializer for.</typeparam>
+    void AddSerializer<TMessage>() where TMessage : class;
 }

@@ -30,7 +30,7 @@ public sealed class MessagingConfigurationBuilder
     /// <summary>
     /// Gets or sets the optional value to use for <see cref="IPublishConfiguration.MessageResponseLogger"/>
     /// </summary>
-    private Action<MessageResponse, Message> MessageResponseLogger { get; set; }
+    private Action<MessageResponse, object> MessageResponseLogger { get; set; }
 
     /// <summary>
     /// Gets or sets the optional value to use for <see cref="IPublishConfiguration.PublishFailureBackoff"/>
@@ -133,7 +133,7 @@ public sealed class MessagingConfigurationBuilder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="logger"/> is <see langword="null"/>.
     /// </exception>
-    public MessagingConfigurationBuilder WithMessageResponseLogger(Action<MessageResponse, Message> logger)
+    public MessagingConfigurationBuilder WithMessageResponseLogger(Action<MessageResponse, object> logger)
     {
         MessageResponseLogger = logger ?? throw new ArgumentNullException(nameof(logger));
         return this;

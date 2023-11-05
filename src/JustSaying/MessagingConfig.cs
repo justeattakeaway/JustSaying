@@ -20,7 +20,7 @@ public class MessagingConfig : IMessagingConfig
 
     public int PublishFailureReAttempts { get; set; }
     public TimeSpan PublishFailureBackoff { get; set; }
-    public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
+    public Action<MessageResponse, object> MessageResponseLogger { get; set; }
     public IReadOnlyCollection<string> AdditionalSubscriberAccounts { get; set; }
     public string Region { get; set; }
     public IMessageSubjectProvider MessageSubjectProvider { get; set; }

@@ -12,7 +12,7 @@ using Message = JustSaying.Models.Message;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
-public class WhenPublishingAsyncResponseLoggerAsyncIsCalled : WhenPublishingTestBase
+public class WhenPublishingAsyncResponseLoggerAsyncIsCalled : WhenPublishingTestBase<SimpleMessage>
 {
     private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
     private const string Url = "https://blablabla/" + QueueName;
@@ -25,9 +25,9 @@ public class WhenPublishingAsyncResponseLoggerAsyncIsCalled : WhenPublishingTest
     private static MessageResponse _response;
     private static Message _message;
 
-    private protected override Task<SqsMessagePublisher> CreateSystemUnderTestAsync()
+    private protected override Task<SqsMessagePublisher<SimpleMessage>> CreateSystemUnderTestAsync()
     {
-        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _serializationRegister, Substitute.For<ILoggerFactory>())
+        var sqs = new SqsMessagePublisher<SimpleMessage>(new Uri(Url), Sqs, _serializationRegister, Substitute.For<ILoggerFactory>())
         {
             MessageResponseLogger = (r, m) =>
             {

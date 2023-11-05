@@ -36,7 +36,7 @@ public class NewtonsoftSerializer : IMessageSerializer
         return (Message)JsonConvert.DeserializeObject(json, type, _settings);
     }
 
-    public string Serialize(Message message, bool serializeForSnsPublishing, string subject)
+    public string Serialize<TMessage>(TMessage message, bool serializeForSnsPublishing, string subject) where TMessage : class
     {
         var json = JsonConvert.SerializeObject(message, _settings);
 

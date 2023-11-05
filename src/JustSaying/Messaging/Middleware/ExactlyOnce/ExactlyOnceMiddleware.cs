@@ -1,4 +1,5 @@
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 // ReSharper disable once CheckNamespace
@@ -28,7 +29,9 @@ public sealed class ExactlyOnceMiddleware<T> : MiddlewareBase<HandleMessageConte
         if (context == null) throw new ArgumentNullException(nameof(context));
         if (func == null) throw new ArgumentNullException(nameof(func));
 
-        string lockKey = $"{context.Message.UniqueKey()}-{_lockSuffixKeyForHandler}";
+        var message = context.Message as Message ?? throw new InvalidOperationException("ExactlyOnceMiddleware only supports messages that inherit from the JustSaying.Models Message base type.");
+
+        string lockKey = $"{message.UniqueKey()}-{_lockSuffixKeyForHandler}";
 
         MessageLockResponse lockResponse = await _messageLock.TryAcquireLockAsync(lockKey, _timeout).ConfigureAwait(false);
 
