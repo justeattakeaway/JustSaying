@@ -92,7 +92,7 @@ function DotNetPack {
         $additionalArgs += $VersionSuffix
     }
 
-    & $dotnet pack $Project $additionalArgs
+    & $dotnet pack $Project --tl $additionalArgs
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet pack failed with exit code $LASTEXITCODE"
@@ -109,7 +109,7 @@ function DotNetTest {
         $additionalArgs += "GitHubActions;report-warnings=false"
     }
 
-    & $dotnet test $Project --configuration "Release" $additionalArgs
+    & $dotnet test $Project --configuration "Release" --tl $additionalArgs
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet test failed with exit code $LASTEXITCODE"
