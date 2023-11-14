@@ -33,10 +33,10 @@
     <PackageVersion Include="NSubstitute" Version="5.1.0" />
     <PackageVersion Include="Polly.Core" Version="8.1.0" />
     <PackageVersion Include="ReportGenerator" Version="5.1.26" />
-    <PackageVersion Include="Serilog" Version="3.0.1" />
+    <PackageVersion Include="Serilog" Version="3.1.1" />
     <PackageVersion Include="Serilog.AspNetCore" Version="7.0.0" />
     <PackageVersion Include="Serilog.Extensions.Logging" Version="7.0.0" />
-    <PackageVersion Include="Serilog.Sinks.Console" Version="4.1.0" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="5.0.0" />
     <PackageVersion Include="Serilog.Sinks.Seq" Version="5.2.3" />
     <PackageVersion Include="SerilogTimings" Version="3.0.1" />
     <PackageVersion Include="Shouldly" Version="4.2.1" />
