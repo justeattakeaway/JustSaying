@@ -2,14 +2,10 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class WhenMessageHandlingThrows : BaseSubscriptionGroupTests
+public class WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
 {
     private bool _firstTime = true;
     private FakeSqsQueue _queue;
-
-    public WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper)
-        : base(testOutputHelper)
-    { }
 
     protected override void Given()
     {

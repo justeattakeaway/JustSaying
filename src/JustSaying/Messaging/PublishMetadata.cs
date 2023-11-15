@@ -10,14 +10,11 @@ public class PublishMetadata
 
     public PublishMetadata AddMessageAttribute(string key, IReadOnlyCollection<byte> data)
     {
-        if (data == null)
+        var mav = new MessageAttributeValue
         {
-            throw new ArgumentNullException(nameof(data));
-        }
-
-        var mav = new MessageAttributeValue();
-        mav.BinaryValue = data;
-        mav.DataType = "Binary";
+            BinaryValue = data ?? throw new ArgumentNullException(nameof(data)),
+            DataType = "Binary"
+        };
 
         MessageAttributes[key] = mav;
 
@@ -26,10 +23,7 @@ public class PublishMetadata
 
     public PublishMetadata AddMessageAttribute(string key, MessageAttributeValue value)
     {
-        if (MessageAttributes == null)
-        {
-            MessageAttributes = new Dictionary<string, MessageAttributeValue>(StringComparer.Ordinal);
-        }
+        MessageAttributes ??= new Dictionary<string, MessageAttributeValue>(StringComparer.Ordinal);
 
         MessageAttributes[key] = value;
 

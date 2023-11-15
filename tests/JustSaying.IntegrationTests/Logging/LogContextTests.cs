@@ -8,13 +8,8 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Logging;
 
-public class LogContextTests : IntegrationTestBase
+public class LogContextTests(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public LogContextTests(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
-
-
     [AwsFact]
     public async Task PublishToTopicLogsShouldHaveContext()
     {

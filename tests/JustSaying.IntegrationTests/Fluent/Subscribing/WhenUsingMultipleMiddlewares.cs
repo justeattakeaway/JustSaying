@@ -4,11 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class WhenUsingMultipleMiddlewares : IntegrationTestBase
+public class WhenUsingMultipleMiddlewares(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenUsingMultipleMiddlewares(ITestOutputHelper outputHelper) : base(outputHelper)
-    { }
-
     [AwsFact]
     public async Task Then_The_Middlewares_Are_Called()
     {

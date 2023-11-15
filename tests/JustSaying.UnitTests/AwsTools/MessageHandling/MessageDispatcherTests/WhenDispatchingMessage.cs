@@ -100,7 +100,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
         return dispatcher;
     }
 
-    public class AndHandlerMapDoesNotHaveMatchingHandler : WhenDispatchingMessage
+    public class AndHandlerMapDoesNotHaveMatchingHandler(ITestOutputHelper outputHelper) : WhenDispatchingMessage(outputHelper)
     {
         private const int ExpectedReceiveCount = 1;
         private readonly TimeSpan _expectedBackoffTimeSpan = TimeSpan.FromMinutes(4);
@@ -123,12 +123,9 @@ public class WhenDispatchingMessage : IAsyncLifetime
             var testLogger = _loggerFactory.GetTestLoggerSink();
             testLogger.LogEntries.ShouldContain(le => le.OriginalFormat == "Failed to dispatch. Middleware for message of type '{MessageTypeName}' not found in middleware map.");
         }
-
-        public AndHandlerMapDoesNotHaveMatchingHandler(ITestOutputHelper outputHelper) : base(outputHelper)
-        { }
     }
 
-    public class AndMessageProcessingSucceeds : WhenDispatchingMessage
+    public class AndMessageProcessingSucceeds(ITestOutputHelper outputHelper) : WhenDispatchingMessage(outputHelper)
     {
         protected override void Given()
         {
@@ -161,16 +158,13 @@ public class WhenDispatchingMessage : IAsyncLifetime
             request.QueueUrl.ShouldBe(ExpectedQueueUrl);
             request.ReceiptHandle.ShouldBe(_sqsMessage.ReceiptHandle);
         }
-
-        public AndMessageProcessingSucceeds(ITestOutputHelper outputHelper) : base(outputHelper)
-        { }
     }
 
-    public class AndMessageProcessingFails : WhenDispatchingMessage
+    public class AndMessageProcessingFails(ITestOutputHelper outputHelper) : WhenDispatchingMessage(outputHelper)
     {
         private const int ExpectedReceiveCount = 1;
         private readonly TimeSpan _expectedBackoffTimeSpan = TimeSpan.FromMinutes(4);
-        private readonly Exception _expectedException = new Exception("Something failed when processing");
+        private readonly Exception _expectedException = new("Something failed when processing");
 
         protected override void Given()
         {
@@ -210,8 +204,5 @@ public class WhenDispatchingMessage : IAsyncLifetime
             request.ReceiptHandle.ShouldBe(_sqsMessage.ReceiptHandle);
             request.VisibilityTimeoutInSeconds.ShouldBe((int)_expectedBackoffTimeSpan.TotalSeconds);
         }
-
-        public AndMessageProcessingFails(ITestOutputHelper outputHelper) : base(outputHelper)
-        { }
     }
 }

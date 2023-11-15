@@ -5,13 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.DependencyInjection.Microsoft;
 
-public class WhenRegisteringMultipleHandlersViaContainer : IntegrationTestBase
+public class WhenRegisteringMultipleHandlersViaContainer(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenRegisteringMultipleHandlersViaContainer(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
-
     [AwsFact]
     public void Then_An_Exception_Is_Thrown()
     {

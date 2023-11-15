@@ -1,5 +1,3 @@
-using System.Runtime.Serialization;
-
 namespace JustSaying.TestingFramework;
 
 public class TestException : Exception

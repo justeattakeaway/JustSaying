@@ -5,21 +5,15 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.UnitTests.Messaging.Channels.MultiplexerTests;
 
-public class MergingMultiplexerTests
+public class MergingMultiplexerTests(ITestOutputHelper outputHelper)
 {
-    private readonly ITestOutputHelper _outputHelper;
     private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
-
-    public MergingMultiplexerTests(ITestOutputHelper outputHelper)
-    {
-        _outputHelper = outputHelper;
-    }
 
     [Fact]
     public async Task Starting_Twice_Returns_Same_Task()
     {
         // Arrange
-        using var multiplexer = new MergingMultiplexer(10, _outputHelper.ToLogger<MergingMultiplexer>());
+        using var multiplexer = new MergingMultiplexer(10, outputHelper.ToLogger<MergingMultiplexer>());
 
         var cts = new CancellationTokenSource();
 
@@ -45,7 +39,7 @@ public class MergingMultiplexerTests
     public void Cannot_Add_Invalid_Reader()
     {
         // Arrange
-        using var multiplexer = new MergingMultiplexer(10, _outputHelper.ToLogger<MergingMultiplexer>());
+        using var multiplexer = new MergingMultiplexer(10, outputHelper.ToLogger<MergingMultiplexer>());
 
         // Act and Assert
         Assert.Throws<ArgumentNullException>(() => multiplexer.ReadFrom(null));
@@ -55,7 +49,7 @@ public class MergingMultiplexerTests
     public async Task Cannot_Get_Messages_Before_Started()
     {
         // Arrange
-        using var multiplexer = new MergingMultiplexer(10, _outputHelper.ToLogger<MergingMultiplexer>());
+        using var multiplexer = new MergingMultiplexer(10, outputHelper.ToLogger<MergingMultiplexer>());
 
         // Act and Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() => ReadAllMessages(multiplexer));
@@ -65,7 +59,7 @@ public class MergingMultiplexerTests
     public async Task When_Reader_Does_Not_Complete_Readers_Not_Completed()
     {
         // Arrange
-        using var multiplexer = new MergingMultiplexer(10, _outputHelper.ToLogger<MergingMultiplexer>());
+        using var multiplexer = new MergingMultiplexer(10, outputHelper.ToLogger<MergingMultiplexer>());
 
         var cts = new CancellationTokenSource();
 
@@ -92,7 +86,7 @@ public class MergingMultiplexerTests
     public async Task When_Reader_Completes_When_All_Readers_Completed()
     {
         // Arrange
-        using var multiplexer = new MergingMultiplexer(10, _outputHelper.ToLogger<MergingMultiplexer>());
+        using var multiplexer = new MergingMultiplexer(10, outputHelper.ToLogger<MergingMultiplexer>());
 
         var cts = new CancellationTokenSource();
 
@@ -109,11 +103,11 @@ public class MergingMultiplexerTests
         channel2.Writer.Complete();
 
         // Assert
-        await Patiently.AssertThatAsync(_outputHelper, () => multiplexerRunTask.IsCompletedSuccessfully);
+        await Patiently.AssertThatAsync(outputHelper, () => multiplexerRunTask.IsCompletedSuccessfully);
         cts.Cancel();
     }
 
-    private static async Task ReadAllMessages(IMultiplexer multiplexer)
+    private static async Task ReadAllMessages(MergingMultiplexer multiplexer)
     {
         await foreach (var _ in multiplexer.GetMessagesAsync())
         {

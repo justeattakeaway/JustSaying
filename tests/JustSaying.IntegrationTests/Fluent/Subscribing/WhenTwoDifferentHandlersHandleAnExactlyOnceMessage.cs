@@ -5,13 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class WhenTwoDifferentHandlersHandleAnExactlyOnceMessage : IntegrationTestBase
+public class WhenTwoDifferentHandlersHandleAnExactlyOnceMessage(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenTwoDifferentHandlersHandleAnExactlyOnceMessage(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
-
     [AwsFact]
     public async Task Then_Both_Handlers_Receive_The_Message()
     {

@@ -62,16 +62,10 @@ public class AccountAddressProviderTests
         Assert.Equal("arn:aws:sns:eu-west-1:123456789012:adhoc-topic-name", address);
     }
 
-    private class ManualNamingConvention : IQueueNamingConvention, ITopicNamingConvention
+    private class ManualNamingConvention(string queueName, string topicName) : IQueueNamingConvention, ITopicNamingConvention
     {
-        private readonly string _queueName;
-        private readonly string _topicName;
-
-        public ManualNamingConvention(string queueName, string topicName)
-        {
-            _queueName = queueName;
-            _topicName = topicName;
-        }
+        private readonly string _queueName = queueName;
+        private readonly string _topicName = topicName;
 
         public string QueueName<T>() => _queueName;
         public string TopicName<T>() => _topicName;

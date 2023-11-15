@@ -55,17 +55,8 @@ public abstract class SqsConfigurationBuilder<TConfiguration, TBuilder>
     /// </exception>
     public TBuilder WithEncryption(string masterKeyId)
     {
-        if (masterKeyId == null)
-        {
-            throw new ArgumentNullException(nameof(masterKeyId));
-        }
-
-        if (Encryption == null)
-        {
-            Encryption = new ServerSideEncryption();
-        }
-
-        Encryption.KmsMasterKeyId = masterKeyId;
+        Encryption ??= new ServerSideEncryption();
+        Encryption.KmsMasterKeyId = masterKeyId ?? throw new ArgumentNullException(nameof(masterKeyId));
         return Self;
     }
 

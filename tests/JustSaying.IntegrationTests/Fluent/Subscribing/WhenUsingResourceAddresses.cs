@@ -6,12 +6,8 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class AddressPubSub : IntegrationTestBase
+public class AddressPubSub(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public AddressPubSub(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
-
     [AwsFact]
     public async Task SimplePubSubWorks()
     {

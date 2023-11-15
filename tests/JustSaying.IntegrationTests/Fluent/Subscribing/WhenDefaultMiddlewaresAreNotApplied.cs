@@ -5,11 +5,8 @@ using Newtonsoft.Json;
 
 namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 
-public class WhenDefaultMiddlewaresAreNotApplied : IntegrationTestBase
+public class WhenDefaultMiddlewaresAreNotApplied(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenDefaultMiddlewaresAreNotApplied(ITestOutputHelper outputHelper) : base(outputHelper)
-    { }
-
     [AwsFact]
     public async Task Then_The_Pipeline_Should_Only_Contain_User_Specified_Middlewares()
     {

@@ -5,13 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.DependencyInjection.Microsoft;
 
-public class WhenUsingCustomHandlerResolver : IntegrationTestBase
+public class WhenUsingCustomHandlerResolver(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenUsingCustomHandlerResolver(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
-
     [AwsFact]
     public async Task Then_The_Handler_Is_Resolved_From_The_Custom_Resolver()
     {

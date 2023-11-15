@@ -1,5 +1,4 @@
 using Amazon;
-using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.TestingFramework;
@@ -8,16 +7,12 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public sealed class WhenUsingSqsQueueByName : BaseSubscriptionGroupTests, IDisposable
+public sealed class WhenUsingSqsQueueByName(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper), IDisposable
 {
     private ISqsQueue _queue;
-    private IAmazonSQS _client;
-    readonly string MessageTypeString = typeof(SimpleMessage).ToString();
+    private FakeAmazonSqs _client;
+    readonly string MessageTypeString = nameof(SimpleMessage);
     const string MessageBody = "object";
-
-    public WhenUsingSqsQueueByName(ITestOutputHelper testOutputHelper)
-        : base(testOutputHelper)
-    { }
 
     protected override void Given()
     {
@@ -56,12 +51,12 @@ public sealed class WhenUsingSqsQueueByName : BaseSubscriptionGroupTests, IDispo
         {
             Messages = new List<Message>
             {
-                new Message
+                new()
                 {
                     MessageId = messageId.ToString(),
                     Body = SqsMessageBody(messageType)
                 },
-                new Message
+                new()
                 {
                     MessageId = messageId.ToString(),
                     Body = "{\"Subject\":\"SOME_UNKNOWN_MESSAGE\"," +

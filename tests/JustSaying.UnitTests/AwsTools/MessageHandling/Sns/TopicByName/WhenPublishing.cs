@@ -7,8 +7,6 @@ using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
-#pragma warning disable 618
-
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;
 
 public class WhenPublishing : WhenPublishingTestBase

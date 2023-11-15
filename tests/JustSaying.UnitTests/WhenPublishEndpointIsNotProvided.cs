@@ -22,7 +22,7 @@ public class WhenPublishEndpointIsNotProvided : XBehaviourTest<SqsReadConfigurat
     }
 
     protected override SqsReadConfiguration CreateSystemUnderTest()
-        => new SqsReadConfiguration(SubscriptionType.ToTopic)
+        => new(SubscriptionType.ToTopic)
         {
             MessageRetention = JustSayingConstants.MinimumRetentionPeriod.Add(TimeSpan.FromSeconds(1)),
             TopicName = "ATopic",

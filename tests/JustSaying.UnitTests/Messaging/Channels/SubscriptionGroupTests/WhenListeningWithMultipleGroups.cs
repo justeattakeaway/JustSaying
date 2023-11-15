@@ -4,16 +4,10 @@ using Newtonsoft.Json;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class WhenListeningWithMultipleGroups : BaseSubscriptionGroupTests
+public class WhenListeningWithMultipleGroups(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
 {
-    private readonly ISqsQueue _queueB;
-    private readonly ISqsQueue _queueA;
-
-    public WhenListeningWithMultipleGroups(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
-    {
-        _queueA = CreateSuccessfulTestQueue("EC159934-A30E-45B0-9186-78853F7D3BED", new TestMessage());
-        _queueB = CreateSuccessfulTestQueue("C7506B3F-81DA-4898-82A5-C0293523592A", new TestMessage());
-    }
+    private readonly ISqsQueue _queueB = CreateSuccessfulTestQueue("C7506B3F-81DA-4898-82A5-C0293523592A", new TestMessage());
+    private readonly ISqsQueue _queueA = CreateSuccessfulTestQueue("EC159934-A30E-45B0-9186-78853F7D3BED", new TestMessage());
 
     protected override Dictionary<string, SubscriptionGroupConfigBuilder> SetupBusConfig()
     {

@@ -78,7 +78,7 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
     /// </returns>
     public QueuePublicationBuilder<T> WithName(string queueName)
     {
-        return this.WithWriteConfiguration(r => r.WithQueueName(queueName));
+        return WithWriteConfiguration(r => r.WithQueueName(queueName));
     }
 
     /// <inheritdoc />

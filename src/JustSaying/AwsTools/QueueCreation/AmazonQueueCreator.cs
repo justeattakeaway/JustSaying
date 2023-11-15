@@ -6,26 +6,15 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.QueueCreation;
 
-public class AmazonQueueCreator : IVerifyAmazonQueues
+public class AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory, ILoggerFactory loggerFactory) : IVerifyAmazonQueues
 {
-    private readonly IAwsClientFactoryProxy _awsClientFactory;
-    private readonly ILoggerFactory _loggerFactory;
-
-    private const string EmptyFilterPolicy = "{}";
-
-    public AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory, ILoggerFactory loggerFactory)
-    {
-        _awsClientFactory = awsClientFactory;
-        _loggerFactory = loggerFactory;
-    }
-
     public QueueWithAsyncStartup EnsureTopicExistsWithQueueSubscribed(
         string region,
         SqsReadConfiguration queueConfig)
     {
         var regionEndpoint = RegionEndpoint.GetBySystemName(region);
-        var sqsClient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
-        var snsClient = _awsClientFactory.GetAwsClientFactory().GetSnsClient(regionEndpoint);
+        var sqsClient = awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
+        var snsClient = awsClientFactory.GetAwsClientFactory().GetSnsClient(regionEndpoint);
 
         var queueWithStartup = EnsureQueueExists(region, queueConfig);
 
@@ -49,7 +38,7 @@ public class AmazonQueueCreator : IVerifyAmazonQueues
             else
             {
 #pragma warning disable 618
-                var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsClient, _loggerFactory);
+                var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsClient, loggerFactory);
 #pragma warning restore 618
                 await eventTopic.CreateAsync(cancellationToken).ConfigureAwait(false);
 
@@ -84,14 +73,14 @@ public class AmazonQueueCreator : IVerifyAmazonQueues
         SqsReadConfiguration queueConfig)
     {
         var regionEndpoint = RegionEndpoint.GetBySystemName(region);
-        var sqsClient = _awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
+        var sqsClient = awsClientFactory.GetAwsClientFactory().GetSqsClient(regionEndpoint);
 
 #pragma warning disable 618
         var queue = new SqsQueueByName(regionEndpoint,
             queueConfig.QueueName,
             sqsClient,
             queueConfig.RetryCountBeforeSendingToErrorQueue,
-            _loggerFactory);
+            loggerFactory);
 #pragma warning restore 618
 
         var startupTask = new Func<CancellationToken, Task>(ct => queue.EnsureQueueAndErrorQueueExistAndAllAttributesAreUpdatedAsync(
@@ -117,7 +106,7 @@ public class AmazonQueueCreator : IVerifyAmazonQueues
             .ConfigureAwait(false);
 
         var actualFilterPolicy =
-            string.IsNullOrWhiteSpace(filterPolicy) ? EmptyFilterPolicy : filterPolicy;
+            string.IsNullOrWhiteSpace(filterPolicy) ? "{}" : filterPolicy;
         await amazonSimpleNotificationService
             .SetSubscriptionAttributesAsync(subscriptionArn, "FilterPolicy", actualFilterPolicy)
             .ConfigureAwait(false);

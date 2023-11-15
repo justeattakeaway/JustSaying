@@ -4,12 +4,8 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenAMessageIsPublishedToAQueue : IntegrationTestBase
+public class WhenAMessageIsPublishedToAQueue(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenAMessageIsPublishedToAQueue(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    { }
-
     [AwsFact]
     public async Task Then_The_Message_Is_Handled()
     {

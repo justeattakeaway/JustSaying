@@ -9,5 +9,6 @@ public sealed class QueueAddressConfiguration
 
     public void Validate()
     {
+        // TODO
     }
 }

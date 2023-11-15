@@ -7,18 +7,11 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
 
-internal class ServiceBuilderServiceResolver : IServiceResolver
+internal class ServiceBuilderServiceResolver(ServicesBuilder builder) : IServiceResolver
 {
-    private readonly ServicesBuilder _builder;
-
     private readonly ConcurrentDictionary<Type, object> _serviceLookup = new();
 
     private bool _built = false;
-
-    public ServiceBuilderServiceResolver(ServicesBuilder builder)
-    {
-        _builder = builder;
-    }
 
     public T ResolveService<T>() where T : class
     {
@@ -29,34 +22,34 @@ internal class ServiceBuilderServiceResolver : IServiceResolver
 
     private void Build()
     {
-        if (_builder.HandlerResolver != null)
+        if (builder.HandlerResolver != null)
         {
-            _serviceLookup[typeof(IHandlerResolver)] = _builder.HandlerResolver();
+            _serviceLookup[typeof(IHandlerResolver)] = builder.HandlerResolver();
         }
 
-        if (_builder.LoggerFactory != null)
+        if (builder.LoggerFactory != null)
         {
-            _serviceLookup[typeof(ILoggerFactory)] = _builder.LoggerFactory();
+            _serviceLookup[typeof(ILoggerFactory)] = builder.LoggerFactory();
         }
 
-        if (_builder.BusBuilder.ClientFactoryBuilder != null)
+        if (builder.BusBuilder.ClientFactoryBuilder != null)
         {
-            _serviceLookup[typeof(IAwsClientFactory)] = _builder.BusBuilder.ClientFactoryBuilder.Build();
+            _serviceLookup[typeof(IAwsClientFactory)] = builder.BusBuilder.ClientFactoryBuilder.Build();
         }
 
-        if (_builder.MessageMonitoring != null)
+        if (builder.MessageMonitoring != null)
         {
-            _serviceLookup[typeof(IMessageMonitor)] = _builder.MessageMonitoring();
+            _serviceLookup[typeof(IMessageMonitor)] = builder.MessageMonitoring();
         }
 
-        if (_builder.SerializationRegister != null)
+        if (builder.SerializationRegister != null)
         {
-            _serviceLookup[typeof(IMessageSerializationRegister)] = _builder.SerializationRegister();
+            _serviceLookup[typeof(IMessageSerializationRegister)] = builder.SerializationRegister();
         }
 
-        if (_builder.MessageContextAccessor != null)
+        if (builder.MessageContextAccessor != null)
         {
-            _serviceLookup[typeof(IMessageContextAccessor)] = _builder.MessageContextAccessor();
+            _serviceLookup[typeof(IMessageContextAccessor)] = builder.MessageContextAccessor();
         }
 
         _built = true;

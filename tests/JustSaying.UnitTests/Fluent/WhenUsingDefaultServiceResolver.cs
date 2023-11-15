@@ -9,12 +9,7 @@ namespace JustSaying.UnitTests.Fluent;
 
 public class WhenUsingDefaultServiceResolver
 {
-    private readonly DefaultServiceResolver _sut;
-
-    public WhenUsingDefaultServiceResolver()
-    {
-        _sut = new DefaultServiceResolver();
-    }
+    private readonly DefaultServiceResolver _sut = new();
 
     [Fact]
     public void ShouldResolveILoggerFactoryToNullLoggerFactory()

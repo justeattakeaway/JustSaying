@@ -7,26 +7,19 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public abstract class GivenAServiceBus : IAsyncLifetime
+public abstract class GivenAServiceBus(ITestOutputHelper outputHelper) : IAsyncLifetime
 {
     protected IMessagingConfig Config;
     protected TrackingLoggingMonitor Monitor;
-    protected ILoggerFactory LoggerFactory;
+    protected ILoggerFactory LoggerFactory = outputHelper.ToLoggerFactory();
     private bool _recordThrownExceptions;
 
-    public ITestOutputHelper OutputHelper { get; private set; }
+    public ITestOutputHelper OutputHelper { get; private set; } = outputHelper;
     protected Exception ThrownException { get; private set; }
 
     protected JustSaying.JustSayingBus SystemUnderTest { get; private set; }
 
     protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
-
-
-    public GivenAServiceBus(ITestOutputHelper outputHelper)
-    {
-        OutputHelper = outputHelper;
-        LoggerFactory = outputHelper.ToLoggerFactory();
-    }
 
     public virtual async Task InitializeAsync()
     {

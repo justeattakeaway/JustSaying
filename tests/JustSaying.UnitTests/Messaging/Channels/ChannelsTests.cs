@@ -15,7 +15,6 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 // ReSharper disable PossibleNullReferenceException
-#pragma warning disable 4014
 
 namespace JustSaying.UnitTests.Messaging.Channels;
 
@@ -333,7 +332,7 @@ public class ChannelsTests
         return new FakeSqsQueue(ct => Task.FromResult(GetMessages(ct)));
     }
 
-    private IMessageReceiveBuffer CreateMessageReceiveBuffer(
+    private MessageReceiveBuffer CreateMessageReceiveBuffer(
         ISqsQueue sqsQueue,
         int prefetch = 10,
         int receiveBufferSize = 10)
@@ -350,7 +349,7 @@ public class ChannelsTests
             LoggerFactory.CreateLogger<MessageReceiveBuffer>());
     }
 
-    private IMultiplexerSubscriber CreateSubscriber(IMessageDispatcher dispatcher)
+    private MultiplexerSubscriber CreateSubscriber(IMessageDispatcher dispatcher)
     {
         return new MultiplexerSubscriber(dispatcher, Guid.NewGuid().ToString(),
             LoggerFactory.CreateLogger<MultiplexerSubscriber>());
@@ -376,7 +375,7 @@ public class ChannelsTests
         return consumerGroupFactory.Create(defaults, settings);
     }
 
-    private IMultiplexer CreateMultiplexer(int channelCapacity = 100)
+    private MergingMultiplexer CreateMultiplexer(int channelCapacity = 100)
     {
         return new MergingMultiplexer(
             channelCapacity,

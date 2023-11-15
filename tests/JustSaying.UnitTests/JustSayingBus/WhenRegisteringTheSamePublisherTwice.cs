@@ -5,7 +5,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public class WhenRegisteringTheSamePublisherTwice : GivenAServiceBus
+public class WhenRegisteringTheSamePublisherTwice(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
 {
     private IMessagePublisher _publisher;
 
@@ -40,7 +40,4 @@ public class WhenRegisteringTheSamePublisherTwice : GivenAServiceBus
 
         publishedTypes.ShouldContainKey(nameof(Message));
     }
-
-    public WhenRegisteringTheSamePublisherTwice(ITestOutputHelper outputHelper) : base(outputHelper)
-    { }
 }

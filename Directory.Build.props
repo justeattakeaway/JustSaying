@@ -2,7 +2,6 @@
   <ItemGroup>
     <PackageReference Include="coverlet.msbuild" PrivateAssets="All" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
     <PackageReference Include="ReportGenerator" PrivateAssets="All" />
     <PackageReference Include="MinVer" PrivateAssets="All" />
   </ItemGroup>
@@ -28,7 +27,6 @@
     <MinVerSkip Condition=" '$(Configuration)' == 'Debug' ">true</MinVerSkip>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
-    <EnableSourceControlManagerQueries>$(EnableSourceLink)</EnableSourceControlManagerQueries>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <NoWarn>$(NoWarn);CA1062;CA1303</NoWarn>
     <PackageIcon>package-icon.png</PackageIcon>
@@ -48,6 +46,7 @@
     <SignAssembly>true</SignAssembly>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
     <CLSCompliant>true</CLSCompliant>
     <ComVisible>false</ComVisible>
     <DebugType>embedded</DebugType>

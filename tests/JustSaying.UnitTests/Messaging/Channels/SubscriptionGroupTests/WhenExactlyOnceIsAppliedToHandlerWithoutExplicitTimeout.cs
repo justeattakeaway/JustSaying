@@ -9,16 +9,11 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout : BaseSubscriptionGroupTests
+public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
 {
     private ISqsQueue _queue;
     private readonly int _maximumTimeout = (int)TimeSpan.MaxValue.TotalSeconds;
     private FakeMessageLock _messageLock;
-
-    public WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper testOutputHelper)
-        : base(testOutputHelper)
-    {
-    }
 
     protected override void Given()
     {

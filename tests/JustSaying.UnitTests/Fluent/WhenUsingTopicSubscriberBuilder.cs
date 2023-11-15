@@ -6,12 +6,7 @@ namespace JustSaying.UnitTests.Fluent;
 
 public class WhenUsingTopicSubscriberBuilder
 {
-    private readonly TopicSubscriptionBuilder<Order> _sut;
-
-    public WhenUsingTopicSubscriberBuilder()
-    {
-        _sut = new TopicSubscriptionBuilder<Order>();
-    }
+    private readonly TopicSubscriptionBuilder<Order> _sut = new();
 
     [Theory]
     [InlineData("")]

@@ -6,7 +6,7 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public class WhenRegisteringPublishers : GivenAServiceBus
+public class WhenRegisteringPublishers(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper)
 {
     private IMessagePublisher _publisher;
 
@@ -57,7 +57,4 @@ public class WhenRegisteringPublishers : GivenAServiceBus
         publishedTypes.ShouldContainKey(nameof(OrderAccepted));
         publishedTypes.ShouldContainKey(nameof(OrderRejected));
     }
-
-    public WhenRegisteringPublishers(ITestOutputHelper outputHelper) : base(outputHelper)
-    { }
 }

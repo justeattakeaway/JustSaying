@@ -11,13 +11,8 @@ namespace JustSaying.IntegrationTests.Fluent.Subscribing;
 /// concurrency of 2, the long running handler will consume one slot, and every other message will be
 /// processed in order in the other slot. The result should be exactly in-order delivery for this test.
 /// </summary>
-public sealed class WhenReceivingIsThrottled : IntegrationTestBase
+public sealed class WhenReceivingIsThrottled(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenReceivingIsThrottled(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
-
     [AwsFact]
     public async Task Then_The_Messages_Are_Handled_With_Throttle()
     {
@@ -78,38 +73,25 @@ public sealed class WhenReceivingIsThrottled : IntegrationTestBase
             });
     }
 
-    private class WaitingMessage : Message, IComparable<WaitingMessage>
+    private class WaitingMessage(int order, TimeSpan timeToWait) : Message, IComparable<WaitingMessage>
     {
-        public WaitingMessage(int order, TimeSpan timeToWait)
-        {
-            Order = order;
-            TimeToWait = timeToWait;
-        }
-
-        public TimeSpan TimeToWait { get; }
-        public int Order { get; }
+        public TimeSpan TimeToWait { get; } = timeToWait;
+        public int Order { get; } = order;
 
         public int CompareTo(WaitingMessage other)
         {
             if (ReferenceEquals(this, other)) return 0;
-            if (ReferenceEquals(null, other)) return 1;
+            if (other is null) return 1;
             return Order.CompareTo(other.Order);
         }
     }
 
-    private class InspectableWaitingHandler : InspectableHandler<WaitingMessage>
+    private class InspectableWaitingHandler(ITestOutputHelper outputHelper) : InspectableHandler<WaitingMessage>
     {
-        private readonly ITestOutputHelper _output;
-
-        public InspectableWaitingHandler(ITestOutputHelper testOutputHelper)
-        {
-            _output = testOutputHelper;
-        }
-
         public override async Task<bool> Handle(WaitingMessage message)
         {
             await base.Handle(message);
-            _output.WriteLine($"Running task {message.Order} which will wait for {message.TimeToWait.TotalMilliseconds}ms");
+            outputHelper.WriteLine($"Running task {message.Order} which will wait for {message.TimeToWait.TotalMilliseconds}ms");
             await Task.Delay(message.TimeToWait);
             return true;
         }

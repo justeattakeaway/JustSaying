@@ -6,17 +6,8 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Sample.Restaurant.KitchenConsole.Handlers;
 
-public class OrderOnItsWayEventHandler : IHandlerAsync<OrderOnItsWayEvent>
+public class OrderOnItsWayEventHandler(IMessagePublisher publisher, ILogger<OrderOnItsWayEventHandler> logger) : IHandlerAsync<OrderOnItsWayEvent>
 {
-    private readonly IMessagePublisher _publisher;
-    private readonly ILogger<OrderOnItsWayEventHandler> _logger;
-
-    public OrderOnItsWayEventHandler(IMessagePublisher publisher, ILogger<OrderOnItsWayEventHandler> logger)
-    {
-        _publisher = publisher;
-        _logger = logger;
-    }
-
     public async Task<bool> Handle(OrderOnItsWayEvent message)
     {
         await Task.Delay(RandomNumberGenerator.GetInt32(50, 100));
@@ -26,9 +17,9 @@ public class OrderOnItsWayEventHandler : IHandlerAsync<OrderOnItsWayEvent>
             OrderId = message.OrderId
         };
 
-        _logger.LogInformation("Order {OrderId} is on its way!", message.OrderId);
+        logger.LogInformation("Order {OrderId} is on its way!", message.OrderId);
 
-        await _publisher.PublishAsync(orderDeliveredEvent);
+        await publisher.PublishAsync(orderDeliveredEvent);
 
         return true;
     }

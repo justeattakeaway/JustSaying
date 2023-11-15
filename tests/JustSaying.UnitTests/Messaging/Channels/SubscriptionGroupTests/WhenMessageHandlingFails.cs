@@ -1,13 +1,8 @@
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class WhenMessageHandlingFails : BaseSubscriptionGroupTests
+public class WhenMessageHandlingFails(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
 {
     private FakeSqsQueue _queue;
-
-    public WhenMessageHandlingFails(ITestOutputHelper testOutputHelper)
-        : base(testOutputHelper)
-    {
-    }
 
     protected override void Given()
     {

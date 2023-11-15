@@ -20,15 +20,14 @@
     <PackageVersion Include="MartinCostello.Logging.XUnit" Version="0.3.0" />
     <PackageVersion Include="MELT" Version="0.9.0" />
     <PackageVersion Include="MELT.Xunit" Version="0.9.0" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="7.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
-    <PackageVersion Include="Microsoft.Extensions.Logging" Version="7.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" />
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.1.1" />
     <PackageVersion Include="MinVer" Version="4.3.0" />
     <PackageVersion Include="morelinq" Version="4.0.0" />
     <PackageVersion Include="NSubstitute" Version="5.1.0" />
@@ -36,7 +35,7 @@
     <PackageVersion Include="ReportGenerator" Version="5.2.0" />
     <PackageVersion Include="Serilog" Version="3.1.1" />
     <PackageVersion Include="Serilog.AspNetCore" Version="7.0.0" />
-    <PackageVersion Include="Serilog.Extensions.Logging" Version="7.0.0" />
+    <PackageVersion Include="Serilog.Extensions.Logging" Version="8.0.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="5.0.0" />
     <PackageVersion Include="Serilog.Sinks.Seq" Version="5.2.3" />
     <PackageVersion Include="SerilogTimings" Version="3.0.1" />

@@ -6,21 +6,14 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.Fluent;
 
-internal sealed class DynamicMessagePublisher : IMessagePublisher
+internal sealed class DynamicMessagePublisher(
+    Func<Message, string> topicNameCustomizer,
+    Func<string, StaticPublicationConfiguration> staticConfigBuilder,
+    ILoggerFactory loggerFactory) : IMessagePublisher
 {
     private readonly ConcurrentDictionary<string, IMessagePublisher> _publisherCache = new();
-    private readonly Func<Message, string> _topicNameCustomizer;
-    private readonly Func<string, StaticPublicationConfiguration> _staticConfigBuilder;
-
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _topicCreationLocks = new();
-    private readonly ILogger<DynamicMessagePublisher> _logger;
-
-    public DynamicMessagePublisher(Func<Message, string> topicNameCustomizer, Func<string, StaticPublicationConfiguration> staticConfigBuilder, ILoggerFactory loggerFactory)
-    {
-        _topicNameCustomizer = topicNameCustomizer;
-        _staticConfigBuilder = staticConfigBuilder;
-        _logger = loggerFactory.CreateLogger<DynamicMessagePublisher>();
-    }
+    private readonly ILogger<DynamicMessagePublisher> _logger = loggerFactory.CreateLogger<DynamicMessagePublisher>();
 
     public InterrogationResult Interrogate()
     {
@@ -40,7 +33,7 @@ internal sealed class DynamicMessagePublisher : IMessagePublisher
 
     public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
     {
-        var topicName = _topicNameCustomizer(message);
+        var topicName = topicNameCustomizer(message);
         if (_publisherCache.TryGetValue(topicName, out var publisher))
         {
             await publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
@@ -59,7 +52,7 @@ internal sealed class DynamicMessagePublisher : IMessagePublisher
         }
 
         _logger.LogDebug("Lock acquired to initialize topic {TopicName}", topicName);
-        var config = _staticConfigBuilder(topicName);
+        var config = staticConfigBuilder(topicName);
         _logger.LogDebug("Executing startup task for topic {TopicName}", topicName);
         await config.StartupTask(cancellationToken).ConfigureAwait(false);
 

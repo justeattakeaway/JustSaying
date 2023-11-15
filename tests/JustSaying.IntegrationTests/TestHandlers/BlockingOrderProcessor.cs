@@ -4,10 +4,6 @@ namespace JustSaying.IntegrationTests.TestHandlers;
 
 public class BlockingOrderProcessor : IHandlerAsync<OrderPlaced>
 {
-    public BlockingOrderProcessor()
-    {
-    }
-
     public int ReceivedMessageCount { get; private set; }
 
     public TaskCompletionSource<object> DoneSignal { get; private set; }

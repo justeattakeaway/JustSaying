@@ -7,12 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenRegisteringAPublisherWithTags : IntegrationTestBase
+public class WhenRegisteringAPublisherWithTags(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenRegisteringAPublisherWithTags(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    { }
-
     [NotSimulatorFact]
     public async Task Then_A_Topic_Is_Created_With_The_Correct_Tags()
     {

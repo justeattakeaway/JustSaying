@@ -8,13 +8,8 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenANamedQueueIsCreated : IntegrationTestBase
+public class WhenANamedQueueIsCreated(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenANamedQueueIsCreated(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
-
     [AwsFact]
     public async Task Then_The_Error_Queue_Is_Created()
     {

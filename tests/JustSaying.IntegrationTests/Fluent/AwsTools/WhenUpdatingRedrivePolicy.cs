@@ -8,13 +8,8 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenUpdatingRedrivePolicy : IntegrationTestBase
+public class WhenUpdatingRedrivePolicy(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenUpdatingRedrivePolicy(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
-
     [AwsFact]
     public async Task Can_Update_Redrive_Policy()
     {

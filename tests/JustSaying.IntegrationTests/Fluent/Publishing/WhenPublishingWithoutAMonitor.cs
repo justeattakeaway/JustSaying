@@ -7,13 +7,8 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenPublishingWithoutAMonitor : IntegrationTestBase
+public class WhenPublishingWithoutAMonitor(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
-    public WhenPublishingWithoutAMonitor(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
-
     [AwsFact]
     public async Task A_Message_Can_Still_Be_Published_To_A_Queue()
     {

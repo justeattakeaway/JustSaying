@@ -20,6 +20,6 @@
     <PackageReference Include="System.Threading.Channels" />
   </ItemGroup>
   <ItemGroup>
-      <Using Remove="System.Net.Http" />
-    </ItemGroup>
+    <Using Remove="System.Net.Http" />
+  </ItemGroup>
 </Project>

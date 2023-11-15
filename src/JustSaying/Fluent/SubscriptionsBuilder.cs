@@ -26,15 +26,14 @@ public sealed class SubscriptionsBuilder
     /// </summary>
     internal MessagingBusBuilder Parent { get; }
 
-    internal SubscriptionGroupSettingsBuilder Defaults = new SubscriptionGroupSettingsBuilder();
+    internal SubscriptionGroupSettingsBuilder Defaults = new();
 
     /// <summary>
     /// Gets the configured subscription builders.
     /// </summary>
-    private IList<ISubscriptionBuilder<Message>> Subscriptions { get; } = new List<ISubscriptionBuilder<Message>>();
+    private List<ISubscriptionBuilder<Message>> Subscriptions { get; } = [];
 
-    private IDictionary<string, SubscriptionGroupConfigBuilder> SubscriptionGroupSettings { get; } =
-        new Dictionary<string, SubscriptionGroupConfigBuilder>();
+    private Dictionary<string, SubscriptionGroupConfigBuilder> SubscriptionGroupSettings { get; } = new();
 
     /// <summary>
     /// Configure the default settings for all subscription groups.
@@ -242,14 +241,8 @@ public sealed class SubscriptionsBuilder
         IAwsClientFactoryProxy awsClientFactoryProxy,
         ILoggerFactory loggerFactory)
     {
-        var resolver = Parent.ServicesBuilder?.HandlerResolver?.Invoke() ??
-                       Parent.ServiceResolver.ResolveService<IHandlerResolver>();
-
-        if (resolver == null)
-        {
-            throw new InvalidOperationException($"No {nameof(IHandlerResolver)} is registered.");
-        }
-
+        var resolver = (Parent.ServicesBuilder?.HandlerResolver?.Invoke() ??
+                       Parent.ServiceResolver.ResolveService<IHandlerResolver>()) ?? throw new InvalidOperationException($"No {nameof(IHandlerResolver)} is registered.");
         Defaults.Validate();
         bus.SetGroupSettings(Defaults, SubscriptionGroupSettings);
 

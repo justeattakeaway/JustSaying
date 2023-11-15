@@ -6,7 +6,7 @@ namespace JustSaying.UnitTests.Messaging.Serialization.SerializationRegister;
 public class WhenAddingASerializerTwice : XBehaviourTest<MessageSerializationRegister>
 {
     protected override MessageSerializationRegister CreateSystemUnderTest() =>
-        new MessageSerializationRegister(
+        new(
             new NonGenericMessageSubjectProvider(),
             new NewtonsoftSerializationFactory());
 

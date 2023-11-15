@@ -11,22 +11,17 @@ using NSubstitute;
 
 namespace JustSaying.IntegrationTests.Fluent;
 
-public abstract class IntegrationTestBase
+public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
 {
-    protected IntegrationTestBase(ITestOutputHelper outputHelper)
-    {
-        OutputHelper = outputHelper;
-        LoggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(lf => lf.AddXUnit(outputHelper));
-    }
-
     protected virtual string AccessKeyId { get; } = "accessKeyId";
 
     protected virtual string SecretAccessKey { get; } = "secretAccessKey";
 
     protected virtual string SessionToken { get; } = "token";
 
-    protected ITestOutputHelper OutputHelper { get; }
-    protected ILoggerFactory LoggerFactory { get; }
+    protected ITestOutputHelper OutputHelper { get; } = outputHelper;
+
+    protected ILoggerFactory LoggerFactory { get; } = Microsoft.Extensions.Logging.LoggerFactory.Create(lf => lf.AddXUnit(outputHelper));
 
     protected virtual string RegionName => Region.SystemName;
 
@@ -116,25 +111,23 @@ public abstract class IntegrationTestBase
     protected async Task RunActionWithTimeout(Func<CancellationToken, Task> action)
     {
         // See https://speakerdeck.com/davidfowl/scaling-asp-dot-net-core-applications?slide=28
-        using (var cts = new CancellationTokenSource())
+        using var cts = new CancellationTokenSource();
+        var delayTask = Task.Delay(Timeout, cts.Token);
+        var actionTask = action(cts.Token);
+
+        var resultTask = await Task.WhenAny(actionTask, delayTask)
+            .ConfigureAwait(false);
+
+        if (resultTask == delayTask)
         {
-            var delayTask = Task.Delay(Timeout, cts.Token);
-            var actionTask = action(cts.Token);
-
-            var resultTask = await Task.WhenAny(actionTask, delayTask)
-                .ConfigureAwait(false);
-
-            if (resultTask == delayTask)
-            {
-                throw new TimeoutException(
-                    $"The tested action took longer than the timeout of {Timeout} to complete.");
-            }
-            else
-            {
-                cts.Cancel();
-            }
-
-            await actionTask;
+            throw new TimeoutException(
+                $"The tested action took longer than the timeout of {Timeout} to complete.");
         }
+        else
+        {
+            cts.Cancel();
+        }
+
+        await actionTask;
     }
 }

@@ -2,14 +2,13 @@
   <PropertyGroup>
     <TargetFramework>net471</TargetFramework>
     <OutputType>Exe</OutputType>
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj" />
     <ProjectReference Include="..\JustSaying\JustSaying.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Magnum" />
     <PackageReference Include="Microsoft.Extensions.Logging" />
-    <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
 </Project>

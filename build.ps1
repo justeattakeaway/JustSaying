@@ -1,8 +1,6 @@
 #! /usr/bin/env pwsh
 
 param(
-    [Parameter(Mandatory = $false)][string] $Configuration = "Release",
-    [Parameter(Mandatory = $false)][string] $OutputPath = "",
     [Parameter(Mandatory = $false)][switch] $SkipTests,
     [Parameter(Mandatory = $false)][switch] $EnableIntegrationTests
 )
@@ -30,10 +28,6 @@ if ($EnableIntegrationTests -eq $true) {
 }
 
 $dotnetVersion = (Get-Content $sdkFile | Out-String | ConvertFrom-Json).sdk.version
-
-if ($OutputPath -eq "") {
-    $OutputPath = Join-Path "$(Convert-Path "$PSScriptRoot")" "artifacts"
-}
 
 $installDotNetSdk = $false;
 
@@ -98,7 +92,7 @@ function DotNetPack {
         $additionalArgs += $VersionSuffix
     }
 
-    & $dotnet pack $Project --output (Join-Path $OutputPath "packages") --configuration $Configuration $additionalArgs
+    & $dotnet pack $Project --tl $additionalArgs
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet pack failed with exit code $LASTEXITCODE"
@@ -115,7 +109,7 @@ function DotNetTest {
         $additionalArgs += "GitHubActions;report-warnings=false"
     }
 
-    & $dotnet test $Project --output $OutputPath --configuration $Configuration $additionalArgs
+    & $dotnet test $Project --configuration "Release" --tl $additionalArgs
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet test failed with exit code $LASTEXITCODE"
@@ -136,7 +130,7 @@ if (($null -ne $env:CI) -And ($EnableIntegrationTests -eq $true)) {
 
 if ($SkipTests -eq $false) {
     Write-Host "Running tests..." -ForegroundColor Green
-    Remove-Item -Path (Join-Path $OutputPath "coverage" "coverage.json") -Force -ErrorAction SilentlyContinue | Out-Null
+    Remove-Item -Path (Join-Path $solutionPath "artifacts" "coverage" "coverage.json") -Force -ErrorAction SilentlyContinue | Out-Null
     ForEach ($testProject in $testProjects) {
         DotNetTest $testProject
     }

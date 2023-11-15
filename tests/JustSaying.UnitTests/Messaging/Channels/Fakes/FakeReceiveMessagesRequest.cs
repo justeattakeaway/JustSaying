@@ -1,19 +1,10 @@
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class FakeReceiveMessagesRequest
+public class FakeReceiveMessagesRequest(string queueUrl, int maxNumOfMessages, int secondsWaitTime, IList<string> attributesToLoad, int numMessagesReceived)
 {
-    public FakeReceiveMessagesRequest(string queueUrl, int maxNumOfMessages, int secondsWaitTime, IList<string> attributesToLoad, int numMessagesReceived)
-    {
-        QueueUrl = queueUrl;
-        MaxNumOfMessages = maxNumOfMessages;
-        SecondsWaitTime = secondsWaitTime;
-        AttributesToLoad = attributesToLoad;
-        NumMessagesReceived = numMessagesReceived;
-    }
-
-    public string QueueUrl { get; }
-    public int MaxNumOfMessages { get; }
-    public int NumMessagesReceived { get; }
-    public int SecondsWaitTime { get; }
-    public IList<string> AttributesToLoad { get; }
+    public string QueueUrl { get; } = queueUrl;
+    public int MaxNumOfMessages { get; } = maxNumOfMessages;
+    public int NumMessagesReceived { get; } = numMessagesReceived;
+    public int SecondsWaitTime { get; } = secondsWaitTime;
+    public IList<string> AttributesToLoad { get; } = attributesToLoad;
 }

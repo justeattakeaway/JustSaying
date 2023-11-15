@@ -9,15 +9,8 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.UnitTests.Messaging.MessageHandling;
 
-public class WhenEnsuringMessageIsOnlyHandledExactlyOnce
+public class WhenEnsuringMessageIsOnlyHandledExactlyOnce(ITestOutputHelper outputHelper)
 {
-    private readonly ITestOutputHelper _outputHelper;
-
-    public WhenEnsuringMessageIsOnlyHandledExactlyOnce(ITestOutputHelper outputHelper)
-    {
-        _outputHelper = outputHelper;
-    }
-
     [Fact]
     public async Task WhenMessageIsLockedByAnotherHandler_MessageWillBeLeftInTheQueue()
     {
@@ -25,7 +18,7 @@ public class WhenEnsuringMessageIsOnlyHandledExactlyOnce
 
         var testResolver = new InMemoryServiceResolver(sc => sc
             .AddLogging(l =>
-                l.AddXUnit(_outputHelper))
+                l.AddXUnit(outputHelper))
             .AddSingleton<IMessageLockAsync>(messageLock));
 
         var monitor = new TrackingLoggingMonitor(LoggerFactory.Create(lf => lf.AddXUnit()).CreateLogger<TrackingLoggingMonitor>());

@@ -18,8 +18,7 @@ public static class Patiently
         ITestOutputHelper output,
         Action func,
         [System.Runtime.CompilerServices.CallerMemberName]
-        string memberName = "",
-        TimeSpan? timeout = null)
+        string memberName = "")
         => await AssertThatAsync(output,
             () =>
             {

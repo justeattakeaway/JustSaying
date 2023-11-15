@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace JustSaying.UnitTests.JustSayingBus;
 
-public sealed class WhenRegisteringSubscribers : GivenAServiceBus, IDisposable
+public sealed class WhenRegisteringSubscribers(ITestOutputHelper outputHelper) : GivenAServiceBus(outputHelper), IDisposable
 {
     private FakeSqsQueue _queue1;
     private FakeSqsQueue _queue2;
@@ -15,7 +15,7 @@ public sealed class WhenRegisteringSubscribers : GivenAServiceBus, IDisposable
     {
         base.Given();
 
-        IEnumerable<Message> GetMessages(CancellationToken cancellationToken)
+        static IEnumerable<Message> GetMessages(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -78,7 +78,4 @@ public sealed class WhenRegisteringSubscribers : GivenAServiceBus, IDisposable
     {
         _cts?.Dispose();
     }
-
-    public WhenRegisteringSubscribers(ITestOutputHelper outputHelper) : base(outputHelper)
-    { }
 }

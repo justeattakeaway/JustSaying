@@ -2,15 +2,10 @@ using Amazon;
 
 namespace JustSaying.AwsTools.MessageHandling;
 
-internal class ForeignTopicArnProvider : ITopicArnProvider
+internal class ForeignTopicArnProvider(RegionEndpoint regionEndpoint, string accountId, string topicName) : ITopicArnProvider
 {
 
-    private readonly string _arn;
-
-    public ForeignTopicArnProvider(RegionEndpoint regionEndpoint, string accountId, string topicName)
-    {
-        _arn = $"arn:aws:sns:{regionEndpoint.SystemName}:{accountId}:{topicName}";
-    }
+    private readonly string _arn = $"arn:aws:sns:{regionEndpoint.SystemName}:{accountId}:{topicName}";
 
     public Task<bool> ArnExistsAsync()
     {

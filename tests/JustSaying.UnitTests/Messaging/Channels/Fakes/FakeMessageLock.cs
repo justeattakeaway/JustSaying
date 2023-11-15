@@ -2,24 +2,16 @@ using JustSaying.Messaging.MessageHandling;
 
 namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 
-public class FakeMessageLock : IMessageLockAsync
+public class FakeMessageLock(bool exclusive = true) : IMessageLockAsync
 {
-    private readonly bool _exclusive;
-
-    public FakeMessageLock(bool exclusive = true)
-    {
-        _exclusive = exclusive;
-        MessageLockRequests = new List<(string key, TimeSpan howLong, bool isPermanent)>();
-    }
-
-    public IList<(string key, TimeSpan howLong, bool isPermanent)> MessageLockRequests { get; }
+    public IList<(string key, TimeSpan howLong, bool isPermanent)> MessageLockRequests { get; } = new List<(string key, TimeSpan howLong, bool isPermanent)>();
 
     public Task<MessageLockResponse> TryAcquireLockPermanentlyAsync(string key)
     {
         MessageLockRequests.Add((key, TimeSpan.MaxValue, true));
         return Task.FromResult(new MessageLockResponse
         {
-            DoIHaveExclusiveLock = _exclusive
+            DoIHaveExclusiveLock = exclusive
         });
     }
 
@@ -28,7 +20,7 @@ public class FakeMessageLock : IMessageLockAsync
         MessageLockRequests.Add((key, howLong, false));
         return Task.FromResult(new MessageLockResponse
         {
-            DoIHaveExclusiveLock = _exclusive
+            DoIHaveExclusiveLock = exclusive
         });
     }
 
