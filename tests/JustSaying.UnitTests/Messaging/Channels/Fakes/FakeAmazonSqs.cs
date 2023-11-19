@@ -1,4 +1,5 @@
 using Amazon.Runtime;
+using Amazon.Runtime.Endpoints;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 
@@ -46,6 +47,11 @@ public sealed class FakeAmazonSqs(Func<IEnumerable<ReceiveMessageResponse>> getM
         CancellationToken cancellationToken = new CancellationToken())
     {
         return Task.FromResult(new AddPermissionResponse());
+    }
+
+    public Task<CancelMessageMoveTaskResponse> CancelMessageMoveTaskAsync(CancelMessageMoveTaskRequest request, CancellationToken cancellationToken = new CancellationToken())
+    {
+        return Task.FromResult(new CancelMessageMoveTaskResponse());
     }
 
     public Task<ChangeMessageVisibilityResponse> ChangeMessageVisibilityAsync(
@@ -178,6 +184,11 @@ public sealed class FakeAmazonSqs(Func<IEnumerable<ReceiveMessageResponse>> getM
         return Task.FromResult(new ListDeadLetterSourceQueuesResponse());
     }
 
+    public Task<ListMessageMoveTasksResponse> ListMessageMoveTasksAsync(ListMessageMoveTasksRequest request, CancellationToken cancellationToken = new CancellationToken())
+    {
+        return Task.FromResult(new ListMessageMoveTasksResponse());
+    }
+
     public Task<ListQueuesResponse> ListQueuesAsync(
         string queueNamePrefix,
         CancellationToken cancellationToken = new CancellationToken())
@@ -299,6 +310,11 @@ public sealed class FakeAmazonSqs(Func<IEnumerable<ReceiveMessageResponse>> getM
         return Task.FromResult(new SetQueueAttributesResponse());
     }
 
+    public Task<StartMessageMoveTaskResponse> StartMessageMoveTaskAsync(StartMessageMoveTaskRequest request, CancellationToken cancellationToken = new CancellationToken())
+    {
+        return Task.FromResult(new StartMessageMoveTaskResponse());
+    }
+
     public Task<TagQueueResponse> TagQueueAsync(
         TagQueueRequest request,
         CancellationToken cancellationToken = new CancellationToken())
@@ -311,6 +327,11 @@ public sealed class FakeAmazonSqs(Func<IEnumerable<ReceiveMessageResponse>> getM
         CancellationToken cancellationToken = new CancellationToken())
     {
         return Task.FromResult(new UntagQueueResponse());
+    }
+
+    public Endpoint DetermineServiceOperationEndpoint(AmazonWebServiceRequest request)
+    {
+        return new Endpoint("https://testqueues.com");
     }
 
     public ISQSPaginatorFactory Paginators { get; set; }
