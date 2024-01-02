@@ -1,5 +1,6 @@
 <Project>
   <ItemGroup Label="Libraries">
+    <PackageVersion Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.300" />
     <PackageVersion Include="AWSSDK.SimpleNotificationService" Version="3.7.0" />
     <PackageVersion Include="AWSSDK.SQS" Version="3.7.0" />
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.1" />
@@ -11,7 +12,6 @@
     <PackageVersion Include="StructureMap" Version="4.6.0" />
     <PackageVersion Include="System.Text.Json" Version="4.6.0" />
     <PackageVersion Include="System.Threading.Channels" Version="4.5.0" />
-    <PackageVersion Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.300" />
   </ItemGroup>
   <ItemGroup Label="Tests and Samples">
     <PackageVersion Include="AutoFixture" Version="4.18.1" />

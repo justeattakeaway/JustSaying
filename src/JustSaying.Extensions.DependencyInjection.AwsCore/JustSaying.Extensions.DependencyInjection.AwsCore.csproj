@@ -9,8 +9,6 @@
     <ProjectReference Include="..\JustSaying\JustSaying.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.SimpleNotificationService" />
-    <PackageReference Include="AWSSDK.SQS" />
     <PackageReference Include="AWSSDK.Extensions.NETCore.Setup"/>
   </ItemGroup>
 </Project>
