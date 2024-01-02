@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29318.209
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4B4A4A0C-31C2-482B-A7D8-094C60C4D0B5}"
 	ProjectSection(SolutionItems) = preProject
@@ -9,8 +9,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitignore = .gitignore
 		build.ps1 = build.ps1
 		CHANGELOG.md = CHANGELOG.md
-		CODE_OF_CONDUCT.md = CODE_OF_CONDUCT.md
 		CodeAnalysisRules.ruleset = CodeAnalysisRules.ruleset
+		CODE_OF_CONDUCT.md = CODE_OF_CONDUCT.md
 		Directory.Build.props = Directory.Build.props
 		Directory.Build.targets = Directory.Build.targets
 		Directory.Packages.props = Directory.Packages.props
@@ -73,9 +73,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Sample.Restauran
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Extensions.DependencyInjection.StructureMap.Tests", "tests\JustSaying.Extensions.DependencyInjection.StructureMap.Tests\JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj", "{6AF4E086-6784-489C-9AB1-36F637A30094}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.Benchmark", "tests\JustSaying.Benchmark\JustSaying.Benchmark.csproj", "{83B43FC1-1F1C-4838-B67B-CE70D16870AF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Benchmark", "tests\JustSaying.Benchmark\JustSaying.Benchmark.csproj", "{83B43FC1-1F1C-4838-B67B-CE70D16870AF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustSaying.Sample.Middleware", "samples\src\JustSaying.Sample.Middleware\JustSaying.Sample.Middleware.csproj", "{38DAC394-0A6E-4BB6-BCFC-8C21D2C64B3A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Sample.Middleware", "samples\src\JustSaying.Sample.Middleware\JustSaying.Sample.Middleware.csproj", "{38DAC394-0A6E-4BB6-BCFC-8C21D2C64B3A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Extensions.DependencyInjection.AwsCore", "src\JustSaying.AwsOptions.Core\JustSaying.Extensions.DependencyInjection.AwsCore.csproj", "{4EFC48D7-4B45-4EBC-9237-4B84FE8239E0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.AWSBuilder.Core.Tests", "tests\JustSaying.AwsBuilder.Core.Tests\TestProject1\JustSaying.AWSBuilder.Core.Tests.csproj", "{1B99B357-5D76-4540-B28E-B6CD3F6F1963}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -139,6 +143,14 @@ Global
 		{38DAC394-0A6E-4BB6-BCFC-8C21D2C64B3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{38DAC394-0A6E-4BB6-BCFC-8C21D2C64B3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{38DAC394-0A6E-4BB6-BCFC-8C21D2C64B3A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4EFC48D7-4B45-4EBC-9237-4B84FE8239E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EFC48D7-4B45-4EBC-9237-4B84FE8239E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EFC48D7-4B45-4EBC-9237-4B84FE8239E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EFC48D7-4B45-4EBC-9237-4B84FE8239E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B99B357-5D76-4540-B28E-B6CD3F6F1963}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B99B357-5D76-4540-B28E-B6CD3F6F1963}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B99B357-5D76-4540-B28E-B6CD3F6F1963}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B99B357-5D76-4540-B28E-B6CD3F6F1963}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -162,6 +174,8 @@ Global
 		{6AF4E086-6784-489C-9AB1-36F637A30094} = {E22A50F2-9952-4483-8AD1-09BE354FB3E4}
 		{83B43FC1-1F1C-4838-B67B-CE70D16870AF} = {E22A50F2-9952-4483-8AD1-09BE354FB3E4}
 		{38DAC394-0A6E-4BB6-BCFC-8C21D2C64B3A} = {77C93C37-DE5B-448F-9A23-6C9D0C8465CA}
+		{4EFC48D7-4B45-4EBC-9237-4B84FE8239E0} = {A94633F2-29F2-48C6-840A-C5370B300AE2}
+		{1B99B357-5D76-4540-B28E-B6CD3F6F1963} = {E22A50F2-9952-4483-8AD1-09BE354FB3E4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {18FBDF85-C124-4444-9F03-D0D4F2B3A612}

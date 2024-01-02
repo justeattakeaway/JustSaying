@@ -1,0 +1,7 @@
+[default]
+region=eu-west-1
+output=json
+[profile local]
+region=us-east-1
+endpoint_url=http://profile.test/
+
