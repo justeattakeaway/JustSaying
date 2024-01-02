@@ -77,9 +77,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Benchmark", "tes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Sample.Middleware", "samples\src\JustSaying.Sample.Middleware\JustSaying.Sample.Middleware.csproj", "{38DAC394-0A6E-4BB6-BCFC-8C21D2C64B3A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Extensions.DependencyInjection.AwsCore", "src\JustSaying.AwsOptions.Core\JustSaying.Extensions.DependencyInjection.AwsCore.csproj", "{4EFC48D7-4B45-4EBC-9237-4B84FE8239E0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Extensions.DependencyInjection.AwsCore", "src\JustSaying.Extensions.DependencyInjection.AwsCore\JustSaying.Extensions.DependencyInjection.AwsCore.csproj", "{4EFC48D7-4B45-4EBC-9237-4B84FE8239E0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.AWSBuilder.Core.Tests", "tests\JustSaying.AwsBuilder.Core.Tests\TestProject1\JustSaying.AWSBuilder.Core.Tests.csproj", "{1B99B357-5D76-4540-B28E-B6CD3F6F1963}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Extensions.DependencyInjection.AwsCore.Tests", "tests\JustSaying.Extensions.DependencyInjection.AwsCore.Tests\JustSaying.Extensions.DependencyInjection.AwsCore.Tests.csproj", "{1B99B357-5D76-4540-B28E-B6CD3F6F1963}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -22,8 +22,8 @@
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\JustSaying.AwsOptions.Core\JustSaying.Extensions.DependencyInjection.AwsCore.csproj" />
-    <ProjectReference Include="..\..\JustSaying.TestingFramework\JustSaying.TestingFramework.csproj" />
+    <ProjectReference Include="..\..\src\JustSaying.Extensions.DependencyInjection.AwsCore\JustSaying.Extensions.DependencyInjection.AwsCore.csproj" />
+    <ProjectReference Include="..\JustSaying.TestingFramework\JustSaying.TestingFramework.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Shouldly" />
@@ -41,4 +41,4 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-</Project> 
+</Project>
