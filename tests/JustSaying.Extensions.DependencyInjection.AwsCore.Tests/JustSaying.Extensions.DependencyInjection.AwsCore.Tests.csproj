@@ -12,6 +12,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Shouldly" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
@@ -19,6 +20,7 @@
     <ProjectReference Include="..\..\src\JustSaying.Extensions.DependencyInjection.AwsCore\JustSaying.Extensions.DependencyInjection.AwsCore.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Using Include="Shouldly" />
     <Using Include="Xunit" />
     <Using Include="Xunit.Abstractions" />
   </ItemGroup>
