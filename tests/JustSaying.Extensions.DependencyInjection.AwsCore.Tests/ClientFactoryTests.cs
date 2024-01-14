@@ -54,8 +54,8 @@ public class ClientFactoryTests
         var snsClient = clientFactory.GetSnsClient(RegionEndpoint.USEast1);
 
         //Assert
-        Assert.True(snsClient.Config.RegionEndpoint == null);
-        Assert.True(snsClient.Config.ServiceURL.Equals("http://profile.test/") == true, snsClient.Config.ServiceURL);
+        snsClient.Config.RegionEndpoint.ShouldBeNull();
+        snsClient.Config.ServiceURL.ShouldBe("http://profile.test/");
     }
 
     [Fact]
