@@ -29,17 +29,17 @@ public static class IServiceCollectionExtensions
     /// </exception>
     public static void AddJustSayingWithAwsConfig(this IServiceCollection services, IConfiguration configuration, Action<MessagingBusBuilder> builderConfig)
     {
-        if(services is null)
+        if (services is null)
         {
             throw new ArgumentNullException(nameof(services));
         }
 
-        if(configuration is null)
+        if (configuration is null)
         {
             throw new ArgumentNullException(nameof(configuration));
         }
 
-        if(builderConfig is null)
+        if (builderConfig is null)
         {
             throw new ArgumentNullException(nameof(builderConfig));
         }
