@@ -8,8 +8,6 @@ namespace JustSaying.Extensions.DependencyInjection.AwsCore.Tests;
 
 public class ClientFactoryTests
 {
-    private readonly string _configFile = Path.Join(AppContext.BaseDirectory, "config");
-
     private readonly string _credentialsFile = Path.Join(AppContext.BaseDirectory, "credentials");
 
     [Fact]
