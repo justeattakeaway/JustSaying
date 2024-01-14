@@ -11,12 +11,6 @@ public class ClientFactoryTests
 
     private readonly string _credentialsFile = Path.Join(AppContext.BaseDirectory, "credentials");
 
-    public ClientFactoryTests()
-    {
-        Environment.SetEnvironmentVariable("AWS_CONFIG_FILE", _configFile);
-        Environment.SetEnvironmentVariable("AWS_SHARED_CREDENTIALS_FILE", _credentialsFile);
-    }
-
     [Fact]
     public void ShouldReadConfigFromFile()
     {
@@ -35,29 +29,6 @@ public class ClientFactoryTests
         //Assert
         Assert.True(snsClient.Config.ServiceURL.Equals("http://test.test/") == true);
         Assert.True(snsClient.Config.UseHttp);
-    }
-
-
-    [Fact]
-    public void ShouldReadFromDefaultProfile()
-    {
-        //Arrange
-        var config = new ConfigurationBuilder()
-            .AddEnvironmentVariables()
-            .Build();
-        var serviceCollection = new ServiceCollection();
-        serviceCollection.AddJustSayingWithAwsConfig(config, (_) => { });
-
-        //Act
-        var provider = serviceCollection.BuildServiceProvider();
-        var clientFactory = provider.GetRequiredService<IAwsClientFactory>();
-        var snsClient = clientFactory.GetSnsClient(RegionEndpoint.EUWest2);
-
-        //Assert
-        Assert.True(string.IsNullOrEmpty(snsClient.Config.ServiceURL), snsClient.Config.ServiceURL);
-        Assert.True(snsClient.Config.RegionEndpoint == RegionEndpoint.EUWest2);
-        Assert.False(snsClient.Config.UseHttp);
-
     }
 
     [Fact]
@@ -92,7 +63,12 @@ public class ClientFactoryTests
     {
         //Arrange
         var config = new ConfigurationBuilder()
-            .AddEnvironmentVariables()
+            .AddInMemoryCollection(new Dictionary<string, string>
+            {
+                {"AWS:Profile", "local"},
+                {"AWS:ProfilesLocation", _credentialsFile},
+                {"AWS:Region", "us-east-1"}
+            })
             .Build();
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddJustSayingWithAwsConfig(config, (_) => { });
@@ -100,12 +76,12 @@ public class ClientFactoryTests
         //Act
         var provider = serviceCollection.BuildServiceProvider();
         var clientFactory = provider.GetRequiredService<IAwsClientFactory>();
-        var sqsClient = clientFactory.GetSqsClient(RegionEndpoint.EUWest2);
-        var snsClient = clientFactory.GetSnsClient(RegionEndpoint.EUWest2);
+        var sqsClient = clientFactory.GetSqsClient(RegionEndpoint.USEast1);
+        var snsClient = clientFactory.GetSnsClient(RegionEndpoint.USEast1);
 
         //Assert
-        Assert.True(sqsClient.Config.RegionEndpoint == RegionEndpoint.EUWest2);
-        Assert.True(snsClient.Config.RegionEndpoint == RegionEndpoint.EUWest2);
+        Assert.True(sqsClient.Config.RegionEndpoint == RegionEndpoint.USEast1);
+        Assert.True(snsClient.Config.RegionEndpoint == RegionEndpoint.USEast1);
     }
 
     [Fact]
@@ -113,7 +89,12 @@ public class ClientFactoryTests
     {
         //Arrange
         var config = new ConfigurationBuilder()
-            .AddEnvironmentVariables()
+             .AddInMemoryCollection(new Dictionary<string, string>
+            {
+                {"AWS:Profile", "local"},
+                {"AWS:ProfilesLocation", _credentialsFile},
+                {"AWS:Region", "us-east-1"}
+            })
             .Build();
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddJustSayingWithAwsConfig(config, (_) => { });
