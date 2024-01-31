@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
-   <PropertyGroup>
+  <PropertyGroup>
     <Description>JustSaying extensions for Microsoft.Extensions.DependencyInjection.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsShipping>true</IsShipping>
     <RootNamespace>Microsoft.Extensions.DependencyInjection</RootNamespace>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
   </PropertyGroup>

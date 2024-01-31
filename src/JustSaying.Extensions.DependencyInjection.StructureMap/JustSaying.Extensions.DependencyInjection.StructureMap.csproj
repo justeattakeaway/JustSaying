@@ -1,7 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Description>JustSaying extensions for StructureMap.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsShipping>true</IsShipping>
     <PackageTags>aws,sns,sqs,structuremap</PackageTags>
     <RootNamespace>StructureMap</RootNamespace>
     <!-- StructureMap is not strong-named, so this assembly also cannot be -->

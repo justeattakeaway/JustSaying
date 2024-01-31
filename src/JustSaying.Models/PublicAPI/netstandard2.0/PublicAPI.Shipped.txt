@@ -1,0 +1,15 @@
+JustSaying.Models.Message
+JustSaying.Models.Message.Conversation.get -> string
+JustSaying.Models.Message.Conversation.set -> void
+JustSaying.Models.Message.Id.get -> System.Guid
+JustSaying.Models.Message.Id.set -> void
+JustSaying.Models.Message.Message() -> void
+JustSaying.Models.Message.RaisingComponent.get -> string
+JustSaying.Models.Message.RaisingComponent.set -> void
+JustSaying.Models.Message.SourceIp.get -> string
+JustSaying.Models.Message.Tenant.get -> string
+JustSaying.Models.Message.Tenant.set -> void
+JustSaying.Models.Message.TimeStamp.get -> System.DateTime
+JustSaying.Models.Message.TimeStamp.set -> void
+JustSaying.Models.Message.Version.get -> string
+virtual JustSaying.Models.Message.UniqueKey() -> string
