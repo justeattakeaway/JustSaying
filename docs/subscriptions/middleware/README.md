@@ -17,7 +17,7 @@ The handler invocation middleware is always the innermost middleware in a pipeli
 
 The stopwatch middleware wraps the handler invocation one, and ensures that the `IMessageMonitor.HandlerExecutionTime`  method is called correctly.
 
-If no custom middleware configuration is provided, the above handlers will be added.
+If no custom middleware configuration is provided, the above middlewares will be added.
 
 #### Adding additional middleware
 
