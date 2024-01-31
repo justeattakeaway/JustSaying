@@ -24,12 +24,12 @@ public static class HandlerMiddlewareBuilderExtensions
     /// </exception>
     public static HandlerMiddlewareBuilder UseHandler<TMessage>(
         this HandlerMiddlewareBuilder builder,
-        Func<HandlerResolutionContext, IHandlerAsync<TMessage>> handler) where TMessage : Message
+        IHandlerResolver handlerResolver) where TMessage : Message
     {
         if (builder == null) throw new ArgumentNullException(nameof(builder));
-        if (handler == null) throw new ArgumentNullException(nameof(handler));
+        if (handlerResolver == null) throw new ArgumentNullException(nameof(handlerResolver));
 
-        return builder.Use(new HandlerInvocationMiddleware<TMessage>(handler));
+        return builder.Use(new HandlerInvocationMiddleware<TMessage>(handlerResolver));
     }
 
     /// <summary>

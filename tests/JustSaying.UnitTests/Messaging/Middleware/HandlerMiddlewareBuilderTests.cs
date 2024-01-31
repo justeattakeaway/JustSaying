@@ -65,7 +65,7 @@ public class HandlerMiddlewareBuilderTests
             .Configure(hmb =>
                 hmb.Use(outer)
                     .Use(inner)
-                    .UseHandler(ctx => handler));
+                    .UseHandler<SimpleMessage>(new DummyHandlerResolver<SimpleMessage>(handler)));
 
         var handlerMiddleware = middlewareBuilder.Build();
 

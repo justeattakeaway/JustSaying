@@ -21,7 +21,7 @@ public class WhenDefaultMiddlewaresAreNotApplied(ITestOutputHelper outputHelper)
                     c => c.WithMiddlewareConfiguration(m =>
                     {
                         m.Use(testMiddleware);
-                        m.UseHandler(_ => handler);
+                        m.UseHandler<SimpleMessage>(new DummyHandlerResolver<SimpleMessage>(handler));
                     })))
             .AddJustSayingHandlers(new[] { handler });
 

@@ -27,7 +27,7 @@ public class WhenEnsuringMessageIsOnlyHandledExactlyOnce(ITestOutputHelper outpu
         var middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
             .UseExactlyOnce<OrderAccepted>(nameof(InspectableHandler<OrderAccepted>),
                 TimeSpan.FromSeconds(1))
-            .UseHandler(ctx => handler)
+            .UseHandler<OrderAccepted>(new DummyHandlerResolver<OrderAccepted>(handler))
             .Build();
 
         var context = TestHandleContexts.From<OrderAccepted>();
