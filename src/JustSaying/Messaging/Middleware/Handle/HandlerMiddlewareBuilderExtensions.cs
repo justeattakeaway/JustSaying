@@ -12,7 +12,7 @@ namespace JustSaying.Messaging.Middleware;
 public static class HandlerMiddlewareBuilderExtensions
 {
     /// <summary>
-    /// Adds a <see cref="HandlerInvocationMiddleware{T}"/> to the current pipeline.
+    /// Adds a resolved handler <see cref="HandlerInvocationMiddleware{T}"/> to the current pipeline.
     /// </summary>
     /// <param name="builder">The current <see cref="HandlerMiddlewareBuilder"/>.</param>
     /// <param name="handler">A factory that creates <see cref="IHandlerAsync{T}"/> instances from
@@ -22,6 +22,28 @@ public static class HandlerMiddlewareBuilderExtensions
     /// <exception cref="ArgumentNullException">
     /// <paramref name="builder"/> or <paramref name="handler"/> is <see langword="null"/>.
     /// </exception>
+    [Obsolete("This method is obsolete and will be removed in a future version. Please use UseHandler(IHandlerResolver) instead.")]
+    public static HandlerMiddlewareBuilder UseHandler<TMessage>(
+        this HandlerMiddlewareBuilder builder,
+        Func<HandlerResolutionContext, IHandlerAsync<TMessage>> handler) where TMessage : Message
+    {
+        if (builder == null) throw new ArgumentNullException(nameof(builder));
+        if (handler == null) throw new ArgumentNullException(nameof(handler));
+
+        return builder.Use(new HandlerInvocationMiddleware<TMessage>(handler));
+    }
+
+    /// <summary>
+    /// Adds a <see cref="HandlerResolveInvocationMiddleware{T}"/> to the current pipeline to resolve handlers on demand
+    /// </summary>
+    /// <param name="builder">The current <see cref="HandlerMiddlewareBuilder"/>.</param>
+    /// <param name="handlerResolver">A factory that creates <see cref="IHandlerAsync{T}"/> instances from
+    /// a <see cref="HandlerResolutionContext"/>.</param>
+    /// <typeparam name="TMessage">The type of the message that should be handled</typeparam>
+    /// <returns>The current <see cref="HandlerMiddlewareBuilder"/>.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="builder"/> or <paramref name="handlerResolver"/> is <see langword="null"/>.
+    /// </exception>
     public static HandlerMiddlewareBuilder UseHandler<TMessage>(
         this HandlerMiddlewareBuilder builder,
         IHandlerResolver handlerResolver) where TMessage : Message
@@ -29,7 +51,7 @@ public static class HandlerMiddlewareBuilderExtensions
         if (builder == null) throw new ArgumentNullException(nameof(builder));
         if (handlerResolver == null) throw new ArgumentNullException(nameof(handlerResolver));
 
-        return builder.Use(new HandlerInvocationMiddleware<TMessage>(handlerResolver));
+        return builder.Use(new HandlerResolveInvocationMiddleware<TMessage>(handlerResolver));
     }
 
     /// <summary>

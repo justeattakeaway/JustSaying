@@ -5,14 +5,11 @@ using JustSaying.Models;
 namespace JustSaying.Messaging.Middleware;
 
 /// <summary>
-/// This middleware is responsible for recalling a previously resolved message handler and calling it.
+/// This middleware is responsible for resolving a message handler and calling it.
 /// </summary>
 /// <typeparam name="T">The type of the message that the message handler handles.</typeparam>
-[Obsolete("This class is obsolete and will be removed in a future version. Please use HandlerResolveInvocationMiddleware instead.")]
-public sealed class HandlerInvocationMiddleware<T>(Func<HandlerResolutionContext, IHandlerAsync<T>> handlerResolver) : MiddlewareBase<HandleMessageContext, bool> where T : Message
+public sealed class HandlerResolveInvocationMiddleware<T>(IHandlerResolver handlerResolver) : MiddlewareBase<HandleMessageContext, bool> where T : Message
 {
-    private readonly Func<HandlerResolutionContext, IHandlerAsync<T>> _handlerResolver = handlerResolver ?? throw new ArgumentNullException(nameof(handlerResolver));
-
     protected override async Task<bool> RunInnerAsync(
         HandleMessageContext context,
         Func<CancellationToken, Task<bool>> func,
@@ -24,7 +21,7 @@ public sealed class HandlerInvocationMiddleware<T>(Func<HandlerResolutionContext
 
         var resolutionContext = new HandlerResolutionContext(context.QueueName);
 
-        IHandlerAsync<T> handler = _handlerResolver(resolutionContext);
+        var handler = handlerResolver.ResolveHandler<T>(resolutionContext);
 
         return await handler.Handle(context.MessageAs<T>()).ConfigureAwait(false);
     }

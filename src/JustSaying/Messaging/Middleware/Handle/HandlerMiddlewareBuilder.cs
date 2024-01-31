@@ -95,7 +95,7 @@ Please check the documentation for your container for more details.");
                 $"Handler middleware has already been specified for {typeof(TMessage).Name} on this queue.");
         }
 
-        _handlerMiddleware = new HandlerInvocationMiddleware<TMessage>(handlerResolver);
+        _handlerMiddleware = new HandlerResolveInvocationMiddleware<TMessage>(handlerResolver);
 
         return this;
     }
