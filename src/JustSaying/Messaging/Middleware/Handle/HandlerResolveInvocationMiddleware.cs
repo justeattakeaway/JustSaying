@@ -10,6 +10,7 @@ namespace JustSaying.Messaging.Middleware;
 /// <typeparam name="T">The type of the message that the message handler handles.</typeparam>
 public sealed class HandlerResolveInvocationMiddleware<T>(IHandlerResolver handlerResolver) : MiddlewareBase<HandleMessageContext, bool> where T : Message
 {
+    /// <inheritdoc />
     protected override async Task<bool> RunInnerAsync(
         HandleMessageContext context,
         Func<CancellationToken, Task<bool>> func,
