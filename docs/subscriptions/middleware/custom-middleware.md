@@ -33,3 +33,10 @@ Alternatively, you can also expose an extension method to make it more easily di
 3. If you require services from the DI container to create or resolve the middleware, resolve them from `builder.ServiceResolver`. 
    1. Note that you may also need to register required services into the container for them to be made available here.
 
+### Additional notes
+
+When adding custom middleware, the default middlewares (`StopwatchMiddleware` and `HandlerInvocationMiddleware`) will not be added automatically.
+
+You should call `UseDefaults<T>(...)`` to make sure they are added to your subscription configuration.
+
+You can view the [sample](https://github.com/justeattakeaway/JustSaying/tree/main/samples/src/JustSaying.Sample.Middleware) for details.

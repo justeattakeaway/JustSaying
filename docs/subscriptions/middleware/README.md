@@ -11,24 +11,25 @@ description: >-
 
 #### Defaults
 
-There are two middlewares that are always added to the message handling pipeline: `HandlerInvocationMiddleware` and `StopwatchMiddleware`. 
+There are two middlewares that are added to the message handling pipeline by default: `HandlerInvocationMiddleware` and `StopwatchMiddleware`.
 
 The handler invocation middleware is always the innermost middleware in a pipeline, and is responsible for resolving a handler and calling it.
 
 The stopwatch middleware wraps the handler invocation one, and ensures that the `IMessageMonitor.HandlerExecutionTime`  method is called correctly.
 
-These defaults cannot currently be removed, but you can add additional middleware around them.
+If no custom middleware configuration is provided, the above handlers will be added.
 
 #### Adding additional middleware
 
 Middleware pipelines are configured on a per-subscription basis, using the [`SqsReadConfiguration.WithMiddlewareConfiguration`](../configuration/sqsreadconfiguration.md#withmiddlewareconfiguration) API:
 
-```text
+```csharp
 c.WithReadConfiguration(rc =>
     rc.WithMiddlewareConfiguration(m =>
     {
         m.Use<MyMiddleware>();
         m.UseExactlyOnce<SimpleMessage>("simple-message-lock");
+        m.UseDefaults<SimpleMessage>(typeof(SimpleMessageHandler));   // Add default middleware pipeline
     }))
 ```
 
@@ -43,6 +44,9 @@ After - StopwatchMiddleware
 After - ExactlyOnceMiddleware  
 After - MyMiddleware`
 
+If you don't call `UseDefaults<T>(...)`` then messages won't pass through your handler, nor will they be deleted from their queues, so it's strongly recommended to use it.
+
+An example of using custom middleware can be found in the [sample](https://github.com/justeattakeaway/JustSaying/tree/main/samples/src/JustSaying.Sample.Middleware)
 
 
 
