@@ -13,6 +13,7 @@ public static class HandlerMiddlewareBuilderExtensions
 {
     /// <summary>
     /// Adds a resolved handler <see cref="HandlerInvocationMiddleware{T}"/> to the current pipeline.
+    /// This method will be deprecated and removed in a future version. Please use UseHandler(IHandlerResolver) instead.
     /// </summary>
     /// <param name="builder">The current <see cref="HandlerMiddlewareBuilder"/>.</param>
     /// <param name="handler">A factory that creates <see cref="IHandlerAsync{T}"/> instances from
@@ -22,7 +23,6 @@ public static class HandlerMiddlewareBuilderExtensions
     /// <exception cref="ArgumentNullException">
     /// <paramref name="builder"/> or <paramref name="handler"/> is <see langword="null"/>.
     /// </exception>
-    [Obsolete("This method is obsolete and will be removed in a future version. Please use UseHandler(IHandlerResolver) instead.")]
     public static HandlerMiddlewareBuilder UseHandler<TMessage>(
         this HandlerMiddlewareBuilder builder,
         Func<HandlerResolutionContext, IHandlerAsync<TMessage>> handler) where TMessage : Message
