@@ -1,8 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <IsShipping>true</IsShipping>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
-      <Using Remove="System.Net.Http" />
-    </ItemGroup>
+    <Using Remove="System.Net.Http" />
+  </ItemGroup>
 </Project>
