@@ -18,6 +18,7 @@ internal sealed class DynamicMessagePublisher(
     private readonly Func<Message, string> _topicNameCustomizer = topicNameCustomizer;
     private readonly Func<string, StaticPublicationConfiguration> _staticConfigBuilder = staticConfigBuilder;
 
+    /// <inheritdoc/>
     public InterrogationResult Interrogate()
     {
         var pairs = _publisherCache.Keys.OrderBy(x => x)
@@ -29,8 +30,10 @@ internal sealed class DynamicMessagePublisher(
         });
     }
 
+    /// <inheritdoc/>
     public Task StartAsync(CancellationToken stoppingToken) => Task.CompletedTask;
 
+    /// <inheritdoc/>
     public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
     {
         string topicName = _topicNameCustomizer(message);
@@ -62,12 +65,11 @@ internal sealed class DynamicMessagePublisher(
         await config.Publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <inheritdoc/>
     public Task PublishAsync(Message message, CancellationToken cancellationToken)
         => PublishAsync(message, null, cancellationToken);
 
-    public Task PublishAsync(IEnumerable<Message> messages, CancellationToken cancellationToken)
-        => PublishAsync(messages, null, cancellationToken);
-
+    /// <inheritdoc/>
     public async Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
     {
         var publisherTask = new List<Task>();

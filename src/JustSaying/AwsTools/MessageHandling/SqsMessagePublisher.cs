@@ -29,14 +29,14 @@ public class SqsMessagePublisher(
         QueueUrl = queueUrl;
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
+    /// <inheritdoc/>
+    public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
+    /// <inheritdoc/>
     public async Task PublishAsync(Message message, CancellationToken cancellationToken)
         => await PublishAsync(message, null, cancellationToken).ConfigureAwait(false);
 
+    /// <inheritdoc/>
     public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
     {
         if (QueueUrl is null) throw new PublishException("Queue URL was null, perhaps you need to call `StartAsync` on the `IMessagePublisher` before publishing.");
@@ -97,6 +97,7 @@ public class SqsMessagePublisher(
 
     public string GetMessageInContext(Message message) => serializationRegister.Serialize(message, serializeForSnsPublishing: false);
 
+    /// <inheritdoc/>
     public InterrogationResult Interrogate()
     {
         return new InterrogationResult(new
@@ -105,9 +106,7 @@ public class SqsMessagePublisher(
         });
     }
 
-    public Task PublishAsync(IEnumerable<Message> messages, CancellationToken cancellationToken)
-        => PublishAsync(messages, null, cancellationToken);
-
+    /// <inheritdoc/>
     public async Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
     {
         if (QueueUrl is null)
@@ -217,7 +216,6 @@ public class SqsMessagePublisher(
                 return entry;
             }).ToList()
         };
-
 
         return request;
     }

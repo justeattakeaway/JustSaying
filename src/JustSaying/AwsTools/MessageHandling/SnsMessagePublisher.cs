@@ -62,10 +62,7 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
         _messageSubjectProvider = messageSubjectProvider;
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
+    public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     public Task PublishAsync(Message message, CancellationToken cancellationToken)
         => PublishAsync(message, null, cancellationToken);
@@ -117,8 +114,8 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
 
     private PublishRequest BuildPublishRequest(Message message, PublishMetadata metadata)
     {
-        var messageToSend = _serializationRegister.Serialize(message, serializeForSnsPublishing: true);
-        var messageType = _messageSubjectProvider.GetSubjectForType(message.GetType());
+        string messageToSend = _serializationRegister.Serialize(message, serializeForSnsPublishing: true);
+        string messageType = _messageSubjectProvider.GetSubjectForType(message.GetType());
 
         return new PublishRequest
         {
@@ -162,14 +159,8 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
 
     public virtual InterrogationResult Interrogate()
     {
-        return new InterrogationResult(new
-        {
-            Arn
-        });
+        return new InterrogationResult(new { Arn });
     }
-
-    public Task PublishAsync(IEnumerable<Message> messages, CancellationToken cancellationToken)
-        => PublishAsync(messages, null, cancellationToken);
 
     public async Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
     {

@@ -18,7 +18,6 @@ public class WhenRegisteringAPublisherForRegion(ITestOutputHelper outputHelper) 
     private async Task ThenATopicIsCreatedInThatRegion<T>()
         where T : IStartable
     {
-
         // Arrange
         var region = RegionEndpoint.EUWest1;
 
@@ -46,5 +45,6 @@ public class WhenRegisteringAPublisherForRegion(ITestOutputHelper outputHelper) 
     }
 
     private sealed class MyMessageForRegion : Message
-    { }
+    {
+    }
 }

@@ -16,7 +16,6 @@ public class WhenTheErrorQueueDisabled(ITestOutputHelper outputHelper) : Integra
     private async Task ThenTheErrorQueueDoesNotExist<T>()
         where  T: IStartable
     {
-
         // Arrange
         var completionSource = new TaskCompletionSource<object>();
         var handler = CreateHandler<SimpleMessage>(completionSource);

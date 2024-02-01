@@ -16,7 +16,7 @@ public class WhenPublishingInBatchAsyncWithGenericMessageSubjectProvider : WhenP
     {
     }
 
-    private readonly List<Message> _messages = new();
+    private readonly List<Message> _messages = [];
     private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
     private const string TopicArn = "topicarn";
 
@@ -28,7 +28,7 @@ public class WhenPublishingInBatchAsyncWithGenericMessageSubjectProvider : WhenP
 
     protected override void Given()
     {
-        for(var i = 0; i < 10; i++)
+        for (int i = 0; i < 10; i++)
         {
             var message = new MessageWithTypeParameters<int, string>();
             _messages.Add(message);
@@ -52,14 +52,14 @@ public class WhenPublishingInBatchAsyncWithGenericMessageSubjectProvider : WhenP
 
     private static bool AssertMessageIsPublishedToSnsTopic(PublishBatchRequest request)
     {
-        if(request.PublishBatchRequestEntries.Count != 10)
+        if (request.PublishBatchRequestEntries.Count != 10)
         {
             return false;
         }
 
-        for (var i = 0; i < 10; i++)
+        for (int i = 0; i < 10; i++)
         {
-           if(request.PublishBatchRequestEntries[i].Message != "json_message_" + i)
+           if (request.PublishBatchRequestEntries[i].Message != "json_message_" + i)
            {
                return false;
            }
@@ -71,7 +71,7 @@ public class WhenPublishingInBatchAsyncWithGenericMessageSubjectProvider : WhenP
     [Fact]
     public void MessageSubjectIsObjectType()
     {
-        var subject = new GenericMessageSubjectProvider().GetSubjectForType(typeof(MessageWithTypeParameters<int, string>));
+        string subject = new GenericMessageSubjectProvider().GetSubjectForType(typeof(MessageWithTypeParameters<int, string>));
         Sns.Received().PublishBatchAsync(Arg.Is<PublishBatchRequest>(x => x.PublishBatchRequestEntries.All(y => y.Subject == subject)));
     }
 

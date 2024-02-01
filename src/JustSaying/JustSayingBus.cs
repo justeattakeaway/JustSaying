@@ -167,6 +167,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         }
     }
 
+    /// <inheritdoc/>
     public async Task StartAsync(CancellationToken stoppingToken)
     {
         if (stoppingToken.IsCancellationRequested) return;
@@ -235,9 +236,11 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         }
     }
 
+    /// <inheritdoc/>
     public async Task PublishAsync(Message message, CancellationToken cancellationToken)
         => await PublishAsync(message, null, cancellationToken).ConfigureAwait(false);
 
+    /// <inheritdoc/>
     public async Task PublishAsync(
         Message message,
         PublishMetadata metadata,
@@ -327,6 +330,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         }
     }
 
+    /// <inheritdoc/>
     public InterrogationResult Interrogate()
     {
         var publisherDescriptions =
@@ -341,15 +345,14 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         });
     }
 
+    /// <inheritdoc/>
     public void Dispose()
     {
         _startLock?.Dispose();
         _loggerFactory?.Dispose();
     }
 
-    public Task PublishAsync(IEnumerable<Message> messages, CancellationToken cancellationToken)
-        => PublishAsync(messages, null, cancellationToken);
-
+    /// <inheritdoc/>
     public Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
     {
         if (!_busStarted && _startupTasks.Count > 0)
