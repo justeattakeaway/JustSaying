@@ -189,29 +189,32 @@ public class SqsMessagePublisher(
         }
     }
 
-    private SendMessageBatchRequest BuildSendMessageBatchRequest(Message[] message, PublishMetadata metadata)
+    private SendMessageBatchRequest BuildSendMessageBatchRequest(Message[] messages, PublishMetadata metadata)
     {
-        var request = new SendMessageBatchRequest
+        var entries = new List<SendMessageBatchRequestEntry>(messages.Length);
+        int? delaySeconds = metadata?.Delay is { } delay ? (int)delay.TotalSeconds : null;
+
+        foreach (var message in messages)
+        {
+            var entry = new SendMessageBatchRequestEntry
+            {
+                Id = message.UniqueKey(),
+                MessageBody = GetMessageInContext(message),
+            };
+
+            if (delaySeconds is { } value)
+            {
+                entry.DelaySeconds = value;
+            }
+
+            entries.Add(entry);
+        }
+
+        return new SendMessageBatchRequest
         {
             QueueUrl = QueueUrl.AbsoluteUri,
-            Entries = message.Select(message =>
-            {
-                var entry = new SendMessageBatchRequestEntry
-                {
-                    Id = message.UniqueKey(),
-                    MessageBody = GetMessageInContext(message)
-                };
-
-                if (metadata?.Delay is { } delay)
-                {
-                    entry.DelaySeconds = (int)delay.TotalSeconds;
-                }
-
-                return entry;
-            }).ToList()
+            Entries = entries,
         };
-
-        return request;
     }
 
     private void EnsureQueueUrl()
