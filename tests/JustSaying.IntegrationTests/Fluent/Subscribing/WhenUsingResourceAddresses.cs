@@ -233,7 +233,7 @@ public class AddressPubSub(ITestOutputHelper outputHelper) : IntegrationTestBase
         using var provider = services.BuildServiceProvider();
 
         // Act
-        var publisher = provider.GetRequiredService<IMessagePublisher>().ShouldBeOfType<IMessageBatchPublisher>();
+        var publisher = provider.GetRequiredService<IMessageBatchPublisher>();
 
         // Assert
         publisher.ShouldNotBeNull();
