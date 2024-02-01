@@ -33,14 +33,13 @@ public class WhenPublishingInBatch : WhenPublishingTestBase
     protected override async Task WhenAsync()
     {
         var messages = new List<Message>();
-        for (var i = 0; i < 1_000; i++)
+        for (int i = 0; i < 1_000; i++)
         {
             messages.Add(new SimpleMessage
             {
                 Content = $"Message {i}"
             });
         }
-
 
         await SystemUnderTest.PublishAsync(messages);
     }
@@ -64,7 +63,7 @@ public class WhenPublishingInBatch : WhenPublishingTestBase
             return false;
         }
 
-        for (var i = 0; i < 10; i++)
+        for (int i = 0; i < 10; i++)
         {
             var entry = request.PublishBatchRequestEntries[i];
             if (entry.Message.Equals($"Message {i}"))
@@ -84,7 +83,7 @@ public class WhenPublishingInBatch : WhenPublishingTestBase
 
     private static bool AssertMessageSubjectIsObjectType(PublishBatchRequest request)
     {
-        for (var i = 0; i < 10; i++)
+        for (int i = 0; i < 10; i++)
         {
             var entry = request.PublishBatchRequestEntries[i];
             if (!entry.Subject.Equals(nameof(SimpleMessage)))

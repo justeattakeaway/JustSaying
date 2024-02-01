@@ -40,7 +40,8 @@ public class WhenUsingStructureMap(ITestOutputHelper outputHelper)
                     });
             });
 
-        IMessagePublisher publisher = container.GetInstance<IMessagePublisher>();
+        var publisher = container.GetInstance<IMessagePublisher>();
+        var batchPublisher = container.GetInstance<IMessageBatchPublisher>();
         IMessagingBus listener = container.GetInstance<IMessagingBus>();
 
         var message = new SimpleMessage();
@@ -49,11 +50,16 @@ public class WhenUsingStructureMap(ITestOutputHelper outputHelper)
         await listener.StartAsync(source.Token);
         await publisher.StartAsync(source.Token);
 
+        if (batchPublisher != publisher)
+        {
+            await batchPublisher.StartAsync(source.Token);
+        }
+
         // Act
         await publisher.PublishAsync(message, source.Token);
+        await batchPublisher.PublishAsync([message], source.Token);
 
-        await Patiently.AssertThatAsync(OutputHelper,
-            () => handler.ReceivedMessages.Any());
+        await Patiently.AssertThatAsync(OutputHelper, () => handler.ReceivedMessages.Count > 1);
 
         // Assert
         handler.ReceivedMessages.ShouldContain(x => x.GetType() == typeof(SimpleMessage));
