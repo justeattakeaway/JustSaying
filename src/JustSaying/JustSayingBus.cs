@@ -246,10 +246,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         PublishMetadata metadata,
         CancellationToken cancellationToken)
     {
-        if (!_busStarted && _startupTasks.Count > 0)
-        {
-            throw new InvalidOperationException("There are pending startup tasks that must be executed by calling StartAsync before messages may be published.");
-        }
+        EnsureStarted();
 
         IMessagePublisher publisher = GetPublisherForMessage(message);
         await PublishAsync(publisher, message, metadata, 0, cancellationToken)
@@ -355,16 +352,13 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     /// <inheritdoc/>
     public Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
     {
-        if (!_busStarted && _startupTasks.Count > 0)
-        {
-            throw new InvalidOperationException("There are pending startup tasks that must be executed by calling StartAsync before messages may be published.");
-        }
+        EnsureStarted();
 
         var tasks = new List<Task>();
         foreach (IGrouping<Type, Message> group in messages.GroupBy(x => x.GetType()))
         {
             IMessageBatchPublisher publisher = GetBatchPublishersForMessageType(group.Key);
-            tasks.Add(PublishAsync(publisher, group.ToList(), metadata, 0, group.Key, cancellationToken));
+            tasks.Add(PublishAsync(publisher, [..group], metadata, 0, group.Key, cancellationToken));
         }
 
         return Task.WhenAll(tasks);
@@ -436,6 +430,14 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
 
                 await PublishAsync(publisher, messages, metadata, attemptCount, messageType, cancellationToken).ConfigureAwait(false);
             }
+        }
+    }
+
+    private void EnsureStarted()
+    {
+        if (!_busStarted && _startupTasks.Count > 0)
+        {
+            throw new InvalidOperationException($"There are pending startup tasks that must be executed by calling {nameof(StartAsync)} before messages may be published.");
         }
     }
 }
