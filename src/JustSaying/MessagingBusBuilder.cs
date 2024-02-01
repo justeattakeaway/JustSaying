@@ -230,6 +230,32 @@ public sealed class MessagingBusBuilder
     }
 
     /// <summary>
+    /// Creates a new instance of <see cref="IMessageBatchPublisher"/>.
+    /// </summary>
+    /// <returns>
+    /// The created instance of <see cref="IMessagePublisher"/>
+    /// </returns>
+    public IMessageBatchPublisher BuildBatchPublisher()
+    {
+        IMessagingConfig config = MessagingConfig.Build();
+
+        config.Validate();
+
+        var publishBatchConfiguration = MessagingConfig.BuildPublishBatchConfiguration();
+        ILoggerFactory loggerFactory = ServiceResolver.ResolveService<ILoggerFactory>();
+
+        JustSayingBus bus = CreateBus(config, loggerFactory, publishBatchConfiguration);
+        IAwsClientFactoryProxy proxy = CreateFactoryProxy();
+
+        if (PublicationsBuilder != null)
+        {
+            PublicationsBuilder.Configure(bus, proxy, loggerFactory);
+        }
+
+        return bus;
+    }
+
+    /// <summary>
     /// Creates a new instance of <see cref="IMessagingBus"/>.
     /// </summary>
     /// <returns>
@@ -252,15 +278,13 @@ public sealed class MessagingBusBuilder
         return bus;
     }
 
-    private JustSayingBus CreateBus(IMessagingConfig config, ILoggerFactory loggerFactory)
+    private JustSayingBus CreateBus(IMessagingConfig config, ILoggerFactory loggerFactory, IPublishBatchConfiguration publishBatchConfiguration = null)
     {
         IMessageSerializationRegister register = ServiceResolver.ResolveService<IMessageSerializationRegister>();
         IMessageReceivePauseSignal messageReceivePauseSignal = ServiceResolver.ResolveService<IMessageReceivePauseSignal>();
         IMessageMonitor monitor = ServiceResolver.ResolveOptionalService<IMessageMonitor>() ?? new NullOpMessageMonitor();
 
-        var bus = new JustSayingBus(config, register, messageReceivePauseSignal, loggerFactory, monitor);
-
-        return bus;
+        return new JustSayingBus(config, register, messageReceivePauseSignal, loggerFactory, monitor, publishBatchConfiguration);
     }
 
     private IAwsClientFactoryProxy CreateFactoryProxy()

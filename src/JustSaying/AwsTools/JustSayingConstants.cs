@@ -72,4 +72,12 @@ public static class JustSayingConstants
     /// Default length of time for which Amazon SQS can reuse a data key to encrypt/decrypt messages before calling AWS KMS again.
     /// </summary>
     public static TimeSpan DefaultAttributeEncryptionKeyReusePeriod => TimeSpan.FromMinutes(5);
+
+    /// <summary>
+    /// The maximum SNS batch size.
+    /// </summary>
+    /// <remarks>
+    /// The default vaule is 10. See https://docs.aws.amazon.com/sns/latest/dg/sns-batch-api-actions.html.
+    /// </remarks>
+    public static int MaximumSnsBatchSize => 10;
 }

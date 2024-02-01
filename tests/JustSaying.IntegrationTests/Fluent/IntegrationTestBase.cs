@@ -77,14 +77,21 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
         return new DefaultAwsClientFactory(credentials) { ServiceUri = ServiceUri };
     }
 
-    protected IHandlerAsync<T> CreateHandler<T>(TaskCompletionSource<object> completionSource)
+    protected IHandlerAsync<T> CreateHandler<T>(TaskCompletionSource<object> completionSource, int expectedMessageCount = 1)
         where T : Message
     {
         IHandlerAsync<T> handler = Substitute.For<IHandlerAsync<T>>();
 
+        var counter = 0;
         handler.Handle(Arg.Any<T>())
             .Returns(true)
-            .AndDoes((_) => completionSource.TrySetResult(null));
+            .AndDoes(x =>
+            {
+                if (Interlocked.Increment(ref counter) == expectedMessageCount)
+                {
+                    completionSource.TrySetResult(null);
+                }
+            });
 
         return handler;
     }
@@ -101,6 +108,24 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
         IServiceProvider serviceProvider = services.BuildServiceProvider();
 
         IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+        IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
+
+        await RunActionWithTimeout(async cancellationToken =>
+            await action(publisher, listener, serviceProvider, cancellationToken)
+                .ConfigureAwait(false));
+    }
+    protected async Task WhenBatchAsync(
+        IServiceCollection services,
+        Func<IMessageBatchPublisher, IMessagingBus, CancellationToken, Task> action)
+        => await WhenBatchAsync(services, async (p, b, _, c) => await action(p, b, c));
+
+    protected async Task WhenBatchAsync(
+        IServiceCollection services,
+        Func<IMessageBatchPublisher, IMessagingBus, IServiceProvider, CancellationToken, Task> action)
+    {
+        IServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        var publisher = serviceProvider.GetRequiredService<IMessageBatchPublisher>();
         IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
 
         await RunActionWithTimeout(async cancellationToken =>

@@ -10,10 +10,12 @@ namespace JustSaying.Fluent;
 
 internal sealed class StaticPublicationConfiguration(
     Func<CancellationToken, Task> startupTask,
-    IMessagePublisher publisher) : ITopicPublisher
+    IMessagePublisher publisher,
+    IMessageBatchPublisher batchPublisher) : ITopicPublisher
 {
     public Func<CancellationToken, Task> StartupTask { get; } = startupTask;
     public IMessagePublisher Publisher { get; } = publisher;
+    public IMessageBatchPublisher BatchPublisher { get; } = batchPublisher;
 
     public static StaticPublicationConfiguration Build<T>(
         string topicName,
@@ -37,6 +39,7 @@ internal sealed class StaticPublicationConfiguration(
             bus.Config.MessageSubjectProvider)
         {
             MessageResponseLogger = bus.Config.MessageResponseLogger,
+            MessageBatchResponseLogger = bus.PublishBatchConfiguration?.MessageBatchResponseLogger
         };
 
         var snsTopic = new SnsTopicByName(
@@ -72,6 +75,6 @@ internal sealed class StaticPublicationConfiguration(
                 typeof(T));
         }
 
-        return new StaticPublicationConfiguration(StartupTask, eventPublisher);
+        return new StaticPublicationConfiguration(StartupTask, eventPublisher, eventPublisher);
     }
 }

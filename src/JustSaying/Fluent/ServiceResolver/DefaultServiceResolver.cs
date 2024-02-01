@@ -34,7 +34,7 @@ internal sealed class DefaultServiceResolver : IServiceResolver
         {
             return null; // Special case - must be provided by the consumer
         }
-        else if (desiredType == typeof(IMessagingConfig))
+        else if (desiredType == typeof(IMessagingConfig) || desiredType == typeof(IPublishBatchConfiguration))
         {
             return new MessagingConfig();
         }

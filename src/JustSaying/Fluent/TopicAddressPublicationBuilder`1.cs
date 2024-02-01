@@ -1,5 +1,6 @@
 using Amazon;
 using JustSaying.AwsTools;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -16,6 +17,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
 {
     private readonly TopicAddress _topicAddress;
     private Func<Exception,Message,bool> _exceptionHandler;
+    private Func<Exception, IReadOnlyCollection<Message>, bool> _exceptionBatchHandler;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TopicAddressPublicationBuilder{T}"/> class.
@@ -42,6 +44,22 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
         return this;
     }
 
+    /// <summary>
+    /// Configures an exception handler to use.
+    /// </summary>
+    /// <param name="exceptionBatchHandler">A delegate to invoke if an exception is thrown while publishing a batch.</param>
+    /// <returns>
+    /// The current <see cref="TopicAddressPublicationBuilder{T}"/>.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="exceptionBatchHandler"/> is <see langword="null"/>.
+    /// </exception>
+    public TopicAddressPublicationBuilder<T> WithExceptionHandler(Func<Exception, IReadOnlyCollection<Message>, bool> exceptionBatchHandler)
+    {
+        _exceptionBatchHandler = exceptionBatchHandler ?? throw new ArgumentNullException(nameof(exceptionBatchHandler));
+        return this;
+    }
+
     /// <inheritdoc />
     public void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
     {
@@ -54,13 +72,15 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
 
         bus.SerializationRegister.AddSerializer<T>();
 
-        var eventPublisher = new TopicAddressPublisher(
+        var eventPublisher = new SnsMessagePublisher(
+            _topicAddress.TopicArn,
             proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(arn.Region)),
+            bus.SerializationRegister,
             loggerFactory,
             config.MessageSubjectProvider,
-            bus.SerializationRegister,
             _exceptionHandler,
-            _topicAddress);
+            _exceptionBatchHandler);
+
         bus.AddMessagePublisher<T>(eventPublisher);
 
         logger.LogInformation(
