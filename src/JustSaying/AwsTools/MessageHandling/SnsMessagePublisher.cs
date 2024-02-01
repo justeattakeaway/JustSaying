@@ -262,7 +262,7 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
                 Id = message.UniqueKey(),
                 Subject = subject,
                 Message = payload,
-                MessageAttributes = attributes
+                MessageAttributes = attributes,
             });
         }
 
