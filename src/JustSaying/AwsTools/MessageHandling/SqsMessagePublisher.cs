@@ -128,48 +128,43 @@ public class SqsMessagePublisher(
 
             if (response != null)
             {
-                using (_logger.BeginScope(new Dictionary<string, string>
+                using var scope = _logger.BeginScope(new Dictionary<string, string> { ["AwsRequestId"] = response.ResponseMetadata?.RequestId });
+                if (response.Successful.Count > 0 && _logger.IsEnabled(LogLevel.Information))
                 {
-                    ["AwsRequestId"] = response.ResponseMetadata?.RequestId
-                }))
-                {
-                    if (response.Successful.Count > 0 && _logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation(
+                        "Published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
+                        response.Successful.Count,
+                        "Queue",
+                        request.QueueUrl);
+
+                    foreach (var message in response.Successful)
                     {
                         _logger.LogInformation(
-                            "Published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
-                            response.Successful.Count,
+                            "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
+                            message.Id,
+                            message.GetType().FullName,
                             "Queue",
                             request.QueueUrl);
-
-                        foreach (var message in response.Successful)
-                        {
-                            _logger.LogInformation(
-                                "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
-                                message.Id,
-                                message.GetType().FullName,
-                                "Queue",
-                                request.QueueUrl);
-                        }
                     }
+                }
 
-                    if (response.Failed.Count > 0 && _logger.IsEnabled(LogLevel.Error))
+                if (response.Failed.Count > 0 && _logger.IsEnabled(LogLevel.Error))
+                {
+                    _logger.LogError(
+                        "Fail to published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
+                        response.Failed.Count,
+                        "Queue",
+                        request.QueueUrl);
+
+                    foreach (var message in response.Failed)
                     {
                         _logger.LogError(
-                            "Fail to published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
-                            response.Failed.Count,
+                            "Fail to published message {MessageId} to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
+                            message.Id,
                             "Queue",
-                            request.QueueUrl);
-
-                        foreach (var message in response.Failed)
-                        {
-                            _logger.LogError(
-                                "Fail to published message {MessageId} to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
-                                message.Id,
-                                "Queue",
-                                request.QueueUrl,
-                                message.Code,
-                                message.SenderFault);
-                        }
+                            request.QueueUrl,
+                            message.Code,
+                            message.SenderFault);
                     }
                 }
             }
