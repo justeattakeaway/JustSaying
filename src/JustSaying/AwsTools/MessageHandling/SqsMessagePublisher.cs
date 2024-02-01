@@ -39,7 +39,7 @@ public class SqsMessagePublisher(
     /// <inheritdoc/>
     public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
     {
-        if (QueueUrl is null) throw new PublishException("Queue URL was null, perhaps you need to call `StartAsync` on the `IMessagePublisher` before publishing.");
+        EnsureQueueUrl();
 
         var request = BuildSendMessageRequest(message, metadata);
         SendMessageResponse response;
@@ -54,10 +54,7 @@ public class SqsMessagePublisher(
                 ex);
         }
 
-        using (_logger.BeginScope(new Dictionary<string, object>
-               {
-                   ["AwsRequestId"] = response?.MessageId
-               }))
+        using (_logger.BeginScope(new Dictionary<string, string> { ["AwsRequestId"] = response?.MessageId }))
         {
             _logger.LogInformation(
                 "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
@@ -109,10 +106,7 @@ public class SqsMessagePublisher(
     /// <inheritdoc/>
     public async Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
     {
-        if (QueueUrl is null)
-        {
-            throw new PublishException("Queue URL was null, perhaps you need to call `StartAsync` on the `IMessagePublisher` before publishing.");
-        }
+        EnsureQueueUrl();
 
         int size = metadata?.BatchSize ?? JustSayingConstants.MaximumSnsBatchSize;
         size = Math.Min(size, JustSayingConstants.MaximumSnsBatchSize);
@@ -218,5 +212,13 @@ public class SqsMessagePublisher(
         };
 
         return request;
+    }
+
+    private void EnsureQueueUrl()
+    {
+        if (QueueUrl is null)
+        {
+            throw new PublishException($"Queue URL was null. Perhaps you need to call the ${nameof(IMessagePublisher.StartAsync)} method on the ${nameof(IMessagePublisher)} before publishing.");
+        }
     }
 }

@@ -101,10 +101,10 @@ internal sealed class DynamicMessagePublisher(
             await config.StartupTask(cancellationToken).ConfigureAwait(false);
 
 
-            _ = _batchPublisherCache.TryAdd(topicName, config.BatchPublisher);
+            var cachedPublisher = _batchPublisherCache.GetOrAdd(topicName, config.BatchPublisher);
 
             _logger.LogDebug("Publishing message on newly created topic {TopicName}", topicName);
-            publisherTask.Add(config.BatchPublisher.PublishAsync(batchMessages, metadata, cancellationToken));
+            publisherTask.Add(cachedPublisher.PublishAsync(batchMessages, metadata, cancellationToken));
         }
 
         await Task.WhenAll(publisherTask).ConfigureAwait(false);

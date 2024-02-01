@@ -178,6 +178,8 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
             }
             catch (AmazonServiceException ex)
             {
+                _logger.LogWarning(ex, "Failed to publish batch of messages to SNS topic {TopicArn}.", request.TopicArn);
+
                 if (!ClientExceptionHandler(ex, chunk))
                 {
                     throw new PublishBatchException($"Failed to publish batch of messages to SNS. Topic ARN: '{request.TopicArn}'.", ex);
@@ -186,48 +188,44 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
 
             if (response is { })
             {
-                using (_logger.BeginScope(new Dictionary<string, string>
-                       {
-                           ["AwsRequestId"] = response.ResponseMetadata?.RequestId
-                       }))
+                using var scope = _logger.BeginScope(new Dictionary<string, string> { ["AwsRequestId"] = response.ResponseMetadata?.RequestId });
+
+                if (response.Successful.Count > 0 && _logger.IsEnabled(LogLevel.Information))
                 {
-                    if (response.Successful.Count > 0 && _logger.IsEnabled(LogLevel.Information))
+                    _logger.LogInformation(
+                        "Published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
+                        response.Successful.Count,
+                        "Topic",
+                        request.TopicArn);
+
+                    foreach (var message in response.Successful)
                     {
                         _logger.LogInformation(
-                            "Published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
-                            response.Successful.Count,
+                            "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
+                            message.Id,
+                            message.GetType().FullName,
                             "Topic",
                             request.TopicArn);
-
-                        foreach (var message in response.Successful)
-                        {
-                            _logger.LogInformation(
-                                "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
-                                message.Id,
-                                message.GetType().FullName,
-                                "Topic",
-                                request.TopicArn);
-                        }
                     }
+                }
 
-                    if (response.Failed.Count > 0 && _logger.IsEnabled(LogLevel.Error))
+                if (response.Failed.Count > 0 && _logger.IsEnabled(LogLevel.Error))
+                {
+                    _logger.LogError(
+                        "Fail to published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
+                        response.Failed.Count,
+                        "Topic",
+                        request.TopicArn);
+
+                    foreach (var message in response.Failed)
                     {
                         _logger.LogError(
-                            "Fail to published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
-                            response.Failed.Count,
+                            "Fail to published message {MessageId} to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
+                            message.Id,
                             "Topic",
-                            request.TopicArn);
-
-                        foreach (var message in response.Failed)
-                        {
-                            _logger.LogError(
-                                "Fail to published message {MessageId} to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
-                                message.Id,
-                                "Topic",
-                                request.TopicArn,
-                                message.Code,
-                                message.SenderFault);
-                        }
+                            request.TopicArn,
+                            message.Code,
+                            message.SenderFault);
                     }
                 }
             }
@@ -249,19 +247,29 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
 
     private bool ClientExceptionHandler(Exception ex, IReadOnlyCollection<Message> messages) => _handleBatchException?.Invoke(ex, messages) ?? false;
 
-    private PublishBatchRequest BuildPublishBatchRequest(Message[] message, PublishMetadata metadata)
+    private PublishBatchRequest BuildPublishBatchRequest(Message[] messages, PublishMetadata metadata)
     {
+        var entries = new List<PublishBatchRequestEntry>(messages.Length);
+
+        foreach (var message in messages)
+        {
+            string subject = _messageSubjectProvider.GetSubjectForType(message.GetType());
+            string payload = _serializationRegister.Serialize(message, serializeForSnsPublishing: true);
+            var attributes = BuildMessageAttributes(metadata);
+
+            entries.Add(new()
+            {
+                Id = message.UniqueKey(),
+                Subject = subject,
+                Message = payload,
+                MessageAttributes = attributes
+            });
+        }
+
         return new PublishBatchRequest
         {
             TopicArn = Arn,
-            PublishBatchRequestEntries = message.Select(message => new PublishBatchRequestEntry
-                {
-                    Id = message.UniqueKey(),
-                    Subject = _messageSubjectProvider.GetSubjectForType(message.GetType()),
-                    Message = _serializationRegister.Serialize(message, serializeForSnsPublishing: true),
-                    MessageAttributes = BuildMessageAttributes(metadata)
-                })
-                .ToList()
+            PublishBatchRequestEntries = entries,
         };
     }
 }
