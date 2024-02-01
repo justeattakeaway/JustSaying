@@ -1,0 +1,24 @@
+{
+  "Region": "eu-west-1",
+  "Middleware": {
+    "Middlewares": []
+  },
+  "PublishedMessageTypes": {
+    "SimpleMessage": {
+      "Publishers": {
+        "es-tenanted-topic": {
+          "Arn": "arn:aws:sns:us-east-1:000000000000:es-tenanted-topic"
+        },
+        "it-tenanted-topic": {
+          "Arn": "arn:aws:sns:us-east-1:000000000000:it-tenanted-topic"
+        },
+        "uk-tenanted-topic": {
+          "Arn": "arn:aws:sns:us-east-1:000000000000:uk-tenanted-topic"
+        }
+      }
+    }
+  },
+  "SubscriptionGroups": {
+    "Groups": []
+  }
+}
