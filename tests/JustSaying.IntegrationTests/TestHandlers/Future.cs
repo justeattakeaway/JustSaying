@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
 
@@ -8,7 +9,7 @@ public class Future<TMessage>(Func<Task> action)
 {
     private readonly TaskCompletionSource<object> _doneSignal = new();
     private readonly Func<Task> _action = action;
-    private readonly List<TMessage> _messages = new();
+    private readonly ConcurrentBag<TMessage> _messages = new();
 
     public Future()
         : this(null)

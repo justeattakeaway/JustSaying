@@ -3,6 +3,7 @@ using JustSaying;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
@@ -125,7 +126,10 @@ public static class IServiceCollectionExtensions
 
         services.TryAddSingleton<IAwsClientFactory, DefaultAwsClientFactory>();
         services.TryAddSingleton<IAwsClientFactoryProxy>((p) => new AwsClientFactoryProxy(p.GetRequiredService<IAwsClientFactory>));
-        services.TryAddSingleton<IMessagingConfig, MessagingConfig>();
+        services.TryAddSingleton<MessagingConfig>();
+        services.TryAddSingleton<IMessagingConfig>((p) => p.GetRequiredService<MessagingConfig>());
+        services.TryAddSingleton<IPublishConfiguration>((p) => p.GetRequiredService<MessagingConfig>());
+        services.TryAddSingleton<IPublishBatchConfiguration>((p) => p.GetRequiredService<MessagingConfig>());
         services.TryAddSingleton<IMessageMonitor, NullOpMessageMonitor>();
 
         services.TryAddTransient<LoggingMiddleware>();
@@ -171,6 +175,20 @@ public static class IServiceCollectionExtensions
             {
                 var builder = serviceProvider.GetRequiredService<MessagingBusBuilder>();
                 return builder.BuildPublisher();
+            });
+
+        services.TryAddSingleton(
+            (serviceProvider) =>
+            {
+                var publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+
+                if (publisher is IMessageBatchPublisher batchPublisher)
+                {
+                    return batchPublisher;
+                }
+
+                var builder = serviceProvider.GetRequiredService<MessagingBusBuilder>();
+                return builder.BuildBatchPublisher();
             });
 
         services.TryAddSingleton(
