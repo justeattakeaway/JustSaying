@@ -21,12 +21,13 @@ internal sealed class DynamicMessagePublisher(
     /// <inheritdoc/>
     public InterrogationResult Interrogate()
     {
-        var pairs = _publisherCache.Keys.OrderBy(x => x)
-            .ToDictionary(x => x, x => _publisherCache[x].Interrogate());
+        var publishers = _publisherCache.Keys.OrderBy(x => x).ToDictionary(x => x, x => _publisherCache[x].Interrogate());
+        var batchPublishers = _batchPublisherCache.Keys.OrderBy(x => x).ToDictionary(x => x, x => _batchPublisherCache[x].Interrogate());
 
         return new InterrogationResult(new
         {
-            Publishers = pairs
+            Publishers = publishers,
+            BatchPublishers = batchPublishers,
         });
     }
 
