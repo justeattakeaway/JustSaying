@@ -5,7 +5,8 @@
   },
   "PublishedMessageTypes": {
     "SimpleMessage": {
-      "Publishers": {
+      "Publishers": {}
+      "BatchPublishers": {
         "es-tenanted-topic": {
           "Arn": "arn:aws:sns:us-east-1:000000000000:es-tenanted-topic"
         },
