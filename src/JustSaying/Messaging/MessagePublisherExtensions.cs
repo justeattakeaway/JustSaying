@@ -44,8 +44,16 @@ public static class MessagePublisherExtensions
     /// <returns>
     /// A <see cref="Task"/> representing the asynchronous operation to publish the messages.
     /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="publisher"/> is <see langword="null"/>.</exception>"
     public static Task PublishAsync(this IMessageBatchPublisher publisher, IEnumerable<Message> messages, CancellationToken cancellationToken = default)
-        => publisher.PublishAsync(messages, null, cancellationToken);
+    {
+        if (publisher == null)
+        {
+            throw new ArgumentNullException(nameof(publisher));
+        }
+
+        return publisher.PublishAsync(messages, null, cancellationToken);
+    }
 
     /// <summary>
     /// Publishes a collection of messages.
@@ -55,6 +63,7 @@ public static class MessagePublisherExtensions
     /// <returns>
     /// A <see cref="Task"/> representing the asynchronous operation to publish the messages.
     /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="publisher"/> is <see langword="null"/>.</exception>"
     public static Task PublishAsync(this IMessagePublisher publisher, IEnumerable<Message> messages)
         => publisher.PublishAsync(messages, null, CancellationToken.None);
 
@@ -67,6 +76,7 @@ public static class MessagePublisherExtensions
     /// <returns>
     /// A <see cref="Task"/> representing the asynchronous operation to publish the messages.
     /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="publisher"/> is <see langword="null"/>.</exception>"
     public static Task PublishAsync(this IMessagePublisher publisher, IEnumerable<Message> messages, CancellationToken cancellationToken)
         => publisher.PublishAsync(messages, null, cancellationToken);
 
@@ -79,6 +89,7 @@ public static class MessagePublisherExtensions
     /// <returns>
     /// A <see cref="Task"/> representing the asynchronous operation to publish the messages.
     /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="publisher"/> is <see langword="null"/>.</exception>"
     public static Task PublishAsync(this IMessagePublisher publisher, IEnumerable<Message> messages, PublishBatchMetadata metadata)
         => publisher.PublishAsync(messages, metadata, CancellationToken.None);
 
@@ -92,6 +103,7 @@ public static class MessagePublisherExtensions
     /// <returns>
     /// A <see cref="Task"/> representing the asynchronous operation to publish the messages.
     /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="publisher"/> is <see langword="null"/>.</exception>"
     public static Task PublishAsync(
         this IMessagePublisher publisher,
         IEnumerable<Message> messages,

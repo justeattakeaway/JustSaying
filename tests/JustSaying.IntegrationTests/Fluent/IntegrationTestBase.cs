@@ -114,6 +114,7 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
             await action(publisher, listener, serviceProvider, cancellationToken)
                 .ConfigureAwait(false));
     }
+
     protected async Task WhenBatchAsync(
         IServiceCollection services,
         Func<IMessageBatchPublisher, IMessagingBus, CancellationToken, Task> action)
