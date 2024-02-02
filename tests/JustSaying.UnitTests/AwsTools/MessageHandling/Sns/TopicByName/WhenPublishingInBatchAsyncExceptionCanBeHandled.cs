@@ -24,9 +24,10 @@ public class WhenPublishingInBatchAsyncExceptionCanBeHandled : WhenPublishingTes
             Sns,
             _serializationRegister,
             NullLoggerFactory.Instance,
-            Substitute.For<IMessageSubjectProvider>(),
-            null,
-            (_, _) => true);
+            Substitute.For<IMessageSubjectProvider>())
+        {
+            HandleBatchException = (_, _) => true,
+        };
 
         return Task.FromResult(topic);
     }

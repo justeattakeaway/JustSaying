@@ -25,9 +25,10 @@ public class WhenPublishingInBatchAsyncExceptionCanBeThrown : WhenPublishingTest
             Sns,
             _serializationRegister,
             NullLoggerFactory.Instance,
-            Substitute.For<IMessageSubjectProvider>(),
-            null,
-            (_, _) => false);
+            Substitute.For<IMessageSubjectProvider>())
+        {
+            HandleBatchException = (_, _) => false,
+        };
 
         return Task.FromResult(topic);
     }
