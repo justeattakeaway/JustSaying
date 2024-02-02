@@ -15,9 +15,9 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
     private readonly IMessageSerializationRegister _serializationRegister;
     private readonly IMessageSubjectProvider _messageSubjectProvider;
     private readonly Func<Exception, Message, bool> _handleException;
-    private readonly Func<Exception, IReadOnlyCollection<Message>, bool> _handleBatchException;
     private readonly ILogger _logger;
 
+    public Func<Exception, IReadOnlyCollection<Message>, bool> HandleBatchException { get; set; }
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
     public Action<MessageBatchResponse, IReadOnlyCollection<Message>> MessageBatchResponseLogger { get; set; }
     public string Arn { get; internal set; }
@@ -40,25 +40,12 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
         ILoggerFactory loggerFactory,
         IMessageSubjectProvider messageSubjectProvider,
         Func<Exception, Message, bool> handleException = null)
-        : this(topicArn, client, serializationRegister, loggerFactory, messageSubjectProvider, handleException, null)
-    {
-    }
-
-    public SnsMessagePublisher(
-        string topicArn,
-        IAmazonSimpleNotificationService client,
-        IMessageSerializationRegister serializationRegister,
-        ILoggerFactory loggerFactory,
-        IMessageSubjectProvider messageSubjectProvider,
-        Func<Exception, Message, bool> handleException,
-        Func<Exception, IReadOnlyCollection<Message>, bool> handleBatchException)
     {
         Arn = topicArn;
         Client = client;
         _serializationRegister = serializationRegister;
         _logger = loggerFactory.CreateLogger("JustSaying.Publish");
         _handleException = handleException;
-        _handleBatchException = handleBatchException;
         _messageSubjectProvider = messageSubjectProvider;
     }
 
@@ -85,10 +72,7 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
             }
         }
 
-        using (_logger.BeginScope(new Dictionary<string, object>
-               {
-                   ["AwsRequestId"] = response?.MessageId
-               }))
+        using (_logger.BeginScope(new Dictionary<string, object> { ["AwsRequestId"] = response?.MessageId }))
         {
             _logger.LogInformation(
                 "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
@@ -157,11 +141,13 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
         };
     }
 
+    /// <inheritdoc/>
     public virtual InterrogationResult Interrogate()
     {
         return new InterrogationResult(new { Arn });
     }
 
+    /// <inheritdoc/>
     public async Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
     {
         int size = metadata?.BatchSize ?? JustSayingConstants.MaximumSnsBatchSize;
@@ -245,7 +231,8 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
         }
     }
 
-    private bool ClientExceptionHandler(Exception ex, IReadOnlyCollection<Message> messages) => _handleBatchException?.Invoke(ex, messages) ?? false;
+    private bool ClientExceptionHandler(Exception ex, IReadOnlyCollection<Message> messages)
+        => HandleBatchException?.Invoke(ex, messages) ?? false;
 
     private PublishBatchRequest BuildPublishBatchRequest(Message[] messages, PublishMetadata metadata)
     {

@@ -78,8 +78,10 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
             bus.SerializationRegister,
             loggerFactory,
             config.MessageSubjectProvider,
-            _exceptionHandler,
-            _exceptionBatchHandler);
+            _exceptionHandler)
+        {
+            HandleBatchException = _exceptionBatchHandler,
+        };
 
         bus.AddMessagePublisher<T>(eventPublisher);
 

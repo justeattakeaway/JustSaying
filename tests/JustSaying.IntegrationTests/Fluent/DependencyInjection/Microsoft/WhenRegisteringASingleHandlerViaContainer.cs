@@ -59,7 +59,7 @@ public class WhenRegisteringASingleHandlerViaContainer(ITestOutputHelper outputH
                 future.ExpectedMessageCount = 10;
                 var messages = new List<Message>();
 
-                for (var i = 0; i < future.ExpectedMessageCount; i++)
+                for (int i = 0; i < future.ExpectedMessageCount; i++)
                 {
                     messages.Add(new OrderPlaced(Guid.NewGuid().ToString()));
                 }

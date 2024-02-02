@@ -13,10 +13,10 @@ public interface IMessageBatchPublisher : IInterrogable, IStartable
     /// </summary>
     /// <param name="publisher">The publisher to use.</param>
     /// <param name="messages">The message(s) to publish.</param>
-    /// <param name="metadata">The message batch metadata.</param>
+    /// <param name="metadata">The optional message batch metadata.</param>
     /// <param name="cancellationToken">The optional cancellation token to use.</param>
     /// <returns>
     /// A <see cref="Task"/> representing the asynchronous operation to publish the messages.
     /// </returns>
-    Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken = default);
+    Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata = default, CancellationToken cancellationToken = default);
 }
