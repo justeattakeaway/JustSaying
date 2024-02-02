@@ -20,8 +20,7 @@ public static class MessagePublisherExtensionsTests
         await Assert.ThrowsAsync<ArgumentNullException>("publisher", () => (null as IMessagePublisher).PublishAsync(messages, CancellationToken.None));
         await Assert.ThrowsAsync<ArgumentNullException>("publisher", () => (null as IMessagePublisher).PublishAsync(message, metadata));
         await Assert.ThrowsAsync<ArgumentNullException>("publisher", () => (null as IMessagePublisher).PublishAsync(messages, batchMetadata));
-        await Assert.ThrowsAsync<ArgumentNullException>("publisher", () => (null as IMessagePublisher).PublishAsync(messages, batchMetadata, CancellationToken.None));
-        await Assert.ThrowsAsync<ArgumentNullException>("publisher", () => (null as IMessageBatchPublisher).PublishAsync(messages));
+        await Assert.ThrowsAsync<ArgumentNullException>("publisher", () => (null as IMessageBatchPublisher).PublishAsync(messages, CancellationToken.None));
     }
 
     [Fact]
