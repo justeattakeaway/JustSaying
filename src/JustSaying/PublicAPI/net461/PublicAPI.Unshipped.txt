@@ -1,0 +1,54 @@
+JustSaying.AwsTools.MessageHandling.MessageBatchResponse
+JustSaying.AwsTools.MessageHandling.MessageBatchResponse.FailedMessageIds.get -> System.Collections.Generic.IReadOnlyCollection<string>
+JustSaying.AwsTools.MessageHandling.MessageBatchResponse.FailedMessageIds.set -> void
+JustSaying.AwsTools.MessageHandling.MessageBatchResponse.HttpStatusCode.get -> System.Net.HttpStatusCode?
+JustSaying.AwsTools.MessageHandling.MessageBatchResponse.HttpStatusCode.set -> void
+JustSaying.AwsTools.MessageHandling.MessageBatchResponse.MessageBatchResponse() -> void
+JustSaying.AwsTools.MessageHandling.MessageBatchResponse.ResponseMetadata.get -> Amazon.Runtime.ResponseMetadata
+JustSaying.AwsTools.MessageHandling.MessageBatchResponse.ResponseMetadata.set -> void
+JustSaying.AwsTools.MessageHandling.MessageBatchResponse.SuccessfulMessageIds.get -> System.Collections.Generic.IReadOnlyCollection<string>
+JustSaying.AwsTools.MessageHandling.MessageBatchResponse.SuccessfulMessageIds.set -> void
+JustSaying.AwsTools.MessageHandling.PublishBatchException
+JustSaying.AwsTools.MessageHandling.PublishBatchException.PublishBatchException() -> void
+JustSaying.AwsTools.MessageHandling.PublishBatchException.PublishBatchException(string message) -> void
+JustSaying.AwsTools.MessageHandling.PublishBatchException.PublishBatchException(string message, System.Exception inner) -> void
+JustSaying.AwsTools.MessageHandling.PublishBatchException.PublishBatchException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+JustSaying.AwsTools.MessageHandling.SnsMessagePublisher.HandleBatchException.get -> System.Func<System.Exception, System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message>, bool>
+JustSaying.AwsTools.MessageHandling.SnsMessagePublisher.HandleBatchException.set -> void
+JustSaying.AwsTools.MessageHandling.SnsMessagePublisher.MessageBatchResponseLogger.get -> System.Action<JustSaying.AwsTools.MessageHandling.MessageBatchResponse, System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message>>
+JustSaying.AwsTools.MessageHandling.SnsMessagePublisher.MessageBatchResponseLogger.set -> void
+JustSaying.AwsTools.MessageHandling.SnsMessagePublisher.PublishAsync(System.Collections.Generic.IEnumerable<JustSaying.Models.Message> messages, JustSaying.Messaging.PublishBatchMetadata metadata, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+JustSaying.AwsTools.MessageHandling.SqsMessagePublisher.MessageBatchResponseLogger.get -> System.Action<JustSaying.AwsTools.MessageHandling.MessageBatchResponse, System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message>>
+JustSaying.AwsTools.MessageHandling.SqsMessagePublisher.MessageBatchResponseLogger.set -> void
+JustSaying.AwsTools.MessageHandling.SqsMessagePublisher.PublishAsync(System.Collections.Generic.IEnumerable<JustSaying.Models.Message> messages, JustSaying.Messaging.PublishBatchMetadata metadata, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+JustSaying.Fluent.MessagingConfigurationBuilder.BuildPublishBatchConfiguration() -> JustSaying.IPublishBatchConfiguration
+JustSaying.Fluent.MessagingConfigurationBuilder.WithMessageResponseLogger(System.Action<JustSaying.AwsTools.MessageHandling.MessageBatchResponse, System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message>> logger) -> JustSaying.Fluent.MessagingConfigurationBuilder
+JustSaying.Fluent.MessagingConfigurationBuilder.WithPublishFailureBackoffForBatch(System.TimeSpan value) -> JustSaying.Fluent.MessagingConfigurationBuilder
+JustSaying.Fluent.MessagingConfigurationBuilder.WithPublishFailureReattemptsForBatch(int value) -> JustSaying.Fluent.MessagingConfigurationBuilder
+JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithExceptionHandler(System.Func<System.Exception, System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message>, bool> exceptionBatchHandler) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
+JustSaying.IPublishBatchConfiguration
+JustSaying.IPublishBatchConfiguration.MessageBatchResponseLogger.get -> System.Action<JustSaying.AwsTools.MessageHandling.MessageBatchResponse, System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message>>
+JustSaying.IPublishBatchConfiguration.MessageBatchResponseLogger.set -> void
+JustSaying.IPublishBatchConfiguration.PublishFailureBackoff.get -> System.TimeSpan
+JustSaying.IPublishBatchConfiguration.PublishFailureBackoff.set -> void
+JustSaying.IPublishBatchConfiguration.PublishFailureReAttempts.get -> int
+JustSaying.IPublishBatchConfiguration.PublishFailureReAttempts.set -> void
+JustSaying.JustSayingBus.AddMessageBatchPublisher<T>(JustSaying.Messaging.IMessageBatchPublisher messageBatchPublisher) -> void
+JustSaying.JustSayingBus.JustSayingBus(JustSaying.IMessagingConfig config, JustSaying.Messaging.MessageSerialization.IMessageSerializationRegister serializationRegister, JustSaying.Messaging.Channels.Receive.IMessageReceivePauseSignal messageReceivePauseSignal, Microsoft.Extensions.Logging.ILoggerFactory loggerFactory, JustSaying.Messaging.Monitoring.IMessageMonitor monitor, JustSaying.IPublishBatchConfiguration publishBatchConfiguration) -> void
+JustSaying.JustSayingBus.PublishAsync(System.Collections.Generic.IEnumerable<JustSaying.Models.Message> messages, JustSaying.Messaging.PublishBatchMetadata metadata, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+JustSaying.JustSayingBus.PublishBatchConfiguration.get -> JustSaying.IPublishBatchConfiguration
+JustSaying.Messaging.IMessageBatchPublisher
+JustSaying.Messaging.IMessageBatchPublisher.PublishAsync(System.Collections.Generic.IEnumerable<JustSaying.Models.Message> messages, JustSaying.Messaging.PublishBatchMetadata metadata = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task
+JustSaying.Messaging.PublishBatchMetadata
+JustSaying.Messaging.PublishBatchMetadata.BatchSize.get -> int
+JustSaying.Messaging.PublishBatchMetadata.BatchSize.set -> void
+JustSaying.Messaging.PublishBatchMetadata.PublishBatchMetadata() -> void
+JustSaying.MessagingBusBuilder.BuildBatchPublisher() -> JustSaying.Messaging.IMessageBatchPublisher
+JustSaying.MessagingConfig.MessageBatchResponseLogger.get -> System.Action<JustSaying.AwsTools.MessageHandling.MessageBatchResponse, System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message>>
+JustSaying.MessagingConfig.MessageBatchResponseLogger.set -> void
+static JustSaying.AwsTools.JustSayingConstants.MaximumSnsBatchSize.get -> int
+static JustSaying.Messaging.MessagePublisherExtensions.PublishAsync(this JustSaying.Messaging.IMessageBatchPublisher publisher, System.Collections.Generic.IEnumerable<JustSaying.Models.Message> messages, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+static JustSaying.Messaging.MessagePublisherExtensions.PublishAsync(this JustSaying.Messaging.IMessagePublisher publisher, System.Collections.Generic.IEnumerable<JustSaying.Models.Message> messages) -> System.Threading.Tasks.Task
+static JustSaying.Messaging.MessagePublisherExtensions.PublishAsync(this JustSaying.Messaging.IMessagePublisher publisher, System.Collections.Generic.IEnumerable<JustSaying.Models.Message> messages, JustSaying.Messaging.PublishBatchMetadata metadata) -> System.Threading.Tasks.Task
+static JustSaying.Messaging.MessagePublisherExtensions.PublishAsync(this JustSaying.Messaging.IMessagePublisher publisher, System.Collections.Generic.IEnumerable<JustSaying.Models.Message> messages, JustSaying.Messaging.PublishBatchMetadata metadata, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+static JustSaying.Messaging.MessagePublisherExtensions.PublishAsync(this JustSaying.Messaging.IMessagePublisher publisher, System.Collections.Generic.IEnumerable<JustSaying.Models.Message> messages, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
