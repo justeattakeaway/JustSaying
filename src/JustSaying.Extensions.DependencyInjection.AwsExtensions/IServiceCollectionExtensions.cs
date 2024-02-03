@@ -2,7 +2,7 @@ using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 using JustSaying;
 using JustSaying.AwsTools;
-using JustSaying.Extensions.DependencyInjection.AwsCore;
+using JustSaying.Extensions.DependencyInjection.AwsExtensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.ComponentModel;

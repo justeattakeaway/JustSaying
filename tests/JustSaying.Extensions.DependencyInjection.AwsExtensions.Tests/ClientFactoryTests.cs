@@ -4,7 +4,7 @@ using JustSaying.AwsTools;
 using Amazon;
 using Shouldly;
 
-namespace JustSaying.Extensions.DependencyInjection.AwsCore.Tests;
+namespace JustSaying.Extensions.DependencyInjection.AwsExtensions.Tests;
 
 public class ClientFactoryTests
 {
