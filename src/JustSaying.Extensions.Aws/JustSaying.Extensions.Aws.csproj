@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <IsShipping>true</IsShipping>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>

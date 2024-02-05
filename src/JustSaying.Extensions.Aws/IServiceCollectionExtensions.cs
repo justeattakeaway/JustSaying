@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 using JustSaying;
@@ -5,7 +6,6 @@ using JustSaying.AwsTools;
 using JustSaying.Extensions.Aws;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using System.ComponentModel;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -16,7 +16,7 @@ namespace Microsoft.Extensions.DependencyInjection;
 public static class IServiceCollectionExtensions
 {
     /// <summary>
-    /// Adds JustSaying services to the service collection.
+    /// Adds JustSaying services to the service collection using AWS configuration.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add JustSaying services to.</param>
     /// <param name="configuration">The <see cref="IConfiguration"/> used to setup AWS configuration.</param>
@@ -25,7 +25,7 @@ public static class IServiceCollectionExtensions
     /// The <see cref="IServiceCollection"/> specified by <paramref name="services"/>.
     /// </returns>
     /// <exception cref="ArgumentNullException">
-    /// <paramref name="services"/> is <see langword="null"/>.
+    /// <paramref name="services"/>, <paramref name="configuration"/> or <paramref name="builderConfig"/> is <see langword="null"/>.
     /// </exception>
     public static void AddJustSayingWithAwsConfig(this IServiceCollection services, IConfiguration configuration, Action<MessagingBusBuilder> builderConfig)
     {
@@ -48,7 +48,7 @@ public static class IServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Adds JustSaying services to the service collection.
+    /// Adds JustSaying services to the service collection using AWS configuration.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add JustSaying services to.</param>
     /// <param name="configuration">The <see cref="IConfiguration"/> used to setup AWS configuration.</param>
@@ -57,21 +57,21 @@ public static class IServiceCollectionExtensions
     /// The <see cref="IServiceCollection"/> specified by <paramref name="services"/>.
     /// </returns>
     /// <exception cref="ArgumentNullException">
-    /// <paramref name="services"/> is <see langword="null"/>.
+    /// <paramref name="services"/>, <paramref name="configuration"/> or <paramref name="builderConfig"/> is <see langword="null"/>.
     /// </exception>
     public static void AddJustSayingWithAwsConfig(this IServiceCollection services, IConfiguration configuration, Action<MessagingBusBuilder, IServiceProvider> builderConfig)
     {
-        if(services is null)
+        if (services is null)
         {
             throw new ArgumentNullException(nameof(services));
         }
 
-        if(configuration is null)
+        if (configuration is null)
         {
             throw new ArgumentNullException(nameof(configuration));
         }
 
-        if(builderConfig is null)
+        if (builderConfig is null)
         {
             throw new ArgumentNullException(nameof(builderConfig));
         }
