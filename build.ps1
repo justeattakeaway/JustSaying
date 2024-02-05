@@ -21,6 +21,7 @@ $sdkFile = Join-Path $solutionPath "global.json"
 $libraryProjects = @(
     (Join-Path $solutionPath "src" "JustSaying" "JustSaying.csproj"),
     (Join-Path $solutionPath "src" "JustSaying.Models" "JustSaying.Models.csproj"),
+    (Join-Path $solutionPath "src" "JustSaying.Extensions.Aws" "JustSaying.Extensions.Aws.csproj"),
     (Join-Path $solutionPath "src" "JustSaying.Extensions.DependencyInjection.Microsoft" "JustSaying.Extensions.DependencyInjection.Microsoft.csproj"),
     (Join-Path $solutionPath "src" "JustSaying.Extensions.DependencyInjection.StructureMap" "JustSaying.Extensions.DependencyInjection.StructureMap.csproj")
 )
