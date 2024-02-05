@@ -4,7 +4,7 @@ using Amazon.SQS;
 using JustSaying.AwsTools;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace JustSaying.Extensions.DependencyInjection.AwsExtensions;
+namespace JustSaying.Extensions.Aws;
 
 internal sealed class AwsConfigResolvingClientFactory : IAwsClientFactory
 {

@@ -2,7 +2,7 @@ using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 using JustSaying;
 using JustSaying.AwsTools;
-using JustSaying.Extensions.DependencyInjection.AwsExtensions;
+using JustSaying.Extensions.Aws;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.ComponentModel;
@@ -20,7 +20,7 @@ public static class IServiceCollectionExtensions
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add JustSaying services to.</param>
     /// <param name="configuration">The <see cref="IConfiguration"/> used to setup AWS configuration.</param>
-    /// <param name="configure">A delegate to a method to use to configure JustSaying.</param>
+    /// <param name="builderConfig">A delegate to a method to use to configure JustSaying.</param>
     /// <returns>
     /// The <see cref="IServiceCollection"/> specified by <paramref name="services"/>.
     /// </returns>
@@ -52,7 +52,7 @@ public static class IServiceCollectionExtensions
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add JustSaying services to.</param>
     /// <param name="configuration">The <see cref="IConfiguration"/> used to setup AWS configuration.</param>
-    /// <param name="configure">A delegate to a method to use to configure JustSaying.</param>
+    /// <param name="builderConfig">A delegate to a method to use to configure JustSaying.</param>
     /// <returns>
     /// The <see cref="IServiceCollection"/> specified by <paramref name="services"/>.
     /// </returns>

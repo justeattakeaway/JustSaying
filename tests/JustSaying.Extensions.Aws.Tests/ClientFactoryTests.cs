@@ -2,9 +2,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using JustSaying.AwsTools;
 using Amazon;
-using Shouldly;
 
-namespace JustSaying.Extensions.DependencyInjection.AwsExtensions.Tests;
+namespace JustSaying.Extensions.Aws.Tests;
 
 public class ClientFactoryTests
 {

@@ -17,7 +17,7 @@
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\JustSaying.Extensions.DependencyInjection.AwsExtensions\JustSaying.Extensions.DependencyInjection.AwsExtensions.csproj" />
+    <ProjectReference Include="..\..\src\JustSaying.Extensions.Aws\JustSaying.Extensions.Aws.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Shouldly" />
