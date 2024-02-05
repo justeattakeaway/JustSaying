@@ -34,5 +34,4 @@ internal sealed class AwsConfigResolvingClientFactory : IAwsClientFactory
         }
         return sqs;
     }
-
 }
