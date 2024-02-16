@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using JustSaying;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
@@ -135,7 +136,11 @@ public static class IServiceCollectionExtensions
         services.TryAddSingleton<IMessageContextAccessor>(serviceProvider => serviceProvider.GetRequiredService<MessageContextAccessor>());
         services.TryAddSingleton<IMessageContextReader>(serviceProvider => serviceProvider.GetRequiredService<MessageContextAccessor>());
 
+#if NET8_0_OR_GREATER
+        services.TryAddSingleton<IMessageSerializationFactory, TypedSystemTextJsonSerializationFactory>();
+#else
         services.TryAddSingleton<IMessageSerializationFactory, NewtonsoftSerializationFactory>();
+#endif
         services.TryAddSingleton<IMessageSubjectProvider, GenericMessageSubjectProvider>();
         services.TryAddSingleton<IVerifyAmazonQueues, AmazonQueueCreator>();
         services.TryAddSingleton<IMessageSerializationRegister>(
@@ -199,7 +204,11 @@ public static class IServiceCollectionExtensions
     /// <exception cref="ArgumentNullException">
     /// <paramref name="services"/> is <see langword="null"/>.
     /// </exception>
+#if NET8_0_OR_GREATER
+    public static IServiceCollection AddJustSayingHandler<TMessage, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services)
+#else
     public static IServiceCollection AddJustSayingHandler<TMessage, THandler>(this IServiceCollection services)
+#endif
         where TMessage : Message
         where THandler : class, IHandlerAsync<TMessage>
     {

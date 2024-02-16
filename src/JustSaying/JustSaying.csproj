@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsShipping>true</IsShipping>
-    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net461;net8.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj" />
@@ -23,4 +23,10 @@
   <ItemGroup>
     <Using Remove="System.Net.Http" />
   </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)','net7.0'))">
+    <Using Include="System.Diagnostics.CodeAnalysis" />
+  </ItemGroup>
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)','net7.0'))">
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
 </Project>

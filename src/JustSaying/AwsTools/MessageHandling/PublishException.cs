@@ -17,7 +17,9 @@ public class PublishException : Exception
     {
     }
 
+#if !NET8_0_OR_GREATER
     protected PublishException(SerializationInfo info, StreamingContext context) : base(info, context)
     {
     }
+#endif
 }

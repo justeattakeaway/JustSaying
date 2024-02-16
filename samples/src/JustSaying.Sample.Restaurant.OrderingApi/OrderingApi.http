@@ -1,0 +1,11 @@
+﻿@HostAddress = https://localhost:5001
+
+POST {{HostAddress}}/api/orders
+Content-Type: application/json
+Accept: application/json
+
+{
+  "description": "A cool description"
+}
+
+###

@@ -17,7 +17,9 @@ public class HandlerNotRegisteredWithContainerException : Exception
     {
     }
 
+#if !NET8_0_OR_GREATER
     protected HandlerNotRegisteredWithContainerException(SerializationInfo info, StreamingContext context) : base(info, context)
     {
     }
+#endif
 }

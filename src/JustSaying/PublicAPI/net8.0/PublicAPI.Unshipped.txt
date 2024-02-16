@@ -1,0 +1,10 @@
+JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>
+JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.Deserialize(string message, System.Type type) -> JustSaying.Models.Message
+JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.GetMessageAttributes(string message) -> JustSaying.Messaging.MessageHandling.MessageAttributes
+JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.GetMessageSubject(string sqsMessage) -> string
+JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.Serialize(JustSaying.Models.Message message, bool serializeForSnsPublishing, string subject) -> string
+JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.SystemTextJsonSerializer() -> void
+JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.SystemTextJsonSerializer(System.Text.Json.JsonSerializerOptions options) -> void
+JustSaying.Messaging.MessageSerialization.TypedSystemTextJsonSerializationFactory
+JustSaying.Messaging.MessageSerialization.TypedSystemTextJsonSerializationFactory.GetSerializer<T>() -> JustSaying.Messaging.MessageSerialization.IMessageSerializer
+JustSaying.Messaging.MessageSerialization.TypedSystemTextJsonSerializationFactory.TypedSystemTextJsonSerializationFactory(System.Text.Json.JsonSerializerOptions options) -> void

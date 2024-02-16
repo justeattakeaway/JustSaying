@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using JustSaying.AwsTools;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
@@ -44,7 +45,22 @@ internal sealed class DefaultServiceResolver : IServiceResolver
         }
         else if (desiredType == typeof(IMessageSerializationFactory))
         {
+
+#if NET8_0_OR_GREATER
+            if (!RuntimeFeature.IsDynamicCodeSupported)
+            {
+                #pragma warning disable IL2026
+                #pragma warning disable IL3050
+                return new NewtonsoftSerializationFactory();
+                #pragma warning restore
+            }
+            else
+            {
+                throw new NotSupportedException($"Newtonsoft.Json is not supported when compiled with the 'PublishTrimmed' option. Use {nameof(TypedSystemTextJsonSerializationFactory)} instead.");
+            }
+#else
             return new NewtonsoftSerializationFactory();
+#endif
         }
         else if (desiredType == typeof(IMessageSerializationRegister))
         {

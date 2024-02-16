@@ -1,8 +1,10 @@
+using System.Text.Json;
 using JustSaying.Messaging;
 using JustSaying.Sample.Restaurant.Models;
 using JustSaying.Sample.Restaurant.OrderingApi;
 using JustSaying.Sample.Restaurant.OrderingApi.Handlers;
 using JustSaying.Sample.Restaurant.OrderingApi.Models;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
@@ -23,6 +25,12 @@ try
     var builder = WebApplication.CreateBuilder(args);
     var configuration = builder.Configuration;
     builder.Host.UseSerilog();
+    builder.Services.ConfigureHttpJsonOptions(cfg =>
+    {
+        cfg.SerializerOptions.TypeInfoResolverChain.Insert(0, ApplicationJsonContext.Default);
+    });
+    builder.Services.AddHostedService<JustSayingHostedService>();
+    builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<JsonSerializerOptions>>().Value);
     builder.Services.AddJustSaying(config =>
     {
         config.Client(x =>

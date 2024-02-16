@@ -1,5 +1,7 @@
+#if NET8_0_OR_GREATER
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using JustSaying.Extensions;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 
@@ -8,11 +10,8 @@ namespace JustSaying.Messaging.MessageSerialization;
 /// <summary>
 /// A class representing an implementation of <see cref="IMessageSerializer"/> for the <c>System.Text.Json</c> serializer.
 /// </summary>
-#if NET8_0_OR_GREATER
-[RequiresUnreferencedCode(Constants.SerializationUnreferencedCodeMessage)]
-[RequiresDynamicCode(Constants.SerializationDynamicCodeMessage)]
-#endif
-public partial class SystemTextJsonSerializer : IMessageSerializer
+public class SystemTextJsonSerializer<T> : IMessageSerializer
+    where T : Message
 {
     private readonly JsonSerializerOptions _options;
 
@@ -40,8 +39,6 @@ public partial class SystemTextJsonSerializer : IMessageSerializer
                 IgnoreNullValues = true,
 #endif
             };
-
-            options.Converters.Add(new JsonStringEnumConverter());
         }
 
         _options = options;
@@ -95,14 +92,17 @@ public partial class SystemTextJsonSerializer : IMessageSerializer
         using var document = JsonDocument.Parse(message);
         JsonElement element = document.RootElement.GetProperty("Message");
         string json = element.ToString();
+        var jsonTypeInfo = _options.GetTypeInfo<T>();
 
-        return (Message)JsonSerializer.Deserialize(json, type, _options);
+        return (Message)JsonSerializer.Deserialize(json, jsonTypeInfo);
     }
 
     /// <inheritdoc />
     public string Serialize(Message message, bool serializeForSnsPublishing, string subject)
     {
-        string json = JsonSerializer.Serialize(message, message.GetType(), _options);
+
+        var jsonTypeInfo = _options.GetTypeInfo<T>();
+        string json = JsonSerializer.Serialize(message, jsonTypeInfo);
 
         // AWS SNS service will add Subject and Message properties automatically,
         // so just return plain message
@@ -112,7 +112,8 @@ public partial class SystemTextJsonSerializer : IMessageSerializer
         }
 
         // For direct publishing to SQS, add Subject and Message properties manually
-        var context = new { Subject = subject, Message = json };
-        return JsonSerializer.Serialize(context, _options);
+        var context = new SqsMessageEnvelope { Subject = subject, Message = json };
+        return JsonSerializer.Serialize(context, JustSayingSerializationContext.Default.SqsMessageEnvelope);
     }
 }
+#endif

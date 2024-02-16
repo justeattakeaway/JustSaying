@@ -17,7 +17,9 @@ public class ConfigurationErrorsException : Exception
     {
     }
 
+#if !NET8_0_OR_GREATER
     protected ConfigurationErrorsException(SerializationInfo info, StreamingContext context) : base(info, context)
     {
     }
+#endif
 }
