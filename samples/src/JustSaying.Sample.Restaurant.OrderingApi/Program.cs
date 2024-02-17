@@ -31,9 +31,9 @@ try
         cfg.SerializerOptions.TypeInfoResolverChain.Insert(0, ApplicationJsonContext.Default);
     });
 
-    builder.Services.Configure<JsonSerializerOptions>(cfg =>
+    builder.Services.Configure<JustSayingJsonSerializerOptions>(cfg =>
     {
-        cfg.TypeInfoResolverChain.Insert(0, ApplicationJsonContext.Default);
+        cfg.SerializerOptions.TypeInfoResolverChain.Insert(0, ApplicationJsonContext.Default);
     });
 
     builder.Services.AddJustSaying(config =>

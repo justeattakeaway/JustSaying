@@ -141,7 +141,7 @@ public static class IServiceCollectionExtensions
         services.TryAddSingleton<IMessageContextReader>(serviceProvider => serviceProvider.GetRequiredService<MessageContextAccessor>());
 
 #if NET8_0_OR_GREATER
-        services.TryAddSingleton<IMessageSerializationFactory>(sp => new TypedSystemTextJsonSerializationFactory(sp.GetRequiredService<IOptions<JsonSerializerOptions>>().Value));
+        services.TryAddSingleton<IMessageSerializationFactory>(sp => new TypedSystemTextJsonSerializationFactory(sp.GetRequiredService<IOptions<JustSayingJsonSerializerOptions>>().Value));
 #else
         services.TryAddSingleton<IMessageSerializationFactory, NewtonsoftSerializationFactory>();
 #endif

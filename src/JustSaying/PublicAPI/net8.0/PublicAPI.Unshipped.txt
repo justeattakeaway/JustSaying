@@ -1,3 +1,6 @@
+JustSaying.Messaging.MessageSerialization.JustSayingJsonSerializerOptions
+JustSaying.Messaging.MessageSerialization.JustSayingJsonSerializerOptions.JustSayingJsonSerializerOptions() -> void
+JustSaying.Messaging.MessageSerialization.JustSayingJsonSerializerOptions.SerializerOptions.get -> System.Text.Json.JsonSerializerOptions
 JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>
 JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.Deserialize(string message, System.Type type) -> JustSaying.Models.Message
 JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.GetMessageAttributes(string message) -> JustSaying.Messaging.MessageHandling.MessageAttributes
@@ -7,4 +10,4 @@ JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.SystemText
 JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.SystemTextJsonSerializer(System.Text.Json.JsonSerializerOptions options) -> void
 JustSaying.Messaging.MessageSerialization.TypedSystemTextJsonSerializationFactory
 JustSaying.Messaging.MessageSerialization.TypedSystemTextJsonSerializationFactory.GetSerializer<T>() -> JustSaying.Messaging.MessageSerialization.IMessageSerializer
-JustSaying.Messaging.MessageSerialization.TypedSystemTextJsonSerializationFactory.TypedSystemTextJsonSerializationFactory(System.Text.Json.JsonSerializerOptions options) -> void
+JustSaying.Messaging.MessageSerialization.TypedSystemTextJsonSerializationFactory.TypedSystemTextJsonSerializationFactory(JustSaying.Messaging.MessageSerialization.JustSayingJsonSerializerOptions options) -> void
