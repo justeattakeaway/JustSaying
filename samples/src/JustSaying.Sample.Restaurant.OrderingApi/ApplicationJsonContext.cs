@@ -5,6 +5,7 @@ using JustSaying.Sample.Restaurant.OrderingApi.Models;
 namespace JustSaying.Sample.Restaurant.OrderingApi;
 
 [JsonSerializable(typeof(CustomerOrderModel))]
+[JsonSerializable(typeof(OrderPlacedEvent))]
 [JsonSerializable(typeof(OrderReadyEvent))]
 [JsonSerializable(typeof(OrderDeliveredEvent))]
 [JsonSerializable(typeof(OrderOnItsWayEvent))]

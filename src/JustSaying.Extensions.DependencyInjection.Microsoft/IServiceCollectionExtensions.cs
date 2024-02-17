@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using JustSaying;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
@@ -13,6 +12,11 @@ using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using JustSaying.Naming;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+#if NET8_0_OR_GREATER
+using System.Text.Json;
+using Microsoft.Extensions.Options;
+using System.Diagnostics.CodeAnalysis;
+#endif
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -62,7 +66,7 @@ public static class IServiceCollectionExtensions
 
         if (string.IsNullOrWhiteSpace(region))
         {
-            throw new ArgumentException("region must not be null or empty" ,nameof(region));
+            throw new ArgumentException("region must not be null or empty", nameof(region));
         }
 
         return services.AddJustSaying(
@@ -137,7 +141,7 @@ public static class IServiceCollectionExtensions
         services.TryAddSingleton<IMessageContextReader>(serviceProvider => serviceProvider.GetRequiredService<MessageContextAccessor>());
 
 #if NET8_0_OR_GREATER
-        services.TryAddSingleton<IMessageSerializationFactory, TypedSystemTextJsonSerializationFactory>();
+        services.TryAddSingleton<IMessageSerializationFactory>(sp => new TypedSystemTextJsonSerializationFactory(sp.GetRequiredService<IOptions<JsonSerializerOptions>>().Value));
 #else
         services.TryAddSingleton<IMessageSerializationFactory, NewtonsoftSerializationFactory>();
 #endif

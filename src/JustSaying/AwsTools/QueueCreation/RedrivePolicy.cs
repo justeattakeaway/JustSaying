@@ -13,6 +13,9 @@ public class RedrivePolicy
     [JsonPropertyName("deadLetterTargetArn")]
     public string DeadLetterQueue { get; set; }
 
+#if NET8_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonConstructor]
+#endif
     public RedrivePolicy(int maximumReceives, string deadLetterQueue)
     {
         MaximumReceives = maximumReceives;
@@ -23,11 +26,17 @@ public class RedrivePolicy
     {
     }
 
-    // Cannot use System.Text.Json below as no public parameterless constructor. Change for v7?
-
     public override string ToString()
+#if NET8_0_OR_GREATER
+        => System.Text.Json.JsonSerializer.Serialize(this, JustSayingSerializationContext.Default.RedrivePolicy);
+#else
         => JsonConvert.SerializeObject(this);
+#endif
 
     public static RedrivePolicy ConvertFromString(string policy)
+#if NET8_0_OR_GREATER
+        => System.Text.Json.JsonSerializer.Deserialize(policy, JustSayingSerializationContext.Default.RedrivePolicy);
+#else
         => JsonConvert.DeserializeObject<RedrivePolicy>(policy);
+#endif
 }

@@ -113,7 +113,7 @@ public class SystemTextJsonSerializer<T> : IMessageSerializer
 
         // For direct publishing to SQS, add Subject and Message properties manually
         var context = new SqsMessageEnvelope { Subject = subject, Message = json };
-        return JsonSerializer.Serialize(context, JustSayingSerializationContext.Default.SqsMessageEnvelope);
+        return JsonSerializer.Serialize(context, JustSaying.JustSayingSerializationContext.Default.SqsMessageEnvelope);
     }
 }
 #endif

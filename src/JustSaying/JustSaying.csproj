@@ -23,10 +23,10 @@
   <ItemGroup>
     <Using Remove="System.Net.Http" />
   </ItemGroup>
-  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)','net7.0'))">
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)','net8.0'))">
     <Using Include="System.Diagnostics.CodeAnalysis" />
   </ItemGroup>
-  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)','net7.0'))">
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)','net8.0'))">
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 </Project>

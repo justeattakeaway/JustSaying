@@ -1,5 +1,6 @@
 using System.Text.Json;
 using JustSaying.Messaging;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Sample.Restaurant.Models;
 using JustSaying.Sample.Restaurant.OrderingApi;
 using JustSaying.Sample.Restaurant.OrderingApi.Handlers;
@@ -29,8 +30,12 @@ try
     {
         cfg.SerializerOptions.TypeInfoResolverChain.Insert(0, ApplicationJsonContext.Default);
     });
-    builder.Services.AddHostedService<JustSayingHostedService>();
-    builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<JsonSerializerOptions>>().Value);
+
+    builder.Services.Configure<JsonSerializerOptions>(cfg =>
+    {
+        cfg.TypeInfoResolverChain.Insert(0, ApplicationJsonContext.Default);
+    });
+
     builder.Services.AddJustSaying(config =>
     {
         config.Client(x =>
