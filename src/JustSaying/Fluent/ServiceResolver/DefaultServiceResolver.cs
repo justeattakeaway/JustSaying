@@ -47,7 +47,7 @@ internal sealed class DefaultServiceResolver : IServiceResolver
         {
 
 #if NET8_0_OR_GREATER
-            if (!RuntimeFeature.IsDynamicCodeSupported)
+            if (RuntimeFeature.IsDynamicCodeSupported)
             {
                 #pragma warning disable IL2026
                 #pragma warning disable IL3050
