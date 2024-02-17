@@ -1,8 +1,12 @@
+#if !NET8_0_OR_GREATER
 using System.Runtime.Serialization;
+#endif
 
 namespace JustSaying.AwsTools.MessageHandling;
 
+#if !NET8_0_OR_GREATER
 [Serializable]
+#endif
 public class PublishException : Exception
 {
     public PublishException() : base("Failed to publish message")
@@ -17,7 +21,9 @@ public class PublishException : Exception
     {
     }
 
+#if !NET8_0_OR_GREATER
     protected PublishException(SerializationInfo info, StreamingContext context) : base(info, context)
     {
     }
+#endif
 }

@@ -7,7 +7,7 @@
     <RootNamespace>StructureMap</RootNamespace>
     <!-- StructureMap is not strong-named, so this assembly also cannot be -->
     <SignAssembly>false</SignAssembly>
-    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net461;net8.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\JustSaying\JustSaying.csproj" />

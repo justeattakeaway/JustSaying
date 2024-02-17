@@ -10,6 +10,19 @@ namespace JustSaying.Messaging.MessageSerialization;
 /// </summary>
 public class SystemTextJsonSerializer : IMessageSerializer
 {
+    private static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
+    {
+#if NET8_0_OR_GREATER
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+#else
+        IgnoreNullValues = true,
+#endif
+        Converters =
+        {
+            new JsonStringEnumConverter(),
+        },
+    };
+
     private readonly JsonSerializerOptions _options;
 
     /// <summary>
@@ -26,17 +39,7 @@ public class SystemTextJsonSerializer : IMessageSerializer
     /// <param name="options">The optional <see cref="JsonSerializerOptions"/> to use.</param>
     public SystemTextJsonSerializer(JsonSerializerOptions options)
     {
-        if (options == null)
-        {
-            options = new JsonSerializerOptions
-            {
-                IgnoreNullValues = true
-            };
-
-            options.Converters.Add(new JsonStringEnumConverter());
-        }
-
-        _options = options;
+        _options = options ?? DefaultJsonSerializerOptions;
     }
 
     /// <inheritdoc />
