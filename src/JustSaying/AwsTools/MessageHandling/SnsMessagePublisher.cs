@@ -10,14 +10,12 @@ using MessageAttributeValue = Amazon.SimpleNotificationService.Model.MessageAttr
 
 namespace JustSaying.AwsTools.MessageHandling;
 
-#pragma warning disable RS0026 // Do not add multiple overloads with optional parameters
 public class SnsMessagePublisher(
     IAmazonSimpleNotificationService client,
     IMessageSerializationRegister serializationRegister,
     ILoggerFactory loggerFactory,
     IMessageSubjectProvider messageSubjectProvider,
     Func<Exception, Message, bool> handleException = null) : IMessagePublisher, IInterrogable
-#pragma warning restore RS0026
 {
     private readonly IMessageSerializationRegister _serializationRegister = serializationRegister;
     private readonly IMessageSubjectProvider _messageSubjectProvider = messageSubjectProvider;
@@ -27,7 +25,6 @@ public class SnsMessagePublisher(
     protected IAmazonSimpleNotificationService Client { get; } = client;
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
 
-#pragma warning disable RS0026 // Do not add multiple overloads with optional parameters
     public SnsMessagePublisher(
         string topicArn,
         IAmazonSimpleNotificationService client,
@@ -36,7 +33,6 @@ public class SnsMessagePublisher(
         IMessageSubjectProvider messageSubjectProvider,
         Func<Exception, Message, bool> handleException = null)
         : this(client, serializationRegister, loggerFactory, messageSubjectProvider, handleException)
-#pragma warning restore RS0026
     {
         Arn = topicArn;
     }
