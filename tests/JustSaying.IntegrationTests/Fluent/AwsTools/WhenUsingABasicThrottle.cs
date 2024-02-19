@@ -72,7 +72,7 @@ public class WhenUsingABasicThrottle(ITestOutputHelper outputHelper) : Integrati
             {
                 var batchEntry = new SendMessageBatchRequestEntry
                 {
-                    MessageBody = $"{{\"Subject\":\"SimpleMessage\", \"Message\": {{ \"Content\": \"{entriesAdded}\"}}}}",
+                    MessageBody = $$"""{"Subject":"SimpleMessage", "Message": { "Content": "{{entriesAdded}}"} }""",
                     Id = Guid.NewGuid().ToString()
                 };
 
