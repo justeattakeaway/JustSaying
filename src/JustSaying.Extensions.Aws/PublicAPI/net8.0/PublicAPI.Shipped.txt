@@ -1,0 +1,3 @@
+Microsoft.Extensions.DependencyInjection.IServiceCollectionExtensions
+static Microsoft.Extensions.DependencyInjection.IServiceCollectionExtensions.AddJustSayingWithAwsConfig(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration, System.Action<JustSaying.MessagingBusBuilder, System.IServiceProvider> builderConfig) -> void
+static Microsoft.Extensions.DependencyInjection.IServiceCollectionExtensions.AddJustSayingWithAwsConfig(this Microsoft.Extensions.DependencyInjection.IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration, System.Action<JustSaying.MessagingBusBuilder> builderConfig) -> void

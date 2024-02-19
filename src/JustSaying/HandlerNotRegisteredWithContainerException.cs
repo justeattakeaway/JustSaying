@@ -1,8 +1,12 @@
+#if !NET8_0_OR_GREATER
 using System.Runtime.Serialization;
+#endif
 
 namespace JustSaying;
 
+#if !NET8_0_OR_GREATER
 [Serializable]
+#endif
 public class HandlerNotRegisteredWithContainerException : Exception
 {
     public HandlerNotRegisteredWithContainerException() : base("Handler not registered with container")
@@ -17,7 +21,9 @@ public class HandlerNotRegisteredWithContainerException : Exception
     {
     }
 
+#if !NET8_0_OR_GREATER
     protected HandlerNotRegisteredWithContainerException(SerializationInfo info, StreamingContext context) : base(info, context)
     {
     }
+#endif
 }
