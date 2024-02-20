@@ -1,8 +1,12 @@
+#if !NET8_0_OR_GREATER
 using System.Runtime.Serialization;
+#endif
 
 namespace JustSaying.Messaging.MessageSerialization;
 
+#if !NET8_0_OR_GREATER
 [Serializable]
+#endif
 public class MessageFormatNotSupportedException : Exception
 {
     public MessageFormatNotSupportedException() : base("Message format not supported")
@@ -18,6 +22,7 @@ public class MessageFormatNotSupportedException : Exception
     }
 #if !NET8_0_OR_GREATER
 
+#if !NET8_0_OR_GREATER
     protected MessageFormatNotSupportedException(SerializationInfo info, StreamingContext context) : base(info, context)
     {
     }

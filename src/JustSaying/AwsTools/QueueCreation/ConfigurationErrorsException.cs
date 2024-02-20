@@ -1,8 +1,12 @@
+#if !NET8_0_OR_GREATER
 using System.Runtime.Serialization;
+#endif
 
 namespace JustSaying.AwsTools.QueueCreation;
 
+#if !NET8_0_OR_GREATER
 [Serializable]
+#endif
 public class ConfigurationErrorsException : Exception
 {
     public ConfigurationErrorsException() : base("Invalid configuration")

@@ -1,0 +1,7 @@
+static StructureMap.ConfigurationExpressionExtensions.AddJustSaying(this StructureMap.ConfigurationExpression registry) -> void
+static StructureMap.ConfigurationExpressionExtensions.AddJustSaying(this StructureMap.ConfigurationExpression registry, string region) -> void
+static StructureMap.ConfigurationExpressionExtensions.AddJustSaying(this StructureMap.ConfigurationExpression registry, System.Action<JustSaying.MessagingBusBuilder, StructureMap.IContext> configure) -> void
+static StructureMap.ConfigurationExpressionExtensions.AddJustSaying(this StructureMap.ConfigurationExpression registry, System.Action<JustSaying.MessagingBusBuilder> configure) -> void
+static StructureMap.RegistryExtensions.AddJustSayingHandler<TMessage, THandler>(this StructureMap.Registry registry) -> void
+StructureMap.ConfigurationExpressionExtensions
+StructureMap.RegistryExtensions
