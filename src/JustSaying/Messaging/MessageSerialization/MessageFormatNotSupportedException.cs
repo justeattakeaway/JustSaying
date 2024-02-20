@@ -22,7 +22,6 @@ public class MessageFormatNotSupportedException : Exception
     }
 #if !NET8_0_OR_GREATER
 
-#if !NET8_0_OR_GREATER
     protected MessageFormatNotSupportedException(SerializationInfo info, StreamingContext context) : base(info, context)
     {
     }
