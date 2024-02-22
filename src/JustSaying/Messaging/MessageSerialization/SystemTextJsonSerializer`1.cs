@@ -1,10 +1,10 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using JustSaying.Extensions;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 #if NET8_0_OR_GREATER
 using System.Runtime.CompilerServices;
-using JustSaying.Extensions;
 #endif
 
 namespace JustSaying.Messaging.MessageSerialization;
@@ -83,17 +83,18 @@ public class SystemTextJsonSerializer<T> : IMessageSerializer
         var attributes = new Dictionary<string, MessageAttributeValue>();
         foreach(var obj in attributesElement.EnumerateObject())
         {
-            var dataType = obj.Value.GetProperty("Type").GetString();
-            var dataValue = obj.Value.GetProperty("Value").GetString();
-
-            var isString = dataType == "String";
-
-            attributes.Add(obj.Name, new MessageAttributeValue()
+            if (obj.Value.TryGetStringProperty("Type", out var dataType)
+                && obj.Value.TryGetStringProperty("Value", out var dataValue))
             {
-                DataType = dataType,
-                StringValue = isString ? dataValue : null,
-                BinaryValue = !isString ? Convert.FromBase64String(dataValue) : null
-            });
+                var isString = dataType == "String";
+
+                attributes.Add(obj.Name, new MessageAttributeValue()
+                {
+                    DataType = dataType,
+                    StringValue = isString ? dataValue : null,
+                    BinaryValue = !isString ? Convert.FromBase64String(dataValue) : null
+                });
+            }
         }
 
         return new MessageAttributes(attributes);
@@ -152,7 +153,7 @@ public class SystemTextJsonSerializer<T> : IMessageSerializer
 
     private string SerializeCore(Message message)
     {
-        string json = string.Empty;
+        string json;
 
 #if NET8_0_OR_GREATER
         if (RuntimeFeature.IsDynamicCodeSupported)
