@@ -12,7 +12,8 @@ namespace JustSaying.Messaging.MessageSerialization;
 [RequiresUnreferencedCode(Constants.SerializationUnreferencedCodeMessage)]
 [RequiresDynamicCode(Constants.SerializationDynamicCodeMessage)]
 #endif
-public partial class SystemTextJsonSerializer : IMessageSerializer
+[Obsolete("This API is deprecated, and will be removed in a later version. Use SystemTextJsonSerializer<T> instead.")]
+public class SystemTextJsonSerializer : IMessageSerializer
 {
     private static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
     {

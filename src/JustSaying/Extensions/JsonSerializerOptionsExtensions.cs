@@ -9,18 +9,9 @@ internal static class JsonSerializerOptionsExtensions
 {
     public static JsonTypeInfo<T> GetTypeInfo<T>(this JsonSerializerOptions options)
     {
-        foreach (var info in options.TypeInfoResolverChain)
-        {
-            Console.WriteLine(info);
-        }
-
+        // This is not guarded as we want to throw if the desired type has not been configured for
         var typeInfo = options.GetTypeInfo(typeof(T));
-        if (typeInfo is not JsonTypeInfo<T> genericTypeInfo)
-        {
-            throw new JsonException($"Could not find type info for the specified type {typeof(T).Name}");
-        }
-
-        return genericTypeInfo;
+        return (JsonTypeInfo<T>)typeInfo;
     }
 }
 #endif

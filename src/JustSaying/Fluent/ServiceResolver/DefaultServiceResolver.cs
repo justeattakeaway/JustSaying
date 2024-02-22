@@ -49,14 +49,15 @@ internal sealed class DefaultServiceResolver : IServiceResolver
 #if NET8_0_OR_GREATER
             if (RuntimeFeature.IsDynamicCodeSupported)
             {
-                #pragma warning disable IL2026
-                #pragma warning disable IL3050
+#pragma warning disable IL2026
+#pragma warning disable IL3050
                 return new NewtonsoftSerializationFactory();
-                #pragma warning restore
+#pragma warning restore IL2026
+#pragma warning disable IL3050
             }
             else
             {
-                throw new NotSupportedException($"Newtonsoft.Json is not supported when compiled with the 'PublishTrimmed' option. Use {nameof(TypedSystemTextJsonSerializationFactory)} instead.");
+                throw new NotSupportedException($"Newtonsoft.Json is not supported when compiled with the 'PublishTrimmed' option. Use {nameof(SystemTextJsonSerializationFactory)} instead.");
             }
 #else
             return new NewtonsoftSerializationFactory();

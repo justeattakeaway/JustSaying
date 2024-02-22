@@ -1,9 +1,11 @@
-#if NET8_0_OR_GREATER
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using JustSaying.Extensions;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
+#if NET8_0_OR_GREATER
+using System.Runtime.CompilerServices;
+using JustSaying.Extensions;
+#endif
 
 namespace JustSaying.Messaging.MessageSerialization;
 
@@ -39,6 +41,17 @@ public class SystemTextJsonSerializer<T> : IMessageSerializer
                 IgnoreNullValues = true,
 #endif
             };
+
+#if NET8_0_OR_GREATER
+            if (RuntimeFeature.IsDynamicCodeSupported)
+            {
+#pragma warning disable IL3050
+                options.Converters.Add(new JsonStringEnumConverter());
+#pragma warning restore IL3050
+            }
+#else
+            options.Converters.Add(new JsonStringEnumConverter());
+#endif
         }
 
         _options = options;
@@ -92,17 +105,14 @@ public class SystemTextJsonSerializer<T> : IMessageSerializer
         using var document = JsonDocument.Parse(message);
         JsonElement element = document.RootElement.GetProperty("Message");
         string json = element.ToString();
-        var jsonTypeInfo = _options.GetTypeInfo<T>();
 
-        return (Message)JsonSerializer.Deserialize(json, jsonTypeInfo);
+        return DeserializeCore(json, type);
     }
 
     /// <inheritdoc />
     public string Serialize(Message message, bool serializeForSnsPublishing, string subject)
     {
-
-        var jsonTypeInfo = _options.GetTypeInfo<T>();
-        string json = JsonSerializer.Serialize(message, jsonTypeInfo);
+        string json = SerializeCore(message);
 
         // AWS SNS service will add Subject and Message properties automatically,
         // so just return plain message
@@ -113,7 +123,55 @@ public class SystemTextJsonSerializer<T> : IMessageSerializer
 
         // For direct publishing to SQS, add Subject and Message properties manually
         var context = new SqsMessageEnvelope { Subject = subject, Message = json };
-        return JsonSerializer.Serialize(context, JustSaying.JustSayingSerializationContext.Default.SqsMessageEnvelope);
+
+#if NET8_0_OR_GREATER
+        return JsonSerializer.Serialize(context, JustSayingSerializationContext.Default.SqsMessageEnvelope);
+#else
+        return JsonSerializer.Serialize(context, _options);
+#endif
+    }
+
+    private Message DeserializeCore(string json, Type type)
+    {
+#if NET8_0_OR_GREATER
+        if (RuntimeFeature.IsDynamicCodeSupported)
+        {
+#pragma warning disable IL3050
+#pragma warning disable IL2026
+            return (Message)JsonSerializer.Deserialize(json, type, _options);
+#pragma warning restore IL2026
+#pragma warning restore IL3050
+        }
+
+        var jsonTypeInfo = _options.GetTypeInfo<T>();
+        return JsonSerializer.Deserialize(json, jsonTypeInfo);
+#else
+        return (Message)JsonSerializer.Deserialize(json, type, _options);
+#endif
+    }
+
+    private string SerializeCore(Message message)
+    {
+        string json = string.Empty;
+
+#if NET8_0_OR_GREATER
+        if (RuntimeFeature.IsDynamicCodeSupported)
+        {
+#pragma warning disable IL3050
+#pragma warning disable IL2026
+            json = JsonSerializer.Serialize(message, _options);
+#pragma warning restore IL2026
+#pragma warning restore IL3050
+        }
+        else
+        {
+            var jsonTypeInfo = _options.GetTypeInfo<T>();
+            json = JsonSerializer.Serialize(message, jsonTypeInfo);
+        }
+#else
+        json = JsonSerializer.Serialize(message, _options);
+#endif
+
+        return json;
     }
 }
-#endif

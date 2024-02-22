@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 
 namespace JustSaying.UnitTests.Messaging.Serialization.SystemTextJson;
 
+#pragma warning disable CS0618 // Type or member is obsolete
 public class WhenUsingCustomSettings : XBehaviourTest<SystemTextJsonSerializer>
 {
     private MessageWithEnum _messageOut;
@@ -44,3 +45,4 @@ public class WhenUsingCustomSettings : XBehaviourTest<SystemTextJsonSerializer>
         _jsonMessage.ShouldNotContain("Two");
     }
 }
+#pragma warning restore CS0618
