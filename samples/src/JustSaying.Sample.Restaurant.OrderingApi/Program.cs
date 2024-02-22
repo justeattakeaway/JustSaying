@@ -36,6 +36,9 @@ try
         cfg.SerializerOptions.TypeInfoResolverChain.Insert(0, ApplicationJsonContext.Default);
     });
 
+    builder.Services.AddSingleton<IMessageSerializationFactory>(sp =>
+        new SystemTextJsonSerializationFactory(sp.GetRequiredService<IOptions<JustSayingJsonSerializerOptions>>().Value.SerializerOptions));
+
     builder.Services.AddJustSaying(config =>
     {
         config.Client(x =>
