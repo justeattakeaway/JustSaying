@@ -8,6 +8,3 @@ JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.GetMessage
 JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.Serialize(JustSaying.Models.Message message, bool serializeForSnsPublishing, string subject) -> string
 JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.SystemTextJsonSerializer() -> void
 JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.SystemTextJsonSerializer(System.Text.Json.JsonSerializerOptions options) -> void
-JustSaying.Messaging.MessageSerialization.TypedSystemTextJsonSerializationFactory
-JustSaying.Messaging.MessageSerialization.TypedSystemTextJsonSerializationFactory.GetSerializer<T>() -> JustSaying.Messaging.MessageSerialization.IMessageSerializer
-JustSaying.Messaging.MessageSerialization.TypedSystemTextJsonSerializationFactory.TypedSystemTextJsonSerializationFactory(JustSaying.Messaging.MessageSerialization.JustSayingJsonSerializerOptions options) -> void
