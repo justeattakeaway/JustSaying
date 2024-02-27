@@ -26,6 +26,8 @@ namespace Microsoft.Extensions.DependencyInjection;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class IServiceCollectionExtensions
 {
+    private const string UnreferencedCodeMessage = "The default IMessageSerializationFactory requires unreferenced code.";
+
     /// <summary>
     /// Adds JustSaying services to the service collection.
     /// </summary>
@@ -36,6 +38,9 @@ public static class IServiceCollectionExtensions
     /// <exception cref="ArgumentNullException">
     /// <paramref name="services"/> is <see langword="null"/>.
     /// </exception>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode(UnreferencedCodeMessage)]
+#endif
     public static IServiceCollection AddJustSaying(this IServiceCollection services)
     {
         if (services == null)
@@ -57,6 +62,9 @@ public static class IServiceCollectionExtensions
     /// <exception cref="ArgumentNullException">
     /// <paramref name="services"/> or <paramref name="region"/> is <see langword="null"/>.
     /// </exception>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode(UnreferencedCodeMessage)]
+#endif
     public static IServiceCollection AddJustSaying(this IServiceCollection services, string region)
     {
         if (services == null)
@@ -85,6 +93,9 @@ public static class IServiceCollectionExtensions
     /// <exception cref="ArgumentNullException">
     /// <paramref name="services"/> or <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode(UnreferencedCodeMessage)]
+#endif
     public static IServiceCollection AddJustSaying(this IServiceCollection services, Action<MessagingBusBuilder> configure)
     {
         if (services == null)
@@ -111,6 +122,9 @@ public static class IServiceCollectionExtensions
     /// <exception cref="ArgumentNullException">
     /// <paramref name="services"/> or <paramref name="configure"/> is <see langword="null"/>.
     /// </exception>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode(UnreferencedCodeMessage)]
+#endif
     public static IServiceCollection AddJustSaying(this IServiceCollection services, Action<MessagingBusBuilder, IServiceProvider> configure)
     {
         if (services == null)

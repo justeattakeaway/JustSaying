@@ -1,4 +1,3 @@
-using System.Text.Json;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Sample.Restaurant.Models;
@@ -39,6 +38,7 @@ try
     builder.Services.AddSingleton<IMessageSerializationFactory>(sp =>
         new SystemTextJsonSerializationFactory(sp.GetRequiredService<IOptions<JustSayingJsonSerializerOptions>>().Value.SerializerOptions));
 
+#pragma warning disable IL2026 // We provide SystemTextJsonSerializationFactory, which is trimming safe
     builder.Services.AddJustSaying(config =>
     {
         config.Client(x =>
@@ -81,6 +81,7 @@ try
             x.WithTopic<OrderOnItsWayEvent>();
         });
     });
+#pragma warning restore IL2026
 
     // Added a message handler for message type for 'OrderReadyEvent' on topic 'orderreadyevent' and queue 'orderreadyevent'
     builder.Services.AddJustSayingHandler<OrderReadyEvent, OrderReadyEventHandler>();
