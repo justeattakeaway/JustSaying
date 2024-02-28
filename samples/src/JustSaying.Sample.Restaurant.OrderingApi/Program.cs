@@ -30,15 +30,15 @@ try
         cfg.SerializerOptions.TypeInfoResolverChain.Insert(0, ApplicationJsonContext.Default);
     });
 
-    builder.Services.Configure<JustSayingJsonSerializerOptions>(cfg =>
+    builder.Services.Configure<MessagingJsonSerializerOptions>(cfg =>
     {
         cfg.SerializerOptions.TypeInfoResolverChain.Insert(0, ApplicationJsonContext.Default);
     });
 
     builder.Services.AddSingleton<IMessageSerializationFactory>(sp =>
-        new SystemTextJsonSerializationFactory(sp.GetRequiredService<IOptions<JustSayingJsonSerializerOptions>>().Value.SerializerOptions));
+        new SystemTextJsonSerializationFactory(sp.GetRequiredService<IOptions<MessagingJsonSerializerOptions>>().Value.SerializerOptions));
 
-#pragma warning disable IL2026 // We provide SystemTextJsonSerializationFactory, which is trimming safe
+#pragma warning disable IL2026 // We provide SystemTextJsonSerializationFactory, which is AOT safe
     builder.Services.AddJustSaying(config =>
     {
         config.Client(x =>

@@ -1,6 +1,3 @@
-JustSaying.Messaging.MessageSerialization.JustSayingJsonSerializerOptions
-JustSaying.Messaging.MessageSerialization.JustSayingJsonSerializerOptions.JustSayingJsonSerializerOptions() -> void
-JustSaying.Messaging.MessageSerialization.JustSayingJsonSerializerOptions.SerializerOptions.get -> System.Text.Json.JsonSerializerOptions
 JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>
 JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.Deserialize(string message, System.Type type) -> JustSaying.Models.Message
 JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer<T>.GetMessageAttributes(string message) -> JustSaying.Messaging.MessageHandling.MessageAttributes

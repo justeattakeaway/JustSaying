@@ -12,11 +12,6 @@ using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using JustSaying.Naming;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-#if NET8_0_OR_GREATER
-using System.Text.Json;
-using Microsoft.Extensions.Options;
-using System.Diagnostics.CodeAnalysis;
-#endif
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -26,7 +21,7 @@ namespace Microsoft.Extensions.DependencyInjection;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class IServiceCollectionExtensions
 {
-    private const string UnreferencedCodeMessage = "The default IMessageSerializationFactory requires unreferenced code.";
+    private const string UnreferencedCodeMessage = "The default IMessageSerializationFactory implementation requires unreferenced code.";
 
     /// <summary>
     /// Adds JustSaying services to the service collection.
