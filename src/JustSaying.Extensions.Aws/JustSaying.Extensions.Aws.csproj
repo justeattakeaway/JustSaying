@@ -10,6 +10,6 @@
     <ProjectReference Include="..\JustSaying\JustSaying.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Extensions.NETCore.Setup"/>
+    <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" />
   </ItemGroup>
 </Project>
