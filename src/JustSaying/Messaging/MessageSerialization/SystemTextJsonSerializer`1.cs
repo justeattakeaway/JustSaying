@@ -160,7 +160,7 @@ public class SystemTextJsonSerializer<T> : IMessageSerializer
         {
 #pragma warning disable IL3050
 #pragma warning disable IL2026
-            json = JsonSerializer.Serialize(message, _options);
+            json = JsonSerializer.Serialize(message, typeof(T), _options);
 #pragma warning restore IL2026
 #pragma warning restore IL3050
         }
