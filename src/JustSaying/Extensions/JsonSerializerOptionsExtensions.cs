@@ -9,7 +9,8 @@ internal static class JsonSerializerOptionsExtensions
 {
     public static JsonTypeInfo<T> GetTypeInfo<T>(this JsonSerializerOptions options)
     {
-        // This is not guarded as we want to throw if the desired type has not been configured for
+        // This throws an ArgumentException if type information is not available for a given type.
+        // We don't guard this to allow the default exception to be propagated.
         var typeInfo = options.GetTypeInfo(typeof(T));
         return (JsonTypeInfo<T>)typeInfo;
     }
