@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 
 namespace JustSaying.AwsTools.QueueCreation;
 
+[Obsolete("This API is not used by the public API, and will be made internal in a future version.")]
 public class RedrivePolicy
 {
     [JsonProperty("maxReceiveCount")]
