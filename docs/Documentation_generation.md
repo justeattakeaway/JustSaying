@@ -1,7 +1,8 @@
 # Documentation Generation
 
 ## PlantUML
-> PlantUML is used to draw UML diagrams, using a simple and human readable text description. [plantuml.com](http://plantuml.com/)
+
+> PlantUML is used to draw UML diagrams, using a simple and human readable text description. [plantuml.com](https://plantuml.com/)
 
 ## Integration with Visual Studio Code
 
@@ -36,5 +37,5 @@
     - All images in `/docs` will be regenerated
 
 ## Further reading
-- Further reading and examples available at:
-    - https://www.planttext.com/
+
+- Further reading and examples available at <https://www.planttext.com>

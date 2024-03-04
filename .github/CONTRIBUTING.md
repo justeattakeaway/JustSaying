@@ -7,7 +7,7 @@ If you find a bug, have a feature request or even want to contribute an enhancem
 
 ## If you find what looks like a bug:
 
-* Check the [GitHub issue tracker](http://github.com/justeattakeaway/JustSaying/issues/ "JustSaying issues") to see if anyone else has reported the same issue.
+* Check the [GitHub issue tracker](https://github.com/justeattakeaway/JustSaying/issues/ "JustSaying issues") to see if anyone else has reported the same issue.
 * Make sure you are using the latest version of JustSaying
 * If you are still having problems then [create an issue](https://github.com/justeattakeaway/JustSaying/issues/new/choose) with enough information so that it can be reproduced and diagnosed
 
