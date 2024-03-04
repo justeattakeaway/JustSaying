@@ -21,7 +21,7 @@ public sealed partial class JsonSerializerOptionsExtensionsTests
     }
 
     [Fact]
-    public void GetTypeInfo_ThrowsArgumentException_WhenOptionsDoNotContainTypeInfo()
+    public void GetTypeInfo_ThrowsNotSupportedException_WhenOptionsDoNotContainTypeInfo()
     {
         var testAction = () => _sut.GetTypeInfo<TestNotContainedClass>();
         testAction.ShouldThrow<NotSupportedException>();
