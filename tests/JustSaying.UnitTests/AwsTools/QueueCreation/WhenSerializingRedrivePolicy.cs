@@ -1,4 +1,5 @@
 using JustSaying.AwsTools.QueueCreation;
+#pragma warning disable CS0618 // Type or member is obsolete
 
 namespace JustSaying.UnitTests.AwsTools.QueueCreation;
 

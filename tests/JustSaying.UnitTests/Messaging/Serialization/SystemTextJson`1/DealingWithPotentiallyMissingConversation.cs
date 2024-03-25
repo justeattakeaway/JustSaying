@@ -1,10 +1,10 @@
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 
-namespace JustSaying.UnitTests.Messaging.Serialization.SystemTextJson;
+namespace JustSaying.UnitTests.Messaging.Serialization.SystemTextJson_1;
 
 #pragma warning disable CS0618 // Type or member is obsolete
-public class DealingWithPotentiallyMissingConversation : XBehaviourTest<SystemTextJsonSerializer>
+public class DealingWithPotentiallyMissingConversation : XBehaviourTest<SystemTextJsonSerializer<MessageWithEnum>>
 #pragma warning restore CS0618 // Type or member is obsolete
 {
     private MessageWithEnum _messageOut;

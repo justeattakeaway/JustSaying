@@ -1,8 +1,10 @@
 using JustSaying.Messaging;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Sample.Restaurant.Models;
 using JustSaying.Sample.Restaurant.OrderingApi;
 using JustSaying.Sample.Restaurant.OrderingApi.Handlers;
 using JustSaying.Sample.Restaurant.OrderingApi.Models;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
@@ -23,6 +25,20 @@ try
     var builder = WebApplication.CreateBuilder(args);
     var configuration = builder.Configuration;
     builder.Host.UseSerilog();
+    builder.Services.ConfigureHttpJsonOptions(cfg =>
+    {
+        cfg.SerializerOptions.TypeInfoResolverChain.Insert(0, ApplicationJsonContext.Default);
+    });
+
+    builder.Services.Configure<MessagingJsonSerializerOptions>(cfg =>
+    {
+        cfg.SerializerOptions.TypeInfoResolverChain.Insert(0, ApplicationJsonContext.Default);
+    });
+
+    builder.Services.AddSingleton<IMessageSerializationFactory>(sp =>
+        new SystemTextJsonSerializationFactory(sp.GetRequiredService<IOptions<MessagingJsonSerializerOptions>>().Value.SerializerOptions));
+
+#pragma warning disable IL2026 // We provide SystemTextJsonSerializationFactory, which is AOT safe
     builder.Services.AddJustSaying(config =>
     {
         config.Client(x =>
@@ -65,6 +81,7 @@ try
             x.WithTopic<OrderOnItsWayEvent>();
         });
     });
+#pragma warning restore IL2026
 
     // Added a message handler for message type for 'OrderReadyEvent' on topic 'orderreadyevent' and queue 'orderreadyevent'
     builder.Services.AddJustSayingHandler<OrderReadyEvent, OrderReadyEventHandler>();
