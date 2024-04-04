@@ -8,10 +8,10 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="1.1.0" Condition=" '$(TargetFramework)' == 'net461' " />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.0.0" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" Condition=" '$(TargetFramework)' == 'net8.0' " />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageVersion Include="StructureMap" Version="4.6.0" />
-    <PackageVersion Include="System.Text.Json" Version="4.6.0" />
+    <PackageVersion Include="System.Text.Json" Version="8.0.0" />
     <PackageVersion Include="System.Threading.Channels" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup Label="Tests and Samples">
@@ -38,7 +38,7 @@
     <PackageVersion Include="Polly.Core" Version="8.2.0" />
     <PackageVersion Include="ReportGenerator" Version="5.2.4" />
     <PackageVersion Include="Serilog" Version="3.1.1" />
-    <PackageVersion Include="Serilog.AspNetCore" Version="8.0.0" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="8.0.1" />
     <PackageVersion Include="Serilog.Extensions.Logging" Version="8.0.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="5.0.1" />
     <PackageVersion Include="Serilog.Sinks.Seq" Version="6.0.0" />
