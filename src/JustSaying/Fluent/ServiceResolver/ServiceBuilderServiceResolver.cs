@@ -57,7 +57,7 @@ internal class ServiceBuilderServiceResolver(ServicesBuilder builder) : IService
 
     public T ResolveOptionalService<T>() where T : class
     {
-        if(!_built) Build();
+        if (!_built) Build();
 
         Type typeofT = typeof(T);
         if (_serviceLookup.TryGetValue(typeofT, out object result))
