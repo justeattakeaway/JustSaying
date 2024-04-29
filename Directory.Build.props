@@ -28,7 +28,6 @@
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <NoWarn>$(NoWarn);CA1062;CA1303;CA1515</NoWarn>
     <PackageIcon>package-icon.png</PackageIcon>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/justeattakeaway/JustSaying</PackageProjectUrl>
