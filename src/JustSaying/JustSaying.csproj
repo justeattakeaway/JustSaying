@@ -2,6 +2,7 @@
   <PropertyGroup>
     <IsShipping>true</IsShipping>
     <TargetFrameworks>netstandard2.0;net461;net8.0</TargetFrameworks>
+    <NoWarn>$(NoWarn);RS0016;RS0017</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj" />

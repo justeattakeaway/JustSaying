@@ -1,5 +1,6 @@
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.MessageHandling.Compression;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
@@ -105,6 +106,7 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
             SerializationRegister,
             Monitor,
             MiddlewareMap,
+            new MessageDecompressionRegistry(new List<IMessageBodyDecompressor>()),
             LoggerFactory);
 
         var defaults = new SubscriptionGroupSettingsBuilder()

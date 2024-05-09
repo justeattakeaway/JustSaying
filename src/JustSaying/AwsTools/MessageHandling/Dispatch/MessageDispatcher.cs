@@ -1,3 +1,4 @@
+using JustSaying.AwsTools.MessageHandling.Compression;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
@@ -13,6 +14,7 @@ public class MessageDispatcher : IMessageDispatcher
     private readonly IMessageSerializationRegister _serializationRegister;
     private readonly IMessageMonitor _messagingMonitor;
     private readonly MiddlewareMap _middlewareMap;
+    private readonly IMessageDecompressionRegistry _decompressionRegistry;
 
     private static ILogger _logger;
 
@@ -20,11 +22,13 @@ public class MessageDispatcher : IMessageDispatcher
         IMessageSerializationRegister serializationRegister,
         IMessageMonitor messagingMonitor,
         MiddlewareMap middlewareMap,
+        IMessageDecompressionRegistry decompressionRegistry,
         ILoggerFactory loggerFactory)
     {
         _serializationRegister = serializationRegister;
         _messagingMonitor = messagingMonitor;
         _middlewareMap = middlewareMap;
+        _decompressionRegistry = decompressionRegistry;
         _logger = loggerFactory.CreateLogger("JustSaying");
     }
 
@@ -78,6 +82,15 @@ public class MessageDispatcher : IMessageDispatcher
         {
             _logger.LogDebug("Attempting to deserialize message with serialization register {Type}",
                 _serializationRegister.GetType().FullName);
+
+            messageContext.Message.MessageAttributes.TryGetValue("Content-Encoding", out var contentEncoding);
+            if (contentEncoding is not null)
+            {
+                var decompressor = _decompressionRegistry.GetDecompressor(contentEncoding.StringValue);
+                // TODO What to do when decompressor not found?
+                var decompressedBody = decompressor.Decompress(messageContext.Message.Body);
+                messageContext.Message.Body = decompressedBody;
+            }
             var messageWithAttributes = _serializationRegister.DeserializeMessage(messageContext.Message.Body);
             return (true, messageWithAttributes.Message, messageWithAttributes.MessageAttributes);
         }

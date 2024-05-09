@@ -34,7 +34,6 @@ JustSaying.AwsTools.MessageHandling.Dispatch.IMessageDispatcher
 JustSaying.AwsTools.MessageHandling.Dispatch.IMessageDispatcher.DispatchMessageAsync(JustSaying.Messaging.Channels.Context.IQueueMessageContext messageContext, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
 JustSaying.AwsTools.MessageHandling.Dispatch.MessageDispatcher
 JustSaying.AwsTools.MessageHandling.Dispatch.MessageDispatcher.DispatchMessageAsync(JustSaying.Messaging.Channels.Context.IQueueMessageContext messageContext, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
-JustSaying.AwsTools.MessageHandling.Dispatch.MessageDispatcher.MessageDispatcher(JustSaying.Messaging.MessageSerialization.IMessageSerializationRegister serializationRegister, JustSaying.Messaging.Monitoring.IMessageMonitor messagingMonitor, JustSaying.AwsTools.MessageHandling.Dispatch.MiddlewareMap middlewareMap, Microsoft.Extensions.Logging.ILoggerFactory loggerFactory) -> void
 JustSaying.AwsTools.MessageHandling.Dispatch.MiddlewareMap
 JustSaying.AwsTools.MessageHandling.Dispatch.MiddlewareMap.Add<T>(string queueName, JustSaying.Messaging.Middleware.MiddlewareBase<JustSaying.Messaging.Middleware.HandleMessageContext, bool> middleware) -> JustSaying.AwsTools.MessageHandling.Dispatch.MiddlewareMap
 JustSaying.AwsTools.MessageHandling.Dispatch.MiddlewareMap.Contains(string queueName, System.Type messageType) -> bool

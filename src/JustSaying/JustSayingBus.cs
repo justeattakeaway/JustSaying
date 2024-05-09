@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.MessageHandling.Compression;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Extensions;
 using JustSaying.Messaging;
@@ -32,6 +33,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;
 
     private readonly IMessageMonitor _monitor;
+    private IMessageDecompressionRegistry _decompressionRegistry;
 
     private ISubscriptionGroup SubscriptionGroups { get; set; }
     public IMessageSerializationRegister SerializationRegister { get; }
@@ -55,6 +57,10 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         Config = config;
         SerializationRegister = serializationRegister;
         MiddlewareMap = new MiddlewareMap();
+        _decompressionRegistry = new MessageDecompressionRegistry(new List<IMessageBodyDecompressor>
+        {
+            new GzipMessageBodyDecompressor()
+        });
 
         _publishersByType = [];
         _subscriptionGroupSettings =
@@ -164,6 +170,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
             SerializationRegister,
             _monitor,
             MiddlewareMap,
+            _decompressionRegistry,
             _loggerFactory);
 
         var subscriptionGroupFactory = new SubscriptionGroupFactory(
