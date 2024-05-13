@@ -1,3 +1,4 @@
+*.binlog
 *.cache
 *.coverage
 *.idea
