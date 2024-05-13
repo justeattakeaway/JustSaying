@@ -1,8 +1,8 @@
 <Project>
   <ItemGroup Label="Libraries">
     <PackageVersion Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.300" />
-    <PackageVersion Include="AWSSDK.SimpleNotificationService" Version="3.7.0" />
-    <PackageVersion Include="AWSSDK.SQS" Version="3.7.0" />
+    <PackageVersion Include="AWSSDK.SimpleNotificationService" Version="3.7.300.5" />
+    <PackageVersion Include="AWSSDK.SQS" Version="3.7.300.5" />
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.1" />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="1.1.0" Condition=" '$(TargetFramework)' == 'net461' " />
@@ -35,7 +35,7 @@
     <PackageVersion Include="MinVer" Version="5.0.0" />
     <PackageVersion Include="morelinq" Version="4.2.0" />
     <PackageVersion Include="NSubstitute" Version="5.1.0" />
-    <PackageVersion Include="Polly.Core" Version="8.3.1" />
+    <PackageVersion Include="Polly.Core" Version="8.4.0" />
     <PackageVersion Include="ReportGenerator" Version="5.2.5" />
     <PackageVersion Include="Serilog" Version="3.1.1" />
     <PackageVersion Include="Serilog.AspNetCore" Version="8.0.1" />
