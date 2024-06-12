@@ -1,3 +1,4 @@
+using System.Text;
 using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -16,6 +17,7 @@ public class SqsMessagePublisher(
 {
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
+    public PublishCompressionOptions CompressionOptions { get; set; }
 
     public Uri QueueUrl { get; internal set; }
 
@@ -80,9 +82,17 @@ public class SqsMessagePublisher(
 
     private SendMessageRequest BuildSendMessageRequest(Message message, PublishMetadata metadata)
     {
+        var messageBody = GetMessageInContext(message);
+
+        var bodyByteLength = Encoding.UTF8.GetByteCount(messageBody); // We should probably also include the length of the message attributes
+        if (bodyByteLength > CompressionOptions.MaxMessageSize) // Well under 256KB
+        {
+            // compress the message body
+        }
+
         var request = new SendMessageRequest
         {
-            MessageBody = GetMessageInContext(message),
+            MessageBody = messageBody,
             QueueUrl = QueueUrl.AbsoluteUri,
         };
 
@@ -103,4 +113,11 @@ public class SqsMessagePublisher(
             QueueUrl
         });
     }
+}
+
+public sealed class PublishCompressionOptions
+{
+    public static PublishCompressionOptions Default => new();
+
+    public int MaxMessageSize { get; set; } = 248 * 1024; // 256KB - 8KB for overhead
 }

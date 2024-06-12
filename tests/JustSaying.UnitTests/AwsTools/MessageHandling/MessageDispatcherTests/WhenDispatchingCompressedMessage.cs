@@ -45,10 +45,10 @@ public class WhenDispatchingCompressedMessage
         };
 
         var decompressorRegistry =
-            new MessageDecompressionRegistry(
-                new List<IMessageBodyDecompressor>
+            new MessageCompressionRegistry(
+                new List<IMessageBodyCompression>
                 {
-                    new GzipMessageBodyDecompressor()
+                    new GzipMessageBodyCompression()
                 });
 
         var queue = new FakeSqsQueue(ct => Task.FromResult(Enumerable.Empty<Message>()));

@@ -33,7 +33,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;
 
     private readonly IMessageMonitor _monitor;
-    private IMessageDecompressionRegistry _decompressionRegistry;
+    private readonly IMessageCompressionRegistry _compressionRegistry;
 
     private ISubscriptionGroup SubscriptionGroups { get; set; }
     public IMessageSerializationRegister SerializationRegister { get; }
@@ -57,9 +57,9 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         Config = config;
         SerializationRegister = serializationRegister;
         MiddlewareMap = new MiddlewareMap();
-        _decompressionRegistry = new MessageDecompressionRegistry(new List<IMessageBodyDecompressor>
+        _compressionRegistry = new MessageCompressionRegistry(new List<IMessageBodyCompression>
         {
-            new GzipMessageBodyDecompressor()
+            new GzipMessageBodyCompression()
         });
 
         _publishersByType = [];
@@ -170,7 +170,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
             SerializationRegister,
             _monitor,
             MiddlewareMap,
-            _decompressionRegistry,
+            _compressionRegistry,
             _loggerFactory);
 
         var subscriptionGroupFactory = new SubscriptionGroupFactory(

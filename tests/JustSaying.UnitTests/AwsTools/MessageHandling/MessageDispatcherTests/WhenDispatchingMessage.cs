@@ -13,6 +13,7 @@ using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using MELT;
+using Meziantou.Xunit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -21,6 +22,7 @@ using SQSMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests;
 
+[DisableParallelization]
 public class WhenDispatchingMessage : IAsyncLifetime
 {
     private const string ExpectedQueueUrl = "http://testurl.com/queue";
@@ -96,7 +98,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
             _serializationRegister,
             _messageMonitor,
             _middlewareMap,
-            new MessageDecompressionRegistry(new List<IMessageBodyDecompressor>()),
+            new MessageCompressionRegistry(new List<IMessageBodyCompression>()),
             _loggerFactory);
 
         return dispatcher;
