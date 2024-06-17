@@ -124,7 +124,7 @@ ForEach ($libraryProject in $libraryProjects) {
 }
 
 if (($null -ne $env:CI) -And ($EnableIntegrationTests -eq $true)) {
-    $LocalStackImage = "localstack/localstack:3.3.0"
+    $LocalStackImage = "localstack/localstack:3.5.0"
     $LocalStackPort = "4566"
     & docker pull --quiet $LocalStackImage
     & docker run --detach --name localstack --publish "${LocalStackPort}:${LocalStackPort}" $LocalStackImage
