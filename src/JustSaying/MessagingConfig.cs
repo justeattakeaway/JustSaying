@@ -16,6 +16,7 @@ public class MessagingConfig : IMessagingConfig
         MessageSubjectProvider = new NonGenericMessageSubjectProvider();
         TopicNamingConvention = new DefaultNamingConventions();
         QueueNamingConvention = new DefaultNamingConventions();
+        CompressionOptions = new PublishCompressionOptions();
     }
 
     public int PublishFailureReAttempts { get; set; }
@@ -26,6 +27,7 @@ public class MessagingConfig : IMessagingConfig
     public IMessageSubjectProvider MessageSubjectProvider { get; set; }
     public ITopicNamingConvention TopicNamingConvention { get; set; }
     public IQueueNamingConvention QueueNamingConvention { get; set; }
+    public PublishCompressionOptions CompressionOptions { get; set; }
 
     public virtual void Validate()
     {

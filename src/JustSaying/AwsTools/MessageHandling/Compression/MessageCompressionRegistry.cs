@@ -1,6 +1,6 @@
 namespace JustSaying.AwsTools.MessageHandling.Compression;
 
-public class MessageCompressionRegistry : IMessageCompressionRegistry
+public sealed class MessageCompressionRegistry : IMessageCompressionRegistry
 {
     private readonly IList<IMessageBodyCompression> _compressions;
 

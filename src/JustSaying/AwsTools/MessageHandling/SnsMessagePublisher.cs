@@ -1,6 +1,8 @@
+using System.Text;
 using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
+using JustSaying.AwsTools.MessageHandling.Compression;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageSerialization;
@@ -21,6 +23,8 @@ public class SnsMessagePublisher(
     private readonly IMessageSubjectProvider _messageSubjectProvider = messageSubjectProvider;
     private readonly Func<Exception, Message, bool> _handleException = handleException;
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
+    public PublishCompressionOptions CompressionOptions { get; set; }
+    public IMessageCompressionRegistry CompressionRegistry { get; set; }
     public string Arn { get; internal set; }
     protected IAmazonSimpleNotificationService Client { get; } = client;
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
@@ -93,26 +97,54 @@ public class SnsMessagePublisher(
     private PublishRequest BuildPublishRequest(Message message, PublishMetadata metadata)
     {
         var messageToSend = _serializationRegister.Serialize(message, serializeForSnsPublishing: true);
+
+        string contentEncoding = null;
+        if (CompressionOptions?.CompressionEncoding is { } compressionEncoding && CompressionRegistry is not null)
+        {
+            var bodyByteLength = Encoding.UTF8.GetByteCount(messageToSend); // We should probably also include the length of the message attributes
+            if (bodyByteLength > (CompressionOptions?.MessageLengthThreshold ?? int.MaxValue)) // Well under 256KB
+            {
+                var compression = CompressionRegistry.GetCompression(compressionEncoding);
+                if (compression is null)
+                {
+                    throw new PublishException($"Compression encoding '{compressionEncoding}' is not registered.");
+                }
+
+                messageToSend = compression.Compress(messageToSend);
+                contentEncoding = compressionEncoding;
+            }
+        }
+
         var messageType = _messageSubjectProvider.GetSubjectForType(message.GetType());
 
-        return new PublishRequest
+        var request = new PublishRequest
         {
             TopicArn = Arn,
             Subject = messageType,
             Message = messageToSend,
-            MessageAttributes = BuildMessageAttributes(metadata)
         };
+
+        AddMessageAttributes(request.MessageAttributes, metadata);
+
+        if (contentEncoding is not null)
+        {
+            request.MessageAttributes.Add("Content-Encoding", new MessageAttributeValue { DataType = "String", StringValue = contentEncoding });
+        }
+
+        return request;
     }
 
-    private static Dictionary<string, MessageAttributeValue> BuildMessageAttributes(PublishMetadata metadata)
+    private static void AddMessageAttributes(Dictionary<string, MessageAttributeValue> requestMessageAttributes, PublishMetadata metadata)
     {
         if (metadata?.MessageAttributes == null || metadata.MessageAttributes.Count == 0)
         {
-            return null;
+            return;
         }
-        return metadata.MessageAttributes.ToDictionary(
-            source => source.Key,
-            source => BuildMessageAttributeValue(source.Value));
+
+        foreach (var attribute in metadata.MessageAttributes)
+        {
+            requestMessageAttributes.Add(attribute.Key, BuildMessageAttributeValue(attribute.Value));
+        }
     }
 
     private static MessageAttributeValue BuildMessageAttributeValue(Messaging.MessageAttributeValue value)

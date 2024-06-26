@@ -1,3 +1,4 @@
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Naming;
 
 namespace JustSaying.AwsTools.QueueCreation;
@@ -11,6 +12,7 @@ public class SqsBasicConfiguration
     public int RetryCountBeforeSendingToErrorQueue { get; set; }
     public bool ErrorQueueOptOut { get; set; }
     public ServerSideEncryption ServerSideEncryption { get; set; }
+    public PublishCompressionOptions CompressionOptions { get; set; }
     public string QueueName { get; set; }
 
     public void ApplyQueueNamingConvention<T>(IQueueNamingConvention namingConvention)

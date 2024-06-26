@@ -1,5 +1,6 @@
 using Amazon;
 using JustSaying.AwsTools;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -16,6 +17,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
 {
     private readonly TopicAddress _topicAddress;
     private Func<Exception,Message,bool> _exceptionHandler;
+    private PublishCompressionOptions _compressionOptions;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TopicAddressPublicationBuilder{T}"/> class.
@@ -42,6 +44,12 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
         return this;
     }
 
+    public TopicAddressPublicationBuilder<T> WithCompression(PublishCompressionOptions compressionOptions)
+    {
+        _compressionOptions = compressionOptions;
+        return this;
+    }
+
     /// <inheritdoc />
     public void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
     {
@@ -60,7 +68,12 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
             config.MessageSubjectProvider,
             bus.SerializationRegister,
             _exceptionHandler,
-            _topicAddress);
+            _topicAddress)
+        {
+            MessageResponseLogger = config.MessageResponseLogger,
+            CompressionRegistry = bus.CompressionRegistry,
+            CompressionOptions = _compressionOptions
+        };
         bus.AddMessagePublisher<T>(eventPublisher);
 
         logger.LogInformation(

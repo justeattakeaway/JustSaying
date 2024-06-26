@@ -1,3 +1,4 @@
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Sample.Restaurant.KitchenConsole;
 using JustSaying.Sample.Restaurant.KitchenConsole.Handlers;
 using JustSaying.Sample.Restaurant.Models;
@@ -97,13 +98,19 @@ static async Task Run()
                 config.Publications(x =>
                 {
                     // Creates the following if they do not already exist
-                    //  - a SNS topic of name `orderreadyevent` with two tags:
+                    //  - an SNS topic of name `orderreadyevent` with two tags:
                     //      - "IsOrderEvent" with no value
                     //      - "Publisher" with the value "KitchenConsole"
                     x.WithTopic<OrderReadyEvent>(cfg =>
                     {
                         cfg.WithTag("IsOrderEvent")
-                            .WithTag("Publisher", appName);
+                            .WithTag("Publisher", appName)
+                            .WithWriteConfiguration(w =>
+                                w.CompressionOptions = new PublishCompressionOptions
+                                {
+                                    CompressionEncoding = "gzip,base64", // TODO validate
+                                    MessageLengthThreshold = 0
+                                });
                     });
                     x.WithTopic<OrderDeliveredEvent>();
                 });

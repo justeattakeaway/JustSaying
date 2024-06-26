@@ -106,7 +106,7 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
             SerializationRegister,
             Monitor,
             MiddlewareMap,
-            new MessageCompressionRegistry(new List<IMessageBodyCompression>()),
+            new MessageCompressionRegistry([]),
             LoggerFactory);
 
         var defaults = new SubscriptionGroupSettingsBuilder()
