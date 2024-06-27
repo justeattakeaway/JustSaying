@@ -1,12 +1,21 @@
 using System.IO.Compression;
 using System.Text;
 
-namespace JustSaying.AwsTools.MessageHandling.Compression;
+namespace JustSaying.Messaging.Compression;
 
-public class GzipMessageBodyCompression : IMessageBodyCompression
+/// <summary>
+/// Implements GZIP compression and Base64 encoding for message bodies.
+/// </summary>
+public sealed class GzipMessageBodyCompression : IMessageBodyCompression
 {
-    public string ContentEncoding => "gzip,base64";
+    /// <summary>
+    /// Gets the content encoding identifier for GZIP compression with Base64 encoding.
+    /// </summary>
+    public string ContentEncoding => ContentEncodings.GzipBase64;
 
+    /// <summary>
+    /// Gets the content encoding identifier for GZIP compression with Base64 encoding.
+    /// </summary>
     public string Compress(string messageBody)
     {
         var contentBytes = Encoding.UTF8.GetBytes(messageBody);
@@ -19,6 +28,11 @@ public class GzipMessageBodyCompression : IMessageBodyCompression
         return Convert.ToBase64String(compressedStream.ToArray());
     }
 
+    /// <summary>
+    /// Decodes the Base64 string and decompresses the message body using GZIP.
+    /// </summary>
+    /// <param name="messageBody">The Base64 encoded and compressed message body to decompress.</param>
+    /// <returns>The decompressed message body as a string.</returns>
     public string Decompress(string messageBody)
     {
         var compressedBytes = Convert.FromBase64String(messageBody);

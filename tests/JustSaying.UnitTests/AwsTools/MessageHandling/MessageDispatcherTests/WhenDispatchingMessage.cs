@@ -1,8 +1,8 @@
 using System.Globalization;
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.AwsTools.MessageHandling.Compression;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;

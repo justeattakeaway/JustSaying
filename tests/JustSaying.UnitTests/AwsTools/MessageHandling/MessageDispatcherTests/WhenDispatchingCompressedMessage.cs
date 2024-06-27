@@ -2,8 +2,8 @@ using System.IO.Compression;
 using System.Text;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.AwsTools.MessageHandling.Compression;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
@@ -40,7 +40,7 @@ public class WhenDispatchingCompressedMessage
             Body = compressedPayload,
             MessageAttributes =
             {
-                ["Content-Encoding"] = new MessageAttributeValue { DataType = "String", StringValue = "gzip,base64" }
+                ["Content-Encoding"] = new MessageAttributeValue { DataType = "String", StringValue = ContentEncodings.GzipBase64 }
             }
         };
 

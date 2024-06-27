@@ -1,5 +1,5 @@
-using JustSaying.AwsTools.MessageHandling.Compression;
 using JustSaying.Messaging.Channels.Context;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;

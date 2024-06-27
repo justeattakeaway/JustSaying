@@ -2,8 +2,8 @@ using System.Text;
 using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using JustSaying.AwsTools.MessageHandling.Compression;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
@@ -136,8 +136,6 @@ public class SqsMessagePublisher(
 
 public sealed class PublishCompressionOptions
 {
-    public static PublishCompressionOptions Default => new();
-
-    public int MessageLengthThreshold { get; set; } = 248 * 1024; // 256KB - 8KB for overhead
+    public int MessageLengthThreshold { get; set; } = 248 * 1024; // (256KB - 8KB) for overhead
     public string CompressionEncoding { get; set; }
 }
