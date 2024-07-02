@@ -2,6 +2,7 @@ using System.Globalization;
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
@@ -95,6 +96,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
             _serializationRegister,
             _messageMonitor,
             _middlewareMap,
+            new MessageCompressionRegistry([]),
             _loggerFactory);
 
         return dispatcher;

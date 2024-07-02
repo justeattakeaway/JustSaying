@@ -109,7 +109,9 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
             bus.SerializationRegister,
             loggerFactory)
         {
-            MessageResponseLogger = config.MessageResponseLogger
+            MessageResponseLogger = config.MessageResponseLogger,
+            CompressionRegistry = bus.CompressionRegistry,
+            CompressionOptions = writeConfiguration.CompressionOptions
         };
 
 #pragma warning disable 618

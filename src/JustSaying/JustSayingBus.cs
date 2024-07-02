@@ -5,6 +5,7 @@ using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
@@ -37,6 +38,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     public IMessageSerializationRegister SerializationRegister { get; }
 
     internal MiddlewareMap MiddlewareMap { get; }
+    internal IMessageCompressionRegistry CompressionRegistry { get; }
 
     public Task Completion { get; private set; }
 
@@ -55,6 +57,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         Config = config;
         SerializationRegister = serializationRegister;
         MiddlewareMap = new MiddlewareMap();
+        CompressionRegistry = new MessageCompressionRegistry([new GzipMessageBodyCompression()]);
 
         _publishersByType = [];
         _subscriptionGroupSettings =
@@ -164,6 +167,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
             SerializationRegister,
             _monitor,
             MiddlewareMap,
+            CompressionRegistry,
             _loggerFactory);
 
         var subscriptionGroupFactory = new SubscriptionGroupFactory(

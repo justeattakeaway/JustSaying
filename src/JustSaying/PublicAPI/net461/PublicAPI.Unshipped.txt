@@ -1,0 +1,9 @@
+JustSaying.AwsTools.MessageHandling.Compression.IMessageBodyDecompressor
+JustSaying.AwsTools.MessageHandling.Compression.IMessageBodyDecompressor.ContentEncoding.get -> string
+JustSaying.AwsTools.MessageHandling.Compression.IMessageBodyDecompressor.Decompress(string messageBody) -> string
+JustSaying.AwsTools.MessageHandling.Compression.IMessageDecompressionRegistry
+JustSaying.AwsTools.MessageHandling.Compression.IMessageDecompressionRegistry.GetDecompressor(string contentEncoding) -> JustSaying.AwsTools.MessageHandling.Compression.IMessageBodyDecompressor
+JustSaying.AwsTools.MessageHandling.Compression.MessageDecompressionRegistry
+JustSaying.AwsTools.MessageHandling.Compression.MessageDecompressionRegistry.GetDecompressor(string contentEncoding) -> JustSaying.AwsTools.MessageHandling.Compression.IMessageBodyDecompressor
+JustSaying.AwsTools.MessageHandling.Compression.MessageDecompressionRegistry.MessageDecompressionRegistry(System.Collections.Generic.IList<JustSaying.AwsTools.MessageHandling.Compression.IMessageBodyDecompressor> decompressors) -> void
+JustSaying.AwsTools.MessageHandling.Dispatch.MessageDispatcher.MessageDispatcher(JustSaying.Messaging.MessageSerialization.IMessageSerializationRegister serializationRegister, JustSaying.Messaging.Monitoring.IMessageMonitor messagingMonitor, JustSaying.AwsTools.MessageHandling.Dispatch.MiddlewareMap middlewareMap, JustSaying.AwsTools.MessageHandling.Compression.IMessageDecompressionRegistry decompressionRegistry, Microsoft.Extensions.Logging.ILoggerFactory loggerFactory) -> void

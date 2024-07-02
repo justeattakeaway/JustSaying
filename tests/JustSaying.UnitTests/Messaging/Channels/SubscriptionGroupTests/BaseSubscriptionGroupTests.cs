@@ -3,6 +3,7 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
@@ -105,6 +106,7 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
             SerializationRegister,
             Monitor,
             MiddlewareMap,
+            new MessageCompressionRegistry([]),
             LoggerFactory);
 
         var defaults = new SubscriptionGroupSettingsBuilder()
