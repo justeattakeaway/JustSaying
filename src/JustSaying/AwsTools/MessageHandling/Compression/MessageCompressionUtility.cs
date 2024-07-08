@@ -30,8 +30,14 @@ internal static class MessageCompressionUtility
         {
             messageSize += Encoding.UTF8.GetByteCount(attribute.Key);
             messageSize += Encoding.UTF8.GetByteCount(attribute.Value.DataType);
-            messageSize += Encoding.UTF8.GetByteCount(attribute.Value.StringValue);
-            messageSize += attribute.Value.BinaryValue.Count;
+            if (attribute.Value.StringValue is not null)
+            {
+                messageSize += Encoding.UTF8.GetByteCount(attribute.Value.StringValue);
+            }
+            if (attribute.Value.BinaryValue is not null)
+            {
+                messageSize += attribute.Value.BinaryValue.Count;
+            }
         }
         return messageSize;
     }
