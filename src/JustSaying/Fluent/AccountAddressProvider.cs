@@ -106,7 +106,7 @@ public sealed class AccountAddressProvider
     /// <returns>The <see cref="Uri"/> for this queue.</returns>
     public Uri GetQueueUri(string queueName)
     {
-        var hostname = _regionEndpoint.GetEndpointForService("sqs").Hostname;
+        var hostname = SqsEndpointHelper.GetSqsHostname(_regionEndpoint.PartitionName, _regionEndpoint.SystemName);
         return new UriBuilder("https", hostname)
         {
             Path = $"{_accountId}/{queueName}"

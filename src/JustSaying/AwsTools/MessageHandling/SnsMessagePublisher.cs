@@ -1,4 +1,3 @@
-using System.Text;
 using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
@@ -98,21 +97,10 @@ public class SnsMessagePublisher(
     {
         var messageToSend = _serializationRegister.Serialize(message, serializeForSnsPublishing: true);
 
-        string contentEncoding = null;
-        if (CompressionOptions?.CompressionEncoding is { } compressionEncoding && CompressionRegistry is not null)
+        (string compressedMessage, string contentEncoding) = MessageCompressionUtility.CompressMessageIfNeeded(messageToSend, metadata, CompressionOptions, CompressionRegistry);
+        if (compressedMessage is not null)
         {
-            var bodyByteLength = Encoding.UTF8.GetByteCount(messageToSend); // We should probably also include the length of the message attributes
-            if (bodyByteLength > (CompressionOptions?.MessageLengthThreshold ?? int.MaxValue)) // Well under 256KB
-            {
-                var compression = CompressionRegistry.GetCompression(compressionEncoding);
-                if (compression is null)
-                {
-                    throw new PublishException($"Compression encoding '{compressionEncoding}' is not registered.");
-                }
-
-                messageToSend = compression.Compress(messageToSend);
-                contentEncoding = compressionEncoding;
-            }
+            messageToSend = compressedMessage;
         }
 
         var messageType = _messageSubjectProvider.GetSubjectForType(message.GetType());

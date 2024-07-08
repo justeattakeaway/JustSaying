@@ -1,4 +1,3 @@
-using System.Text;
 using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -87,28 +86,19 @@ public class SqsMessagePublisher(
     {
         var messageBody = GetMessageInContext(message);
 
-        string contentEncoding = null;
-        if (CompressionOptions?.CompressionEncoding is { } compressionEncoding && CompressionRegistry is not null)
+        (string compressedMessage, string contentEncoding) = MessageCompressionUtility.CompressMessageIfNeeded(messageBody, metadata, CompressionOptions, CompressionRegistry);
+        if (compressedMessage is not null)
         {
-            var bodyByteLength = Encoding.UTF8.GetByteCount(messageBody); // We should probably also include the length of the message attributes
-            if (bodyByteLength > (CompressionOptions?.MessageLengthThreshold ?? int.MaxValue)) // Well under 256KB
-            {
-                var compression = CompressionRegistry.GetCompression(compressionEncoding);
-                if (compression is null)
-                {
-                    throw new PublishException($"Compression encoding '{compressionEncoding}' is not registered.");
-                }
-
-                messageBody = compression.Compress(messageBody);
-                contentEncoding = compressionEncoding;
-            }
+            messageBody = compressedMessage;
         }
 
         var request = new SendMessageRequest
         {
             MessageBody = messageBody,
-            QueueUrl = QueueUrl.AbsoluteUri,
+            QueueUrl = QueueUrl.AbsoluteUri
         };
+
+        AddMessageAttributes(request.MessageAttributes, metadata);
 
         if (contentEncoding is not null)
         {
@@ -125,6 +115,38 @@ public class SqsMessagePublisher(
 
     private string GetMessageInContext(Message message) => serializationRegister.Serialize(message, serializeForSnsPublishing: false);
 
+    private static void AddMessageAttributes(Dictionary<string, MessageAttributeValue> requestMessageAttributes, PublishMetadata metadata)
+    {
+        if (metadata?.MessageAttributes == null || metadata.MessageAttributes.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var attribute in metadata.MessageAttributes)
+        {
+            requestMessageAttributes.Add(attribute.Key, BuildMessageAttributeValue(attribute.Value));
+        }
+    }
+
+    private static MessageAttributeValue BuildMessageAttributeValue(Messaging.MessageAttributeValue value)
+    {
+        if (value == null)
+        {
+            return null;
+        }
+
+        var binaryValueStream = value.BinaryValue != null
+            ? new MemoryStream([.. value.BinaryValue], false)
+            : null;
+
+        return new MessageAttributeValue
+        {
+            StringValue = value.StringValue,
+            BinaryValue = binaryValueStream,
+            DataType = value.DataType
+        };
+    }
+
     public InterrogationResult Interrogate()
     {
         return new InterrogationResult(new
@@ -132,10 +154,4 @@ public class SqsMessagePublisher(
             QueueUrl
         });
     }
-}
-
-public sealed class PublishCompressionOptions
-{
-    public int MessageLengthThreshold { get; set; } = 248 * 1024; // (256KB - 8KB) for overhead
-    public string CompressionEncoding { get; set; }
 }
