@@ -32,6 +32,19 @@ public class MessageDispatcher : IMessageDispatcher
         _logger = loggerFactory.CreateLogger("JustSaying");
     }
 
+    public MessageDispatcher(
+        IMessageSerializationRegister serializationRegister,
+        IMessageMonitor messagingMonitor,
+        MiddlewareMap middlewareMap,
+        ILoggerFactory loggerFactory) : this(
+        serializationRegister,
+        messagingMonitor,
+        middlewareMap,
+        null,
+        loggerFactory)
+    {
+    }
+
     public async Task DispatchMessageAsync(
         IQueueMessageContext messageContext,
         CancellationToken cancellationToken)

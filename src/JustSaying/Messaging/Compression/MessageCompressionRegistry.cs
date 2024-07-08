@@ -13,7 +13,7 @@ public sealed class MessageCompressionRegistry : IMessageCompressionRegistry
     /// <param name="compressions">A list of available compression methods.</param>
     public MessageCompressionRegistry(IList<IMessageBodyCompression> compressions)
     {
-        _compressions = compressions;
+        _compressions = compressions ?? throw new ArgumentNullException(nameof(compressions));
     }
 
     /// <summary>
