@@ -171,6 +171,8 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
 
         var writeConfiguration = new SnsWriteConfiguration();
         ConfigureWrites?.Invoke(writeConfiguration);
+        writeConfiguration.CompressionOptions ??= bus.Config.CompressionOptions;
+
         if (writeConfiguration.CompressionOptions?.CompressionEncoding is { } compressionEncoding)
         {
             if (bus.CompressionRegistry.GetCompression(compressionEncoding) is null)

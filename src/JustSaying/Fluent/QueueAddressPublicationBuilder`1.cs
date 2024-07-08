@@ -27,9 +27,15 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
         _queueAddress = queueAddress;
     }
 
+    /// <summary>
+    /// Sets the compression options for publishing messages.
+    /// </summary>
+    /// <param name="compressionOptions">The compression options to use when publishing messages.</param>
+    /// <returns>The current instance of <see cref="QueueAddressPublicationBuilder{T}"/> for method chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="compressionOptions"/> is null.</exception>
     public QueueAddressPublicationBuilder<T> WithCompression(PublishCompressionOptions compressionOptions)
     {
-        _compressionOptions = compressionOptions;
+        _compressionOptions = compressionOptions ?? throw new ArgumentNullException(nameof(compressionOptions));
         return this;
     }
 
@@ -51,7 +57,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
         {
             MessageResponseLogger = config.MessageResponseLogger,
             CompressionRegistry = bus.CompressionRegistry,
-            CompressionOptions = _compressionOptions
+            CompressionOptions = _compressionOptions ?? bus.Config.CompressionOptions
         };
 
         bus.AddMessagePublisher<T>(eventPublisher);

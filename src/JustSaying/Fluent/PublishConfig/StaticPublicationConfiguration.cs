@@ -38,7 +38,7 @@ internal sealed class StaticPublicationConfiguration(
         {
             MessageResponseLogger = bus.Config.MessageResponseLogger,
             CompressionRegistry = bus.CompressionRegistry,
-            CompressionOptions = writeConfiguration.CompressionOptions,
+            CompressionOptions = writeConfiguration.CompressionOptions ?? bus.Config.CompressionOptions
         };
 
         var snsTopic = new SnsTopicByName(
