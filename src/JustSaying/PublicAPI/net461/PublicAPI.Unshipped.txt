@@ -1,6 +1,5 @@
 const JustSaying.Messaging.Compression.ContentEncodings.GzipBase64 = "gzip,base64" -> string
 JustSaying.AwsTools.MessageHandling.Dispatch.MessageDispatcher.MessageDispatcher(JustSaying.Messaging.MessageSerialization.IMessageSerializationRegister serializationRegister, JustSaying.Messaging.Monitoring.IMessageMonitor messagingMonitor, JustSaying.AwsTools.MessageHandling.Dispatch.MiddlewareMap middlewareMap, JustSaying.Messaging.Compression.IMessageCompressionRegistry compressionRegistry, Microsoft.Extensions.Logging.ILoggerFactory loggerFactory) -> void
-JustSaying.AwsTools.MessageHandling.Dispatch.MessageDispatcher.MessageDispatcher(JustSaying.Messaging.MessageSerialization.IMessageSerializationRegister serializationRegister, JustSaying.Messaging.Monitoring.IMessageMonitor messagingMonitor, JustSaying.AwsTools.MessageHandling.Dispatch.MiddlewareMap middlewareMap, Microsoft.Extensions.Logging.ILoggerFactory loggerFactory) -> void
 JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
 JustSaying.AwsTools.MessageHandling.PublishCompressionOptions.CompressionEncoding.get -> string
 JustSaying.AwsTools.MessageHandling.PublishCompressionOptions.CompressionEncoding.set -> void
@@ -15,7 +14,6 @@ JustSaying.AwsTools.MessageHandling.SqsMessagePublisher.CompressionOptions.get -
 JustSaying.AwsTools.MessageHandling.SqsMessagePublisher.CompressionOptions.set -> void
 JustSaying.AwsTools.MessageHandling.SqsMessagePublisher.CompressionRegistry.get -> JustSaying.Messaging.Compression.IMessageCompressionRegistry
 JustSaying.AwsTools.MessageHandling.SqsMessagePublisher.CompressionRegistry.set -> void
-JustSaying.AwsTools.MessageHandling.SqsMessagePublisher.GetMessageInContext(JustSaying.Models.Message message) -> string
 JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.CompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
 JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.CompressionOptions.set -> void
 JustSaying.AwsTools.QueueCreation.SqsBasicConfiguration.CompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
