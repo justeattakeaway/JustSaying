@@ -100,7 +100,11 @@ public class MessageDispatcher : IMessageDispatcher
             if (contentEncoding is not null)
             {
                 var decompressor = _compressionRegistry.GetCompression(contentEncoding.StringValue);
-                // TODO What to do when decompressor not found?
+                if (decompressor is null)
+                {
+                    throw new PublishException($"Compression encoding '{contentEncoding.StringValue}' is not registered.");
+                }
+
                 var decompressedBody = decompressor.Decompress(messageContext.Message.Body);
                 messageContext.Message.Body = decompressedBody;
             }

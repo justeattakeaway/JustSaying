@@ -73,23 +73,6 @@ public class MessageCompressionUtilityTests
     }
 
     [Fact]
-    public void CompressMessageIfNeeded_UnregisteredCompression_ThrowsPublishException()
-    {
-        // Arrange
-        var message = new string('a', 1000);
-        var metadata = new PublishMetadata();
-        var compressionOptions = new PublishCompressionOptions
-        {
-            CompressionEncoding = "unknown",
-            MessageLengthThreshold = 500
-        };
-
-        // Act & Assert
-        Assert.Throws<PublishException>(() =>
-            MessageCompressionUtility.CompressMessageIfNeeded(message, metadata, compressionOptions, _compressionRegistry));
-    }
-
-    [Fact]
     public void CompressMessageIfNeeded_WithMessageAttributes_CalculatesTotalSize()
     {
         // Arrange

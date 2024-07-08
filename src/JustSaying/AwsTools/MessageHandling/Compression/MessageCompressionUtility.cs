@@ -71,14 +71,9 @@ internal static class MessageCompressionUtility
     /// <param name="compressionEncoding">The encoding of the desired compression algorithm.</param>
     /// <param name="compressionRegistry">The registry containing available compression algorithms.</param>
     /// <returns>The compression algorithm corresponding to the specified encoding.</returns>
-    /// <exception cref="PublishException">Thrown when the specified compression encoding is not registered.</exception>
     private static IMessageBodyCompression GetCompressionAlgorithm(string compressionEncoding, IMessageCompressionRegistry compressionRegistry)
     {
         var compression = compressionRegistry.GetCompression(compressionEncoding);
-        if (compression is null)
-        {
-            throw new PublishException($"Compression encoding '{compressionEncoding}' is not registered.");
-        }
         return compression;
     }
 }
