@@ -113,7 +113,7 @@ public class SqsMessagePublisher(
         return request;
     }
 
-    private string GetMessageInContext(Message message) => serializationRegister.Serialize(message, serializeForSnsPublishing: false);
+    public string GetMessageInContext(Message message) => serializationRegister.Serialize(message, serializeForSnsPublishing: false);
 
     private static void AddMessageAttributes(Dictionary<string, MessageAttributeValue> requestMessageAttributes, PublishMetadata metadata)
     {

@@ -15,6 +15,7 @@ JustSaying.AwsTools.MessageHandling.SqsMessagePublisher.CompressionOptions.get -
 JustSaying.AwsTools.MessageHandling.SqsMessagePublisher.CompressionOptions.set -> void
 JustSaying.AwsTools.MessageHandling.SqsMessagePublisher.CompressionRegistry.get -> JustSaying.Messaging.Compression.IMessageCompressionRegistry
 JustSaying.AwsTools.MessageHandling.SqsMessagePublisher.CompressionRegistry.set -> void
+JustSaying.AwsTools.MessageHandling.SqsMessagePublisher.GetMessageInContext(JustSaying.Models.Message message) -> string
 JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.CompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
 JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.CompressionOptions.set -> void
 JustSaying.AwsTools.QueueCreation.SqsBasicConfiguration.CompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
