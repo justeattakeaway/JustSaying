@@ -57,7 +57,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
         {
             MessageResponseLogger = config.MessageResponseLogger,
             CompressionRegistry = bus.CompressionRegistry,
-            CompressionOptions = _compressionOptions ?? bus.Config.CompressionOptions
+            CompressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions
         };
         CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, eventPublisher.CompressionOptions);
 

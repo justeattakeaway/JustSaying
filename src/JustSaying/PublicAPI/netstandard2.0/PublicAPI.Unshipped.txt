@@ -20,8 +20,8 @@ JustSaying.AwsTools.QueueCreation.SqsBasicConfiguration.CompressionOptions.get -
 JustSaying.AwsTools.QueueCreation.SqsBasicConfiguration.CompressionOptions.set -> void
 JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithCompression(JustSaying.AwsTools.MessageHandling.PublishCompressionOptions compressionOptions) -> JustSaying.Fluent.QueueAddressPublicationBuilder<T>
 JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithCompression(JustSaying.AwsTools.MessageHandling.PublishCompressionOptions compressionOptions) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
-JustSaying.IMessagingConfig.CompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
-JustSaying.IMessagingConfig.CompressionOptions.set -> void
+JustSaying.IMessagingConfig.DefaultCompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
+JustSaying.IMessagingConfig.DefaultCompressionOptions.set -> void
 JustSaying.Messaging.Compression.ContentEncodings
 JustSaying.Messaging.Compression.GzipMessageBodyCompression
 JustSaying.Messaging.Compression.GzipMessageBodyCompression.Compress(string messageBody) -> string
@@ -37,5 +37,5 @@ JustSaying.Messaging.Compression.IMessageCompressionRegistry.GetCompression(stri
 JustSaying.Messaging.Compression.MessageCompressionRegistry
 JustSaying.Messaging.Compression.MessageCompressionRegistry.GetCompression(string contentEncoding) -> JustSaying.Messaging.Compression.IMessageBodyCompression
 JustSaying.Messaging.Compression.MessageCompressionRegistry.MessageCompressionRegistry(System.Collections.Generic.IList<JustSaying.Messaging.Compression.IMessageBodyCompression> compressions) -> void
-JustSaying.MessagingConfig.CompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
-JustSaying.MessagingConfig.CompressionOptions.set -> void
+JustSaying.MessagingConfig.DefaultCompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
+JustSaying.MessagingConfig.DefaultCompressionOptions.set -> void
