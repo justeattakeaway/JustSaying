@@ -9,18 +9,19 @@ internal static class MessageCompressionUtility
     public static (string compressedMessage, string contentEncoding) CompressMessageIfNeeded(string message, PublishMetadata metadata, PublishCompressionOptions compressionOptions, IMessageCompressionRegistry compressionRegistry)
     {
         string contentEncoding = null;
+        string compressedMessage = null;
         if (compressionOptions?.CompressionEncoding is { } compressionEncoding && compressionRegistry is not null)
         {
             var messageSize = CalculateTotalMessageSize(metadata, message);
             if (messageSize > compressionOptions.MessageLengthThreshold)
             {
                 var compression = GetCompressionAlgorithm(compressionEncoding, compressionRegistry);
-                message = compression.Compress(message);
+                compressedMessage = compression.Compress(message);
                 contentEncoding = compressionEncoding;
             }
         }
-
-        return (message, contentEncoding);
+        
+        return (compressedMessage, contentEncoding);
     }
 
     private static int CalculateTotalMessageSize(PublishMetadata metadata, string message)
