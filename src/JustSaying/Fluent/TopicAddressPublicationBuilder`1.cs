@@ -80,6 +80,8 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
             CompressionRegistry = bus.CompressionRegistry,
             CompressionOptions = _compressionOptions ?? bus.Config.CompressionOptions
         };
+        CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, eventPublisher.CompressionOptions);
+        
         bus.AddMessagePublisher<T>(eventPublisher);
 
         logger.LogInformation(

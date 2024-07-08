@@ -172,14 +172,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
         var writeConfiguration = new SnsWriteConfiguration();
         ConfigureWrites?.Invoke(writeConfiguration);
         writeConfiguration.CompressionOptions ??= bus.Config.CompressionOptions;
-
-        if (writeConfiguration.CompressionOptions?.CompressionEncoding is { } compressionEncoding)
-        {
-            if (bus.CompressionRegistry.GetCompression(compressionEncoding) is null)
-            {
-                throw new InvalidOperationException($"Compression encoding '{compressionEncoding}' is not registered with the bus.");
-            }
-        }
+        CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, writeConfiguration.CompressionOptions);
 
         var client = proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region));
 

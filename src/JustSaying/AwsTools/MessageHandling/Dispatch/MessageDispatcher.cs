@@ -102,7 +102,7 @@ public class MessageDispatcher : IMessageDispatcher
                 var decompressor = _compressionRegistry.GetCompression(contentEncoding.StringValue);
                 if (decompressor is null)
                 {
-                    throw new PublishException($"Compression encoding '{contentEncoding.StringValue}' is not registered.");
+                    throw new InvalidOperationException($"Compression encoding '{contentEncoding.StringValue}' is not registered.");
                 }
 
                 var decompressedBody = decompressor.Decompress(messageContext.Message.Body);

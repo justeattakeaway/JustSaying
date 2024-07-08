@@ -1,4 +1,5 @@
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Fluent;
 using JustSaying.Naming;
 
 namespace JustSaying.AwsTools.QueueCreation;
