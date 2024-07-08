@@ -44,19 +44,24 @@ internal static class MessageCompressionUtility
     private static int CalculateTotalMessageSize(string message, PublishMetadata metadata)
     {
         var messageSize = Encoding.UTF8.GetByteCount(message);
-        foreach (var attribute in metadata.MessageAttributes)
+        if (metadata?.MessageAttributes != null)
         {
-            messageSize += Encoding.UTF8.GetByteCount(attribute.Key);
-            messageSize += Encoding.UTF8.GetByteCount(attribute.Value.DataType);
-            if (attribute.Value.StringValue is not null)
+            foreach (var attribute in metadata.MessageAttributes)
             {
-                messageSize += Encoding.UTF8.GetByteCount(attribute.Value.StringValue);
-            }
-            if (attribute.Value.BinaryValue is not null)
-            {
-                messageSize += attribute.Value.BinaryValue.Count;
+                messageSize += Encoding.UTF8.GetByteCount(attribute.Key);
+                messageSize += Encoding.UTF8.GetByteCount(attribute.Value.DataType);
+                if (attribute.Value.StringValue is not null)
+                {
+                    messageSize += Encoding.UTF8.GetByteCount(attribute.Value.StringValue);
+                }
+
+                if (attribute.Value.BinaryValue is not null)
+                {
+                    messageSize += attribute.Value.BinaryValue.Count;
+                }
             }
         }
+
         return messageSize;
     }
 
