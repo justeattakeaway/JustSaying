@@ -1,6 +1,7 @@
 using System.Threading.Channels;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.Interrogation;
@@ -57,6 +58,7 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         _channel = Channel.CreateBounded<IQueueMessageContext>(bufferSize);
 
         _requestMessageAttributeNames.Add(MessageSystemAttributeName.ApproximateReceiveCount);
+        _requestMessageAttributeNames.Add(MessageAttributeKeys.ContentEncoding);
     }
 
     /// <summary>
@@ -141,8 +143,6 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
                 QueueName = _sqsQueueReader.QueueName,
                 RegionName = _sqsQueueReader.RegionSystemName,
             };
-
-            _requestMessageAttributeNames.Add("content");
 
             messages = await _sqsMiddleware.RunAsync(context,
                     async ct =>

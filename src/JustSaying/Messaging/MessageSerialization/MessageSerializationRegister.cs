@@ -1,16 +1,32 @@
 using System.Collections.Concurrent;
+using System.Text;
+using System.Text.Json;
+using JustSaying.AwsTools;
+using JustSaying.Messaging.Compression;
 using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialization;
 
-public class MessageSerializationRegister(
-    IMessageSubjectProvider messageSubjectProvider,
-    IMessageSerializationFactory serializationFactory) : IMessageSerializationRegister
+public class MessageSerializationRegister : IMessageSerializationRegister
 {
-    private readonly IMessageSubjectProvider _messageSubjectProvider = messageSubjectProvider ?? throw new ArgumentNullException(nameof(messageSubjectProvider));
-    private readonly IMessageSerializationFactory _serializationFactory = serializationFactory;
+    private readonly IMessageSubjectProvider _messageSubjectProvider;
+    private readonly IMessageSerializationFactory _serializationFactory;
+    private readonly IMessageCompressionRegistry _compressionRegistry;
     private readonly ConcurrentDictionary<string, Lazy<TypeSerializer>> _typeSerializersBySubject = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<IMessageSerializer> _messageSerializers = new();
+
+    public MessageSerializationRegister(IMessageSubjectProvider messageSubjectProvider,
+        IMessageSerializationFactory serializationFactory) : this(messageSubjectProvider, serializationFactory, null)
+    {
+    }
+
+    public MessageSerializationRegister(IMessageSubjectProvider messageSubjectProvider,
+        IMessageSerializationFactory serializationFactory, IMessageCompressionRegistry compressionRegistry)
+    {
+        _messageSubjectProvider = messageSubjectProvider ?? throw new ArgumentNullException(nameof(messageSubjectProvider));
+        _serializationFactory = serializationFactory;
+        _compressionRegistry = compressionRegistry;
+    }
 
     public void AddSerializer<T>() where T : Message
     {
@@ -44,6 +60,46 @@ public class MessageSerializationRegister(
 
             TypeSerializer typeSerializer = lazyTypeSerializer.Value;
             var attributes = typeSerializer.Serializer.GetMessageAttributes(body);
+            // TODO This is bad and needs designing around...
+            var contentEncoding = attributes.Get(MessageAttributeKeys.ContentEncoding);
+            if (contentEncoding is not null)
+            {
+                var decompressor = _compressionRegistry.GetCompression(contentEncoding.StringValue);
+                if (decompressor is null)
+                {
+                    throw new InvalidOperationException($"Compression encoding '{contentEncoding.StringValue}' is not registered.");
+                }
+
+                using var document = JsonDocument.Parse(body);
+                JsonElement element = document.RootElement.GetProperty("Message");
+                string json = element.ToString();
+
+                var decompressedBody = decompressor.Decompress(json);
+
+                using var memoryStream = new MemoryStream();
+                using (var jsonWriter = new Utf8JsonWriter(memoryStream))
+                {
+                    jsonWriter.WriteStartObject();
+                    foreach (var property in document.RootElement.EnumerateObject())
+                    {
+                        if (property.Name == "Message")
+                        {
+                            jsonWriter.WritePropertyName("Message");
+                            jsonWriter.WriteStringValue(decompressedBody);
+                        }
+                        else
+                        {
+                            property.WriteTo(jsonWriter);
+                        }
+                    }
+                    jsonWriter.WriteEndObject();
+                }
+
+                // Update body with the new document string
+                body = Encoding.UTF8.GetString(memoryStream.ToArray());
+
+            }
+
             var message = typeSerializer.Serializer.Deserialize(body, typeSerializer.Type);
             return new MessageWithAttributes(message, attributes);
         }

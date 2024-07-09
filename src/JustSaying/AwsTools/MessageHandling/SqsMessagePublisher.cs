@@ -102,7 +102,7 @@ public class SqsMessagePublisher(
 
         if (contentEncoding is not null)
         {
-            request.MessageAttributes.Add("Content-Encoding", new MessageAttributeValue { DataType = "String", StringValue = contentEncoding });
+            request.MessageAttributes.Add(MessageAttributeKeys.ContentEncoding, new MessageAttributeValue { DataType = "String", StringValue = contentEncoding });
         }
 
         if (metadata?.Delay != null)

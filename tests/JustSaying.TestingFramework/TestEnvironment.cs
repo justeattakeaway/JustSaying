@@ -45,13 +45,15 @@ public static class TestEnvironment
     {
         get
         {
-            var awsEnv = Environment.GetEnvironmentVariable("AWS_SERVICE_URL");
-            if (string.IsNullOrWhiteSpace(awsEnv))
-            {
-                return null;
-            }
-
-            return new Uri(awsEnv, UriKind.Absolute);
+            // TODO Undo this change
+            return new Uri("http://localhost:4566", UriKind.Absolute);
+            // var awsEnv = Environment.GetEnvironmentVariable("AWS_SERVICE_URL");
+            // if (string.IsNullOrWhiteSpace(awsEnv))
+            // {
+            //     return null;
+            // }
+            //
+            // return new Uri(awsEnv, UriKind.Absolute);
         }
     }
 

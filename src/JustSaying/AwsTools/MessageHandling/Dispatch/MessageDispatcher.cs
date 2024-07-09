@@ -96,18 +96,6 @@ public class MessageDispatcher : IMessageDispatcher
             _logger.LogDebug("Attempting to deserialize message with serialization register {Type}",
                 _serializationRegister.GetType().FullName);
 
-            messageContext.Message.MessageAttributes.TryGetValue("Content-Encoding", out var contentEncoding);
-            if (contentEncoding is not null)
-            {
-                var decompressor = _compressionRegistry.GetCompression(contentEncoding.StringValue);
-                if (decompressor is null)
-                {
-                    throw new InvalidOperationException($"Compression encoding '{contentEncoding.StringValue}' is not registered.");
-                }
-
-                var decompressedBody = decompressor.Decompress(messageContext.Message.Body);
-                messageContext.Message.Body = decompressedBody;
-            }
             var messageWithAttributes = _serializationRegister.DeserializeMessage(messageContext.Message.Body);
             return (true, messageWithAttributes.Message, messageWithAttributes.MessageAttributes);
         }

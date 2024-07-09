@@ -19,13 +19,16 @@ public class WhenDispatchingCompressedMessage
     {
         // Arrange
         var originalMessage = new SimpleMessage { Id = Guid.NewGuid() };
+        var decompressorRegistry =
+            new MessageCompressionRegistry([new GzipMessageBodyCompression()]);
         var messageSerializer = new MessageSerializationRegister(
             new NonGenericMessageSubjectProvider(),
-            new SystemTextJsonSerializationFactory());
+            new SystemTextJsonSerializationFactory(),
+            decompressorRegistry);
 
         messageSerializer.AddSerializer<SimpleMessage>();
 
-        var payload = messageSerializer.Serialize(originalMessage, false);
+        var payload = messageSerializer.Serialize(originalMessage, true);
 
         var memoryStream = new MemoryStream();
         await using (var gzipStream = new GZipStream(memoryStream, CompressionMode.Compress))
@@ -43,9 +46,6 @@ public class WhenDispatchingCompressedMessage
                 ["Content-Encoding"] = new MessageAttributeValue { DataType = "String", StringValue = ContentEncodings.GzipBase64 }
             }
         };
-
-        var decompressorRegistry =
-            new MessageCompressionRegistry([new GzipMessageBodyCompression()]);
 
         var queue = new FakeSqsQueue(ct => Task.FromResult(Enumerable.Empty<Message>()));
         var queueReader = new SqsQueueReader(queue);

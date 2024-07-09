@@ -116,7 +116,7 @@ public class SnsMessagePublisher(
 
         if (contentEncoding is not null)
         {
-            request.MessageAttributes.Add("Content-Encoding", new MessageAttributeValue { DataType = "String", StringValue = contentEncoding });
+            request.MessageAttributes.Add(MessageAttributeKeys.ContentEncoding, new MessageAttributeValue { DataType = "String", StringValue = contentEncoding });
         }
 
         return request;
