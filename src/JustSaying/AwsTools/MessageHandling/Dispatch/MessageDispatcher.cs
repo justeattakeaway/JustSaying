@@ -1,3 +1,6 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Context;
 using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
@@ -14,7 +17,9 @@ public class MessageDispatcher : IMessageDispatcher
     private readonly IMessageSerializationRegister _serializationRegister;
     private readonly IMessageMonitor _messagingMonitor;
     private readonly MiddlewareMap _middlewareMap;
-    private readonly IMessageCompressionRegistry _compressionRegistry;
+    private readonly MessageCompressionRegistry _compressionRegistry;
+    // Temporary until we can remove the `IMessageSerializer` interface in favour of a cleaner design
+    private readonly SystemTextJsonSerializer _jsonSerializer = new();
 
     private static ILogger _logger;
 
@@ -22,7 +27,7 @@ public class MessageDispatcher : IMessageDispatcher
         IMessageSerializationRegister serializationRegister,
         IMessageMonitor messagingMonitor,
         MiddlewareMap middlewareMap,
-        IMessageCompressionRegistry compressionRegistry,
+        MessageCompressionRegistry compressionRegistry,
         ILoggerFactory loggerFactory)
     {
         _serializationRegister = serializationRegister;
@@ -96,8 +101,12 @@ public class MessageDispatcher : IMessageDispatcher
             _logger.LogDebug("Attempting to deserialize message with serialization register {Type}",
                 _serializationRegister.GetType().FullName);
 
-            var messageWithAttributes = _serializationRegister.DeserializeMessage(messageContext.Message.Body);
-            return (true, messageWithAttributes.Message, messageWithAttributes.MessageAttributes);
+            var body = messageContext.Message.Body;
+
+            var attributes = MessageAttributes(messageContext, ref body);
+
+            var messageWithAttributes = _serializationRegister.DeserializeMessage(body);
+            return (true, messageWithAttributes.Message, attributes);
         }
         catch (MessageFormatNotSupportedException ex)
         {
@@ -123,5 +132,73 @@ public class MessageDispatcher : IMessageDispatcher
 
             return (false, null, null);
         }
+    }
+
+    private MessageAttributes MessageAttributes(IQueueMessageContext messageContext, ref string body)
+    {
+        bool isRawMessage = IsRawMessage(body);
+        var attributes = isRawMessage ? GetRawMessageAttributes(messageContext) : _jsonSerializer.GetMessageAttributes(body);
+
+        var contentEncoding = attributes.Get(MessageAttributeKeys.ContentEncoding);
+        if (contentEncoding is not null)
+        {
+            var decompressor = _compressionRegistry.GetCompression(contentEncoding.StringValue);
+            if (decompressor is null)
+            {
+                throw new InvalidOperationException($"Compression encoding '{contentEncoding.StringValue}' is not registered.");
+            }
+
+            var jsonNode = JsonNode.Parse(body)!;
+            var messageNode = jsonNode["Message"]!;
+            string json = messageNode.ToString();
+
+            var decompressedBody = decompressor.Decompress(json);
+
+            jsonNode["Message"] = JsonValue.Create(decompressedBody);
+            body = jsonNode.ToJsonString();
+        }
+
+        return attributes;
+    }
+
+    private static bool IsRawMessage(string body)
+    {
+        bool isRawMessage = true;
+        using var jsonDocument = JsonDocument.Parse(body);
+        if (jsonDocument.RootElement.TryGetProperty("Type", out var typeElement))
+        {
+            var messageType = typeElement.GetString();
+            if (messageType is "Notification")
+            {
+                isRawMessage = false;
+            }
+        }
+
+        return isRawMessage;
+    }
+
+    private static MessageAttributes GetRawMessageAttributes(IQueueMessageContext messageContext)
+    {
+        Dictionary<string, MessageAttributeValue> rawAttributes = new ();
+        if (messageContext.Message.MessageAttributes is null)
+        {
+            return new MessageAttributes();
+        }
+
+        foreach (var messageMessageAttribute in messageContext.Message.MessageAttributes)
+        {
+            var dataType = messageMessageAttribute.Value.DataType;
+            var dataValue = messageMessageAttribute.Value.StringValue;
+            var isString = dataType == "String";
+            var messageAttributeValue = new MessageAttributeValue
+            {
+                DataType = dataType,
+                StringValue = isString ? dataValue : null,
+                BinaryValue = !isString ? Convert.FromBase64String(dataValue) : null
+            };
+            rawAttributes.Add(messageMessageAttribute.Key, messageAttributeValue);
+        }
+
+        return new MessageAttributes(rawAttributes);
     }
 }

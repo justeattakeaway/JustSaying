@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Nodes;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Compression;
 
@@ -14,10 +15,11 @@ internal static class MessageCompressionUtility
     /// </summary>
     /// <param name="message">The original message to potentially compress.</param>
     /// <param name="metadata">Metadata associated with the message.</param>
+    /// <param name="destinationType">The type of destination (<see cref="PublishDestinationType.Topic"/> or <see cref="PublishDestinationType.Queue"/>) for the message.</param>
     /// <param name="compressionOptions">Options specifying when and how to compress.</param>
     /// <param name="compressionRegistry">Registry of available compression algorithms.</param>
     /// <returns>A tuple containing the compressed message (or null if not compressed) and the content encoding used (or null if not compressed).</returns>
-    public static (string compressedMessage, string contentEncoding) CompressMessageIfNeeded(string message, PublishMetadata metadata, PublishCompressionOptions compressionOptions, IMessageCompressionRegistry compressionRegistry)
+    public static (string compressedMessage, string contentEncoding) CompressMessageIfNeeded(string message, PublishMetadata metadata, PublishDestinationType destinationType, PublishCompressionOptions compressionOptions, MessageCompressionRegistry compressionRegistry)
     {
         string contentEncoding = null;
         string compressedMessage = null;
@@ -26,9 +28,32 @@ internal static class MessageCompressionUtility
             var messageSize = CalculateTotalMessageSize(message, metadata);
             if (messageSize > compressionOptions.MessageLengthThreshold)
             {
-                var compression = GetCompressionAlgorithm(compressionEncoding, compressionRegistry);
+                var compression = compressionRegistry.GetCompression(compressionEncoding);
+                if (compression is null)
+                {
+                    throw new InvalidOperationException($"No compression algorithm registered for encoding '{compressionEncoding}'.");
+                }
+
+                JsonNode jsonNode = null;
+                if (destinationType == PublishDestinationType.Queue)
+                {
+                    jsonNode = JsonNode.Parse(message);
+                    if (jsonNode is JsonObject jsonObject && jsonObject.TryGetPropertyValue("Message", out var messageNode))
+                    {
+                        message = messageNode!.GetValue<string>();
+                    }
+                }
                 compressedMessage = compression.Compress(message);
                 contentEncoding = compressionEncoding;
+
+                if (destinationType == PublishDestinationType.Queue)
+                {
+                    if (jsonNode is JsonObject jsonObject)
+                    {
+                        jsonObject["Message"] = compressedMessage;
+                        compressedMessage = jsonObject.ToJsonString();
+                    }
+                }
             }
         }
 
@@ -63,17 +88,5 @@ internal static class MessageCompressionUtility
         }
 
         return messageSize;
-    }
-
-    /// <summary>
-    /// Retrieves the compression algorithm for the specified encoding from the compression registry.
-    /// </summary>
-    /// <param name="compressionEncoding">The encoding of the desired compression algorithm.</param>
-    /// <param name="compressionRegistry">The registry containing available compression algorithms.</param>
-    /// <returns>The compression algorithm corresponding to the specified encoding.</returns>
-    private static IMessageBodyCompression GetCompressionAlgorithm(string compressionEncoding, IMessageCompressionRegistry compressionRegistry)
-    {
-        var compression = compressionRegistry.GetCompression(compressionEncoding);
-        return compression;
     }
 }

@@ -58,7 +58,6 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
         _channel = Channel.CreateBounded<IQueueMessageContext>(bufferSize);
 
         _requestMessageAttributeNames.Add(MessageSystemAttributeName.ApproximateReceiveCount);
-        _requestMessageAttributeNames.Add(MessageAttributeKeys.ContentEncoding);
     }
 
     /// <summary>

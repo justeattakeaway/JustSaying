@@ -3,7 +3,7 @@ namespace JustSaying.Messaging.Compression;
 /// <summary>
 /// Implements a registry for message compression methods.
 /// </summary>
-public sealed class MessageCompressionRegistry : IMessageCompressionRegistry
+public sealed class MessageCompressionRegistry
 {
     private readonly IList<IMessageBodyCompression> _compressions;
 

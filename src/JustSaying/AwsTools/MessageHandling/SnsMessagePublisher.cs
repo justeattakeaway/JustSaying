@@ -23,7 +23,7 @@ public class SnsMessagePublisher(
     private readonly Func<Exception, Message, bool> _handleException = handleException;
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
     public PublishCompressionOptions CompressionOptions { get; set; }
-    public IMessageCompressionRegistry CompressionRegistry { get; set; }
+    internal MessageCompressionRegistry CompressionRegistry { get; set; }
     public string Arn { get; internal set; }
     protected IAmazonSimpleNotificationService Client { get; } = client;
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
@@ -97,7 +97,7 @@ public class SnsMessagePublisher(
     {
         var messageToSend = _serializationRegister.Serialize(message, serializeForSnsPublishing: true);
 
-        (string compressedMessage, string contentEncoding) = MessageCompressionUtility.CompressMessageIfNeeded(messageToSend, metadata, CompressionOptions, CompressionRegistry);
+        (string compressedMessage, string contentEncoding) = MessageCompressionUtility.CompressMessageIfNeeded(messageToSend, metadata, PublishDestinationType.Topic, CompressionOptions, CompressionRegistry);
         if (compressedMessage is not null)
         {
             messageToSend = compressedMessage;

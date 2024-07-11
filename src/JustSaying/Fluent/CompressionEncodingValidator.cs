@@ -5,7 +5,7 @@ namespace JustSaying.Fluent;
 
 internal static class CompressionEncodingValidator
 {
-    public static void ValidateEncoding(IMessageCompressionRegistry compressionRegistry, PublishCompressionOptions compressionOptions)
+    public static void ValidateEncoding(MessageCompressionRegistry compressionRegistry, PublishCompressionOptions compressionOptions)
     {
         if (compressionOptions?.CompressionEncoding is { } compressionEncoding)
         {

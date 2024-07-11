@@ -38,7 +38,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     public IMessageSerializationRegister SerializationRegister { get; }
 
     internal MiddlewareMap MiddlewareMap { get; }
-    internal IMessageCompressionRegistry CompressionRegistry { get; }
+    internal MessageCompressionRegistry CompressionRegistry { get; }
 
     public Task Completion { get; private set; }
 

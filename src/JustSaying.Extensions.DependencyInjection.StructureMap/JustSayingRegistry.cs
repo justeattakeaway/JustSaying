@@ -43,7 +43,7 @@ internal sealed class JustSayingRegistry : Registry
         For<LoggingMiddleware>().Transient();
         For<SqsPostProcessorMiddleware>().Transient();
 
-        For<IMessageCompressionRegistry>().Use((p) => new MessageCompressionRegistry(new List<IMessageBodyCompression> { new GzipMessageBodyCompression() })).Singleton();
+        For<MessageCompressionRegistry>().Use((p) => new MessageCompressionRegistry(new List<IMessageBodyCompression> { new GzipMessageBodyCompression() })).Singleton();
         For<IMessageSerializationRegister>()
             .Use(
                 nameof(IMessageSerializationRegister),
@@ -51,8 +51,7 @@ internal sealed class JustSayingRegistry : Registry
                 {
                     var config = p.GetInstance<IMessagingConfig>();
                     var serializerFactory = p.GetInstance<IMessageSerializationFactory>();
-                    var compressionRegistry = p.GetInstance<IMessageCompressionRegistry>();
-                    return new MessageSerializationRegister(config.MessageSubjectProvider, serializerFactory, compressionRegistry);
+                    return new MessageSerializationRegister(config.MessageSubjectProvider, serializerFactory);
                 })
             .Singleton();
 

@@ -1,4 +1,6 @@
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
@@ -7,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenAMessageIsPublishedWithCompression(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenAMessageIsPublishedToAQueueWithCompression(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
     [AwsFact]
     public async Task Then_The_Message_Is_Handled()
@@ -16,16 +18,17 @@ public class WhenAMessageIsPublishedWithCompression(ITestOutputHelper outputHelp
         var handler = new InspectableHandler<SimpleMessage>();
 
         var services = GivenJustSaying()
-            .ConfigureJustSaying((builder) => builder.WithLoopbackTopicAndPublicationOptions<SimpleMessage>(UniqueName,
+            .ConfigureJustSaying((builder) => builder.WithLoopbackQueueAndPublicationOptions<SimpleMessage>(UniqueName,
                 c =>
                 {
-                    c.WithWriteConfiguration(writeConfiguration =>
+                    c.WithWriteConfiguration((SqsWriteConfiguration writeConfiguration) =>
                     {
                         writeConfiguration.CompressionOptions = new PublishCompressionOptions
                         {
                             CompressionEncoding = ContentEncodings.GzipBase64,
                             MessageLengthThreshold = 100
                         };
+                        writeConfiguration.QueueName = UniqueName;
                     });
                 }))
             .AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>()
@@ -34,10 +37,7 @@ public class WhenAMessageIsPublishedWithCompression(ITestOutputHelper outputHelp
         var message = new SimpleMessage
         {
             // Content longer than 100 bytes
-            Content =
-                """
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-                """
+            Content = new string('a', 500)
         };
 
         await WhenAsync(
@@ -46,9 +46,11 @@ public class WhenAMessageIsPublishedWithCompression(ITestOutputHelper outputHelp
             {
                 await listener.StartAsync(cancellationToken);
                 await publisher.StartAsync(cancellationToken);
+                var publishMetadata = new PublishMetadata();
+                publishMetadata.AddMessageAttribute("Hello", "World");
 
                 // Act
-                await publisher.PublishAsync(message, cancellationToken);
+                await publisher.PublishAsync(message, publishMetadata, cancellationToken);
 
                 // Assert
                 await Patiently.AssertThatAsync(OutputHelper,

@@ -1,3 +1,4 @@
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
@@ -5,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenAMessageIsPublishedToATopicWithSystemTextJson(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenAMessageIsPublishedToATopicWithAttributes(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
     [AwsFact]
     public async Task Then_The_Message_Is_Handled()
@@ -25,6 +26,8 @@ public class WhenAMessageIsPublishedToATopicWithSystemTextJson(ITestOutputHelper
         {
             Content = content
         };
+        var publishMetadata = new PublishMetadata();
+        publishMetadata.AddMessageAttribute("Hello", "World");
 
         await WhenAsync(
             services,
@@ -34,7 +37,7 @@ public class WhenAMessageIsPublishedToATopicWithSystemTextJson(ITestOutputHelper
                 await publisher.StartAsync(cancellationToken);
 
                 // Act
-                await publisher.PublishAsync(message, cancellationToken);
+                await publisher.PublishAsync(message, publishMetadata, cancellationToken);
 
                 // Assert
                 await Patiently.AssertThatAsync(OutputHelper,

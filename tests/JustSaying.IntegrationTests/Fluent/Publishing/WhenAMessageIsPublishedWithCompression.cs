@@ -1,3 +1,5 @@
+using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
@@ -5,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.IntegrationTests.Fluent.Publishing;
 
-public class WhenAMessageIsPublishedToATopicWithSystemTextJson(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenAMessageIsPublishedWithCompression(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
     [AwsFact]
     public async Task Then_The_Message_Is_Handled()
@@ -14,16 +16,25 @@ public class WhenAMessageIsPublishedToATopicWithSystemTextJson(ITestOutputHelper
         var handler = new InspectableHandler<SimpleMessage>();
 
         var services = GivenJustSaying()
-            .ConfigureJustSaying(
-                (builder) => builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
+            .ConfigureJustSaying((builder) => builder.WithLoopbackTopicAndPublicationOptions<SimpleMessage>(UniqueName,
+                c =>
+                {
+                    c.WithWriteConfiguration(writeConfiguration =>
+                    {
+                        writeConfiguration.CompressionOptions = new PublishCompressionOptions
+                        {
+                            CompressionEncoding = ContentEncodings.GzipBase64,
+                            MessageLengthThreshold = 100
+                        };
+                    });
+                }))
             .AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>()
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
-        string content = Guid.NewGuid().ToString();
-
-        var message = new SimpleMessage()
+        var message = new SimpleMessage
         {
-            Content = content
+            // Content longer than 100 bytes
+            Content = new string('a', 500)
         };
 
         await WhenAsync(
@@ -40,7 +51,7 @@ public class WhenAMessageIsPublishedToATopicWithSystemTextJson(ITestOutputHelper
                 await Patiently.AssertThatAsync(OutputHelper,
                     () =>
                     {
-                        handler.ReceivedMessages.ShouldHaveSingleItem().Content.ShouldBe(content);
+                        handler.ReceivedMessages.ShouldHaveSingleItem().Content.ShouldBe(message.Content);
                     });
             });
     }

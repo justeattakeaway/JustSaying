@@ -17,9 +17,9 @@ public class SqsMessagePublisher(
     ILoggerFactory loggerFactory) : IMessagePublisher
 {
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
+    internal MessageCompressionRegistry CompressionRegistry { get; set; }
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
     public PublishCompressionOptions CompressionOptions { get; set; }
-    public IMessageCompressionRegistry CompressionRegistry { get; set; }
 
     public Uri QueueUrl { get; internal set; }
 
@@ -86,7 +86,7 @@ public class SqsMessagePublisher(
     {
         var messageBody = GetMessageInContext(message);
 
-        (string compressedMessage, string contentEncoding) = MessageCompressionUtility.CompressMessageIfNeeded(messageBody, metadata, CompressionOptions, CompressionRegistry);
+        (string compressedMessage, string contentEncoding) = MessageCompressionUtility.CompressMessageIfNeeded(messageBody, metadata, PublishDestinationType.Queue, CompressionOptions, CompressionRegistry);
         if (compressedMessage is not null)
         {
             messageBody = compressedMessage;

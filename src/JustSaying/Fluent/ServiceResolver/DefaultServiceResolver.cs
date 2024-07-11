@@ -47,7 +47,7 @@ internal sealed class DefaultServiceResolver : IServiceResolver
         {
             return new NewtonsoftSerializationFactory();
         }
-        else if (desiredType == typeof(IMessageCompressionRegistry))
+        else if (desiredType == typeof(MessageCompressionRegistry))
         {
             return new MessageCompressionRegistry([new GzipMessageBodyCompression()]);
         }
@@ -55,8 +55,7 @@ internal sealed class DefaultServiceResolver : IServiceResolver
         {
             return new MessageSerializationRegister(
                 ResolveService<IMessageSubjectProvider>(),
-                ResolveService<IMessageSerializationFactory>(),
-                ResolveService<IMessageCompressionRegistry>());
+                ResolveService<IMessageSerializationFactory>());
         }
         else if (desiredType == typeof(IMessageSubjectProvider))
         {

@@ -16,4 +16,11 @@ public class MessageAttributes(Dictionary<string, MessageAttributeValue> attribu
 
     public MessageAttributeValue Get(string value)
         => _attributes.TryGetValue(value, out MessageAttributeValue result) ? result : null;
+
+    /// <summary>
+    /// Gets all available attribute keys.
+    /// </summary>
+    /// <returns>An IReadOnlyCollection of strings representing all attribute keys.</returns>
+    public IReadOnlyCollection<string> GetKeys()
+        => _attributes.Keys;
 }

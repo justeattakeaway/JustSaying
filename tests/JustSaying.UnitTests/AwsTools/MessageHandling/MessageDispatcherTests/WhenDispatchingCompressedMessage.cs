@@ -1,5 +1,7 @@
 using System.IO.Compression;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
@@ -14,21 +16,26 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests;
 
 public class WhenDispatchingCompressedMessage
 {
-    [Fact(Skip = "for now")]
+    [Fact]
     public async Task ShouldDecompressMessage()
     {
         // Arrange
         var originalMessage = new SimpleMessage { Id = Guid.NewGuid() };
         var decompressorRegistry =
             new MessageCompressionRegistry([new GzipMessageBodyCompression()]);
-        var messageSerializer = new MessageSerializationRegister(
+        var messageSerializerRegistry = new MessageSerializationRegister(
             new NonGenericMessageSubjectProvider(),
-            new SystemTextJsonSerializationFactory(),
-            decompressorRegistry);
+            new SystemTextJsonSerializationFactory());
+        messageSerializerRegistry.AddSerializer<SimpleMessage>();
 
-        messageSerializer.AddSerializer<SimpleMessage>();
-
-        var payload = messageSerializer.Serialize(originalMessage, true);
+        string payload = JsonSerializer.Serialize(originalMessage, originalMessage.GetType(), new JsonSerializerOptions
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            Converters =
+            {
+                new JsonStringEnumConverter(),
+            },
+        });
 
         var memoryStream = new MemoryStream();
         await using (var gzipStream = new GZipStream(memoryStream, CompressionMode.Compress))
@@ -37,10 +44,11 @@ public class WhenDispatchingCompressedMessage
         }
 
         var compressedPayload = Convert.ToBase64String(memoryStream.ToArray());
+        var fullMessagePayload = JsonSerializer.Serialize(new { Subject = nameof(SimpleMessage), Message = compressedPayload });
 
         var sqsMessage = new Message
         {
-            Body = compressedPayload,
+            Body = fullMessagePayload,
             MessageAttributes =
             {
                 ["Content-Encoding"] = new MessageAttributeValue { DataType = "String", StringValue = ContentEncodings.GzipBase64 }
@@ -53,7 +61,7 @@ public class WhenDispatchingCompressedMessage
         var middlewareMap = new MiddlewareMap();
         var inspectableMiddleware = new InspectableMiddleware<SimpleMessage>();
         middlewareMap.Add<SimpleMessage>("fake-queue-name", inspectableMiddleware);
-        var messageDispatcher = new MessageDispatcher(messageSerializer, new NullOpMessageMonitor(), middlewareMap, decompressorRegistry, new LoggerFactory());
+        var messageDispatcher = new MessageDispatcher(messageSerializerRegistry, new NullOpMessageMonitor(), middlewareMap, decompressorRegistry, new LoggerFactory());
 
         // Act
         await messageDispatcher.DispatchMessageAsync(messageContext, CancellationToken.None);

@@ -4,7 +4,7 @@ using JustSaying.AwsTools.MessageHandling;
 
 public class MessageCompressionUtilityTests
 {
-    private readonly IMessageCompressionRegistry _compressionRegistry;
+    private readonly MessageCompressionRegistry _compressionRegistry;
 
     public MessageCompressionUtilityTests()
     {
@@ -20,7 +20,7 @@ public class MessageCompressionUtilityTests
         var compressionOptions = new PublishCompressionOptions();
 
         // Act
-        var result = MessageCompressionUtility.CompressMessageIfNeeded(message, metadata, compressionOptions, _compressionRegistry);
+        var result = MessageCompressionUtility.CompressMessageIfNeeded(message, metadata, PublishDestinationType.Topic, compressionOptions, _compressionRegistry);
 
         // Assert
         Assert.Null(result.compressedMessage);
@@ -40,7 +40,7 @@ public class MessageCompressionUtilityTests
         };
 
         // Act
-        var result = MessageCompressionUtility.CompressMessageIfNeeded(message, metadata, compressionOptions, _compressionRegistry);
+        var result = MessageCompressionUtility.CompressMessageIfNeeded(message, metadata, PublishDestinationType.Topic, compressionOptions, _compressionRegistry);
 
         // Assert
         Assert.Null(result.compressedMessage);
@@ -60,7 +60,7 @@ public class MessageCompressionUtilityTests
         };
 
         // Act
-        var result = MessageCompressionUtility.CompressMessageIfNeeded(message, metadata, compressionOptions, _compressionRegistry);
+        var result = MessageCompressionUtility.CompressMessageIfNeeded(message, metadata, PublishDestinationType.Topic, compressionOptions, _compressionRegistry);
 
         // Assert
         Assert.NotNull(result.compressedMessage);
@@ -88,7 +88,7 @@ public class MessageCompressionUtilityTests
         };
 
         // Act
-        var result = MessageCompressionUtility.CompressMessageIfNeeded(message, metadata, compressionOptions, _compressionRegistry);
+        var result = MessageCompressionUtility.CompressMessageIfNeeded(message, metadata, PublishDestinationType.Topic, compressionOptions, _compressionRegistry);
 
         // Assert
         Assert.NotNull(result.compressedMessage);
