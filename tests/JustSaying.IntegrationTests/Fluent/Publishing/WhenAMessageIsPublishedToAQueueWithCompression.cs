@@ -21,14 +21,13 @@ public class WhenAMessageIsPublishedToAQueueWithCompression(ITestOutputHelper ou
             .ConfigureJustSaying((builder) => builder.WithLoopbackQueueAndPublicationOptions<SimpleMessage>(UniqueName,
                 c =>
                 {
-                    c.WithWriteConfiguration((SqsWriteConfiguration writeConfiguration) =>
+                    c.WithWriteConfiguration(writeConfiguration =>
                     {
                         writeConfiguration.CompressionOptions = new PublishCompressionOptions
                         {
                             CompressionEncoding = ContentEncodings.GzipBase64,
                             MessageLengthThreshold = 100
                         };
-                        writeConfiguration.QueueName = UniqueName;
                     });
                 }))
             .AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>()

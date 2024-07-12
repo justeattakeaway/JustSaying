@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using JustSaying.Messaging;
@@ -163,18 +164,30 @@ public class MessageDispatcher : IMessageDispatcher
 
     private static bool IsRawMessage(string body)
     {
-        bool isRawMessage = true;
-        using var jsonDocument = JsonDocument.Parse(body);
-        if (jsonDocument.RootElement.TryGetProperty("Type", out var typeElement))
+        if (body is null)
         {
-            var messageType = typeElement.GetString();
-            if (messageType is "Notification")
-            {
-                isRawMessage = false;
-            }
+            return true;
         }
 
-        return isRawMessage;
+        try
+        {
+            bool isRawMessage = true;
+            using var jsonDocument = JsonDocument.Parse(body);
+            if (jsonDocument.RootElement.TryGetProperty("Type", out var typeElement))
+            {
+                var messageType = typeElement.GetString();
+                if (messageType is "Notification")
+                {
+                    isRawMessage = false;
+                }
+            }
+
+            return isRawMessage;
+        }
+        catch
+        {
+            return true;
+        }
     }
 
     private static MessageAttributes GetRawMessageAttributes(IQueueMessageContext messageContext)

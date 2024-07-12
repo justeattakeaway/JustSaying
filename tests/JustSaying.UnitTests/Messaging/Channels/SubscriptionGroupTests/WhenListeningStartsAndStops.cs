@@ -6,8 +6,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
 public class WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
 {
-    private const string AttributeMessageContentsRunning = @"Message Contents Running";
-    private const string AttributeMessageContentsAfterStop = @"Message Contents After Stop";
+    private const string AttributeMessageContentsRunning = """{ "Subject": "SimpleMessage", "Message": "Message Contents Running" }""";
+    private const string AttributeMessageContentsAfterStop = """{ "Subject": "SimpleMessage", "Message": "Message Contents After Stop" }""";
 
     private int _expectedMaxMessageCount;
     private bool _running;

@@ -30,14 +30,7 @@ public class WhenAMessageIsPublishedToAQueueWithAttribute(ITestOutputHelper outp
         var handler = new SimpleMessageWithStringAttributesHandler(new MessageContextAccessor());
 
         var services = GivenJustSaying()
-            .ConfigureJustSaying((builder) => builder.WithLoopbackQueueAndPublicationOptions<SimpleMessage>(UniqueName,
-                c =>
-                {
-                    c.WithWriteConfiguration((SqsWriteConfiguration writeConfiguration) =>
-                    {
-                        writeConfiguration.QueueName = UniqueName;
-                    });
-                }))
+            .ConfigureJustSaying((builder) => builder.WithLoopbackQueueAndPublicationOptions<SimpleMessage>(UniqueName))
             .AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>()
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
@@ -46,6 +39,8 @@ public class WhenAMessageIsPublishedToAQueueWithAttribute(ITestOutputHelper outp
             // Content longer than 100 bytes
             Content = Guid.NewGuid().ToString()
         };
+        var publishMetadata = new PublishMetadata();
+        publishMetadata.AddMessageAttribute("Hello", "World");
 
         await WhenAsync(
             services,
@@ -53,8 +48,6 @@ public class WhenAMessageIsPublishedToAQueueWithAttribute(ITestOutputHelper outp
             {
                 await listener.StartAsync(cancellationToken);
                 await publisher.StartAsync(cancellationToken);
-                var publishMetadata = new PublishMetadata();
-                publishMetadata.AddMessageAttribute("Hello", "World");
 
                 // Act
                 await publisher.PublishAsync(message, publishMetadata, cancellationToken);
@@ -63,8 +56,9 @@ public class WhenAMessageIsPublishedToAQueueWithAttribute(ITestOutputHelper outp
                 await Patiently.AssertThatAsync(OutputHelper,
                     () =>
                     {
-                        handler.HandledMessages.ShouldHaveSingleItem().message.Content.ShouldBe(message.Content);
-                        handler.HandledMessages.ShouldHaveSingleItem().context.MessageAttributes.GetKeys().ShouldContain("Hello");
+                        var (actualMessageContext, actualMessage) = handler.HandledMessages.ShouldHaveSingleItem();
+                        actualMessage.Content.ShouldBe(message.Content);
+                        actualMessageContext.MessageAttributes.GetKeys().ShouldContain("Hello");
                     });
             });
     }

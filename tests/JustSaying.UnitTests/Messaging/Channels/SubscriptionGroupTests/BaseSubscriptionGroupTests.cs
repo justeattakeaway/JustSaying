@@ -87,7 +87,7 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
         await Patiently.AssertThatAsync(OutputHelper,
             () => Until() || cts.IsCancellationRequested);
 
-        cts.Cancel();
+        await cts.CancelAsync();
         await completion.HandleCancellation();
     }
 
