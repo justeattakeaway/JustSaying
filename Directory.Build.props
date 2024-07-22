@@ -64,4 +64,10 @@
     <None Include="$(MSBuildThisFileDirectory)$(PackageIcon)" Pack="True" PackagePath="" />
     <None Include="$(MSBuildThisFileDirectory)$(PackageReadmeFile)" Pack="True" PackagePath="" />
   </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)','net8.0'))">
+    <Using Include="System.Diagnostics.CodeAnalysis" />
+  </ItemGroup>
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)','net8.0'))">
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
 </Project>
