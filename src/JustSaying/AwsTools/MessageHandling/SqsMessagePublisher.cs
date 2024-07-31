@@ -2,10 +2,12 @@ using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
+using MessageAttributeValue = Amazon.SQS.Model.MessageAttributeValue;
 
 namespace JustSaying.AwsTools.MessageHandling;
 
@@ -15,7 +17,9 @@ public class SqsMessagePublisher(
     ILoggerFactory loggerFactory) : IMessagePublisher
 {
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
+    internal MessageCompressionRegistry CompressionRegistry { get; set; }
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
+    public PublishCompressionOptions CompressionOptions { get; set; }
 
     public Uri QueueUrl { get; internal set; }
 
@@ -80,11 +84,26 @@ public class SqsMessagePublisher(
 
     private SendMessageRequest BuildSendMessageRequest(Message message, PublishMetadata metadata)
     {
+        var messageBody = GetMessageInContext(message);
+
+        (string compressedMessage, string contentEncoding) = MessageCompressionUtility.CompressMessageIfNeeded(messageBody, metadata, PublishDestinationType.Queue, CompressionOptions, CompressionRegistry);
+        if (compressedMessage is not null)
+        {
+            messageBody = compressedMessage;
+        }
+
         var request = new SendMessageRequest
         {
-            MessageBody = GetMessageInContext(message),
-            QueueUrl = QueueUrl.AbsoluteUri,
+            MessageBody = messageBody,
+            QueueUrl = QueueUrl.AbsoluteUri
         };
+
+        AddMessageAttributes(request.MessageAttributes, metadata);
+
+        if (contentEncoding is not null)
+        {
+            request.MessageAttributes.Add(MessageAttributeKeys.ContentEncoding, new MessageAttributeValue { DataType = "String", StringValue = contentEncoding });
+        }
 
         if (metadata?.Delay != null)
         {
@@ -95,6 +114,38 @@ public class SqsMessagePublisher(
     }
 
     public string GetMessageInContext(Message message) => serializationRegister.Serialize(message, serializeForSnsPublishing: false);
+
+    private static void AddMessageAttributes(Dictionary<string, MessageAttributeValue> requestMessageAttributes, PublishMetadata metadata)
+    {
+        if (metadata?.MessageAttributes == null || metadata.MessageAttributes.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var attribute in metadata.MessageAttributes)
+        {
+            requestMessageAttributes.Add(attribute.Key, BuildMessageAttributeValue(attribute.Value));
+        }
+    }
+
+    private static MessageAttributeValue BuildMessageAttributeValue(Messaging.MessageAttributeValue value)
+    {
+        if (value == null)
+        {
+            return null;
+        }
+
+        var binaryValueStream = value.BinaryValue != null
+            ? new MemoryStream([.. value.BinaryValue], false)
+            : null;
+
+        return new MessageAttributeValue
+        {
+            StringValue = value.StringValue,
+            BinaryValue = binaryValueStream,
+            DataType = value.DataType
+        };
+    }
 
     public InterrogationResult Interrogate()
     {

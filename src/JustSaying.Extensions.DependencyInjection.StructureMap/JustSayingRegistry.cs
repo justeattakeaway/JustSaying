@@ -2,6 +2,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
 using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware.Logging;
@@ -42,6 +43,7 @@ internal sealed class JustSayingRegistry : Registry
         For<LoggingMiddleware>().Transient();
         For<SqsPostProcessorMiddleware>().Transient();
 
+        For<MessageCompressionRegistry>().Use((p) => new MessageCompressionRegistry(new List<IMessageBodyCompression> { new GzipMessageBodyCompression() })).Singleton();
         For<IMessageSerializationRegister>()
             .Use(
                 nameof(IMessageSerializationRegister),

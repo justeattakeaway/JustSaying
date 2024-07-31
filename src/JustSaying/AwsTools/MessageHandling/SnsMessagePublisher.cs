@@ -2,6 +2,7 @@ using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
@@ -21,6 +22,8 @@ public class SnsMessagePublisher(
     private readonly IMessageSubjectProvider _messageSubjectProvider = messageSubjectProvider;
     private readonly Func<Exception, Message, bool> _handleException = handleException;
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
+    public PublishCompressionOptions CompressionOptions { get; set; }
+    internal MessageCompressionRegistry CompressionRegistry { get; set; }
     public string Arn { get; internal set; }
     protected IAmazonSimpleNotificationService Client { get; } = client;
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
@@ -93,26 +96,43 @@ public class SnsMessagePublisher(
     private PublishRequest BuildPublishRequest(Message message, PublishMetadata metadata)
     {
         var messageToSend = _serializationRegister.Serialize(message, serializeForSnsPublishing: true);
+
+        (string compressedMessage, string contentEncoding) = MessageCompressionUtility.CompressMessageIfNeeded(messageToSend, metadata, PublishDestinationType.Topic, CompressionOptions, CompressionRegistry);
+        if (compressedMessage is not null)
+        {
+            messageToSend = compressedMessage;
+        }
+
         var messageType = _messageSubjectProvider.GetSubjectForType(message.GetType());
 
-        return new PublishRequest
+        var request = new PublishRequest
         {
             TopicArn = Arn,
             Subject = messageType,
             Message = messageToSend,
-            MessageAttributes = BuildMessageAttributes(metadata)
         };
+
+        AddMessageAttributes(request.MessageAttributes, metadata);
+
+        if (contentEncoding is not null)
+        {
+            request.MessageAttributes.Add(MessageAttributeKeys.ContentEncoding, new MessageAttributeValue { DataType = "String", StringValue = contentEncoding });
+        }
+
+        return request;
     }
 
-    private static Dictionary<string, MessageAttributeValue> BuildMessageAttributes(PublishMetadata metadata)
+    private static void AddMessageAttributes(Dictionary<string, MessageAttributeValue> requestMessageAttributes, PublishMetadata metadata)
     {
         if (metadata?.MessageAttributes == null || metadata.MessageAttributes.Count == 0)
         {
-            return null;
+            return;
         }
-        return metadata.MessageAttributes.ToDictionary(
-            source => source.Key,
-            source => BuildMessageAttributeValue(source.Value));
+
+        foreach (var attribute in metadata.MessageAttributes)
+        {
+            requestMessageAttributes.Add(attribute.Key, BuildMessageAttributeValue(attribute.Value));
+        }
     }
 
     private static MessageAttributeValue BuildMessageAttributeValue(Messaging.MessageAttributeValue value)

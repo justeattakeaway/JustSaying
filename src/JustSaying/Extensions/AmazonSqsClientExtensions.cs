@@ -25,7 +25,8 @@ internal static class AmazonSqsClientExtensions
             {
                 AttributeNames = [.. attributesToLoad],
                 WaitTimeSeconds = secondsWaitTime,
-                MaxNumberOfMessages = maxNumOfMessages
+                MaxNumberOfMessages = maxNumOfMessages,
+                MessageAttributeNames = ["All"]
             },
             cancellationToken).ConfigureAwait(false);
 

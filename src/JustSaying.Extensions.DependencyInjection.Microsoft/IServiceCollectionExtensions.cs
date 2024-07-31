@@ -4,6 +4,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
 using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware.Logging;
@@ -138,6 +139,7 @@ public static class IServiceCollectionExtensions
         services.TryAddSingleton<IMessageSerializationFactory, NewtonsoftSerializationFactory>();
         services.TryAddSingleton<IMessageSubjectProvider, GenericMessageSubjectProvider>();
         services.TryAddSingleton<IVerifyAmazonQueues, AmazonQueueCreator>();
+        services.TryAddSingleton((p) => new MessageCompressionRegistry([new GzipMessageBodyCompression()]));
         services.TryAddSingleton<IMessageSerializationRegister>(
             (p) =>
             {

@@ -12,11 +12,7 @@ public class SystemTextJsonSerializer : IMessageSerializer
 {
     private static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
     {
-#if NET8_0_OR_GREATER
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-#else
-        IgnoreNullValues = true,
-#endif
         Converters =
         {
             new JsonStringEnumConverter(),
@@ -58,7 +54,7 @@ public class SystemTextJsonSerializer : IMessageSerializer
 
     public MessageAttributes GetMessageAttributes(string message)
     {
-        var jsonDocument = JsonDocument.Parse(message);
+        using var jsonDocument = JsonDocument.Parse(message);
 
         if (!jsonDocument.RootElement.TryGetProperty("MessageAttributes", out var attributesElement))
         {
@@ -90,7 +86,6 @@ public class SystemTextJsonSerializer : IMessageSerializer
         using var document = JsonDocument.Parse(message);
         JsonElement element = document.RootElement.GetProperty("Message");
         string json = element.ToString();
-
         return (Message)JsonSerializer.Deserialize(json, type, _options);
     }
 

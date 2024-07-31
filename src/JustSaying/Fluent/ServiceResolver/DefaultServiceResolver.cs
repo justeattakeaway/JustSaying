@@ -1,4 +1,5 @@
 using JustSaying.AwsTools;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Naming;
@@ -45,6 +46,10 @@ internal sealed class DefaultServiceResolver : IServiceResolver
         else if (desiredType == typeof(IMessageSerializationFactory))
         {
             return new NewtonsoftSerializationFactory();
+        }
+        else if (desiredType == typeof(MessageCompressionRegistry))
+        {
+            return new MessageCompressionRegistry([new GzipMessageBodyCompression()]);
         }
         else if (desiredType == typeof(IMessageSerializationRegister))
         {

@@ -45,6 +45,8 @@ public static class TestEnvironment
     {
         get
         {
+            // TODO Undo this change
+            //return new Uri("http://localhost:4566", UriKind.Absolute);
             var awsEnv = Environment.GetEnvironmentVariable("AWS_SERVICE_URL");
             if (string.IsNullOrWhiteSpace(awsEnv))
             {

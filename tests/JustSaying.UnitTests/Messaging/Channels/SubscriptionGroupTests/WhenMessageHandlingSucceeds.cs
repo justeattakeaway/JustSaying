@@ -1,10 +1,17 @@
+using System.Diagnostics.CodeAnalysis;
 using Amazon.SQS.Model;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
 public class WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
 {
-    private const string MessageBody = "Expected Message Body";
+    [StringSyntax(StringSyntaxAttribute.Json)]
+    private const string MessageBody = """
+                                       {
+                                         "Subject": "TestMessage",
+                                         "Message": "Expected Message Body"
+                                       }
+                                       """;
     private FakeSqsQueue _queue;
 
     protected override void Given()
