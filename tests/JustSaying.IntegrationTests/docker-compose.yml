@@ -3,7 +3,7 @@ services:
   localstack:
     container_name: localstack
     restart: unless-stopped
-    image: localstack/localstack:3.3.0
+    image: localstack/localstack:3.5.0
     ports:
       - 4566:4566
     environment:

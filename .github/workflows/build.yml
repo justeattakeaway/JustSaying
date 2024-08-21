@@ -15,7 +15,6 @@ permissions:
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   DOTNET_NOLOGO: true
-  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_SYSTEM_CONSOLE_ALLOW_ANSI_COLOR_REDIRECTION: 1
   NUGET_XMLDOC_MODE: skip
   TERM: xterm
@@ -28,26 +27,31 @@ jobs:
     outputs:
       dotnet-sdk-version: ${{ steps.setup-dotnet.outputs.dotnet-version }}
 
+    permissions:
+      attestations: write
+      contents: write
+      id-token: write
+
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
         include:
           - os: macos-latest
-            os_name: macos
+            os-name: macos
           - os: ubuntu-latest
-            os_name: linux
+            os-name: linux
           - os: windows-latest
-            os_name: windows
+            os-name: windows
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3 # v4.0.0
+        uses: actions/setup-dotnet@6bd8b7f7774af54e05809fcc5431931b3eb1ddee # v4.0.1
         id: setup-dotnet
 
       - name: Setup NuGet cache
@@ -68,16 +72,41 @@ jobs:
         run: ./build.ps1 -EnableIntegrationTests
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@7afa10ed9b269c561c2336fd862446844e0cbf71 # v4.2.0
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v4.5.0
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           file: ./artifacts/coverage/coverage.cobertura.xml
-          flags: ${{ matrix.os_name }}
-          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ matrix.os-name }}
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@ab9d16d4b419c9d1a02df5213fa0ebe965ca5a57 # v0.17.1
+        with:
+          artifact-name: build-${{ matrix.os-name }}.spdx.json
+          output-file: ./artifacts/build.spdx.json
+          path: ./artifacts/bin
+          upload-release-assets: ${{ runner.os == 'Windows' }}
+
+      - name: Attest artifacts
+        uses: actions/attest-build-provenance@310b0a4a3b0b78ef57ecda988ee04b132db73ef8 # v1.4.1
+        if: |
+          runner.os == 'Windows' &&
+          github.event.repository.fork == false &&
+          (github.ref_name == github.event.repository.default_branch ||
+           startsWith(github.ref, 'refs/tags/v'))
+        with:
+          subject-path: |
+            ./artifacts/bin/JustSaying/release*/JustSaying.dll
+            ./artifacts/bin/JustSaying.Extensions.Aws/release*/JustSaying.Extensions.Aws.dll
+            ./artifacts/bin/JustSaying.Extensions.DependencyInjection.Microsoft/release*/JustSaying.Extensions.DependencyInjection.Microsoft.dll
+            ./artifacts/bin/JustSaying.Extensions.DependencyInjection.StructureMap/release*/JustSaying.Extensions.DependencyInjection.StructureMap.dll
+            ./artifacts/bin/JustSaying.Models/release*/JustSaying.Models.dll
+            ./artifacts/package/release/*
 
       - name: Publish NuGet packages
-        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
-          name: packages-${{ matrix.os_name }}
+          name: packages-${{ matrix.os-name }}
           path: ./artifacts/package/release
           if-no-files-found: error
 
@@ -87,12 +116,12 @@ jobs:
     steps:
 
     - name: Download packages
-      uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
+      uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
       with:
         name: packages-windows
 
     - name: Setup .NET SDK
-      uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3 # v4.0.0
+      uses: actions/setup-dotnet@6bd8b7f7774af54e05809fcc5431931b3eb1ddee # v4.0.1
       with:
         dotnet-version: ${{ needs.build.outputs.dotnet-sdk-version }}
 
@@ -110,6 +139,7 @@ jobs:
         }
         if ($invalidPackages -gt 0) {
           Write-Output "::error::$invalidPackages NuGet package(s) failed validation."
+          exit 1
         }
 
   publish-github:
@@ -124,12 +154,12 @@ jobs:
     steps:
 
     - name: Download packages
-      uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
+      uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
       with:
         name: packages-windows
 
     - name: Setup .NET SDK
-      uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3 # v4.0.0
+      uses: actions/setup-dotnet@6bd8b7f7774af54e05809fcc5431931b3eb1ddee # v4.0.1
       with:
         dotnet-version: ${{ needs.build.outputs.dotnet-sdk-version }}
 
@@ -145,12 +175,12 @@ jobs:
     steps:
 
     - name: Download packages
-      uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
+      uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
       with:
         name: packages-windows
 
     - name: Setup .NET SDK
-      uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3 # v4.0.0
+      uses: actions/setup-dotnet@6bd8b7f7774af54e05809fcc5431931b3eb1ddee # v4.0.1
       with:
         dotnet-version: ${{ needs.build.outputs.dotnet-sdk-version }}
 
