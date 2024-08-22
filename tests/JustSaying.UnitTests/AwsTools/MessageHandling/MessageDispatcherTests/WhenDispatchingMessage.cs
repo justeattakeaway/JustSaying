@@ -2,6 +2,7 @@ using System.Globalization;
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
@@ -25,7 +26,6 @@ public class WhenDispatchingMessage : IAsyncLifetime
 {
     private const string ExpectedQueueUrl = "http://testurl.com/queue";
 
-    private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
     private readonly TrackingLoggingMonitor _messageMonitor;
     private readonly MiddlewareMap _middlewareMap;
     private readonly ILoggerFactory _loggerFactory;
@@ -38,6 +38,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
     internal MessageDispatcher SystemUnderTest { get; private set; }
 
     protected readonly IMessageBackoffStrategy MessageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
+    private readonly MessageConverter _messageConverter;
 
     public WhenDispatchingMessage(ITestOutputHelper outputHelper)
     {
@@ -45,6 +46,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
         _loggerFactory = TestLoggerFactory.Create(lb => lb.AddXUnit(outputHelper));
         _messageMonitor = new TrackingLoggingMonitor(_loggerFactory.CreateLogger<TrackingLoggingMonitor>());
         _middlewareMap = new MiddlewareMap();
+        _messageConverter = new MessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry([]));
     }
 
     public virtual async Task InitializeAsync()
@@ -80,23 +82,19 @@ public class WhenDispatchingMessage : IAsyncLifetime
         {
             Uri = new Uri(ExpectedQueueUrl)
         };
-        _serializationRegister.DeserializeMessage(Arg.Any<string>())
-            .Returns(new MessageWithAttributes(_typedMessage, new MessageAttributes()));
     }
 
     private async Task When()
     {
-        var queueReader = new SqsQueueReader(_queue);
+        var queueReader = new SqsQueueReader(_queue, _messageConverter);
         await SystemUnderTest.DispatchMessageAsync(queueReader.ToMessageContext(_sqsMessage), CancellationToken.None);
     }
 
     private MessageDispatcher CreateSystemUnderTestAsync()
     {
         var dispatcher = new MessageDispatcher(
-            _serializationRegister,
             _messageMonitor,
             _middlewareMap,
-            new MessageCompressionRegistry([]),
             _loggerFactory);
 
         return dispatcher;
@@ -111,12 +109,6 @@ public class WhenDispatchingMessage : IAsyncLifetime
         {
             base.Given();
             _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString(CultureInfo.InvariantCulture));
-        }
-
-        [Fact]
-        public void ShouldDeserializeMessage()
-        {
-            _serializationRegister.Received(1).DeserializeMessage(Arg.Is<string>(x => x == _sqsMessage.Body));
         }
 
         [Fact]
@@ -145,12 +137,6 @@ public class WhenDispatchingMessage : IAsyncLifetime
                 .Build();
 
             _middlewareMap.Add<OrderAccepted>(_queue.QueueName, middleware);
-        }
-
-        [Fact]
-        public void ShouldDeserializeMessage()
-        {
-            _serializationRegister.Received(1).DeserializeMessage(Arg.Is<string>(x => x == _sqsMessage.Body));
         }
 
         [Fact]

@@ -3,6 +3,7 @@ using Amazon.Runtime;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
@@ -14,7 +15,6 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;
 
 public class WhenPublishingAsyncResultLoggerIsCalled : WhenPublishingTestBase
 {
-    private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
     private const string TopicArn = "topicarn";
 
     private const string MessageId = "TestMessage12345";
@@ -25,7 +25,8 @@ public class WhenPublishingAsyncResultLoggerIsCalled : WhenPublishingTestBase
 
     private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        var topic = new SnsMessagePublisher(TopicArn, Sns, _serializationRegister, NullLoggerFactory.Instance, Substitute.For<IMessageSubjectProvider>())
+        var messageConverter = new MessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry([]));
+        var topic = new SnsMessagePublisher(TopicArn, Sns, messageConverter, NullLoggerFactory.Instance, Substitute.For<IMessageSubjectProvider>())
         {
             MessageResponseLogger = (r, m) =>
             {

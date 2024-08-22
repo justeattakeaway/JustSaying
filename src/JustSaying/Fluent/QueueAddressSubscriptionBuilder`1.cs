@@ -1,7 +1,12 @@
 using Amazon;
 using Amazon.SQS;
 using JustSaying.AwsTools;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
@@ -32,6 +37,7 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
 
     private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
+    private IMessageBodySerializer MessageBodySerializer { get; set; }
 
     /// <summary>
     /// Configures the SQS read configuration.
@@ -55,6 +61,14 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         MiddlewareConfiguration = middlewareConfiguration;
         return this;
     }
+
+    public ISubscriptionBuilder<T> WithMessageBodySerializer(IMessageBodySerializer messageBodySerializer)
+    {
+        MessageBodySerializer = messageBodySerializer;
+        return this;
+    }
+
+
 
     /// <inheritdoc />
     void ISubscriptionBuilder<T>.Configure(
@@ -80,7 +94,9 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         attachedQueueConfig.SubscriptionGroupName ??= queue.QueueName;
         attachedQueueConfig.Validate();
 
-        bus.AddQueue(attachedQueueConfig.SubscriptionGroupName, queue);
+        var sqsSource = new SqsSource { SqsQueue = queue, MessageConverter = new MessageConverter(new NewtonsoftMessageBodySerializer<T>(), new MessageCompressionRegistry([new GzipMessageBodyCompression()])) };
+
+        bus.AddQueue(attachedQueueConfig.SubscriptionGroupName, sqsSource);
 
         logger.LogInformation(
             "Created SQS queue subscription for '{MessageType}' on '{QueueName}'",

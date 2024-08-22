@@ -1,5 +1,6 @@
 using Amazon.SimpleNotificationService;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
@@ -13,8 +14,8 @@ internal sealed class TopicAddressPublisher(
     IAmazonSimpleNotificationService snsClient,
     ILoggerFactory loggerFactory,
     IMessageSubjectProvider subjectProvider,
-    IMessageSerializationRegister serializationRegister,
+    IMessageConverter messageConverter,
     Func<Exception, Message, bool> handleException,
-    TopicAddress topicAddress) : SnsMessagePublisher(topicAddress.TopicArn, snsClient, serializationRegister, loggerFactory, subjectProvider, handleException)
+    TopicAddress topicAddress) : SnsMessagePublisher(topicAddress.TopicArn, snsClient, messageConverter, loggerFactory, subjectProvider, handleException)
 {
 }

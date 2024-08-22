@@ -2,6 +2,9 @@ using Amazon.SimpleNotificationService;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
 #pragma warning disable CS0618
@@ -21,7 +24,7 @@ internal sealed class StaticPublicationConfiguration(
         SnsWriteConfiguration writeConfiguration,
         IAmazonSimpleNotificationService snsClient,
         ILoggerFactory loggerFactory,
-        JustSayingBus bus)
+        JustSayingBus bus) where T : Message
     {
         var readConfiguration = new SqsReadConfiguration(SubscriptionType.ToTopic)
         {
@@ -32,7 +35,8 @@ internal sealed class StaticPublicationConfiguration(
 
         var eventPublisher = new SnsMessagePublisher(
             snsClient,
-            bus.SerializationRegister,
+            // TODO fix this properly
+            new MessageConverter(new NewtonsoftMessageBodySerializer<T>(), new MessageCompressionRegistry([new GzipMessageBodyCompression()])),
             loggerFactory,
             bus.Config.MessageSubjectProvider)
         {

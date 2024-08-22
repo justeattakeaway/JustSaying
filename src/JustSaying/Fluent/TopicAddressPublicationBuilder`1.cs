@@ -1,6 +1,9 @@
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -66,13 +69,11 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
         var config = bus.Config;
         var arn = Arn.Parse(_topicAddress.TopicArn);
 
-        bus.SerializationRegister.AddSerializer<T>();
-
         var eventPublisher = new TopicAddressPublisher(
             proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(arn.Region)),
             loggerFactory,
             config.MessageSubjectProvider,
-            bus.SerializationRegister,
+            new MessageConverter(new NewtonsoftMessageBodySerializer<T>(), new MessageCompressionRegistry([new GzipMessageBodyCompression()])),
             _exceptionHandler,
             _topicAddress)
         {
@@ -81,7 +82,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
             CompressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions
         };
         CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, eventPublisher.CompressionOptions);
-        
+
         bus.AddMessagePublisher<T>(eventPublisher);
 
         logger.LogInformation(

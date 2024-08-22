@@ -60,7 +60,7 @@ public class WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper) : B
     [Fact]
     public void MessageIsProcessed()
     {
-        SerializationRegister.ReceivedDeserializationRequests.ShouldContain(AttributeMessageContentsRunning);
-        SerializationRegister.ReceivedDeserializationRequests.ShouldNotContain(AttributeMessageContentsAfterStop);
+        // TODO
+        throw new NotImplementedException();
     }
 }

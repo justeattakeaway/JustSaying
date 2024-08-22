@@ -106,3 +106,32 @@ public class SystemTextJsonSerializer : IMessageSerializer
         return JsonSerializer.Serialize(context, _options);
     }
 }
+
+public class SystemTextJsonMessageBodySerializer<T> : IMessageBodySerializer where T: Message
+{
+    private readonly JsonSerializerOptions _options;
+
+    private static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        Converters =
+        {
+            new JsonStringEnumConverter(),
+        },
+    };
+
+    public SystemTextJsonMessageBodySerializer(JsonSerializerOptions options)
+    {
+        _options = options ?? DefaultJsonSerializerOptions;
+    }
+
+    public string Serialize(Message message)
+    {
+        return JsonSerializer.Serialize(message, message.GetType(), _options);
+    }
+
+    public Message Deserialize(string messageBody)
+    {
+        return JsonSerializer.Deserialize<T>(messageBody, _options);
+    }
+}

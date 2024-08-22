@@ -15,7 +15,7 @@ public class GenericMessageSubjectProvider : IMessageSubjectProvider
     private static IEnumerable<Type> Flatten(Type type)
     {
         yield return type;
-        foreach (var inner in type.GetTypeInfo().GetGenericArguments().SelectMany(Flatten))
+        foreach (var inner in type.GetGenericArguments().SelectMany(Flatten))
         {
             yield return inner;
         }

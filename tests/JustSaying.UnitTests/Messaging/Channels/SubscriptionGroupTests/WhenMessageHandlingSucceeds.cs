@@ -25,14 +25,18 @@ public class WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper) : B
     [Fact]
     public void MessagesGetDeserializedByCorrectHandler()
     {
-        SerializationRegister.ReceivedDeserializationRequests.ShouldAllBe(
-            msg => msg == MessageBody);
+        // SerializationRegister.ReceivedDeserializationRequests.ShouldAllBe(
+        //     msg => msg == MessageBody);
+        // TODO
+        throw new NotImplementedException();
     }
 
     [Fact]
     public void ProcessingIsPassedToTheHandlerForCorrectMessage()
     {
-        Handler.ReceivedMessages.ShouldContain(SerializationRegister.DefaultDeserializedMessage());
+        //Handler.ReceivedMessages.ShouldContain(SerializationRegister.DefaultDeserializedMessage());
+        // TODO
+        throw new NotImplementedException();
     }
 
     [Fact]

@@ -26,8 +26,8 @@ public class WhenThereAreExceptionsInMessageProcessing(ITestOutputHelper testOut
 
         Queues.Add(_queue);
 
-        SerializationRegister.DefaultDeserializedMessage = () =>
-            throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
+        // TODO throw exception during deserialization
+        throw new NotImplementedException();
     }
 
     protected override bool Until()

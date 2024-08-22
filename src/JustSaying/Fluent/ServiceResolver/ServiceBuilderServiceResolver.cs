@@ -41,12 +41,7 @@ internal class ServiceBuilderServiceResolver(ServicesBuilder builder) : IService
         {
             _serviceLookup[typeof(IMessageMonitor)] = builder.MessageMonitoring();
         }
-
-        if (builder.SerializationRegister != null)
-        {
-            _serviceLookup[typeof(IMessageSerializationRegister)] = builder.SerializationRegister();
-        }
-
+        
         if (builder.MessageContextAccessor != null)
         {
             _serviceLookup[typeof(IMessageContextAccessor)] = builder.MessageContextAccessor();

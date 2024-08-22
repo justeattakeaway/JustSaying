@@ -14,8 +14,7 @@ public class WhenThereAreExceptionsInSqsCalling(ITestOutputHelper testOutputHelp
         _queue = CreateSuccessfulTestQueue("TestQueue", ExceptionOnFirstCall());
         Queues.Add(_queue);
 
-        SerializationRegister.DefaultDeserializedMessage =
-            () => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
+        // setup deserializer failure
     }
 
     private IEnumerable<Message> ExceptionOnFirstCall()

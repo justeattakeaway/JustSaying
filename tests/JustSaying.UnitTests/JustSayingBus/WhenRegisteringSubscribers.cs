@@ -1,4 +1,8 @@
 using Amazon.SQS.Model;
+using JustSaying.Messaging;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using Newtonsoft.Json;
@@ -36,8 +40,18 @@ public sealed class WhenRegisteringSubscribers(ITestOutputHelper outputHelper) :
         SystemUnderTest.AddMessageMiddleware<SimpleMessage>(_queue1.QueueName,
             new InspectableMiddleware<SimpleMessage>());
 
-        SystemUnderTest.AddQueue("groupA", _queue1);
-        SystemUnderTest.AddQueue("groupB", _queue2);
+        var messageConverter1 = new MessageConverter(new NewtonsoftMessageBodySerializer<OrderAccepted>(), new MessageCompressionRegistry([]));
+        var messageConverter2 = new MessageConverter(new NewtonsoftMessageBodySerializer<OrderRejected>(), new MessageCompressionRegistry([]));
+        SystemUnderTest.AddQueue("groupA", new SqsSource
+        {
+            SqsQueue = _queue1,
+            MessageConverter = messageConverter1
+        });
+        SystemUnderTest.AddQueue("groupB", new SqsSource
+        {
+            SqsQueue = _queue2,
+            MessageConverter = messageConverter2
+        });
 
         _cts = new CancellationTokenSource();
         _cts.CancelAfter(TimeSpan.FromSeconds(5));

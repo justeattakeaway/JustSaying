@@ -1,6 +1,7 @@
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Compression;
@@ -20,7 +21,6 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
     protected IList<ISqsQueue> Queues;
     protected MiddlewareMap MiddlewareMap;
     protected TrackingLoggingMonitor Monitor;
-    protected FakeSerializationRegister SerializationRegister;
     protected int ConcurrencyLimit = 8;
     protected ITestOutputHelper OutputHelper { get; }
 
@@ -54,7 +54,6 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
         Queues = new List<ISqsQueue>();
         Handler = new InspectableHandler<SimpleMessage>();
         Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
-        SerializationRegister = new FakeSerializationRegister();
         MiddlewareMap = new MiddlewareMap();
         CompletionMiddleware = new AwaitableMiddleware(OutputHelper);
 
@@ -99,11 +98,9 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
 
     private ISubscriptionGroup CreateSystemUnderTest()
     {
-        Logger.LogInformation("Creating MessageDispatcher with serialization register type {Type}",
-            SerializationRegister.GetType().FullName);
+        Logger.LogInformation("Creating MessageDispatcher");
 
         var dispatcher = new MessageDispatcher(
-            SerializationRegister,
             Monitor,
             MiddlewareMap,
             new MessageCompressionRegistry([]),
@@ -127,7 +124,7 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
     {
         return new Dictionary<string, SubscriptionGroupConfigBuilder>
         {
-            { "test", new SubscriptionGroupConfigBuilder("test").AddQueues(Queues) },
+            ["test"] = new SubscriptionGroupConfigBuilder("test").AddQueues(Queues)
         };
     }
 

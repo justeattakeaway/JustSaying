@@ -35,6 +35,6 @@ public abstract class GivenAServiceBusWithoutMonitoring : IAsyncLifetime
 
     private JustSaying.JustSayingBus CreateSystemUnderTest()
     {
-        return new JustSaying.JustSayingBus(Config, null, new MessageReceivePauseSignal(), LoggerFactory, null);
+        return new JustSaying.JustSayingBus(Config, new MessageReceivePauseSignal(), LoggerFactory, null);
     }
 }

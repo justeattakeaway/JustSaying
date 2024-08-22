@@ -1,10 +1,12 @@
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Dispatch;
 using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Middleware.Receive;
 using JustSaying.Messaging.Monitoring;
@@ -317,7 +319,7 @@ public class ChannelsTests
         cts.Cancel();
     }
 
-    private static FakeSqsQueue TestQueue(Action spy = null)
+    private static SqsSource TestQueue(Action spy = null)
     {
         IEnumerable<Message> GetMessages(CancellationToken cancellationToken)
         {
@@ -329,11 +331,17 @@ public class ChannelsTests
             }
         }
 
-        return new FakeSqsQueue(ct => Task.FromResult(GetMessages(ct)));
+        var source = new SqsSource
+        {
+            SqsQueue =new FakeSqsQueue(ct => Task.FromResult(GetMessages(ct))),
+            MessageConverter = new MessageConverter(new NewtonsoftMessageBodySerializer<>())
+        };
+
+        return ;
     }
 
     private MessageReceiveBuffer CreateMessageReceiveBuffer(
-        ISqsQueue sqsQueue,
+        SqsSource sqsQueue,
         int prefetch = 10,
         int receiveBufferSize = 10)
     {
@@ -356,7 +364,7 @@ public class ChannelsTests
     }
 
     private ISubscriptionGroup CreateSubscriptionGroup(
-        IList<ISqsQueue> queues,
+        IList<SqsSource> queues,
         IMessageDispatcher dispatcher)
     {
         var defaults = new SubscriptionGroupSettingsBuilder();

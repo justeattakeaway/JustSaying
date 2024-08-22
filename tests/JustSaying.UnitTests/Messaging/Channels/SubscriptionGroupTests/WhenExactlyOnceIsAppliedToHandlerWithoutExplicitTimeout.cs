@@ -56,7 +56,13 @@ public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper te
     [Fact]
     public void MessageIsLocked()
     {
-        var messageId = SerializationRegister.DefaultDeserializedMessage().Id.ToString();
+        // this should be part of setup to make work
+        var message = new SimpleMessage
+        {
+            RaisingComponent = "Component",
+            Id = Guid.NewGuid()
+        };
+        var messageId = message.Id.ToString();
 
         var tempLockRequests = _messageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
         tempLockRequests.ShouldNotBeEmpty();

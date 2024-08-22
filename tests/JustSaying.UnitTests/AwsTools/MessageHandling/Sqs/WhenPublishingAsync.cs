@@ -1,6 +1,7 @@
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -10,14 +11,14 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
 public class WhenPublishingAsync : WhenPublishingTestBase
 {
-    private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
+    private readonly MessageConverter _messageConverter = new(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry([]));
     private const string Url = "https://blablabla/" + QueueName;
     private readonly SimpleMessage _message = new() { Content = "Hello" };
     private const string QueueName = "queuename";
 
     private protected override Task<SqsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _serializationRegister, Substitute.For<ILoggerFactory>());
+        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _messageConverter, Substitute.For<ILoggerFactory>());
         return Task.FromResult(sqs);
     }
 
@@ -29,8 +30,9 @@ public class WhenPublishingAsync : WhenPublishingTestBase
         Sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>())
             .Returns(new GetQueueAttributesResponse());
 
-        _serializationRegister.Serialize(_message, false)
-            .Returns("serialized_contents");
+        // TODO make work
+        // _serializationRegister.Serialize(_message, false)
+        //     .Returns("serialized_contents");
     }
 
     protected override async Task WhenAsync()

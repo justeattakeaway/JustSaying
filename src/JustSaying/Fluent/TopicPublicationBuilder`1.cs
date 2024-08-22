@@ -190,7 +190,5 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
 
         bus.AddStartupTask(config.StartupTask);
         bus.AddMessagePublisher<T>(config.Publisher);
-
-        bus.SerializationRegister.AddSerializer<T>();
     }
 }

@@ -1,3 +1,4 @@
+using JustSaying.Models;
 using JustSaying.Naming;
 
 namespace JustSaying.AwsTools.QueueCreation;
@@ -22,7 +23,7 @@ public class SqsReadConfiguration : SqsBasicConfiguration
     public string FilterPolicy { get; set; }
     public string SubscriptionGroupName { get; set; }
 
-    public void ApplyTopicNamingConvention<T>(ITopicNamingConvention namingConvention)
+    public void ApplyTopicNamingConvention<T>(ITopicNamingConvention namingConvention) where T: Message
     {
         TopicName = namingConvention.Apply<T>(TopicName);
     }

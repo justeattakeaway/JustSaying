@@ -16,7 +16,7 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
         TimeSpan receiveMessagesWaitTime,
         int multiplexerCapacity,
         int prefetch,
-        IReadOnlyCollection<ISqsQueue> queues)
+        IReadOnlyCollection<SqsSource> queueSources)
     {
         ConcurrencyLimit = concurrencyLimit;
         BufferSize = bufferSize;
@@ -24,7 +24,7 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
         ReceiveMessagesWaitTime = receiveMessagesWaitTime;
         MultiplexerCapacity = multiplexerCapacity;
         Prefetch = prefetch;
-        Queues = queues;
+        QueueSources = queueSources;
         Name = name;
     }
 
@@ -67,5 +67,11 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
     /// <summary>
     /// A collection of <see cref="ISqsQueue"/> to read messages from.
     /// </summary>
-    public IReadOnlyCollection<ISqsQueue> Queues { get; }
+    public IReadOnlyCollection<SqsSource> QueueSources { get; }
+}
+
+public sealed class SqsSource
+{
+    public ISqsQueue SqsQueue { get; set; }
+    public IMessageConverter MessageConverter { get; set; }
 }

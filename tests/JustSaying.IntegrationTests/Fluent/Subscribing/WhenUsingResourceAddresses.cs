@@ -166,8 +166,9 @@ public class AddressPubSub(ITestOutputHelper outputHelper) : IntegrationTestBase
                 {
                     builder.Client((options) =>
                     {
-                        options.WithSessionCredentials(AccessKeyId, SecretAccessKey, SessionToken)
-                            .WithServiceUri(ServiceUri);
+                        options.WithClientFactory(() => clientFactory);
+                        // options.WithSessionCredentials(AccessKeyId, SecretAccessKey, SessionToken)
+                        //     .WithServiceUri(ServiceUri);
                     });
                 })
             .ConfigureJustSaying(builder =>

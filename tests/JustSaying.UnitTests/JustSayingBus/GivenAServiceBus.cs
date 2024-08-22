@@ -51,10 +51,8 @@ public abstract class GivenAServiceBus(ITestOutputHelper outputHelper) : IAsyncL
 
     private JustSaying.JustSayingBus CreateSystemUnderTest()
     {
-        var serializerRegister = new FakeSerializationRegister();
         var messageReceivePauseSignal = new MessageReceivePauseSignal();
         var bus = new JustSaying.JustSayingBus(Config,
-            serializerRegister,
             messageReceivePauseSignal,
             LoggerFactory,
             Monitor);

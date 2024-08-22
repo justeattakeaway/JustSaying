@@ -7,8 +7,6 @@ public interface IMessageSerializer
 {
     string GetMessageSubject(string sqsMessage);
 
-    MessageAttributes GetMessageAttributes(string message);
-
     Message Deserialize(string message, Type type);
 
     /// <summary>
@@ -23,3 +21,24 @@ public interface IMessageSerializer
     /// <returns></returns>
     string Serialize(Message message, bool serializeForSnsPublishing, string subject);
 }
+
+public interface IMessageBodySerializer
+{
+    string Serialize(Message message);
+    Message Deserialize(string message);
+}
+
+
+// public sealed class MessageEnvelopeWrapper : IMessageEnvelopeWrapper
+// {
+//     public string Serialize(string messageBody, string typeIdentifier)
+//     {
+//         return messageBody;
+//     }
+//
+//     public string Deserialize(string message)
+//     {
+//         return message;
+//     }
+// }
+//

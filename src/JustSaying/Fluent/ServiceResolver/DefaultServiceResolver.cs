@@ -51,12 +51,6 @@ internal sealed class DefaultServiceResolver : IServiceResolver
         {
             return new MessageCompressionRegistry([new GzipMessageBodyCompression()]);
         }
-        else if (desiredType == typeof(IMessageSerializationRegister))
-        {
-            return new MessageSerializationRegister(
-                ResolveService<IMessageSubjectProvider>(),
-                ResolveService<IMessageSerializationFactory>());
-        }
         else if (desiredType == typeof(IMessageSubjectProvider))
         {
             return new NonGenericMessageSubjectProvider();

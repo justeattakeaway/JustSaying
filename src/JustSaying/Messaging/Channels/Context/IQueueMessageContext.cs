@@ -1,4 +1,5 @@
 using Amazon.SQS.Model;
+using JustSaying.Messaging.MessageSerialization;
 
 namespace JustSaying.Messaging.Channels.Context;
 
@@ -22,4 +23,6 @@ public interface IQueueMessageContext : IMessageVisibilityUpdater, IMessageDelet
     /// Gets the name of the queue that this message was received from.
     /// </summary>
     string QueueName { get; }
+
+    IMessageConverter MessageConverter { get; }
 }

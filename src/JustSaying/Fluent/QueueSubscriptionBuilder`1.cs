@@ -1,5 +1,8 @@
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using JustSaying.Naming;
@@ -184,7 +187,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         var queue = creator.EnsureQueueExists(region, subscriptionConfig);
         bus.AddStartupTask(queue.StartupTask);
 
-        bus.AddQueue(subscriptionConfig.SubscriptionGroupName, queue.Queue);
+        bus.AddQueue(subscriptionConfig.SubscriptionGroupName, new SqsSource { MessageConverter = new MessageConverter(new NewtonsoftMessageBodySerializer<T>(), null), SqsQueue = queue.Queue });
 
         logger.LogInformation(
             "Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",

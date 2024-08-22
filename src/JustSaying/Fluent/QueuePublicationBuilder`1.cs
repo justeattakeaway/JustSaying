@@ -2,6 +2,9 @@ using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -99,14 +102,12 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
         ConfigureWrites?.Invoke(writeConfiguration);
         writeConfiguration.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
 
-        bus.SerializationRegister.AddSerializer<T>();
-
         var regionEndpoint = RegionEndpoint.GetBySystemName(region);
         var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
 
         var eventPublisher = new SqsMessagePublisher(
             sqsClient,
-            bus.SerializationRegister,
+            new MessageConverter(new NewtonsoftMessageBodySerializer<T>(), new MessageCompressionRegistry([new GzipMessageBodyCompression()])),
             loggerFactory)
         {
             MessageResponseLogger = config.MessageResponseLogger,

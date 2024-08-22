@@ -1,4 +1,5 @@
 using Amazon.SQS.Model;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Context;
 
 namespace JustSaying.AwsTools.MessageHandling;
@@ -6,10 +7,12 @@ namespace JustSaying.AwsTools.MessageHandling;
 internal class SqsQueueReader
 {
     private readonly ISqsQueue _sqsQueue;
+    private readonly IMessageConverter _messageConverter;
 
-    internal SqsQueueReader(ISqsQueue sqsQueue)
+    internal SqsQueueReader(ISqsQueue sqsQueue, IMessageConverter messageConverter)
     {
         _sqsQueue = sqsQueue;
+        _messageConverter = messageConverter;
     }
 
     internal string QueueName => _sqsQueue.QueueName;
@@ -20,7 +23,7 @@ internal class SqsQueueReader
 
     internal IQueueMessageContext ToMessageContext(Message message)
     {
-        return new QueueMessageContext(message, this);
+        return new QueueMessageContext(message, this, _messageConverter);
     }
 
     internal async Task<IList<Message>> GetMessagesAsync(

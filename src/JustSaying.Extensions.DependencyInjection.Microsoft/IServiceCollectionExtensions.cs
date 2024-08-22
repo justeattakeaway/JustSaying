@@ -140,13 +140,6 @@ public static class IServiceCollectionExtensions
         services.TryAddSingleton<IMessageSubjectProvider, GenericMessageSubjectProvider>();
         services.TryAddSingleton<IVerifyAmazonQueues, AmazonQueueCreator>();
         services.TryAddSingleton((p) => new MessageCompressionRegistry([new GzipMessageBodyCompression()]));
-        services.TryAddSingleton<IMessageSerializationRegister>(
-            (p) =>
-            {
-                var config = p.GetRequiredService<IMessagingConfig>();
-                var serializerFactory = p.GetRequiredService<IMessageSerializationFactory>();
-                return new MessageSerializationRegister(config.MessageSubjectProvider, serializerFactory);
-            });
 
         services.TryAddSingleton<IMessageReceivePauseSignal, MessageReceivePauseSignal>();
 

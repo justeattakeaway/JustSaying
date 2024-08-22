@@ -37,11 +37,6 @@ public sealed class ServicesBuilder
     internal Func<IMessageMonitor> MessageMonitoring { get; private set; }
 
     /// <summary>
-    /// Gets or sets a delegate to a method to create the <see cref="IMessageSerializationRegister"/> to use.
-    /// </summary>
-    internal Func<IMessageSerializationRegister> SerializationRegister { get; private set; }
-
-    /// <summary>
     /// Gets or sets a delegate to a method to create the <see cref="MessageContextAccessor"/> to use.
     /// </summary>
     internal Func<IMessageContextAccessor> MessageContextAccessor { get; private set; }

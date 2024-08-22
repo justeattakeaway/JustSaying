@@ -1,7 +1,9 @@
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
@@ -40,15 +42,24 @@ public class SubscriptionGroupCollectionTests
 
         var middleware1 = new InspectableMiddleware<TestJustSayingMessage>();
         var middleware2 = new InspectableMiddleware<TestJustSayingMessage>();
+        var messageConverter = new MessageConverter(new NewtonsoftMessageBodySerializer<TestJustSayingMessage>(), new MessageCompressionRegistry([]));
 
         bus.AddMessageMiddleware<TestJustSayingMessage>(queueName1, middleware1);
         bus.AddMessageMiddleware<TestJustSayingMessage>(queueName2, middleware2);
 
-        ISqsQueue queue1 = TestQueue(bus.SerializationRegister, queueName1);
-        ISqsQueue queue2 = TestQueue(bus.SerializationRegister, queueName2);
+        ISqsQueue queue1 = TestQueue(queueName1);
+        ISqsQueue queue2 = TestQueue(queueName2);
 
-        bus.AddQueue(group1, queue1);
-        bus.AddQueue(group2, queue2);
+        bus.AddQueue(group1, new SqsSource
+        {
+            SqsQueue = queue1,
+            MessageConverter = messageConverter
+        });
+        bus.AddQueue(group2, new SqsSource
+        {
+            SqsQueue = queue2,
+            MessageConverter = messageConverter
+        });
 
         using var cts = new CancellationTokenSource();
 
@@ -81,11 +92,8 @@ public class SubscriptionGroupCollectionTests
     private JustSaying.JustSayingBus CreateBus()
     {
         var config = Substitute.For<IMessagingConfig>();
-        var serializationRegister = new MessageSerializationRegister(
-            new NonGenericMessageSubjectProvider(),
-            new NewtonsoftSerializationFactory());
 
-        var bus = new JustSaying.JustSayingBus(config, serializationRegister, MessageReceivePauseSignal, LoggerFactory, MessageMonitor);
+        var bus = new JustSaying.JustSayingBus(config, MessageReceivePauseSignal, LoggerFactory, MessageMonitor);
 
         var defaultSubscriptionSettings = new SubscriptionGroupSettingsBuilder()
             .WithDefaultMultiplexerCapacity(1)
@@ -98,8 +106,8 @@ public class SubscriptionGroupCollectionTests
         return bus;
     }
 
+    // TODO remove redundant code
     private static FakeSqsQueue TestQueue(
-        IMessageSerializationRegister messageSerializationRegister,
         string queueName,
         Action spy = null)
     {
@@ -110,7 +118,12 @@ public class SubscriptionGroupCollectionTests
 
         var messages = new List<Message>
         {
-            new TestMessage { Body = messageSerializationRegister.Serialize(message, false) },
+            new TestMessage { Body = """
+                                     {
+                                        "Subject": "TestJustSayingMessage",
+                                        "Message": "{\"QueueName\":\"queue1\"}"
+                                     }
+                                     """ },
         };
 
         var queue = new FakeSqsQueue(async ct =>

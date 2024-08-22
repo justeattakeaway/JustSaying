@@ -5,12 +5,14 @@ using System.Text.Json.Serialization;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 using Microsoft.Extensions.Logging;
+using MessageAttributeValue = Amazon.SQS.Model.MessageAttributeValue;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests;
 
@@ -23,10 +25,7 @@ public class WhenDispatchingCompressedMessage
         var originalMessage = new SimpleMessage { Id = Guid.NewGuid() };
         var decompressorRegistry =
             new MessageCompressionRegistry([new GzipMessageBodyCompression()]);
-        var messageSerializerRegistry = new MessageSerializationRegister(
-            new NonGenericMessageSubjectProvider(),
-            new SystemTextJsonSerializationFactory());
-        messageSerializerRegistry.AddSerializer<SimpleMessage>();
+        var messageConverter = new MessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), decompressorRegistry);
 
         string payload = JsonSerializer.Serialize(originalMessage, originalMessage.GetType(), new JsonSerializerOptions
         {
@@ -56,12 +55,12 @@ public class WhenDispatchingCompressedMessage
         };
 
         var queue = new FakeSqsQueue(ct => Task.FromResult(Enumerable.Empty<Message>()));
-        var queueReader = new SqsQueueReader(queue);
+        var queueReader = new SqsQueueReader(queue, messageConverter);
         var messageContext = queueReader.ToMessageContext(sqsMessage);
         var middlewareMap = new MiddlewareMap();
         var inspectableMiddleware = new InspectableMiddleware<SimpleMessage>();
         middlewareMap.Add<SimpleMessage>("fake-queue-name", inspectableMiddleware);
-        var messageDispatcher = new MessageDispatcher(messageSerializerRegistry, new NullOpMessageMonitor(), middlewareMap, decompressorRegistry, new LoggerFactory());
+        var messageDispatcher = new MessageDispatcher(new NullOpMessageMonitor(), middlewareMap, new LoggerFactory());
 
         // Act
         await messageDispatcher.DispatchMessageAsync(messageContext, CancellationToken.None);

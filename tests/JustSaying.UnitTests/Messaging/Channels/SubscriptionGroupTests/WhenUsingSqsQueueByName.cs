@@ -39,7 +39,11 @@ public sealed class WhenUsingSqsQueueByName(ITestOutputHelper testOutputHelper) 
     [Fact]
     public void HandlerReceivesMessage()
     {
-        Handler.ReceivedMessages.Contains(SerializationRegister.DefaultDeserializedMessage())
+        Handler.ReceivedMessages.Contains(new SimpleMessage
+            {
+                RaisingComponent = "Component",
+                Id = Guid.NewGuid()
+            })
             .ShouldBeTrue();
     }
 
@@ -49,26 +53,25 @@ public sealed class WhenUsingSqsQueueByName(ITestOutputHelper testOutputHelper) 
     {
         return new ReceiveMessageResponse
         {
-            Messages = new List<Message>
-            {
-                new()
+            Messages =
+            [
+                new Message
                 {
                     MessageId = messageId.ToString(),
                     Body = SqsMessageBody(messageType)
                 },
-                new()
+                new Message
                 {
                     MessageId = messageId.ToString(),
-                    Body = "{\"Subject\":\"SOME_UNKNOWN_MESSAGE\"," +
-                           "\"Message\":\"SOME_RANDOM_MESSAGE\"}"
+                    Body = """{"Subject":"SOME_UNKNOWN_MESSAGE","Message":"SOME_RANDOM_MESSAGE"}"""
                 }
-            }
+            ]
         };
     }
 
     private static string SqsMessageBody(string messageType)
     {
-        return "{\"Subject\":\"" + messageType + "\"," + "\"Message\":\"" + MessageBody + "\"}";
+        return $$"""{"Subject":"{{messageType}}","Message":"{{MessageBody}}"}""";
     }
 
     public void Dispose()

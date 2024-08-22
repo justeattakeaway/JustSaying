@@ -1,6 +1,7 @@
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
 public class WhenPublishingDelayedMessage : WhenPublishingTestBase
 {
-    private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
+    private readonly MessageConverter _messageConverter = new(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry([]));
     private const string Url = "https://testurl.com/" + QueueName;
 
     private readonly SimpleMessage _message = new();
@@ -23,7 +24,7 @@ public class WhenPublishingDelayedMessage : WhenPublishingTestBase
 
     private protected override Task<SqsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _serializationRegister, Substitute.For<ILoggerFactory>());
+        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _messageConverter, Substitute.For<ILoggerFactory>());
         return Task.FromResult(sqs);
     }
 
