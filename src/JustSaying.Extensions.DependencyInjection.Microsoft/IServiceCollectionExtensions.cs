@@ -136,7 +136,8 @@ public static class IServiceCollectionExtensions
         services.TryAddSingleton<IMessageContextAccessor>(serviceProvider => serviceProvider.GetRequiredService<MessageContextAccessor>());
         services.TryAddSingleton<IMessageContextReader>(serviceProvider => serviceProvider.GetRequiredService<MessageContextAccessor>());
 
-        services.TryAddSingleton<IMessageSerializationFactory, NewtonsoftSerializationFactory>();
+        // TODO
+        //services.TryAddSingleton<IMessageSerializationFactory, NewtonsoftSerializationFactory>();
         services.TryAddSingleton<IMessageSubjectProvider, GenericMessageSubjectProvider>();
         services.TryAddSingleton<IVerifyAmazonQueues, AmazonQueueCreator>();
         services.TryAddSingleton((p) => new MessageCompressionRegistry([new GzipMessageBodyCompression()]));

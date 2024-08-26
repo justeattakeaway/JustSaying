@@ -1,6 +1,11 @@
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
@@ -22,12 +27,14 @@ public class WhenThereAreExceptionsInMessageProcessing(ITestOutputHelper testOut
             }
         }
 
-        _queue = CreateSuccessfulTestQueue("TestQueue", ct => Task.FromResult(GetMessages(ct)));
+        _queue = new FakeSqsQueue(ct => Task.FromResult(GetMessages(ct)));
+        var sqsSource = new SqsSource
+        {
+            SqsQueue = _queue,
+            MessageConverter = new ReceivedMessageConverter(new ThrowingMessageBodySerializer(), new MessageCompressionRegistry([]))
+        };
 
-        Queues.Add(_queue);
-
-        // TODO throw exception during deserialization
-        throw new NotImplementedException();
+        Queues.Add(sqsSource);
     }
 
     protected override bool Until()
@@ -40,5 +47,11 @@ public class WhenThereAreExceptionsInMessageProcessing(ITestOutputHelper testOut
     {
         await Patiently.AssertThatAsync(OutputHelper,
             () => _callCount.ShouldBeGreaterThan(1));
+    }
+
+    private sealed class ThrowingMessageBodySerializer : IMessageBodySerializer
+    {
+        public string Serialize(Models.Message message) => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
+        public Models.Message Deserialize(string message) => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
     }
 }

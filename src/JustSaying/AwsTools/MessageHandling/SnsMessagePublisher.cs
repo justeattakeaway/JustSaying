@@ -2,7 +2,6 @@ using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.Messaging;
-using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
@@ -13,17 +12,15 @@ namespace JustSaying.AwsTools.MessageHandling;
 
 internal class SnsMessagePublisher(
     IAmazonSimpleNotificationService client,
-    IMessageConverter messageConverter,
+    IPublishMessageConverter messageConverter,
     ILoggerFactory loggerFactory,
     IMessageSubjectProvider messageSubjectProvider,
     Func<Exception, Message, bool> handleException = null) : IMessagePublisher, IInterrogable
 {
-    private readonly IMessageConverter _messageConverter = messageConverter;
+    private readonly IPublishMessageConverter _messageConverter = messageConverter;
     private readonly IMessageSubjectProvider _messageSubjectProvider = messageSubjectProvider;
     private readonly Func<Exception, Message, bool> _handleException = handleException;
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
-    public PublishCompressionOptions CompressionOptions { get; set; }
-    internal MessageCompressionRegistry CompressionRegistry { get; set; }
     public string Arn { get; internal set; }
     protected IAmazonSimpleNotificationService Client { get; } = client;
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
@@ -31,7 +28,7 @@ internal class SnsMessagePublisher(
     public SnsMessagePublisher(
         string topicArn,
         IAmazonSimpleNotificationService client,
-        IMessageConverter messageConverter,
+        IPublishMessageConverter messageConverter,
         ILoggerFactory loggerFactory,
         IMessageSubjectProvider messageSubjectProvider,
         Func<Exception, Message, bool> handleException = null)
@@ -96,9 +93,6 @@ internal class SnsMessagePublisher(
     private PublishRequest BuildPublishRequest(Message message, PublishMetadata metadata)
     {
         var (messageToSend, attributes, subject) = _messageConverter.ConvertForPublish(message, metadata, PublishDestinationType.Topic);
-
-        // TODO
-        //var messageType = _messageSubjectProvider.GetSubjectForType(message.GetType());
 
         var request = new PublishRequest
         {

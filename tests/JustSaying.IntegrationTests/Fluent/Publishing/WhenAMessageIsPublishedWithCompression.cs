@@ -28,7 +28,7 @@ public class WhenAMessageIsPublishedWithCompression(ITestOutputHelper outputHelp
                         };
                     });
                 }))
-            .AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>()
+            //.AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>() TODO
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
         var message = new SimpleMessage

@@ -40,8 +40,8 @@ public sealed class WhenRegisteringSubscribers(ITestOutputHelper outputHelper) :
         SystemUnderTest.AddMessageMiddleware<SimpleMessage>(_queue1.QueueName,
             new InspectableMiddleware<SimpleMessage>());
 
-        var messageConverter1 = new MessageConverter(new NewtonsoftMessageBodySerializer<OrderAccepted>(), new MessageCompressionRegistry([]));
-        var messageConverter2 = new MessageConverter(new NewtonsoftMessageBodySerializer<OrderRejected>(), new MessageCompressionRegistry([]));
+        var messageConverter1 = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<OrderAccepted>(), new MessageCompressionRegistry([]));
+        var messageConverter2 = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<OrderRejected>(), new MessageCompressionRegistry([]));
         SystemUnderTest.AddQueue("groupA", new SqsSource
         {
             SqsQueue = _queue1,

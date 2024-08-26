@@ -11,7 +11,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
 public class WhenPublishingDelayedMessage : WhenPublishingTestBase
 {
-    private readonly MessageConverter _messageConverter = new(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry([]));
+    private readonly PublishMessageConverter _publishMessageConverter = new(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry([]), new PublishCompressionOptions(), "Subject");
     private const string Url = "https://testurl.com/" + QueueName;
 
     private readonly SimpleMessage _message = new();
@@ -24,7 +24,7 @@ public class WhenPublishingDelayedMessage : WhenPublishingTestBase
 
     private protected override Task<SqsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _messageConverter, Substitute.For<ILoggerFactory>());
+        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _publishMessageConverter, Substitute.For<ILoggerFactory>());
         return Task.FromResult(sqs);
     }
 

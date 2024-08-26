@@ -1,8 +1,11 @@
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
@@ -40,8 +43,6 @@ public class ErrorHandlingTests
         }
         var queue = new FakeSqsQueue(ct => Task.FromResult(GetMessages()));
 
-
-        var queues = new List<ISqsQueue> { queue };
         IMessageDispatcher dispatcher =
             new FakeDispatcher(() =>
             {
@@ -52,7 +53,13 @@ public class ErrorHandlingTests
             .WithDefaultConcurrencyLimit(8);
         var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
         {
-            { "test", new SubscriptionGroupConfigBuilder("test").AddQueues(queues) },
+            {
+                "test", new SubscriptionGroupConfigBuilder("test").AddQueue(new SqsSource
+                {
+                    SqsQueue = queue,
+                    MessageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry([]))
+                })
+            }
         };
 
         var subscriptionGroupFactory = new SubscriptionGroupFactory(
@@ -93,7 +100,6 @@ public class ErrorHandlingTests
         }
         var queue = new FakeSqsQueue(ct => Task.FromResult(GetMessages()));
 
-        var queues = new List<ISqsQueue> { queue };
         IMessageDispatcher dispatcher =
             new FakeDispatcher(() => Interlocked.Increment(ref messagesDispatched));
 
@@ -101,7 +107,11 @@ public class ErrorHandlingTests
             .WithDefaultConcurrencyLimit(1);
         var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
         {
-            { "test", new SubscriptionGroupConfigBuilder("test").AddQueues(queues) },
+            { "test", new SubscriptionGroupConfigBuilder("test").AddQueue(new SqsSource
+            {
+                SqsQueue = queue,
+                MessageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry([]))
+            }) },
         };
 
         var subscriptionGroupFactory = new SubscriptionGroupFactory(

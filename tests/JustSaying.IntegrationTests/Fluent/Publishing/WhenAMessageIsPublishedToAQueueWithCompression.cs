@@ -30,7 +30,7 @@ public class WhenAMessageIsPublishedToAQueueWithCompression(ITestOutputHelper ou
                         };
                     });
                 }))
-            .AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>()
+            //.AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>() TODO
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
         var message = new SimpleMessage

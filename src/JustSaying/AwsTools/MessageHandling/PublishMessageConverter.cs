@@ -10,12 +10,12 @@ using JustSaying.Models;
 
 namespace JustSaying.Messaging;
 
-internal sealed class MessageConverter : IMessageConverter
+internal sealed class ReceivedMessageConverter : IReceivedMessageConverter
 {
     private readonly IMessageBodySerializer _bodySerializer;
     private readonly MessageCompressionRegistry _compressionRegistry;
 
-    public MessageConverter(IMessageBodySerializer bodySerializer, MessageCompressionRegistry compressionRegistry)
+    public ReceivedMessageConverter(IMessageBodySerializer bodySerializer, MessageCompressionRegistry compressionRegistry)
     {
         _bodySerializer = bodySerializer;
         _compressionRegistry = compressionRegistry;
@@ -25,84 +25,18 @@ internal sealed class MessageConverter : IMessageConverter
     {
         string body = message.Body;
         var attributes = GetMessageAttributes(message, body);
-        bool isRawMessage = IsRawMessage(body);
-        if (!isRawMessage)
+        //bool isRawMessage = IsRawMessage(body);
+        if (body is not null) // TODO
         {
             var jsonNode = JsonNode.Parse(body);
             if (jsonNode is JsonObject jsonObject && jsonObject.TryGetPropertyValue("Message", out var messageNode))
             {
-                body = messageNode!.GetValue<string>();
+                body = messageNode!.ToString();
             }
         }
         body = ApplyBodyDecompression(body, attributes);
         var result = _bodySerializer.Deserialize(body);
         return new ReceivedMessage(result, attributes);
-    }
-
-    public MessageForPublishing ConvertForPublish(Message message, PublishMetadata publishMetadata, PublishDestinationType destinationType)
-    {
-        var messageBody = _bodySerializer.Serialize(message);
-
-        Dictionary<string, MessageAttributeValue> attributeValues = new();
-        AddMessageAttributes(attributeValues, publishMetadata);
-
-        (string compressedMessage, string contentEncoding) = CompressMessageBody(messageBody, publishMetadata, PublishDestinationType.Queue, new PublishCompressionOptions() /* TODO */, _compressionRegistry);
-        if (compressedMessage is not null)
-        {
-            messageBody = compressedMessage;
-            attributeValues.Add(MessageAttributeKeys.ContentEncoding, new MessageAttributeValue { DataType = "String", StringValue = contentEncoding });
-        }
-
-        string subject = null;
-        if (destinationType == PublishDestinationType.Topic)
-        {
-            // TODO
-            subject = null;
-        }
-
-        return new MessageForPublishing(messageBody, attributeValues, subject);
-    }
-
-    private static void AddMessageAttributes(Dictionary<string, MessageAttributeValue> requestMessageAttributes, PublishMetadata metadata)
-    {
-        if (metadata?.MessageAttributes == null || metadata.MessageAttributes.Count == 0)
-        {
-            return;
-        }
-
-        foreach (var attribute in metadata.MessageAttributes)
-        {
-            requestMessageAttributes.Add(attribute.Key, attribute.Value);
-        }
-    }
-
-
-    private static bool IsRawMessage(string body)
-    {
-        if (body is null)
-        {
-            return true;
-        }
-
-        try
-        {
-            var isRawMessage = true;
-            using var jsonDocument = JsonDocument.Parse(body);
-            if (jsonDocument.RootElement.TryGetProperty("Type", out var typeElement))
-            {
-                string messageType = typeElement.GetString();
-                if (messageType is "Notification")
-                {
-                    isRawMessage = false;
-                }
-            }
-
-            return isRawMessage;
-        }
-        catch
-        {
-            return true;
-        }
     }
 
     private string ApplyBodyDecompression(string body, MessageAttributes attributes)
@@ -124,8 +58,8 @@ internal sealed class MessageConverter : IMessageConverter
 
     private static MessageAttributes GetMessageAttributes(Amazon.SQS.Model.Message message, string body)
     {
-        bool isRawMessage = IsRawMessage(body);
-        var attributes = isRawMessage ? GetRawMessageAttributes(message) : GetMessageAttributes(body);
+        bool isSnsPayload = IsSnsPayload(body);
+        var attributes = isSnsPayload ? GetMessageAttributes(body) : GetRawMessageAttributes(message);
 
         return attributes;
     }
@@ -183,6 +117,80 @@ internal sealed class MessageConverter : IMessageConverter
         return new MessageAttributes(rawAttributes);
     }
 
+    private static bool IsSnsPayload(string body)
+    {
+        if (body is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            var isSnsPayload = false;
+            using var jsonDocument = JsonDocument.Parse(body);
+            if (jsonDocument.RootElement.TryGetProperty("Type", out var typeElement))
+            {
+                string messageType = typeElement.GetString();
+                if (messageType is "Notification")
+                {
+                    isSnsPayload = true;
+                }
+            }
+
+            return isSnsPayload;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+}
+
+internal sealed class PublishMessageConverter : IPublishMessageConverter
+{
+    private readonly IMessageBodySerializer _bodySerializer;
+    private readonly MessageCompressionRegistry _compressionRegistry;
+    private readonly PublishCompressionOptions _compressionOptions;
+    private readonly string _snsSubject;
+
+    public PublishMessageConverter(IMessageBodySerializer bodySerializer, MessageCompressionRegistry compressionRegistry, PublishCompressionOptions compressionOptions, string snsSubject)
+    {
+        _bodySerializer = bodySerializer;
+        _compressionRegistry = compressionRegistry;
+        _compressionOptions = compressionOptions;
+        _snsSubject = snsSubject;
+    }
+
+    public PublishMessage ConvertForPublish(Message message, PublishMetadata publishMetadata, PublishDestinationType destinationType)
+    {
+        var messageBody = _bodySerializer.Serialize(message);
+
+        Dictionary<string, MessageAttributeValue> attributeValues = new();
+        AddMessageAttributes(attributeValues, publishMetadata);
+
+        (string compressedMessage, string contentEncoding) = CompressMessageBody(messageBody, publishMetadata, destinationType, _compressionOptions, _compressionRegistry);
+        if (compressedMessage is not null)
+        {
+            messageBody = compressedMessage;
+            attributeValues.Add(MessageAttributeKeys.ContentEncoding, new MessageAttributeValue { DataType = "String", StringValue = contentEncoding });
+        }
+
+        return new PublishMessage(messageBody, attributeValues, _snsSubject);
+    }
+
+    private static void AddMessageAttributes(Dictionary<string, MessageAttributeValue> requestMessageAttributes, PublishMetadata metadata)
+    {
+        if (metadata?.MessageAttributes == null || metadata.MessageAttributes.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var attribute in metadata.MessageAttributes)
+        {
+            requestMessageAttributes.Add(attribute.Key, attribute.Value);
+        }
+    }
+
     /// <summary>
     /// Compresses a message if it meets the specified compression criteria.
     /// </summary>
@@ -192,7 +200,7 @@ internal sealed class MessageConverter : IMessageConverter
     /// <param name="compressionOptions">Options specifying when and how to compress.</param>
     /// <param name="compressionRegistry">Registry of available compression algorithms.</param>
     /// <returns>A tuple containing the compressed message (or null if not compressed) and the content encoding used (or null if not compressed).</returns>
-    public static (string compressedMessage, string contentEncoding) CompressMessageBody(string message, PublishMetadata metadata, PublishDestinationType destinationType, PublishCompressionOptions compressionOptions, MessageCompressionRegistry compressionRegistry)
+    private static (string compressedMessage, string contentEncoding) CompressMessageBody(string message, PublishMetadata metadata, PublishDestinationType destinationType, PublishCompressionOptions compressionOptions, MessageCompressionRegistry compressionRegistry)
     {
         string contentEncoding = null;
         string compressedMessage = null;

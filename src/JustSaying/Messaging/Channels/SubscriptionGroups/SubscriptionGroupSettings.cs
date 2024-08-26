@@ -73,5 +73,5 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
 public sealed class SqsSource
 {
     public ISqsQueue SqsQueue { get; set; }
-    public IMessageConverter MessageConverter { get; set; }
+    public IReceivedMessageConverter MessageConverter { get; set; }
 }

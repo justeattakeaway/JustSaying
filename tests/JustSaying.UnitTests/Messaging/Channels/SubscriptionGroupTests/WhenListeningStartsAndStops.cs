@@ -1,4 +1,5 @@
 using Amazon.SQS.Model;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using Microsoft.Extensions.Logging;
 
@@ -31,9 +32,10 @@ public class WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper) : B
             }
         }
 
-        _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), ct => Task.FromResult(GetMessages(ct)));
+        var sqsSource = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), ct => Task.FromResult(GetMessages(ct)));
+        _queue = sqsSource.SqsQueue as FakeSqsQueue;
 
-        Queues.Add(_queue);
+        Queues.Add(sqsSource);
     }
 
     protected override async Task WhenAsync()

@@ -9,9 +9,10 @@ public class WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper) : Bas
 
     protected override void Given()
     {
-        _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
+        var sqsSource = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
+        _queue = sqsSource.SqsQueue as FakeSqsQueue;
 
-        Queues.Add(_queue);
+        Queues.Add(sqsSource);
 
         Handler.OnHandle = (msg) =>
         {

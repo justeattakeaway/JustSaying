@@ -33,16 +33,18 @@ internal sealed class StaticPublicationConfiguration(
 
         readConfiguration.ApplyTopicNamingConvention<T>(bus.Config.TopicNamingConvention);
 
+        var compressionOptions = writeConfiguration.CompressionOptions ?? bus.Config.DefaultCompressionOptions;
+        var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
+        var subjectProvider = bus.Config.MessageSubjectProvider;
+        var subject = subjectProvider.GetSubjectForType(typeof(T));
+
         var eventPublisher = new SnsMessagePublisher(
             snsClient,
-            // TODO fix this properly
-            new MessageConverter(new NewtonsoftMessageBodySerializer<T>(), new MessageCompressionRegistry([new GzipMessageBodyCompression()])),
+            new PublishMessageConverter(serializer, new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject),
             loggerFactory,
             bus.Config.MessageSubjectProvider)
         {
             MessageResponseLogger = bus.Config.MessageResponseLogger,
-            CompressionRegistry = bus.CompressionRegistry,
-            CompressionOptions = writeConfiguration.CompressionOptions ?? bus.Config.DefaultCompressionOptions
         };
 
         var snsTopic = new SnsTopicByName(

@@ -3,14 +3,7 @@ using Newtonsoft.Json;
 
 namespace JustSaying.Messaging.MessageSerialization;
 
-public class NewtonsoftSerializationFactory(JsonSerializerSettings settings) : IMessageSerializationFactory
+public class NewtonsoftSerializationFactory(JsonSerializerSettings settings = null) : IMessageBodySerializationFactory
 {
-    private readonly NewtonsoftSerializer _serializer = new(settings);
-
-    public NewtonsoftSerializationFactory()
-        : this(null)
-    {
-    }
-
-    public IMessageSerializer GetSerializer<T>() where T : Message => _serializer;
+    public IMessageBodySerializer GetSerializer<T>() where T : Message => new NewtonsoftMessageBodySerializer<T>(settings);
 }

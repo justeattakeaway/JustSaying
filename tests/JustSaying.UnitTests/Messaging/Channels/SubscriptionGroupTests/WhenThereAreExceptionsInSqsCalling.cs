@@ -11,8 +11,9 @@ public class WhenThereAreExceptionsInSqsCalling(ITestOutputHelper testOutputHelp
 
     protected override void Given()
     {
-        _queue = CreateSuccessfulTestQueue("TestQueue", ExceptionOnFirstCall());
-        Queues.Add(_queue);
+        var sqsSource = CreateSuccessfulTestQueue("TestQueue", ExceptionOnFirstCall());
+        _queue = sqsSource.SqsQueue as FakeSqsQueue;
+        Queues.Add(sqsSource);
 
         // setup deserializer failure
     }

@@ -1,5 +1,9 @@
 using Amazon.SQS.Model;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Middleware.Receive;
 using JustSaying.TestingFramework;
@@ -23,12 +27,16 @@ public class WhenSqsIsSlow
             new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>();
 
         var messages = new List<Message> { new TestMessage() };
-        var queue = new FakeSqsQueue(async ct =>
+        var queue = new SqsSource
         {
-            await Task.Delay(100, ct);
-            Interlocked.Increment(ref _callCount);
-            return messages;
-        });
+            SqsQueue = new FakeSqsQueue(async ct =>
+            {
+                await Task.Delay(100, ct);
+                Interlocked.Increment(ref _callCount);
+                return messages;
+            }),
+            MessageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry([]))
+        };
 
         var monitor = new TrackingLoggingMonitor(
             loggerFactory.CreateLogger<TrackingLoggingMonitor>());

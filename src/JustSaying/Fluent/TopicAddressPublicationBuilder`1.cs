@@ -69,19 +69,23 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
         var config = bus.Config;
         var arn = Arn.Parse(_topicAddress.TopicArn);
 
+        var compressionRegistry = bus.CompressionRegistry;
+        var compressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions;
+        var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
+        var subjectProvider = bus.Config.MessageSubjectProvider;
+        var subject = subjectProvider.GetSubjectForType(typeof(T));
+
         var eventPublisher = new TopicAddressPublisher(
             proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(arn.Region)),
             loggerFactory,
             config.MessageSubjectProvider,
-            new MessageConverter(new NewtonsoftMessageBodySerializer<T>(), new MessageCompressionRegistry([new GzipMessageBodyCompression()])),
+            new PublishMessageConverter(serializer, compressionRegistry, compressionOptions, subject),
             _exceptionHandler,
             _topicAddress)
         {
-            MessageResponseLogger = config.MessageResponseLogger,
-            CompressionRegistry = bus.CompressionRegistry,
-            CompressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions
+            MessageResponseLogger = config.MessageResponseLogger
         };
-        CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, eventPublisher.CompressionOptions);
+        CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, compressionOptions);
 
         bus.AddMessagePublisher<T>(eventPublisher);
 

@@ -6,28 +6,18 @@ namespace JustSaying.AwsTools.QueueCreation;
 
 public class SqsBasicConfiguration
 {
-    public TimeSpan MessageRetention { get; set; }
-    public TimeSpan ErrorQueueRetentionPeriod { get; set; }
-    public TimeSpan VisibilityTimeout { get; set; }
-    public TimeSpan DeliveryDelay { get; set; }
-    public int RetryCountBeforeSendingToErrorQueue { get; set; }
+    public TimeSpan MessageRetention { get; set; } = JustSayingConstants.DefaultRetentionPeriod;
+    public TimeSpan ErrorQueueRetentionPeriod { get; set; } = JustSayingConstants.MaximumRetentionPeriod;
+    public TimeSpan VisibilityTimeout { get; set; } = JustSayingConstants.DefaultVisibilityTimeout;
+    public TimeSpan DeliveryDelay { get; set; } = JustSayingConstants.MinimumDeliveryDelay;
+    public int RetryCountBeforeSendingToErrorQueue { get; set; } = JustSayingConstants.DefaultHandlerRetryCount;
     public bool ErrorQueueOptOut { get; set; }
     public ServerSideEncryption ServerSideEncryption { get; set; }
-    public PublishCompressionOptions CompressionOptions { get; set; }
     public string QueueName { get; set; }
 
     public void ApplyQueueNamingConvention<T>(IQueueNamingConvention namingConvention)
     {
         QueueName = namingConvention.Apply<T>(QueueName);
-    }
-
-    public SqsBasicConfiguration()
-    {
-        MessageRetention = JustSayingConstants.DefaultRetentionPeriod;
-        ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod;
-        VisibilityTimeout = JustSayingConstants.DefaultVisibilityTimeout;
-        RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
-        DeliveryDelay = JustSayingConstants.MinimumDeliveryDelay;
     }
 
     public void Validate()

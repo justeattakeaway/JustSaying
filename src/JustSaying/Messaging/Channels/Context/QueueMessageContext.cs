@@ -15,7 +15,7 @@ public sealed class QueueMessageContext : IQueueMessageContext
     /// <param name="message">The <see cref="Amazon.SQS.Model.Message"/> to be handled.</param>
     /// <param name="queueReader">The <see cref="SqsQueueReader"/> the message was read from.</param>
     /// <param name="messageConverter"></param>
-    internal QueueMessageContext(Message message, SqsQueueReader queueReader, IMessageConverter messageConverter)
+    internal QueueMessageContext(Message message, SqsQueueReader queueReader, IReceivedMessageConverter messageConverter)
     {
         Message = message ?? throw new ArgumentNullException(nameof(message));
         _queueReader = queueReader ?? throw new ArgumentNullException(nameof(queueReader));
@@ -31,7 +31,7 @@ public sealed class QueueMessageContext : IQueueMessageContext
     /// <inheritdoc />
     public string QueueName => _queueReader.QueueName;
 
-    public IMessageConverter MessageConverter { get; }
+    public IReceivedMessageConverter MessageConverter { get; }
 
     /// <inheritdoc />
     public async Task UpdateMessageVisibilityTimeout(TimeSpan visibilityTimeout, CancellationToken cancellationToken)

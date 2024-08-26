@@ -25,9 +25,9 @@ public sealed class ReceivedMessage(Message message, MessageAttributes messageAt
     }
 }
 
-public sealed class MessageForPublishing
+public sealed class PublishMessage
 {
-    public MessageForPublishing(string body, Dictionary<string, MessageAttributeValue> messageAttributes, string subject)
+    public PublishMessage(string body, Dictionary<string, MessageAttributeValue> messageAttributes, string subject)
     {
         Body = body;
         MessageAttributes = messageAttributes;

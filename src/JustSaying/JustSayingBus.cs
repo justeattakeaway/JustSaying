@@ -38,6 +38,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
 
     internal MiddlewareMap MiddlewareMap { get; }
     internal MessageCompressionRegistry CompressionRegistry { get; }
+    internal IMessageBodySerializationFactory MessageBodySerializerFactory { get; set; }
 
     public Task Completion { get; private set; }
 
@@ -55,6 +56,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         Config = config;
         MiddlewareMap = new MiddlewareMap();
         CompressionRegistry = new MessageCompressionRegistry([new GzipMessageBodyCompression()]);
+        MessageBodySerializerFactory = new NewtonsoftSerializationFactory();
 
         _publishersByType = [];
         _subscriptionGroupSettings =

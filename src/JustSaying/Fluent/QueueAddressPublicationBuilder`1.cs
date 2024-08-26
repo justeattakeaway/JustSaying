@@ -50,19 +50,19 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
         logger.LogInformation("Adding SQS publisher for message type '{MessageType}'", typeof(T));
 
         var config = bus.Config;
-        //bus.SerializationRegister.AddSerializer<T>();
+        var compressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions;
+        var subjectProvider = bus.Config.MessageSubjectProvider;
+        var subject = subjectProvider.GetSubjectForType(typeof(T));
 
         var eventPublisher = new SqsMessagePublisher(
             _queueAddress.QueueUrl,
             proxy.GetAwsClientFactory().GetSqsClient(RegionEndpoint.GetBySystemName(_queueAddress.RegionName)),
-            new MessageConverter(new NewtonsoftMessageBodySerializer<T>(), new MessageCompressionRegistry([new GzipMessageBodyCompression()])),
+            new PublishMessageConverter(bus.MessageBodySerializerFactory.GetSerializer<T>(), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject),
             loggerFactory)
         {
-            MessageResponseLogger = config.MessageResponseLogger,
-            CompressionRegistry = bus.CompressionRegistry,
-            CompressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions
+            MessageResponseLogger = config.MessageResponseLogger
         };
-        CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, eventPublisher.CompressionOptions);
+        CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, compressionOptions);
 
         bus.AddMessagePublisher<T>(eventPublisher);
 

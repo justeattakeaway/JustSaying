@@ -14,7 +14,7 @@ internal sealed class TopicAddressPublisher(
     IAmazonSimpleNotificationService snsClient,
     ILoggerFactory loggerFactory,
     IMessageSubjectProvider subjectProvider,
-    IMessageConverter messageConverter,
+    IPublishMessageConverter messageConverter,
     Func<Exception, Message, bool> handleException,
     TopicAddress topicAddress) : SnsMessagePublisher(topicAddress.TopicArn, snsClient, messageConverter, loggerFactory, subjectProvider, handleException)
 {

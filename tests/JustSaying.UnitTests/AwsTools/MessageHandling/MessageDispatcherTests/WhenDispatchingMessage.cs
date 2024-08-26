@@ -38,7 +38,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
     internal MessageDispatcher SystemUnderTest { get; private set; }
 
     protected readonly IMessageBackoffStrategy MessageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
-    private readonly MessageConverter _messageConverter;
+    private readonly ReceivedMessageConverter _messageConverter;
 
     public WhenDispatchingMessage(ITestOutputHelper outputHelper)
     {
@@ -46,7 +46,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
         _loggerFactory = TestLoggerFactory.Create(lb => lb.AddXUnit(outputHelper));
         _messageMonitor = new TrackingLoggingMonitor(_loggerFactory.CreateLogger<TrackingLoggingMonitor>());
         _middlewareMap = new MiddlewareMap();
-        _messageConverter = new MessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry([]));
+        _messageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry([]));
     }
 
     public virtual async Task InitializeAsync()

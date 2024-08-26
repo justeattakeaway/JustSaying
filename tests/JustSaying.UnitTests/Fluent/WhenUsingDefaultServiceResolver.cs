@@ -35,12 +35,12 @@ public class WhenUsingDefaultServiceResolver
         _sut.ResolveService<IMessagingConfig>().ShouldBeOfType<MessagingConfig>();
     }
 
-    [Fact]
-    public void ShouldResolveIMessageSerializationFactoryToNewtonsoftSerializationFactory()
-    {
-        _sut.ResolveService<IMessageSerializationFactory>().ShouldBeOfType<NewtonsoftSerializationFactory>();
-    }
-    
+    // [Fact]
+    // public void ShouldResolveIMessageSerializationFactoryToNewtonsoftSerializationFactory()
+    // {
+    //     _sut.ResolveService<IMessageSerializationFactory>().ShouldBeOfType<NewtonsoftSerializationFactory>();
+    // }
+
     [Fact]
     public void ShouldResolveIMessageSubjectProviderToNonGenericMessageSubjectProvider()
     {

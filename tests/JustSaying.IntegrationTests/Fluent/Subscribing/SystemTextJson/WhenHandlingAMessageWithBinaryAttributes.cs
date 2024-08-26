@@ -34,7 +34,7 @@ public class WhenHandlingAMessageWithBinaryAttributes(ITestOutputHelper outputHe
         var services = GivenJustSaying()
             .ConfigureJustSaying((builder) => builder
                 .WithLoopbackTopic<SimpleMessage>(UniqueName))
-            .AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>()
+            //.AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>() TODO
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
         await WhenAsync(

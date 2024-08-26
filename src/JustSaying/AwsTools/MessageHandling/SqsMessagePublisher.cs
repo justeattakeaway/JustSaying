@@ -13,20 +13,18 @@ namespace JustSaying.AwsTools.MessageHandling;
 
 internal class SqsMessagePublisher(
     IAmazonSQS client,
-    MessageConverter messageConverter,
+    PublishMessageConverter messageConverter,
     ILoggerFactory loggerFactory) : IMessagePublisher
 {
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
-    internal MessageCompressionRegistry CompressionRegistry { get; set; }
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
-    public PublishCompressionOptions CompressionOptions { get; set; }
 
     public Uri QueueUrl { get; internal set; }
 
     public SqsMessagePublisher(
         Uri queueUrl,
         IAmazonSQS client,
-        MessageConverter messageConverter,
+        PublishMessageConverter messageConverter,
         ILoggerFactory loggerFactory) : this(client, messageConverter, loggerFactory)
     {
         QueueUrl = queueUrl;

@@ -1,7 +1,6 @@
 using Amazon;
 using Amazon.SQS;
 using JustSaying.AwsTools;
-using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
@@ -68,8 +67,6 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         return this;
     }
 
-
-
     /// <inheritdoc />
     void ISubscriptionBuilder<T>.Configure(
         JustSayingBus bus,
@@ -94,7 +91,9 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         attachedQueueConfig.SubscriptionGroupName ??= queue.QueueName;
         attachedQueueConfig.Validate();
 
-        var sqsSource = new SqsSource { SqsQueue = queue, MessageConverter = new MessageConverter(new NewtonsoftMessageBodySerializer<T>(), new MessageCompressionRegistry([new GzipMessageBodyCompression()])) };
+        var serializer = MessageBodySerializer ?? bus.MessageBodySerializerFactory.GetSerializer<T>();
+        var messageConverter = new ReceivedMessageConverter(serializer, new MessageCompressionRegistry([new GzipMessageBodyCompression()]));
+        var sqsSource = new SqsSource { SqsQueue = queue, MessageConverter = messageConverter };
 
         bus.AddQueue(attachedQueueConfig.SubscriptionGroupName, sqsSource);
 

@@ -5,6 +5,7 @@ using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
@@ -20,7 +21,7 @@ public class WhenPublishingAsync : WhenPublishingTestBase
 
     private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        var messageConverter = new MessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry([]));
+        var messageConverter = new PublishMessageConverter(new FakeBodySerializer(Message), new MessageCompressionRegistry([]), new PublishCompressionOptions(), nameof(SimpleMessage));
         var topic = new SnsMessagePublisher(TopicArn, Sns, messageConverter, NullLoggerFactory.Instance, new NonGenericMessageSubjectProvider());
         return Task.FromResult(topic);
     }

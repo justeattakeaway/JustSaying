@@ -207,10 +207,13 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
             subscriptionConfig);
 
         bus.AddStartupTask(queueWithStartup.StartupTask);
+        var compressionRegistry = bus.CompressionRegistry;
+        var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
+
         var sqsSource = new SqsSource
         {
             SqsQueue = queueWithStartup.Queue,
-            MessageConverter = new MessageConverter(new NewtonsoftMessageBodySerializer<T>(), new MessageCompressionRegistry([new GzipMessageBodyCompression()]))
+            MessageConverter = new ReceivedMessageConverter(serializer, compressionRegistry)
         };
         bus.AddQueue(subscriptionConfig.SubscriptionGroupName, sqsSource);
 

@@ -25,7 +25,7 @@ public class WhenDispatchingCompressedMessage
         var originalMessage = new SimpleMessage { Id = Guid.NewGuid() };
         var decompressorRegistry =
             new MessageCompressionRegistry([new GzipMessageBodyCompression()]);
-        var messageConverter = new MessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), decompressorRegistry);
+        var messageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), decompressorRegistry);
 
         string payload = JsonSerializer.Serialize(originalMessage, originalMessage.GetType(), new JsonSerializerOptions
         {

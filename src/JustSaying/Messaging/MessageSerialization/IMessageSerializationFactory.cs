@@ -2,7 +2,7 @@ using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialization;
 
-public interface IMessageSerializationFactory
+public interface IMessageBodySerializationFactory
 {
-    IMessageSerializer GetSerializer<T>() where T : Message;
+    IMessageBodySerializer GetSerializer<T>() where T : Message;
 }

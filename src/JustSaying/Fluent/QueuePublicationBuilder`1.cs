@@ -105,14 +105,17 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
         var regionEndpoint = RegionEndpoint.GetBySystemName(region);
         var sqsClient = proxy.GetAwsClientFactory().GetSqsClient(regionEndpoint);
 
+        var compressionRegistry = bus.CompressionRegistry;
+        var compressionOptions = writeConfiguration.CompressionOptions;
+        var subjectProvider = bus.Config.MessageSubjectProvider;
+        var subject = subjectProvider.GetSubjectForType(typeof(T));
+
         var eventPublisher = new SqsMessagePublisher(
             sqsClient,
-            new MessageConverter(new NewtonsoftMessageBodySerializer<T>(), new MessageCompressionRegistry([new GzipMessageBodyCompression()])),
+            new PublishMessageConverter(bus.MessageBodySerializerFactory.GetSerializer<T>(), compressionRegistry, compressionOptions, subject),
             loggerFactory)
         {
-            MessageResponseLogger = config.MessageResponseLogger,
-            CompressionRegistry = bus.CompressionRegistry,
-            CompressionOptions = writeConfiguration.CompressionOptions
+            MessageResponseLogger = config.MessageResponseLogger
         };
 
 #pragma warning disable 618

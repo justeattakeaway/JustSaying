@@ -6,6 +6,7 @@ using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
@@ -18,7 +19,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
 public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
 {
-    protected IList<ISqsQueue> Queues;
+    protected IList<SqsSource> Queues;
     protected MiddlewareMap MiddlewareMap;
     protected TrackingLoggingMonitor Monitor;
     protected int ConcurrencyLimit = 8;
@@ -51,7 +52,7 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
 
     private void GivenInternal()
     {
-        Queues = new List<ISqsQueue>();
+        Queues = [];
         Handler = new InspectableHandler<SimpleMessage>();
         Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
         MiddlewareMap = new MiddlewareMap();
@@ -75,9 +76,9 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
     // Default implementation
     protected virtual async Task WhenAsync()
     {
-        foreach (ISqsQueue queue in Queues)
+        foreach (SqsSource queue in Queues)
         {
-            MiddlewareMap.Add<SimpleMessage>(queue.QueueName, Middleware);
+            MiddlewareMap.Add<SimpleMessage>(queue.SqsQueue.QueueName, Middleware);
         }
 
         var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
@@ -103,7 +104,6 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
         var dispatcher = new MessageDispatcher(
             Monitor,
             MiddlewareMap,
-            new MessageCompressionRegistry([]),
             LoggerFactory);
 
         var defaults = new SubscriptionGroupSettingsBuilder()
@@ -128,24 +128,33 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
         };
     }
 
-    protected static FakeSqsQueue CreateSuccessfulTestQueue(string queueName, params Message[] messages)
+    protected static SqsSource CreateSuccessfulTestQueue(string queueName, params Message[] messages)
     {
         return CreateSuccessfulTestQueue(queueName, messages.AsEnumerable());
     }
 
-    protected static FakeSqsQueue CreateSuccessfulTestQueue(string queueName, IEnumerable<Message> messages)
+    protected static SqsSource CreateSuccessfulTestQueue(string queueName, IEnumerable<Message> messages)
     {
         return CreateSuccessfulTestQueue(queueName, ct => Task.FromResult(messages));
     }
 
-    protected static FakeSqsQueue CreateSuccessfulTestQueue(
+    protected static SqsSource CreateSuccessfulTestQueue(
         string queueName,
         Func<CancellationToken, Task<IEnumerable<Message>>> messageProducer)
     {
-        var sqsQueue = new FakeSqsQueue( messageProducer,
-            queueName);
+        var sqsQueue = new FakeSqsQueue(messageProducer, queueName);
 
-        return sqsQueue;
+        return new SqsSource
+        {
+            SqsQueue = sqsQueue,
+            MessageConverter = new ReceivedMessageConverter(new FakeBodyDeserializer(
+                    new SimpleMessage
+                    {
+                        RaisingComponent = "Component",
+                        Id = Guid.NewGuid()
+                    }),
+                new MessageCompressionRegistry([]))
+        };
     }
 
     public Task DisposeAsync()

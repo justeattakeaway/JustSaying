@@ -4,6 +4,7 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
+using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
@@ -11,16 +12,15 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;
 
 public class WhenPublishingAsyncWithGenericMessageSubjectProvider : WhenPublishingTestBase
 {
-    public class MessageWithTypeParameters<TA, TB> : Message
-    {
-    }
+    public class MessageWithTypeParameters<TA, TB> : Message;
 
     private const string Message = "the_message_in_json";
     private const string TopicArn = "topicarn";
 
     private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        var messageConverter = new MessageConverter(new NewtonsoftMessageBodySerializer<MessageWithTypeParameters<int, string>>(), new MessageCompressionRegistry([]));
+        var subject = new GenericMessageSubjectProvider().GetSubjectForType(typeof(MessageWithTypeParameters<int, string>));
+        var messageConverter = new PublishMessageConverter(new FakeBodySerializer(Message), new MessageCompressionRegistry([]), new PublishCompressionOptions(), subject);
         var topic = new SnsMessagePublisher(TopicArn, Sns, messageConverter, NullLoggerFactory.Instance, new GenericMessageSubjectProvider());
         return Task.FromResult(topic);
     }

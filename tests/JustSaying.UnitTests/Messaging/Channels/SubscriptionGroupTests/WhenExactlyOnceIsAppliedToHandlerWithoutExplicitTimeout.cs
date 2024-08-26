@@ -1,4 +1,5 @@
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
@@ -11,7 +12,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
 public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
 {
-    private ISqsQueue _queue;
+    private SqsSource _queue;
     private readonly int _maximumTimeout = (int)TimeSpan.MaxValue.TotalSeconds;
     private FakeMessageLock _messageLock;
 
@@ -39,7 +40,7 @@ public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper te
 
     protected override async Task WhenAsync()
     {
-        MiddlewareMap.Add<SimpleMessage>(_queue.QueueName, Middleware);
+        MiddlewareMap.Add<SimpleMessage>(_queue.SqsQueue.QueueName, Middleware);
 
         var cts = new CancellationTokenSource();
 

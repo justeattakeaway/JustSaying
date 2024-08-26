@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Amazon.SQS.Model;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
@@ -16,10 +17,10 @@ public class WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper) : B
 
     protected override void Given()
     {
-        _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(),
-            ct => Task.FromResult(new List<Message> { new TestMessage { Body = MessageBody } }.AsEnumerable()));
+        var sqsSource = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage { Body = MessageBody });
+        _queue = sqsSource.SqsQueue as FakeSqsQueue;
 
-        Queues.Add(_queue);
+        Queues.Add(sqsSource);
     }
 
     [Fact]

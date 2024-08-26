@@ -6,7 +6,6 @@ namespace JustSaying.TestingFramework;
 public sealed class AwsFactAttribute : FactAttribute
 {
     public AwsFactAttribute()
-        : base()
     {
         if (!TestEnvironment.IsSimulatorConfigured && !TestEnvironment.HasCredentials)
         {
