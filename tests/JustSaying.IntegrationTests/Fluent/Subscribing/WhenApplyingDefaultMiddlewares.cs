@@ -25,7 +25,7 @@ public class WhenApplyingDefaultMiddlewares(ITestOutputHelper outputHelper) : In
         var services = GivenJustSaying()
             .ConfigureJustSaying((builder) =>
                 builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
-            .AddJustSayingHandlers(new[] { handler });
+            .AddJustSayingHandlers([handler]);
 
         string json = "";
         await WhenAsync(

@@ -43,8 +43,9 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// </summary>
     private Dictionary<string, string> Tags { get; } = new(StringComparer.Ordinal);
 
-    private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
+    private bool IsRawDeliveryMode { get; set; }
 
+    private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
     /// <summary>
     /// Configures that the <see cref="ITopicNamingConvention"/> will create the topic name that should be used.
@@ -173,6 +174,12 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         return this;
     }
 
+    public TopicSubscriptionBuilder<T> WithRawDelivery()
+    {
+        IsRawDeliveryMode = true;
+        return this;
+    }
+
     /// <inheritdoc />
     void ISubscriptionBuilder<T>.Configure(
         JustSayingBus bus,
@@ -188,6 +195,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         {
             QueueName = QueueName,
             TopicName = TopicName,
+            RawMessageDelivery = IsRawDeliveryMode,
             Tags = Tags
         };
 

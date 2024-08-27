@@ -1,5 +1,6 @@
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging;
@@ -53,6 +54,7 @@ public abstract class GivenAServiceBus(ITestOutputHelper outputHelper) : IAsyncL
     {
         var messageReceivePauseSignal = new MessageReceivePauseSignal();
         var bus = new JustSaying.JustSayingBus(Config,
+            new NewtonsoftSerializationFactory(),
             messageReceivePauseSignal,
             LoggerFactory,
             Monitor);

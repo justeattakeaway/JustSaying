@@ -32,8 +32,7 @@ internal sealed class JustSayingRegistry : Registry
         For<IAwsClientFactoryProxy>().Use((p) => new AwsClientFactoryProxy(p.GetInstance<IAwsClientFactory>)).Singleton();
         For<IMessagingConfig>().Use<MessagingConfig>().Singleton();
         For<IMessageMonitor>().Use<NullOpMessageMonitor>().Singleton();
-        // TODO
-        //For<IMessageSerializationFactory>().Use<NewtonsoftSerializationFactory>().Singleton();
+        For<IMessageBodySerializationFactory>().Use<NewtonsoftSerializationFactory>().Singleton();
         For<IMessageSubjectProvider>().Use<GenericMessageSubjectProvider>().Singleton();
         For<IVerifyAmazonQueues>().Use<AmazonQueueCreator>().Singleton();
 

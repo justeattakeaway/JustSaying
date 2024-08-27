@@ -93,7 +93,7 @@ public class SubscriptionGroupCollectionTests
     {
         var config = Substitute.For<IMessagingConfig>();
 
-        var bus = new JustSaying.JustSayingBus(config, MessageReceivePauseSignal, LoggerFactory, MessageMonitor);
+        var bus = new JustSaying.JustSayingBus(config, new NewtonsoftSerializationFactory(), MessageReceivePauseSignal, LoggerFactory, MessageMonitor);
 
         var defaultSubscriptionSettings = new SubscriptionGroupSettingsBuilder()
             .WithDefaultMultiplexerCapacity(1)
