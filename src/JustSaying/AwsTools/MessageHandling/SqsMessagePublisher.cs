@@ -122,7 +122,7 @@ public class SqsMessagePublisher(
             catch (AmazonServiceException ex)
             {
                 throw new PublishBatchException(
-                    $"Failed to publish batch message to SQS. {nameof(request.QueueUrl)}: {request.QueueUrl}",
+                    $"Failed to publish batch of {chunk.Length} messages to SQS. {nameof(request.QueueUrl)}: {request.QueueUrl}",
                     ex);
             }
 
@@ -151,7 +151,7 @@ public class SqsMessagePublisher(
                 if (response.Failed.Count > 0 && _logger.IsEnabled(LogLevel.Error))
                 {
                     _logger.LogError(
-                        "Fail to published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
+                        "Failed to published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
                         response.Failed.Count,
                         "Queue",
                         request.QueueUrl);
@@ -159,7 +159,7 @@ public class SqsMessagePublisher(
                     foreach (var message in response.Failed)
                     {
                         _logger.LogError(
-                            "Fail to published message {MessageId} to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
+                            "Failed to published message {MessageId} to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
                             message.Id,
                             "Queue",
                             request.QueueUrl,

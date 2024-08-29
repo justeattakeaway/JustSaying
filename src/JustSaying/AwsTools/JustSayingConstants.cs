@@ -77,7 +77,7 @@ public static class JustSayingConstants
     /// The maximum SNS batch size.
     /// </summary>
     /// <remarks>
-    /// The default vaule is 10. See https://docs.aws.amazon.com/sns/latest/dg/sns-batch-api-actions.html.
+    /// The default value is 10. See https://docs.aws.amazon.com/sns/latest/dg/sns-batch-api-actions.html.
     /// </remarks>
     public static int MaximumSnsBatchSize => 10;
 }

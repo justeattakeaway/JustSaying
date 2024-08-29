@@ -209,7 +209,7 @@ public sealed class MessagingConfigurationBuilder
     }
 
     /// <summary>
-    /// Specifies the number of publish re-attempts to use if message publishing fails.
+    /// Specifies the number of publish re-attempts to make if message publishing fails.
     /// </summary>
     /// <param name="value">The number of re-attempts.</param>
     /// <returns>
@@ -222,7 +222,7 @@ public sealed class MessagingConfigurationBuilder
     }
 
     /// <summary>
-    /// Specifies the number of publish re-attempts to use if message publishing fails in batch.
+    /// Specifies the number of publish re-attempts to make if message publishing fails in a batch.
     /// </summary>
     /// <param name="value">The number of re-attempts.</param>
     /// <returns>
