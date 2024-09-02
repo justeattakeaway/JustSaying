@@ -157,7 +157,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     {
         if (PublishBatchConfiguration.PublishFailureReAttempts == 0)
         {
-            _log.LogWarning("You have not set a re-attempt value for publish failures. If the publish location is not available you may lose messages.");
+            _log.LogWarning("You have not set a re-attempt value for batch publish failures. If the publish location is not available you may lose messages.");
         }
 
         _batchPublishersByType[typeof(T)] = messageBatchPublisher;
@@ -368,15 +368,15 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     {
         if (_publishersByType.Count == 0)
         {
-            const string errorMessage = "Error publishing message, no publishers registered. Has the bus been started?";
+            const string errorMessage = "Error publishing message batch, no publishers registered. Has the bus been started?";
             _log.LogError(errorMessage);
             throw new InvalidOperationException(errorMessage);
         }
 
         if (!_batchPublishersByType.TryGetValue(messageType, out var publisher))
         {
-            _log.LogError("Error publishing message. No publishers registered for message type '{MessageType}'.", messageType);
-            throw new InvalidOperationException($"Error publishing message, no publishers registered for message type '{messageType}'.");
+            _log.LogError("Error publishing message batch. No publishers registered for message type '{MessageType}'.", messageType);
+            throw new InvalidOperationException($"Error publishing message batch, no publishers registered for message type '{messageType}'.");
         }
 
         return publisher;
@@ -411,7 +411,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
 
                     _log.LogError(
                         ex,
-                        "Failed to publish a message of type '{MessageType}'. Halting after attempt number {PublishAttemptCount}.",
+                        "Failed to publish a message batch of type '{MessageType}'. Halting after attempt number {PublishAttemptCount}.",
                         messageType,
                         attemptCount);
 
@@ -420,7 +420,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
 
                 _log.LogWarning(
                     ex,
-                    "Failed to publish a message of type '{MessageType}'. Retrying after attempt number {PublishAttemptCount} of {PublishFailureReattempts}.",
+                    "Failed to publish a message batch of type '{MessageType}'. Retrying after attempt number {PublishAttemptCount} of {PublishFailureReattempts}.",
                     messageType,
                     attemptCount,
                     PublishBatchConfiguration.PublishFailureReAttempts);

@@ -47,7 +47,7 @@ public class WhenAMessageIsPublishedToATopic(ITestOutputHelper outputHelper) : I
     [InlineData(10, 10)]
     [InlineData(10, 20)]
     [InlineData(5, 10)]
-    public async Task Then_Multiple_Messages_Is_Handled(int maxBatchSize, int batchSize)
+    public async Task Then_Multiple_Messages_Are_Handled(int maxBatchSize, int batchSize)
     {
         // Arrange
         var completionSource = new TaskCompletionSource<object>();

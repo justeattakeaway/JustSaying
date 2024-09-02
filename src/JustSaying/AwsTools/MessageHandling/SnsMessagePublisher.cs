@@ -198,7 +198,7 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
                 if (response.Failed.Count > 0 && _logger.IsEnabled(LogLevel.Error))
                 {
                     _logger.LogError(
-                        "Failed to published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
+                        "Failed to publish batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
                         response.Failed.Count,
                         "Topic",
                         request.TopicArn);
@@ -206,7 +206,7 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
                     foreach (var message in response.Failed)
                     {
                         _logger.LogError(
-                            "Failed to published message {MessageId} to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
+                            "Failed to publish message {MessageId} to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
                             message.Id,
                             "Topic",
                             request.TopicArn,
