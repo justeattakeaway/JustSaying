@@ -1,5 +1,4 @@
 using JustSaying.Messaging;
-using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -26,7 +25,7 @@ public class WhenPublishingWithNoRegisteredMessages(ITestOutputHelper outputHelp
         await batchPublisher.StartAsync(CancellationToken.None);
 
         // Act and Assert
-        exception = await Assert.ThrowsAsync<InvalidOperationException>(() => batchPublisher.PublishAsync(new List<Message> {new SimpleMessage() }, CancellationToken.None));
-        exception.Message.ShouldBe("Error publishing message, no publishers registered. Has the bus been started?");
+        exception = await Assert.ThrowsAsync<InvalidOperationException>(() => batchPublisher.PublishAsync([new SimpleMessage()], CancellationToken.None));
+        exception.Message.ShouldBe("Error publishing message batch, no publishers registered. Has the bus been started?");
     }
 }
