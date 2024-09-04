@@ -37,7 +37,7 @@ public class WhenRegisteringMessageHandlers(ITestOutputHelper outputHelper) : Gi
         SystemUnderTest.AddQueue(typeof(Message).FullName, new SqsSource
         {
             SqsQueue = _queue,
-            MessageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<Message>(), new MessageCompressionRegistry([]))
+            MessageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<Message>(), new MessageCompressionRegistry(), false)
         });
         SystemUnderTest.AddMessageMiddleware<Message>(_queue.QueueName, _futureHandler1);
         SystemUnderTest.AddMessageMiddleware<Message2>(_queue.QueueName, _futureHandler2);

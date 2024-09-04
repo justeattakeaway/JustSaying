@@ -18,7 +18,7 @@ public class DealingWithPotentiallyMissingConversation : XBehaviourTest<Newtonso
         _jsonMessage = SystemUnderTest.Serialize(_messageOut);
 
         //add extra property to see what happens:
-        _jsonMessage = _jsonMessage.Replace("{__", "{\"New\":\"Property\",__", StringComparison.OrdinalIgnoreCase);
+        _jsonMessage = _jsonMessage.Replace("{__", """{"New":"Property",__""", StringComparison.OrdinalIgnoreCase);
         _messageIn = SystemUnderTest.Deserialize(_jsonMessage) as MessageWithEnum;
     }
 

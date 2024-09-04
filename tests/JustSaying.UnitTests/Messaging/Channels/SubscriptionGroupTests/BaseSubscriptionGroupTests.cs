@@ -57,6 +57,11 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
         Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
         MiddlewareMap = new MiddlewareMap();
         CompletionMiddleware = new AwaitableMiddleware(OutputHelper);
+        SetupMessage = new SimpleMessage
+        {
+            RaisingComponent = "Component",
+            Id = Guid.NewGuid()
+        };
 
         var testResolver = new InMemoryServiceResolver(OutputHelper, Monitor,
             sc => sc.AddSingleton<IHandlerAsync<SimpleMessage>>(Handler));
@@ -69,6 +74,7 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
         Given();
     }
 
+    public SimpleMessage SetupMessage { get; private set; }
     public AwaitableMiddleware CompletionMiddleware { get; set; }
 
     protected abstract void Given();
@@ -128,17 +134,17 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
         };
     }
 
-    protected static SqsSource CreateSuccessfulTestQueue(string queueName, params Message[] messages)
+    protected SqsSource CreateSuccessfulTestQueue(string queueName, params Message[] messages)
     {
         return CreateSuccessfulTestQueue(queueName, messages.AsEnumerable());
     }
 
-    protected static SqsSource CreateSuccessfulTestQueue(string queueName, IEnumerable<Message> messages)
+    protected SqsSource CreateSuccessfulTestQueue(string queueName, IEnumerable<Message> messages)
     {
         return CreateSuccessfulTestQueue(queueName, ct => Task.FromResult(messages));
     }
 
-    protected static SqsSource CreateSuccessfulTestQueue(
+    protected SqsSource CreateSuccessfulTestQueue(
         string queueName,
         Func<CancellationToken, Task<IEnumerable<Message>>> messageProducer)
     {
@@ -148,12 +154,8 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
         {
             SqsQueue = sqsQueue,
             MessageConverter = new ReceivedMessageConverter(new FakeBodyDeserializer(
-                    new SimpleMessage
-                    {
-                        RaisingComponent = "Component",
-                        Id = Guid.NewGuid()
-                    }),
-                new MessageCompressionRegistry([]))
+                    SetupMessage),
+                new MessageCompressionRegistry(), false)
         };
     }
 

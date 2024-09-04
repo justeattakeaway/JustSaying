@@ -57,7 +57,7 @@ public class ErrorHandlingTests
                 "test", new SubscriptionGroupConfigBuilder("test").AddQueue(new SqsSource
                 {
                     SqsQueue = queue,
-                    MessageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry([]))
+                    MessageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), false)
                 })
             }
         };
@@ -110,7 +110,7 @@ public class ErrorHandlingTests
             { "test", new SubscriptionGroupConfigBuilder("test").AddQueue(new SqsSource
             {
                 SqsQueue = queue,
-                MessageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry([]))
+                MessageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), false)
             }) },
         };
 

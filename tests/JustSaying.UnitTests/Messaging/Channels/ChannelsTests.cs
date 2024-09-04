@@ -334,7 +334,7 @@ public class ChannelsTests
         var source = new SqsSource
         {
             SqsQueue = new FakeSqsQueue(ct => Task.FromResult(GetMessages(ct))),
-            MessageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry([]))
+            MessageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), false)
         };
 
         return source;

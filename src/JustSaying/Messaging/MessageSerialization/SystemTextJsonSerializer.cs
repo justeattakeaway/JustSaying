@@ -107,22 +107,18 @@ namespace JustSaying.Messaging.MessageSerialization;
 //     }
 // }
 
-public class SystemTextJsonMessageBodySerializer<T> : IMessageBodySerializer where T: Message
+public class SystemTextJsonMessageBodySerializer<T> : SystemTextJsonMessageBodySerializerBase, IMessageBodySerializer where T: Message
 {
     private readonly JsonSerializerOptions _options;
 
-    private static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
+    public SystemTextJsonMessageBodySerializer()
     {
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Converters =
-        {
-            new JsonStringEnumConverter(),
-        },
-    };
+        _options = DefaultJsonSerializerOptions;
+    }
 
     public SystemTextJsonMessageBodySerializer(JsonSerializerOptions options)
     {
-        _options = options ?? DefaultJsonSerializerOptions;
+        _options = options;
     }
 
     public string Serialize(Message message)
@@ -134,4 +130,16 @@ public class SystemTextJsonMessageBodySerializer<T> : IMessageBodySerializer whe
     {
         return JsonSerializer.Deserialize<T>(messageBody, _options);
     }
+}
+
+public class SystemTextJsonMessageBodySerializerBase
+{
+    private protected static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        Converters =
+        {
+            new JsonStringEnumConverter(),
+        },
+    };
 }

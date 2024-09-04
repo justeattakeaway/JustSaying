@@ -92,7 +92,8 @@ public sealed class QueueAddressSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         attachedQueueConfig.Validate();
 
         var serializer = MessageBodySerializer ?? bus.MessageBodySerializerFactory.GetSerializer<T>();
-        var messageConverter = new ReceivedMessageConverter(serializer, new MessageCompressionRegistry([new GzipMessageBodyCompression()]));
+        var compressionRegistry = bus.CompressionRegistry;
+        var messageConverter = new ReceivedMessageConverter(serializer, compressionRegistry, attachedQueueConfig.RawMessageDelivery);
         var sqsSource = new SqsSource { SqsQueue = queue, MessageConverter = messageConverter };
 
         bus.AddQueue(attachedQueueConfig.SubscriptionGroupName, sqsSource);

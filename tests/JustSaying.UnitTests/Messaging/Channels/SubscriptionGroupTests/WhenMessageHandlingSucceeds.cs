@@ -24,20 +24,9 @@ public class WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper) : B
     }
 
     [Fact]
-    public void MessagesGetDeserializedByCorrectHandler()
-    {
-        // SerializationRegister.ReceivedDeserializationRequests.ShouldAllBe(
-        //     msg => msg == MessageBody);
-        // TODO
-        throw new NotImplementedException();
-    }
-
-    [Fact]
     public void ProcessingIsPassedToTheHandlerForCorrectMessage()
     {
-        //Handler.ReceivedMessages.ShouldContain(SerializationRegister.DefaultDeserializedMessage());
-        // TODO
-        throw new NotImplementedException();
+        Handler.ReceivedMessages.ShouldContain(SetupMessage);
     }
 
     [Fact]

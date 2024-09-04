@@ -8,13 +8,18 @@ public class NewtonsoftMessageBodySerializer<T> : IMessageBodySerializer where T
 {
     private readonly JsonSerializerSettings _settings;
 
-    public NewtonsoftMessageBodySerializer(JsonSerializerSettings settings = null)
+    public NewtonsoftMessageBodySerializer()
     {
-        _settings = settings ?? new JsonSerializerSettings
+        _settings = new JsonSerializerSettings
         {
             NullValueHandling = NullValueHandling.Ignore,
             Converters = [new Newtonsoft.Json.Converters.StringEnumConverter()]
         };
+    }
+
+    public NewtonsoftMessageBodySerializer(JsonSerializerSettings settings)
+    {
+        _settings = settings;
     }
 
     public string Serialize(Message message)

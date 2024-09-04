@@ -10,7 +10,7 @@ public class CompressionEncodingValidatorTests
     public void ValidateEncoding_WithNullCompressionOptions_DoesNotThrow()
     {
         // Arrange
-        var registry = new MessageCompressionRegistry([]);
+        var registry = new MessageCompressionRegistry();
 
         // Act & Assert
         CompressionEncodingValidator.ValidateEncoding(registry, null);
@@ -20,7 +20,7 @@ public class CompressionEncodingValidatorTests
     public void ValidateEncoding_WithNullCompressionEncoding_DoesNotThrow()
     {
         // Arrange
-        var registry = new MessageCompressionRegistry([]);
+        var registry = new MessageCompressionRegistry();
         var options = new PublishCompressionOptions { CompressionEncoding = null };
 
         // Act & Assert
@@ -43,7 +43,7 @@ public class CompressionEncodingValidatorTests
     public void ValidateEncoding_WithUnregisteredEncoding_ThrowsInvalidOperationException()
     {
         // Arrange
-        var registry = new MessageCompressionRegistry([]);
+        var registry = new MessageCompressionRegistry();
         var options = new PublishCompressionOptions { CompressionEncoding = "unknown" };
 
         // Act & Assert

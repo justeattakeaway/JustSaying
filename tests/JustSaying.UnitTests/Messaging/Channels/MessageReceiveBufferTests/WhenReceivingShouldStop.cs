@@ -35,7 +35,7 @@ public class WhenReceivingShouldStop
                 Interlocked.Increment(ref _callCount);
                 return Task.FromResult(messages.AsEnumerable());
             }),
-            MessageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry([]))
+            MessageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), false)
         };
 
         _messageReceivePauseSignal = new MessageReceivePauseSignal();

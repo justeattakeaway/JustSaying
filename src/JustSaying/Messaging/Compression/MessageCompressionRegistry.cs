@@ -11,9 +11,9 @@ public sealed class MessageCompressionRegistry
     /// Initializes a new instance of the <see cref="MessageCompressionRegistry"/> class.
     /// </summary>
     /// <param name="compressions">A list of available compression methods.</param>
-    public MessageCompressionRegistry(IList<IMessageBodyCompression> compressions)
+    public MessageCompressionRegistry(IList<IMessageBodyCompression> compressions = null)
     {
-        _compressions = compressions ?? throw new ArgumentNullException(nameof(compressions));
+        _compressions = compressions ?? [];
     }
 
     /// <summary>

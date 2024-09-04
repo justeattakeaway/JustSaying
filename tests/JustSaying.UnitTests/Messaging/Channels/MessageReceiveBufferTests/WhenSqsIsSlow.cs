@@ -35,7 +35,7 @@ public class WhenSqsIsSlow
                 Interlocked.Increment(ref _callCount);
                 return messages;
             }),
-            MessageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry([]))
+            MessageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), false)
         };
 
         var monitor = new TrackingLoggingMonitor(

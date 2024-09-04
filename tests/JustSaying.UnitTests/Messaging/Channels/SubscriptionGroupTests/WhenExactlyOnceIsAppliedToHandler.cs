@@ -18,7 +18,10 @@ public class WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelpe
 
     protected override void Given()
     {
-        _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
+        _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage
+        {
+            Body = """{"Subject":"SimpleMessage", "Message": { "Content": "Hi"} }"""
+        });
 
         Queues.Add(_queue);
 
@@ -67,12 +70,7 @@ public class WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelpe
     public void MessageIsLocked()
     {
         // this should be part of setup to make work
-        var message = new SimpleMessage
-        {
-            RaisingComponent = "Component",
-            Id = Guid.NewGuid()
-        };
-        var messageId = message.Id.ToString();
+        var messageId = SetupMessage.Id.ToString();
 
         var tempLockRequests = _messageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
         tempLockRequests.Count().ShouldBeGreaterThan(0);

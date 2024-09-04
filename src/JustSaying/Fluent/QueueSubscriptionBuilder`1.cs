@@ -187,7 +187,9 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         var queue = creator.EnsureQueueExists(region, subscriptionConfig);
         bus.AddStartupTask(queue.StartupTask);
 
-        bus.AddQueue(subscriptionConfig.SubscriptionGroupName, new SqsSource { MessageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<T>(), null), SqsQueue = queue.Queue });
+        var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
+        var compressionRegistry = bus.CompressionRegistry;
+        bus.AddQueue(subscriptionConfig.SubscriptionGroupName, new SqsSource { MessageConverter = new ReceivedMessageConverter(serializer, compressionRegistry, subscriptionConfig.RawMessageDelivery), SqsQueue = queue.Queue });
 
         logger.LogInformation(
             "Created SQS subscriber for message type '{MessageType}' on queue '{QueueName}'.",

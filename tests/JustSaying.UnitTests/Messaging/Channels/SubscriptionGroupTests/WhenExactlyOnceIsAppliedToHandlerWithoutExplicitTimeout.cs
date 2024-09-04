@@ -18,7 +18,10 @@ public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper te
 
     protected override void Given()
     {
-        _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage());
+        _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage
+        {
+            Body = """{"Subject":"SimpleMessage", "Message": { "Content": "Hi"} }"""
+        });
         Queues.Add(_queue);
         _messageLock = new FakeMessageLock();
 
@@ -47,9 +50,9 @@ public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper te
         var completion = SystemUnderTest.RunAsync(cts.Token);
 
         await Patiently.AssertThatAsync(OutputHelper,
-            () => Handler.ReceivedMessages.Any());
+            () => !Handler.ReceivedMessages.IsEmpty);
 
-        cts.Cancel();
+        await cts.CancelAsync();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
 
     }
@@ -57,15 +60,9 @@ public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper te
     [Fact]
     public void MessageIsLocked()
     {
-        // this should be part of setup to make work
-        var message = new SimpleMessage
-        {
-            RaisingComponent = "Component",
-            Id = Guid.NewGuid()
-        };
-        var messageId = message.Id.ToString();
+        var messageId = SetupMessage.Id.ToString();
 
-        var tempLockRequests = _messageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
+        var tempLockRequests = _messageLock.MessageLockRequests.Where(lr => !lr.isPermanent).ToList();
         tempLockRequests.ShouldNotBeEmpty();
 
         foreach(var lockRequest in tempLockRequests)

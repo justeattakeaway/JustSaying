@@ -43,8 +43,6 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// </summary>
     private Dictionary<string, string> Tags { get; } = new(StringComparer.Ordinal);
 
-    private bool IsRawDeliveryMode { get; set; }
-
     private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
     /// <summary>
@@ -174,12 +172,6 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         return this;
     }
 
-    public TopicSubscriptionBuilder<T> WithRawDelivery()
-    {
-        IsRawDeliveryMode = true;
-        return this;
-    }
-
     /// <inheritdoc />
     void ISubscriptionBuilder<T>.Configure(
         JustSayingBus bus,
@@ -195,7 +187,6 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         {
             QueueName = QueueName,
             TopicName = TopicName,
-            RawMessageDelivery = IsRawDeliveryMode,
             Tags = Tags
         };
 
@@ -221,7 +212,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         var sqsSource = new SqsSource
         {
             SqsQueue = queueWithStartup.Queue,
-            MessageConverter = new ReceivedMessageConverter(serializer, compressionRegistry)
+            MessageConverter = new ReceivedMessageConverter(serializer, compressionRegistry, subscriptionConfig.RawMessageDelivery)
         };
         bus.AddQueue(subscriptionConfig.SubscriptionGroupName, sqsSource);
 

@@ -14,19 +14,21 @@ internal sealed class ReceivedMessageConverter : IReceivedMessageConverter
 {
     private readonly IMessageBodySerializer _bodySerializer;
     private readonly MessageCompressionRegistry _compressionRegistry;
+    private readonly bool _isRawMessage;
 
-    public ReceivedMessageConverter(IMessageBodySerializer bodySerializer, MessageCompressionRegistry compressionRegistry)
+    public ReceivedMessageConverter(IMessageBodySerializer bodySerializer, MessageCompressionRegistry compressionRegistry, bool isRawMessage)
     {
         _bodySerializer = bodySerializer;
         _compressionRegistry = compressionRegistry;
+        _isRawMessage = isRawMessage;
     }
 
     public ReceivedMessage ConvertForReceive(Amazon.SQS.Model.Message message)
     {
         string body = message.Body;
         var attributes = GetMessageAttributes(message, body);
-        //bool isRawMessage = IsRawMessage(body);
-        if (body is not null) // TODO
+
+        if (body is not null && !_isRawMessage)
         {
             var jsonNode = JsonNode.Parse(body);
             if (jsonNode is JsonObject jsonObject && jsonObject.TryGetPropertyValue("Message", out var messageNode))
@@ -81,7 +83,7 @@ internal sealed class ReceivedMessageConverter : IReceivedMessageConverter
 
             var isString = dataType == "String";
 
-            attributes.Add(obj.Name, new MessageAttributeValue()
+            attributes.Add(obj.Name, new MessageAttributeValue
             {
                 DataType = dataType,
                 StringValue = isString ? dataValue : null,

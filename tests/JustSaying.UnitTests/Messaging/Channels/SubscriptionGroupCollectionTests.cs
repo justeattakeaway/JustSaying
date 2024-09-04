@@ -42,7 +42,7 @@ public class SubscriptionGroupCollectionTests
 
         var middleware1 = new InspectableMiddleware<TestJustSayingMessage>();
         var middleware2 = new InspectableMiddleware<TestJustSayingMessage>();
-        var messageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<TestJustSayingMessage>(), new MessageCompressionRegistry([]));
+        var messageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<TestJustSayingMessage>(), new MessageCompressionRegistry(), false);
 
         bus.AddMessageMiddleware<TestJustSayingMessage>(queueName1, middleware1);
         bus.AddMessageMiddleware<TestJustSayingMessage>(queueName2, middleware2);
@@ -116,7 +116,7 @@ public class SubscriptionGroupCollectionTests
             QueueName = queueName,
         };
 
-        var messageConverter = new PublishMessageConverter(new NewtonsoftMessageBodySerializer<TestJustSayingMessage>(), new MessageCompressionRegistry([]), new PublishCompressionOptions(), "TestJustSayingMessage");
+        var messageConverter = new PublishMessageConverter(new NewtonsoftMessageBodySerializer<TestJustSayingMessage>(), new MessageCompressionRegistry(), new PublishCompressionOptions(), "TestJustSayingMessage");
 
         List<Message> messages = [new TestMessage { Body = messageConverter.ConvertForPublish(message, null, PublishDestinationType.Queue).Body }];
 

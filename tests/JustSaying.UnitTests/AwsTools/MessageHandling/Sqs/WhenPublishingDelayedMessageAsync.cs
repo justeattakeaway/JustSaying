@@ -11,7 +11,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
 public class WhenPublishingDelayedMessageAsync : WhenPublishingTestBase
 {
-    private readonly PublishMessageConverter _publishMessageConverter = new(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry([]), new PublishCompressionOptions(), "Subject");
+    private readonly PublishMessageConverter _publishMessageConverter = new(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), new PublishCompressionOptions(), "Subject");
     private const string Url = "https://blablabla/" + QueueName;
     private readonly SimpleMessage _message = new();
     private readonly PublishMetadata _metadata = new()
