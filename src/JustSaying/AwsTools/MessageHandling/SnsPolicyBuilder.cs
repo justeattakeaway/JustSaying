@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Amazon;
+using JustSaying.Messaging.MessageSerialization;
 
 namespace JustSaying.AwsTools.MessageHandling;
 
@@ -42,7 +43,7 @@ internal static class SnsPolicyBuilder
                              "Sid" : "{{Guid.NewGuid().ToString().Replace("-", "")}}",
                              "Effect" : "Allow",
                              "Principal" : {
-                                 "AWS" : {{JsonSerializer.Serialize(policyDetails.AccountIds)}}
+                                 "AWS" : {{SerializeAccountIds(policyDetails.AccountIds)}}
                              },
                              "Action"    : "sns:Subscribe",
                              "Resource"  : "{{policyDetails.SourceArn}}"
@@ -50,5 +51,14 @@ internal static class SnsPolicyBuilder
                      ]
                  }
                  """;
+    }
+
+    private static string SerializeAccountIds(IReadOnlyCollection<string> accountIds)
+    {
+#if NET8_0_OR_GREATER
+        return JsonSerializer.Serialize(accountIds, JustSayingSerializationContext.Default.IReadOnlyCollectionString);
+#else
+        return JsonSerializer.Serialize(accountIds);
+#endif
     }
 }

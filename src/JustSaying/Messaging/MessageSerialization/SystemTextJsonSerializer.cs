@@ -8,6 +8,11 @@ namespace JustSaying.Messaging.MessageSerialization;
 /// <summary>
 /// A class representing an implementation of <see cref="IMessageSerializer"/> for the <c>System.Text.Json</c> serializer.
 /// </summary>
+#if NET8_0_OR_GREATER
+[RequiresUnreferencedCode(Constants.SerializationUnreferencedCodeMessage)]
+[RequiresDynamicCode(Constants.SerializationDynamicCodeMessage)]
+#endif
+[Obsolete("This API is deprecated, and will be removed in a future version. Use SystemTextJsonSerializer<T> instead.")]
 public class SystemTextJsonSerializer : IMessageSerializer
 {
     private static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()

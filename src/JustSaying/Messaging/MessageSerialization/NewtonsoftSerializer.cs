@@ -5,6 +5,10 @@ using Newtonsoft.Json.Linq;
 
 namespace JustSaying.Messaging.MessageSerialization;
 
+#if NET8_0_OR_GREATER
+[RequiresUnreferencedCode(Constants.SerializationUnreferencedCodeMessage)]
+[RequiresDynamicCode(Constants.SerializationDynamicCodeMessage)]
+#endif
 public class NewtonsoftSerializer : IMessageSerializer
 {
     private readonly JsonSerializerSettings _settings;

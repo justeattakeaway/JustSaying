@@ -1,10 +1,10 @@
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 
-namespace JustSaying.UnitTests.Messaging.Serialization.SystemTextJson;
+namespace JustSaying.UnitTests.Messaging.Serialization.SystemTextJson_1;
 
 #pragma warning disable CS0618 // Type or member is obsolete
-public class DealingWithPotentiallyMissingConversation : XBehaviourTest<SystemTextJsonSerializer>
+public class WhenSerializingAndDeserializing : XBehaviourTest<SystemTextJsonSerializer>
 #pragma warning restore CS0618 // Type or member is obsolete
 {
     private MessageWithEnum _messageOut;
@@ -19,21 +19,27 @@ public class DealingWithPotentiallyMissingConversation : XBehaviourTest<SystemTe
     protected override void WhenAction()
     {
         _jsonMessage = SystemUnderTest.Serialize(_messageOut, false, _messageOut.GetType().Name);
-
-        // Add extra property to see what happens:
-        _jsonMessage = _jsonMessage.Replace("{__", "{\"New\":\"Property\",__", StringComparison.OrdinalIgnoreCase);
         _messageIn = SystemUnderTest.Deserialize(_jsonMessage, typeof(MessageWithEnum)) as MessageWithEnum;
     }
 
     [Fact]
-    public void ItDoesNotHaveConversationPropertySerializedBecauseItIsNotSet_ThisIsForBackwardsCompatibilityWhenWeDeploy()
+    public void MessageHasBeenCreated()
     {
-        _jsonMessage.ShouldNotContain("Conversation");
+        _messageOut.ShouldNotBeNull();
     }
 
     [Fact]
-    public void DeserializedMessageHasEmptyConversation_ThisIsForBackwardsCompatibilityWhenWeDeploy()
+    public void MessagesContainSameDetails()
     {
-        _messageIn.Conversation.ShouldBeNull();
+        _messageOut.EnumVal.ShouldBe(_messageIn.EnumVal);
+        _messageOut.RaisingComponent.ShouldBe(_messageIn.RaisingComponent);
+        _messageOut.TimeStamp.ShouldBe(_messageIn.TimeStamp);
+    }
+
+    [Fact]
+    public void EnumsAreRepresentedAsStrings()
+    {
+        _jsonMessage.ShouldContain("EnumVal");
+        _jsonMessage.ShouldContain("Two");
     }
 }

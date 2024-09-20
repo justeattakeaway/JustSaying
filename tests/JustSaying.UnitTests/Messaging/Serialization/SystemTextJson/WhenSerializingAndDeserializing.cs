@@ -3,7 +3,9 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.UnitTests.Messaging.Serialization.SystemTextJson;
 
+#pragma warning disable CS0618 // Type or member is obsolete
 public class WhenSerializingAndDeserializing : XBehaviourTest<SystemTextJsonSerializer>
+#pragma warning restore CS0618 // Type or member is obsolete
 {
     private MessageWithEnum _messageOut;
     private MessageWithEnum _messageIn;

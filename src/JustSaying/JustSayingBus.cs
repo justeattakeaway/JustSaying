@@ -200,7 +200,7 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     {
         if (!_busStarted && _startupTasks.Count > 0)
         {
-            throw new InvalidOperationException("There are pending startup tasks that must be executed by calling StartAsync before messages may be published.");
+            throw new InvalidOperationException($"There are pending startup tasks that must be executed by calling StartAsync before messages may be published. Bus started {_busStarted}, Count {_startupTasks.Count}");
         }
 
         IMessagePublisher publisher = GetPublisherForMessage(message);
