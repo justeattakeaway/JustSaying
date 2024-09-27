@@ -1,6 +1,6 @@
 <Project>
   <ItemGroup Label="Libraries">
-    <PackageVersion Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.400" />
+    <PackageVersion Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.300" />
     <PackageVersion Include="AWSSDK.SimpleNotificationService" Version="3.7.400" />
     <PackageVersion Include="AWSSDK.SQS" Version="3.7.400" />
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.1" />
