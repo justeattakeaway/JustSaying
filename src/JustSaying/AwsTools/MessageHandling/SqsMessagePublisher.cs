@@ -12,10 +12,11 @@ namespace JustSaying.AwsTools.MessageHandling;
 public class SqsMessagePublisher(
     IAmazonSQS client,
     IMessageSerializationRegister serializationRegister,
-    ILoggerFactory loggerFactory) : IMessagePublisher
+    ILoggerFactory loggerFactory) : IMessagePublisher, IMessageBatchPublisher
 {
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
+    public Action<MessageBatchResponse, IReadOnlyCollection<Message>> MessageBatchResponseLogger { get; set; }
 
     public Uri QueueUrl { get; internal set; }
 
@@ -28,17 +29,17 @@ public class SqsMessagePublisher(
         QueueUrl = queueUrl;
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
+    /// <inheritdoc/>
+    public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
+    /// <inheritdoc/>
     public async Task PublishAsync(Message message, CancellationToken cancellationToken)
         => await PublishAsync(message, null, cancellationToken).ConfigureAwait(false);
 
+    /// <inheritdoc/>
     public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
     {
-        if (QueueUrl is null) throw new PublishException("Queue URL was null, perhaps you need to call `StartAsync` on the `IMessagePublisher` before publishing.");
+        EnsureQueueUrl();
 
         var request = BuildSendMessageRequest(message, metadata);
         SendMessageResponse response;
@@ -53,10 +54,7 @@ public class SqsMessagePublisher(
                 ex);
         }
 
-        using (_logger.BeginScope(new Dictionary<string, object>
-               {
-                   ["AwsRequestId"] = response?.MessageId
-               }))
+        using (_logger.BeginScope(new Dictionary<string, string> { ["AwsRequestId"] = response?.MessageId }))
         {
             _logger.LogInformation(
                 "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
@@ -88,7 +86,7 @@ public class SqsMessagePublisher(
 
         if (metadata?.Delay != null)
         {
-            request.DelaySeconds = (int) metadata.Delay.Value.TotalSeconds;
+            request.DelaySeconds = (int)metadata.Delay.Value.TotalSeconds;
         }
 
         return request;
@@ -96,11 +94,129 @@ public class SqsMessagePublisher(
 
     public string GetMessageInContext(Message message) => serializationRegister.Serialize(message, serializeForSnsPublishing: false);
 
+    /// <inheritdoc/>
     public InterrogationResult Interrogate()
     {
         return new InterrogationResult(new
         {
             QueueUrl
         });
+    }
+
+    /// <inheritdoc/>
+    public async Task PublishAsync(IEnumerable<Message> messages, PublishBatchMetadata metadata, CancellationToken cancellationToken)
+    {
+        EnsureQueueUrl();
+
+        int size = metadata?.BatchSize ?? JustSayingConstants.MaximumSnsBatchSize;
+        size = Math.Min(size, JustSayingConstants.MaximumSnsBatchSize);
+
+        foreach (var chunk in messages.Chunk(size))
+        {
+            var request = BuildSendMessageBatchRequest(chunk, metadata);
+            SendMessageBatchResponse response;
+            try
+            {
+                response = await client.SendMessageBatchAsync(request, cancellationToken).ConfigureAwait(false);
+            }
+            catch (AmazonServiceException ex)
+            {
+                throw new PublishBatchException(
+                    $"Failed to publish batch of {chunk.Length} messages to SQS. {nameof(request.QueueUrl)}: {request.QueueUrl}",
+                    ex);
+            }
+
+            if (response != null)
+            {
+                using var scope = _logger.BeginScope(new Dictionary<string, string> { ["AwsRequestId"] = response.ResponseMetadata?.RequestId });
+                if (response.Successful.Count > 0 && _logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation(
+                        "Published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
+                        response.Successful.Count,
+                        "Queue",
+                        request.QueueUrl);
+
+                    foreach (var message in response.Successful)
+                    {
+                        _logger.LogInformation(
+                            "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.",
+                            message.Id,
+                            message.GetType().FullName,
+                            "Queue",
+                            request.QueueUrl);
+                    }
+                }
+
+                if (response.Failed.Count > 0 && _logger.IsEnabled(LogLevel.Error))
+                {
+                    _logger.LogError(
+                        "Failed to publish batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
+                        response.Failed.Count,
+                        "Queue",
+                        request.QueueUrl);
+
+                    foreach (var message in response.Failed)
+                    {
+                        _logger.LogError(
+                            "Failed to publish message {MessageId} to {DestinationType} '{MessageDestination}' with error code: {ErrorCode} is error on BatchAPI: {IsBatchAPIError}.",
+                            message.Id,
+                            "Queue",
+                            request.QueueUrl,
+                            message.Code,
+                            message.SenderFault);
+                    }
+                }
+            }
+
+            if (MessageBatchResponseLogger != null)
+            {
+                var responseData = new MessageBatchResponse
+                {
+                    SuccessfulMessageIds = response?.Successful.Select(x => x.MessageId).ToArray(),
+                    FailedMessageIds = response?.Failed.Select(x => x.Id).ToArray(),
+                    ResponseMetadata = response?.ResponseMetadata,
+                    HttpStatusCode = response?.HttpStatusCode,
+                };
+
+                MessageBatchResponseLogger(responseData, chunk);
+            }
+        }
+    }
+
+    private SendMessageBatchRequest BuildSendMessageBatchRequest(Message[] messages, PublishMetadata metadata)
+    {
+        var entries = new List<SendMessageBatchRequestEntry>(messages.Length);
+        int? delaySeconds = metadata?.Delay is { } delay ? (int)delay.TotalSeconds : null;
+
+        foreach (var message in messages)
+        {
+            var entry = new SendMessageBatchRequestEntry
+            {
+                Id = message.UniqueKey(),
+                MessageBody = GetMessageInContext(message),
+            };
+
+            if (delaySeconds is { } value)
+            {
+                entry.DelaySeconds = value;
+            }
+
+            entries.Add(entry);
+        }
+
+        return new SendMessageBatchRequest
+        {
+            QueueUrl = QueueUrl.AbsoluteUri,
+            Entries = entries,
+        };
+    }
+
+    private void EnsureQueueUrl()
+    {
+        if (QueueUrl is null)
+        {
+            throw new PublishException($"Queue URL was null. Perhaps you need to call the ${nameof(IMessagePublisher.StartAsync)} method on the ${nameof(IMessagePublisher)} before publishing.");
+        }
     }
 }

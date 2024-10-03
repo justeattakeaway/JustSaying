@@ -9,6 +9,13 @@ public class WhenTheErrorQueueDisabled(ITestOutputHelper outputHelper) : Integra
     [AwsFact]
     public async Task Then_The_Error_Queue_Does_Not_Exist()
     {
+        await ThenTheErrorQueueDoesNotExist<IMessagePublisher>();
+        await ThenTheErrorQueueDoesNotExist<IMessageBatchPublisher>();
+    }
+
+    private async Task ThenTheErrorQueueDoesNotExist<T>()
+        where  T: IStartable
+    {
         // Arrange
         var completionSource = new TaskCompletionSource<object>();
         var handler = CreateHandler<SimpleMessage>(completionSource);
@@ -24,7 +31,7 @@ public class WhenTheErrorQueueDisabled(ITestOutputHelper outputHelper) : Integra
             .BuildServiceProvider();
 
         // Act - Force queue creation
-        IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+        var publisher = serviceProvider.GetRequiredService<T>();
         await publisher.StartAsync(CancellationToken.None);
 
         // Assert
