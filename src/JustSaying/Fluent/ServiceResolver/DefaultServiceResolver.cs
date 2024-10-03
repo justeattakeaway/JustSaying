@@ -43,7 +43,7 @@ internal sealed class DefaultServiceResolver : IServiceResolver
         {
             return new NullOpMessageMonitor();
         }
-        else if (desiredType == typeof(IMessageBodySerializer))
+        else if (desiredType == typeof(IMessageBodySerializationFactory))
         {
             return new NewtonsoftSerializationFactory();
         }
