@@ -2,6 +2,8 @@ using System.Globalization;
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialization;
@@ -24,7 +26,6 @@ public class WhenDispatchingMessage : IAsyncLifetime
 {
     private const string ExpectedQueueUrl = "http://testurl.com/queue";
 
-    private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
     private readonly TrackingLoggingMonitor _messageMonitor;
     private readonly MiddlewareMap _middlewareMap;
     private readonly ILoggerFactory _loggerFactory;
@@ -36,7 +37,9 @@ public class WhenDispatchingMessage : IAsyncLifetime
 
     internal MessageDispatcher SystemUnderTest { get; private set; }
 
-    protected readonly IMessageBackoffStrategy MessageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
+    private readonly IMessageBackoffStrategy _messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
+    private readonly IMessageBodySerializer _messageBodySerializer = Substitute.For<IMessageBodySerializer>();
+    private readonly ReceivedMessageConverter _messageConverter;
 
     public WhenDispatchingMessage(ITestOutputHelper outputHelper)
     {
@@ -44,6 +47,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
         _loggerFactory = TestLoggerFactory.Create(lb => lb.AddXUnit(outputHelper));
         _messageMonitor = new TrackingLoggingMonitor(_loggerFactory.CreateLogger<TrackingLoggingMonitor>());
         _middlewareMap = new MiddlewareMap();
+        _messageConverter = new ReceivedMessageConverter(_messageBodySerializer, new MessageCompressionRegistry(), false);
     }
 
     public virtual async Task InitializeAsync()
@@ -62,7 +66,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
 
     protected virtual void Given()
     {
-        _typedMessage = new OrderAccepted();
+        _typedMessage = new SimpleMessage();
 
         _sqsMessage = new SQSMessage
         {
@@ -79,25 +83,30 @@ public class WhenDispatchingMessage : IAsyncLifetime
         {
             Uri = new Uri(ExpectedQueueUrl)
         };
-        _serializationRegister.DeserializeMessage(Arg.Any<string>())
-            .Returns(new MessageWithAttributes(_typedMessage, new MessageAttributes()));
+
+        _messageBodySerializer.Deserialize(Arg.Any<string>()).Returns(_typedMessage);
     }
 
     private async Task When()
     {
-        var queueReader = new SqsQueueReader(_queue);
+        var queueReader = new SqsQueueReader(_queue, _messageConverter);
         await SystemUnderTest.DispatchMessageAsync(queueReader.ToMessageContext(_sqsMessage), CancellationToken.None);
     }
 
     private MessageDispatcher CreateSystemUnderTestAsync()
     {
         var dispatcher = new MessageDispatcher(
-            _serializationRegister,
             _messageMonitor,
             _middlewareMap,
             _loggerFactory);
 
         return dispatcher;
+    }
+
+    [Fact]
+    public void ShouldDeserializeMessage()
+    {
+        _messageBodySerializer.Received(1).Deserialize(Arg.Is<string>(x => x == _sqsMessage.Body));
     }
 
     public class AndHandlerMapDoesNotHaveMatchingHandler(ITestOutputHelper outputHelper) : WhenDispatchingMessage(outputHelper)
@@ -109,12 +118,6 @@ public class WhenDispatchingMessage : IAsyncLifetime
         {
             base.Given();
             _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString(CultureInfo.InvariantCulture));
-        }
-
-        [Fact]
-        public void ShouldDeserializeMessage()
-        {
-            _serializationRegister.Received(1).DeserializeMessage(Arg.Is<string>(x => x == _sqsMessage.Body));
         }
 
         [Fact]
@@ -138,17 +141,11 @@ public class WhenDispatchingMessage : IAsyncLifetime
                 sc => sc.AddSingleton<IHandlerAsync<SimpleMessage>>(handler));
 
             var middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
-                .UseBackoff(MessageBackoffStrategy)
+                .UseBackoff(_messageBackoffStrategy)
                 .UseDefaults<SimpleMessage>(handler.GetType())
                 .Build();
 
-            _middlewareMap.Add<OrderAccepted>(_queue.QueueName, middleware);
-        }
-
-        [Fact]
-        public void ShouldDeserializeMessage()
-        {
-            _serializationRegister.Received(1).DeserializeMessage(Arg.Is<string>(x => x == _sqsMessage.Body));
+            _middlewareMap.Add<SimpleMessage>(_queue.QueueName, middleware);
         }
 
         [Fact]
@@ -180,20 +177,20 @@ public class WhenDispatchingMessage : IAsyncLifetime
                 sc => sc.AddSingleton<IHandlerAsync<SimpleMessage>>(handler));
 
             var middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)
-                .UseBackoff(MessageBackoffStrategy)
+                .UseBackoff(_messageBackoffStrategy)
                 .UseDefaults<SimpleMessage>(handler.GetType())
                 .Build();
 
-            _middlewareMap.Add<OrderAccepted>(_queue.QueueName, middleware);
+            _middlewareMap.Add<SimpleMessage>(_queue.QueueName, middleware);
 
-            MessageBackoffStrategy.GetBackoffDuration(_typedMessage, 1, _expectedException).Returns(_expectedBackoffTimeSpan);
+            _messageBackoffStrategy.GetBackoffDuration(_typedMessage, 1, _expectedException).Returns(_expectedBackoffTimeSpan);
             _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString(CultureInfo.InvariantCulture));
         }
 
         [Fact]
         public void ShouldInvokeMessageBackoffStrategyWithNumberOfReceives()
         {
-            MessageBackoffStrategy.Received(1).GetBackoffDuration(Arg.Is(_typedMessage), Arg.Is(ExpectedReceiveCount), Arg.Is(_expectedException));
+            _messageBackoffStrategy.Received(1).GetBackoffDuration(Arg.Is(_typedMessage), Arg.Is(ExpectedReceiveCount), Arg.Is(_expectedException));
         }
 
         [Fact]

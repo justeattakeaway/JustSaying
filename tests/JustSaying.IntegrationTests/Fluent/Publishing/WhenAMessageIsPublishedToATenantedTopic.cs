@@ -42,6 +42,8 @@ public class WhenAMessageIsPublishedToATenantedTopic(ITestOutputHelper outputHel
             services,
             async (publisher, listener, cancellationToken) =>
             {
+                var waitForSixMessages = handler.WaitForMessageCountAsync(6, cancellationToken);
+
                 await listener.StartAsync(cancellationToken);
                 await publisher.StartAsync(cancellationToken);
 
@@ -57,11 +59,14 @@ public class WhenAMessageIsPublishedToATenantedTopic(ITestOutputHelper outputHel
 
                 json = publisherJson.Replace(UniqueName, "integrationTestQueueName", StringComparison.Ordinal);
 
+                await waitForSixMessages;
+
                 // Assert
                 await Patiently.AssertThatAsync(OutputHelper,
                     () =>
                     {
                         var received = handler.ReceivedMessages;
+                        received.Count.ShouldBe(6);
                         received.ShouldContain(x => x.Content == testId && x.Tenant == "uk", 2);
                         received.ShouldContain(x => x.Content == testId && x.Tenant == "it", 2);
                         received.ShouldContain(x => x.Content == testId && x.Tenant == "es", 2);

@@ -33,7 +33,8 @@ public class AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory, ILogger
                     topicArn,
                     sqsClient,
                     queue.Uri,
-                    queueConfig.FilterPolicy).ConfigureAwait(false);
+                    queueConfig.FilterPolicy,
+                    queueConfig.RawMessageDelivery).ConfigureAwait(false);
             }
             else
             {
@@ -46,7 +47,8 @@ public class AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory, ILogger
                     eventTopic.Arn,
                     sqsClient,
                     queue.Uri,
-                    queueConfig.FilterPolicy).ConfigureAwait(false);
+                    queueConfig.FilterPolicy,
+                    queueConfig.RawMessageDelivery).ConfigureAwait(false);
 
                 var sqsDetails = new SqsPolicyDetails
                 {
@@ -94,7 +96,8 @@ public class AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory, ILogger
         string topicArn,
         IAmazonSQS amazonSQS,
         Uri queueUrl,
-        string filterPolicy)
+        string filterPolicy,
+        bool rawMessageDelivery)
     {
         if (amazonSimpleNotificationService == null) throw new ArgumentNullException(nameof(amazonSimpleNotificationService));
         if (amazonSQS == null) throw new ArgumentNullException(nameof(amazonSQS));
@@ -109,6 +112,9 @@ public class AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory, ILogger
             string.IsNullOrWhiteSpace(filterPolicy) ? "{}" : filterPolicy;
         await amazonSimpleNotificationService
             .SetSubscriptionAttributesAsync(subscriptionArn, "FilterPolicy", actualFilterPolicy)
+            .ConfigureAwait(false);
+        await amazonSimpleNotificationService
+            .SetSubscriptionAttributesAsync(subscriptionArn, "RawMessageDelivery", rawMessageDelivery.ToString().ToLowerInvariant())
             .ConfigureAwait(false);
     }
 }

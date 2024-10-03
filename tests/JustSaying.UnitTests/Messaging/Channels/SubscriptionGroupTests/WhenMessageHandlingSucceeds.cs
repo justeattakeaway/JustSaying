@@ -1,31 +1,32 @@
+using System.Diagnostics.CodeAnalysis;
 using Amazon.SQS.Model;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
 public class WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
 {
-    private const string MessageBody = "Expected Message Body";
+    [StringSyntax(StringSyntaxAttribute.Json)]
+    private const string MessageBody = """
+                                       {
+                                         "Subject": "TestMessage",
+                                         "Message": "Expected Message Body"
+                                       }
+                                       """;
     private FakeSqsQueue _queue;
 
     protected override void Given()
     {
-        _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(),
-            ct => Task.FromResult(new List<Message> { new TestMessage { Body = MessageBody } }.AsEnumerable()));
+        var sqsSource = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage { Body = MessageBody });
+        _queue = sqsSource.SqsQueue as FakeSqsQueue;
 
-        Queues.Add(_queue);
-    }
-
-    [Fact]
-    public void MessagesGetDeserializedByCorrectHandler()
-    {
-        SerializationRegister.ReceivedDeserializationRequests.ShouldAllBe(
-            msg => msg == MessageBody);
+        Queues.Add(sqsSource);
     }
 
     [Fact]
     public void ProcessingIsPassedToTheHandlerForCorrectMessage()
     {
-        Handler.ReceivedMessages.ShouldContain(SerializationRegister.DefaultDeserializedMessage());
+        Handler.ReceivedMessages.ShouldContain(SetupMessage);
     }
 
     [Fact]

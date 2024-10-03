@@ -8,6 +8,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AutoFixture" />
+    <PackageReference Include="LocalSqsSnsMessaging" />
     <PackageReference Include="MartinCostello.Logging.XUnit" />
     <PackageReference Include="Microsoft.Extensions.Logging" />
     <PackageReference Include="NSubstitute" />

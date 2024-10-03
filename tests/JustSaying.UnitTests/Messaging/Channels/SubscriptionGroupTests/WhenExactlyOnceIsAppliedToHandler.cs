@@ -1,4 +1,5 @@
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
@@ -11,13 +12,16 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
 public class WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
 {
-    private ISqsQueue _queue;
+    private SqsSource _queue;
     private readonly int _expectedTimeout = 5;
     private FakeMessageLock _messageLock;
 
     protected override void Given()
     {
-        _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
+        _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage
+        {
+            Body = """{"Subject":"SimpleMessage", "Message": { "Content": "Hi"} }"""
+        });
 
         Queues.Add(_queue);
 
@@ -41,7 +45,7 @@ public class WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelpe
 
     protected override async Task WhenAsync()
     {
-        MiddlewareMap.Add<SimpleMessage>(_queue.QueueName, Middleware);
+        MiddlewareMap.Add<SimpleMessage>(_queue.SqsQueue.QueueName, Middleware);
 
         using var cts = new CancellationTokenSource();
 
@@ -65,7 +69,8 @@ public class WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelpe
     [Fact]
     public void MessageIsLocked()
     {
-        var messageId = SerializationRegister.DefaultDeserializedMessage().Id.ToString();
+        // this should be part of setup to make work
+        var messageId = SetupMessage.Id.ToString();
 
         var tempLockRequests = _messageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
         tempLockRequests.Count().ShouldBeGreaterThan(0);

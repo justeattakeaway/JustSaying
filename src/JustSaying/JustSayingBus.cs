@@ -1,10 +1,10 @@
 using System.Collections.Concurrent;
-using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
@@ -34,15 +34,16 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     private readonly IMessageMonitor _monitor;
 
     private ISubscriptionGroup SubscriptionGroups { get; set; }
-    public IMessageSerializationRegister SerializationRegister { get; }
 
     internal MiddlewareMap MiddlewareMap { get; }
+    internal MessageCompressionRegistry CompressionRegistry { get; }
+    internal IMessageBodySerializationFactory MessageBodySerializerFactory { get; set; }
 
     public Task Completion { get; private set; }
 
-    public JustSayingBus(
+    internal JustSayingBus(
         IMessagingConfig config,
-        IMessageSerializationRegister serializationRegister,
+        IMessageBodySerializationFactory serializationFactory,
         ILoggerFactory loggerFactory,
         IMessageMonitor monitor)
     {
@@ -53,8 +54,9 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         _log = _loggerFactory.CreateLogger("JustSaying");
 
         Config = config;
-        SerializationRegister = serializationRegister;
         MiddlewareMap = new MiddlewareMap();
+        CompressionRegistry = new MessageCompressionRegistry([new GzipMessageBodyCompression()]);
+        MessageBodySerializerFactory = serializationFactory;
 
         _publishersByType = [];
         _subscriptionGroupSettings =
@@ -62,17 +64,17 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
         _defaultSubscriptionGroupSettings = new SubscriptionGroupSettingsBuilder();
     }
 
-    public JustSayingBus(
+    internal JustSayingBus(
         IMessagingConfig config,
-        IMessageSerializationRegister serializationRegister,
+        IMessageBodySerializationFactory serializationFactory,
         IMessageReceivePauseSignal messageReceivePauseSignal,
         ILoggerFactory loggerFactory,
-        IMessageMonitor monitor) : this(config, serializationRegister, loggerFactory, monitor)
+        IMessageMonitor monitor) : this(config, serializationFactory, loggerFactory, monitor)
     {
         _messageReceivePauseSignal = messageReceivePauseSignal;
     }
 
-    public void AddQueue(string subscriptionGroup, ISqsQueue queue)
+    internal void AddQueue(string subscriptionGroup, SqsSource queue)
     {
         if (string.IsNullOrWhiteSpace(subscriptionGroup))
         {
@@ -108,7 +110,6 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     public void AddMessageMiddleware<T>(string queueName, HandleMessageMiddleware middleware)
         where T : Message
     {
-        SerializationRegister.AddSerializer<T>();
         MiddlewareMap.Add<T>(queueName, middleware);
     }
 
@@ -161,7 +162,6 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IDisposabl
     private async Task RunImplAsync(CancellationToken stoppingToken)
     {
         var dispatcher = new MessageDispatcher(
-            SerializationRegister,
             _monitor,
             MiddlewareMap,
             _loggerFactory);

@@ -3,7 +3,7 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.UnitTests.Messaging.Serialization.SystemTextJson;
 
-public class DealingWithPotentiallyMissingConversation : XBehaviourTest<SystemTextJsonSerializer>
+public class DealingWithPotentiallyMissingConversation : XBehaviourTest<SystemTextJsonMessageBodySerializer<MessageWithEnum>>
 {
     private MessageWithEnum _messageOut;
     private MessageWithEnum _messageIn;
@@ -16,11 +16,11 @@ public class DealingWithPotentiallyMissingConversation : XBehaviourTest<SystemTe
 
     protected override void WhenAction()
     {
-        _jsonMessage = SystemUnderTest.Serialize(_messageOut, false, _messageOut.GetType().Name);
+        _jsonMessage = SystemUnderTest.Serialize(_messageOut);
 
         // Add extra property to see what happens:
         _jsonMessage = _jsonMessage.Replace("{__", "{\"New\":\"Property\",__", StringComparison.OrdinalIgnoreCase);
-        _messageIn = SystemUnderTest.Deserialize(_jsonMessage, typeof(MessageWithEnum)) as MessageWithEnum;
+        _messageIn = SystemUnderTest.Deserialize(_jsonMessage) as MessageWithEnum;
     }
 
     [Fact]

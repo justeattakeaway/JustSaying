@@ -10,14 +10,14 @@ using MessageAttributeValue = Amazon.SimpleNotificationService.Model.MessageAttr
 
 namespace JustSaying.AwsTools.MessageHandling;
 
-public class SnsMessagePublisher(
+internal class SnsMessagePublisher(
     IAmazonSimpleNotificationService client,
-    IMessageSerializationRegister serializationRegister,
+    IPublishMessageConverter messageConverter,
     ILoggerFactory loggerFactory,
     IMessageSubjectProvider messageSubjectProvider,
     Func<Exception, Message, bool> handleException = null) : IMessagePublisher, IInterrogable
 {
-    private readonly IMessageSerializationRegister _serializationRegister = serializationRegister;
+    private readonly IPublishMessageConverter _messageConverter = messageConverter;
     private readonly IMessageSubjectProvider _messageSubjectProvider = messageSubjectProvider;
     private readonly Func<Exception, Message, bool> _handleException = handleException;
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
@@ -28,11 +28,11 @@ public class SnsMessagePublisher(
     public SnsMessagePublisher(
         string topicArn,
         IAmazonSimpleNotificationService client,
-        IMessageSerializationRegister serializationRegister,
+        IPublishMessageConverter messageConverter,
         ILoggerFactory loggerFactory,
         IMessageSubjectProvider messageSubjectProvider,
         Func<Exception, Message, bool> handleException = null)
-        : this(client, serializationRegister, loggerFactory, messageSubjectProvider, handleException)
+        : this(client, messageConverter, loggerFactory, messageSubjectProvider, handleException)
     {
         Arn = topicArn;
     }
@@ -92,27 +92,31 @@ public class SnsMessagePublisher(
 
     private PublishRequest BuildPublishRequest(Message message, PublishMetadata metadata)
     {
-        var messageToSend = _serializationRegister.Serialize(message, serializeForSnsPublishing: true);
-        var messageType = _messageSubjectProvider.GetSubjectForType(message.GetType());
+        var (messageToSend, attributes, subject) = _messageConverter.ConvertForPublish(message, metadata, PublishDestinationType.Topic);
 
-        return new PublishRequest
+        var request = new PublishRequest
         {
             TopicArn = Arn,
-            Subject = messageType,
+            Subject = subject,
             Message = messageToSend,
-            MessageAttributes = BuildMessageAttributes(metadata)
         };
+
+        AddMessageAttributes(request.MessageAttributes, attributes);
+
+        return request;
     }
 
-    private static Dictionary<string, MessageAttributeValue> BuildMessageAttributes(PublishMetadata metadata)
+    private static void AddMessageAttributes(Dictionary<string, MessageAttributeValue> requestMessageAttributes, Dictionary<string, Messaging.MessageAttributeValue> attributes)
     {
-        if (metadata?.MessageAttributes == null || metadata.MessageAttributes.Count == 0)
+        if (attributes == null || attributes.Count == 0)
         {
-            return null;
+            return;
         }
-        return metadata.MessageAttributes.ToDictionary(
-            source => source.Key,
-            source => BuildMessageAttributeValue(source.Value));
+
+        foreach (var attribute in attributes)
+        {
+            requestMessageAttributes.Add(attribute.Key, BuildMessageAttributeValue(attribute.Value));
+        }
     }
 
     private static MessageAttributeValue BuildMessageAttributeValue(Messaging.MessageAttributeValue value)

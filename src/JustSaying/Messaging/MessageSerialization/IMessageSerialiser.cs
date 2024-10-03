@@ -1,25 +1,23 @@
-using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 
 namespace JustSaying.Messaging.MessageSerialization;
 
-public interface IMessageSerializer
+/// <summary>
+/// Defines the contract for serializing and deserializing message bodies.
+/// </summary>
+public interface IMessageBodySerializer
 {
-    string GetMessageSubject(string sqsMessage);
-
-    MessageAttributes GetMessageAttributes(string message);
-
-    Message Deserialize(string message, Type type);
+    /// <summary>
+    /// Serializes a message into a string representation.
+    /// </summary>
+    /// <param name="message">The message to serialize.</param>
+    /// <returns>A string representation of the serialized message.</returns>
+    string Serialize(Message message);
 
     /// <summary>
-    /// Serializes a message for publishing
+    /// Deserializes a string representation back into a message object.
     /// </summary>
-    /// <param name="message"></param>
-    /// <param name="serializeForSnsPublishing">If set to false, then message will be wrapped in extra object with Subject and Message fields, e.g.:
-    /// new { Subject = subject, Message = serializedMessage };
-    ///
-    /// AWS SNS service adds these automatically, so for publishing to topics don't add these properties
-    /// </param>
-    /// <returns></returns>
-    string Serialize(Message message, bool serializeForSnsPublishing, string subject);
+    /// <param name="message">The string representation of the message to deserialize.</param>
+    /// <returns>The deserialized message object.</returns>
+    Message Deserialize(string message);
 }

@@ -2,16 +2,18 @@ using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.Interrogation;
-using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
+using MessageAttributeValue = Amazon.SQS.Model.MessageAttributeValue;
 
 namespace JustSaying.AwsTools.MessageHandling;
 
-public class SqsMessagePublisher(
+internal class SqsMessagePublisher(
     IAmazonSQS client,
-    IMessageSerializationRegister serializationRegister,
+    PublishMessageConverter messageConverter,
     ILoggerFactory loggerFactory) : IMessagePublisher
 {
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
@@ -22,8 +24,8 @@ public class SqsMessagePublisher(
     public SqsMessagePublisher(
         Uri queueUrl,
         IAmazonSQS client,
-        IMessageSerializationRegister serializationRegister,
-        ILoggerFactory loggerFactory) : this(client, serializationRegister, loggerFactory)
+        PublishMessageConverter messageConverter,
+        ILoggerFactory loggerFactory) : this(client, messageConverter, loggerFactory)
     {
         QueueUrl = queueUrl;
     }
@@ -80,11 +82,15 @@ public class SqsMessagePublisher(
 
     private SendMessageRequest BuildSendMessageRequest(Message message, PublishMetadata metadata)
     {
+        var (messageBody, attributes, _) = messageConverter.ConvertForPublish(message, metadata, PublishDestinationType.Queue);
+
         var request = new SendMessageRequest
         {
-            MessageBody = GetMessageInContext(message),
-            QueueUrl = QueueUrl.AbsoluteUri,
+            MessageBody = messageBody,
+            QueueUrl = QueueUrl.AbsoluteUri
         };
+
+        AddMessageAttributes(request.MessageAttributes, attributes);
 
         if (metadata?.Delay != null)
         {
@@ -94,7 +100,37 @@ public class SqsMessagePublisher(
         return request;
     }
 
-    public string GetMessageInContext(Message message) => serializationRegister.Serialize(message, serializeForSnsPublishing: false);
+    private static void AddMessageAttributes(Dictionary<string, MessageAttributeValue> requestMessageAttributes, Dictionary<string, Messaging.MessageAttributeValue> messageAttributes)
+    {
+        if (messageAttributes == null || messageAttributes.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var attribute in messageAttributes)
+        {
+            requestMessageAttributes.Add(attribute.Key, BuildMessageAttributeValue(attribute.Value));
+        }
+    }
+
+    private static MessageAttributeValue BuildMessageAttributeValue(Messaging.MessageAttributeValue value)
+    {
+        if (value == null)
+        {
+            return null;
+        }
+
+        var binaryValueStream = value.BinaryValue != null
+            ? new MemoryStream([.. value.BinaryValue], false)
+            : null;
+
+        return new MessageAttributeValue
+        {
+            StringValue = value.StringValue,
+            BinaryValue = binaryValueStream,
+            DataType = value.DataType
+        };
+    }
 
     public InterrogationResult Interrogate()
     {

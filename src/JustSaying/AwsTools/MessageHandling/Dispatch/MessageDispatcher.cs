@@ -8,21 +8,18 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling.Dispatch;
 
-public class MessageDispatcher : IMessageDispatcher
+internal class MessageDispatcher : IMessageDispatcher
 {
-    private readonly IMessageSerializationRegister _serializationRegister;
     private readonly IMessageMonitor _messagingMonitor;
     private readonly MiddlewareMap _middlewareMap;
 
     private static ILogger _logger;
 
     public MessageDispatcher(
-        IMessageSerializationRegister serializationRegister,
         IMessageMonitor messagingMonitor,
         MiddlewareMap middlewareMap,
         ILoggerFactory loggerFactory)
     {
-        _serializationRegister = serializationRegister;
         _messagingMonitor = messagingMonitor;
         _middlewareMap = middlewareMap;
         _logger = loggerFactory.CreateLogger("JustSaying");
@@ -68,7 +65,6 @@ public class MessageDispatcher : IMessageDispatcher
 
         await middleware.RunAsync(handleContext, null, cancellationToken)
             .ConfigureAwait(false);
-
     }
 
     private async Task<(bool success, Message typedMessage, MessageAttributes attributes)>
@@ -76,10 +72,11 @@ public class MessageDispatcher : IMessageDispatcher
     {
         try
         {
-            _logger.LogDebug("Attempting to deserialize message with serialization register {Type}",
-                _serializationRegister.GetType().FullName);
-            var messageWithAttributes = _serializationRegister.DeserializeMessage(messageContext.Message.Body);
-            return (true, messageWithAttributes.Message, messageWithAttributes.MessageAttributes);
+            _logger.LogDebug("Attempting to deserialize message.");
+
+            var (message, attributes) = messageContext.MessageConverter.ConvertForReceive(messageContext.Message);
+
+            return (true, message, attributes);
         }
         catch (MessageFormatNotSupportedException ex)
         {

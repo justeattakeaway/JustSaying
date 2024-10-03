@@ -2,6 +2,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
 using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware.Logging;
@@ -31,7 +32,7 @@ internal sealed class JustSayingRegistry : Registry
         For<IAwsClientFactoryProxy>().Use((p) => new AwsClientFactoryProxy(p.GetInstance<IAwsClientFactory>)).Singleton();
         For<IMessagingConfig>().Use<MessagingConfig>().Singleton();
         For<IMessageMonitor>().Use<NullOpMessageMonitor>().Singleton();
-        For<IMessageSerializationFactory>().Use<NewtonsoftSerializationFactory>().Singleton();
+        For<IMessageBodySerializationFactory>().Use<NewtonsoftSerializationFactory>().Singleton();
         For<IMessageSubjectProvider>().Use<GenericMessageSubjectProvider>().Singleton();
         For<IVerifyAmazonQueues>().Use<AmazonQueueCreator>().Singleton();
 
@@ -41,18 +42,7 @@ internal sealed class JustSayingRegistry : Registry
 
         For<LoggingMiddleware>().Transient();
         For<SqsPostProcessorMiddleware>().Transient();
-
-        For<IMessageSerializationRegister>()
-            .Use(
-                nameof(IMessageSerializationRegister),
-                (p) =>
-                {
-                    var config = p.GetInstance<IMessagingConfig>();
-                    var serializerFactory = p.GetInstance<IMessageSerializationFactory>();
-                    return new MessageSerializationRegister(config.MessageSubjectProvider, serializerFactory);
-                })
-            .Singleton();
-
+        For<MessageCompressionRegistry>().Use((p) => new MessageCompressionRegistry(new List<IMessageBodyCompression> { new GzipMessageBodyCompression() })).Singleton();
         For<IMessageReceivePauseSignal>().Use<MessageReceivePauseSignal>().Singleton();
 
         For<DefaultNamingConventions>().Singleton();

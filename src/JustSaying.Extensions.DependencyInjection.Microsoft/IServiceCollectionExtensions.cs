@@ -4,6 +4,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
 using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware.Logging;
@@ -135,16 +136,10 @@ public static class IServiceCollectionExtensions
         services.TryAddSingleton<IMessageContextAccessor>(serviceProvider => serviceProvider.GetRequiredService<MessageContextAccessor>());
         services.TryAddSingleton<IMessageContextReader>(serviceProvider => serviceProvider.GetRequiredService<MessageContextAccessor>());
 
-        services.TryAddSingleton<IMessageSerializationFactory, NewtonsoftSerializationFactory>();
+        services.TryAddSingleton<IMessageBodySerializationFactory, NewtonsoftSerializationFactory>();
         services.TryAddSingleton<IMessageSubjectProvider, GenericMessageSubjectProvider>();
         services.TryAddSingleton<IVerifyAmazonQueues, AmazonQueueCreator>();
-        services.TryAddSingleton<IMessageSerializationRegister>(
-            (p) =>
-            {
-                var config = p.GetRequiredService<IMessagingConfig>();
-                var serializerFactory = p.GetRequiredService<IMessageSerializationFactory>();
-                return new MessageSerializationRegister(config.MessageSubjectProvider, serializerFactory);
-            });
+        services.TryAddSingleton((p) => new MessageCompressionRegistry([new GzipMessageBodyCompression()]));
 
         services.TryAddSingleton<IMessageReceivePauseSignal, MessageReceivePauseSignal>();
 

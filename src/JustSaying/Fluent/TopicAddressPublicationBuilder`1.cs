@@ -1,5 +1,9 @@
 using Amazon;
 using JustSaying.AwsTools;
+using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -16,6 +20,8 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
 {
     private readonly TopicAddress _topicAddress;
     private Func<Exception,Message,bool> _exceptionHandler;
+    private PublishCompressionOptions _compressionOptions;
+    private string _subject;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TopicAddressPublicationBuilder{T}"/> class.
@@ -42,6 +48,24 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
         return this;
     }
 
+    /// <summary>
+    /// Sets the compression options for publishing messages.
+    /// </summary>
+    /// <param name="compressionOptions">The compression options to use when publishing messages.</param>
+    /// <returns>The current instance of <see cref="TopicAddressPublicationBuilder{T}"/> for method chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="compressionOptions"/> is null.</exception>
+    public TopicAddressPublicationBuilder<T> WithCompression(PublishCompressionOptions compressionOptions)
+    {
+        _compressionOptions = compressionOptions ?? throw new ArgumentNullException(nameof(compressionOptions));
+        return this;
+    }
+
+    public TopicAddressPublicationBuilder<T> WithSubject(string subject)
+    {
+        _subject = subject;
+        return this;
+    }
+
     /// <inheritdoc />
     public void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
     {
@@ -52,15 +76,24 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
         var config = bus.Config;
         var arn = Arn.Parse(_topicAddress.TopicArn);
 
-        bus.SerializationRegister.AddSerializer<T>();
+        var compressionRegistry = bus.CompressionRegistry;
+        var compressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions;
+        var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
+        var subjectProvider = bus.Config.MessageSubjectProvider;
+        var subject = _subject ?? subjectProvider.GetSubjectForType(typeof(T));
 
         var eventPublisher = new TopicAddressPublisher(
             proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(arn.Region)),
             loggerFactory,
             config.MessageSubjectProvider,
-            bus.SerializationRegister,
+            new PublishMessageConverter(serializer, compressionRegistry, compressionOptions, subject),
             _exceptionHandler,
-            _topicAddress);
+            _topicAddress)
+        {
+            MessageResponseLogger = config.MessageResponseLogger
+        };
+        CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, compressionOptions);
+
         bus.AddMessagePublisher<T>(eventPublisher);
 
         logger.LogInformation(
