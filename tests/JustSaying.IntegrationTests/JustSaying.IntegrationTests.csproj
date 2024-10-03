@@ -15,7 +15,6 @@
     <PackageReference Include="AWSSDK.SimpleNotificationService" />
     <PackageReference Include="AWSSDK.SQS" />
     <PackageReference Include="GitHubActionsTestLogger" />
-    <PackageReference Include="LocalSqsSnsMessaging" />
     <PackageReference Include="MartinCostello.Logging.XUnit" />
     <PackageReference Include="MELT.Xunit" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />

@@ -1,3 +1,4 @@
+using JustSaying.IntegrationTests;
 using JustSaying.IntegrationTests.Fluent;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
