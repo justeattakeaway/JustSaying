@@ -106,7 +106,6 @@ public class SubscriptionGroupCollectionTests
         return bus;
     }
 
-    // TODO remove redundant code
     private static FakeSqsQueue TestQueue(
         string queueName,
         Action spy = null)

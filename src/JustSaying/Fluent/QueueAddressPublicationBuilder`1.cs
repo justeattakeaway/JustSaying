@@ -3,7 +3,6 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Compression;
-using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -20,6 +19,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
 {
     private readonly QueueAddress _queueAddress;
     private PublishCompressionOptions _compressionOptions;
+    private string _subject;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="QueueAddressPublicationBuilder{T}"/> class.
@@ -42,6 +42,13 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
         return this;
     }
 
+    // TODO add tests
+    public QueueAddressPublicationBuilder<T> WithSubject(string subject)
+    {
+        _subject = subject;
+        return this;
+    }
+
     /// <inheritdoc />
     public void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
     {
@@ -52,7 +59,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
         var config = bus.Config;
         var compressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions;
         var subjectProvider = bus.Config.MessageSubjectProvider;
-        var subject = subjectProvider.GetSubjectForType(typeof(T));
+        var subject = _subject ?? subjectProvider.GetSubjectForType(typeof(T));
 
         var eventPublisher = new SqsMessagePublisher(
             _queueAddress.QueueUrl,

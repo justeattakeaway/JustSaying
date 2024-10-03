@@ -9,13 +9,13 @@
     <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\RiderProjects\ConsoleApp9\src\LocalAwsMessaging\LocalAwsMessaging.csproj" />
     <ProjectReference Include="..\JustSaying.TestingFramework\JustSaying.TestingFramework.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.SimpleNotificationService" />
     <PackageReference Include="AWSSDK.SQS" />
     <PackageReference Include="GitHubActionsTestLogger" />
+    <PackageReference Include="LocalSqsSnsMessaging" />
     <PackageReference Include="MartinCostello.Logging.XUnit" />
     <PackageReference Include="MELT.Xunit" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />

@@ -31,7 +31,6 @@ public class WhenAMessageIsPublishedToAQueueWithAttribute(ITestOutputHelper outp
 
         var services = GivenJustSaying()
             .ConfigureJustSaying((builder) => builder.WithLoopbackQueueAndPublicationOptions<SimpleMessage>(UniqueName))
-            //.AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>() TODO
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
         var message = new SimpleMessage

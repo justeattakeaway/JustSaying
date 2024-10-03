@@ -43,7 +43,7 @@
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <RepositoryUrl>$(PackageProjectUrl).git</RepositoryUrl>
-    <SignAssembly Condition=" '$(OS)' != 'Windows_NT' ">true</SignAssembly>
+    <SignAssembly>true</SignAssembly>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <UseArtifactsOutput>true</UseArtifactsOutput>

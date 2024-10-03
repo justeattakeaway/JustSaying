@@ -33,7 +33,6 @@ public class WhenHandlingAMessageWithStringAttributes(ITestOutputHelper outputHe
         var services = GivenJustSaying()
             .ConfigureJustSaying((builder) => builder
                 .WithLoopbackTopic<SimpleMessage>(UniqueName))
-            //.AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>() TODO
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
         await WhenAsync(

@@ -202,7 +202,7 @@ internal sealed class PublishMessageConverter : IPublishMessageConverter
     /// <param name="compressionOptions">Options specifying when and how to compress.</param>
     /// <param name="compressionRegistry">Registry of available compression algorithms.</param>
     /// <returns>A tuple containing the compressed message (or null if not compressed) and the content encoding used (or null if not compressed).</returns>
-    private static (string compressedMessage, string contentEncoding) CompressMessageBody(string message, PublishMetadata metadata, PublishDestinationType destinationType, PublishCompressionOptions compressionOptions, MessageCompressionRegistry compressionRegistry)
+    public static (string compressedMessage, string contentEncoding) CompressMessageBody(string message, PublishMetadata metadata, PublishDestinationType destinationType, PublishCompressionOptions compressionOptions, MessageCompressionRegistry compressionRegistry)
     {
         string contentEncoding = null;
         string compressedMessage = null;

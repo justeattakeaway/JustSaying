@@ -4,7 +4,7 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
-using LocalAwsMessaging;
+using LocalSqsSnsMessaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

@@ -81,8 +81,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Extensions.Aws",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.Extensions.Aws.Tests", "tests\JustSaying.Extensions.Aws.Tests\JustSaying.Extensions.Aws.Tests.csproj", "{1B99B357-5D76-4540-B28E-B6CD3F6F1963}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalAwsMessaging", "..\..\..\RiderProjects\ConsoleApp9\src\LocalAwsMessaging\LocalAwsMessaging.csproj", "{52311A75-232B-4466-B429-71C256710566}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -153,10 +151,6 @@ Global
 		{1B99B357-5D76-4540-B28E-B6CD3F6F1963}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B99B357-5D76-4540-B28E-B6CD3F6F1963}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1B99B357-5D76-4540-B28E-B6CD3F6F1963}.Release|Any CPU.Build.0 = Release|Any CPU
-		{52311A75-232B-4466-B429-71C256710566}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{52311A75-232B-4466-B429-71C256710566}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{52311A75-232B-4466-B429-71C256710566}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{52311A75-232B-4466-B429-71C256710566}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -182,7 +176,6 @@ Global
 		{38DAC394-0A6E-4BB6-BCFC-8C21D2C64B3A} = {77C93C37-DE5B-448F-9A23-6C9D0C8465CA}
 		{4EFC48D7-4B45-4EBC-9237-4B84FE8239E0} = {A94633F2-29F2-48C6-840A-C5370B300AE2}
 		{1B99B357-5D76-4540-B28E-B6CD3F6F1963} = {E22A50F2-9952-4483-8AD1-09BE354FB3E4}
-		{52311A75-232B-4466-B429-71C256710566} = {A94633F2-29F2-48C6-840A-C5370B300AE2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {18FBDF85-C124-4444-9F03-D0D4F2B3A612}

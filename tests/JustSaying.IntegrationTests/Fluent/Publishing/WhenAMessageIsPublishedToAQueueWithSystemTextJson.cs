@@ -17,7 +17,6 @@ public class WhenAMessageIsPublishedToAQueueWithSystemTextJson(ITestOutputHelper
         var services = GivenJustSaying()
             .ConfigureJustSaying(
                 (builder) => builder.WithLoopbackQueue<SimpleMessage>(UniqueName))
-            //.AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>() TODO
             .AddSingleton(handler);
 
         string content = Guid.NewGuid().ToString();

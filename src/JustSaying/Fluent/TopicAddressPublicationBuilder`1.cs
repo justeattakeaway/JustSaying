@@ -21,6 +21,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     private readonly TopicAddress _topicAddress;
     private Func<Exception,Message,bool> _exceptionHandler;
     private PublishCompressionOptions _compressionOptions;
+    private string _subject;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TopicAddressPublicationBuilder{T}"/> class.
@@ -59,6 +60,12 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
         return this;
     }
 
+    public TopicAddressPublicationBuilder<T> WithSubject(string subject)
+    {
+        _subject = subject;
+        return this;
+    }
+
     /// <inheritdoc />
     public void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
     {
@@ -73,7 +80,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
         var compressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions;
         var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
         var subjectProvider = bus.Config.MessageSubjectProvider;
-        var subject = subjectProvider.GetSubjectForType(typeof(T));
+        var subject = _subject ?? subjectProvider.GetSubjectForType(typeof(T));
 
         var eventPublisher = new TopicAddressPublisher(
             proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(arn.Region)),

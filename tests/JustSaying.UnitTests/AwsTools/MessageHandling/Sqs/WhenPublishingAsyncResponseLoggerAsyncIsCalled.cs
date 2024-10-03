@@ -47,10 +47,6 @@ public class WhenPublishingAsyncResponseLoggerAsyncIsCalled : WhenPublishingTest
         Sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>())
             .Returns(new GetQueueAttributesResponse());
 
-        // TODO make work
-        // _serializationRegister.Serialize(_testMessage, false)
-        //     .Returns("serialized_contents");
-
         Sqs.SendMessageAsync(Arg.Any<SendMessageRequest>())
             .Returns(PublishResult);
     }

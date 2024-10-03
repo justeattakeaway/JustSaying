@@ -43,11 +43,10 @@ internal sealed class DefaultServiceResolver : IServiceResolver
         {
             return new NullOpMessageMonitor();
         }
-        // TODO
-        // else if (desiredType == typeof(IMessageSerializationFactory))
-        // {
-        //     return new NewtonsoftSerializationFactory();
-        // }
+        else if (desiredType == typeof(IMessageBodySerializer))
+        {
+            return new NewtonsoftSerializationFactory();
+        }
         else if (desiredType == typeof(MessageCompressionRegistry))
         {
             return new MessageCompressionRegistry([new GzipMessageBodyCompression()]);
