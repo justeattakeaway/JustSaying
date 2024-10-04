@@ -15,7 +15,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 /// <summary>
 /// Builds <see cref="ISubscriptionGroup"/>'s from the various components required.
 /// </summary>
-internal class SubscriptionGroupFactory : ISubscriptionGroupFactory
+internal sealed class SubscriptionGroupFactory : ISubscriptionGroupFactory
 {
     private readonly IMessageDispatcher _messageDispatcher;
     private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;

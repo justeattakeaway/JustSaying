@@ -69,9 +69,3 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
     /// </summary>
     public IReadOnlyCollection<SqsSource> QueueSources { get; }
 }
-
-public sealed class SqsSource
-{
-    public ISqsQueue SqsQueue { get; set; }
-    public IReceivedMessageConverter MessageConverter { get; set; }
-}

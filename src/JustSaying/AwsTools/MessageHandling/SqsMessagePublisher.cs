@@ -11,7 +11,7 @@ using MessageAttributeValue = Amazon.SQS.Model.MessageAttributeValue;
 
 namespace JustSaying.AwsTools.MessageHandling;
 
-internal class SqsMessagePublisher(
+internal sealed class SqsMessagePublisher(
     IAmazonSQS client,
     PublishMessageConverter messageConverter,
     ILoggerFactory loggerFactory) : IMessagePublisher

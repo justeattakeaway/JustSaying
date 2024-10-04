@@ -20,7 +20,7 @@ public class MessageAttributes(Dictionary<string, MessageAttributeValue> attribu
     /// <summary>
     /// Gets all available attribute keys.
     /// </summary>
-    /// <returns>An IReadOnlyCollection of strings representing all attribute keys.</returns>
+    /// <returns>An <see cref="IReadOnlyCollection{T}"/> of strings representing all attribute keys.</returns>
     public IReadOnlyCollection<string> GetKeys()
         => _attributes.Keys;
 }

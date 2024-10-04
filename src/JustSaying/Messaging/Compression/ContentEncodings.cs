@@ -11,7 +11,7 @@ namespace JustSaying.Messaging.Compression;
 public static class ContentEncodings
 {
     /// <summary>
-    /// The GzipBase64 constant represents the "gzip,base64" content encoding.
+    /// Represents the <c>gzip,base64</c> content encoding.
     /// </summary>
     public const string GzipBase64 = "gzip,base64";
 }
