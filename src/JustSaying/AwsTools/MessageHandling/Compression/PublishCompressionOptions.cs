@@ -13,11 +13,12 @@ public sealed class PublishCompressionOptions
     /// The default value is 262,144 bytes (256 KB).
     /// </remarks>
     public int MessageLengthThreshold { get; set; } = 256 * 1024;
+
     /// <summary>
     /// Gets or sets the compression encoding to be used.
     /// </summary>
     /// <remarks>
-    /// This should correspond to a registered compression algorithm in the IMessageCompressionRegistry.
+    /// This should correspond to a registered compression algorithm in the <see cref="IMessageCompressionRegistry"/>..
     /// </remarks>
     public string CompressionEncoding { get; set; }
 }

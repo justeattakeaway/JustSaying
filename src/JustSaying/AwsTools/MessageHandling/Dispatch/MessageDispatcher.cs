@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.AwsTools.MessageHandling.Dispatch;
 
-internal class MessageDispatcher : IMessageDispatcher
+internal sealed class MessageDispatcher : IMessageDispatcher
 {
     private readonly IMessageMonitor _messagingMonitor;
     private readonly MiddlewareMap _middlewareMap;

@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using JustSaying.AwsTools;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using Microsoft.Extensions.Logging;
 
@@ -41,7 +40,7 @@ internal class ServiceBuilderServiceResolver(ServicesBuilder builder) : IService
         {
             _serviceLookup[typeof(IMessageMonitor)] = builder.MessageMonitoring();
         }
-        
+
         if (builder.MessageContextAccessor != null)
         {
             _serviceLookup[typeof(IMessageContextAccessor)] = builder.MessageContextAccessor();

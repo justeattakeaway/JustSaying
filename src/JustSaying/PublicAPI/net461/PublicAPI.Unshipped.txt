@@ -73,13 +73,11 @@ JustSaying.Messaging.MessageSerialization.ReceivedMessage.Deconstruct(out JustSa
 JustSaying.Messaging.MessageSerialization.ReceivedMessage.Message.get -> JustSaying.Models.Message
 JustSaying.Messaging.MessageSerialization.ReceivedMessage.MessageAttributes.get -> JustSaying.Messaging.MessageHandling.MessageAttributes
 JustSaying.Messaging.MessageSerialization.ReceivedMessage.ReceivedMessage(JustSaying.Models.Message message, JustSaying.Messaging.MessageHandling.MessageAttributes messageAttributes) -> void
+JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer
 JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>
 JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>.Deserialize(string messageBody) -> JustSaying.Models.Message
 JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>.Serialize(JustSaying.Models.Message message) -> string
-JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>.SystemTextJsonMessageBodySerializer() -> void
 JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>.SystemTextJsonMessageBodySerializer(System.Text.Json.JsonSerializerOptions options) -> void
-JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializerBase
-JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializerBase.SystemTextJsonMessageBodySerializerBase() -> void
 JustSaying.MessagingConfig.DefaultCompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
 JustSaying.MessagingConfig.DefaultCompressionOptions.set -> void
 *REMOVED*JustSaying.AwsTools.MessageHandling.Dispatch.IMessageDispatcher
@@ -168,4 +166,4 @@ JustSaying.MessagingConfig.DefaultCompressionOptions.set -> void
 *REMOVED*JustSaying.Messaging.MessageSerialization.TypeSerializer.TypeSerializer(System.Type type, JustSaying.Messaging.MessageSerialization.IMessageSerializer serializer) -> void
 *REMOVED*virtual JustSaying.AwsTools.MessageHandling.SnsMessagePublisher.Interrogate() -> JustSaying.Messaging.Interrogation.InterrogationResult
 *REMOVED*JustSaying.AwsTools.MessageHandling.Dispatch.MessageDispatcher
-
+static readonly JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions -> System.Text.Json.JsonSerializerOptions
