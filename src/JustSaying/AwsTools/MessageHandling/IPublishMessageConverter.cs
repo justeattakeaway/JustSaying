@@ -15,11 +15,13 @@ public interface IPublishMessageConverter
     /// <returns>A <see cref="PublishMessage"/> object containing the converted message body, attributes, and any additional publishing information.</returns>
     /// <remarks>
     /// This method handles the following operations:
-    /// - Serializes the message body
-    /// - Adds custom message attributes
-    /// - Applies compression to the message body if it meets specified criteria
-    /// - Adds compression-related attributes if compression is applied
-    /// - Prepares the message for SNS (if applicable) by setting the subject
+    /// <ul>
+    /// <li>Serializes the message body</li>
+    /// <li>Adds custom message attributes</li>
+    /// <li>Applies compression to the message body if it meets specified criteria</li>
+    /// <li>Adds compression-related attributes if compression is applied</li>
+    /// <li>Prepares the message for SNS (if applicable) by setting the subject</li>
+    /// </ul>
     /// The exact behavior may vary based on the destination type and compression options.
     /// </remarks>
     PublishMessage ConvertForPublish(Message message, PublishMetadata publishMetadata, PublishDestinationType destinationType);
