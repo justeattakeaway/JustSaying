@@ -166,4 +166,4 @@ JustSaying.MessagingConfig.DefaultCompressionOptions.set -> void
 *REMOVED*JustSaying.Messaging.MessageSerialization.TypeSerializer.TypeSerializer(System.Type type, JustSaying.Messaging.MessageSerialization.IMessageSerializer serializer) -> void
 *REMOVED*virtual JustSaying.AwsTools.MessageHandling.SnsMessagePublisher.Interrogate() -> JustSaying.Messaging.Interrogation.InterrogationResult
 *REMOVED*JustSaying.AwsTools.MessageHandling.Dispatch.MessageDispatcher
-static readonly JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions -> System.Text.Json.JsonSerializerOptions
+static JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions.get -> System.Text.Json.JsonSerializerOptions

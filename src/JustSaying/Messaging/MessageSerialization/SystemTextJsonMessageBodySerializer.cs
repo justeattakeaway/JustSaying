@@ -15,7 +15,7 @@ public static class SystemTextJsonMessageBodySerializer
     /// <item><description>Using a <see cref="JsonStringEnumConverter"/> for enum serialization.</description></item>
     /// </list>
     /// </remarks>
-    public static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
+    public static JsonSerializerOptions DefaultJsonSerializerOptions { get; } = new()
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         Converters =
