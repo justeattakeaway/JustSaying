@@ -3,26 +3,23 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
-using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 using MessageAttributeValue = Amazon.SimpleNotificationService.Model.MessageAttributeValue;
 
 namespace JustSaying.AwsTools.MessageHandling;
 
-internal class SnsMessagePublisher(
+internal sealed class SnsMessagePublisher(
     IAmazonSimpleNotificationService client,
     IPublishMessageConverter messageConverter,
     ILoggerFactory loggerFactory,
-    IMessageSubjectProvider messageSubjectProvider,
     Func<Exception, Message, bool> handleException = null) : IMessagePublisher, IInterrogable
 {
     private readonly IPublishMessageConverter _messageConverter = messageConverter;
-    private readonly IMessageSubjectProvider _messageSubjectProvider = messageSubjectProvider;
     private readonly Func<Exception, Message, bool> _handleException = handleException;
+    private readonly IAmazonSimpleNotificationService _client = client;
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
     public string Arn { get; internal set; }
-    protected IAmazonSimpleNotificationService Client { get; } = client;
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
 
     public SnsMessagePublisher(
@@ -30,9 +27,8 @@ internal class SnsMessagePublisher(
         IAmazonSimpleNotificationService client,
         IPublishMessageConverter messageConverter,
         ILoggerFactory loggerFactory,
-        IMessageSubjectProvider messageSubjectProvider,
         Func<Exception, Message, bool> handleException = null)
-        : this(client, messageConverter, loggerFactory, messageSubjectProvider, handleException)
+        : this(client, messageConverter, loggerFactory,handleException)
     {
         Arn = topicArn;
     }
@@ -51,7 +47,7 @@ internal class SnsMessagePublisher(
         PublishResponse response = null;
         try
         {
-            response = await Client.PublishAsync(request, cancellationToken).ConfigureAwait(false);
+            response = await _client.PublishAsync(request, cancellationToken).ConfigureAwait(false);
         }
         catch (AmazonServiceException ex)
         {
@@ -138,7 +134,7 @@ internal class SnsMessagePublisher(
         };
     }
 
-    public virtual InterrogationResult Interrogate()
+    public InterrogationResult Interrogate()
     {
         return new InterrogationResult(new
         {

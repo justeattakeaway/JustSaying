@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
@@ -72,7 +73,7 @@ public class WhenUsingABasicThrottle(ITestOutputHelper outputHelper) : Integrati
             {
                 var batchEntry = new SendMessageBatchRequestEntry
                 {
-                    MessageBody = $$"""{"Subject":"SimpleMessage", "Message": { "Content": "{{entriesAdded}}"} }""",
+                    MessageBody = $$"""{"Subject":"SimpleMessage", "Message": "{{JsonEncodedText.Encode($$"""{ "Content": "{{entriesAdded}}" }""")}}" }""",
                     Id = Guid.NewGuid().ToString()
                 };
 

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageHandling;
@@ -18,10 +19,11 @@ public class WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelpe
 
     protected override void Given()
     {
-        _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage
-        {
-            Body = """{"Subject":"SimpleMessage", "Message": { "Content": "Hi"} }"""
-        });
+        _queue = CreateSuccessfulTestQueue("TestQueue",
+            new TestMessage
+            {
+                Body = $$"""{"Subject":"SimpleMessage", "Message": "{{JsonEncodedText.Encode("""{ "Content": "Hi"} }""")}}"}"""
+            });
 
         Queues.Add(_queue);
 

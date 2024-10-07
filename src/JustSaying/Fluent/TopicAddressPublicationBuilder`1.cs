@@ -71,7 +71,6 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
 
         logger.LogInformation("Adding SNS publisher for message type '{MessageType}'", typeof(T));
 
-        var config = bus.Config;
         var arn = Arn.Parse(_topicAddress.TopicArn);
 
         var compressionRegistry = bus.CompressionRegistry;
@@ -85,7 +84,6 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
             proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(arn.Region)),
             new PublishMessageConverter(PublishDestinationType.Topic, serializer, compressionRegistry, compressionOptions, subject, true),
             loggerFactory,
-            subjectProvider,
             _exceptionHandler);
 
         CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, compressionOptions);

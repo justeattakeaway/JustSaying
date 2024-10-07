@@ -30,7 +30,7 @@ internal sealed class ReceivedMessageConverter : IReceivedMessageConverter
             var jsonNode = JsonNode.Parse(body);
             if (jsonNode is JsonObject jsonObject && jsonObject.TryGetPropertyValue("Message", out var messageNode))
             {
-                body = messageNode?.ToString();
+                body = messageNode?.GetValue<string>();
             }
         }
         body = ApplyBodyDecompression(body, attributes);
