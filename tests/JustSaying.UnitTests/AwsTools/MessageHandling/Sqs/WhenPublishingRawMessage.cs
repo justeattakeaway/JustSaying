@@ -10,9 +10,9 @@ using NSubstitute;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
-public class WhenPublishing : WhenPublishingTestBase
+public class WhenPublishingRawMessage : WhenPublishingTestBase
 {
-    private readonly PublishMessageConverter _publishMessageConverter = new(PublishDestinationType.Queue, new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), new PublishCompressionOptions(), "Subject", false);
+    private readonly PublishMessageConverter _publishMessageConverter = new(PublishDestinationType.Queue, new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), new PublishCompressionOptions(), "Subject", true);
     private const string Url = "https://blablabla/" + QueueName;
     private readonly SimpleMessage _message = new() { Content = "Hello" };
     private const string QueueName = "queuename";
@@ -45,9 +45,7 @@ public class WhenPublishing : WhenPublishingTestBase
     {
         _capturedMessageBody.ShouldNotBeNull();
         var jsonNode = JsonNode.Parse(_capturedMessageBody).ShouldNotBeNull();
-        var messageBody = jsonNode["Message"]!.GetValue<string>();
-        var message = JsonNode.Parse(messageBody).ShouldNotBeNull();
-        var content = message["Content"].ShouldNotBeNull().GetValue<string>();
+        var content = jsonNode["Content"].ShouldNotBeNull().GetValue<string>();
         content.ShouldBe("Hello");
     }
 

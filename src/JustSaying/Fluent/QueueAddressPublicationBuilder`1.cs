@@ -20,6 +20,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
     private readonly QueueAddress _queueAddress;
     private PublishCompressionOptions _compressionOptions;
     private string _subject;
+    private bool _isRawMessage;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="QueueAddressPublicationBuilder{T}"/> class.
@@ -49,6 +50,12 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
         return this;
     }
 
+    public QueueAddressPublicationBuilder<T> WithRawMessages()
+    {
+        _isRawMessage = true;
+        return this;
+    }
+
     /// <inheritdoc />
     public void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
     {
@@ -64,7 +71,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
         var eventPublisher = new SqsMessagePublisher(
             _queueAddress.QueueUrl,
             proxy.GetAwsClientFactory().GetSqsClient(RegionEndpoint.GetBySystemName(_queueAddress.RegionName)),
-            new PublishMessageConverter(bus.MessageBodySerializerFactory.GetSerializer<T>(), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject),
+            new PublishMessageConverter(PublishDestinationType.Queue, bus.MessageBodySerializerFactory.GetSerializer<T>(), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, _isRawMessage),
             loggerFactory)
         {
             MessageResponseLogger = config.MessageResponseLogger

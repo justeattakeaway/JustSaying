@@ -10,6 +10,10 @@ JustSaying.AwsTools.MessageHandling.PublishDestinationType.Queue = 2 -> JustSayi
 JustSaying.AwsTools.MessageHandling.PublishDestinationType.Topic = 1 -> JustSaying.AwsTools.MessageHandling.PublishDestinationType
 JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.CompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
 JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.CompressionOptions.set -> void
+JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.IsRawMessage.get -> bool
+JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.IsRawMessage.set -> void
+JustSaying.AwsTools.QueueCreation.SqsBasicConfiguration.IsRawMessage.get -> bool
+JustSaying.AwsTools.QueueCreation.SqsBasicConfiguration.IsRawMessage.set -> void
 JustSaying.AwsTools.QueueCreation.SqsReadConfiguration.RawMessageDelivery.get -> bool
 JustSaying.AwsTools.QueueCreation.SqsReadConfiguration.RawMessageDelivery.set -> void
 JustSaying.AwsTools.QueueCreation.SqsWriteConfiguration.CompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
@@ -46,9 +50,9 @@ JustSaying.Messaging.Compression.MessageCompressionRegistry
 JustSaying.Messaging.Compression.MessageCompressionRegistry.GetCompression(string contentEncoding) -> JustSaying.Messaging.Compression.IMessageBodyCompression
 JustSaying.Messaging.Compression.MessageCompressionRegistry.MessageCompressionRegistry(System.Collections.Generic.IList<JustSaying.Messaging.Compression.IMessageBodyCompression> compressions = null) -> void
 JustSaying.Messaging.IPublishMessageConverter
-JustSaying.Messaging.IPublishMessageConverter.ConvertForPublish(JustSaying.Models.Message message, JustSaying.Messaging.PublishMetadata publishMetadata, JustSaying.AwsTools.MessageHandling.PublishDestinationType destinationType) -> JustSaying.Messaging.MessageSerialization.PublishMessage
+JustSaying.Messaging.IPublishMessageConverter.ConvertForPublishAsync(JustSaying.Models.Message message, JustSaying.Messaging.PublishMetadata publishMetadata) -> System.Threading.Tasks.ValueTask<JustSaying.Messaging.MessageSerialization.PublishMessage>
 JustSaying.Messaging.IReceivedMessageConverter
-JustSaying.Messaging.IReceivedMessageConverter.ConvertForReceive(Amazon.SQS.Model.Message message) -> JustSaying.Messaging.MessageSerialization.ReceivedMessage
+JustSaying.Messaging.IReceivedMessageConverter.ConvertForReceiveAsync(Amazon.SQS.Model.Message message) -> System.Threading.Tasks.ValueTask<JustSaying.Messaging.MessageSerialization.ReceivedMessage>
 JustSaying.Messaging.MessageHandling.MessageAttributes.GetKeys() -> System.Collections.Generic.IReadOnlyCollection<string>
 JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory
 JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory.GetSerializer<T>() -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer
@@ -167,3 +171,4 @@ JustSaying.MessagingConfig.DefaultCompressionOptions.set -> void
 *REMOVED*virtual JustSaying.AwsTools.MessageHandling.SnsMessagePublisher.Interrogate() -> JustSaying.Messaging.Interrogation.InterrogationResult
 *REMOVED*JustSaying.AwsTools.MessageHandling.Dispatch.MessageDispatcher
 static JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions.get -> System.Text.Json.JsonSerializerOptions
+JustSaying.Fluent.QueueAddressPublicationBuilder<T>.WithRawMessages() -> JustSaying.Fluent.QueueAddressPublicationBuilder<T>

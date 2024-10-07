@@ -2,9 +2,7 @@ using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
-using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.Interrogation;
-using JustSaying.Messaging.MessageHandling;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
 using MessageAttributeValue = Amazon.SQS.Model.MessageAttributeValue;
@@ -42,7 +40,7 @@ internal sealed class SqsMessagePublisher(
     {
         if (QueueUrl is null) throw new PublishException("Queue URL was null, perhaps you need to call `StartAsync` on the `IMessagePublisher` before publishing.");
 
-        var request = BuildSendMessageRequest(message, metadata);
+        var request = await BuildSendMessageRequestAsync(message, metadata);
         SendMessageResponse response;
         try
         {
@@ -80,9 +78,9 @@ internal sealed class SqsMessagePublisher(
         }
     }
 
-    private SendMessageRequest BuildSendMessageRequest(Message message, PublishMetadata metadata)
+    private async Task<SendMessageRequest> BuildSendMessageRequestAsync(Message message, PublishMetadata metadata)
     {
-        var (messageBody, attributes, _) = messageConverter.ConvertForPublish(message, metadata, PublishDestinationType.Queue);
+        var (messageBody, attributes, _) = await messageConverter.ConvertForPublishAsync(message, metadata);
 
         var request = new SendMessageRequest
         {

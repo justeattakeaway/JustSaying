@@ -110,7 +110,7 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
 
         var eventPublisher = new SqsMessagePublisher(
             sqsClient,
-            new PublishMessageConverter(bus.MessageBodySerializerFactory.GetSerializer<T>(), compressionRegistry, compressionOptions, subject),
+            new PublishMessageConverter(PublishDestinationType.Queue, bus.MessageBodySerializerFactory.GetSerializer<T>(), compressionRegistry, compressionOptions, subject, writeConfiguration.IsRawMessage),
             loggerFactory)
         {
             MessageResponseLogger = config.MessageResponseLogger

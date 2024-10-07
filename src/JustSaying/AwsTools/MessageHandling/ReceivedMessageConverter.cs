@@ -20,7 +20,7 @@ internal sealed class ReceivedMessageConverter : IReceivedMessageConverter
         _isRawMessage = isRawMessage;
     }
 
-    public ReceivedMessage ConvertForReceive(Amazon.SQS.Model.Message message)
+    public ValueTask<ReceivedMessage> ConvertForReceiveAsync(Amazon.SQS.Model.Message message)
     {
         string body = message.Body;
         var attributes = GetMessageAttributes(message, body);
@@ -30,12 +30,12 @@ internal sealed class ReceivedMessageConverter : IReceivedMessageConverter
             var jsonNode = JsonNode.Parse(body);
             if (jsonNode is JsonObject jsonObject && jsonObject.TryGetPropertyValue("Message", out var messageNode))
             {
-                body = messageNode.ToString();
+                body = messageNode?.ToString();
             }
         }
         body = ApplyBodyDecompression(body, attributes);
         var result = _bodySerializer.Deserialize(body);
-        return new ReceivedMessage(result, attributes);
+        return new ValueTask<ReceivedMessage>(new ReceivedMessage(result, attributes));
     }
 
     private string ApplyBodyDecompression(string body, MessageAttributes attributes)

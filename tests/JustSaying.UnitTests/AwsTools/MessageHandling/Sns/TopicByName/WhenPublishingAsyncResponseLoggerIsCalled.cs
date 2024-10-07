@@ -25,7 +25,7 @@ public class WhenPublishingAsyncResultLoggerIsCalled : WhenPublishingTestBase
 
     private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        var messageConverter = new PublishMessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), new PublishCompressionOptions(), "Subject");
+        var messageConverter = new PublishMessageConverter(PublishDestinationType.Topic, new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), new PublishCompressionOptions(), "Subject", false);
         var topic = new SnsMessagePublisher(TopicArn, Sns, messageConverter, NullLoggerFactory.Instance, Substitute.For<IMessageSubjectProvider>())
         {
             MessageResponseLogger = (r, m) =>

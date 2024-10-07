@@ -40,7 +40,7 @@ internal sealed class StaticPublicationConfiguration(
 
         var eventPublisher = new SnsMessagePublisher(
             snsClient,
-            new PublishMessageConverter(serializer, new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject),
+            new PublishMessageConverter(PublishDestinationType.Topic, serializer, new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, writeConfiguration.IsRawMessage),
             loggerFactory,
             bus.Config.MessageSubjectProvider)
         {

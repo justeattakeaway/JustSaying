@@ -23,6 +23,6 @@ public sealed class MessageCompressionRegistry
     /// <returns>An <see cref="IMessageBodyCompression"/> instance for the specified encoding, or null if not found.</returns>
     public IMessageBodyCompression GetCompression(string contentEncoding)
     {
-        return _compressions.FirstOrDefault(x => x.ContentEncoding == contentEncoding);
+        return _compressions.FirstOrDefault(x => string.Equals(x.ContentEncoding, contentEncoding, StringComparison.OrdinalIgnoreCase));
     }
 }

@@ -12,7 +12,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
 public class WhenPublishingAsync : WhenPublishingTestBase
 {
-    private readonly PublishMessageConverter _publishMessageConverter = new(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), new PublishCompressionOptions(), "Subject");
+    private readonly PublishMessageConverter _publishMessageConverter = new(PublishDestinationType.Queue, new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), new PublishCompressionOptions(), "Subject", false);
     private const string Url = "https://blablabla/" + QueueName;
     private readonly SimpleMessage _message = new() { Content = "Hello" };
     private string _capturedMessageBody;
@@ -45,7 +45,9 @@ public class WhenPublishingAsync : WhenPublishingTestBase
     {
         _capturedMessageBody.ShouldNotBeNull();
         var jsonNode = JsonNode.Parse(_capturedMessageBody).ShouldNotBeNull();
-        var content = jsonNode["Content"].ShouldNotBeNull().GetValue<string>();
+        var messageBody = jsonNode["Message"]!.GetValue<string>();
+        var message = JsonNode.Parse(messageBody).ShouldNotBeNull();
+        var content = message["Content"].ShouldNotBeNull().GetValue<string>();
         content.ShouldBe("Hello");
     }
 

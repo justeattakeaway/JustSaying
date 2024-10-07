@@ -9,9 +9,14 @@ public class DealingWithPotentiallyMissingConversation : XBehaviourTest<SystemTe
     private MessageWithEnum _messageIn;
     private string _jsonMessage;
 
+    protected override SystemTextJsonMessageBodySerializer<MessageWithEnum> CreateSystemUnderTest()
+    {
+        return new SystemTextJsonMessageBodySerializer<MessageWithEnum>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions);
+    }
+
     protected override void Given()
     {
-        _messageOut = new MessageWithEnum() { EnumVal = Value.Two };
+        _messageOut = new MessageWithEnum { EnumVal = Value.Two };
     }
 
     protected override void WhenAction()
@@ -19,7 +24,7 @@ public class DealingWithPotentiallyMissingConversation : XBehaviourTest<SystemTe
         _jsonMessage = SystemUnderTest.Serialize(_messageOut);
 
         // Add extra property to see what happens:
-        _jsonMessage = _jsonMessage.Replace("{__", "{\"New\":\"Property\",__", StringComparison.OrdinalIgnoreCase);
+        _jsonMessage = _jsonMessage.Replace("{__", """{"New":"Property",__""", StringComparison.OrdinalIgnoreCase);
         _messageIn = SystemUnderTest.Deserialize(_jsonMessage) as MessageWithEnum;
     }
 

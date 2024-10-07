@@ -80,16 +80,14 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
         var subjectProvider = bus.Config.MessageSubjectProvider;
         var subject = _subject ?? subjectProvider.GetSubjectForType(typeof(T));
 
-        var eventPublisher = new TopicAddressPublisher(
+        var eventPublisher = new SnsMessagePublisher(
+            _topicAddress.TopicArn,
             proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(arn.Region)),
+            new PublishMessageConverter(PublishDestinationType.Topic, serializer, compressionRegistry, compressionOptions, subject, true),
             loggerFactory,
-            config.MessageSubjectProvider,
-            new PublishMessageConverter(serializer, compressionRegistry, compressionOptions, subject),
-            _exceptionHandler,
-            _topicAddress)
-        {
-            MessageResponseLogger = config.MessageResponseLogger
-        };
+            subjectProvider,
+            _exceptionHandler);
+
         CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, compressionOptions);
 
         bus.AddMessagePublisher<T>(eventPublisher);

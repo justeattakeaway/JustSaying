@@ -7,6 +7,7 @@ public class SnsWriteConfiguration
 {
     public ServerSideEncryption Encryption { get; set; }
     public PublishCompressionOptions CompressionOptions { get; set; }
+    public bool IsRawMessage { get; set; }
 
     /// <summary>
     /// Extension point enabling custom error handling on a per notification basis, including ability handle raised exceptions.

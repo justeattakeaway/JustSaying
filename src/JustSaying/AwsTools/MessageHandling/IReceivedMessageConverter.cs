@@ -13,5 +13,5 @@ public interface IReceivedMessageConverter
     /// This method handles the conversion of both raw SQS messages and SNS-wrapped messages.
     /// It also applies any necessary decompression to the message body.
     /// </remarks>
-    ReceivedMessage ConvertForReceive(Amazon.SQS.Model.Message message);
+    ValueTask<ReceivedMessage> ConvertForReceiveAsync(Amazon.SQS.Model.Message message);
 }

@@ -9,7 +9,7 @@ internal static class SqsEndpointHelper
             "aws-cn" => $"sqs.{region}.amazonaws.com.cn",
             "aws-us-gov" => $"sqs.{region}.amazonaws.com",
             "aws" => $"sqs.{region}.amazonaws.com",
-            _ => throw new ArgumentException("Unknown partition.", nameof(partition))
+            _ => throw new ArgumentException($"Unknown partition: {partition}", nameof(partition))
         };
     }
 }

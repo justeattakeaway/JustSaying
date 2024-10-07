@@ -9,9 +9,14 @@ public class WhenSerializingAndDeserializing : XBehaviourTest<SystemTextJsonMess
     private MessageWithEnum _messageIn;
     private string _jsonMessage;
 
+    protected override SystemTextJsonMessageBodySerializer<MessageWithEnum> CreateSystemUnderTest()
+    {
+        return new SystemTextJsonMessageBodySerializer<MessageWithEnum>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions);
+    }
+
     protected override void Given()
     {
-        _messageOut = new MessageWithEnum() { EnumVal = Value.Two };
+        _messageOut = new MessageWithEnum { EnumVal = Value.Two };
     }
 
     protected override void WhenAction()

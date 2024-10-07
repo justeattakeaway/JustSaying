@@ -15,7 +15,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
 public class WhenPublishingAsyncResponseLoggerAsyncIsCalled : WhenPublishingTestBase
 {
-    private readonly PublishMessageConverter _publishMessageConverter = new(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), new PublishCompressionOptions(), "Subject");
+    private readonly PublishMessageConverter _publishMessageConverter = new(PublishDestinationType.Queue, new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), new PublishCompressionOptions(), "Subject", false);
     private const string Url = "https://blablabla/" + QueueName;
     private readonly SimpleMessage _testMessage = new() { Content = "Hello" };
     private const string QueueName = "queuename";

@@ -47,7 +47,7 @@ internal class SnsMessagePublisher(
 
     public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
     {
-        var request = BuildPublishRequest(message, metadata);
+        var request = await BuildPublishRequestAsync(message, metadata);
         PublishResponse response = null;
         try
         {
@@ -90,9 +90,9 @@ internal class SnsMessagePublisher(
 
     private bool ClientExceptionHandler(Exception ex, Message message) => _handleException?.Invoke(ex, message) ?? false;
 
-    private PublishRequest BuildPublishRequest(Message message, PublishMetadata metadata)
+    private async Task<PublishRequest> BuildPublishRequestAsync(Message message, PublishMetadata metadata)
     {
-        var (messageToSend, attributes, subject) = _messageConverter.ConvertForPublish(message, metadata, PublishDestinationType.Topic);
+        var (messageToSend, attributes, subject) = await _messageConverter.ConvertForPublishAsync(message, metadata);
 
         var request = new PublishRequest
         {

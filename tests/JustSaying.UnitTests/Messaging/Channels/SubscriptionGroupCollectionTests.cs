@@ -47,8 +47,8 @@ public class SubscriptionGroupCollectionTests
         bus.AddMessageMiddleware<TestJustSayingMessage>(queueName1, middleware1);
         bus.AddMessageMiddleware<TestJustSayingMessage>(queueName2, middleware2);
 
-        ISqsQueue queue1 = TestQueue(queueName1);
-        ISqsQueue queue2 = TestQueue(queueName2);
+        ISqsQueue queue1 = await TestQueue(queueName1);
+        ISqsQueue queue2 = await TestQueue(queueName2);
 
         bus.AddQueue(group1, new SqsSource
         {
@@ -106,7 +106,7 @@ public class SubscriptionGroupCollectionTests
         return bus;
     }
 
-    private static FakeSqsQueue TestQueue(
+    private static async Task<FakeSqsQueue> TestQueue(
         string queueName,
         Action spy = null)
     {
@@ -115,9 +115,9 @@ public class SubscriptionGroupCollectionTests
             QueueName = queueName,
         };
 
-        var messageConverter = new PublishMessageConverter(new NewtonsoftMessageBodySerializer<TestJustSayingMessage>(), new MessageCompressionRegistry(), new PublishCompressionOptions(), "TestJustSayingMessage");
+        var messageConverter = new PublishMessageConverter(PublishDestinationType.Queue, new NewtonsoftMessageBodySerializer<TestJustSayingMessage>(), new MessageCompressionRegistry(), new PublishCompressionOptions(), "TestJustSayingMessage", false);
 
-        List<Message> messages = [new TestMessage { Body = messageConverter.ConvertForPublish(message, null, PublishDestinationType.Queue).Body }];
+        List<Message> messages = [new TestMessage { Body = (await messageConverter.ConvertForPublishAsync(message, null)).Body }];
 
         var queue = new FakeSqsQueue(async ct =>
         {

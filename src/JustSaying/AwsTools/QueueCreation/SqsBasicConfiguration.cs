@@ -13,6 +13,7 @@ public class SqsBasicConfiguration
     public int RetryCountBeforeSendingToErrorQueue { get; set; } = JustSayingConstants.DefaultHandlerRetryCount;
     public bool ErrorQueueOptOut { get; set; }
     public ServerSideEncryption ServerSideEncryption { get; set; }
+    public bool IsRawMessage { get; set; }
     public string QueueName { get; set; }
 
     public void ApplyQueueNamingConvention<T>(IQueueNamingConvention namingConvention)
