@@ -1,3 +1,5 @@
+using JustSaying.Messaging.Compression;
+
 namespace JustSaying.AwsTools.MessageHandling;
 
 /// <summary>
@@ -18,7 +20,7 @@ public sealed class PublishCompressionOptions
     /// Gets or sets the compression encoding to be used.
     /// </summary>
     /// <remarks>
-    /// This should correspond to a registered compression algorithm in the <see cref="IMessageCompressionRegistry"/>..
+    /// This should correspond to a registered compression algorithm in the <see cref="MessageCompressionRegistry"/>.
     /// </remarks>
     public string CompressionEncoding { get; set; }
 }

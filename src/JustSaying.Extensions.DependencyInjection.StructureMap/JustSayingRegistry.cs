@@ -10,6 +10,7 @@ using JustSaying.Messaging.Middleware.PostProcessing;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Naming;
 using StructureMap;
+using StructureMap.Pipeline;
 
 namespace JustSaying;
 
@@ -42,7 +43,8 @@ internal sealed class JustSayingRegistry : Registry
 
         For<LoggingMiddleware>().Transient();
         For<SqsPostProcessorMiddleware>().Transient();
-        For<MessageCompressionRegistry>().Use((p) => new MessageCompressionRegistry(new List<IMessageBodyCompression> { new GzipMessageBodyCompression() })).Singleton();
+        For<IMessageBodyCompression>().Add<GzipMessageBodyCompression>().Singleton();
+        For<MessageCompressionRegistry>().Singleton();
         For<IMessageReceivePauseSignal>().Use<MessageReceivePauseSignal>().Singleton();
 
         For<DefaultNamingConventions>().Singleton();

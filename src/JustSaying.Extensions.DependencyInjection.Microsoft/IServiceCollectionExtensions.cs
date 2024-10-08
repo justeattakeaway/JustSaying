@@ -139,7 +139,8 @@ public static class IServiceCollectionExtensions
         services.TryAddSingleton<IMessageBodySerializationFactory, NewtonsoftSerializationFactory>();
         services.TryAddSingleton<IMessageSubjectProvider, GenericMessageSubjectProvider>();
         services.TryAddSingleton<IVerifyAmazonQueues, AmazonQueueCreator>();
-        services.TryAddSingleton((p) => new MessageCompressionRegistry([new GzipMessageBodyCompression()]));
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IMessageBodyCompression, GzipMessageBodyCompression>());
+        services.TryAddSingleton<MessageCompressionRegistry>();
 
         services.TryAddSingleton<IMessageReceivePauseSignal, MessageReceivePauseSignal>();
 
