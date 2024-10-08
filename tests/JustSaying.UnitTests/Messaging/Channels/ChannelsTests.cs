@@ -200,7 +200,7 @@ public class ChannelsTests
         var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
         var bufferCompletion = buffer.RunAsync(cts.Token);
 
-        cts.CancelAfter(3.Seconds());
+        cts.CancelAfter(1.Seconds());
 
         await multiplexerCompletion.HandleCancellation();
         await bufferCompletion.HandleCancellation();

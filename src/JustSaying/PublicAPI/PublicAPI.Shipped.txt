@@ -127,13 +127,6 @@ JustSaying.AwsTools.QueueCreation.ConfigurationErrorsException.ConfigurationErro
 JustSaying.AwsTools.QueueCreation.IVerifyAmazonQueues
 JustSaying.AwsTools.QueueCreation.IVerifyAmazonQueues.EnsureQueueExists(string region, JustSaying.AwsTools.QueueCreation.SqsReadConfiguration queueConfig) -> JustSaying.AwsTools.MessageHandling.QueueWithAsyncStartup
 JustSaying.AwsTools.QueueCreation.IVerifyAmazonQueues.EnsureTopicExistsWithQueueSubscribed(string region, JustSaying.AwsTools.QueueCreation.SqsReadConfiguration queueConfig) -> JustSaying.AwsTools.MessageHandling.QueueWithAsyncStartup
-JustSaying.AwsTools.QueueCreation.RedrivePolicy
-JustSaying.AwsTools.QueueCreation.RedrivePolicy.DeadLetterQueue.get -> string
-JustSaying.AwsTools.QueueCreation.RedrivePolicy.DeadLetterQueue.set -> void
-JustSaying.AwsTools.QueueCreation.RedrivePolicy.MaximumReceives.get -> int
-JustSaying.AwsTools.QueueCreation.RedrivePolicy.MaximumReceives.set -> void
-JustSaying.AwsTools.QueueCreation.RedrivePolicy.RedrivePolicy() -> void
-JustSaying.AwsTools.QueueCreation.RedrivePolicy.RedrivePolicy(int maximumReceives, string deadLetterQueue) -> void
 JustSaying.AwsTools.QueueCreation.ServerSideEncryption
 JustSaying.AwsTools.QueueCreation.ServerSideEncryption.KmsDataKeyReusePeriod.get -> System.TimeSpan
 JustSaying.AwsTools.QueueCreation.ServerSideEncryption.KmsDataKeyReusePeriod.set -> void
@@ -693,7 +686,6 @@ override JustSaying.AwsTools.ErrorQueue.UpdateQueueAttributeAsync(JustSaying.Aws
 override JustSaying.AwsTools.MessageHandling.SqsQueueByName.CreateAsync(JustSaying.AwsTools.QueueCreation.SqsBasicConfiguration queueConfig, int attempt = 0, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>
 override JustSaying.AwsTools.MessageHandling.SqsQueueByName.DeleteAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
 override JustSaying.AwsTools.MessageHandling.SqsQueueByName.GetCreateQueueAttributes(JustSaying.AwsTools.QueueCreation.SqsBasicConfiguration queueConfig) -> System.Collections.Generic.Dictionary<string, string>
-override JustSaying.AwsTools.QueueCreation.RedrivePolicy.ToString() -> string
 override JustSaying.AwsTools.QueueCreation.SqsReadConfiguration.OnValidating() -> void
 override JustSaying.Messaging.MessageHandling.MessageLockResponse.ToString() -> string
 override JustSaying.Messaging.Middleware.PostProcessing.SqsPostProcessorMiddleware.RunInnerAsync(JustSaying.Messaging.Middleware.HandleMessageContext context, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<bool>> func, System.Threading.CancellationToken stoppingToken) -> System.Threading.Tasks.Task<bool>
@@ -710,7 +702,6 @@ static JustSaying.AwsTools.JustSayingConstants.MaximumDeliveryDelay.get -> Syste
 static JustSaying.AwsTools.JustSayingConstants.MaximumRetentionPeriod.get -> System.TimeSpan
 static JustSaying.AwsTools.JustSayingConstants.MinimumDeliveryDelay.get -> System.TimeSpan
 static JustSaying.AwsTools.JustSayingConstants.MinimumRetentionPeriod.get -> System.TimeSpan
-static JustSaying.AwsTools.QueueCreation.RedrivePolicy.ConvertFromString(string policy) -> JustSaying.AwsTools.QueueCreation.RedrivePolicy
 static JustSaying.Extensions.ChannelExtensions.MergeAsync<T>(System.Collections.Generic.IEnumerable<System.Threading.Channels.ChannelReader<T>> inputs, System.Threading.Channels.ChannelWriter<T> output, System.Threading.CancellationToken stoppingToken) -> System.Threading.Tasks.Task
 static JustSaying.Messaging.Channels.SubscriptionGroups.SubscriptionGroupSettingsValidation.Validate(this JustSaying.Messaging.Channels.SubscriptionGroups.ISubscriptionGroupSettings settings) -> void
 static JustSaying.Messaging.MessageProcessingStrategies.MessageDefaults.MaxAmazonMessageCap.get -> int
