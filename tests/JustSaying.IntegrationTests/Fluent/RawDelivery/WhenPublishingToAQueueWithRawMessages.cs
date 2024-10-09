@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JustSaying.Fluent.RawDelivery;
 
-public class WhenUsingRawDelivery(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenPublishingToAQueueWithRawMessages(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
     [AwsFact]
     public async Task Then_The_Message_Is_Published()
@@ -18,7 +18,8 @@ public class WhenUsingRawDelivery(ITestOutputHelper outputHelper) : IntegrationT
             .ConfigureJustSaying((builder) =>
             {
                 builder.Client((options) => options.WithClientFactory(() => awsClientFactory));
-                builder.WithLoopbackTopic<SimpleMessage>(UniqueName,
+                builder.WithLoopbackQueueAndPublicationOptions<SimpleMessage>(UniqueName,
+                    c => { c.WithWriteConfiguration(rc => rc.IsRawMessage = true); },
                     c => { c.WithReadConfiguration(rc => rc.RawMessageDelivery = true); });
             })
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);

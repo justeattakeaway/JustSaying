@@ -36,7 +36,7 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
                             //     .WithServiceUri(TestEnvironment.SimulatorUrl)
                             )
                         .Messaging((options) => options.WithRegion("eu-west-1"))
-                        .Publications((options) => options.WithQueue<QueueMessage>(o => o.WithName(queueName)))
+                        .Publications((options) => options.WithQueue<QueueMessage>(o => o.WithQueueName(queueName)))
                         .Subscriptions((options) => options.ForQueue<QueueMessage>(o => o.WithQueueName(queueName)))
                         .Services((options) => options.WithMessageMonitoring(() => new MyMonitor()));
                 })
@@ -204,7 +204,7 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
 
         public void Configure(MessagingBusBuilder builder)
         {
-            builder.Publications((p) => p.WithQueue<QueueMessage>(options => options.WithName(QueueName)))
+            builder.Publications((p) => p.WithQueue<QueueMessage>(options => options.WithQueueName(QueueName)))
                 .Subscriptions((p) => p.ForQueue<QueueMessage>(cfg => cfg.WithQueueName(QueueName)));
         }
     }

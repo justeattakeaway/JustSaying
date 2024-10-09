@@ -246,7 +246,6 @@ JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>
 JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>.WithMiddlewareConfiguration(System.Action<JustSaying.Messaging.Middleware.HandlerMiddlewareBuilder> middlewareConfiguration) -> JustSaying.Fluent.ISubscriptionBuilder<T>
 JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>.WithReadConfiguration(System.Action<JustSaying.Fluent.QueueAddressConfiguration> configure) -> JustSaying.Fluent.QueueAddressSubscriptionBuilder<T>
 JustSaying.Fluent.QueuePublicationBuilder<T>
-JustSaying.Fluent.QueuePublicationBuilder<T>.WithName(string queueName) -> JustSaying.Fluent.QueuePublicationBuilder<T>
 JustSaying.Fluent.QueuePublicationBuilder<T>.WithWriteConfiguration(System.Action<JustSaying.AwsTools.QueueCreation.SqsWriteConfiguration> configure) -> JustSaying.Fluent.QueuePublicationBuilder<T>
 JustSaying.Fluent.QueuePublicationBuilder<T>.WithWriteConfiguration(System.Action<JustSaying.Fluent.SqsWriteConfigurationBuilder> configure) -> JustSaying.Fluent.QueuePublicationBuilder<T>
 JustSaying.Fluent.QueueSubscriptionBuilder<T>
@@ -734,3 +733,4 @@ virtual JustSaying.AwsTools.QueueCreation.SqsBasicConfiguration.OnValidating() -
 virtual JustSaying.MessagingConfig.Validate() -> void
 virtual JustSaying.Naming.DefaultNamingConventions.QueueName<T>() -> string
 virtual JustSaying.Naming.DefaultNamingConventions.TopicName<T>() -> string
+JustSaying.Fluent.QueuePublicationBuilder<T>.WithQueueName(string name) -> JustSaying.Fluent.QueuePublicationBuilder<T>

@@ -34,7 +34,7 @@ internal sealed class PublishMessageConverter : IPublishMessageConverter
         Dictionary<string, MessageAttributeValue> attributeValues = new();
         AddMessageAttributes(attributeValues, publishMetadata);
 
-        (string compressedMessage, string contentEncoding) = CompressMessageBody(messageBody, publishMetadata, _destinationType, _compressionOptions, _compressionRegistry);
+        (string compressedMessage, string contentEncoding) = CompressMessageBody(messageBody, publishMetadata);
         if (compressedMessage is not null)
         {
             messageBody = compressedMessage;
@@ -71,33 +71,24 @@ internal sealed class PublishMessageConverter : IPublishMessageConverter
     /// </summary>
     /// <param name="message">The original message to potentially compress.</param>
     /// <param name="metadata">Metadata associated with the message.</param>
-    /// <param name="destinationType">The type of destination (<see cref="PublishDestinationType.Topic"/> or <see cref="PublishDestinationType.Queue"/>) for the message.</param>
-    /// <param name="compressionOptions">Options specifying when and how to compress.</param>
-    /// <param name="compressionRegistry">Registry of available compression algorithms.</param>
     /// <returns>A tuple containing the compressed message (or null if not compressed) and the content encoding used (or null if not compressed).</returns>
-    public static (string compressedMessage, string contentEncoding)
-        CompressMessageBody(
-            string message,
-            PublishMetadata metadata,
-            PublishDestinationType destinationType,
-            PublishCompressionOptions compressionOptions,
-            MessageCompressionRegistry compressionRegistry)
+    internal (string compressedMessage, string contentEncoding) CompressMessageBody(string message, PublishMetadata metadata)
     {
         string contentEncoding = null;
         string compressedMessage = null;
-        if (compressionOptions?.CompressionEncoding is { } compressionEncoding && compressionRegistry is not null)
+        if (_compressionOptions?.CompressionEncoding is { } compressionEncoding && _compressionRegistry is not null)
         {
             var messageSize = CalculateTotalMessageSize(message, metadata);
-            if (messageSize >= compressionOptions.MessageLengthThreshold)
+            if (messageSize >= _compressionOptions.MessageLengthThreshold)
             {
-                var compression = compressionRegistry.GetCompression(compressionEncoding);
+                var compression = _compressionRegistry.GetCompression(compressionEncoding);
                 if (compression is null)
                 {
                     throw new InvalidOperationException($"No compression algorithm registered for encoding '{compressionEncoding}'.");
                 }
 
                 JsonNode jsonNode = null;
-                if (destinationType == PublishDestinationType.Queue)
+                if (_destinationType == PublishDestinationType.Queue && !_isRawMessage)
                 {
                     jsonNode = JsonNode.Parse(message);
                     if (jsonNode is JsonObject jsonObject && jsonObject.TryGetPropertyValue("Message", out var messageNode))
@@ -107,15 +98,6 @@ internal sealed class PublishMessageConverter : IPublishMessageConverter
                 }
                 compressedMessage = compression.Compress(message);
                 contentEncoding = compressionEncoding;
-
-                if (destinationType == PublishDestinationType.Queue)
-                {
-                    if (jsonNode is JsonObject jsonObject)
-                    {
-                        jsonObject["Message"] = compressedMessage;
-                        compressedMessage = jsonObject.ToJsonString();
-                    }
-                }
             }
         }
 

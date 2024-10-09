@@ -30,7 +30,7 @@ public sealed class WhenReceivingIsThrottled(ITestOutputHelper outputHelper) : I
         var services = GivenJustSaying()
             .ConfigureJustSaying((builder) => builder.Client((client) => client.WithAnonymousCredentials()))
             .ConfigureJustSaying((builder) => builder.Messaging((options) => options.WithPublishFailureBackoff(TimeSpan.FromMilliseconds(1))))
-            .ConfigureJustSaying((builder) => builder.Publications((options) => options.WithQueue<WaitingMessage>(o => o.WithName(UniqueName))))
+            .ConfigureJustSaying((builder) => builder.Publications((options) => options.WithQueue<WaitingMessage>(o => o.WithQueueName(UniqueName))))
             .ConfigureJustSaying(
                 (builder) => builder.Subscriptions(
                     (options) => options

@@ -10,7 +10,7 @@ internal static class MessagingBusBuilderTestExtensions
         where T : Message
     {
         return builder
-            .Publications((options) => options.WithQueue<T>(o => o.WithName(name)))
+            .Publications((options) => options.WithQueue<T>(o => o.WithQueueName(name)))
             .Subscriptions((options) => options.ForQueue<T>(subscriptionBuilder =>
             {
                 subscriptionBuilder.WithQueueName(name);
@@ -32,18 +32,19 @@ internal static class MessagingBusBuilderTestExtensions
     }
 
     public static MessagingBusBuilder WithLoopbackQueueAndPublicationOptions<T>(this MessagingBusBuilder builder, string name,
-        Action<QueuePublicationBuilder<T>> configure = null)
+        Action<QueuePublicationBuilder<T>> configurePublisher = null, Action<QueueSubscriptionBuilder<T>> configureSubscriber = null)
         where T : Message
     {
         return builder
-            .Publications((options) => options.WithQueue<T>(o =>
+            .Publications((options) => options.WithQueue<T>(publicationBuilder =>
             {
-                configure?.Invoke(o);
-                o.WithName(name);
+                publicationBuilder.WithQueueName(name);
+                configurePublisher?.Invoke(publicationBuilder);
             }))
             .Subscriptions((options) => options.ForQueue<T>(subscriptionBuilder =>
             {
                 subscriptionBuilder.WithQueueName(name);
+                configureSubscriber?.Invoke(subscriptionBuilder);
             }));
     }
 

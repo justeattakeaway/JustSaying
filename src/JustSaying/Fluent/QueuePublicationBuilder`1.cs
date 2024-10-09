@@ -28,6 +28,8 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
     /// </summary>
     private Action<SqsWriteConfiguration> ConfigureWrites { get; set; }
 
+    private string QueueName { get; set; } = string.Empty;
+
     /// <summary>
     /// Configures the SQS write configuration.
     /// </summary>
@@ -73,13 +75,14 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
     /// <summary>
     /// Configures the SQS Queue name, rather than using the naming convention.
     /// </summary>
-    /// <param name="queueName">The name of the queue to subscribe to.</param>
+    /// <param name="name">The name of the queue to subscribe to.</param>
     /// <returns>
     /// The current <see cref="QueuePublicationBuilder{T}"/>.
     /// </returns>
-    public QueuePublicationBuilder<T> WithName(string queueName)
+    public QueuePublicationBuilder<T> WithQueueName(string name)
     {
-        return WithWriteConfiguration(r => r.WithQueueName(queueName));
+        QueueName = name ?? throw new ArgumentNullException(nameof(name));
+        return this;
     }
 
     /// <inheritdoc />
@@ -96,7 +99,10 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
         var config = bus.Config;
         var region = config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(config.Region)} property.");
 
-        var writeConfiguration = new SqsWriteConfiguration();
+        var writeConfiguration = new SqsWriteConfiguration
+        {
+            QueueName = QueueName
+        };
         ConfigureWrites?.Invoke(writeConfiguration);
         writeConfiguration.ApplyQueueNamingConvention<T>(config.QueueNamingConvention);
 

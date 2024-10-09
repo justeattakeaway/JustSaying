@@ -1,17 +1,15 @@
 using JustSaying.Messaging;
 using JustSaying.Messaging.Compression;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.MessageSerialization;
+using JustSaying.TestingFramework;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling;
 
-public class MessageCompressionUtilityTests
+public class MessageCompressionRegistryTests
 {
-    private readonly MessageCompressionRegistry _compressionRegistry;
-
-    public MessageCompressionUtilityTests()
-    {
-        _compressionRegistry = new MessageCompressionRegistry([new GzipMessageBodyCompression()]);
-    }
+    private readonly MessageCompressionRegistry _compressionRegistry = new([new GzipMessageBodyCompression()]);
+    private readonly SystemTextJsonMessageBodySerializer<SimpleMessage> _bodySerializer = new(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions);
 
     [Fact]
     public void CompressMessageIfNeeded_NoCompression_ReturnsOriginalMessage()
@@ -20,9 +18,10 @@ public class MessageCompressionUtilityTests
         var message = "Test message";
         var metadata = new PublishMetadata();
         var compressionOptions = new PublishCompressionOptions();
+        var messageConverter = new PublishMessageConverter(PublishDestinationType.Topic, _bodySerializer, _compressionRegistry, compressionOptions, "TestSubject", false);
 
         // Act
-        var result = PublishMessageConverter.CompressMessageBody(message, metadata, PublishDestinationType.Topic, compressionOptions, _compressionRegistry);
+        var result = messageConverter.CompressMessageBody(message, metadata);
 
         // Assert
         Assert.Null(result.compressedMessage);
@@ -40,9 +39,10 @@ public class MessageCompressionUtilityTests
             CompressionEncoding = ContentEncodings.GzipBase64,
             MessageLengthThreshold = 1000
         };
+        var messageConverter = new PublishMessageConverter(PublishDestinationType.Topic, _bodySerializer, _compressionRegistry, compressionOptions, "TestSubject", false);
 
         // Act
-        var result = PublishMessageConverter.CompressMessageBody(message, metadata, PublishDestinationType.Topic, compressionOptions, _compressionRegistry);
+        var result = messageConverter.CompressMessageBody(message, metadata);
 
         // Assert
         Assert.Null(result.compressedMessage);
@@ -60,9 +60,36 @@ public class MessageCompressionUtilityTests
             CompressionEncoding = ContentEncodings.GzipBase64,
             MessageLengthThreshold = 500
         };
+        var messageConverter = new PublishMessageConverter(PublishDestinationType.Topic, _bodySerializer, _compressionRegistry, compressionOptions, "TestSubject", false);
 
         // Act
-        var result = PublishMessageConverter.CompressMessageBody(message, metadata, PublishDestinationType.Topic, compressionOptions, _compressionRegistry);
+        var result = messageConverter.CompressMessageBody(message, metadata);
+
+        // Assert
+        Assert.NotNull(result.compressedMessage);
+        Assert.Equal(ContentEncodings.GzipBase64, result.contentEncoding);
+
+        // Verify that the compressed message can be decompressed
+        var gzipCompression = new GzipMessageBodyCompression();
+        var decompressedMessage = gzipCompression.Decompress(result.compressedMessage);
+        Assert.Equal(message, decompressedMessage);
+    }
+
+    [Fact]
+    public void CompressMessageIfNeeded_WithRawMessage_CompressionThresholdMet_ReturnsCompressedMessage()
+    {
+        // Arrange
+        var message = new string('a', 1000);
+        var metadata = new PublishMetadata();
+        var compressionOptions = new PublishCompressionOptions
+        {
+            CompressionEncoding = ContentEncodings.GzipBase64,
+            MessageLengthThreshold = 500
+        };
+        var messageConverter = new PublishMessageConverter(PublishDestinationType.Queue, _bodySerializer, _compressionRegistry, compressionOptions, "TestSubject", true);
+
+        // Act
+        var result = messageConverter.CompressMessageBody(message, metadata);
 
         // Assert
         Assert.NotNull(result.compressedMessage);
@@ -88,9 +115,10 @@ public class MessageCompressionUtilityTests
             CompressionEncoding = ContentEncodings.GzipBase64,
             MessageLengthThreshold = 50
         };
+        var messageConverter = new PublishMessageConverter(PublishDestinationType.Topic, _bodySerializer, _compressionRegistry, compressionOptions, "TestSubject", false);
 
         // Act
-        var result = PublishMessageConverter.CompressMessageBody(message, metadata, PublishDestinationType.Topic, compressionOptions, _compressionRegistry);
+        var result = messageConverter.CompressMessageBody(message, metadata);
 
         // Assert
         Assert.NotNull(result.compressedMessage);
