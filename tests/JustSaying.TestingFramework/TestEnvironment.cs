@@ -36,7 +36,7 @@ public static class TestEnvironment
     /// <summary>
     /// Gets a value indicating whether an AWS simulator is configured for use.
     /// </summary>
-    public static bool IsSimulatorConfigured => (SimulatorUrl != null);
+    public static bool IsSimulatorConfigured => SimulatorUrl != null;
 
     /// <summary>
     /// Gets the URL for the configured AWS simulator, if any.

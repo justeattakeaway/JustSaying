@@ -1,37 +1,41 @@
 using System.Net;
 using Amazon.Runtime;
 using Amazon.SimpleNotificationService.Model;
+using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
-using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using NSubstitute.Core;
+using Message = JustSaying.Models.Message;
+
+#pragma warning disable 618
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;
 
-public class WhenPublishingAsyncResultLoggerIsCalled : WhenPublishingTestBase
+public class WhenPublishingInBatchAsyncResultLoggerIsCalled : WhenPublishingTestBase
 {
+    private readonly List<SimpleMessage> _testMessages = new();
+    private readonly List<string> _messageIds = new();
     private const string TopicArn = "topicarn";
 
-    private const string MessageId = "TestMessage12345";
     private const string RequestId = "TestRequesteId23456";
 
-    private static MessageResponse _response;
-    private static Message _message;
+    private static MessageBatchResponse _response;
+    private static IEnumerable<Message> _messages;
 
     private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
     {
         var messageConverter = new PublishMessageConverter(PublishDestinationType.Topic, new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), new PublishCompressionOptions(), "Subject", false);
         var topic = new SnsMessagePublisher(TopicArn, Sns, messageConverter, NullLoggerFactory.Instance, null, null)
         {
-            MessageResponseLogger = (r, m) =>
+            MessageBatchResponseLogger = (r, m) =>
             {
                 _response = r;
-                _message = m;
+                _messages = m;
             }
         };
 
@@ -40,23 +44,32 @@ public class WhenPublishingAsyncResultLoggerIsCalled : WhenPublishingTestBase
 
     protected override void Given()
     {
+        for (var i = 0; i < 10; i++)
+        {
+            _testMessages.Add(new SimpleMessage{ Content = $"Test message {i}" });
+            _messageIds.Add("TestMessageId" + i);
+        }
+
         Sns.FindTopicAsync("TopicName")
             .Returns(new Topic { TopicArn = TopicArn });
-        Sns.PublishAsync(Arg.Any<PublishRequest>())
+        Sns.PublishBatchAsync(Arg.Any<PublishBatchRequest>())
             .Returns(PublishResult);
     }
 
     protected override Task WhenAsync()
     {
-        return SystemUnderTest.PublishAsync(new SimpleMessage());
+        return SystemUnderTest.PublishAsync(new List<Message> { new SimpleMessage() });
     }
 
-    private static Task<PublishResponse> PublishResult(CallInfo arg)
+    private Task<PublishBatchResponse> PublishResult(CallInfo arg)
     {
-        var response = new PublishResponse
+        var response = new PublishBatchResponse
         {
-            MessageId = MessageId,
             HttpStatusCode = HttpStatusCode.OK,
+            Successful = _messageIds.Select(messageId => new PublishBatchResultEntry
+            {
+                MessageId = messageId
+            }).ToList(),
             ResponseMetadata = new ResponseMetadata
             {
                 RequestId = RequestId
@@ -75,7 +88,7 @@ public class WhenPublishingAsyncResultLoggerIsCalled : WhenPublishingTestBase
     [Fact]
     public void ResponseIsForwardedToResponseLogger()
     {
-        _response.MessageId.ShouldBe(MessageId);
+        _response.SuccessfulMessageIds.ShouldBe(_messageIds);
         _response.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
@@ -90,6 +103,6 @@ public class WhenPublishingAsyncResultLoggerIsCalled : WhenPublishingTestBase
     [Fact]
     public void MessageIsForwardedToResponseLogger()
     {
-        _message.ShouldNotBeNull();
+        _messages.ShouldNotBeNull();
     }
 }

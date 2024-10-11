@@ -119,7 +119,8 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
             new PublishMessageConverter(PublishDestinationType.Queue, bus.MessageBodySerializerFactory.GetSerializer<T>(), compressionRegistry, compressionOptions, subject, writeConfiguration.IsRawMessage),
             loggerFactory)
         {
-            MessageResponseLogger = config.MessageResponseLogger
+            MessageResponseLogger = config.MessageResponseLogger,
+            MessageBatchResponseLogger = bus.PublishBatchConfiguration?.MessageBatchResponseLogger
         };
 
 #pragma warning disable 618

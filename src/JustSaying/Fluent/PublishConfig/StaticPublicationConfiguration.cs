@@ -3,7 +3,6 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Compression;
-using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -13,10 +12,12 @@ namespace JustSaying.Fluent;
 
 internal sealed class StaticPublicationConfiguration(
     Func<CancellationToken, Task> startupTask,
-    IMessagePublisher publisher) : ITopicPublisher
+    IMessagePublisher publisher,
+    IMessageBatchPublisher batchPublisher) : ITopicPublisher
 {
     public Func<CancellationToken, Task> StartupTask { get; } = startupTask;
     public IMessagePublisher Publisher { get; } = publisher;
+    public IMessageBatchPublisher BatchPublisher { get; } = batchPublisher;
 
     public static StaticPublicationConfiguration Build<T>(
         string topicName,
@@ -41,9 +42,12 @@ internal sealed class StaticPublicationConfiguration(
         var eventPublisher = new SnsMessagePublisher(
             snsClient,
             new PublishMessageConverter(PublishDestinationType.Topic, serializer, new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, writeConfiguration.IsRawMessage),
-            loggerFactory)
+            loggerFactory,
+            null,
+            null)
         {
             MessageResponseLogger = bus.Config.MessageResponseLogger,
+            MessageBatchResponseLogger = bus.PublishBatchConfiguration?.MessageBatchResponseLogger
         };
 
         var snsTopic = new SnsTopicByName(
@@ -79,6 +83,6 @@ internal sealed class StaticPublicationConfiguration(
                 typeof(T));
         }
 
-        return new StaticPublicationConfiguration(StartupTask, eventPublisher);
+        return new StaticPublicationConfiguration(StartupTask, eventPublisher, eventPublisher);
     }
 }

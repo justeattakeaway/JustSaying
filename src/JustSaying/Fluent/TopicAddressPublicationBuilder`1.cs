@@ -18,6 +18,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
 {
     private readonly TopicAddress _topicAddress;
     private Func<Exception,Message,bool> _exceptionHandler;
+    private Func<Exception, IReadOnlyCollection<Message>, bool> _exceptionBatchHandler;
     private PublishCompressionOptions _compressionOptions;
     private string _subject;
 
@@ -43,6 +44,22 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     public TopicAddressPublicationBuilder<T> WithExceptionHandler(Func<Exception, Message, bool> exceptionHandler)
     {
         _exceptionHandler = exceptionHandler ?? throw new ArgumentNullException(nameof(exceptionHandler));
+        return this;
+    }
+
+    /// <summary>
+    /// Configures an exception handler to use.
+    /// </summary>
+    /// <param name="exceptionBatchHandler">A delegate to invoke if an exception is thrown while publishing a batch.</param>
+    /// <returns>
+    /// The current <see cref="TopicAddressPublicationBuilder{T}"/>.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="exceptionBatchHandler"/> is <see langword="null"/>.
+    /// </exception>
+    public TopicAddressPublicationBuilder<T> WithExceptionHandler(Func<Exception, IReadOnlyCollection<Message>, bool> exceptionBatchHandler)
+    {
+        _exceptionBatchHandler = exceptionBatchHandler ?? throw new ArgumentNullException(nameof(exceptionBatchHandler));
         return this;
     }
 
@@ -84,7 +101,8 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
             proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(arn.Region)),
             new PublishMessageConverter(PublishDestinationType.Topic, serializer, compressionRegistry, compressionOptions, subject, true),
             loggerFactory,
-            _exceptionHandler);
+            _exceptionHandler,
+            _exceptionBatchHandler);
 
         CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, compressionOptions);
 

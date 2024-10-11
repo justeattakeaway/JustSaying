@@ -2,7 +2,6 @@ using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Compression;
-using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -18,7 +17,7 @@ public class WhenPublishing : WhenPublishingTestBase
     private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
     {
         var messageConverter = new PublishMessageConverter(PublishDestinationType.Topic, new FakeBodySerializer(Message), new MessageCompressionRegistry(), new PublishCompressionOptions(), nameof(SimpleMessage), false);
-        var topic = new SnsMessagePublisher(TopicArn, Sns, messageConverter, NullLoggerFactory.Instance);
+        var topic = new SnsMessagePublisher(TopicArn, Sns, messageConverter, NullLoggerFactory.Instance, null, null);
         return Task.FromResult(topic);
     }
 

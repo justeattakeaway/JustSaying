@@ -4,14 +4,17 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Models;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using NSubstitute.Core;
 
+#pragma warning disable 618
+
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;
 
-public class WhenPublishingAsyncExceptionCanBeThrown : WhenPublishingTestBase
+public class WhenPublishingInBatchAsyncExceptionCanBeThrown : WhenPublishingTestBase
 {
     private const string TopicArn = "topicarn";
 
@@ -30,14 +33,14 @@ public class WhenPublishingAsyncExceptionCanBeThrown : WhenPublishingTestBase
 
     protected override Task WhenAsync()
     {
-        Sns.PublishAsync(Arg.Any<PublishRequest>()).Returns(ThrowsException);
+        Sns.PublishBatchAsync(Arg.Any<PublishBatchRequest>()).Returns(ThrowsException);
         return Task.CompletedTask;
     }
 
     [Fact]
     public async Task ExceptionIsThrown()
     {
-        await Should.ThrowAsync<PublishException>(() => SystemUnderTest.PublishAsync(new SimpleMessage()));
+        await Should.ThrowAsync<PublishBatchException>(() => SystemUnderTest.PublishAsync(new List<Message> {new SimpleMessage() }));
     }
 
     [Fact]
@@ -45,9 +48,9 @@ public class WhenPublishingAsyncExceptionCanBeThrown : WhenPublishingTestBase
     {
         try
         {
-            await SystemUnderTest.PublishAsync(new SimpleMessage());
+            await SystemUnderTest.PublishAsync(new List<Message>{ new SimpleMessage()});
         }
-        catch (PublishException ex)
+        catch (PublishBatchException ex)
         {
             var inner = ex.InnerException as AmazonServiceException;
             inner.ShouldNotBeNull();
@@ -55,7 +58,7 @@ public class WhenPublishingAsyncExceptionCanBeThrown : WhenPublishingTestBase
         }
     }
 
-    private static Task<PublishResponse> ThrowsException(CallInfo callInfo)
+    private static Task<PublishBatchResponse> ThrowsException(CallInfo callInfo)
     {
         throw new AmazonServiceException("Operation timed out");
     }
