@@ -90,7 +90,12 @@ internal sealed class MessageDispatcher : IMessageDispatcher
 
             return (false, null, null);
         }
-        catch (Exception ex)
+        catch (OperationCanceledException)
+        {
+            // Ignore cancellation
+            return (false, null, null);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogError(
                 ex,
