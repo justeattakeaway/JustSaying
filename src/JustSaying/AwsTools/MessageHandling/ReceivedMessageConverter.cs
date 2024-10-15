@@ -57,10 +57,7 @@ internal sealed class ReceivedMessageConverter : IReceivedMessageConverter
 
     private static MessageAttributes GetMessageAttributes(Amazon.SQS.Model.Message message, string body)
     {
-        bool isSnsPayload = IsSnsPayload(body);
-        var attributes = isSnsPayload ? GetMessageAttributes(body) : GetRawMessageAttributes(message);
-
-        return attributes;
+        return IsSnsPayload(body) ? GetMessageAttributes(body) : GetRawMessageAttributes(message);
     }
 
     private static MessageAttributes GetMessageAttributes(string message)

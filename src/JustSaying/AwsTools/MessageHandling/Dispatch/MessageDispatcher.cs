@@ -95,7 +95,7 @@ internal sealed class MessageDispatcher : IMessageDispatcher
             // Ignore cancellation
             return (false, null, null);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex)
         {
             _logger.LogError(
                 ex,
