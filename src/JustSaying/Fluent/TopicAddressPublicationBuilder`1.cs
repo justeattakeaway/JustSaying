@@ -21,6 +21,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     private Func<Exception, IReadOnlyCollection<Message>, bool> _exceptionBatchHandler;
     private PublishCompressionOptions _compressionOptions;
     private string _subject;
+    private bool _subjectSet;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TopicAddressPublicationBuilder{T}"/> class.
@@ -78,6 +79,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     public TopicAddressPublicationBuilder<T> WithSubject(string subject)
     {
         _subject = subject;
+        _subjectSet = true;
         return this;
     }
 
@@ -94,7 +96,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
         var compressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions;
         var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
         var subjectProvider = bus.Config.MessageSubjectProvider;
-        var subject = _subject ?? subjectProvider.GetSubjectForType(typeof(T));
+        var subject = _subjectSet ? _subject : subjectProvider.GetSubjectForType(typeof(T));
 
         var eventPublisher = new SnsMessagePublisher(
             _topicAddress.TopicArn,

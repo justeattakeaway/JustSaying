@@ -540,7 +540,6 @@ JustSaying.Messaging.MessageSerialization.NonGenericMessageSubjectProvider.GetSu
 JustSaying.Messaging.MessageSerialization.NonGenericMessageSubjectProvider.NonGenericMessageSubjectProvider() -> void
 JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializationFactory
 JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializationFactory.GetSerializer<T>() -> JustSaying.Messaging.MessageSerialization.IMessageSerializer
-JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializationFactory.SystemTextJsonSerializationFactory() -> void
 JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializationFactory.SystemTextJsonSerializationFactory(System.Text.Json.JsonSerializerOptions options) -> void
 JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer
 JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer.Deserialize(string message, System.Type type) -> JustSaying.Models.Message

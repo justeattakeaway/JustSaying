@@ -45,12 +45,13 @@ public class WhenUsingRawDelivery(ITestOutputHelper outputHelper) : IntegrationT
                 {
                     var handledMessage = handler.ReceivedMessages.Where(m => m.Id.ToString() == message.UniqueKey()).ShouldHaveSingleItem();
                     handledMessage.Content.ShouldBe(content);
-                    var response = awsClientFactory.InspectableSqsClient.ReceiveMessageResponses.Where(r => r.Messages.Count > 0).ShouldHaveSingleItem();
-                    var responseMessage = response.Messages.ShouldHaveSingleItem();
-                    var messageBody = responseMessage.Body;
-                    messageBody.ShouldNotContain("Message");
-                    messageBody.ShouldNotContain("Subject");
                 });
+
+                var response = awsClientFactory.InspectableSqsClient.ReceiveMessageResponses.Where(r => r.Messages.Count > 0).ShouldHaveSingleItem();
+                var responseMessage = response.Messages.ShouldHaveSingleItem();
+                string messageBody = responseMessage.Body;
+                messageBody.ShouldNotContain("Message");
+                messageBody.ShouldNotContain("Subject");
             });
     }
 }

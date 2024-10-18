@@ -6,11 +6,10 @@ using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools;
-using JustSaying.TestingFramework;
 
-namespace JustSaying.Fluent.RawDelivery;
+namespace JustSaying.TestingFramework;
 
-internal sealed class InspectableSqsClient(IAmazonSQS innerAmazonSqsClient) : IAmazonSQS
+public sealed class InspectableSqsClient(IAmazonSQS innerAmazonSqsClient) : IAmazonSQS
 {
     public List<ReceiveMessageResponse> ReceiveMessageResponses { get; } = [];
 
@@ -69,7 +68,7 @@ internal sealed class InspectableSqsClient(IAmazonSQS innerAmazonSqsClient) : IA
     ISQSPaginatorFactory IAmazonSQS.Paginators => innerAmazonSqsClient.Paginators;
 }
 
-internal sealed class InspectableClientFactory(IAwsClientFactory innerClientFactory) : IAwsClientFactory
+public sealed class InspectableClientFactory(IAwsClientFactory innerClientFactory) : IAwsClientFactory
 {
     public InspectableSqsClient InspectableSqsClient { get; } = new(innerClientFactory.GetSqsClient(TestEnvironment.Region));
 

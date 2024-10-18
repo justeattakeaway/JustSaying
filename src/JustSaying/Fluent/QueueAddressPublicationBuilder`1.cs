@@ -20,6 +20,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
     private readonly QueueAddress _queueAddress;
     private PublishCompressionOptions _compressionOptions;
     private string _subject;
+    private bool _subjectSet;
     private bool _isRawMessage;
 
     /// <summary>
@@ -43,13 +44,22 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
         return this;
     }
 
-    // TODO add tests
+    /// <summary>
+    /// Sets the subject for the message.
+    /// </summary>
+    /// <param name="subject">The subject to set for the message.</param>
+    /// <returns>The current instance of <see cref="QueueAddressPublicationBuilder{T}"/> for method chaining.</returns>
     public QueueAddressPublicationBuilder<T> WithSubject(string subject)
     {
         _subject = subject;
+        _subjectSet = true;
         return this;
     }
 
+    /// <summary>
+    /// Sets the message to be published as raw message.
+    /// </summary>
+    /// <returns>The current instance of <see cref="QueueAddressPublicationBuilder{T}"/> for method chaining.</returns>
     public QueueAddressPublicationBuilder<T> WithRawMessages()
     {
         _isRawMessage = true;
@@ -66,7 +76,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
         var config = bus.Config;
         var compressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions;
         var subjectProvider = bus.Config.MessageSubjectProvider;
-        var subject = _subject ?? subjectProvider.GetSubjectForType(typeof(T));
+        var subject = _subjectSet ? _subject : subjectProvider.GetSubjectForType(typeof(T));
 
         var eventPublisher = new SqsMessagePublisher(
             _queueAddress.QueueUrl,

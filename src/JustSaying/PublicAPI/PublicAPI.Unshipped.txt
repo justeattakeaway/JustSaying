@@ -19,6 +19,8 @@ JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.CompressionOptions.get -
 JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.CompressionOptions.set -> void
 JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.IsRawMessage.get -> bool
 JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.IsRawMessage.set -> void
+JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.Subject.get -> string
+JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.Subject.set -> void
 JustSaying.AwsTools.QueueCreation.SqsBasicConfiguration.IsRawMessage.get -> bool
 JustSaying.AwsTools.QueueCreation.SqsBasicConfiguration.IsRawMessage.set -> void
 JustSaying.AwsTools.QueueCreation.SqsReadConfiguration.RawMessageDelivery.get -> bool
@@ -172,10 +174,7 @@ JustSaying.MessagingConfig.DefaultCompressionOptions.set -> void
 *REMOVED*JustSaying.Messaging.MessageSerialization.NewtonsoftSerializer.NewtonsoftSerializer() -> void
 *REMOVED*JustSaying.Messaging.MessageSerialization.NewtonsoftSerializer.NewtonsoftSerializer(Newtonsoft.Json.JsonSerializerSettings settings) -> void
 *REMOVED*JustSaying.Messaging.MessageSerialization.NewtonsoftSerializer.Serialize(JustSaying.Models.Message message, bool serializeForSnsPublishing, string subject) -> string
-*REMOVED*JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializationFactory
 *REMOVED*JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializationFactory.GetSerializer<T>() -> JustSaying.Messaging.MessageSerialization.IMessageSerializer
-*REMOVED*JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializationFactory.SystemTextJsonSerializationFactory() -> void
-*REMOVED*JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializationFactory.SystemTextJsonSerializationFactory(System.Text.Json.JsonSerializerOptions options) -> void
 *REMOVED*JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer
 *REMOVED*JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer.Deserialize(string message, System.Type type) -> JustSaying.Models.Message
 *REMOVED*JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializer.GetMessageAttributes(string message) -> JustSaying.Messaging.MessageHandling.MessageAttributes
@@ -216,3 +215,4 @@ static JustSaying.AwsTools.JustSayingConstants.MaximumSnsBatchSize.get -> int
 static JustSaying.Messaging.MessagePublisherExtensions.PublishAsync(this JustSaying.Messaging.IMessageBatchPublisher publisher, System.Collections.Generic.IEnumerable<JustSaying.Models.Message> messages, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
 static JustSaying.Messaging.MessagePublisherExtensions.PublishAsync(this JustSaying.Messaging.IMessagePublisher publisher, System.Collections.Generic.IEnumerable<JustSaying.Models.Message> messages, JustSaying.Messaging.PublishBatchMetadata metadata, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
 static JustSaying.Messaging.MessagePublisherExtensions.PublishAsync(this JustSaying.Messaging.IMessagePublisher publisher, System.Collections.Generic.IEnumerable<JustSaying.Models.Message> messages, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializationFactory.GetSerializer<T>() -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer
