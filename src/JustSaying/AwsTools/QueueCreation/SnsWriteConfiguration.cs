@@ -44,7 +44,7 @@ public class SnsWriteConfiguration
     internal bool SubjectSet { get; private set; }
 
     /// <summary>
-    /// Gets or sets a function for custom error handling on a per-notification basis.
+    /// Gets or sets a delegate for custom error handling on a per-notification basis.
     /// </summary>
     /// <remarks>
     /// This is an extension point enabling custom error handling, including the ability to handle raised exceptions.

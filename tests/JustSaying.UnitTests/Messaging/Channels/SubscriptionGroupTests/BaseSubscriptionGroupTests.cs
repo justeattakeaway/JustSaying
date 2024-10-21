@@ -1,12 +1,10 @@
 using Amazon.SQS.Model;
-using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
@@ -30,6 +28,7 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
     protected ISubscriptionGroup SystemUnderTest { get; private set; }
     protected ILoggerFactory LoggerFactory { get; }
     protected ILogger Logger { get; }
+    protected CancellationTokenSource CancellationTokenSource { get; } = new();
 
     private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;
 
@@ -88,7 +87,8 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
         }
 
         var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-        var completion = SystemUnderTest.RunAsync(cts.Token);
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, CancellationTokenSource.Token);
+        var completion = SystemUnderTest.RunAsync(linkedCts.Token);
 
         await Patiently.AssertThatAsync(OutputHelper,
             () => Until() || cts.IsCancellationRequested);

@@ -57,7 +57,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
     }
 
     /// <summary>
-    /// Sets the message to be published as raw message.
+    /// Sets the message to be published as a raw message.
     /// </summary>
     /// <returns>The current instance of <see cref="QueueAddressPublicationBuilder{T}"/> for method chaining.</returns>
     public QueueAddressPublicationBuilder<T> WithRawMessages()

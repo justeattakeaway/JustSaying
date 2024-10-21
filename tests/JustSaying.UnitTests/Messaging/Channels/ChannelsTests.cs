@@ -27,7 +27,7 @@ public class ChannelsTests
     private ILoggerFactory LoggerFactory { get; }
     private IMessageMonitor MessageMonitor { get; }
     private ITestOutputHelper OutputHelper { get; }
-    private readonly TimeSpan _timeoutPeriod = TimeSpan.FromSeconds(1);
+    private readonly TimeSpan _timeoutPeriod = TimeSpan.FromMilliseconds(50);
 
     public ChannelsTests(ITestOutputHelper testOutputHelper)
     {
@@ -200,7 +200,7 @@ public class ChannelsTests
         var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
         var bufferCompletion = buffer.RunAsync(cts.Token);
 
-        cts.CancelAfter(1.Seconds());
+        cts.CancelAfter(TimeSpan.FromMilliseconds(150));
 
         await multiplexerCompletion.HandleCancellation();
         await bufferCompletion.HandleCancellation();

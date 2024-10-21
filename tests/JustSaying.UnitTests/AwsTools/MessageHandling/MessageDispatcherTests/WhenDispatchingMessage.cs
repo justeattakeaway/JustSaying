@@ -13,15 +13,16 @@ using JustSaying.Models;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.Fakes;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
-using MELT;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Testing;
 using Newtonsoft.Json;
 using NSubstitute;
 using SQSMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests;
 
+[Collection(nameof(WhenDispatchingMessage))]
 public class WhenDispatchingMessage : IAsyncLifetime
 {
     private const string ExpectedQueueUrl = "http://testurl.com/queue";
@@ -40,11 +41,17 @@ public class WhenDispatchingMessage : IAsyncLifetime
     private readonly IMessageBackoffStrategy _messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
     private readonly IMessageBodySerializer _messageBodySerializer = Substitute.For<IMessageBodySerializer>();
     private readonly ReceivedMessageConverter _messageConverter;
+    private readonly FakeLogCollector _fakeLogCollector;
 
     public WhenDispatchingMessage(ITestOutputHelper outputHelper)
     {
         _outputHelper = outputHelper;
-        _loggerFactory = TestLoggerFactory.Create(lb => lb.AddXUnit(outputHelper));
+        _fakeLogCollector = new FakeLogCollector();
+        _loggerFactory = LoggerFactory.Create(lb =>
+        {
+            lb.AddFakeLogging().AddXUnit(outputHelper);
+            lb.Services.AddSingleton(_fakeLogCollector);
+        });
         _messageMonitor = new TrackingLoggingMonitor(_loggerFactory.CreateLogger<TrackingLoggingMonitor>());
         _middlewareMap = new MiddlewareMap();
         _messageConverter = new ReceivedMessageConverter(_messageBodySerializer, new MessageCompressionRegistry(), false);
@@ -56,7 +63,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
 
         SystemUnderTest = CreateSystemUnderTestAsync();
 
-        await When().ConfigureAwait(false);
+        await When();
     }
 
     public virtual Task DisposeAsync()
@@ -123,8 +130,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
         [Fact]
         public void ShouldNotHandleMessage()
         {
-            var testLogger = _loggerFactory.GetTestLoggerSink();
-            testLogger.LogEntries.ShouldContain(le => le.OriginalFormat == "Failed to dispatch. Middleware for message of type '{MessageTypeName}' not found in middleware map.");
+            _fakeLogCollector.GetSnapshot().ShouldContain(le => le.Message == "Failed to dispatch. Middleware for message of type 'JustSaying.TestingFramework.SimpleMessage' not found in middleware map.");
         }
     }
 

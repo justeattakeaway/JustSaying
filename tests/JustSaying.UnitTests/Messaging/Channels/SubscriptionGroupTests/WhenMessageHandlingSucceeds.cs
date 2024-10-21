@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.TestingFramework;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
@@ -23,6 +24,13 @@ public class WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper) : B
         Queues.Add(sqsSource);
     }
 
+    protected override bool Until()
+    {
+        _queue.ReceivedAllMessages.Wait();
+         CompletionMiddleware.Complete?.Wait();
+        return base.Until();
+    }
+
     [Fact]
     public void ProcessingIsPassedToTheHandlerForCorrectMessage()
     {
@@ -30,9 +38,9 @@ public class WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper) : B
     }
 
     [Fact]
-    public void AllMessagesAreClearedFromQueue()
+    public async Task AllMessagesAreClearedFromQueue()
     {
-        _queue.DeleteMessageRequests.Count.ShouldBe(Handler.ReceivedMessages.Count);
+        await Patiently.AssertThatAsync(() => _queue.DeleteMessageRequests.Count.ShouldBe(Handler.ReceivedMessages.Count));
     }
 
     [Fact]

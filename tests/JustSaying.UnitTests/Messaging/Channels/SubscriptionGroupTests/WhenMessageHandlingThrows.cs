@@ -5,21 +5,26 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 public class WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
 {
     private bool _firstTime = true;
+    private readonly object _firstTimeLock = new();
     private FakeSqsQueue _queue;
 
     protected override void Given()
     {
         var sqsSource = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
-        _queue = sqsSource.SqsQueue as FakeSqsQueue;
+        _queue = (FakeSqsQueue)sqsSource.SqsQueue;
+        _queue.MaxNumberOfMessagesToReceive = 100;
 
         Queues.Add(sqsSource);
 
         Handler.OnHandle = (msg) =>
         {
-            if (!_firstTime) return;
+            lock (_firstTimeLock)
+            {
+                if (!_firstTime) return;
 
-            _firstTime = false;
-            throw new TestException("Thrown by test handler");
+                _firstTime = false;
+                throw new TestException("Thrown by test handler");
+            }
         };
     }
 
@@ -30,11 +35,17 @@ public class WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper) : Bas
     }
 
     [Fact]
-    public void FailedMessageIsNotRemovedFromQueue()
+    public async Task FailedMessageIsNotRemovedFromQueue()
     {
-        var numberHandled = Handler.ReceivedMessages.Count;
+        await _queue.ReceivedAllMessages.WaitAsync(TimeSpan.FromSeconds(5));
+        await CompletionMiddleware.Complete.WaitAsync(TimeSpan.FromSeconds(5));
+        await Task.Delay(1_500); // Give the handler a chance to run
 
-        _queue.DeleteMessageRequests.Count.ShouldBe(numberHandled - 1);
+        await Patiently.AssertThatAsync(() =>
+        {
+            Handler.ReceivedMessages.Count.ShouldBe(100);
+            _queue.DeleteMessageRequests.Count.ShouldBe(99);
+        });
     }
 
     [Fact]

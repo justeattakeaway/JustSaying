@@ -1,4 +1,5 @@
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.TestingFramework;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 

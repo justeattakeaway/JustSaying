@@ -79,10 +79,10 @@ public class WhenSubscriberIsSlow
         var readTask = Messages();
 
         // Read messages for a while
-        await Task.Delay(TimeSpan.FromSeconds(2));
+        await Task.Delay(TimeSpan.FromMilliseconds(150));
 
         // Cancel token
-        cts.Cancel();
+        await cts.CancelAsync();
 
         // Ensure buffer completes
         await _messageReceiveBuffer.Reader.Completion;

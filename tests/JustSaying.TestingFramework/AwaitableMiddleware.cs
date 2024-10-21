@@ -10,7 +10,7 @@ public class AwaitableMiddleware(ITestOutputHelper outputHelper) : MiddlewareBas
 
     protected override async Task<bool> RunInnerAsync(HandleMessageContext context, Func<CancellationToken, Task<bool>> func, CancellationToken stoppingToken)
     {
-        var tcs = new TaskCompletionSource();
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         Complete = tcs.Task;
         try
         {

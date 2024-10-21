@@ -80,14 +80,14 @@ public class WhenReceivingShouldStop
         _messageReceivePauseSignal.Pause();
 
         using var cts = new CancellationTokenSource();
-        var _ = _messageReceiveBuffer.RunAsync(cts.Token);
+        _ = _messageReceiveBuffer.RunAsync(cts.Token);
         var readTask = Messages();
 
         // Check if we can start receiving for a while
-        await Task.Delay(TimeSpan.FromSeconds(2));
+        await Task.Delay(TimeSpan.FromMilliseconds(50));
 
         // Cancel token
-        cts.Cancel();
+        await cts.CancelAsync();
 
         // Ensure buffer completes
         await _messageReceiveBuffer.Reader.Completion;
@@ -106,20 +106,20 @@ public class WhenReceivingShouldStop
         _messageReceivePauseSignal.Pause();
 
         using var cts = new CancellationTokenSource();
-        var _ = _messageReceiveBuffer.RunAsync(cts.Token);
+        _ = _messageReceiveBuffer.RunAsync(cts.Token);
         var readTask = Messages();
 
         // Check if we can start receiving for a while
-        await Task.Delay(TimeSpan.FromSeconds(1));
+        await Task.Delay(TimeSpan.FromMilliseconds(50));
 
         // Signal start receiving messages
         _messageReceivePauseSignal.Resume();
 
         // Read messages for a while
-        await Task.Delay(TimeSpan.FromSeconds(1));
+        await Task.Delay(TimeSpan.FromMilliseconds(150));
 
         // Cancel token
-        cts.Cancel();
+        await cts.CancelAsync();
 
         // Ensure buffer completes
         await _messageReceiveBuffer.Reader.Completion;

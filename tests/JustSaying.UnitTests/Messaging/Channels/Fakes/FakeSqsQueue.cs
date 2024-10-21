@@ -7,6 +7,8 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 public class FakeSqsQueue(Func<CancellationToken, Task<IEnumerable<Message>>> messageProducer, string queueName = "fake-queue-name") : ISqsQueue
 {
     private readonly Func<CancellationToken, Task<IEnumerable<Message>>> _messageProducer = messageProducer;
+    private readonly TaskCompletionSource _receivedAllMessages = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private int _messageReceived;
 
     public InterrogationResult Interrogate()
     {
@@ -17,6 +19,8 @@ public class FakeSqsQueue(Func<CancellationToken, Task<IEnumerable<Message>>> me
     public string RegionSystemName { get; } = "fake-region";
     public Uri Uri { get; set; } = new Uri("http://test.com");
     public string Arn { get; } = $"arn:aws:fake-region:123456789012:{queueName}";
+    public int? MaxNumberOfMessagesToReceive { get; set; } = 100;
+    public Task ReceivedAllMessages => _receivedAllMessages.Task;
 
     public List<FakeDeleteMessageRequest> DeleteMessageRequests { get; } = new();
     public List<FakeChangeMessageVisibilityRequest> ChangeMessageVisbilityRequests { get; } = new();
@@ -37,11 +41,19 @@ public class FakeSqsQueue(Func<CancellationToken, Task<IEnumerable<Message>>> me
 
     public async Task<IList<Message>> ReceiveMessagesAsync(string queueUrl, int maxNumOfMessages, int secondsWaitTime, IList<string> attributesToLoad, CancellationToken cancellationToken)
     {
-        await Task.Delay(50, cancellationToken);
+        await Task.Yield();
         var messages = await _messageProducer(cancellationToken);
-        var result =  messages.Take(maxNumOfMessages).ToList();
+
+        var countToTake = MaxNumberOfMessagesToReceive is null ? maxNumOfMessages : Math.Min(maxNumOfMessages, MaxNumberOfMessagesToReceive.Value - _messageReceived);
+        var result =  messages.Take(countToTake).ToList();
+        _messageReceived += result.Count;
 
         ReceiveMessageRequests.Add(new FakeReceiveMessagesRequest(queueUrl, maxNumOfMessages, secondsWaitTime, attributesToLoad, result.Count));
+
+        if (_messageReceived >= MaxNumberOfMessagesToReceive)
+        {
+            _receivedAllMessages.TrySetResult();
+        }
 
         return result;
     }
