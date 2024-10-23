@@ -5,7 +5,6 @@ using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
-using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 

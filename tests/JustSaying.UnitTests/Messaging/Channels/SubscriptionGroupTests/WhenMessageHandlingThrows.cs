@@ -37,9 +37,12 @@ public class WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper) : Bas
     [Fact]
     public async Task FailedMessageIsNotRemovedFromQueue()
     {
+        // Avoid race condition
+        await Task.Delay(TimeSpan.FromMilliseconds(50));
         await _queue.ReceivedAllMessages.WaitAsync(TimeSpan.FromSeconds(5));
+        // Avoid race condition
+        await Task.Delay(TimeSpan.FromMilliseconds(50));
         await CompletionMiddleware.Complete.WaitAsync(TimeSpan.FromSeconds(5));
-        await Task.Delay(1_500); // Give the handler a chance to run
 
         await Patiently.AssertThatAsync(() =>
         {
