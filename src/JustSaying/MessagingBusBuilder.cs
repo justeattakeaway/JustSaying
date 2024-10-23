@@ -277,11 +277,11 @@ public sealed class MessagingBusBuilder
 
     private JustSayingBus CreateBus(IMessagingConfig config, ILoggerFactory loggerFactory, IPublishBatchConfiguration publishBatchConfiguration = null)
     {
-        IMessageSerializationRegister register = ServiceResolver.ResolveService<IMessageSerializationRegister>();
+        IMessageBodySerializationFactory serializationFactory = ServiceResolver.ResolveService<IMessageBodySerializationFactory>();
         IMessageReceivePauseSignal messageReceivePauseSignal = ServiceResolver.ResolveService<IMessageReceivePauseSignal>();
         IMessageMonitor monitor = ServiceResolver.ResolveOptionalService<IMessageMonitor>() ?? new NullOpMessageMonitor();
 
-        return new JustSayingBus(config, register, messageReceivePauseSignal, loggerFactory, monitor, publishBatchConfiguration);
+        return new JustSayingBus(config, serializationFactory, messageReceivePauseSignal, loggerFactory, monitor, publishBatchConfiguration);
     }
 
     private IAwsClientFactoryProxy CreateFactoryProxy()

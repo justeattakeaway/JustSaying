@@ -1,6 +1,7 @@
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -18,6 +19,9 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     private readonly TopicAddress _topicAddress;
     private Func<Exception,Message,bool> _exceptionHandler;
     private Func<Exception, IReadOnlyCollection<Message>, bool> _exceptionBatchHandler;
+    private PublishCompressionOptions _compressionOptions;
+    private string _subject;
+    private bool _subjectSet;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TopicAddressPublicationBuilder{T}"/> class.
@@ -60,6 +64,25 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
         return this;
     }
 
+    /// <summary>
+    /// Sets the compression options for publishing messages.
+    /// </summary>
+    /// <param name="compressionOptions">The compression options to use when publishing messages.</param>
+    /// <returns>The current instance of <see cref="TopicAddressPublicationBuilder{T}"/> for method chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="compressionOptions"/> is null.</exception>
+    public TopicAddressPublicationBuilder<T> WithCompression(PublishCompressionOptions compressionOptions)
+    {
+        _compressionOptions = compressionOptions ?? throw new ArgumentNullException(nameof(compressionOptions));
+        return this;
+    }
+
+    public TopicAddressPublicationBuilder<T> WithSubject(string subject)
+    {
+        _subject = subject;
+        _subjectSet = true;
+        return this;
+    }
+
     /// <inheritdoc />
     public void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
     {
@@ -67,21 +90,23 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
 
         logger.LogInformation("Adding SNS publisher for message type '{MessageType}'", typeof(T));
 
-        var config = bus.Config;
         var arn = Arn.Parse(_topicAddress.TopicArn);
 
-        bus.SerializationRegister.AddSerializer<T>();
+        var compressionRegistry = bus.CompressionRegistry;
+        var compressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions;
+        var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
+        var subjectProvider = bus.Config.MessageSubjectProvider;
+        var subject = _subjectSet ? _subject : subjectProvider.GetSubjectForType(typeof(T));
 
         var eventPublisher = new SnsMessagePublisher(
             _topicAddress.TopicArn,
             proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(arn.Region)),
-            bus.SerializationRegister,
+            new PublishMessageConverter(PublishDestinationType.Topic, serializer, compressionRegistry, compressionOptions, subject, true),
             loggerFactory,
-            config.MessageSubjectProvider,
-            _exceptionHandler)
-        {
-            HandleBatchException = _exceptionBatchHandler,
-        };
+            _exceptionHandler,
+            _exceptionBatchHandler);
+
+        CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, compressionOptions);
 
         bus.AddMessagePublisher<T>(eventPublisher);
 

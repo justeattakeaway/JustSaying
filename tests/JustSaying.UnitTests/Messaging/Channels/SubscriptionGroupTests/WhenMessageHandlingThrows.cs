@@ -5,20 +5,28 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 public class WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
 {
     private bool _firstTime = true;
+    private readonly object _firstTimeLock = new();
     private FakeSqsQueue _queue;
 
     protected override void Given()
     {
-        _queue = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
+        var sqsSource = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
+        _queue = (FakeSqsQueue)sqsSource.SqsQueue;
+        _queue.MaxNumberOfMessagesToReceive = 10;
 
-        Queues.Add(_queue);
+        Queues.Add(sqsSource);
 
         Handler.OnHandle = (msg) =>
         {
             if (!_firstTime) return;
 
-            _firstTime = false;
-            throw new TestException("Thrown by test handler");
+            lock (_firstTimeLock)
+            {
+                if (!_firstTime) return;
+
+                _firstTime = false;
+                throw new TestException("Thrown by test handler");
+            }
         };
     }
 
@@ -29,11 +37,20 @@ public class WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper) : Bas
     }
 
     [Fact]
-    public void FailedMessageIsNotRemovedFromQueue()
+    public async Task FailedMessageIsNotRemovedFromQueue()
     {
-        var numberHandled = Handler.ReceivedMessages.Count;
+        // Avoid race condition
+        await Task.Delay(TimeSpan.FromMilliseconds(250));
+        await _queue.ReceivedAllMessages.WaitAsync(TimeSpan.FromSeconds(5));
+        // Avoid race condition
+        await Task.Delay(TimeSpan.FromMilliseconds(250));
+        await CompletionMiddleware.Complete.WaitAsync(TimeSpan.FromSeconds(5));
 
-        _queue.DeleteMessageRequests.Count.ShouldBe(numberHandled - 1);
+        await Patiently.AssertThatAsync(() =>
+        {
+            Handler.ReceivedMessages.Count.ShouldBe(10);
+            _queue.DeleteMessageRequests.Count.ShouldBe(9);
+        });
     }
 
     [Fact]

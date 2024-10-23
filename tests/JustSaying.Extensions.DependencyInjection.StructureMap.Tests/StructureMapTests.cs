@@ -1,6 +1,7 @@
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
+using LocalSqsSnsMessaging;
 using Microsoft.Extensions.Logging;
 using Shouldly;
 using StructureMap;
@@ -11,6 +12,7 @@ namespace JustSaying;
 public class WhenUsingStructureMap(ITestOutputHelper outputHelper)
 {
     private ITestOutputHelper OutputHelper { get; } = outputHelper;
+    private InMemoryAwsBus InMemoryAwsBus { get; } = new ();
 
     [AwsFact]
     public async Task Can_Create_Messaging_Bus_Fluently_For_A_Queue()
@@ -32,8 +34,10 @@ public class WhenUsingStructureMap(ITestOutputHelper outputHelper)
                     (builder) =>
                     {
                         builder.Client((options) =>
-                                options.WithBasicCredentials("accessKey", "secretKey")
-                                    .WithServiceUri(TestEnvironment.SimulatorUrl))
+                                    options.WithClientFactory(() => new LocalAwsClientFactory(InMemoryAwsBus))
+                                // options.WithBasicCredentials("accessKey", "secretKey")
+                                //     .WithServiceUri(TestEnvironment.SimulatorUrl)
+                                )
                             .Messaging((options) => options.WithRegion("eu-west-1"))
                             .Publications((options) => options.WithQueue<SimpleMessage>())
                             .Subscriptions((options) => options.ForQueue<SimpleMessage>());

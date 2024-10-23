@@ -1,3 +1,4 @@
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Naming;
 
@@ -9,5 +10,6 @@ public interface IMessagingConfig : IPublishConfiguration
     IMessageSubjectProvider MessageSubjectProvider { get; set; }
     ITopicNamingConvention TopicNamingConvention { get; set; }
     IQueueNamingConvention QueueNamingConvention { get; set; }
+    PublishCompressionOptions DefaultCompressionOptions { get; set; }
     void Validate();
 }

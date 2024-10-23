@@ -1,4 +1,5 @@
 {
   "methodDisplay": "classAndMethod",
-  "methodDisplayOptions": "replaceUnderscoreWithSpace"
+  "methodDisplayOptions": "replaceUnderscoreWithSpace",
+  "parallelAlgorithm": "conservative"
 }
