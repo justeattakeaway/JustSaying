@@ -18,6 +18,8 @@ public class WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper) : Bas
 
         Handler.OnHandle = (msg) =>
         {
+            if (!_firstTime) return;
+
             lock (_firstTimeLock)
             {
                 if (!_firstTime) return;
@@ -38,10 +40,10 @@ public class WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper) : Bas
     public async Task FailedMessageIsNotRemovedFromQueue()
     {
         // Avoid race condition
-        await Task.Delay(TimeSpan.FromMilliseconds(50));
+        await Task.Delay(TimeSpan.FromMilliseconds(250));
         await _queue.ReceivedAllMessages.WaitAsync(TimeSpan.FromSeconds(5));
         // Avoid race condition
-        await Task.Delay(TimeSpan.FromMilliseconds(50));
+        await Task.Delay(TimeSpan.FromMilliseconds(250));
         await CompletionMiddleware.Complete.WaitAsync(TimeSpan.FromSeconds(5));
 
         await Patiently.AssertThatAsync(() =>

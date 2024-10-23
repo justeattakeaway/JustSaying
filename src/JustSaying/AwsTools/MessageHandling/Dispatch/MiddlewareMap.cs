@@ -75,11 +75,6 @@ public sealed class MiddlewareMap : IInterrogable
         return _middlewares.TryGetValue((queueName, messageType), out var middleware) ? middleware : null;
     }
 
-    internal void Clear()
-    {
-        _middlewares.Clear();
-    }
-
     public InterrogationResult Interrogate()
     {
         var middlewares = _middlewares.Select(item =>

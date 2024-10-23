@@ -14,6 +14,7 @@ public class FakeSqsQueue(Func<CancellationToken, Task<IEnumerable<Message>>> me
     private readonly ConcurrentBag<FakeChangeMessageVisibilityRequest> _changeMessageVisibilityRequests = [];
     private readonly ConcurrentBag<FakeTagQueueRequest> _tagQueueRequests = [];
     private readonly ConcurrentBag<FakeReceiveMessagesRequest> _receiveMessageRequests = [];
+    private readonly object _messageLock = new();
 
     public InterrogationResult Interrogate()
     {
@@ -49,18 +50,21 @@ public class FakeSqsQueue(Func<CancellationToken, Task<IEnumerable<Message>>> me
         await Task.Yield();
         var messages = await _messageProducer(cancellationToken);
 
-        var countToTake = MaxNumberOfMessagesToReceive is null ? maxNumOfMessages : Math.Min(maxNumOfMessages, MaxNumberOfMessagesToReceive.Value - _messageReceived);
-        var result =  messages.Take(countToTake).ToList();
-        _messageReceived += result.Count;
-
-        _receiveMessageRequests.Add(new FakeReceiveMessagesRequest(queueUrl, maxNumOfMessages, secondsWaitTime, attributesToLoad, result.Count));
-
-        if (_messageReceived >= MaxNumberOfMessagesToReceive)
+        lock (_messageLock)
         {
-            _receivedAllMessages.TrySetResult();
-        }
+            var countToTake = MaxNumberOfMessagesToReceive is null ? maxNumOfMessages : Math.Min(maxNumOfMessages, MaxNumberOfMessagesToReceive.Value - _messageReceived);
+            var result = messages.Take(countToTake).ToList();
+            _messageReceived += result.Count;
 
-        return result;
+            _receiveMessageRequests.Add(new FakeReceiveMessagesRequest(queueUrl, maxNumOfMessages, secondsWaitTime, attributesToLoad, result.Count));
+
+            if (_messageReceived >= MaxNumberOfMessagesToReceive)
+            {
+                _receivedAllMessages.TrySetResult();
+            }
+
+            return result;
+        }
     }
 
     public Task ChangeMessageVisibilityAsync(string queueUrl, string receiptHandle, int visibilityTimeoutInSeconds, CancellationToken cancellationToken)
