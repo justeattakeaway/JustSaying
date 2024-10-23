@@ -20,15 +20,9 @@ public class WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper) : B
     {
         var sqsSource = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage { Body = MessageBody });
         _queue = sqsSource.SqsQueue as FakeSqsQueue;
+        _queue!.MaxNumberOfMessagesToReceive = 10;
 
         Queues.Add(sqsSource);
-    }
-
-    protected override bool Until()
-    {
-        _queue.ReceivedAllMessages.Wait();
-         CompletionMiddleware.Complete?.Wait();
-        return base.Until();
     }
 
     [Fact]
@@ -40,7 +34,10 @@ public class WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper) : B
     [Fact]
     public async Task AllMessagesAreClearedFromQueue()
     {
-        await Patiently.AssertThatAsync(() => _queue.DeleteMessageRequests.Count.ShouldBe(Handler.ReceivedMessages.Count));
+        await _queue.ReceivedAllMessages.WaitAsync(TimeSpan.FromSeconds(5));
+        await CompletionMiddleware.Complete.WaitAsync(TimeSpan.FromSeconds(5));
+
+        await Patiently.AssertThatAsync(OutputHelper, () => _queue.DeleteMessageRequests.Count.ShouldBe(Handler.ReceivedMessages.Count));
     }
 
     [Fact]

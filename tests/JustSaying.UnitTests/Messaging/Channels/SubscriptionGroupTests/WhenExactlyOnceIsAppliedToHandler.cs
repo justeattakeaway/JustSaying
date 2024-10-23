@@ -54,10 +54,9 @@ public class WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelpe
         var completion = SystemUnderTest.RunAsync(cts.Token);
 
         // wait until it's done
-        await Patiently.AssertThatAsync(OutputHelper,
-            () => Handler.ReceivedMessages.Any());
+        await Patiently.AssertThatAsync(OutputHelper, () => !Handler.ReceivedMessages.IsEmpty);
 
-        cts.Cancel();
+        await cts.CancelAsync();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
     }
@@ -74,8 +73,8 @@ public class WhenExactlyOnceIsAppliedToHandler(ITestOutputHelper testOutputHelpe
         // this should be part of setup to make work
         var messageId = SetupMessage.Id.ToString();
 
-        var tempLockRequests = _messageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
-        tempLockRequests.Count().ShouldBeGreaterThan(0);
+        var tempLockRequests = _messageLock.MessageLockRequests.Where(lr => !lr.isPermanent).ToList();
+        tempLockRequests.Count.ShouldBeGreaterThan(0);
         tempLockRequests.ShouldAllBe(pair =>
             pair.key.Contains(messageId, StringComparison.OrdinalIgnoreCase) &&
             pair.howLong == TimeSpan.FromSeconds(_expectedTimeout));

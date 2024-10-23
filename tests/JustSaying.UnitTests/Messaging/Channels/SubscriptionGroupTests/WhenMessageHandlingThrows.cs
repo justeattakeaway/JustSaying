@@ -12,7 +12,7 @@ public class WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper) : Bas
     {
         var sqsSource = CreateSuccessfulTestQueue("TestQueue", new TestMessage());
         _queue = (FakeSqsQueue)sqsSource.SqsQueue;
-        _queue.MaxNumberOfMessagesToReceive = 100;
+        _queue.MaxNumberOfMessagesToReceive = 10;
 
         Queues.Add(sqsSource);
 
@@ -43,8 +43,8 @@ public class WhenMessageHandlingThrows(ITestOutputHelper testOutputHelper) : Bas
 
         await Patiently.AssertThatAsync(() =>
         {
-            Handler.ReceivedMessages.Count.ShouldBe(100);
-            _queue.DeleteMessageRequests.Count.ShouldBe(99);
+            Handler.ReceivedMessages.Count.ShouldBe(10);
+            _queue.DeleteMessageRequests.Count.ShouldBe(9);
         });
     }
 

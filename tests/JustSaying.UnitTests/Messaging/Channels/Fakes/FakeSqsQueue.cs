@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Interrogation;
@@ -9,6 +10,10 @@ public class FakeSqsQueue(Func<CancellationToken, Task<IEnumerable<Message>>> me
     private readonly Func<CancellationToken, Task<IEnumerable<Message>>> _messageProducer = messageProducer;
     private readonly TaskCompletionSource _receivedAllMessages = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private int _messageReceived;
+    private readonly ConcurrentBag<FakeDeleteMessageRequest> _deleteMessageRequests = [];
+    private readonly ConcurrentBag<FakeChangeMessageVisibilityRequest> _changeMessageVisibilityRequests = [];
+    private readonly ConcurrentBag<FakeTagQueueRequest> _tagQueueRequests = [];
+    private readonly ConcurrentBag<FakeReceiveMessagesRequest> _receiveMessageRequests = [];
 
     public InterrogationResult Interrogate()
     {
@@ -22,20 +27,20 @@ public class FakeSqsQueue(Func<CancellationToken, Task<IEnumerable<Message>>> me
     public int? MaxNumberOfMessagesToReceive { get; set; } = 100;
     public Task ReceivedAllMessages => _receivedAllMessages.Task;
 
-    public List<FakeDeleteMessageRequest> DeleteMessageRequests { get; } = new();
-    public List<FakeChangeMessageVisibilityRequest> ChangeMessageVisbilityRequests { get; } = new();
-    public List<FakeTagQueueRequest> TagQueueRequests { get; } = new();
-    public List<FakeReceiveMessagesRequest> ReceiveMessageRequests { get; } = new();
+    public IReadOnlyCollection<FakeDeleteMessageRequest> DeleteMessageRequests => _deleteMessageRequests;
+    public IReadOnlyCollection<FakeChangeMessageVisibilityRequest> ChangeMessageVisibilityRequests => _changeMessageVisibilityRequests;
+    public IReadOnlyCollection<FakeTagQueueRequest> TagQueueRequests => _tagQueueRequests;
+    public IReadOnlyCollection<FakeReceiveMessagesRequest> ReceiveMessageRequests => _receiveMessageRequests;
 
     public Task DeleteMessageAsync(string queueUrl, string receiptHandle, CancellationToken cancellationToken)
     {
-        DeleteMessageRequests.Add(new FakeDeleteMessageRequest(queueUrl, receiptHandle));
+        _deleteMessageRequests.Add(new FakeDeleteMessageRequest(queueUrl, receiptHandle));
         return Task.CompletedTask;
     }
 
     public Task TagQueueAsync(string queueUrl, Dictionary<string, string> tags, CancellationToken cancellationToken)
     {
-        TagQueueRequests.Add(new FakeTagQueueRequest(queueUrl, tags));
+        _tagQueueRequests.Add(new FakeTagQueueRequest(queueUrl, tags));
         return Task.CompletedTask;
     }
 
@@ -48,7 +53,7 @@ public class FakeSqsQueue(Func<CancellationToken, Task<IEnumerable<Message>>> me
         var result =  messages.Take(countToTake).ToList();
         _messageReceived += result.Count;
 
-        ReceiveMessageRequests.Add(new FakeReceiveMessagesRequest(queueUrl, maxNumOfMessages, secondsWaitTime, attributesToLoad, result.Count));
+        _receiveMessageRequests.Add(new FakeReceiveMessagesRequest(queueUrl, maxNumOfMessages, secondsWaitTime, attributesToLoad, result.Count));
 
         if (_messageReceived >= MaxNumberOfMessagesToReceive)
         {
@@ -60,7 +65,7 @@ public class FakeSqsQueue(Func<CancellationToken, Task<IEnumerable<Message>>> me
 
     public Task ChangeMessageVisibilityAsync(string queueUrl, string receiptHandle, int visibilityTimeoutInSeconds, CancellationToken cancellationToken)
     {
-        ChangeMessageVisbilityRequests.Add(new FakeChangeMessageVisibilityRequest(queueUrl, receiptHandle, visibilityTimeoutInSeconds));
+        _changeMessageVisibilityRequests.Add(new FakeChangeMessageVisibilityRequest(queueUrl, receiptHandle, visibilityTimeoutInSeconds));
         return Task.CompletedTask;
     }
 }

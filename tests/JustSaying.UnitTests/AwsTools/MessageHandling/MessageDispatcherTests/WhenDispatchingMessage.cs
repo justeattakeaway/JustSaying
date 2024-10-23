@@ -88,7 +88,8 @@ public class WhenDispatchingMessage : IAsyncLifetime
 
         _queue = new FakeSqsQueue(ct => Task.FromResult(GetMessages()))
         {
-            Uri = new Uri(ExpectedQueueUrl)
+            Uri = new Uri(ExpectedQueueUrl),
+            MaxNumberOfMessagesToReceive = 1
         };
 
         _messageBodySerializer.Deserialize(Arg.Any<string>()).Returns(_typedMessage);
@@ -128,9 +129,9 @@ public class WhenDispatchingMessage : IAsyncLifetime
         }
 
         [Fact]
-        public void ShouldNotHandleMessage()
+        public async Task ShouldNotHandleMessage()
         {
-            _fakeLogCollector.GetSnapshot().ShouldContain(le => le.Message == "Failed to dispatch. Middleware for message of type 'JustSaying.TestingFramework.SimpleMessage' not found in middleware map.");
+            await Patiently.AssertThatAsync(_outputHelper, () => _fakeLogCollector.GetSnapshot().ShouldContain(le => le.Message == "Failed to dispatch. Middleware for message of type 'JustSaying.TestingFramework.SimpleMessage' not found in middleware map."));
         }
     }
 
@@ -202,7 +203,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
         [Fact]
         public void ShouldUpdateMessageVisibility()
         {
-            var request = _queue.ChangeMessageVisbilityRequests.ShouldHaveSingleItem();
+            var request = _queue.ChangeMessageVisibilityRequests.ShouldHaveSingleItem();
             request.QueueUrl.ShouldBe(ExpectedQueueUrl);
             request.ReceiptHandle.ShouldBe(_sqsMessage.ReceiptHandle);
             request.VisibilityTimeoutInSeconds.ShouldBe((int)_expectedBackoffTimeSpan.TotalSeconds);
