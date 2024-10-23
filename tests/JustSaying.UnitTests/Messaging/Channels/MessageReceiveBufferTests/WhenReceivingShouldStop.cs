@@ -16,9 +16,9 @@ public class WhenReceivingShouldStop
 {
     private class TestMessage : Message { }
 
-    private int _callCount;
     private readonly MessageReceivePauseSignal _messageReceivePauseSignal;
     private readonly MessageReceiveBuffer _messageReceiveBuffer;
+    private readonly FakeSqsQueue _queue;
 
     public WhenReceivingShouldStop(ITestOutputHelper testOutputHelper)
     {
@@ -28,13 +28,14 @@ public class WhenReceivingShouldStop
             new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>();
 
         var messages = new List<Message> { new TestMessage() };
-        var queue = new SqsSource
+        _queue = new FakeSqsQueue(ct => Task.FromResult(messages.AsEnumerable()))
         {
-            SqsQueue = new FakeSqsQueue(ct =>
-            {
-                Interlocked.Increment(ref _callCount);
-                return Task.FromResult(messages.AsEnumerable());
-            }),
+            MaxNumberOfMessagesToReceive = 10
+        };
+
+        var source = new SqsSource
+        {
+            SqsQueue = _queue,
             MessageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), false)
         };
 
@@ -48,7 +49,7 @@ public class WhenReceivingShouldStop
             10,
             TimeSpan.FromSeconds(1),
             TimeSpan.FromSeconds(1),
-            queue,
+            source,
             sqsMiddleware,
             _messageReceivePauseSignal,
             monitor,
@@ -84,7 +85,7 @@ public class WhenReceivingShouldStop
         var readTask = Messages();
 
         // Check if we can start receiving for a while
-        await Task.Delay(TimeSpan.FromMilliseconds(50));
+        await Task.Delay(TimeSpan.FromMilliseconds(150), cts.Token);
 
         // Cancel token
         await cts.CancelAsync();
@@ -110,13 +111,13 @@ public class WhenReceivingShouldStop
         var readTask = Messages();
 
         // Check if we can start receiving for a while
-        await Task.Delay(TimeSpan.FromMilliseconds(50));
+        await Task.Delay(TimeSpan.FromMilliseconds(50), cts.Token);
 
         // Signal start receiving messages
         _messageReceivePauseSignal.Resume();
 
         // Read messages for a while
-        await Task.Delay(TimeSpan.FromMilliseconds(150));
+        await _queue.ReceivedAllMessages.WaitAsync(TimeSpan.FromSeconds(5), cts.Token);
 
         // Cancel token
         await cts.CancelAsync();
@@ -129,6 +130,6 @@ public class WhenReceivingShouldStop
 
         // Make sure that number makes sense
         messagesRead.ShouldBeGreaterThan(0);
-        messagesRead.ShouldBeLessThanOrEqualTo(_callCount);
+        messagesRead.ShouldBeLessThanOrEqualTo(10);
     }
 }
