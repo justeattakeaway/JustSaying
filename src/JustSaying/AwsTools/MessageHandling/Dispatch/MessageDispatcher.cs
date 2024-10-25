@@ -13,7 +13,7 @@ internal sealed class MessageDispatcher : IMessageDispatcher
     private readonly IMessageMonitor _messagingMonitor;
     private readonly MiddlewareMap _middlewareMap;
 
-    private static ILogger _logger;
+    private readonly ILogger _logger;
 
     public MessageDispatcher(
         IMessageMonitor messagingMonitor,
@@ -39,6 +39,7 @@ internal sealed class MessageDispatcher : IMessageDispatcher
 
         if (!success)
         {
+            _logger.LogTrace("DeserializeMessage failed. Message will not be dispatched.");
             return;
         }
 

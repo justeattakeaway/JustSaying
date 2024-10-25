@@ -22,7 +22,6 @@ using SQSMessage = Amazon.SQS.Model.Message;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests;
 
-[Collection(nameof(WhenDispatchingMessage))]
 public class WhenDispatchingMessage : IAsyncLifetime
 {
     private const string ExpectedQueueUrl = "http://testurl.com/queue";
@@ -46,15 +45,18 @@ public class WhenDispatchingMessage : IAsyncLifetime
     public WhenDispatchingMessage(ITestOutputHelper outputHelper)
     {
         _outputHelper = outputHelper;
-        _fakeLogCollector = new FakeLogCollector();
-        _loggerFactory = LoggerFactory.Create(lb =>
-        {
-            lb.AddFakeLogging().AddXUnit(outputHelper);
-            lb.Services.AddSingleton(_fakeLogCollector);
-        });
+        var services =
+            new ServiceCollection().AddLogging(lb =>
+            {
+                lb.SetMinimumLevel(LogLevel.Trace);
+                lb.AddFakeLogging().AddXUnit(outputHelper);
+            });
+        var sp =  services.BuildServiceProvider();
+        _fakeLogCollector = sp.GetFakeLogCollector();
+        _loggerFactory = sp.GetService<ILoggerFactory>();
         _messageMonitor = new TrackingLoggingMonitor(_loggerFactory.CreateLogger<TrackingLoggingMonitor>());
         _middlewareMap = new MiddlewareMap();
-        _messageConverter = new ReceivedMessageConverter(_messageBodySerializer, new MessageCompressionRegistry(), false);
+        _messageConverter = new ReceivedMessageConverter(_messageBodySerializer, new MessageCompressionRegistry(), true);
     }
 
     public virtual async Task InitializeAsync()
@@ -131,7 +133,13 @@ public class WhenDispatchingMessage : IAsyncLifetime
         [Fact]
         public async Task ShouldNotHandleMessage()
         {
-            await Patiently.AssertThatAsync(_outputHelper, () => _fakeLogCollector.GetSnapshot().ShouldContain(le => le.Message == "Failed to dispatch. Middleware for message of type 'JustSaying.TestingFramework.SimpleMessage' not found in middleware map."));
+            _messageBodySerializer.Received(1).Deserialize(Arg.Is<string>(x => x == _sqsMessage.Body));
+            _messageMonitor.HandledMessages.ShouldBeEmpty();
+            await Patiently.AssertThatAsync(_outputHelper, () =>
+            {
+                var logs = _fakeLogCollector.GetSnapshot();
+                logs.ShouldContain(le => le.Message == "Failed to dispatch. Middleware for message of type 'JustSaying.TestingFramework.SimpleMessage' not found in middleware map.");
+            });
         }
     }
 
