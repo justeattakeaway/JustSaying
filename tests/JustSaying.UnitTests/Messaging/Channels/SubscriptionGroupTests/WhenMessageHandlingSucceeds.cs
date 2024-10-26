@@ -5,7 +5,7 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
+public class WhenMessageHandlingSucceeds : BaseSubscriptionGroupTests
 {
     [StringSyntax(StringSyntaxAttribute.Json)]
     private const string MessageBody = """
@@ -16,11 +16,16 @@ public class WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper) : B
                                        """;
     private FakeSqsQueue _queue;
 
+    public WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+    {
+        MessagesToWaitFor = 10;
+    }
+
     protected override void Given()
     {
         var sqsSource = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage { Body = MessageBody });
         _queue = sqsSource.SqsQueue as FakeSqsQueue;
-        _queue!.MaxNumberOfMessagesToReceive = 10;
+        _queue!.MaxNumberOfMessagesToReceive = MessagesToWaitFor;
 
         Queues.Add(sqsSource);
     }

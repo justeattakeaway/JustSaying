@@ -29,9 +29,9 @@ public class WhenThereAreExceptionsInSqsCalling(ITestOutputHelper testOutputHelp
         yield break;
     }
 
-    protected override bool Until()
+    protected override Task<bool> UntilAsync()
     {
-        return _callCount > 1;
+        return Task.FromResult(_callCount > 1);
     }
 
     [Fact]

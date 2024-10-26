@@ -36,9 +36,9 @@ public class WhenThereAreExceptionsInMessageProcessing(ITestOutputHelper testOut
         Queues.Add(sqsSource);
     }
 
-    protected override bool Until()
+    protected override Task<bool> UntilAsync()
     {
-        return _callCount > 1;
+        return Task.FromResult(_callCount > 1);
     }
 
     [Fact]

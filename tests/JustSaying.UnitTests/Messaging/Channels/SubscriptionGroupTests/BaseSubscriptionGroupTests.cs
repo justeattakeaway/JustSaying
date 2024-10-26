@@ -55,7 +55,7 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
         Handler = new InspectableHandler<SimpleMessage>();
         Monitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
         MiddlewareMap = new MiddlewareMap();
-        CompletionMiddleware = new AwaitableMiddleware(OutputHelper);
+        CompletionMiddleware = new AwaitableMiddleware(OutputHelper, MessagesToWaitFor);
         SetupMessage = new SimpleMessage
         {
             RaisingComponent = "Component",
@@ -74,6 +74,7 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
     }
 
     public SimpleMessage SetupMessage { get; private set; }
+    public int MessagesToWaitFor { get; protected set; } = 1;
     public AwaitableMiddleware CompletionMiddleware { get; set; }
 
     protected abstract void Given();
@@ -91,16 +92,17 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
         var completion = SystemUnderTest.RunAsync(linkedCts.Token);
 
         await Patiently.AssertThatAsync(OutputHelper,
-            () => Until() || cts.IsCancellationRequested);
+            async () => cts.IsCancellationRequested || await UntilAsync());
 
         await cts.CancelAsync();
         await completion.HandleCancellation();
     }
 
-    protected virtual bool Until()
+    protected virtual async Task<bool> UntilAsync()
     {
         OutputHelper.WriteLine("Checking if middleware chain has completed");
-        return CompletionMiddleware.Complete?.IsCompleted ?? false;
+        await (CompletionMiddleware.Complete ?? Task.CompletedTask).WaitAsync(TimeSpan.FromSeconds(5));
+        return CompletionMiddleware.Complete is not null;
     }
 
     private ISubscriptionGroup CreateSystemUnderTest()
