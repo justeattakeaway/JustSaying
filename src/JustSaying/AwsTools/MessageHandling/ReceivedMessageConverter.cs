@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using JustSaying.AwsTools;
@@ -123,10 +124,18 @@ internal sealed class ReceivedMessageConverter : IReceivedMessageConverter
 
         try
         {
-            using var jsonDocument = JsonDocument.Parse(body);
-            if (jsonDocument.RootElement.TryGetProperty("Type", out var typeElement))
+            var utf8JsonReader = new Utf8JsonReader(Encoding.UTF8.GetBytes(body));
+            if (!JsonDocument.TryParseValue(ref utf8JsonReader, out var jsonDocument))
             {
-                return typeElement.GetString() is "Notification";
+                return false;
+            }
+
+            using (jsonDocument)
+            {
+                if (jsonDocument.RootElement.TryGetProperty("Type", out var typeElement))
+                {
+                    return typeElement.GetString() is "Notification";
+                }
             }
         }
         catch
