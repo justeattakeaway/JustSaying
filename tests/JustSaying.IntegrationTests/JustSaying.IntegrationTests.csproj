@@ -16,6 +16,7 @@
     <PackageReference Include="AWSSDK.SQS" />
     <PackageReference Include="GitHubActionsTestLogger" />
     <PackageReference Include="MartinCostello.Logging.XUnit" />
+    <PackageReference Include="Meziantou.Xunit.ParallelTestFramework" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
