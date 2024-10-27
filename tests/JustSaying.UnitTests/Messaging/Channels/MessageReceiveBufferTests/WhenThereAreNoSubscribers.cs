@@ -59,7 +59,7 @@ public class WhenThereAreNoSubscribers
     public async Task Buffer_Is_Filled()
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
-        var _ = _messageReceiveBuffer.RunAsync(cts.Token);
+        _ = _messageReceiveBuffer.RunAsync(cts.Token);
 
         await Patiently.AssertThatAsync(_outputHelper, () => _callCount > 0);
 

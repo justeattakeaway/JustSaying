@@ -101,7 +101,7 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
     protected virtual async Task<bool> UntilAsync()
     {
         OutputHelper.WriteLine("Checking if middleware chain has completed");
-        await (CompletionMiddleware.Complete ?? Task.CompletedTask).WaitAsync(TimeSpan.FromSeconds(5));
+        await (CompletionMiddleware.Complete ?? Task.CompletedTask).WaitAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         return CompletionMiddleware.Complete is not null;
     }
 

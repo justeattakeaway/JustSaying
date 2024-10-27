@@ -49,11 +49,12 @@ public class FakeSqsQueue(Func<CancellationToken, Task<IEnumerable<Message>>> me
     {
         await Task.Yield();
         var messages = await _messageProducer(cancellationToken);
+        List<Message> result;
 
         lock (_messageLock)
         {
             var countToTake = MaxNumberOfMessagesToReceive is null ? maxNumOfMessages : Math.Min(maxNumOfMessages, MaxNumberOfMessagesToReceive.Value - _messageReceived);
-            var result = messages.Take(countToTake).ToList();
+            result = messages.Take(countToTake).ToList();
             _messageReceived += result.Count;
 
             _receiveMessageRequests.Add(new FakeReceiveMessagesRequest(queueUrl, maxNumOfMessages, secondsWaitTime, attributesToLoad, result.Count));
@@ -62,9 +63,15 @@ public class FakeSqsQueue(Func<CancellationToken, Task<IEnumerable<Message>>> me
             {
                 _receivedAllMessages.TrySetResult();
             }
-
-            return result;
         }
+
+        // If empty, wait for a bit to avoid spinning in a tight loop
+        if (result.Count == 0)
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(20), cancellationToken);
+        }
+
+        return result;
     }
 
     public Task ChangeMessageVisibilityAsync(string queueUrl, string receiptHandle, int visibilityTimeoutInSeconds, CancellationToken cancellationToken)

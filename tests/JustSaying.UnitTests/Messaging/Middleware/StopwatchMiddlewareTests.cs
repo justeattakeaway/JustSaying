@@ -16,7 +16,7 @@ public class StopwatchMiddlewareTests
 
     public StopwatchMiddlewareTests(ITestOutputHelper outputHelper)
     {
-        var loggerFactory = LoggerFactory.Create(lf => lf.AddXUnit(outputHelper));
+        var loggerFactory = LoggerFactory.Create(lf => lf.AddXUnit(outputHelper).SetMinimumLevel(LogLevel.Information));
 
         _handler = new InspectableHandler<OrderAccepted>();
         _monitor = new TrackingLoggingMonitor(loggerFactory.CreateLogger<TrackingLoggingMonitor>());

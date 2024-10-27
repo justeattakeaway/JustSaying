@@ -48,7 +48,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
         var services =
             new ServiceCollection().AddLogging(lb =>
             {
-                lb.SetMinimumLevel(LogLevel.Trace);
+                lb.SetMinimumLevel(LogLevel.Information);
                 lb.AddFakeLogging().AddXUnit(outputHelper);
             });
         var sp =  services.BuildServiceProvider();

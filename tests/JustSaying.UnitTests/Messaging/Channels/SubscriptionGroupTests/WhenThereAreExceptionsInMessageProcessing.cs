@@ -42,10 +42,9 @@ public class WhenThereAreExceptionsInMessageProcessing(ITestOutputHelper testOut
     }
 
     [Fact]
-    public async Task TheListenerDoesNotDie()
+    public void TheListenerDoesNotDie()
     {
-        await Patiently.AssertThatAsync(OutputHelper,
-            () => _callCount.ShouldBeGreaterThan(1));
+        _callCount.ShouldBeGreaterThan(1);
     }
 
     private sealed class ThrowingMessageBodySerializer : IMessageBodySerializer

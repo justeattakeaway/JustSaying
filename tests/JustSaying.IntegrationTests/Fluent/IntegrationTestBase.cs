@@ -53,7 +53,7 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
         LogLevel logLevel = levelOverride ?? LogLevel.Debug;
         return new ServiceCollection()
             .AddLogging((p) => p
-                .AddTest()
+                .AddFakeLogging()
                 .AddXUnit(OutputHelper, o =>
                 {
                     o.IncludeScopes = true;

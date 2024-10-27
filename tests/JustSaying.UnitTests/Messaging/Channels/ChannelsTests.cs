@@ -33,7 +33,7 @@ public class ChannelsTests
     {
         MessageReceivePauseSignal = new MessageReceivePauseSignal();
         OutputHelper = testOutputHelper;
-        LoggerFactory = new LoggerFactory().AddXUnit(testOutputHelper, LogLevel.Trace);
+        LoggerFactory = new LoggerFactory().AddXUnit(testOutputHelper, LogLevel.Information);
         MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
     }
 

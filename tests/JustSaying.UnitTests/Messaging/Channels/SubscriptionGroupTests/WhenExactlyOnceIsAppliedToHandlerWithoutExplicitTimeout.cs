@@ -30,7 +30,7 @@ public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper te
         var serviceResolver = new InMemoryServiceResolver(sc =>
             sc.AddSingleton<IMessageLockAsync>(_messageLock)
                 .AddSingleton<IHandlerAsync<SimpleMessage>>(Handler)
-                .AddLogging(x => x.AddXUnit(OutputHelper)));
+                .AddLogging(x => x.AddXUnit(OutputHelper).SetMinimumLevel(LogLevel.Information)));
 
         var middlewareBuilder = new HandlerMiddlewareBuilder(serviceResolver, serviceResolver);
 

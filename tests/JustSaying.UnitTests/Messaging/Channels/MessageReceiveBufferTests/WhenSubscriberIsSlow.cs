@@ -58,7 +58,6 @@ public class WhenSubscriberIsSlow
 
         while (true)
         {
-            await Task.Delay(100);
             var couldRead = await _messageReceiveBuffer.Reader.WaitToReadAsync();
             if (!couldRead) break;
 
@@ -75,11 +74,11 @@ public class WhenSubscriberIsSlow
     public async Task All_Messages_Are_Processed()
     {
         using var cts = new CancellationTokenSource();
-        var _ = _messageReceiveBuffer.RunAsync(cts.Token);
+        _ = _messageReceiveBuffer.RunAsync(cts.Token);
         var readTask = Messages();
 
         // Read messages for a while
-        await Task.Delay(TimeSpan.FromMilliseconds(150));
+        await Task.Delay(TimeSpan.FromMilliseconds(150), cts.Token);
 
         // Cancel token
         await cts.CancelAsync();
