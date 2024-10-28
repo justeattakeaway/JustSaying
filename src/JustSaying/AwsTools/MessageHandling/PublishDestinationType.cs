@@ -1,6 +1,6 @@
 namespace JustSaying.AwsTools.MessageHandling;
 
-public enum PublishDestinationType
+internal enum PublishDestinationType
 {
     Topic = 1,
     Queue = 2

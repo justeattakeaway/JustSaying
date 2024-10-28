@@ -12,9 +12,6 @@ JustSaying.AwsTools.MessageHandling.PublishCompressionOptions.CompressionEncodin
 JustSaying.AwsTools.MessageHandling.PublishCompressionOptions.MessageLengthThreshold.get -> int
 JustSaying.AwsTools.MessageHandling.PublishCompressionOptions.MessageLengthThreshold.set -> void
 JustSaying.AwsTools.MessageHandling.PublishCompressionOptions.PublishCompressionOptions() -> void
-JustSaying.AwsTools.MessageHandling.PublishDestinationType
-JustSaying.AwsTools.MessageHandling.PublishDestinationType.Queue = 2 -> JustSaying.AwsTools.MessageHandling.PublishDestinationType
-JustSaying.AwsTools.MessageHandling.PublishDestinationType.Topic = 1 -> JustSaying.AwsTools.MessageHandling.PublishDestinationType
 JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.CompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
 JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.CompressionOptions.set -> void
 JustSaying.AwsTools.QueueCreation.SnsWriteConfiguration.IsRawMessage.get -> bool
