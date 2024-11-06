@@ -71,19 +71,12 @@ internal sealed class ReceivedMessageConverter : IReceivedMessageConverter
         }
 
         Dictionary<string, MessageAttributeValue> attributes = new();
-        foreach (var obj in attributesElement.EnumerateObject())
+        foreach (var property in attributesElement.EnumerateObject())
         {
-            var dataType = obj.Value.GetProperty("Type").GetString();
-            var dataValue = obj.Value.GetProperty("Value").GetString();
+            var dataType = property.Value.GetProperty("Type").GetString();
+            var dataValue = property.Value.GetProperty("Value").GetString();
 
-            var isString = dataType == "String";
-
-            attributes.Add(obj.Name, new MessageAttributeValue
-            {
-                DataType = dataType,
-                StringValue = isString ? dataValue : null,
-                BinaryValue = !isString ? Convert.FromBase64String(dataValue) : null
-            });
+            attributes.Add(property.Name, MessageAttributeParser.Parse(dataType, dataValue));
         }
 
         return new MessageAttributes(attributes);
@@ -102,14 +95,9 @@ internal sealed class ReceivedMessageConverter : IReceivedMessageConverter
         {
             var dataType = messageMessageAttribute.Value.DataType;
             var dataValue = messageMessageAttribute.Value.StringValue;
-            var isString = dataType == "String";
-            var messageAttributeValue = new MessageAttributeValue
-            {
-                DataType = dataType,
-                StringValue = isString ? dataValue : null,
-                BinaryValue = !isString ? Convert.FromBase64String(dataValue) : null
-            };
-            rawAttributes.Add(messageMessageAttribute.Key, messageAttributeValue);
+            rawAttributes.Add(messageMessageAttribute.Key, MessageAttributeParser.Parse(dataType, dataValue));
+            rawAttributes.Add(messageMessageAttribute.Key, MessageAttributeParser.Parse(dataType, dataValue));
+            rawAttributes.Add(messageMessageAttribute.Key, MessageAttributeParser.Parse(dataType, dataValue));
         }
 
         return new MessageAttributes(rawAttributes);
