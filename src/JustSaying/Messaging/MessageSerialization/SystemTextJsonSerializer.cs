@@ -66,12 +66,19 @@ public class SystemTextJsonSerializer : IMessageSerializer
         }
 
         var attributes = new Dictionary<string, MessageAttributeValue>();
-        foreach (var property in attributesElement.EnumerateObject())
+        foreach(var obj in attributesElement.EnumerateObject())
         {
-            var dataType = property.Value.GetProperty("Type").GetString();
-            var dataValue = property.Value.GetProperty("Value").GetString();
+            var dataType = obj.Value.GetProperty("Type").GetString();
+            var dataValue = obj.Value.GetProperty("Value").GetString();
 
-            attributes.Add(property.Name, MessageAttributeParser.Parse(dataType, dataValue));
+            var isString = dataType == "String";
+
+            attributes.Add(obj.Name, new MessageAttributeValue()
+            {
+                DataType = dataType,
+                StringValue = isString ? dataValue : null,
+                BinaryValue = !isString ? Convert.FromBase64String(dataValue) : null
+            });
         }
 
         return new MessageAttributes(attributes);

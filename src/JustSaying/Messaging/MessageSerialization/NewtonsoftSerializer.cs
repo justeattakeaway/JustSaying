@@ -17,10 +17,10 @@ public class NewtonsoftSerializer : IMessageSerializer
     public NewtonsoftSerializer(JsonSerializerSettings settings)
     {
         settings ??= new JsonSerializerSettings
-        {
-            NullValueHandling = NullValueHandling.Ignore,
-            Converters = [new Newtonsoft.Json.Converters.StringEnumConverter()]
-        };
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+                Converters = new JsonConverter[] { new Newtonsoft.Json.Converters.StringEnumConverter() }
+            };
 
         _settings = settings;
     }
@@ -57,30 +57,33 @@ public class NewtonsoftSerializer : IMessageSerializer
             return new MessageAttributes();
         }
 
-        var attributes = new Dictionary<string, MessageAttributeValue>();
+        var dict = new Dictionary<string, MessageAttributeValue>();
 
-        foreach (var property in props)
+        foreach (var prop in props)
         {
-            if (property.Value is not { } propertyValue)
+            var propData = prop.Value;
+            if (propData == null) continue;
+
+            var dataType = propData["Type"].ToString();
+            var dataValue = propData["Value"].ToString();
+
+            var isString = dataType == "String";
+
+            var mav = new MessageAttributeValue
             {
-                continue;
-            }
-
-            var dataType = propertyValue["Type"].ToString();
-            var dataValue = propertyValue["Value"].ToString();
-
-            attributes.Add(property.Name, MessageAttributeParser.Parse(dataType, dataValue));
+                DataType = dataType,
+                StringValue = isString ? dataValue : null,
+                BinaryValue = !isString ? Convert.FromBase64String(dataValue) : null
+            };
+            dict.Add(prop.Name, mav);
         }
 
-        return new MessageAttributes(attributes);
+        return new MessageAttributes(dict);
     }
 
     public string GetMessageSubject(string sqsMessage)
     {
-        if (string.IsNullOrWhiteSpace(sqsMessage))
-        {
-            return string.Empty;
-        }
+        if (string.IsNullOrWhiteSpace(sqsMessage)) return string.Empty;
 
         var body = JObject.Parse(sqsMessage);
         return body.Value<string>("Subject") ?? string.Empty;
