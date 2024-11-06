@@ -1,5 +1,3 @@
-using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.Compression;
 using JustSaying.Sample.Restaurant.KitchenConsole;
 using JustSaying.Sample.Restaurant.KitchenConsole.Handlers;
 using JustSaying.Sample.Restaurant.Models;
@@ -105,13 +103,7 @@ static async Task Run()
                     x.WithTopic<OrderReadyEvent>(cfg =>
                     {
                         cfg.WithTag("IsOrderEvent")
-                            .WithTag("Publisher", appName)
-                            .WithWriteConfiguration(w =>
-                                w.CompressionOptions = new PublishCompressionOptions
-                                {
-                                    CompressionEncoding = ContentEncodings.GzipBase64, // TODO validate
-                                    MessageLengthThreshold = 0
-                                });
+                            .WithTag("Publisher", appName);
                     });
                     x.WithTopic<OrderDeliveredEvent>();
                 });
