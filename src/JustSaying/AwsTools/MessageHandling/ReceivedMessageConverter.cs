@@ -96,8 +96,6 @@ internal sealed class ReceivedMessageConverter : IReceivedMessageConverter
             var dataType = messageMessageAttribute.Value.DataType;
             var dataValue = messageMessageAttribute.Value.StringValue;
             rawAttributes.Add(messageMessageAttribute.Key, MessageAttributeParser.Parse(dataType, dataValue));
-            rawAttributes.Add(messageMessageAttribute.Key, MessageAttributeParser.Parse(dataType, dataValue));
-            rawAttributes.Add(messageMessageAttribute.Key, MessageAttributeParser.Parse(dataType, dataValue));
         }
 
         return new MessageAttributes(rawAttributes);

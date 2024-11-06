@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
@@ -76,6 +77,7 @@ internal sealed class PublishMessageConverter : IPublishMessageConverter
     {
         string contentEncoding = null;
         string compressedMessage = null;
+
         if (_compressionOptions?.CompressionEncoding is { } compressionEncoding && _compressionRegistry is not null)
         {
             var messageSize = CalculateTotalMessageSize(message, metadata);
@@ -87,15 +89,16 @@ internal sealed class PublishMessageConverter : IPublishMessageConverter
                     throw new InvalidOperationException($"No compression algorithm registered for encoding '{compressionEncoding}'.");
                 }
 
-                JsonNode jsonNode = null;
+                // For queue messages that aren't raw, we need to extract the inner message before compression
                 if (_destinationType == PublishDestinationType.Queue && !_isRawMessage)
                 {
-                    jsonNode = JsonNode.Parse(message);
+                    var jsonNode = JsonNode.Parse(message);
                     if (jsonNode is JsonObject jsonObject && jsonObject.TryGetPropertyValue("Message", out var messageNode))
                     {
                         message = messageNode?.GetValue<string>();
                     }
                 }
+
                 compressedMessage = compression.Compress(message);
                 contentEncoding = compressionEncoding;
             }
@@ -110,9 +113,28 @@ internal sealed class PublishMessageConverter : IPublishMessageConverter
     /// <param name="message">The message content.</param>
     /// <param name="metadata">Metadata associated with the message.</param>
     /// <returns>The total size of the message in bytes.</returns>
-    private static int CalculateTotalMessageSize(string message, PublishMetadata metadata)
+    private int CalculateTotalMessageSize(string message, PublishMetadata metadata)
     {
-        var messageSize = Encoding.UTF8.GetByteCount(message);
+        int messageSize = 0;
+
+        // For queue messages that aren't raw, we need to account for the wrapper structure
+        if (_destinationType == PublishDestinationType.Queue && !_isRawMessage)
+        {
+            // Calculate size of the wrapper object with escaped message
+            var wrappedMessage = new JsonObject
+            {
+                ["Message"] = message,
+                ["Subject"] = _subject
+            }.ToJsonString();
+
+            messageSize = Encoding.UTF8.GetByteCount(wrappedMessage);
+        }
+        else
+        {
+            // For non-queue or raw messages, just calculate the direct message size
+            messageSize = Encoding.UTF8.GetByteCount(message);
+        }
+
         if (metadata?.MessageAttributes != null)
         {
             foreach (var attribute in metadata.MessageAttributes)
