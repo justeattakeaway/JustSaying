@@ -43,9 +43,17 @@ public class MessageSerializationRegister(
             }
 
             TypeSerializer typeSerializer = lazyTypeSerializer.Value;
-            var attributes = typeSerializer.Serializer.GetMessageAttributes(body);
-            var message = typeSerializer.Serializer.Deserialize(body, typeSerializer.Type);
-            return new MessageWithAttributes(message, attributes);
+
+            if (typeSerializer.Serializer is IMessageAndAttributesDeserializer deserializer)
+            {
+                return deserializer.DeserializeWithAttributes(body, typeSerializer.Type);
+            }
+            else
+            {
+                var attributes = typeSerializer.Serializer.GetMessageAttributes(body);
+                var message = typeSerializer.Serializer.Deserialize(body, typeSerializer.Type);
+                return new MessageWithAttributes(message, attributes);
+            }
         }
 
         var exception = new MessageFormatNotSupportedException("Message can not be handled - type undetermined.");

@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 
 namespace JustSaying.Messaging.MessageSerialization;
 
-public class NewtonsoftSerializer : IMessageSerializer
+public class NewtonsoftSerializer : IMessageSerializer, IMessageAndAttributesDeserializer
 {
     private readonly JsonSerializerSettings _settings;
 
@@ -28,9 +28,7 @@ public class NewtonsoftSerializer : IMessageSerializer
     public Message Deserialize(string message, Type type)
     {
         var document = JObject.Parse(message);
-        string json = document["Message"].ToString();
-
-        return (Message)JsonConvert.DeserializeObject(json, type, _settings);
+        return Deserialize(document, type);
     }
 
     public string Serialize(Message message, bool serializeForSnsPublishing, string subject)
@@ -51,7 +49,29 @@ public class NewtonsoftSerializer : IMessageSerializer
 
     public MessageAttributes GetMessageAttributes(string message)
     {
-        var props = JObject.Parse(message).Value<JObject>("MessageAttributes")?.Properties();
+        var document = JObject.Parse(message);
+        return GetMessageAttributes(document);
+    }
+
+    MessageWithAttributes IMessageAndAttributesDeserializer.DeserializeWithAttributes(string message, Type type)
+    {
+        var document = JObject.Parse(message);
+
+        var content = Deserialize(document, type);
+        var attributes = GetMessageAttributes(document);
+
+        return new(content, attributes);
+    }
+
+    private Message Deserialize(JObject document, Type type)
+    {
+        string json = document["Message"].ToString();
+        return (Message)JsonConvert.DeserializeObject(json, type, _settings);
+    }
+
+    private MessageAttributes GetMessageAttributes(JObject document)
+    {
+        var props = document.Value<JObject>("MessageAttributes")?.Properties();
         if (props == null)
         {
             return new MessageAttributes();

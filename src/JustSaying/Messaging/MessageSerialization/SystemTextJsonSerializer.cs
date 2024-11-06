@@ -8,7 +8,7 @@ namespace JustSaying.Messaging.MessageSerialization;
 /// <summary>
 /// A class representing an implementation of <see cref="IMessageSerializer"/> for the <c>System.Text.Json</c> serializer.
 /// </summary>
-public class SystemTextJsonSerializer : IMessageSerializer
+public class SystemTextJsonSerializer : IMessageSerializer, IMessageAndAttributesDeserializer
 {
     private static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
     {
@@ -58,33 +58,15 @@ public class SystemTextJsonSerializer : IMessageSerializer
 
     public MessageAttributes GetMessageAttributes(string message)
     {
-        var jsonDocument = JsonDocument.Parse(message);
-
-        if (!jsonDocument.RootElement.TryGetProperty("MessageAttributes", out var attributesElement))
-        {
-            return new MessageAttributes();
-        }
-
-        var attributes = new Dictionary<string, MessageAttributeValue>();
-        foreach (var property in attributesElement.EnumerateObject())
-        {
-            var dataType = property.Value.GetProperty("Type").GetString();
-            var dataValue = property.Value.GetProperty("Value").GetString();
-
-            attributes.Add(property.Name, MessageAttributeParser.Parse(dataType, dataValue));
-        }
-
-        return new MessageAttributes(attributes);
+        using var jsonDocument = JsonDocument.Parse(message);
+        return GetMessageAttributes(jsonDocument);
     }
 
     /// <inheritdoc />
     public Message Deserialize(string message, Type type)
     {
         using var document = JsonDocument.Parse(message);
-        JsonElement element = document.RootElement.GetProperty("Message");
-        string json = element.ToString();
-
-        return (Message)JsonSerializer.Deserialize(json, type, _options);
+        return Deserialize(document, type);
     }
 
     /// <inheritdoc />
@@ -102,5 +84,42 @@ public class SystemTextJsonSerializer : IMessageSerializer
         // For direct publishing to SQS, add Subject and Message properties manually
         var context = new { Subject = subject, Message = json };
         return JsonSerializer.Serialize(context, _options);
+    }
+
+    MessageWithAttributes IMessageAndAttributesDeserializer.DeserializeWithAttributes(string message, Type type)
+    {
+        using var document = JsonDocument.Parse(message);
+
+        var content = Deserialize(document, type);
+        var attributes = GetMessageAttributes(document);
+
+        return new(content, attributes);
+    }
+
+    private Message Deserialize(JsonDocument document, Type type)
+    {
+        JsonElement element = document.RootElement.GetProperty("Message");
+        string json = element.ToString();
+
+        return (Message)JsonSerializer.Deserialize(json, type, _options);
+    }
+
+    private MessageAttributes GetMessageAttributes(JsonDocument jsonDocument)
+    {
+        if (!jsonDocument.RootElement.TryGetProperty("MessageAttributes", out var attributesElement))
+        {
+            return new MessageAttributes();
+        }
+
+        var attributes = new Dictionary<string, MessageAttributeValue>();
+        foreach (var property in attributesElement.EnumerateObject())
+        {
+            var dataType = property.Value.GetProperty("Type").GetString();
+            var dataValue = property.Value.GetProperty("Value").GetString();
+
+            attributes.Add(property.Name, MessageAttributeParser.Parse(dataType, dataValue));
+        }
+
+        return new MessageAttributes(attributes);
     }
 }
