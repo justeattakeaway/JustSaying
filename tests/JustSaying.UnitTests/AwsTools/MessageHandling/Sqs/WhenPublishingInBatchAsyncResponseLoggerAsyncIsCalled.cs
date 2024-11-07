@@ -17,7 +17,7 @@ public class WhenPublishingInBatchAsyncResponseLoggerAsyncIsCalled : WhenPublish
 {
     private readonly List<SimpleMessage> _testMessages = new();
     private readonly List<string> _messageIds = new();
-    private readonly PublishMessageConverter _publishMessageConverter = new(PublishDestinationType.Queue, new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), new PublishCompressionOptions(), "Subject", false);
+    private readonly PublishMessageConverter _publishMessageConverter = CreateConverter();
     private const string Url = "https://blablabla/" + QueueName;
     private const string QueueName = "queuename";
 

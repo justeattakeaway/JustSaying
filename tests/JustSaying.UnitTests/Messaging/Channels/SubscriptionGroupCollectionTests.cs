@@ -42,7 +42,7 @@ public class SubscriptionGroupCollectionTests
 
         var middleware1 = new InspectableMiddleware<TestJustSayingMessage>();
         var middleware2 = new InspectableMiddleware<TestJustSayingMessage>();
-        var messageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<TestJustSayingMessage>(), new MessageCompressionRegistry(), false);
+        var messageConverter = new ReceivedMessageConverter(TestJustSayingMessage.Serializer, new MessageCompressionRegistry(), false);
 
         bus.AddMessageMiddleware<TestJustSayingMessage>(queueName1, middleware1);
         bus.AddMessageMiddleware<TestJustSayingMessage>(queueName2, middleware2);
@@ -115,7 +115,13 @@ public class SubscriptionGroupCollectionTests
             QueueName = queueName,
         };
 
-        var messageConverter = new PublishMessageConverter(PublishDestinationType.Queue, new NewtonsoftMessageBodySerializer<TestJustSayingMessage>(), new MessageCompressionRegistry(), new PublishCompressionOptions(), "TestJustSayingMessage", false);
+        var messageConverter = new PublishMessageConverter(
+            PublishDestinationType.Queue,
+            new SystemTextJsonMessageBodySerializer<TestJustSayingMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions),
+            new MessageCompressionRegistry(),
+            new PublishCompressionOptions(),
+            "TestJustSayingMessage",
+            false);
 
         List<Message> messages = [new TestMessage { Body = (await messageConverter.ConvertForPublishAsync(message, null)).Body }];
 
@@ -140,6 +146,8 @@ public class SubscriptionGroupCollectionTests
     private class TestJustSayingMessage : JustSaying.Models.Message
     {
         public string QueueName { get; set; }
+
+        public static IMessageBodySerializer Serializer => new SystemTextJsonMessageBodySerializer<TestJustSayingMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions);
 
         public override string ToString()
         {

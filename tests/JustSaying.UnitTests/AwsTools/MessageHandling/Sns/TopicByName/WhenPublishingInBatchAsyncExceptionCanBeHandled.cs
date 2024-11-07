@@ -19,7 +19,7 @@ public class WhenPublishingInBatchAsyncExceptionCanBeHandled : WhenPublishingTes
 
     private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        var messageConverter = new PublishMessageConverter(PublishDestinationType.Topic, new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), new PublishCompressionOptions(), "Subject", false);
+        var messageConverter = CreateConverter();
         var topic = new SnsMessagePublisher(TopicArn, Sns, messageConverter, NullLoggerFactory.Instance, null, (_, _) => true);
         return Task.FromResult(topic);
     }

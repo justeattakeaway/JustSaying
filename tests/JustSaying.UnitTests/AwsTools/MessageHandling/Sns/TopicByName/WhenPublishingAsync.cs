@@ -19,7 +19,7 @@ public class WhenPublishingAsync : WhenPublishingTestBase
 
     private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        var messageConverter = new PublishMessageConverter(PublishDestinationType.Topic, new FakeBodySerializer(Message), new MessageCompressionRegistry(), new PublishCompressionOptions(), nameof(SimpleMessage), false);
+        var messageConverter = CreateConverter(new FakeBodySerializer(Message));
         var topic = new SnsMessagePublisher(TopicArn, Sns, messageConverter, NullLoggerFactory.Instance, null, null);
         return Task.FromResult(topic);
     }

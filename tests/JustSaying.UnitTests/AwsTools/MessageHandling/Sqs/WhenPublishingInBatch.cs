@@ -12,7 +12,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
 public class WhenPublishingInBatch : WhenPublishingTestBase
 {
-    private readonly PublishMessageConverter _publishMessageConverter = new(PublishDestinationType.Queue, new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), new PublishCompressionOptions(), "Subject", false);
+    private readonly PublishMessageConverter _publishMessageConverter = CreateConverter();
     private const string Url = "https://blablabla/" + QueueName;
     private readonly List<SimpleMessage> _messages = new();
     private const string QueueName = "queuename";

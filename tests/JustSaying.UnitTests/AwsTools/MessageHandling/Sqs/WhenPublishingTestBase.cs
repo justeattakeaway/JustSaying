@@ -1,5 +1,9 @@
 using Amazon.SQS;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
+using JustSaying.TestingFramework;
 using NSubstitute;
 
 namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
@@ -26,6 +30,16 @@ public abstract class WhenPublishingTestBase : IAsyncLifetime
 
     protected abstract void Given();
     private protected abstract Task<SqsMessagePublisher> CreateSystemUnderTestAsync();
+
+    internal static PublishMessageConverter CreateConverter(bool isRawMessage = false)
+    {
+        return new PublishMessageConverter(PublishDestinationType.Queue,
+            SimpleMessage.Serializer,
+            new MessageCompressionRegistry(),
+            new PublishCompressionOptions(),
+            nameof(SimpleMessage),
+            isRawMessage);
+    }
 
     protected abstract Task WhenAsync();
 }

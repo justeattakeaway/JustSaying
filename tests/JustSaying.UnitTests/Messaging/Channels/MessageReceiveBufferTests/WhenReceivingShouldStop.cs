@@ -36,7 +36,7 @@ public class WhenReceivingShouldStop
         var source = new SqsSource
         {
             SqsQueue = _queue,
-            MessageConverter = new ReceivedMessageConverter(new NewtonsoftMessageBodySerializer<SimpleMessage>(), new MessageCompressionRegistry(), false)
+            MessageConverter = new ReceivedMessageConverter(SimpleMessage.Serializer, new MessageCompressionRegistry(), false)
         };
 
         _messageReceivePauseSignal = new MessageReceivePauseSignal();

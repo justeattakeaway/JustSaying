@@ -20,7 +20,7 @@ public class WhenPublishingAsyncWithGenericMessageSubjectProvider : WhenPublishi
     private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
     {
         var subject = new GenericMessageSubjectProvider().GetSubjectForType(typeof(MessageWithTypeParameters<int, string>));
-        var messageConverter = new PublishMessageConverter(PublishDestinationType.Topic, new FakeBodySerializer(Message), new MessageCompressionRegistry(), new PublishCompressionOptions(), subject, false);
+        var messageConverter = CreateConverter(new FakeBodySerializer(Message), subject);
         var topic = new SnsMessagePublisher(TopicArn, Sns, messageConverter, NullLoggerFactory.Instance, null, null);
         return Task.FromResult(topic);
     }
