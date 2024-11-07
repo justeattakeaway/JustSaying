@@ -18,7 +18,13 @@ internal sealed class PublishMessageConverter : IPublishMessageConverter
     private readonly string _subject;
     private readonly bool _isRawMessage;
 
-    public PublishMessageConverter(PublishDestinationType destinationType, IMessageBodySerializer bodySerializer, MessageCompressionRegistry compressionRegistry, PublishCompressionOptions compressionOptions, string subject, bool isRawMessage)
+    public PublishMessageConverter(
+        PublishDestinationType destinationType,
+        IMessageBodySerializer bodySerializer,
+        MessageCompressionRegistry compressionRegistry,
+        PublishCompressionOptions compressionOptions,
+        string subject,
+        bool isRawMessage)
     {
         _destinationType = destinationType;
         _bodySerializer = bodySerializer;
