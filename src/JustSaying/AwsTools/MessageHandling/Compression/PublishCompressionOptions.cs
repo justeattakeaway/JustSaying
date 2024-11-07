@@ -12,9 +12,9 @@ public sealed class PublishCompressionOptions
     /// Messages larger than this threshold will be compressed.
     /// </summary>
     /// <remarks>
-    /// The default value is 262,144 bytes (256 KB).
+    /// The default value is 260,096 bytes (254 KB), 2KB less than the SNS and SQS limit.
     /// </remarks>
-    public int MessageLengthThreshold { get; set; } = 256 * 1024;
+    public int MessageLengthThreshold { get; set; } = 254 * 1024;
 
     /// <summary>
     /// Gets or sets the compression encoding to be used.
