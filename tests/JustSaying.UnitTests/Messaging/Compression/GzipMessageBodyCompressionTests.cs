@@ -55,7 +55,7 @@ namespace JustSaying.UnitTests.Messaging.Compression
         public void Compress_WithLargeString_ShouldCompressSuccessfully()
         {
             // Arrange
-            string largeString = new string('A', 1000000);  // 1 million 'A' characters
+            string largeString = new string('A', 1_000_000);
 
             // Act
             string compressed = _compression.Compress(largeString);
