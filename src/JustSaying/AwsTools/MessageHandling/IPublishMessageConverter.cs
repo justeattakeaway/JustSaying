@@ -1,4 +1,3 @@
-using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 
@@ -11,6 +10,7 @@ public interface IPublishMessageConverter
     /// </summary>
     /// <param name="message">The original message to be converted.</param>
     /// <param name="publishMetadata">Metadata associated with the publish operation, including any custom message attributes.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A <see cref="PublishMessage"/> object containing the converted message body, attributes, and any additional publishing information.</returns>
     /// <remarks>
     /// This method handles the following operations:
@@ -23,5 +23,5 @@ public interface IPublishMessageConverter
     /// </ul>
     /// The exact behavior may vary based on the destination type and compression options.
     /// </remarks>
-    ValueTask<PublishMessage> ConvertForPublishAsync(Message message, PublishMetadata publishMetadata);
+    ValueTask<PublishMessage> ConvertForPublishAsync(Message message, PublishMetadata publishMetadata, CancellationToken cancellationToken = default);
 }

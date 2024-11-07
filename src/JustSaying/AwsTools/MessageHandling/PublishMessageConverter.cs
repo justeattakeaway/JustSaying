@@ -1,5 +1,4 @@
 using System.Text;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
@@ -34,7 +33,7 @@ internal sealed class PublishMessageConverter : IPublishMessageConverter
         _isRawMessage = isRawMessage;
     }
 
-    public ValueTask<PublishMessage> ConvertForPublishAsync(Message message, PublishMetadata publishMetadata)
+    public ValueTask<PublishMessage> ConvertForPublishAsync(Message message, PublishMetadata publishMetadata, CancellationToken cancellationToken = default)
     {
         var messageBody = _bodySerializer.Serialize(message);
 

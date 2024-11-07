@@ -21,7 +21,7 @@ internal sealed class ReceivedMessageConverter : IReceivedMessageConverter
         _isRawMessage = isRawMessage;
     }
 
-    public ValueTask<ReceivedMessage> ConvertForReceiveAsync(Amazon.SQS.Model.Message message)
+    public ValueTask<ReceivedMessage> ConvertForReceiveAsync(Amazon.SQS.Model.Message message, CancellationToken cancellationToken = default)
     {
         string body = message.Body;
         var attributes = GetMessageAttributes(message, body);

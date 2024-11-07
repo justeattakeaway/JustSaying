@@ -65,9 +65,9 @@ JustSaying.Messaging.Compression.MessageCompressionRegistry.GetCompression(strin
 JustSaying.Messaging.Compression.MessageCompressionRegistry.MessageCompressionRegistry(System.Collections.Generic.IList<JustSaying.Messaging.Compression.IMessageBodyCompression> compressions = null) -> void
 JustSaying.Messaging.IMessageBatchPublisher.PublishAsync(System.Collections.Generic.IEnumerable<JustSaying.Models.Message> messages, JustSaying.Messaging.PublishBatchMetadata metadata = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task
 JustSaying.Messaging.IPublishMessageConverter
-JustSaying.Messaging.IPublishMessageConverter.ConvertForPublishAsync(JustSaying.Models.Message message, JustSaying.Messaging.PublishMetadata publishMetadata) -> System.Threading.Tasks.ValueTask<JustSaying.Messaging.MessageSerialization.PublishMessage>
+JustSaying.Messaging.IPublishMessageConverter.ConvertForPublishAsync(JustSaying.Models.Message message, JustSaying.Messaging.PublishMetadata publishMetadata, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<JustSaying.Messaging.MessageSerialization.PublishMessage>
 JustSaying.Messaging.IReceivedMessageConverter
-JustSaying.Messaging.IReceivedMessageConverter.ConvertForReceiveAsync(Amazon.SQS.Model.Message message) -> System.Threading.Tasks.ValueTask<JustSaying.Messaging.MessageSerialization.ReceivedMessage>
+JustSaying.Messaging.IReceivedMessageConverter.ConvertForReceiveAsync(Amazon.SQS.Model.Message message, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<JustSaying.Messaging.MessageSerialization.ReceivedMessage>
 JustSaying.Messaging.MessageHandling.MessageAttributes.GetKeys() -> System.Collections.Generic.IReadOnlyCollection<string>
 JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory
 JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory.GetSerializer<T>() -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer
