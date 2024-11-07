@@ -82,7 +82,7 @@ internal sealed class ReceivedMessageConverter : IReceivedMessageConverter
         return new MessageAttributes(attributes);
     }
 
-    public static MessageAttributeValue ParseMessageAttribute(string dataType, string dataValue)
+    private static MessageAttributeValue ParseMessageAttribute(string dataType, string dataValue)
     {
         // Check for a prefix instead of an exact match as SQS supports custom-type labels, or example, "Binary.gif".
         // See https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-metadata.html#sqs-message-attributes.
