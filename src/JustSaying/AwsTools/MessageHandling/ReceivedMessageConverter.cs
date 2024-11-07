@@ -76,10 +76,24 @@ internal sealed class ReceivedMessageConverter : IReceivedMessageConverter
             var dataType = property.Value.GetProperty("Type").GetString();
             var dataValue = property.Value.GetProperty("Value").GetString();
 
-            attributes.Add(property.Name, MessageAttributeParser.Parse(dataType, dataValue));
+            attributes.Add(property.Name, ParseMessageAttribute(dataType, dataValue));
         }
 
         return new MessageAttributes(attributes);
+    }
+
+    public static MessageAttributeValue ParseMessageAttribute(string dataType, string dataValue)
+    {
+        // Check for a prefix instead of an exact match as SQS supports custom-type labels, or example, "Binary.gif".
+        // See https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-metadata.html#sqs-message-attributes.
+        bool isBinary = dataType?.StartsWith("Binary", StringComparison.Ordinal) is true;
+
+        return new()
+        {
+            DataType = dataType,
+            StringValue = !isBinary ? dataValue : null,
+            BinaryValue = isBinary ? Convert.FromBase64String(dataValue) : null
+        };
     }
 
     private static MessageAttributes GetRawMessageAttributes(Amazon.SQS.Model.Message message)
@@ -95,7 +109,7 @@ internal sealed class ReceivedMessageConverter : IReceivedMessageConverter
         {
             var dataType = messageMessageAttribute.Value.DataType;
             var dataValue = messageMessageAttribute.Value.StringValue;
-            rawAttributes.Add(messageMessageAttribute.Key, MessageAttributeParser.Parse(dataType, dataValue));
+            rawAttributes.Add(messageMessageAttribute.Key, ParseMessageAttribute(dataType, dataValue));
         }
 
         return new MessageAttributes(rawAttributes);
