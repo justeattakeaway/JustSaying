@@ -35,6 +35,7 @@ public class WhenUsingStructureMap(ITestOutputHelper outputHelper)
                     {
                         builder.Client((options) =>
                                     options.WithClientFactory(() => new LocalAwsClientFactory(InMemoryAwsBus))
+                                // TODO Add back LocalStack config for running in CI
                                 // options.WithBasicCredentials("accessKey", "secretKey")
                                 //     .WithServiceUri(TestEnvironment.SimulatorUrl)
                                 )

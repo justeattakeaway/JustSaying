@@ -7,5 +7,7 @@ public sealed class AwsFactAttribute : FactAttribute
 {
     public AwsFactAttribute()
     {
+        // TODO Add back logic to check if AWS credentials are available when running with LocalStack
+        // at the moment we are not using LocalStack so we can skip this check
     }
 }

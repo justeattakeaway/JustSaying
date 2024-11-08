@@ -32,6 +32,7 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
                 {
                     builder.Client((options) =>
                             options.WithClientFactory(() => new LocalAwsClientFactory(bus))
+                            // TODO Add back LocalStack config for running in CI
                             // options.WithBasicCredentials("accessKey", "secretKey")
                             //     .WithServiceUri(TestEnvironment.SimulatorUrl)
                             )
@@ -80,6 +81,7 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
                     builder
                         .Client((options) =>
                                 options.WithClientFactory(() => new LocalAwsClientFactory(bus))
+                            // TODO Add back LocalStack config for running in CI
                             // options.WithBasicCredentials("accessKey", "secretKey")
                             //     .WithServiceUri(TestEnvironment.SimulatorUrl)
                             )
@@ -181,6 +183,7 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
             builder.Client(
                 (options) =>
                     options.WithClientFactory(() => new LocalAwsClientFactory(bus))
+                    // TODO Add back LocalStack config for running in CI
                     // options.WithSessionCredentials("accessKeyId", "secretKeyId", "token")
                     // .WithServiceUri(TestEnvironment.SimulatorUrl)
                 );
