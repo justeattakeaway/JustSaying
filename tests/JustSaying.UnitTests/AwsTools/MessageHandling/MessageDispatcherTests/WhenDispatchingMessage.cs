@@ -39,7 +39,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
 
     private readonly IMessageBackoffStrategy _messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
     private readonly IMessageBodySerializer _messageBodySerializer = Substitute.For<IMessageBodySerializer>();
-    private readonly ReceivedMessageConverter _messageConverter;
+    private readonly InboundMessageConverter _messageConverter;
     private readonly FakeLogCollector _fakeLogCollector;
 
     public WhenDispatchingMessage(ITestOutputHelper outputHelper)
@@ -56,7 +56,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
         _loggerFactory = sp.GetService<ILoggerFactory>();
         _messageMonitor = new TrackingLoggingMonitor(_loggerFactory.CreateLogger<TrackingLoggingMonitor>());
         _middlewareMap = new MiddlewareMap();
-        _messageConverter = new ReceivedMessageConverter(_messageBodySerializer, new MessageCompressionRegistry(), true);
+        _messageConverter = new InboundMessageConverter(_messageBodySerializer, new MessageCompressionRegistry(), true);
     }
 
     public virtual async Task InitializeAsync()

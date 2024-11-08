@@ -30,7 +30,7 @@ public class WhenThereAreExceptionsInMessageProcessing(ITestOutputHelper testOut
         var sqsSource = new SqsSource
         {
             SqsQueue = _queue,
-            MessageConverter = new ReceivedMessageConverter(new ThrowingMessageBodySerializer(), new MessageCompressionRegistry(), false)
+            MessageConverter = new InboundMessageConverter(new ThrowingMessageBodySerializer(), new MessageCompressionRegistry(), false)
         };
 
         Queues.Add(sqsSource);

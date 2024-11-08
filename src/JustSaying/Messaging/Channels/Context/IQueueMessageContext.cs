@@ -24,5 +24,5 @@ public interface IQueueMessageContext : IMessageVisibilityUpdater, IMessageDelet
     /// </summary>
     string QueueName { get; }
 
-    IReceivedMessageConverter MessageConverter { get; }
+    IInboundMessageConverter MessageConverter { get; }
 }

@@ -1,8 +1,8 @@
 namespace JustSaying.Messaging.MessageSerialization;
 
-public sealed class PublishMessage
+public sealed class OutboundMessage
 {
-    public PublishMessage(string body, Dictionary<string, MessageAttributeValue> messageAttributes, string subject)
+    public OutboundMessage(string body, Dictionary<string, MessageAttributeValue> messageAttributes, string subject)
     {
         Body = body;
         MessageAttributes = messageAttributes;

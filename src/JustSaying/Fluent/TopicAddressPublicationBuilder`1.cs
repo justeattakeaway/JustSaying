@@ -101,7 +101,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
         var eventPublisher = new SnsMessagePublisher(
             _topicAddress.TopicArn,
             proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(arn.Region)),
-            new PublishMessageConverter(PublishDestinationType.Topic, serializer, compressionRegistry, compressionOptions, subject, true),
+            new OutboundMessageConverter(PublishDestinationType.Topic, serializer, compressionRegistry, compressionOptions, subject, true),
             loggerFactory,
             _exceptionHandler,
             _exceptionBatchHandler);

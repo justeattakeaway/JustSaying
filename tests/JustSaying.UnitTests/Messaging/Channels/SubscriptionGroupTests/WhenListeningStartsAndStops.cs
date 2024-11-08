@@ -39,7 +39,7 @@ public class WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper) : B
         var sqsSource = new SqsSource
         {
             SqsQueue = sqsQueue,
-            MessageConverter = new ReceivedMessageConverter(new SystemTextJsonMessageBodySerializer<SimpleMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions), new MessageCompressionRegistry(), false)
+            MessageConverter = new InboundMessageConverter(new SystemTextJsonMessageBodySerializer<SimpleMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions), new MessageCompressionRegistry(), false)
         };
 
         _queue = sqsSource.SqsQueue as FakeSqsQueue;

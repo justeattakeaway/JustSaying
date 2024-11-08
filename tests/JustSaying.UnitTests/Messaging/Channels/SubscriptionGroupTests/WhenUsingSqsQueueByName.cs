@@ -47,7 +47,7 @@ public sealed class WhenUsingSqsQueueByName(ITestOutputHelper testOutputHelper) 
         Queues.Add(new SqsSource
         {
             SqsQueue = queue,
-            MessageConverter = new ReceivedMessageConverter(new FakeBodyDeserializer(_message), new MessageCompressionRegistry(), false)
+            MessageConverter = new InboundMessageConverter(new FakeBodyDeserializer(_message), new MessageCompressionRegistry(), false)
         });
     }
 

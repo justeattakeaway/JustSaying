@@ -12,14 +12,14 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
 public class WhenPublishingInBatch : WhenPublishingTestBase
 {
-    private readonly PublishMessageConverter _publishMessageConverter = CreateConverter();
+    private readonly OutboundMessageConverter _outboundMessageConverter = CreateConverter();
     private const string Url = "https://blablabla/" + QueueName;
     private readonly List<SimpleMessage> _messages = new();
     private const string QueueName = "queuename";
 
     private protected override Task<SqsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _publishMessageConverter, Substitute.For<ILoggerFactory>());
+        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _outboundMessageConverter, Substitute.For<ILoggerFactory>());
         return Task.FromResult(sqs);
     }
 

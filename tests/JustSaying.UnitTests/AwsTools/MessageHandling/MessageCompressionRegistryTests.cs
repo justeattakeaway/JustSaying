@@ -18,7 +18,7 @@ public class MessageCompressionRegistryTests
         var message = "Test message";
         var metadata = new PublishMetadata();
         var compressionOptions = new PublishCompressionOptions();
-        var messageConverter = new PublishMessageConverter(PublishDestinationType.Topic, _bodySerializer, _compressionRegistry, compressionOptions, "TestSubject", false);
+        var messageConverter = new OutboundMessageConverter(PublishDestinationType.Topic, _bodySerializer, _compressionRegistry, compressionOptions, "TestSubject", false);
 
         // Act
         var result = messageConverter.CompressMessageBody(message, metadata);
@@ -39,7 +39,7 @@ public class MessageCompressionRegistryTests
             CompressionEncoding = ContentEncodings.GzipBase64,
             MessageLengthThreshold = 1000
         };
-        var messageConverter = new PublishMessageConverter(PublishDestinationType.Topic, _bodySerializer, _compressionRegistry, compressionOptions, "TestSubject", false);
+        var messageConverter = new OutboundMessageConverter(PublishDestinationType.Topic, _bodySerializer, _compressionRegistry, compressionOptions, "TestSubject", false);
 
         // Act
         var result = messageConverter.CompressMessageBody(message, metadata);
@@ -60,7 +60,7 @@ public class MessageCompressionRegistryTests
             CompressionEncoding = ContentEncodings.GzipBase64,
             MessageLengthThreshold = 500
         };
-        var messageConverter = new PublishMessageConverter(PublishDestinationType.Topic, _bodySerializer, _compressionRegistry, compressionOptions, "TestSubject", false);
+        var messageConverter = new OutboundMessageConverter(PublishDestinationType.Topic, _bodySerializer, _compressionRegistry, compressionOptions, "TestSubject", false);
 
         // Act
         var result = messageConverter.CompressMessageBody(message, metadata);
@@ -86,7 +86,7 @@ public class MessageCompressionRegistryTests
             CompressionEncoding = ContentEncodings.GzipBase64,
             MessageLengthThreshold = 500
         };
-        var messageConverter = new PublishMessageConverter(PublishDestinationType.Queue, _bodySerializer, _compressionRegistry, compressionOptions, "TestSubject", true);
+        var messageConverter = new OutboundMessageConverter(PublishDestinationType.Queue, _bodySerializer, _compressionRegistry, compressionOptions, "TestSubject", true);
 
         // Act
         var result = messageConverter.CompressMessageBody(message, metadata);
@@ -115,7 +115,7 @@ public class MessageCompressionRegistryTests
             CompressionEncoding = ContentEncodings.GzipBase64,
             MessageLengthThreshold = 50
         };
-        var messageConverter = new PublishMessageConverter(PublishDestinationType.Topic, _bodySerializer, _compressionRegistry, compressionOptions, "TestSubject", false);
+        var messageConverter = new OutboundMessageConverter(PublishDestinationType.Topic, _bodySerializer, _compressionRegistry, compressionOptions, "TestSubject", false);
 
         // Act
         var result = messageConverter.CompressMessageBody(message, metadata);

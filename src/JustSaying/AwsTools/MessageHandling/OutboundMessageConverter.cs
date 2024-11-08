@@ -8,7 +8,7 @@ using JustSaying.Models;
 
 namespace JustSaying.Messaging;
 
-internal sealed class PublishMessageConverter : IPublishMessageConverter
+internal sealed class OutboundMessageConverter : IOutboundMessageConverter
 {
     private readonly PublishDestinationType _destinationType;
     private readonly IMessageBodySerializer _bodySerializer;
@@ -17,7 +17,7 @@ internal sealed class PublishMessageConverter : IPublishMessageConverter
     private readonly string _subject;
     private readonly bool _isRawMessage;
 
-    public PublishMessageConverter(
+    public OutboundMessageConverter(
         PublishDestinationType destinationType,
         IMessageBodySerializer bodySerializer,
         MessageCompressionRegistry compressionRegistry,
@@ -33,7 +33,7 @@ internal sealed class PublishMessageConverter : IPublishMessageConverter
         _isRawMessage = isRawMessage;
     }
 
-    public ValueTask<PublishMessage> ConvertForPublishAsync(Message message, PublishMetadata publishMetadata, CancellationToken cancellationToken = default)
+    public ValueTask<OutboundMessage> ConvertToOutboundMessageAsync(Message message, PublishMetadata publishMetadata, CancellationToken cancellationToken = default)
     {
         var messageBody = _bodySerializer.Serialize(message);
 
@@ -56,7 +56,7 @@ internal sealed class PublishMessageConverter : IPublishMessageConverter
             }.ToJsonString();
         }
 
-        return new ValueTask<PublishMessage>(new PublishMessage(messageBody, attributeValues, _subject));
+        return new ValueTask<OutboundMessage>(new OutboundMessage(messageBody, attributeValues, _subject));
     }
 
     private static void AddMessageAttributes(Dictionary<string, MessageAttributeValue> requestMessageAttributes, PublishMetadata metadata)

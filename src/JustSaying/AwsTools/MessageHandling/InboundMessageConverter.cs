@@ -8,20 +8,20 @@ using JustSaying.Messaging.MessageSerialization;
 
 namespace JustSaying.Messaging;
 
-internal sealed class ReceivedMessageConverter : IReceivedMessageConverter
+internal sealed class InboundMessageConverter : IInboundMessageConverter
 {
     private readonly IMessageBodySerializer _bodySerializer;
     private readonly MessageCompressionRegistry _compressionRegistry;
     private readonly bool _isRawMessage;
 
-    public ReceivedMessageConverter(IMessageBodySerializer bodySerializer, MessageCompressionRegistry compressionRegistry, bool isRawMessage)
+    public InboundMessageConverter(IMessageBodySerializer bodySerializer, MessageCompressionRegistry compressionRegistry, bool isRawMessage)
     {
         _bodySerializer = bodySerializer;
         _compressionRegistry = compressionRegistry;
         _isRawMessage = isRawMessage;
     }
 
-    public ValueTask<ReceivedMessage> ConvertForReceiveAsync(Amazon.SQS.Model.Message message, CancellationToken cancellationToken = default)
+    public ValueTask<InboundMessage> ConvertToInboundMessageAsync(Amazon.SQS.Model.Message message, CancellationToken cancellationToken = default)
     {
         string body = message.Body;
         var attributes = GetMessageAttributes(message, body);
@@ -36,7 +36,7 @@ internal sealed class ReceivedMessageConverter : IReceivedMessageConverter
         }
         body = ApplyBodyDecompression(body, attributes);
         var result = _bodySerializer.Deserialize(body);
-        return new ValueTask<ReceivedMessage>(new ReceivedMessage(result, attributes));
+        return new ValueTask<InboundMessage>(new InboundMessage(result, attributes));
     }
 
     private string ApplyBodyDecompression(string body, MessageAttributes attributes)

@@ -155,7 +155,7 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
         return new SqsSource
         {
             SqsQueue = sqsQueue,
-            MessageConverter = new ReceivedMessageConverter(new FakeBodyDeserializer(
+            MessageConverter = new InboundMessageConverter(new FakeBodyDeserializer(
                     SetupMessage),
                 new MessageCompressionRegistry(), false)
         };

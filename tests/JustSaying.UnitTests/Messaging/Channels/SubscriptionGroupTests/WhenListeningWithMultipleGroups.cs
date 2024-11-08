@@ -36,7 +36,7 @@ public class WhenListeningWithMultipleGroups : BaseSubscriptionGroupTests
                 }.AsEnumerable()),
             "C7506B3F-81DA-4898-82A5-C0293523592A");
 
-        var messageConverter = new ReceivedMessageConverter(new SystemTextJsonMessageBodySerializer<SimpleMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions), new MessageCompressionRegistry(), false);
+        var messageConverter = new InboundMessageConverter(new SystemTextJsonMessageBodySerializer<SimpleMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions), new MessageCompressionRegistry(), false);
         _queueA = new SqsSource
         {
             SqsQueue = queueA,

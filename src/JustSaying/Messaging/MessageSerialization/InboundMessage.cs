@@ -6,7 +6,7 @@ namespace JustSaying.Messaging.MessageSerialization;
 /// <summary>
 /// Represents a deserialized message with attributes.
 /// </summary>
-public sealed class ReceivedMessage(Message message, MessageAttributes messageAttributes)
+public sealed class InboundMessage(Message message, MessageAttributes messageAttributes)
 {
     /// <summary>
     /// Gets the message that was extracted from a message body.

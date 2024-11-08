@@ -42,7 +42,7 @@ public class SubscriptionGroupCollectionTests
 
         var middleware1 = new InspectableMiddleware<TestJustSayingMessage>();
         var middleware2 = new InspectableMiddleware<TestJustSayingMessage>();
-        var messageConverter = new ReceivedMessageConverter(TestJustSayingMessage.Serializer, new MessageCompressionRegistry(), false);
+        var messageConverter = new InboundMessageConverter(TestJustSayingMessage.Serializer, new MessageCompressionRegistry(), false);
 
         bus.AddMessageMiddleware<TestJustSayingMessage>(queueName1, middleware1);
         bus.AddMessageMiddleware<TestJustSayingMessage>(queueName2, middleware2);
@@ -115,7 +115,7 @@ public class SubscriptionGroupCollectionTests
             QueueName = queueName,
         };
 
-        var messageConverter = new PublishMessageConverter(
+        var messageConverter = new OutboundMessageConverter(
             PublishDestinationType.Queue,
             new SystemTextJsonMessageBodySerializer<TestJustSayingMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions),
             new MessageCompressionRegistry(),
@@ -123,7 +123,7 @@ public class SubscriptionGroupCollectionTests
             "TestJustSayingMessage",
             false);
 
-        List<Message> messages = [new TestMessage { Body = (await messageConverter.ConvertForPublishAsync(message, null)).Body }];
+        List<Message> messages = [new TestMessage { Body = (await messageConverter.ConvertToOutboundMessageAsync(message, null)).Body }];
 
         var queue = new FakeSqsQueue(async ct =>
         {

@@ -81,7 +81,7 @@ public sealed class QueueAddressPublicationBuilder<T> : IPublicationBuilder<T>
         var eventPublisher = new SqsMessagePublisher(
             _queueAddress.QueueUrl,
             proxy.GetAwsClientFactory().GetSqsClient(RegionEndpoint.GetBySystemName(_queueAddress.RegionName)),
-            new PublishMessageConverter(PublishDestinationType.Queue, bus.MessageBodySerializerFactory.GetSerializer<T>(), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, _isRawMessage),
+            new OutboundMessageConverter(PublishDestinationType.Queue, bus.MessageBodySerializerFactory.GetSerializer<T>(), new MessageCompressionRegistry([new GzipMessageBodyCompression()]), compressionOptions, subject, _isRawMessage),
             loggerFactory)
         {
             MessageResponseLogger = config.MessageResponseLogger

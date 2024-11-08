@@ -11,7 +11,7 @@ namespace JustSaying.AwsTools.MessageHandling;
 
 internal sealed class SqsMessagePublisher(
     IAmazonSQS client,
-    PublishMessageConverter messageConverter,
+    OutboundMessageConverter messageConverter,
     ILoggerFactory loggerFactory) : IMessagePublisher, IMessageBatchPublisher
 {
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
@@ -23,7 +23,7 @@ internal sealed class SqsMessagePublisher(
     public SqsMessagePublisher(
         Uri queueUrl,
         IAmazonSQS client,
-        PublishMessageConverter messageConverter,
+        OutboundMessageConverter messageConverter,
         ILoggerFactory loggerFactory) : this(client, messageConverter, loggerFactory)
     {
         QueueUrl = queueUrl;
@@ -78,7 +78,7 @@ internal sealed class SqsMessagePublisher(
 
     private async Task<SendMessageRequest> BuildSendMessageRequestAsync(Message message, PublishMetadata metadata)
     {
-        var (messageBody, attributes, _) = await messageConverter.ConvertForPublishAsync(message, metadata);
+        var (messageBody, attributes, _) = await messageConverter.ConvertToOutboundMessageAsync(message, metadata);
 
         var request = new SendMessageRequest
         {
@@ -225,7 +225,7 @@ internal sealed class SqsMessagePublisher(
 
         foreach (var message in messages)
         {
-            var (messageBody, attributes, _) = await messageConverter.ConvertForPublishAsync(message, metadata);
+            var (messageBody, attributes, _) = await messageConverter.ConvertToOutboundMessageAsync(message, metadata);
 
             var entry = new SendMessageBatchRequestEntry
             {

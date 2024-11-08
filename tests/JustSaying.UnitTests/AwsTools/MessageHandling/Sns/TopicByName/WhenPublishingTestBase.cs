@@ -32,9 +32,9 @@ public abstract class WhenPublishingTestBase : IAsyncLifetime
     protected abstract void Given();
     private protected abstract Task<SnsMessagePublisher> CreateSystemUnderTestAsync();
 
-    internal static PublishMessageConverter CreateConverter(IMessageBodySerializer serializer = null, string subject = null)
+    internal static OutboundMessageConverter CreateConverter(IMessageBodySerializer serializer = null, string subject = null)
     {
-        return new PublishMessageConverter(PublishDestinationType.Topic,
+        return new OutboundMessageConverter(PublishDestinationType.Topic,
             serializer ?? new SystemTextJsonMessageBodySerializer<SimpleMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions),
             new MessageCompressionRegistry(),
             new PublishCompressionOptions(),

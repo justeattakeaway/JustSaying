@@ -12,7 +12,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
 public class WhenPublishingRawMessage : WhenPublishingTestBase
 {
-    private readonly PublishMessageConverter _publishMessageConverter = CreateConverter(isRawMessage: true);
+    private readonly OutboundMessageConverter _outboundMessageConverter = CreateConverter(isRawMessage: true);
     private const string Url = "https://blablabla/" + QueueName;
     private readonly SimpleMessage _message = new() { Content = "Hello" };
     private const string QueueName = "queuename";
@@ -20,7 +20,7 @@ public class WhenPublishingRawMessage : WhenPublishingTestBase
 
     private protected override Task<SqsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _publishMessageConverter, Substitute.For<ILoggerFactory>());
+        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _outboundMessageConverter, Substitute.For<ILoggerFactory>());
         return Task.FromResult(sqs);
     }
 

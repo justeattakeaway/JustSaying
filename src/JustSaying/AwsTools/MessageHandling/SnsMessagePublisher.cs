@@ -11,12 +11,12 @@ namespace JustSaying.AwsTools.MessageHandling;
 
 internal sealed class SnsMessagePublisher(
     IAmazonSimpleNotificationService client,
-    IPublishMessageConverter messageConverter,
+    IOutboundMessageConverter messageConverter,
     ILoggerFactory loggerFactory,
     Func<Exception, Message, bool> handleException,
     Func<Exception, IReadOnlyCollection<Message>, bool> handleBatchException) : IMessagePublisher, IMessageBatchPublisher, IInterrogable
 {
-    private readonly IPublishMessageConverter _messageConverter = messageConverter;
+    private readonly IOutboundMessageConverter _messageConverter = messageConverter;
     private readonly Func<Exception, Message, bool> _handleException = handleException;
     private readonly Func<Exception, IReadOnlyCollection<Message>, bool> _handleBatchException = handleBatchException;
     private readonly IAmazonSimpleNotificationService _client = client;
@@ -28,7 +28,7 @@ internal sealed class SnsMessagePublisher(
     public SnsMessagePublisher(
         string topicArn,
         IAmazonSimpleNotificationService client,
-        IPublishMessageConverter messageConverter,
+        IOutboundMessageConverter messageConverter,
         ILoggerFactory loggerFactory,
         Func<Exception, Message, bool> handleException,
         Func<Exception, IReadOnlyCollection<Message>, bool> handleBatchException)
@@ -86,7 +86,7 @@ internal sealed class SnsMessagePublisher(
 
     private async Task<PublishRequest> BuildPublishRequestAsync(Message message, PublishMetadata metadata)
     {
-        var (messageToSend, attributes, subject) = await _messageConverter.ConvertForPublishAsync(message, metadata);
+        var (messageToSend, attributes, subject) = await _messageConverter.ConvertToOutboundMessageAsync(message, metadata);
 
         var request = new PublishRequest
         {
@@ -231,7 +231,7 @@ internal sealed class SnsMessagePublisher(
 
         foreach (var message in messages)
         {
-            var (messageToSend, attributes, subject) = await _messageConverter.ConvertForPublishAsync(message, metadata);
+            var (messageToSend, attributes, subject) = await _messageConverter.ConvertToOutboundMessageAsync(message, metadata);
 
             PublishBatchRequestEntry request = new()
             {

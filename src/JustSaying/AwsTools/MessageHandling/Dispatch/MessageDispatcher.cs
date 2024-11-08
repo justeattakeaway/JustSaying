@@ -75,7 +75,7 @@ internal sealed class MessageDispatcher : IMessageDispatcher
         {
             _logger.LogDebug("Attempting to deserialize message.");
 
-            var (message, attributes) = await messageContext.MessageConverter.ConvertForReceiveAsync(messageContext.Message);
+            var (message, attributes) = await messageContext.MessageConverter.ConvertToInboundMessageAsync(messageContext.Message, cancellationToken);
 
             return (true, message, attributes);
         }

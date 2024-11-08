@@ -31,9 +31,9 @@ public abstract class WhenPublishingTestBase : IAsyncLifetime
     protected abstract void Given();
     private protected abstract Task<SqsMessagePublisher> CreateSystemUnderTestAsync();
 
-    internal static PublishMessageConverter CreateConverter(bool isRawMessage = false)
+    internal static OutboundMessageConverter CreateConverter(bool isRawMessage = false)
     {
-        return new PublishMessageConverter(PublishDestinationType.Queue,
+        return new OutboundMessageConverter(PublishDestinationType.Queue,
             SimpleMessage.Serializer,
             new MessageCompressionRegistry(),
             new PublishCompressionOptions(),

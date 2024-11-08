@@ -50,7 +50,7 @@ public class ChannelPolicyTests
                 "test", new SubscriptionGroupConfigBuilder("test").AddQueue(new SqsSource
                 {
                     SqsQueue = sqsQueue,
-                    MessageConverter = new ReceivedMessageConverter(SimpleMessage.Serializer, new MessageCompressionRegistry(), false)
+                    MessageConverter = new InboundMessageConverter(SimpleMessage.Serializer, new MessageCompressionRegistry(), false)
                 })
             }
         };

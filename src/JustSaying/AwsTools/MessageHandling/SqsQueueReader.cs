@@ -7,9 +7,9 @@ namespace JustSaying.AwsTools.MessageHandling;
 internal class SqsQueueReader
 {
     private readonly ISqsQueue _sqsQueue;
-    private readonly IReceivedMessageConverter _messageConverter;
+    private readonly IInboundMessageConverter _messageConverter;
 
-    internal SqsQueueReader(ISqsQueue sqsQueue, IReceivedMessageConverter messageConverter)
+    internal SqsQueueReader(ISqsQueue sqsQueue, IInboundMessageConverter messageConverter)
     {
         _sqsQueue = sqsQueue;
         _messageConverter = messageConverter;

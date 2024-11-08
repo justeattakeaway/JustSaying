@@ -210,7 +210,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         var sqsSource = new SqsSource
         {
             SqsQueue = queueWithStartup.Queue,
-            MessageConverter = new ReceivedMessageConverter(serializer, compressionRegistry, subscriptionConfig.RawMessageDelivery)
+            MessageConverter = new InboundMessageConverter(serializer, compressionRegistry, subscriptionConfig.RawMessageDelivery)
         };
         bus.AddQueue(subscriptionConfig.SubscriptionGroupName, sqsSource);
 

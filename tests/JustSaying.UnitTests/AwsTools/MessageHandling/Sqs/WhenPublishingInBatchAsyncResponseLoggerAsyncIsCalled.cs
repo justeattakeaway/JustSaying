@@ -17,7 +17,7 @@ public class WhenPublishingInBatchAsyncResponseLoggerAsyncIsCalled : WhenPublish
 {
     private readonly List<SimpleMessage> _testMessages = new();
     private readonly List<string> _messageIds = new();
-    private readonly PublishMessageConverter _publishMessageConverter = CreateConverter();
+    private readonly OutboundMessageConverter _outboundMessageConverter = CreateConverter();
     private const string Url = "https://blablabla/" + QueueName;
     private const string QueueName = "queuename";
 
@@ -28,7 +28,7 @@ public class WhenPublishingInBatchAsyncResponseLoggerAsyncIsCalled : WhenPublish
 
     private protected override Task<SqsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _publishMessageConverter, Substitute.For<ILoggerFactory>())
+        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _outboundMessageConverter, Substitute.For<ILoggerFactory>())
         {
             MessageBatchResponseLogger = (r, m) =>
             {

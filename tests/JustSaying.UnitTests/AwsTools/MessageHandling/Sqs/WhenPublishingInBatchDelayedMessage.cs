@@ -11,7 +11,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
 public class WhenPublishingInBatchDelayedMessage : WhenPublishingTestBase
 {
-    private readonly PublishMessageConverter _publishMessageConverter = CreateConverter();
+    private readonly OutboundMessageConverter _outboundMessageConverter = CreateConverter();
     private const string Url = "https://testurl.com/" + QueueName;
 
     private readonly List<SimpleMessage> _messages = new();
@@ -29,7 +29,7 @@ public class WhenPublishingInBatchDelayedMessage : WhenPublishingTestBase
             _messages.Add(new SimpleMessage{ Content = $"Message {i}" });
         }
 
-        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _publishMessageConverter, Substitute.For<ILoggerFactory>());
+        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _outboundMessageConverter, Substitute.For<ILoggerFactory>());
         return Task.FromResult(sqs);
     }
 
