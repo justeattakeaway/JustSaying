@@ -3,7 +3,7 @@
     <NoWarn>$(NoWarn);CA1707;CA2007</NoWarn>
     <RootNamespace>JustSaying</RootNamespace>
     <SignAssembly>false</SignAssembly>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
