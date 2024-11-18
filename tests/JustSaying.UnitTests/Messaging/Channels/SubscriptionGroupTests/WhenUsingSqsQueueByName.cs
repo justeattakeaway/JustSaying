@@ -1,7 +1,12 @@
 using Amazon;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 
 #pragma warning disable 618
 
@@ -13,6 +18,12 @@ public sealed class WhenUsingSqsQueueByName(ITestOutputHelper testOutputHelper) 
     private FakeAmazonSqs _client;
     readonly string MessageTypeString = nameof(SimpleMessage);
     const string MessageBody = "object";
+
+    private readonly SimpleMessage _message = new()
+    {
+        RaisingComponent = "Component",
+        Id = Guid.NewGuid()
+    };
 
     protected override void Given()
     {
@@ -33,13 +44,17 @@ public sealed class WhenUsingSqsQueueByName(ITestOutputHelper testOutputHelper) 
 
         _queue = queue;
 
-        Queues.Add(_queue);
+        Queues.Add(new SqsSource
+        {
+            SqsQueue = queue,
+            MessageConverter = new InboundMessageConverter(new FakeBodyDeserializer(_message), new MessageCompressionRegistry(), false)
+        });
     }
 
     [Fact]
     public void HandlerReceivesMessage()
     {
-        Handler.ReceivedMessages.Contains(SerializationRegister.DefaultDeserializedMessage())
+        Handler.ReceivedMessages.Contains(_message)
             .ShouldBeTrue();
     }
 
@@ -49,26 +64,25 @@ public sealed class WhenUsingSqsQueueByName(ITestOutputHelper testOutputHelper) 
     {
         return new ReceiveMessageResponse
         {
-            Messages = new List<Message>
-            {
-                new()
+            Messages =
+            [
+                new Message
                 {
                     MessageId = messageId.ToString(),
                     Body = SqsMessageBody(messageType)
                 },
-                new()
+                new Message
                 {
                     MessageId = messageId.ToString(),
-                    Body = "{\"Subject\":\"SOME_UNKNOWN_MESSAGE\"," +
-                           "\"Message\":\"SOME_RANDOM_MESSAGE\"}"
+                    Body = """{"Subject":"SOME_UNKNOWN_MESSAGE","Message":"SOME_RANDOM_MESSAGE"}"""
                 }
-            }
+            ]
         };
     }
 
     private static string SqsMessageBody(string messageType)
     {
-        return "{\"Subject\":\"" + messageType + "\"," + "\"Message\":\"" + MessageBody + "\"}";
+        return $$"""{"Subject":"{{messageType}}","Message":"{{MessageBody}}"}""";
     }
 
     public void Dispose()

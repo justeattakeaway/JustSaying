@@ -11,10 +11,10 @@
     <ProjectReference Include="..\JustSaying.TestingFramework\JustSaying.TestingFramework.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.SimpleNotificationService" VersionOverride="3.7.400.25" />
-    <PackageReference Include="AWSSDK.SQS" VersionOverride="3.7.400.25" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" />
+    <PackageReference Include="AWSSDK.SQS" />
     <PackageReference Include="GitHubActionsTestLogger" />
-    <PackageReference Include="MELT" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="Polly.Core" />

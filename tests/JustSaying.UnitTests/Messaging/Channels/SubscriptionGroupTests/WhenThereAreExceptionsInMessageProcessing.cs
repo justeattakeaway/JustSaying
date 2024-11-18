@@ -1,5 +1,9 @@
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
@@ -22,23 +26,30 @@ public class WhenThereAreExceptionsInMessageProcessing(ITestOutputHelper testOut
             }
         }
 
-        _queue = CreateSuccessfulTestQueue("TestQueue", ct => Task.FromResult(GetMessages(ct)));
+        _queue = new FakeSqsQueue(ct => Task.FromResult(GetMessages(ct)));
+        var sqsSource = new SqsSource
+        {
+            SqsQueue = _queue,
+            MessageConverter = new InboundMessageConverter(new ThrowingMessageBodySerializer(), new MessageCompressionRegistry(), false)
+        };
 
-        Queues.Add(_queue);
-
-        SerializationRegister.DefaultDeserializedMessage = () =>
-            throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
+        Queues.Add(sqsSource);
     }
 
-    protected override bool Until()
+    protected override Task<bool> UntilAsync()
     {
-        return _callCount > 1;
+        return Task.FromResult(_callCount > 1);
     }
 
     [Fact]
-    public async Task TheListenerDoesNotDie()
+    public void TheListenerDoesNotDie()
     {
-        await Patiently.AssertThatAsync(OutputHelper,
-            () => _callCount.ShouldBeGreaterThan(1));
+        _callCount.ShouldBeGreaterThan(1);
+    }
+
+    private sealed class ThrowingMessageBodySerializer : IMessageBodySerializer
+    {
+        public string Serialize(Models.Message message) => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
+        public Models.Message Deserialize(string message) => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
     }
 }

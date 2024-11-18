@@ -171,6 +171,8 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
 
         var writeConfiguration = new SnsWriteConfiguration();
         ConfigureWrites?.Invoke(writeConfiguration);
+        writeConfiguration.CompressionOptions ??= bus.Config.DefaultCompressionOptions;
+        CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, writeConfiguration.CompressionOptions);
 
         var client = proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region));
 
@@ -189,7 +191,5 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
         bus.AddStartupTask(config.StartupTask);
         bus.AddMessagePublisher<T>(config.Publisher);
         bus.AddMessageBatchPublisher<T>(config.BatchPublisher);
-
-        bus.SerializationRegister.AddSerializer<T>();
     }
 }

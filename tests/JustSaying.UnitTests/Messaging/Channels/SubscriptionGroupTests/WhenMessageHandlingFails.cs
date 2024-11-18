@@ -1,3 +1,6 @@
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.TestingFramework;
+
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
 public class WhenMessageHandlingFails(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
@@ -6,9 +9,10 @@ public class WhenMessageHandlingFails(ITestOutputHelper testOutputHelper) : Base
 
     protected override void Given()
     {
-        _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage());
+        var sqsSource = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage());
+        _queue = sqsSource.SqsQueue as FakeSqsQueue;
 
-        Queues.Add(_queue);
+        Queues.Add(sqsSource);
         Handler.ShouldSucceed = false;
     }
 

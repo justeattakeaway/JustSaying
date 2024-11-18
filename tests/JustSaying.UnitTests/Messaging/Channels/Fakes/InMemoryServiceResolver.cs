@@ -13,7 +13,7 @@ public class InMemoryServiceResolver : IServiceResolver, IHandlerResolver
     private readonly IServiceProvider _provider;
 
     private static readonly Action<IServiceCollection, ITestOutputHelper, IMessageMonitor> Configure = (sc, outputHelper, monitor) =>
-        sc.AddLogging(l => l.AddXUnit(outputHelper))
+        sc.AddLogging(l => l.AddXUnit(outputHelper).SetMinimumLevel(LogLevel.Information))
             .AddSingleton(monitor)
             .AddSingleton<LoggingMiddleware>()
             .AddSingleton<SqsPostProcessorMiddleware>()

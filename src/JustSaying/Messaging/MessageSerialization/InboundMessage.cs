@@ -6,7 +6,7 @@ namespace JustSaying.Messaging.MessageSerialization;
 /// <summary>
 /// Represents a deserialized message with attributes.
 /// </summary>
-public class MessageWithAttributes(Message message, MessageAttributes messageAttributes)
+public sealed class InboundMessage(Message message, MessageAttributes messageAttributes)
 {
     /// <summary>
     /// Gets the message that was extracted from a message body.
@@ -17,4 +17,10 @@ public class MessageWithAttributes(Message message, MessageAttributes messageAtt
     /// Gets the attributes that were extracted from a message body.
     /// </summary>
     public MessageAttributes MessageAttributes { get; } = messageAttributes;
+
+    public void Deconstruct(out Message message, out MessageAttributes attributes)
+    {
+        message = Message;
+        attributes = MessageAttributes;
+    }
 }

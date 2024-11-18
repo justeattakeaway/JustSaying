@@ -38,13 +38,7 @@ public class WhenUsingDefaultServiceResolver
     [Fact]
     public void ShouldResolveIMessageSerializationFactoryToNewtonsoftSerializationFactory()
     {
-        _sut.ResolveService<IMessageSerializationFactory>().ShouldBeOfType<NewtonsoftSerializationFactory>();
-    }
-
-    [Fact]
-    public void ShouldResolveIMessageSerializationRegisterToMessageSerializationRegister()
-    {
-        _sut.ResolveService<IMessageSerializationRegister>().ShouldBeOfType<MessageSerializationRegister>();
+        _sut.ResolveService<IMessageBodySerializationFactory>().ShouldBeOfType<NewtonsoftSerializationFactory>();
     }
 
     [Fact]

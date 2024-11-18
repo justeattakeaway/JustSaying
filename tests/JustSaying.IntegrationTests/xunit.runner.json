@@ -1,6 +1,4 @@
 {
   "methodDisplay": "classAndMethod",
-  "methodDisplayOptions": "replaceUnderscoreWithSpace",
-  "parallelizeTestCollections": false,
-  "maxParallelThreads": 1 
+  "methodDisplayOptions": "replaceUnderscoreWithSpace"
 }
