@@ -76,7 +76,6 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
-          file: ./artifacts/coverage/coverage.cobertura.xml
           flags: ${{ matrix.os-name }}
 
       - name: Generate SBOM
