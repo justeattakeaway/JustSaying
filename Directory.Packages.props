@@ -5,8 +5,8 @@
     <PackageVersion Include="AWSSDK.SQS" Version="3.7.400.25" />
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.1" />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" Condition=" '$(TargetFramework)' == 'net461' " />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="1.1.0" Condition=" '$(TargetFramework)' == 'net461' " />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.0.0" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" Condition=" '$(TargetFramework)' == 'net8.0' " />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.1" />
