@@ -31,16 +31,20 @@ public static class Patiently
         ITestOutputHelper output,
         Func<bool> func,
         [System.Runtime.CompilerServices.CallerMemberName]
-        string memberName = "")
-        => await AssertThatAsyncInner(output, func, 5.Seconds(), memberName).ConfigureAwait(false);
+        string memberName = "",
+        [System.Runtime.CompilerServices.CallerArgumentExpression("func")]
+        string assertionExpression = "")
+        => await AssertThatAsyncInner(output, func, 5.Seconds(), memberName, assertionExpression).ConfigureAwait(false);
 
     public static async Task AssertThatAsync(
         ITestOutputHelper output,
         Func<bool> func,
         TimeSpan timeout,
         [System.Runtime.CompilerServices.CallerMemberName]
-        string memberName = "")
-        => await AssertThatAsyncInner(output, func, timeout, memberName).ConfigureAwait(false);
+        string memberName = "",
+        [System.Runtime.CompilerServices.CallerArgumentExpression("func")]
+        string assertionExpression = "")
+        => await AssertThatAsyncInner(output, func, timeout, memberName, assertionExpression).ConfigureAwait(false);
 
     public static async Task AssertThatAsync(ITestOutputHelper output, Func<Task<bool>> func) =>
         await AssertThatAsync(output, func, 5.Seconds()).ConfigureAwait(false);
@@ -80,7 +84,8 @@ public static class Patiently
         ITestOutputHelper output,
         Func<bool> func,
         TimeSpan timeout,
-        string description)
+        string description,
+        string assertionExpression)
     {
         var watch = new Stopwatch();
         watch.Start();
@@ -106,7 +111,7 @@ public static class Patiently
                 $"Waiting for {watch.Elapsed.TotalMilliseconds} ms - Still waiting for {description}.");
         } while (watch.Elapsed < timeout);
 
-        func.Invoke().ShouldBeTrue();
+        func.Invoke().ShouldBeTrue($"Failed to assert that {assertionExpression} within {timeout}");
     }
 }
 
