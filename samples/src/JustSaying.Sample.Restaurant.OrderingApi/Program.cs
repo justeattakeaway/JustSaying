@@ -150,5 +150,5 @@ finally
     Log.CloseAndFlush();
 }
 
-static string TenantTopicAddressCustomizer(Message message, string arnTemplate)
+static string TenantTopicAddressCustomizer(string arnTemplate, Message message)
     => arnTemplate.Replace("{tenant}", message.Tenant);

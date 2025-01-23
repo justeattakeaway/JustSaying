@@ -16,7 +16,7 @@ internal sealed class DynamicAddressPublicationConfiguration(
 
     public static DynamicAddressPublicationConfiguration Build<T>(
         string topicArnTemplate,
-        Func<Message, string, string> topicNameCustomizer,
+        Func<string, Message, string> topicNameCustomizer,
         Func<string, StaticAddressPublicationConfiguration> staticConfigBuilder,
         ILoggerFactory loggerFactory)
     {

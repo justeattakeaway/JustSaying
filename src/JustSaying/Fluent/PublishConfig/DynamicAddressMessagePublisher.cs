@@ -8,7 +8,7 @@ namespace JustSaying.Fluent;
 
 internal sealed class DynamicAddressMessagePublisher(
     string topicArnTemplate,
-    Func<Message, string, string> topicAddressCustomizer,
+    Func<string, Message, string> topicAddressCustomizer,
     Func<string, StaticAddressPublicationConfiguration> staticConfigBuilder,
     ILoggerFactory loggerFactory) : IMessagePublisher, IMessageBatchPublisher
 {
@@ -17,7 +17,7 @@ internal sealed class DynamicAddressMessagePublisher(
     private readonly ConcurrentDictionary<string, IMessageBatchPublisher> _batchPublisherCache = new();
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _topicCreationLocks = new();
     private readonly ILogger<DynamicMessagePublisher> _logger = loggerFactory.CreateLogger<DynamicMessagePublisher>();
-    private readonly Func<Message, string, string> _topicAddressCustomizer = topicAddressCustomizer;
+    private readonly Func<string, Message, string> _topicAddressCustomizer = topicAddressCustomizer;
     private readonly Func<string, StaticAddressPublicationConfiguration> _staticConfigBuilder = staticConfigBuilder;
 
     /// <inheritdoc/>
@@ -39,7 +39,7 @@ internal sealed class DynamicAddressMessagePublisher(
     /// <inheritdoc/>
     public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
     {
-        string topicArn = _topicAddressCustomizer(message, _topicArnTemplate);
+        string topicArn = _topicAddressCustomizer(_topicArnTemplate, message);
         if (_publisherCache.TryGetValue(topicArn, out var publisher))
         {
             await publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
@@ -76,7 +76,7 @@ internal sealed class DynamicAddressMessagePublisher(
         var publisherTask = new List<Task>();
         foreach (var groupByType in messages.GroupBy(x => x.GetType()))
         {
-            foreach (var groupByTopic in groupByType.GroupBy(x => _topicAddressCustomizer(x, _topicArnTemplate)))
+            foreach (var groupByTopic in groupByType.GroupBy(x => _topicAddressCustomizer(_topicArnTemplate, x)))
             {
                 string topicArn = groupByTopic.Key;
                 var batch = groupByTopic.ToList();

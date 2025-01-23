@@ -23,7 +23,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     /// Function that will produce a topic address dynamically from a Message and the original topic
     /// address at publish time.
     /// </summary>
-    public Func<Message, string, string> TopicAddressCustomizer { get; set; }
+    public Func<string, Message, string> TopicAddressCustomizer { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TopicAddressPublicationBuilder{T}"/> class.
@@ -78,7 +78,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     /// <returns>
     /// The current <see cref="TopicAddressPublicationBuilder{T}"/>.
     /// </returns>
-    public TopicAddressPublicationBuilder<T> WithTopicAddress(Func<Message, string, string> topicAddressCustomizer)
+    public TopicAddressPublicationBuilder<T> WithTopicAddress(Func<string, Message, string> topicAddressCustomizer)
     {
         TopicAddressCustomizer = topicAddressCustomizer;
         return this;
