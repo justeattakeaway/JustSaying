@@ -7,7 +7,7 @@
 
     <ItemGroup>
       <PackageReference Include="CommandLineParser" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" VersionOverride="9.0.1" />
       <PackageReference Include="morelinq" />
       <PackageReference Include="Serilog" />
       <PackageReference Include="Serilog.Extensions.Logging" />
