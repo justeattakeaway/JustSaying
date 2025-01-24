@@ -1,6 +1,3 @@
-using Amazon;
-using JustSaying.AwsTools;
-using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;

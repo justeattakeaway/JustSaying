@@ -67,9 +67,9 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     }
 
     /// <summary>
-    /// Configures the address of the topic by calling this func at publish time to determine the name of the topic.
+    /// Configures the address of the topic by calling this func at publish time to determine the topic ARN.
     /// </summary>
-    /// <param name="topicAddressCustomizer">Function that will be called at publish time to determine the name of the target topic for this <see cref="T"/>.
+    /// <param name="topicAddressCustomizer">Function that will be called at publish time to determine the ARN of the target topic for this <see cref="T"/>.
     /// <para>
     /// For example: <c>WithTopicAddress(msg => $"arn:aws:sns:eu-west-1:00000000:{msg.Tenant}-mymessage")</c> with <c>msg.Tenant</c> of <c>["uk", "au"]</c> would
     /// publish to topics <c>"uk-mymessage"</c> and <c>"au-mymessage"</c> when a message is published with those tenants.
