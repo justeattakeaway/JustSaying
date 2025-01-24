@@ -64,10 +64,6 @@ try
             //  - a SNS topic of name `orderplacedevent`
             x.WithTopic<OrderPlacedEvent>();
             x.WithTopic<OrderOnItsWayEvent>();
-            x.WithTopicArn<OrderPlacedEvent>("arn:aws:sns:eu-west-1:123456789012:{tenant}-orderplacedevent", options =>
-            {
-                options.WithTopicAddress(TenantTopicAddressCustomizer);
-            });
         });
     });
 
@@ -149,6 +145,3 @@ finally
 {
     Log.CloseAndFlush();
 }
-
-static string TenantTopicAddressCustomizer(string arnTemplate, Message message)
-    => arnTemplate.Replace("{tenant}", message.Tenant);
