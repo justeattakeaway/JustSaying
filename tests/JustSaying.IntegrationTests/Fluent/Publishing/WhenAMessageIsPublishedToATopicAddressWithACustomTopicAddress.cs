@@ -55,11 +55,12 @@ public class WhenAMessageIsPublishedToATopicAddressWithACustomTopicAddress(ITest
                 await listener.StartAsync(cancellationToken);
                 await publisher.StartAsync(cancellationToken);
 
-                var listenerJson = JsonConvert.SerializeObject(listener.Interrogate(), Formatting.Indented);
-                var publisherJson = JsonConvert.SerializeObject(publisher.Interrogate(), Formatting.Indented);
-
                 await publisher.PublishAsync(ukMessage, cancellationToken);
                 await publisher.PublishAsync(usMessage, cancellationToken);
+
+                // Interrogation has to come after publishing, as per-arn publishers are created on demand
+                var listenerJson = JsonConvert.SerializeObject(listener.Interrogate(), Formatting.Indented);
+                var publisherJson = JsonConvert.SerializeObject(publisher.Interrogate(), Formatting.Indented);
 
                 json = string.Join($"{Environment.NewLine}{Environment.NewLine}",
                         listenerJson,
