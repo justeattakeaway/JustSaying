@@ -61,6 +61,7 @@ internal sealed class DynamicAddressMessagePublisher(
         var config = _staticConfigBuilder(topicArn);
 
         _ = _publisherCache.TryAdd(topicArn, config.Publisher);
+        lockObj.Release(1);
 
         _logger.LogDebug("Publishing message on newly configured topic {TopicArn}", topicArn);
         await config.Publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);

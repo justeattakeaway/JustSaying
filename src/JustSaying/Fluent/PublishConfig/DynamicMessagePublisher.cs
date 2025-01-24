@@ -61,6 +61,7 @@ internal sealed class DynamicMessagePublisher(
         await config.StartupTask(cancellationToken).ConfigureAwait(false);
 
         _ = _publisherCache.TryAdd(topicName, config.Publisher);
+        lockObj.Release(1);
 
         _logger.LogDebug("Publishing message on newly created topic {TopicName}", topicName);
         await config.Publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
