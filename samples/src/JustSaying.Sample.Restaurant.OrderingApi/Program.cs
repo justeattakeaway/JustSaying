@@ -1,5 +1,4 @@
 using JustSaying.Messaging;
-using JustSaying.Models;
 using JustSaying.Sample.Restaurant.Models;
 using JustSaying.Sample.Restaurant.OrderingApi;
 using JustSaying.Sample.Restaurant.OrderingApi.Handlers;

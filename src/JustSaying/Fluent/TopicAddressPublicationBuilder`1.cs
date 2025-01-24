@@ -67,7 +67,7 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     }
 
     /// <summary>
-    /// Configures the address of the topic by calling this func at publish time to determine the topic ARN.
+    /// Configures the address of the topic by calling this function at publish time to determine the topic ARN.
     /// </summary>
     /// <param name="topicAddressCustomizer">Function that will be called at publish time to determine the ARN of the target topic for this <see cref="T"/>.
     /// <para>
