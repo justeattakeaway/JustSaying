@@ -38,7 +38,8 @@ internal sealed class DynamicMessagePublisher(
     public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
     {
         string topicName = _topicNameCustomizer(message);
-        if (_publisherCache.TryGetValue(topicName, out var publisher))
+        IMessagePublisher publisher;
+        if (_publisherCache.TryGetValue(topicName, out publisher))
         {
             await publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
             return;
@@ -47,24 +48,25 @@ internal sealed class DynamicMessagePublisher(
         var lockObj = _topicCreationLocks.GetOrAdd(topicName, _ => new SemaphoreSlim(1, 1));
 
         _logger.LogDebug("Publisher for topic {TopicName} not found, waiting on creation lock", topicName);
-        await lockObj.WaitAsync(cancellationToken).ConfigureAwait(false);
-        if (_publisherCache.TryGetValue(topicName, out var thePublisher))
+        using(await lockObj.WaitScopedAsync(cancellationToken).ConfigureAwait(false))
         {
-            _logger.LogDebug("Lock re-entrancy detected, returning existing publisher");
-            await thePublisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
-            return;
+            if (_publisherCache.TryGetValue(topicName, out publisher))
+            {
+                _logger.LogDebug("Lock re-entrancy detected, returning existing publisher");
+                await publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
+                return;
+            }
+
+            _logger.LogDebug("Lock acquired to initialize topic {TopicName}", topicName);
+            var config = _staticConfigBuilder(topicName);
+            _logger.LogDebug("Executing startup task for topic {TopicName}", topicName);
+            await config.StartupTask(cancellationToken).ConfigureAwait(false);
+
+            _ = _publisherCache.TryAdd(topicName, config.Publisher);
+            publisher = config.Publisher;
         }
-
-        _logger.LogDebug("Lock acquired to initialize topic {TopicName}", topicName);
-        var config = _staticConfigBuilder(topicName);
-        _logger.LogDebug("Executing startup task for topic {TopicName}", topicName);
-        await config.StartupTask(cancellationToken).ConfigureAwait(false);
-
-        _ = _publisherCache.TryAdd(topicName, config.Publisher);
-        lockObj.Release(1);
-
         _logger.LogDebug("Publishing message on newly created topic {TopicName}", topicName);
-        await config.Publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
+        await publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
@@ -81,8 +83,8 @@ internal sealed class DynamicMessagePublisher(
             {
                 string topicName = groupByTopic.Key;
                 var batch = groupByTopic.ToList();
-
-                if (_batchPublisherCache.TryGetValue(topicName, out var publisher))
+                IMessageBatchPublisher publisher;
+                if (_batchPublisherCache.TryGetValue(topicName, out publisher))
                 {
                     publisherTask.Add(publisher.PublishAsync(batch, metadata, cancellationToken));
                     continue;
@@ -90,24 +92,25 @@ internal sealed class DynamicMessagePublisher(
 
                 var lockObj = _topicCreationLocks.GetOrAdd(topicName, _ => new SemaphoreSlim(1, 1));
                 _logger.LogDebug("Publisher for topic {TopicName} not found, waiting on creation lock", topicName);
-                await lockObj.WaitAsync(cancellationToken).ConfigureAwait(false);
-                if (_batchPublisherCache.TryGetValue(topicName, out publisher))
+                using (await lockObj.WaitScopedAsync(cancellationToken).ConfigureAwait(false))
                 {
-                    _logger.LogDebug("Lock re-entrancy detected, returning existing publisher");
-                    publisherTask.Add(publisher.PublishAsync(batch, metadata, cancellationToken));
-                    continue;
+                    if (_batchPublisherCache.TryGetValue(topicName, out publisher))
+                    {
+                        _logger.LogDebug("Lock re-entrancy detected, returning existing publisher");
+                        publisherTask.Add(publisher.PublishAsync(batch, metadata, cancellationToken));
+                        continue;
+                    }
+
+                    _logger.LogDebug("Lock acquired to initialize topic {TopicName}", topicName);
+                    var config = _staticConfigBuilder(topicName);
+                    _logger.LogDebug("Executing startup task for topic {TopicName}", topicName);
+                    await config.StartupTask(cancellationToken).ConfigureAwait(false);
+
+                    publisher = _batchPublisherCache.GetOrAdd(topicName, config.BatchPublisher);
                 }
 
-                _logger.LogDebug("Lock acquired to initialize topic {TopicName}", topicName);
-                var config = _staticConfigBuilder(topicName);
-                _logger.LogDebug("Executing startup task for topic {TopicName}", topicName);
-                await config.StartupTask(cancellationToken).ConfigureAwait(false);
-
-                var cachedPublisher = _batchPublisherCache.GetOrAdd(topicName, config.BatchPublisher);
-                lockObj.Release(1);
-
                 _logger.LogDebug("Publishing message on newly created topic {TopicName}", topicName);
-                publisherTask.Add(cachedPublisher.PublishAsync(batch, metadata, cancellationToken));
+                publisherTask.Add(publisher.PublishAsync(batch, metadata, cancellationToken));
             }
         }
 

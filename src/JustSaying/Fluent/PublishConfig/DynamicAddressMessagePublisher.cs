@@ -40,7 +40,8 @@ internal sealed class DynamicAddressMessagePublisher(
     public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
     {
         string topicArn = _topicAddressCustomizer(_topicArnTemplate, message);
-        if (_publisherCache.TryGetValue(topicArn, out var publisher))
+        IMessagePublisher publisher;
+        if (_publisherCache.TryGetValue(topicArn, out publisher))
         {
             await publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
             return;
@@ -49,22 +50,24 @@ internal sealed class DynamicAddressMessagePublisher(
         var lockObj = _topicCreationLocks.GetOrAdd(topicArn, _ => new SemaphoreSlim(1, 1));
 
         _logger.LogDebug("Publisher for topic {TopicArn} not found, waiting on setup lock", topicArn);
-        await lockObj.WaitAsync(cancellationToken).ConfigureAwait(false);
-        if (_publisherCache.TryGetValue(topicArn, out var thePublisher))
+        using(await lockObj.WaitScopedAsync(cancellationToken).ConfigureAwait(false))
         {
-            _logger.LogDebug("Lock re-entrancy detected, returning existing publisher");
-            await thePublisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
-            return;
+            if (_publisherCache.TryGetValue(topicArn, out publisher))
+            {
+                _logger.LogDebug("Lock re-entrancy detected, returning existing publisher");
+                await publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
+                return;
+            }
+
+            _logger.LogDebug("Lock acquired to configure topic {TopicArn}", topicArn);
+            var config = _staticConfigBuilder(topicArn);
+
+            _ = _publisherCache.TryAdd(topicArn, config.Publisher);
+            publisher = config.Publisher;
         }
 
-        _logger.LogDebug("Lock acquired to configure topic {TopicArn}", topicArn);
-        var config = _staticConfigBuilder(topicArn);
-
-        _ = _publisherCache.TryAdd(topicArn, config.Publisher);
-        lockObj.Release(1);
-
         _logger.LogDebug("Publishing message on newly configured topic {TopicArn}", topicArn);
-        await config.Publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
+        await publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
@@ -81,8 +84,8 @@ internal sealed class DynamicAddressMessagePublisher(
             {
                 string topicArn = groupByTopic.Key;
                 var batch = groupByTopic.ToList();
-
-                if (_batchPublisherCache.TryGetValue(topicArn, out var publisher))
+                IMessageBatchPublisher publisher;
+                if (_batchPublisherCache.TryGetValue(topicArn, out publisher))
                 {
                     publisherTask.Add(publisher.PublishAsync(batch, metadata, cancellationToken));
                     continue;
@@ -90,22 +93,23 @@ internal sealed class DynamicAddressMessagePublisher(
 
                 var lockObj = _topicCreationLocks.GetOrAdd(topicArn, _ => new SemaphoreSlim(1, 1));
                 _logger.LogDebug("Publisher for topic {TopicArn} not found, waiting on creation lock", topicArn);
-                await lockObj.WaitAsync(cancellationToken).ConfigureAwait(false);
-                if (_batchPublisherCache.TryGetValue(topicArn, out publisher))
+                using(await lockObj.WaitScopedAsync(cancellationToken).ConfigureAwait(false))
                 {
-                    _logger.LogDebug("Lock re-entrancy detected, returning existing publisher");
-                    publisherTask.Add(publisher.PublishAsync(batch, metadata, cancellationToken));
-                    continue;
+                    if (_batchPublisherCache.TryGetValue(topicArn, out publisher))
+                    {
+                        _logger.LogDebug("Lock re-entrancy detected, returning existing publisher");
+                        publisherTask.Add(publisher.PublishAsync(batch, metadata, cancellationToken));
+                        continue;
+                    }
+
+                    _logger.LogDebug("Lock acquired to configure topic {TopicArn}", topicArn);
+                    var config = _staticConfigBuilder(topicArn);
+
+                    publisher = _batchPublisherCache.GetOrAdd(topicArn, config.BatchPublisher);
                 }
 
-                _logger.LogDebug("Lock acquired to configure topic {TopicArn}", topicArn);
-                var config = _staticConfigBuilder(topicArn);
-
-                var cachedPublisher = _batchPublisherCache.GetOrAdd(topicArn, config.BatchPublisher);
-                lockObj.Release(1);
-
                 _logger.LogDebug("Publishing message on newly created topic {TopicName}", topicArn);
-                publisherTask.Add(cachedPublisher.PublishAsync(batch, metadata, cancellationToken));
+                publisherTask.Add(publisher.PublishAsync(batch, metadata, cancellationToken));
             }
         }
 
