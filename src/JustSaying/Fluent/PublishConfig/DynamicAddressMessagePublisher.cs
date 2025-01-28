@@ -13,9 +13,7 @@ internal sealed class DynamicAddressMessagePublisher(
     ILoggerFactory loggerFactory) : IMessagePublisher, IMessageBatchPublisher
 {
     private readonly string _topicArnTemplate = topicArnTemplate;
-    private readonly ConcurrentDictionary<string, IMessagePublisher> _publisherCache = new();
-    private readonly ConcurrentDictionary<string, IMessageBatchPublisher> _batchPublisherCache = new();
-    private readonly ConcurrentDictionary<string, SemaphoreSlim> _topicCreationLocks = new();
+    private readonly ConcurrentDictionary<string, Lazy<StaticAddressPublicationConfiguration>> _publisherConfigurationCache = new();
     private readonly ILogger<DynamicMessagePublisher> _logger = loggerFactory.CreateLogger<DynamicMessagePublisher>();
     private readonly Func<string, Message, string> _topicAddressCustomizer = topicAddressCustomizer;
     private readonly Func<string, StaticAddressPublicationConfiguration> _staticConfigBuilder = staticConfigBuilder;
@@ -23,8 +21,8 @@ internal sealed class DynamicAddressMessagePublisher(
     /// <inheritdoc/>
     public InterrogationResult Interrogate()
     {
-        var publishers = _publisherCache.Keys.OrderBy(x => x).ToDictionary(x => x, x => _publisherCache[x].Interrogate());
-        var batchPublishers = _batchPublisherCache.Keys.OrderBy(x => x).ToDictionary(x => x, x => _batchPublisherCache[x].Interrogate());
+        var publishers = _publisherConfigurationCache.Keys.OrderBy(x => x).ToDictionary(x => x, x => _publisherConfigurationCache[x].Value.Publisher.Interrogate());
+        var batchPublishers = _publisherConfigurationCache.Keys.OrderBy(x => x).ToDictionary(x => x, x => _publisherConfigurationCache[x].Value.BatchPublisher.Interrogate());
 
         return new InterrogationResult(new
         {
@@ -40,34 +38,8 @@ internal sealed class DynamicAddressMessagePublisher(
     public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
     {
         string topicArn = _topicAddressCustomizer(_topicArnTemplate, message);
-        IMessagePublisher publisher;
-        if (_publisherCache.TryGetValue(topicArn, out publisher))
-        {
-            await publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
-            return;
-        }
-
-        var lockObj = _topicCreationLocks.GetOrAdd(topicArn, _ => new SemaphoreSlim(1, 1));
-
-        _logger.LogDebug("Publisher for topic {TopicArn} not found, waiting on setup lock", topicArn);
-        using (await lockObj.WaitScopedAsync(cancellationToken).ConfigureAwait(false))
-        {
-            if (_publisherCache.TryGetValue(topicArn, out publisher))
-            {
-                _logger.LogDebug("Lock re-entrancy detected, returning existing publisher");
-                await publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
-                return;
-            }
-
-            _logger.LogDebug("Lock acquired to configure topic {TopicArn}", topicArn);
-            var config = _staticConfigBuilder(topicArn);
-
-            _ = _publisherCache.TryAdd(topicArn, config.Publisher);
-            publisher = config.Publisher;
-        }
-
-        _logger.LogDebug("Publishing message on newly configured topic {TopicArn}", topicArn);
-        await publisher.PublishAsync(message, metadata, cancellationToken).ConfigureAwait(false);
+        var publisherConfig = _publisherConfigurationCache.GetOrAdd(topicArn, CreateLazyPublisherConfig);
+        await publisherConfig.Value.Publisher.PublishAsync(message, metadata, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -84,35 +56,19 @@ internal sealed class DynamicAddressMessagePublisher(
             {
                 string topicArn = groupByTopic.Key;
                 var batch = groupByTopic.ToList();
-                IMessageBatchPublisher publisher;
-                if (_batchPublisherCache.TryGetValue(topicArn, out publisher))
-                {
-                    publisherTask.Add(publisher.PublishAsync(batch, metadata, cancellationToken));
-                    continue;
-                }
 
-                var lockObj = _topicCreationLocks.GetOrAdd(topicArn, _ => new SemaphoreSlim(1, 1));
-                _logger.LogDebug("Publisher for topic {TopicArn} not found, waiting on creation lock", topicArn);
-                using (await lockObj.WaitScopedAsync(cancellationToken).ConfigureAwait(false))
-                {
-                    if (_batchPublisherCache.TryGetValue(topicArn, out publisher))
-                    {
-                        _logger.LogDebug("Lock re-entrancy detected, returning existing publisher");
-                        publisherTask.Add(publisher.PublishAsync(batch, metadata, cancellationToken));
-                        continue;
-                    }
-
-                    _logger.LogDebug("Lock acquired to configure topic {TopicArn}", topicArn);
-                    var config = _staticConfigBuilder(topicArn);
-
-                    publisher = _batchPublisherCache.GetOrAdd(topicArn, config.BatchPublisher);
-                }
-
-                _logger.LogDebug("Publishing message on newly created topic {TopicName}", topicArn);
-                publisherTask.Add(publisher.PublishAsync(batch, metadata, cancellationToken));
+                var publisherConfig = _publisherConfigurationCache.GetOrAdd(topicArn, CreateLazyPublisherConfig);
+                publisherTask.Add(publisherConfig.Value.BatchPublisher.PublishAsync(batch, metadata, cancellationToken));
             }
         }
 
         await Task.WhenAll(publisherTask).ConfigureAwait(false);
     }
+
+    private Lazy<StaticAddressPublicationConfiguration> CreateLazyPublisherConfig(string topicArn)
+        => new(() =>
+        {
+            _logger.LogDebug("Publisher configuration for topic {TopicArn} not found. Creating new configuration", topicArn);
+            return _staticConfigBuilder(topicArn);
+        });
 }
