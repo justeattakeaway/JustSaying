@@ -50,7 +50,7 @@ internal sealed class DynamicAddressMessagePublisher(
         var lockObj = _topicCreationLocks.GetOrAdd(topicArn, _ => new SemaphoreSlim(1, 1));
 
         _logger.LogDebug("Publisher for topic {TopicArn} not found, waiting on setup lock", topicArn);
-        using(await lockObj.WaitScopedAsync(cancellationToken).ConfigureAwait(false))
+        using (await lockObj.WaitScopedAsync(cancellationToken).ConfigureAwait(false))
         {
             if (_publisherCache.TryGetValue(topicArn, out publisher))
             {
@@ -93,7 +93,7 @@ internal sealed class DynamicAddressMessagePublisher(
 
                 var lockObj = _topicCreationLocks.GetOrAdd(topicArn, _ => new SemaphoreSlim(1, 1));
                 _logger.LogDebug("Publisher for topic {TopicArn} not found, waiting on creation lock", topicArn);
-                using(await lockObj.WaitScopedAsync(cancellationToken).ConfigureAwait(false))
+                using (await lockObj.WaitScopedAsync(cancellationToken).ConfigureAwait(false))
                 {
                     if (_batchPublisherCache.TryGetValue(topicArn, out publisher))
                     {

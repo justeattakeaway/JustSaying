@@ -48,7 +48,7 @@ internal sealed class DynamicMessagePublisher(
         var lockObj = _topicCreationLocks.GetOrAdd(topicName, _ => new SemaphoreSlim(1, 1));
 
         _logger.LogDebug("Publisher for topic {TopicName} not found, waiting on creation lock", topicName);
-        using(await lockObj.WaitScopedAsync(cancellationToken).ConfigureAwait(false))
+        using (await lockObj.WaitScopedAsync(cancellationToken).ConfigureAwait(false))
         {
             if (_publisherCache.TryGetValue(topicName, out publisher))
             {
