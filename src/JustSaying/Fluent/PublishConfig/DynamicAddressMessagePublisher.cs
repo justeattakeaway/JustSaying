@@ -102,6 +102,7 @@ internal sealed class DynamicAddressMessagePublisher(
                 var config = _staticConfigBuilder(topicArn);
 
                 var cachedPublisher = _batchPublisherCache.GetOrAdd(topicArn, config.BatchPublisher);
+                lockObj.Release(1);
 
                 _logger.LogDebug("Publishing message on newly created topic {TopicName}", topicArn);
                 publisherTask.Add(cachedPublisher.PublishAsync(batch, metadata, cancellationToken));
