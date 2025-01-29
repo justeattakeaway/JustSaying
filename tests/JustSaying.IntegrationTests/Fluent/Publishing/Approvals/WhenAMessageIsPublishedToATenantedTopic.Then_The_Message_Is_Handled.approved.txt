@@ -16,7 +16,17 @@
           "Arn": "arn:aws:sns:us-east-1:000000000000:uk-tenanted-topic"
         }
       },
-      "BatchPublishers": {}
+      "BatchPublishers": {
+        "es-tenanted-topic": {
+          "Arn": "arn:aws:sns:us-east-1:000000000000:es-tenanted-topic"
+        },
+        "it-tenanted-topic": {
+          "Arn": "arn:aws:sns:us-east-1:000000000000:it-tenanted-topic"
+        },
+        "uk-tenanted-topic": {
+          "Arn": "arn:aws:sns:us-east-1:000000000000:uk-tenanted-topic"
+        }
+      }
     }
   },
   "SubscriptionGroups": {

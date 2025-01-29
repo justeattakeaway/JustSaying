@@ -60,7 +60,14 @@
           "Arn": "arn:aws:sns:us-east-1:000000000000:us-simple-message"
         }
       },
-      "BatchPublishers": {}
+      "BatchPublishers": {
+        "arn:aws:sns:us-east-1:000000000000:uk-simple-message": {
+          "Arn": "arn:aws:sns:us-east-1:000000000000:uk-simple-message"
+        },
+        "arn:aws:sns:us-east-1:000000000000:us-simple-message": {
+          "Arn": "arn:aws:sns:us-east-1:000000000000:us-simple-message"
+        }
+      }
     }
   },
   "SubscriptionGroups": {
