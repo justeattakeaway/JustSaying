@@ -70,11 +70,11 @@ internal sealed class DynamicMessagePublisher(
             .OrderBy(o => o.Key)
             .ToDictionary(x => x.Key, x => interrogate(x.Value.Value.Result));
 
-    private Lazy<Task<StaticPublicationConfiguration>> CreateLazyPublisherConfig(string topicArn, CancellationToken cancellationToken)
+    private Lazy<Task<StaticPublicationConfiguration>> CreateLazyPublisherConfig(string topicName, CancellationToken cancellationToken)
         => new(async () =>
         {
-            _logger.LogDebug("Publisher configuration for topic {TopicArn} not found. Creating new configuration", topicArn);
-            var config = _staticConfigBuilder(topicArn);
+            _logger.LogDebug("Publisher configuration for topic {TopicName} not found. Initializing Topic.", topicName);
+            var config = _staticConfigBuilder(topicName);
             await config.StartupTask(cancellationToken).ConfigureAwait(false);
             return config;
         });
