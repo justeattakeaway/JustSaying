@@ -22,12 +22,10 @@ internal sealed class DynamicAddressMessagePublisher(
     public InterrogationResult Interrogate()
     {
         var publishers = _publisherConfigurationCache.Keys.OrderBy(x => x).ToDictionary(x => x, x => _publisherConfigurationCache[x].Value.Publisher.Interrogate());
-        var batchPublishers = _publisherConfigurationCache.Keys.OrderBy(x => x).ToDictionary(x => x, x => _publisherConfigurationCache[x].Value.BatchPublisher.Interrogate());
 
         return new InterrogationResult(new
         {
             Publishers = publishers,
-            BatchPublishers = batchPublishers,
         });
     }
 

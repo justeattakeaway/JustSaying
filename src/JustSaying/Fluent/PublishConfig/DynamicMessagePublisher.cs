@@ -20,12 +20,10 @@ internal sealed class DynamicMessagePublisher(
     public InterrogationResult Interrogate()
     {
         var publishers = GetInterrogationResultForTasks(static config => config.Publisher.Interrogate());
-        var batchPublishers = GetInterrogationResultForTasks(static config => config.BatchPublisher.Interrogate());
 
         return new InterrogationResult(new
         {
             Publishers = publishers,
-            BatchPublishers = batchPublishers,
         });
     }
 
