@@ -1,6 +1,9 @@
 using System.Diagnostics;
+using Amazon;
 using Amazon.Runtime;
+using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools;
+using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
@@ -155,5 +158,24 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
         }
 
         await actionTask;
+    }
+
+    protected async Task<string> GivenAnExistingTopic(string topicName, CancellationToken cancellationToken)
+    {
+        var client = CreateClientFactory().GetSnsClient(Region);
+
+        var createTopicRequest = new CreateTopicRequest
+        {
+            Name = topicName,
+        };
+        var response = await client.CreateTopicAsync(createTopicRequest, cancellationToken);
+
+        var policyDetails = new SnsPolicyDetails
+        {
+            SourceArn = response.TopicArn,
+        };
+        await SnsPolicy.SaveAsync(policyDetails, client);
+
+        return response.TopicArn;
     }
 }

@@ -1,0 +1,68 @@
+{
+  "Region": "eu-west-1",
+  "Middleware": {
+    "Middlewares": [
+      {
+        "MessageType": "SimpleMessage",
+        "QueueName": "integrationTestQueueName",
+        "MiddlewareChain": [
+          "MessageContextAccessorMiddleware",
+          "LoggingMiddleware",
+          "StopwatchMiddleware",
+          "SqsPostProcessorMiddleware",
+          "ErrorHandlerMiddleware",
+          "HandlerInvocationMiddleware`1[JustSaying.TestingFramework.SimpleMessage]"
+        ]
+      }
+    ]
+  },
+  "PublishedMessageTypes": {},
+  "SubscriptionGroups": {
+    "Groups": [
+      {
+        "Name": "integrationTestQueueName",
+        "ConcurrencyLimit": 10,
+        "Multiplexer": {
+          "ChannelCapacity": 100,
+          "ReaderCount": 2
+        },
+        "ReceiveBuffers": [
+          {
+            "BufferSize": 10,
+            "QueueName": "integrationTestQueueName",
+            "Region": "eu-west-1",
+            "Prefetch": 10
+          },
+          {
+            "BufferSize": 10,
+            "QueueName": "integrationTestQueueName",
+            "Region": "eu-west-1",
+            "Prefetch": 10
+          }
+        ]
+      }
+    ]
+  }
+}
+
+{
+  "Region": "eu-west-1",
+  "Middleware": {
+    "Middlewares": []
+  },
+  "PublishedMessageTypes": {
+    "SimpleMessage": {
+      "Publishers": {
+        "arn:aws:sns:us-east-1:000000000000:at-simple-message": {
+          "Arn": "arn:aws:sns:us-east-1:000000000000:at-simple-message"
+        },
+        "arn:aws:sns:us-east-1:000000000000:us-simple-message": {
+          "Arn": "arn:aws:sns:us-east-1:000000000000:us-simple-message"
+        }
+      }
+    }
+  },
+  "SubscriptionGroups": {
+    "Groups": []
+  }
+}

@@ -25,7 +25,10 @@ JustSaying.Fluent.MessagingConfigurationBuilder.BuildPublishBatchConfiguration()
 JustSaying.Fluent.MessagingConfigurationBuilder.WithMessageResponseLogger(System.Action<JustSaying.AwsTools.MessageHandling.MessageBatchResponse, System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message>> logger) -> JustSaying.Fluent.MessagingConfigurationBuilder
 JustSaying.Fluent.MessagingConfigurationBuilder.WithPublishFailureBackoffForBatch(System.TimeSpan value) -> JustSaying.Fluent.MessagingConfigurationBuilder
 JustSaying.Fluent.MessagingConfigurationBuilder.WithPublishFailureReattemptsForBatch(int value) -> JustSaying.Fluent.MessagingConfigurationBuilder
+JustSaying.Fluent.TopicAddressPublicationBuilder<T>.TopicAddressCustomizer.get -> System.Func<string, JustSaying.Models.Message, string>
+JustSaying.Fluent.TopicAddressPublicationBuilder<T>.TopicAddressCustomizer.set -> void
 JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithExceptionHandler(System.Func<System.Exception, System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message>, bool> exceptionBatchHandler) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
+JustSaying.Fluent.TopicAddressPublicationBuilder<T>.WithTopicAddress(System.Func<string, JustSaying.Models.Message, string> topicAddressCustomizer) -> JustSaying.Fluent.TopicAddressPublicationBuilder<T>
 JustSaying.IPublishBatchConfiguration
 JustSaying.IPublishBatchConfiguration.MessageBatchResponseLogger.get -> System.Action<JustSaying.AwsTools.MessageHandling.MessageBatchResponse, System.Collections.Generic.IReadOnlyCollection<JustSaying.Models.Message>>
 JustSaying.IPublishBatchConfiguration.MessageBatchResponseLogger.set -> void
