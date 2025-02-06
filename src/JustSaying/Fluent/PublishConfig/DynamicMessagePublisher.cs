@@ -64,7 +64,7 @@ internal sealed class DynamicMessagePublisher(
 
     private Dictionary<string, InterrogationResult> GetInterrogationResultForTasks(Func<StaticPublicationConfiguration, InterrogationResult> interrogate) =>
         _publisherConfigurationCache
-            .Where(w => w.Value.Value.IsCompleted)
+            .Where(w => w.Value.Value.Status == TaskStatus.RanToCompletion)
             .OrderBy(o => o.Key)
             .ToDictionary(x => x.Key, x => interrogate(x.Value.Value.Result));
 
