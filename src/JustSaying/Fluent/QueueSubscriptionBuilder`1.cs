@@ -42,6 +42,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     /// </summary>
     private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
+    private bool IsFifoQueue { get; set; }
 
     /// <summary>
     /// Configures that the <see cref="IQueueNamingConvention"/> will create the queue name that should be used.
@@ -147,6 +148,22 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         return this;
     }
 
+    /// <summary>
+    /// Configures the SQS Queue as a FIFO Queue.
+    /// </summary>
+    /// <remarks>
+    /// Queue Name should have the ".fifo" suffix appended per SQS specification.
+    /// </remarks>
+    /// <returns>
+    /// The current <see cref="QueuePublicationBuilder{T}"/>.
+    /// </returns>
+    public QueueSubscriptionBuilder<T> WithFifo()
+    {
+        IsFifoQueue = true;
+
+        return this;
+    }
+
     /// <inheritdoc />
     public ISubscriptionBuilder<T> WithMiddlewareConfiguration(Action<HandlerMiddlewareBuilder> middlewareConfiguration)
     {
@@ -168,6 +185,7 @@ public sealed class QueueSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.PointToPoint)
         {
             QueueName = QueueName,
+            IsFifoQueue = IsFifoQueue,
             Tags = Tags
         };
 

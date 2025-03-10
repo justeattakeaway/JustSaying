@@ -22,6 +22,7 @@ public class WhenQueueIsDeleted(ITestOutputHelper outputHelper) : IntegrationTes
         var queue = new SqsQueueByName(
             Region,
             UniqueName,
+            false,
             client,
             1,
             loggerFactory);

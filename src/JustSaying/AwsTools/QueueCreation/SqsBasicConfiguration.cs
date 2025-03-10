@@ -12,6 +12,7 @@ public class SqsBasicConfiguration
     public bool ErrorQueueOptOut { get; set; }
     public ServerSideEncryption ServerSideEncryption { get; set; }
     public string QueueName { get; set; }
+    public bool IsFifoQueue { get; set; }
 
     public void ApplyQueueNamingConvention<T>(IQueueNamingConvention namingConvention)
     {

@@ -24,6 +24,7 @@ public class WhenUpdatingRedrivePolicy(ITestOutputHelper outputHelper) : Integra
         var queue = new SqsQueueByName(
             Region,
             UniqueName,
+            false,
             client,
             1,
             loggerFactory);

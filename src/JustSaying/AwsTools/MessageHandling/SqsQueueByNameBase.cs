@@ -2,6 +2,7 @@ using System.Net;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using Amazon.SQS.Util;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Extensions;
 using JustSaying.Messaging.Interrogation;
@@ -12,10 +13,11 @@ namespace JustSaying.AwsTools.MessageHandling;
 [Obsolete("SqsQueueBase and related classes are not intended for general usage and may be removed in a future major release")]
 public abstract class SqsQueueByNameBase : ISqsQueue
 {
-    protected SqsQueueByNameBase(RegionEndpoint region, string queueName, IAmazonSQS client, ILoggerFactory loggerFactory)
+    protected SqsQueueByNameBase(RegionEndpoint region, string queueName, bool isFifoQueue, IAmazonSQS client, ILoggerFactory loggerFactory)
     {
         if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
         QueueName = queueName;
+        IsFifoQueue = isFifoQueue;
         Client = client;
         _region = region;
         Logger = loggerFactory.CreateLogger("JustSaying");
@@ -41,6 +43,7 @@ public abstract class SqsQueueByNameBase : ISqsQueue
     public Uri Uri { get; private set; }
     protected IAmazonSQS Client { get; }
     public string QueueName { get; }
+    public bool IsFifoQueue { get; }
     internal TimeSpan MessageRetentionPeriod { get; set; }
     internal RedrivePolicy RedrivePolicy { get; set; }
     public string RegionSystemName => _region.SystemName;
@@ -90,7 +93,12 @@ public abstract class SqsQueueByNameBase : ISqsQueue
 
         try
         {
-            var queueResponse = await Client.CreateQueueAsync(QueueName, cancellationToken).ConfigureAwait(false);
+            var queueRequest = new CreateQueueRequest(QueueName);
+            if (IsFifoQueue)
+            {
+                queueRequest.Attributes.Add(SQSConstants.ATTRIBUTE_FIFO_QUEUE, "true");
+            }
+            var queueResponse = await Client.CreateQueueAsync(queueRequest, cancellationToken).ConfigureAwait(false);
 
             if (!string.IsNullOrWhiteSpace(queueResponse?.QueueUrl))
             {
