@@ -27,7 +27,8 @@ internal sealed class StaticPublicationConfiguration(
     {
         var readConfiguration = new SqsReadConfiguration(SubscriptionType.ToTopic)
         {
-            TopicName = topicName
+            TopicName = topicName,
+            IsFifoQueue = writeConfiguration.IsFifoTopic,
         };
 
         readConfiguration.ApplyTopicNamingConvention<T>(bus.Config.TopicNamingConvention);
@@ -44,6 +45,7 @@ internal sealed class StaticPublicationConfiguration(
 
         var snsTopic = new SnsTopicByName(
             readConfiguration.TopicName,
+            writeConfiguration.IsFifoTopic,
             snsClient,
             loggerFactory)
         {

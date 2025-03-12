@@ -88,6 +88,14 @@ public class SqsMessagePublisher(
         {
             request.DelaySeconds = (int)metadata.Delay.Value.TotalSeconds;
         }
+        if (metadata?.MessageGroupId != null)
+        {
+            request.MessageGroupId = metadata.MessageGroupId;
+        }
+        if (metadata?.MessageDeduplicationId != null)
+        {
+            request.MessageDeduplicationId = metadata.MessageDeduplicationId;
+        }
 
         return request;
     }
@@ -184,7 +192,7 @@ public class SqsMessagePublisher(
         }
     }
 
-    private SendMessageBatchRequest BuildSendMessageBatchRequest(Message[] messages, PublishMetadata metadata)
+    private SendMessageBatchRequest BuildSendMessageBatchRequest(Message[] messages, PublishBatchMetadata metadata)
     {
         var entries = new List<SendMessageBatchRequestEntry>(messages.Length);
         int? delaySeconds = metadata?.Delay is { } delay ? (int)delay.TotalSeconds : null;
@@ -200,6 +208,16 @@ public class SqsMessagePublisher(
             if (delaySeconds is { } value)
             {
                 entry.DelaySeconds = value;
+            }
+
+            if (metadata?.MessageGroupIds.TryGetValue(message, out var messageGroupId) ?? false)
+            {
+                entry.MessageGroupId = messageGroupId;
+            }
+
+            if (metadata?.MessageDeduplicationIds.TryGetValue(message, out var messageDeduplicationId) ?? false)
+            {
+                entry.MessageDeduplicationId = messageDeduplicationId;
             }
 
             entries.Add(entry);

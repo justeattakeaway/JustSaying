@@ -21,6 +21,7 @@ public class WhenCreatingQueueTwice(ITestOutputHelper outputHelper) : Integratio
 
         var topic = new SnsTopicByName(
             topicName,
+            false,
             client,
             loggerFactory);
 
