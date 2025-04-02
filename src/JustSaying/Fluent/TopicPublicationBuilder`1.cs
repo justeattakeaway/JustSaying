@@ -42,6 +42,8 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// </summary>
     public Func<Message, string> TopicNameCustomizer { get; set; }
 
+    private bool IsFifoTopic { get; set; }
+
     /// <summary>
     /// Configures the SNS write configuration.
     /// </summary>
@@ -156,6 +158,22 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
         return this;
     }
 
+    /// <summary>
+    /// Configures the SNS Topic as a FIFO Topic.
+    /// </summary>
+    /// <remarks>
+    /// Topic Name should have the ".fifo" suffix appended per SQS specification.
+    /// </remarks>
+    /// <returns>
+    /// The current <see cref="TopicPublicationBuilder{T}"/>.
+    /// </returns>
+    public TopicPublicationBuilder<T> WithFifo()
+    {
+        IsFifoTopic = true;
+
+        return this;
+    }
+
     /// <inheritdoc />
     void IPublicationBuilder<T>.Configure(
         JustSayingBus bus,
@@ -169,7 +187,10 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
 
         var region = bus.Config.Region ?? throw new InvalidOperationException($"Config cannot have a blank entry for the {nameof(bus.Config.Region)} property.");
 
-        var writeConfiguration = new SnsWriteConfiguration();
+        var writeConfiguration = new SnsWriteConfiguration
+        {
+            IsFifoTopic = IsFifoTopic,
+        };
         ConfigureWrites?.Invoke(writeConfiguration);
 
         var client = proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(region));

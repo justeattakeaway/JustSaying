@@ -10,6 +10,7 @@ public static class JustSayingConstants
     public const string AttributePolicy = "Policy";
     public const string AttributeEncryptionKeyId = "KmsMasterKeyId";
     public const string AttributeEncryptionKeyReusePeriodSecondId = "KmsDataKeyReusePeriodSeconds";
+    public const string AttributeFifoTopic = "FifoTopic";
 
     /// <summary>
     /// Default visibility timeout for message

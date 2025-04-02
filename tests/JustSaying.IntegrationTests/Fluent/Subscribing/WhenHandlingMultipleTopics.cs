@@ -32,7 +32,7 @@ public class WhenHandlingMultipleTopics(ITestOutputHelper outputHelper) : Integr
                 var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
                 var client = clientFactory.GetSqsClient(Region);
 
-                var queue = new SqsQueueByName(Region, UniqueName, client, 0, loggerFactory);
+                var queue = new SqsQueueByName(Region, UniqueName, false, client, 0, loggerFactory);
 
                 await Patiently.AssertThatAsync(OutputHelper, () => queue.ExistsAsync(CancellationToken.None), 60.Seconds());
 

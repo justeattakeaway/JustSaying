@@ -13,11 +13,12 @@ namespace JustSaying.AwsTools.MessageHandling;
 public class SqsQueueByName(
     RegionEndpoint region,
     string queueName,
+    bool isFifoQueue,
     IAmazonSQS client,
     int retryCountBeforeSendingToErrorQueue,
-    ILoggerFactory loggerFactory) : SqsQueueByNameBase(region, queueName, client, loggerFactory)
+    ILoggerFactory loggerFactory) : SqsQueueByNameBase(region, queueName, isFifoQueue, client, loggerFactory)
 {
-    internal ErrorQueue ErrorQueue { get; } = new ErrorQueue(region, queueName, client, loggerFactory);
+    internal ErrorQueue ErrorQueue { get; } = new ErrorQueue(region, queueName, isFifoQueue, client, loggerFactory);
 
     public override async Task<bool> CreateAsync(SqsBasicConfiguration queueConfig, int attempt = 0, CancellationToken cancellationToken = default)
     {
