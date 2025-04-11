@@ -38,7 +38,7 @@ public class AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory, ILogger
             else
             {
 #pragma warning disable 618
-                var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, snsClient, loggerFactory);
+                var eventTopic = new SnsTopicByName(queueConfig.PublishEndpoint, queueConfig.IsFifoQueue, snsClient, loggerFactory);
 #pragma warning restore 618
                 await eventTopic.CreateAsync(cancellationToken).ConfigureAwait(false);
 
@@ -78,6 +78,7 @@ public class AmazonQueueCreator(IAwsClientFactoryProxy awsClientFactory, ILogger
 #pragma warning disable 618
         var queue = new SqsQueueByName(regionEndpoint,
             queueConfig.QueueName,
+            queueConfig.IsFifoQueue,
             sqsClient,
             queueConfig.RetryCountBeforeSendingToErrorQueue,
             loggerFactory);
