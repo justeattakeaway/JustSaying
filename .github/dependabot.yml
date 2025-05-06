@@ -10,8 +10,6 @@ updates:
   schedule:
     interval: daily
     timezone: Europe/London
-  reviewers:
-    - "justeattakeaway/justsaying-maintainers"
   open-pull-requests-limit: 10
   ignore:
     - dependency-name: AWSSDK.Extensions.NETCore.Setup
