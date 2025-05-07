@@ -101,13 +101,24 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
         string messageToSend = _serializationRegister.Serialize(message, serializeForSnsPublishing: true);
         string messageType = _messageSubjectProvider.GetSubjectForType(message.GetType());
 
-        return new PublishRequest
+        var request = new PublishRequest
         {
             TopicArn = Arn,
             Subject = messageType,
             Message = messageToSend,
             MessageAttributes = BuildMessageAttributes(metadata)
         };
+
+        if (metadata?.MessageGroupId != null)
+        {
+            request.MessageGroupId = metadata.MessageGroupId;
+        }
+        if (metadata?.MessageDeduplicationId != null)
+        {
+            request.MessageDeduplicationId = metadata.MessageDeduplicationId;
+        }
+
+        return request;
     }
 
     private static Dictionary<string, MessageAttributeValue> BuildMessageAttributes(PublishMetadata metadata)
@@ -234,7 +245,7 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
     private bool ClientExceptionHandler(Exception ex, IReadOnlyCollection<Message> messages)
         => HandleBatchException?.Invoke(ex, messages) ?? false;
 
-    private PublishBatchRequest BuildPublishBatchRequest(Message[] messages, PublishMetadata metadata)
+    private PublishBatchRequest BuildPublishBatchRequest(Message[] messages, PublishBatchMetadata metadata)
     {
         var entries = new List<PublishBatchRequestEntry>(messages.Length);
 
@@ -244,13 +255,25 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
             string payload = _serializationRegister.Serialize(message, serializeForSnsPublishing: true);
             var attributes = BuildMessageAttributes(metadata);
 
-            entries.Add(new()
+            var entry = new PublishBatchRequestEntry
             {
                 Id = message.UniqueKey(),
                 Subject = subject,
                 Message = payload,
                 MessageAttributes = attributes,
-            });
+            };
+
+            if (metadata?.MessageGroupIds.TryGetValue(message, out var messageGroupId) ?? false)
+            {
+                entry.MessageGroupId = messageGroupId;
+            }
+
+            if (metadata?.MessageDeduplicationIds.TryGetValue(message, out var messageDeduplicationId) ?? false)
+            {
+                entry.MessageDeduplicationId = messageDeduplicationId;
+            }
+
+            entries.Add(entry);
         }
 
         return new PublishBatchRequest

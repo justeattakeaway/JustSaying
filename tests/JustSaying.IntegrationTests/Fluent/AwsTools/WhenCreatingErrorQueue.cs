@@ -21,6 +21,7 @@ public class WhenCreatingErrorQueue(ITestOutputHelper outputHelper) : Integratio
         var queue = new ErrorQueue(
             Region,
             UniqueName,
+            false,
             client,
             loggerFactory);
 
