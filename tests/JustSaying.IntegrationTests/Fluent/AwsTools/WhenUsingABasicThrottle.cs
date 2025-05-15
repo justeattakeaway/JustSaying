@@ -32,6 +32,7 @@ public class WhenUsingABasicThrottle(ITestOutputHelper outputHelper) : Integrati
         var queue = new SqsQueueByName(
             Region,
             UniqueName,
+            false,
             client,
             retryCountBeforeSendingToErrorQueue,
             loggerFactory);

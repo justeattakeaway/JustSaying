@@ -8,15 +8,12 @@ using Microsoft.Extensions.Logging;
 
 namespace JustSaying.IntegrationTests.Fluent.AwsTools;
 
-public class WhenUpdatingRetentionPeriod(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
+public class WhenANamedFifoQueueIsCreated(ITestOutputHelper outputHelper) : IntegrationTestBase(outputHelper)
 {
     [AwsFact]
-    public async Task Can_Update_Retention_Period()
+    public async Task Then_The_Error_Queue_Is_Created()
     {
         // Arrange
-        var oldRetentionPeriod = TimeSpan.FromSeconds(600);
-        var newRetentionPeriod = TimeSpan.FromSeconds(700);
-
         ILoggerFactory loggerFactory = OutputHelper.ToLoggerFactory();
         IAwsClientFactory clientFactory = CreateClientFactory();
 
@@ -24,20 +21,18 @@ public class WhenUpdatingRetentionPeriod(ITestOutputHelper outputHelper) : Integ
 
         var queue = new SqsQueueByName(
             Region,
-            UniqueName,
-            false,
+            UniqueName + ".fifo",
+            true,
             client,
             1,
             loggerFactory);
 
-        await queue.CreateAsync(
-            new SqsBasicConfiguration { MessageRetention = oldRetentionPeriod });
-
         // Act
-        await queue.UpdateQueueAttributeAsync(
-            new SqsBasicConfiguration { MessageRetention = newRetentionPeriod }, CancellationToken.None);
+        await queue.CreateAsync(new SqsBasicConfiguration());
 
         // Assert
-        queue.MessageRetentionPeriod.ShouldBe(newRetentionPeriod);
+        await Patiently.AssertThatAsync(OutputHelper,
+            async () => await queue.ErrorQueue.ExistsAsync(CancellationToken.None),
+            40.Seconds());
     }
 }
