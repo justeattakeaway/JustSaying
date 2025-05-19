@@ -26,6 +26,7 @@ public sealed class WhenUsingSqsQueueByName(ITestOutputHelper testOutputHelper) 
 
         var queue = new SqsQueueByName(RegionEndpoint.EUWest1,
             "some-queue-name",
+            false,
             _client,
             retryCount,
             LoggerFactory);

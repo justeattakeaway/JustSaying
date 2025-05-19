@@ -41,6 +41,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
 
     private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
 
+    private bool IsFifoTopic { get; set; }
 
     /// <summary>
     /// Configures that the <see cref="ITopicNamingConvention"/> will create the topic name that should be used.
@@ -169,6 +170,22 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         return this;
     }
 
+    /// <summary>
+    /// Configures the SNS Topic as a FIFO Topic.
+    /// </summary>
+    /// <remarks>
+    /// Topic Name should have the ".fifo" suffix appended per SQS specification.
+    /// </remarks>
+    /// <returns>
+    /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
+    /// </returns>
+    public TopicSubscriptionBuilder<T> WithFifo()
+    {
+        IsFifoTopic = true;
+
+        return this;
+    }
+
     /// <inheritdoc />
     void ISubscriptionBuilder<T>.Configure(
         JustSayingBus bus,
@@ -183,6 +200,7 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
         var subscriptionConfig = new SqsReadConfiguration(SubscriptionType.ToTopic)
         {
             QueueName = QueueName,
+            IsFifoQueue = IsFifoTopic,
             TopicName = TopicName,
             Tags = Tags
         };
