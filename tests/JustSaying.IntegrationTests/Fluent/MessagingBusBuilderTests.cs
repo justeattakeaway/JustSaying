@@ -114,6 +114,49 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
     }
 
     [AwsFact]
+    public async Task Can_Create_Messaging_Bus_Fluently_For_A_Topic_Address()
+    {
+        var topicName = Guid.NewGuid().ToString();
+
+        // Arrange
+        var services = new ServiceCollection()
+            .AddLogging((p) => p.AddXUnit(OutputHelper))
+            .AddJustSaying(
+                (builder) =>
+                {
+                    builder
+                        .Client((options) =>
+                            options.WithBasicCredentials("accessKey", "secretKey")
+                                .WithServiceUri(TestEnvironment.SimulatorUrl))
+                        .Messaging((options) => options.WithRegion("eu-west-1"))
+                        .Publications((options) => options.WithTopic<TopicMessage>())
+                        .Subscriptions((options) => options.ForTopic<TopicMessage>(cfg => cfg.WithQueueName(topicName)));
+                })
+            .AddSingleton<IMessageStore<TopicMessage>, TestMessageStore<TopicMessage>>()
+            .AddJustSayingHandler<TopicMessage, MessageStoringHandler<TopicMessage>>();
+
+        IServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        IMessagePublisher publisher = serviceProvider.GetRequiredService<IMessagePublisher>();
+        IMessagingBus listener = serviceProvider.GetRequiredService<IMessagingBus>();
+
+        using var source = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+
+        // Act
+        await listener.StartAsync(source.Token);
+        await publisher.StartAsync(source.Token);
+
+        var message = new TopicMessage();
+
+        await publisher.PublishAsync(message, source.Token);
+
+        var store = serviceProvider.GetService<IMessageStore<TopicMessage>>();
+
+        await Patiently.AssertThatAsync(OutputHelper,
+            () => store.Messages.Any(msg => msg.Id == message.Id));
+    }
+
+    [AwsFact]
     public async Task Can_Create_Messaging_Bus()
     {
         // Arrange

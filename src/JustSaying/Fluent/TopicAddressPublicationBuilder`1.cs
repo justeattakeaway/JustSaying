@@ -17,11 +17,17 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     where T : Message
 {
     private readonly TopicAddress _topicAddress;
-    private Func<Exception,Message,bool> _exceptionHandler;
+    private Func<Exception, Message, bool> _exceptionHandler;
     private Func<Exception, IReadOnlyCollection<Message>, bool> _exceptionBatchHandler;
     private PublishCompressionOptions _compressionOptions;
     private string _subject;
     private bool _subjectSet;
+
+    /// <summary>
+    /// Function that will produce a topic address dynamically from a Message and the original topic
+    /// address at publish time.
+    /// </summary>
+    public Func<string, Message, string> TopicAddressCustomizer { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TopicAddressPublicationBuilder{T}"/> class.
@@ -83,6 +89,24 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
         return this;
     }
 
+    /// <summary>
+    /// Configures the address of the topic by calling this function at publish time to determine the topic ARN.
+    /// </summary>
+    /// <param name="topicAddressCustomizer">Function that will be called at publish time to determine the ARN of the target topic for this <see cref="T"/>.
+    /// <para>
+    /// For example: <c>WithTopicAddress(msg => $"arn:aws:sns:eu-west-1:00000000:{msg.Tenant}-mymessage")</c> with <c>msg.Tenant</c> of <c>["uk", "au"]</c> would
+    /// publish to topics <c>"uk-mymessage"</c> and <c>"au-mymessage"</c> when a message is published with those tenants.
+    /// </para>
+    /// </param>
+    /// <returns>
+    /// The current <see cref="TopicAddressPublicationBuilder{T}"/>.
+    /// </returns>
+    public TopicAddressPublicationBuilder<T> WithTopicAddress(Func<string, Message, string> topicAddressCustomizer)
+    {
+        TopicAddressCustomizer = topicAddressCustomizer;
+        return this;
+    }
+
     /// <inheritdoc />
     public void Configure(JustSayingBus bus, IAwsClientFactoryProxy proxy, ILoggerFactory loggerFactory)
     {
@@ -98,17 +122,24 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
         var subjectProvider = bus.Config.MessageSubjectProvider;
         var subject = _subjectSet ? _subject : subjectProvider.GetSubjectForType(typeof(T));
 
-        var eventPublisher = new SnsMessagePublisher(
-            _topicAddress.TopicArn,
-            proxy.GetAwsClientFactory().GetSnsClient(RegionEndpoint.GetBySystemName(arn.Region)),
-            new OutboundMessageConverter(PublishDestinationType.Topic, serializer, compressionRegistry, compressionOptions, subject, true),
-            loggerFactory,
-            _exceptionHandler,
-            _exceptionBatchHandler);
-
         CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, compressionOptions);
 
-        bus.AddMessagePublisher<T>(eventPublisher);
+        StaticAddressPublicationConfiguration BuildConfiguration(string topicArn)
+            => StaticAddressPublicationConfiguration.Build<T>(
+                topicArn,
+                proxy.GetAwsClientFactory(),
+                new OutboundMessageConverter(PublishDestinationType.Topic, serializer, compressionRegistry, compressionOptions, subject, true),
+                loggerFactory,
+                bus,
+                _exceptionHandler,
+                _exceptionBatchHandler);
+
+        ITopicAddressPublisher publisherConfig = TopicAddressCustomizer != null
+            ? DynamicAddressPublicationConfiguration.Build<T>(_topicAddress.TopicArn, TopicAddressCustomizer, BuildConfiguration, loggerFactory)
+            : BuildConfiguration(_topicAddress.TopicArn);
+
+        bus.AddMessagePublisher<T>(publisherConfig.Publisher);
+        bus.AddMessageBatchPublisher<T>(publisherConfig.BatchPublisher);
 
         logger.LogInformation(
             "Created SNS topic publisher on topic '{TopicName}' for message type '{MessageType}'",

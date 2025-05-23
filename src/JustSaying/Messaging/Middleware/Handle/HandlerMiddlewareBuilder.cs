@@ -38,7 +38,7 @@ public sealed class HandlerMiddlewareBuilder(IHandlerResolver handlerResolver, I
         {
             throw new InvalidOperationException(
                 @"Middlewares must be registered into your DI container such that each resolution creates a new instance.
-For StructureMap use Transient(), and for Microsoft.Extensions.DependencyInjection, use AddTransient().
+For StructureMap use AlwaysUnique(), and for Microsoft.Extensions.DependencyInjection, use AddTransient().
 Please check the documentation for your container for more details.");
         }
 

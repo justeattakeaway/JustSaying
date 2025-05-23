@@ -43,8 +43,8 @@ internal sealed class JustSayingRegistry : Registry
         For<IMessageContextAccessor>().Use(context => context.GetInstance<MessageContextAccessor>());
         For<IMessageContextReader>().Use(context => context.GetInstance<MessageContextAccessor>());
 
-        For<LoggingMiddleware>().Transient();
-        For<SqsPostProcessorMiddleware>().Transient();
+        For<LoggingMiddleware>().AlwaysUnique();
+        For<SqsPostProcessorMiddleware>().AlwaysUnique();
         For<IMessageBodyCompression>().Add<GzipMessageBodyCompression>().Singleton();
         For<MessageCompressionRegistry>().Singleton();
         For<IMessageReceivePauseSignal>().Use<MessageReceivePauseSignal>().Singleton();

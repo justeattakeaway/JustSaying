@@ -40,7 +40,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// Function that will produce a topic name dynamically from a Message at publish time.
     /// If the topic doesn't exist, it will be created at that point.
     /// </summary>
-    public Func<Message,string> TopicNameCustomizer { get; set; }
+    public Func<Message, string> TopicNameCustomizer { get; set; }
 
     /// <summary>
     /// Configures the SNS write configuration.
@@ -148,7 +148,7 @@ public sealed class TopicPublicationBuilder<T> : IPublicationBuilder<T>
     /// </para>
     /// </param>
     /// <returns>
-    /// The current <see cref="TopicSubscriptionBuilder{T}"/>.
+    /// The current <see cref="TopicPublicationBuilder{T}"/>.
     /// </returns>
     public TopicPublicationBuilder<T> WithTopicName(Func<Message, string> topicNameCustomizer)
     {
