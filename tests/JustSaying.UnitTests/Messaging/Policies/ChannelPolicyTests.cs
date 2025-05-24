@@ -1,8 +1,11 @@
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware.Receive;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
@@ -36,8 +39,6 @@ public class ChannelPolicyTests
         int dispatchedMessageCount = 0;
         var sqsQueue = TestQueue(() => Interlocked.Increment(ref queueCalledCount));
 
-        var queues = new List<ISqsQueue> { sqsQueue };
-
         var config = new SubscriptionGroupSettingsBuilder()
             .WithDefaultConcurrencyLimit(8);
         config.WithCustomMiddleware(
@@ -45,7 +46,13 @@ public class ChannelPolicyTests
 
         var settings = new Dictionary<string, SubscriptionGroupConfigBuilder>
         {
-            { "test", new SubscriptionGroupConfigBuilder("test").AddQueues(queues) },
+            {
+                "test", new SubscriptionGroupConfigBuilder("test").AddQueue(new SqsSource
+                {
+                    SqsQueue = sqsQueue,
+                    MessageConverter = new InboundMessageConverter(SimpleMessage.Serializer, new MessageCompressionRegistry(), false)
+                })
+            }
         };
 
         IMessageDispatcher dispatcher = new FakeDispatcher(() => Interlocked.Increment(ref dispatchedMessageCount));

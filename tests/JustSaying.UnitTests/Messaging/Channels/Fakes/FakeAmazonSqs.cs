@@ -237,7 +237,7 @@ public sealed class FakeAmazonSqs(Func<IEnumerable<ReceiveMessageResponse>> getM
         ReceiveMessageRequest request,
         CancellationToken cancellationToken = default)
     {
-        await Task.Delay(50, cancellationToken);
+        await Task.Yield();
 
         ReceiveMessageRequests.Add(request);
 

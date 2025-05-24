@@ -11,11 +11,11 @@ public class WhenThereAreExceptionsInSqsCalling(ITestOutputHelper testOutputHelp
 
     protected override void Given()
     {
-        _queue = CreateSuccessfulTestQueue("TestQueue", ExceptionOnFirstCall());
-        Queues.Add(_queue);
+        var sqsSource = CreateSuccessfulTestQueue("TestQueue", ExceptionOnFirstCall());
+        _queue = sqsSource.SqsQueue as FakeSqsQueue;
+        Queues.Add(sqsSource);
 
-        SerializationRegister.DefaultDeserializedMessage =
-            () => throw new TestException("Test from WhenThereAreExceptionsInMessageProcessing");
+        // setup deserializer failure
     }
 
     private IEnumerable<Message> ExceptionOnFirstCall()
@@ -29,9 +29,9 @@ public class WhenThereAreExceptionsInSqsCalling(ITestOutputHelper testOutputHelp
         yield break;
     }
 
-    protected override bool Until()
+    protected override Task<bool> UntilAsync()
     {
-        return _callCount > 1;
+        return Task.FromResult(_callCount > 1);
     }
 
     [Fact]

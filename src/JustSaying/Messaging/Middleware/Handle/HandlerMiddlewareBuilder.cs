@@ -108,7 +108,6 @@ Please check the documentation for your container for more details.");
     /// <param name="configure">An <see cref="Action{HandlerMiddlewareBuilder}"/> that customises
     /// the pipeline.</param>
     /// <returns></returns>
-
     public HandlerMiddlewareBuilder Configure(
         Action<HandlerMiddlewareBuilder> configure)
     {

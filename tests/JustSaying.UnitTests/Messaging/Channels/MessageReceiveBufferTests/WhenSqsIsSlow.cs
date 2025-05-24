@@ -1,5 +1,9 @@
 using Amazon.SQS.Model;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Middleware.Receive;
 using JustSaying.TestingFramework;
@@ -12,8 +16,8 @@ public class WhenSqsIsSlow
 {
     protected class TestMessage : Message { }
 
-    private int _callCount;
     private readonly MessageReceiveBuffer _messageReceiveBuffer;
+    private readonly FakeSqsQueue _queue;
 
     public WhenSqsIsSlow(ITestOutputHelper testOutputHelper)
     {
@@ -23,12 +27,20 @@ public class WhenSqsIsSlow
             new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>();
 
         var messages = new List<Message> { new TestMessage() };
-        var queue = new FakeSqsQueue(async ct =>
+        _queue = new FakeSqsQueue(async ct =>
         {
-            await Task.Delay(100, ct);
-            Interlocked.Increment(ref _callCount);
+            await Task.Delay(20, ct);
             return messages;
-        });
+        })
+        {
+            MaxNumberOfMessagesToReceive = 10
+        };
+
+        var source = new SqsSource
+        {
+            SqsQueue = _queue,
+            MessageConverter = new InboundMessageConverter(SimpleMessage.Serializer, new MessageCompressionRegistry(), false)
+        };
 
         var monitor = new TrackingLoggingMonitor(
             loggerFactory.CreateLogger<TrackingLoggingMonitor>());
@@ -38,7 +50,7 @@ public class WhenSqsIsSlow
             10,
             TimeSpan.FromSeconds(1),
             TimeSpan.FromSeconds(1),
-            queue,
+            source,
             sqsMiddleware,
             null,
             monitor,
@@ -67,14 +79,13 @@ public class WhenSqsIsSlow
     public async Task All_Messages_Are_Processed()
     {
         using var cts = new CancellationTokenSource();
-        var _ = _messageReceiveBuffer.RunAsync(cts.Token);
+        _ = _messageReceiveBuffer.RunAsync(cts.Token);
         var readTask = Messages();
 
-        // Read messages for a while
-        await Task.Delay(TimeSpan.FromSeconds(2));
+        await _queue.ReceivedAllMessages.WaitAsync(TimeSpan.FromSeconds(5), cts.Token);
 
         // Cancel token
-        cts.Cancel();
+        await cts.CancelAsync();
 
         // Ensure buffer completes
         await _messageReceiveBuffer.Reader.Completion;
@@ -84,6 +95,6 @@ public class WhenSqsIsSlow
 
         // Make sure that number makes sense
         messagesRead.ShouldBeGreaterThan(0);
-        messagesRead.ShouldBeLessThanOrEqualTo(_callCount);
+        messagesRead.ShouldBeLessThanOrEqualTo(10);
     }
 }

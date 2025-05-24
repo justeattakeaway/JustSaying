@@ -18,7 +18,7 @@ public class WhenAHandlerThrowsAnExceptionWithNoMonitor(ITestOutputHelper output
 
         var services = GivenJustSaying()
             .ConfigureJustSaying((builder) => builder.Publications((options) =>
-                options.WithQueue<SimpleMessage>(qo => qo.WithName(UniqueName))))
+                options.WithQueue<SimpleMessage>(qo => qo.WithQueueName(UniqueName))))
             .ConfigureJustSaying(
                 (builder) => builder.Subscriptions(
                         (options) => options.ForQueue<SimpleMessage>(

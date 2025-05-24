@@ -1,3 +1,4 @@
+using System.Text.Json;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
@@ -16,7 +17,7 @@ public class WhenAMessageIsPublishedToATopicWithSystemTextJson(ITestOutputHelper
         var services = GivenJustSaying()
             .ConfigureJustSaying(
                 (builder) => builder.WithLoopbackTopic<SimpleMessage>(UniqueName))
-            .AddSingleton<IMessageSerializationFactory, SystemTextJsonSerializationFactory>()
+            .AddSingleton<IMessageBodySerializationFactory>(x => new SystemTextJsonSerializationFactory(new JsonSerializerOptions()))
             .AddSingleton<IHandlerAsync<SimpleMessage>>(handler);
 
         string content = Guid.NewGuid().ToString();
