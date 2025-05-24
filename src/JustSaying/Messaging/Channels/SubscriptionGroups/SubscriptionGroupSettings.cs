@@ -3,7 +3,7 @@ using JustSaying.AwsTools.MessageHandling;
 namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 
 /// <summary>
-/// The settings used by <see cref="SubscriptionGroupFactory"/> to be create
+/// The settings used by <see cref="SubscriptionGroupFactory"/> to create
 /// a <see cref="ISubscriptionGroup"/>.
 /// </summary>
 public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
