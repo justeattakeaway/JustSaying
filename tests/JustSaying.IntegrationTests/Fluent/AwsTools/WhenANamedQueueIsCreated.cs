@@ -22,6 +22,7 @@ public class WhenANamedQueueIsCreated(ITestOutputHelper outputHelper) : Integrat
         var queue = new SqsQueueByName(
             Region,
             UniqueName,
+            false,
             client,
             1,
             loggerFactory);
