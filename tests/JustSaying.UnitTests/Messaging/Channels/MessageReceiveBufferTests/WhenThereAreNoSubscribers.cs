@@ -1,5 +1,9 @@
 using Amazon.SQS.Model;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Middleware.Receive;
 using JustSaying.TestingFramework;
@@ -26,11 +30,15 @@ public class WhenThereAreNoSubscribers
             new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>();
 
         var messages = new List<Message> { new TestMessage() };
-        var queue = new FakeSqsQueue(ct =>
+        var queue = new SqsSource
         {
-            Interlocked.Increment(ref _callCount);
-            return Task.FromResult(messages.AsEnumerable());
-        });
+            SqsQueue = new FakeSqsQueue(ct =>
+            {
+                Interlocked.Increment(ref _callCount);
+                return Task.FromResult(messages.AsEnumerable());
+            }),
+            MessageConverter = new InboundMessageConverter(SimpleMessage.Serializer, new MessageCompressionRegistry(), false)
+        };
 
         var monitor = new TrackingLoggingMonitor(
             loggerFactory.CreateLogger<TrackingLoggingMonitor>());
@@ -51,7 +59,7 @@ public class WhenThereAreNoSubscribers
     public async Task Buffer_Is_Filled()
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
-        var _ = _messageReceiveBuffer.RunAsync(cts.Token);
+        _ = _messageReceiveBuffer.RunAsync(cts.Token);
 
         await Patiently.AssertThatAsync(_outputHelper, () => _callCount > 0);
 

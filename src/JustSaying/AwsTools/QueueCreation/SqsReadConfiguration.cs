@@ -1,3 +1,4 @@
+using JustSaying.Models;
 using JustSaying.Naming;
 
 namespace JustSaying.AwsTools.QueueCreation;
@@ -20,9 +21,10 @@ public class SqsReadConfiguration : SqsBasicConfiguration
     public Dictionary<string, string> Tags { get; set; }
     public string TopicSourceAccount { get; set; }
     public string FilterPolicy { get; set; }
+    public bool RawMessageDelivery { get; set; }
     public string SubscriptionGroupName { get; set; }
 
-    public void ApplyTopicNamingConvention<T>(ITopicNamingConvention namingConvention)
+    public void ApplyTopicNamingConvention<T>(ITopicNamingConvention namingConvention) where T: Message
     {
         TopicName = namingConvention.Apply<T>(TopicName);
     }

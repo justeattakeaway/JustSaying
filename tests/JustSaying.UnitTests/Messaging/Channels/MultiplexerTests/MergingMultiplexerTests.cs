@@ -7,7 +7,7 @@ namespace JustSaying.UnitTests.Messaging.Channels.MultiplexerTests;
 
 public class MergingMultiplexerTests(ITestOutputHelper outputHelper)
 {
-    private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan TimeoutPeriod = TimeSpan.FromMilliseconds(50);
 
     [Fact]
     public async Task Starting_Twice_Returns_Same_Task()

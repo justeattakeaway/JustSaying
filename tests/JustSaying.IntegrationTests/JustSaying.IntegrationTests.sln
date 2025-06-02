@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.002.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JustSaying.IntegrationTests", "JustSaying.IntegrationTests.csproj", "{7B078B88-5CAE-423B-B6BB-18392F7C54BD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7B078B88-5CAE-423B-B6BB-18392F7C54BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B078B88-5CAE-423B-B6BB-18392F7C54BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B078B88-5CAE-423B-B6BB-18392F7C54BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B078B88-5CAE-423B-B6BB-18392F7C54BD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E3F85F97-D917-4B57-9EC0-DB84F3917969}
+	EndGlobalSection
+EndGlobal

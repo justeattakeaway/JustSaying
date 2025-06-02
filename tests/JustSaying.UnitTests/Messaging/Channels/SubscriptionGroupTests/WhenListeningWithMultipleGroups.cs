@@ -1,13 +1,53 @@
-using JustSaying.AwsTools.MessageHandling;
+using System.Text.Json;
+using Amazon.SQS.Model;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
+using JustSaying.TestingFramework;
 using Newtonsoft.Json;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class WhenListeningWithMultipleGroups(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
+public class WhenListeningWithMultipleGroups : BaseSubscriptionGroupTests
 {
-    private readonly ISqsQueue _queueB = CreateSuccessfulTestQueue("C7506B3F-81DA-4898-82A5-C0293523592A", new TestMessage());
-    private readonly ISqsQueue _queueA = CreateSuccessfulTestQueue("EC159934-A30E-45B0-9186-78853F7D3BED", new TestMessage());
+    private readonly SqsSource _queueA;
+    private readonly SqsSource _queueB;
+
+    public WhenListeningWithMultipleGroups(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+    {
+        var queueA = new FakeSqsQueue(ct =>
+                Task.FromResult(new List<Message>
+                {
+                    new TestMessage
+                    {
+                        Body = $$"""{"Subject":"SimpleMessage", "Message": "{{JsonEncodedText.Encode(JsonSerializer.Serialize(new SimpleMessage { Content = "Hi" }))}}" }"""
+                    }
+                }.AsEnumerable()),
+            "EC159934-A30E-45B0-9186-78853F7D3BED");
+        var queueB = new FakeSqsQueue(ct =>
+                Task.FromResult(new List<Message>
+                {
+                    new TestMessage
+                    {
+                        Body = $$"""{"Subject":"SimpleMessage", "Message": "{{JsonEncodedText.Encode(JsonSerializer.Serialize(new SimpleMessage { Content = "Hi again" }))}}" }"""
+                    }
+                }.AsEnumerable()),
+            "C7506B3F-81DA-4898-82A5-C0293523592A");
+
+        var messageConverter = new InboundMessageConverter(new SystemTextJsonMessageBodySerializer<SimpleMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions), new MessageCompressionRegistry(), false);
+        _queueA = new SqsSource
+        {
+            SqsQueue = queueA,
+            MessageConverter = messageConverter
+        };
+        _queueB = new SqsSource
+        {
+            SqsQueue = queueB,
+            MessageConverter = messageConverter
+        };
+    }
 
     protected override Dictionary<string, SubscriptionGroupConfigBuilder> SetupBusConfig()
     {

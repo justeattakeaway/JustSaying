@@ -1,3 +1,4 @@
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 
 namespace JustSaying.TestingFramework;
@@ -17,6 +18,8 @@ public class OrderRejected : Message
 public class SimpleMessage : Message
 {
     public string Content { get; set; }
+
+    public static IMessageBodySerializer Serializer { get; } = new SystemTextJsonMessageBodySerializer<SimpleMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions);
 }
 
 public class AnotherSimpleMessage : Message
@@ -44,6 +47,4 @@ public class GenericMessage<T> : Message
     public T Contents { get; set; }
 }
 
-public class MyMessage
-{
-}
+public class MyMessage;

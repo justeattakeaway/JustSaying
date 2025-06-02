@@ -3,15 +3,15 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
-using JustSaying.Messaging.MessageSerialization;
 using Microsoft.Extensions.Logging;
 using Message = JustSaying.Models.Message;
+using MessageAttributeValue = Amazon.SQS.Model.MessageAttributeValue;
 
 namespace JustSaying.AwsTools.MessageHandling;
 
-public class SqsMessagePublisher(
+internal sealed class SqsMessagePublisher(
     IAmazonSQS client,
-    IMessageSerializationRegister serializationRegister,
+    OutboundMessageConverter messageConverter,
     ILoggerFactory loggerFactory) : IMessagePublisher, IMessageBatchPublisher
 {
     private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
@@ -23,8 +23,8 @@ public class SqsMessagePublisher(
     public SqsMessagePublisher(
         Uri queueUrl,
         IAmazonSQS client,
-        IMessageSerializationRegister serializationRegister,
-        ILoggerFactory loggerFactory) : this(client, serializationRegister, loggerFactory)
+        OutboundMessageConverter messageConverter,
+        ILoggerFactory loggerFactory) : this(client, messageConverter, loggerFactory)
     {
         QueueUrl = queueUrl;
     }
@@ -41,7 +41,7 @@ public class SqsMessagePublisher(
     {
         EnsureQueueUrl();
 
-        var request = BuildSendMessageRequest(message, metadata);
+        var request = await BuildSendMessageRequestAsync(message, metadata);
         SendMessageResponse response;
         try
         {
@@ -76,13 +76,17 @@ public class SqsMessagePublisher(
         }
     }
 
-    private SendMessageRequest BuildSendMessageRequest(Message message, PublishMetadata metadata)
+    private async Task<SendMessageRequest> BuildSendMessageRequestAsync(Message message, PublishMetadata metadata)
     {
+        var (messageBody, attributes, _) = await messageConverter.ConvertToOutboundMessageAsync(message, metadata);
+
         var request = new SendMessageRequest
         {
-            MessageBody = GetMessageInContext(message),
-            QueueUrl = QueueUrl.AbsoluteUri,
+            MessageBody = messageBody,
+            QueueUrl = QueueUrl.AbsoluteUri
         };
+
+        AddMessageAttributes(request.MessageAttributes, attributes);
 
         if (metadata?.Delay != null)
         {
@@ -92,7 +96,37 @@ public class SqsMessagePublisher(
         return request;
     }
 
-    public string GetMessageInContext(Message message) => serializationRegister.Serialize(message, serializeForSnsPublishing: false);
+    private static void AddMessageAttributes(Dictionary<string, MessageAttributeValue> requestMessageAttributes, Dictionary<string, Messaging.MessageAttributeValue> messageAttributes)
+    {
+        if (messageAttributes == null || messageAttributes.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var attribute in messageAttributes)
+        {
+            requestMessageAttributes.Add(attribute.Key, BuildMessageAttributeValue(attribute.Value));
+        }
+    }
+
+    private static MessageAttributeValue BuildMessageAttributeValue(Messaging.MessageAttributeValue value)
+    {
+        if (value == null)
+        {
+            return null;
+        }
+
+        var binaryValueStream = value.BinaryValue != null
+            ? new MemoryStream([.. value.BinaryValue], false)
+            : null;
+
+        return new MessageAttributeValue
+        {
+            StringValue = value.StringValue,
+            BinaryValue = binaryValueStream,
+            DataType = value.DataType
+        };
+    }
 
     /// <inheritdoc/>
     public InterrogationResult Interrogate()
@@ -113,7 +147,7 @@ public class SqsMessagePublisher(
 
         foreach (var chunk in messages.Chunk(size))
         {
-            var request = BuildSendMessageBatchRequest(chunk, metadata);
+            var request = await BuildSendMessageBatchRequestAsync(chunk, metadata);
             SendMessageBatchResponse response;
             try
             {
@@ -184,18 +218,22 @@ public class SqsMessagePublisher(
         }
     }
 
-    private SendMessageBatchRequest BuildSendMessageBatchRequest(Message[] messages, PublishMetadata metadata)
+    private async Task<SendMessageBatchRequest> BuildSendMessageBatchRequestAsync(Message[] messages, PublishMetadata metadata)
     {
         var entries = new List<SendMessageBatchRequestEntry>(messages.Length);
         int? delaySeconds = metadata?.Delay is { } delay ? (int)delay.TotalSeconds : null;
 
         foreach (var message in messages)
         {
+            var (messageBody, attributes, _) = await messageConverter.ConvertToOutboundMessageAsync(message, metadata);
+
             var entry = new SendMessageBatchRequestEntry
             {
                 Id = message.UniqueKey(),
-                MessageBody = GetMessageInContext(message),
+                MessageBody = messageBody
             };
+
+            AddMessageAttributes(entry.MessageAttributes, attributes);
 
             if (delaySeconds is { } value)
             {

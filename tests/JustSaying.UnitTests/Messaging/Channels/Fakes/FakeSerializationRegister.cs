@@ -1,38 +1,16 @@
-using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
-using JustSaying.TestingFramework;
 
 namespace JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 
-public class FakeSerializationRegister : IMessageSerializationRegister
+internal class FakeBodySerializer(string messageBody) : IMessageBodySerializer
 {
-    public Func<SimpleMessage> DefaultDeserializedMessage { get; set; }
+    public string Serialize(Message message) => messageBody;
+    Message IMessageBodySerializer.Deserialize(string message) => throw new NotImplementedException();
+}
 
-    public IList<string> ReceivedDeserializationRequests { get; }
-
-    public FakeSerializationRegister()
-    {
-        var defaultMessage = new SimpleMessage
-        {
-            RaisingComponent = "Component",
-            Id = Guid.NewGuid()
-        };
-        DefaultDeserializedMessage = () => defaultMessage;
-        ReceivedDeserializationRequests = new List<string>();
-    }
-
-    public MessageWithAttributes DeserializeMessage(string body)
-    {
-        ReceivedDeserializationRequests.Add(body);
-        return new MessageWithAttributes(DefaultDeserializedMessage(), new MessageAttributes());
-    }
-
-    public string Serialize(Message message, bool serializeForSnsPublishing)
-    {
-        return "";
-    }
-
-    public void AddSerializer<T>() where T : Message
-    { }
+internal class FakeBodyDeserializer(Message messageToReturn) : IMessageBodySerializer
+{
+    string IMessageBodySerializer.Serialize(Message message) =>  throw new NotImplementedException();
+    public Message Deserialize(string message) => messageToReturn;
 }

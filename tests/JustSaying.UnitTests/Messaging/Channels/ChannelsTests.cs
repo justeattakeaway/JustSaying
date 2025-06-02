@@ -1,10 +1,13 @@
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Dispatch;
 using JustSaying.Messaging.Channels.Multiplexer;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Middleware.Receive;
 using JustSaying.Messaging.Monitoring;
@@ -24,17 +27,15 @@ public class ChannelsTests
     private ILoggerFactory LoggerFactory { get; }
     private IMessageMonitor MessageMonitor { get; }
     private ITestOutputHelper OutputHelper { get; }
-    private readonly TimeSpan _timeoutPeriod = TimeSpan.FromSeconds(1);
+    private readonly TimeSpan _timeoutPeriod = TimeSpan.FromMilliseconds(50);
 
     public ChannelsTests(ITestOutputHelper testOutputHelper)
     {
         MessageReceivePauseSignal = new MessageReceivePauseSignal();
         OutputHelper = testOutputHelper;
-        LoggerFactory = new LoggerFactory().AddXUnit(testOutputHelper, LogLevel.Trace);
+        LoggerFactory = new LoggerFactory().AddXUnit(testOutputHelper, LogLevel.Information);
         MessageMonitor = new TrackingLoggingMonitor(LoggerFactory.CreateLogger<TrackingLoggingMonitor>());
     }
-
-
 
     [Fact]
     public async Task QueueCanBeAssignedToOnePump()
@@ -180,8 +181,9 @@ public class ChannelsTests
     [InlineData(10, 20, 20, 50)]
     public async Task WhenSubscriberNotStarted_BufferShouldFillUp_AndStopDownloading(int receivePrefetch, int receiveBufferSize, int multiplexerCapacity, int expectedDownloadCount)
     {
-        var sqsQueue = TestQueue();
-        IMessageReceiveBuffer buffer = CreateMessageReceiveBuffer(sqsQueue, receivePrefetch, receiveBufferSize);
+        var sqsSource = TestQueue();
+        var sqsQueue = sqsSource.SqsQueue as FakeSqsQueue;
+        IMessageReceiveBuffer buffer = CreateMessageReceiveBuffer(sqsSource, receivePrefetch, receiveBufferSize);
         FakeDispatcher dispatcher = new FakeDispatcher();
         IMultiplexerSubscriber consumer1 = CreateSubscriber(dispatcher);
         IMultiplexer multiplexer = CreateMultiplexer(multiplexerCapacity);
@@ -198,7 +200,7 @@ public class ChannelsTests
         var multiplexerCompletion = multiplexer.RunAsync(cts.Token);
         var bufferCompletion = buffer.RunAsync(cts.Token);
 
-        cts.CancelAfter(3.Seconds());
+        cts.CancelAfter(TimeSpan.FromMilliseconds(150));
 
         await multiplexerCompletion.HandleCancellation();
         await bufferCompletion.HandleCancellation();
@@ -224,7 +226,7 @@ public class ChannelsTests
         var sqsQueue2 = TestQueue();
         var sqsQueue3 = TestQueue();
 
-        var queues = new List<ISqsQueue> { sqsQueue1, sqsQueue2, sqsQueue3 };
+        var queues = new List<SqsSource> { sqsQueue1, sqsQueue2, sqsQueue3 };
         IMessageDispatcher dispatcher = new FakeDispatcher();
         var bus = CreateSubscriptionGroup(queues, dispatcher);
 
@@ -242,7 +244,7 @@ public class ChannelsTests
 
         int callCountBeforeCancelled = 0;
         int callCountAfterCancelled = 0;
-        ISqsQueue sqsQueue = TestQueue(() =>
+        var sqsQueue = TestQueue(() =>
         {
             if (cts.Token.IsCancellationRequested)
             {
@@ -275,7 +277,7 @@ public class ChannelsTests
         int dispatchedBeforeCancelled = 0;
         int dispatchedAfterCancelled = 0;
 
-        ISqsQueue sqsQueue = TestQueue();
+        var sqsQueue = TestQueue();
         IMessageDispatcher dispatcher = new FakeDispatcher(() =>
         {
             if (cts.Token.IsCancellationRequested)
@@ -305,7 +307,7 @@ public class ChannelsTests
     {
         var queue = TestQueue();
         var dispatcher = new FakeDispatcher();
-        var group = CreateSubscriptionGroup(new[] { queue }, dispatcher);
+        var group = CreateSubscriptionGroup([queue], dispatcher);
 
         var cts = new CancellationTokenSource();
 
@@ -317,7 +319,7 @@ public class ChannelsTests
         cts.Cancel();
     }
 
-    private static FakeSqsQueue TestQueue(Action spy = null)
+    private static SqsSource TestQueue(Action spy = null)
     {
         IEnumerable<Message> GetMessages(CancellationToken cancellationToken)
         {
@@ -329,11 +331,17 @@ public class ChannelsTests
             }
         }
 
-        return new FakeSqsQueue(ct => Task.FromResult(GetMessages(ct)));
+        var source = new SqsSource
+        {
+            SqsQueue = new FakeSqsQueue(ct => Task.FromResult(GetMessages(ct))),
+            MessageConverter = new InboundMessageConverter(SimpleMessage.Serializer, new MessageCompressionRegistry(), false)
+        };
+
+        return source;
     }
 
     private MessageReceiveBuffer CreateMessageReceiveBuffer(
-        ISqsQueue sqsQueue,
+        SqsSource sqsQueue,
         int prefetch = 10,
         int receiveBufferSize = 10)
     {
@@ -356,7 +364,7 @@ public class ChannelsTests
     }
 
     private ISubscriptionGroup CreateSubscriptionGroup(
-        IList<ISqsQueue> queues,
+        IList<SqsSource> queues,
         IMessageDispatcher dispatcher)
     {
         var defaults = new SubscriptionGroupSettingsBuilder();

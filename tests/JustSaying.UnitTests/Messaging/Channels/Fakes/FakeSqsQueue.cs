@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging.Interrogation;
@@ -7,6 +8,13 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 public class FakeSqsQueue(Func<CancellationToken, Task<IEnumerable<Message>>> messageProducer, string queueName = "fake-queue-name") : ISqsQueue
 {
     private readonly Func<CancellationToken, Task<IEnumerable<Message>>> _messageProducer = messageProducer;
+    private readonly TaskCompletionSource _receivedAllMessages = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private int _messageReceived;
+    private readonly ConcurrentBag<FakeDeleteMessageRequest> _deleteMessageRequests = [];
+    private readonly ConcurrentBag<FakeChangeMessageVisibilityRequest> _changeMessageVisibilityRequests = [];
+    private readonly ConcurrentBag<FakeTagQueueRequest> _tagQueueRequests = [];
+    private readonly ConcurrentBag<FakeReceiveMessagesRequest> _receiveMessageRequests = [];
+    private readonly object _messageLock = new();
 
     public InterrogationResult Interrogate()
     {
@@ -17,38 +25,58 @@ public class FakeSqsQueue(Func<CancellationToken, Task<IEnumerable<Message>>> me
     public string RegionSystemName { get; } = "fake-region";
     public Uri Uri { get; set; } = new Uri("http://test.com");
     public string Arn { get; } = $"arn:aws:fake-region:123456789012:{queueName}";
+    public int? MaxNumberOfMessagesToReceive { get; set; } = 100;
+    public Task ReceivedAllMessages => _receivedAllMessages.Task;
 
-    public List<FakeDeleteMessageRequest> DeleteMessageRequests { get; } = new();
-    public List<FakeChangeMessageVisibilityRequest> ChangeMessageVisbilityRequests { get; } = new();
-    public List<FakeTagQueueRequest> TagQueueRequests { get; } = new();
-    public List<FakeReceiveMessagesRequest> ReceiveMessageRequests { get; } = new();
+    public IReadOnlyCollection<FakeDeleteMessageRequest> DeleteMessageRequests => _deleteMessageRequests;
+    public IReadOnlyCollection<FakeChangeMessageVisibilityRequest> ChangeMessageVisibilityRequests => _changeMessageVisibilityRequests;
+    public IReadOnlyCollection<FakeTagQueueRequest> TagQueueRequests => _tagQueueRequests;
+    public IReadOnlyCollection<FakeReceiveMessagesRequest> ReceiveMessageRequests => _receiveMessageRequests;
 
     public Task DeleteMessageAsync(string queueUrl, string receiptHandle, CancellationToken cancellationToken)
     {
-        DeleteMessageRequests.Add(new FakeDeleteMessageRequest(queueUrl, receiptHandle));
+        _deleteMessageRequests.Add(new FakeDeleteMessageRequest(queueUrl, receiptHandle));
         return Task.CompletedTask;
     }
 
     public Task TagQueueAsync(string queueUrl, Dictionary<string, string> tags, CancellationToken cancellationToken)
     {
-        TagQueueRequests.Add(new FakeTagQueueRequest(queueUrl, tags));
+        _tagQueueRequests.Add(new FakeTagQueueRequest(queueUrl, tags));
         return Task.CompletedTask;
     }
 
     public async Task<IList<Message>> ReceiveMessagesAsync(string queueUrl, int maxNumOfMessages, int secondsWaitTime, IList<string> attributesToLoad, CancellationToken cancellationToken)
     {
-        await Task.Delay(50, cancellationToken);
+        await Task.Yield();
         var messages = await _messageProducer(cancellationToken);
-        var result =  messages.Take(maxNumOfMessages).ToList();
+        List<Message> result;
 
-        ReceiveMessageRequests.Add(new FakeReceiveMessagesRequest(queueUrl, maxNumOfMessages, secondsWaitTime, attributesToLoad, result.Count));
+        lock (_messageLock)
+        {
+            var countToTake = MaxNumberOfMessagesToReceive is null ? maxNumOfMessages : Math.Min(maxNumOfMessages, MaxNumberOfMessagesToReceive.Value - _messageReceived);
+            result = messages.Take(countToTake).ToList();
+            _messageReceived += result.Count;
+
+            _receiveMessageRequests.Add(new FakeReceiveMessagesRequest(queueUrl, maxNumOfMessages, secondsWaitTime, attributesToLoad, result.Count));
+
+            if (_messageReceived >= MaxNumberOfMessagesToReceive)
+            {
+                _receivedAllMessages.TrySetResult();
+            }
+        }
+
+        // If empty, wait for a bit to avoid spinning in a tight loop
+        if (result.Count == 0)
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(20), cancellationToken);
+        }
 
         return result;
     }
 
     public Task ChangeMessageVisibilityAsync(string queueUrl, string receiptHandle, int visibilityTimeoutInSeconds, CancellationToken cancellationToken)
     {
-        ChangeMessageVisbilityRequests.Add(new FakeChangeMessageVisibilityRequest(queueUrl, receiptHandle, visibilityTimeoutInSeconds));
+        _changeMessageVisibilityRequests.Add(new FakeChangeMessageVisibilityRequest(queueUrl, receiptHandle, visibilityTimeoutInSeconds));
         return Task.CompletedTask;
     }
 }

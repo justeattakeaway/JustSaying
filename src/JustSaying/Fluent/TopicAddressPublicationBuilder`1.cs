@@ -1,6 +1,7 @@
 using Amazon;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 
@@ -18,6 +19,9 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     private readonly TopicAddress _topicAddress;
     private Func<Exception, Message, bool> _exceptionHandler;
     private Func<Exception, IReadOnlyCollection<Message>, bool> _exceptionBatchHandler;
+    private PublishCompressionOptions _compressionOptions;
+    private string _subject;
+    private bool _subjectSet;
 
     /// <summary>
     /// Function that will produce a topic address dynamically from a Message and the original topic
@@ -67,6 +71,25 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
     }
 
     /// <summary>
+    /// Sets the compression options for publishing messages.
+    /// </summary>
+    /// <param name="compressionOptions">The compression options to use when publishing messages.</param>
+    /// <returns>The current instance of <see cref="TopicAddressPublicationBuilder{T}"/> for method chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="compressionOptions"/> is null.</exception>
+    public TopicAddressPublicationBuilder<T> WithCompression(PublishCompressionOptions compressionOptions)
+    {
+        _compressionOptions = compressionOptions ?? throw new ArgumentNullException(nameof(compressionOptions));
+        return this;
+    }
+
+    public TopicAddressPublicationBuilder<T> WithSubject(string subject)
+    {
+        _subject = subject;
+        _subjectSet = true;
+        return this;
+    }
+
+    /// <summary>
     /// Configures the address of the topic by calling this function at publish time to determine the topic ARN.
     /// </summary>
     /// <param name="topicAddressCustomizer">Function that will be called at publish time to determine the ARN of the target topic for this <see cref="T"/>.
@@ -93,14 +116,23 @@ public sealed class TopicAddressPublicationBuilder<T> : IPublicationBuilder<T>
 
         var arn = Arn.Parse(_topicAddress.TopicArn);
 
-        bus.SerializationRegister.AddSerializer<T>();
+        var compressionRegistry = bus.CompressionRegistry;
+        var compressionOptions = _compressionOptions ?? bus.Config.DefaultCompressionOptions;
+        var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
+        var subjectProvider = bus.Config.MessageSubjectProvider;
+        var subject = _subjectSet ? _subject : subjectProvider.GetSubjectForType(typeof(T));
+
+        CompressionEncodingValidator.ValidateEncoding(bus.CompressionRegistry, compressionOptions);
 
         StaticAddressPublicationConfiguration BuildConfiguration(string topicArn)
             => StaticAddressPublicationConfiguration.Build<T>(
                 topicArn,
                 proxy.GetAwsClientFactory(),
+                new OutboundMessageConverter(PublishDestinationType.Topic, serializer, compressionRegistry, compressionOptions, subject, true),
                 loggerFactory,
-                bus);
+                bus,
+                _exceptionHandler,
+                _exceptionBatchHandler);
 
         ITopicAddressPublisher publisherConfig = TopicAddressCustomizer != null
             ? DynamicAddressPublicationConfiguration.Build<T>(_topicAddress.TopicArn, TopicAddressCustomizer, BuildConfiguration, loggerFactory)

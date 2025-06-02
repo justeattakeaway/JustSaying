@@ -1,5 +1,6 @@
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.MessageSerialization;
 
 namespace JustSaying.Messaging.Channels.Context;
 
@@ -13,10 +14,12 @@ public sealed class QueueMessageContext : IQueueMessageContext
     /// </summary>
     /// <param name="message">The <see cref="Amazon.SQS.Model.Message"/> to be handled.</param>
     /// <param name="queueReader">The <see cref="SqsQueueReader"/> the message was read from.</param>
-    internal QueueMessageContext(Message message, SqsQueueReader queueReader)
+    /// <param name="messageConverter"></param>
+    internal QueueMessageContext(Message message, SqsQueueReader queueReader, IInboundMessageConverter messageConverter)
     {
         Message = message ?? throw new ArgumentNullException(nameof(message));
         _queueReader = queueReader ?? throw new ArgumentNullException(nameof(queueReader));
+        MessageConverter = messageConverter;
     }
 
     /// <inheritdoc />
@@ -27,6 +30,8 @@ public sealed class QueueMessageContext : IQueueMessageContext
 
     /// <inheritdoc />
     public string QueueName => _queueReader.QueueName;
+
+    public IInboundMessageConverter MessageConverter { get; }
 
     /// <inheritdoc />
     public async Task UpdateMessageVisibilityTimeout(TimeSpan visibilityTimeout, CancellationToken cancellationToken)

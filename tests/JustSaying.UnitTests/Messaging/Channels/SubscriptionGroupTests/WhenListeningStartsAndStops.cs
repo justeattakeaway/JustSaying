@@ -1,14 +1,17 @@
+using System.Text.Json;
 using Amazon.SQS.Model;
+using JustSaying.Messaging;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageProcessingStrategies;
+using JustSaying.Messaging.MessageSerialization;
+using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
 public class WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
 {
-    private const string AttributeMessageContentsRunning = @"Message Contents Running";
-    private const string AttributeMessageContentsAfterStop = @"Message Contents After Stop";
-
     private int _expectedMaxMessageCount;
     private bool _running;
     private FakeSqsQueue _queue;
@@ -20,8 +23,8 @@ public class WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper) : B
 
         Logger.LogInformation("Expected max message count is {MaxMessageCount}", _expectedMaxMessageCount);
 
-        var response1 = new Message { Body = AttributeMessageContentsRunning };
-        var response2 = new Message { Body = AttributeMessageContentsAfterStop } ;
+        var response1 = new Message { Body = $$"""{ "Subject": "SimpleMessage", "Message": "{{JsonEncodedText.Encode(JsonSerializer.Serialize(new SimpleMessage { Content = "Message Contents Running" }))}}" }""" };
+        var response2 = new Message { Body = $$"""{ "Subject": "SimpleMessage", "Message": "{{JsonEncodedText.Encode(JsonSerializer.Serialize(new SimpleMessage { Content = "Message Contents After Stop" }))}}" }""" };
         IEnumerable<Message> GetMessages(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
@@ -31,9 +34,17 @@ public class WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper) : B
             }
         }
 
-        _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), ct => Task.FromResult(GetMessages(ct)));
+        var sqsQueue = new FakeSqsQueue(ct => Task.FromResult(GetMessages(ct)), Guid.NewGuid().ToString());
 
-        Queues.Add(_queue);
+        var sqsSource = new SqsSource
+        {
+            SqsQueue = sqsQueue,
+            MessageConverter = new InboundMessageConverter(new SystemTextJsonMessageBodySerializer<SimpleMessage>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions), new MessageCompressionRegistry(), false)
+        };
+
+        _queue = sqsSource.SqsQueue as FakeSqsQueue;
+
+        Queues.Add(sqsSource);
     }
 
     protected override async Task WhenAsync()
@@ -60,7 +71,7 @@ public class WhenListeningStartsAndStops(ITestOutputHelper testOutputHelper) : B
     [Fact]
     public void MessageIsProcessed()
     {
-        SerializationRegister.ReceivedDeserializationRequests.ShouldContain(AttributeMessageContentsRunning);
-        SerializationRegister.ReceivedDeserializationRequests.ShouldNotContain(AttributeMessageContentsAfterStop);
+        Handler.ReceivedMessages.ShouldContain(m => m.Content.Equals("Message Contents Running"));
+        Handler.ReceivedMessages.ShouldNotContain(m => m.Content.Equals("Message Contents After Stop"));
     }
 }

@@ -32,7 +32,7 @@ public class MessageContextAccessorTests
         var accessor = MakeAccessor();
         accessor.MessageContext = data;
 
-        await Task.Delay(250);
+        await Task.Delay(50);
 
         AssertSame(data, accessor.MessageContext);
     }
@@ -86,8 +86,7 @@ public class MessageContextAccessorTests
 
         for (int i = 0; i < 5; i++)
         {
-            await Task.Delay(100 + i)
-                .ConfigureAwait(false);
+            await Task.Yield();
 
             AssertSame(data, accessor.MessageContext);
 
