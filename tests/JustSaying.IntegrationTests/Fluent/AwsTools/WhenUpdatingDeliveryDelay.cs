@@ -25,6 +25,7 @@ public class WhenUpdatingDeliveryDelay(ITestOutputHelper outputHelper) : Integra
         var queue = new SqsQueueByName(
             Region,
             UniqueName,
+            false,
             client,
             1,
             loggerFactory);

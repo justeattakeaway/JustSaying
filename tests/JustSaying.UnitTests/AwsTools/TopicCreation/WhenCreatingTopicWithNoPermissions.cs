@@ -24,6 +24,7 @@ public class WhenCreatingTopicWithNoPermissions(ITestOutputHelper outputHelper)
 
         var topic = new SnsTopicByName(
             topicName,
+            false,
             client,
             loggerFactory);
 
@@ -45,6 +46,7 @@ public class WhenCreatingTopicWithNoPermissions(ITestOutputHelper outputHelper)
 
         var topic = new SnsTopicByName(
             topicName,
+            false,
             client,
             loggerFactory);
 

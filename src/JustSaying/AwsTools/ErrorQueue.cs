@@ -14,8 +14,9 @@ namespace JustSaying.AwsTools;
 public class ErrorQueue(
     RegionEndpoint region,
     string sourceQueueName,
+    bool sourceIsFifoQueue,
     IAmazonSQS client,
-    ILoggerFactory loggerFactory) : SqsQueueByNameBase(region, sourceQueueName + "_error", client, loggerFactory)
+    ILoggerFactory loggerFactory) : SqsQueueByNameBase(region, GetErrorQueueName(sourceQueueName, sourceIsFifoQueue), sourceIsFifoQueue, client, loggerFactory)
 {
     protected override Dictionary<string, string> GetCreateQueueAttributes(SqsBasicConfiguration queueConfig)
     {
@@ -24,6 +25,15 @@ public class ErrorQueue(
             { SQSConstants.ATTRIBUTE_MESSAGE_RETENTION_PERIOD, queueConfig.ErrorQueueRetentionPeriod.AsSecondsString() },
             { SQSConstants.ATTRIBUTE_VISIBILITY_TIMEOUT, JustSayingConstants.DefaultVisibilityTimeout.AsSecondsString() },
         };
+    }
+
+    private static string GetErrorQueueName(string sourceQueueName, bool sourceIsFifoQueue)
+    {
+        if (!sourceIsFifoQueue)
+        {
+            return sourceQueueName + "_error";
+        }
+        return sourceQueueName.Replace(".fifo", "_error.fifo");
     }
 
     public override async Task UpdateQueueAttributeAsync(SqsBasicConfiguration queueConfig, CancellationToken cancellationToken)

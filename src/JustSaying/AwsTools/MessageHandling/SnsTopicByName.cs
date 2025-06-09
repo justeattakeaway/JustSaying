@@ -10,6 +10,7 @@ namespace JustSaying.AwsTools.MessageHandling;
 [Obsolete("SnsTopicByName is not intended for general usage and may be removed in a future major release")]
 public sealed class SnsTopicByName(
     string topicName,
+    bool isFifoTopic,
     IAmazonSimpleNotificationService client,
     ILoggerFactory loggerFactory) : IInterrogable
 {
@@ -76,7 +77,12 @@ public sealed class SnsTopicByName(
     {
         try
         {
-            var response = await client.CreateTopicAsync(new CreateTopicRequest(TopicName), cancellationToken)
+            var request = new CreateTopicRequest(TopicName);
+            if (isFifoTopic)
+            {
+                request.Attributes.Add(JustSayingConstants.AttributeFifoTopic, "true");
+            }
+            var response = await client.CreateTopicAsync(request, cancellationToken)
                 .ConfigureAwait(false);
 
             if (string.IsNullOrEmpty(response.TopicArn))

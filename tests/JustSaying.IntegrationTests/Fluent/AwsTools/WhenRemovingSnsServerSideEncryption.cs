@@ -20,6 +20,7 @@ public class WhenRemovingSnsServerSideEncryption(ITestOutputHelper outputHelper)
 
         var topic = new SnsTopicByName(
             UniqueName,
+            false,
             client,
             loggerFactory);
 

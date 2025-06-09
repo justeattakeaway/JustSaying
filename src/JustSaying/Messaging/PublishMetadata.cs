@@ -8,6 +8,10 @@ public class PublishMetadata
 
     public IDictionary<string, MessageAttributeValue> MessageAttributes { get; private set; }
 
+    public string MessageGroupId { get; private set; }
+
+    public string MessageDeduplicationId { get; private set; }
+
     public PublishMetadata AddMessageAttribute(string key, IReadOnlyCollection<byte> data)
     {
         var mav = new MessageAttributeValue
@@ -48,4 +52,15 @@ public class PublishMetadata
         });
     }
 
+    public PublishMetadata AddMessageGroupId(string messageGroupId)
+    {
+        MessageGroupId = messageGroupId;
+        return this;
+    }
+
+    public PublishMetadata AddMessageDeduplicationId(string messageDeduplicationId)
+    {
+        MessageDeduplicationId = messageDeduplicationId;
+        return this;
+    }
 }

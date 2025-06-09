@@ -11,4 +11,6 @@ public class SnsWriteConfiguration
     /// </summary>
     /// <returns>Boolean indicating whether the exception has been handled</returns>
     public Func<Exception, Message, bool> HandleException { get; set; }
+
+    public bool IsFifoTopic { get; set; }
 }

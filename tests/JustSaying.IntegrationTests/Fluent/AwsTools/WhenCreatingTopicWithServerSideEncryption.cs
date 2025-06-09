@@ -20,6 +20,7 @@ public class WhenCreatingTopicWithServerSideEncryption(ITestOutputHelper outputH
 
         var topic = new SnsTopicByName(
             UniqueName,
+            false,
             client,
             loggerFactory);
 
@@ -41,6 +42,7 @@ public class WhenCreatingTopicWithServerSideEncryption(ITestOutputHelper outputH
 
         var topic = new SnsTopicByName(
             UniqueName,
+            false,
             client,
             loggerFactory);
 
@@ -64,6 +66,7 @@ public class WhenCreatingTopicWithServerSideEncryption(ITestOutputHelper outputH
 
         var topic = new SnsTopicByName(
             UniqueName,
+            false,
             client,
             loggerFactory);
 

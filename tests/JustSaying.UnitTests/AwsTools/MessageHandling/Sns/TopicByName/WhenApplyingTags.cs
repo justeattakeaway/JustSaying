@@ -16,7 +16,7 @@ public class WhenApplyingTags : WhenSnsTopicTestBase
 
     private protected override Task<SnsTopicByName> CreateSystemUnderTestAsync()
     {
-        var topicByName = new SnsTopicByName("TopicName", Sns,  NullLoggerFactory.Instance)
+        var topicByName = new SnsTopicByName("TopicName", false, Sns,  NullLoggerFactory.Instance)
         {
             Tags = _tags
         };

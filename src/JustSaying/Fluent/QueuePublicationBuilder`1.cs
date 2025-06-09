@@ -27,6 +27,8 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
     /// </summary>
     private Action<SqsWriteConfiguration> ConfigureWrites { get; set; }
 
+    private bool IsFifoQueue { get; set; }
+
     /// <summary>
     /// Configures the SQS write configuration.
     /// </summary>
@@ -81,6 +83,22 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
         return WithWriteConfiguration(r => r.WithQueueName(queueName));
     }
 
+    /// <summary>
+    /// Configures the SQS Queue as a FIFO Queue.
+    /// </summary>
+    /// <remarks>
+    /// Queue Name should have the ".fifo" suffix appended per SQS specification.
+    /// </remarks>
+    /// <returns>
+    /// The current <see cref="QueuePublicationBuilder{T}"/>.
+    /// </returns>
+    public QueuePublicationBuilder<T> WithFifo()
+    {
+        IsFifoQueue = true;
+
+        return this;
+    }
+
     /// <inheritdoc />
     void IPublicationBuilder<T>.Configure(
         JustSayingBus bus,
@@ -117,6 +135,7 @@ public sealed class QueuePublicationBuilder<T> : IPublicationBuilder<T>
         var sqsQueue = new SqsQueueByName(
             regionEndpoint,
             writeConfiguration.QueueName,
+            IsFifoQueue,
             sqsClient,
             writeConfiguration.RetryCountBeforeSendingToErrorQueue,
             loggerFactory);

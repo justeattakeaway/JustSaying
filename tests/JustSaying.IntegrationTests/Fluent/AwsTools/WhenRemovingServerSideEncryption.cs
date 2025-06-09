@@ -21,6 +21,7 @@ public class WhenRemovingServerSideEncryption(ITestOutputHelper outputHelper) : 
         var queue = new SqsQueueByName(
             Region,
             UniqueName,
+            false,
             client,
             1,
             loggerFactory);
