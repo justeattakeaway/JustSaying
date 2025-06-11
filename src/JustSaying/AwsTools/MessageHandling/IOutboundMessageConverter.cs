@@ -3,7 +3,7 @@ using JustSaying.Models;
 
 namespace JustSaying.Messaging;
 
-public interface IOutboundMessageConverter
+internal interface IOutboundMessageConverter
 {
     /// <summary>
     /// Converts a message to a format suitable for publishing, applying necessary transformations and compression.
