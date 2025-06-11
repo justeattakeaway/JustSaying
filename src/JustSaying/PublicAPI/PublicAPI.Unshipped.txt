@@ -52,8 +52,6 @@ JustSaying.Messaging.Compression.MessageCompressionRegistry.GetCompression(strin
 JustSaying.Messaging.Compression.MessageCompressionRegistry.MessageCompressionRegistry(System.Collections.Generic.IList<JustSaying.Messaging.Compression.IMessageBodyCompression> compressions = null) -> void
 JustSaying.Messaging.IInboundMessageConverter
 JustSaying.Messaging.IInboundMessageConverter.ConvertToInboundMessageAsync(Amazon.SQS.Model.Message message, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<JustSaying.Messaging.MessageSerialization.InboundMessage>
-JustSaying.Messaging.IOutboundMessageConverter
-JustSaying.Messaging.IOutboundMessageConverter.ConvertToOutboundMessageAsync(JustSaying.Models.Message message, JustSaying.Messaging.PublishMetadata publishMetadata, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<JustSaying.Messaging.MessageSerialization.OutboundMessage>
 JustSaying.Messaging.MessageHandling.MessageAttributes.GetKeys() -> System.Collections.Generic.IReadOnlyCollection<string>
 JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory
 JustSaying.Messaging.MessageSerialization.IMessageBodySerializationFactory.GetSerializer<T>() -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer
