@@ -1,6 +1,7 @@
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -11,12 +12,12 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sns.TopicByName;
 
 public class WhenPublishingAsyncExceptionCanBeHandled : WhenPublishingTestBase
 {
-    private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
     private const string TopicArn = "topicarn";
 
     private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        var topic = new SnsMessagePublisher(TopicArn, Sns, _serializationRegister, NullLoggerFactory.Instance, Substitute.For<IMessageSubjectProvider>(), (_, _) => true);
+        var messageConverter = CreateConverter();
+        var topic = new SnsMessagePublisher(TopicArn, Sns, messageConverter, NullLoggerFactory.Instance, (_, _) => true, null);
 
         return Task.FromResult(topic);
     }

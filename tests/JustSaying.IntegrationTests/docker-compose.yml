@@ -1,10 +1,9 @@
-version: "2"
 services:
   localstack:
     container_name: localstack
     restart: unless-stopped
-    image: localstack/localstack:3.5.0
+    image: localstack/localstack:3.7
     ports:
-      - 4566:4566
+      - "4566:4566"
     environment:
       LS_LOG: debug

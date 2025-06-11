@@ -5,7 +5,7 @@ namespace JustSaying.AwsTools.MessageHandling.Dispatch;
 /// <summary>
 /// Dispatches messages to the queue.
 /// </summary>
-public interface IMessageDispatcher
+internal interface IMessageDispatcher
 {
     /// <summary>
     /// Dispatches the message in <see cref="IQueueMessageContext"/> to the queue in the context.

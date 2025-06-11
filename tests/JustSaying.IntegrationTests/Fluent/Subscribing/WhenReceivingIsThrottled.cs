@@ -16,8 +16,8 @@ public sealed class WhenReceivingIsThrottled(ITestOutputHelper outputHelper) : I
     [AwsFact]
     public async Task Then_The_Messages_Are_Handled_With_Throttle()
     {
-        // First handler takes ages all the others take 50 ms
-        int waitOthers = 50;
+        // First handler takes ages all the others take 10 ms
+        int waitOthers = 10;
         int waitOne = 3_600_000;
 
         var messagesToSend = Enumerable.Range(0, 30)
@@ -30,7 +30,7 @@ public sealed class WhenReceivingIsThrottled(ITestOutputHelper outputHelper) : I
         var services = GivenJustSaying()
             .ConfigureJustSaying((builder) => builder.Client((client) => client.WithAnonymousCredentials()))
             .ConfigureJustSaying((builder) => builder.Messaging((options) => options.WithPublishFailureBackoff(TimeSpan.FromMilliseconds(1))))
-            .ConfigureJustSaying((builder) => builder.Publications((options) => options.WithQueue<WaitingMessage>(o => o.WithName(UniqueName))))
+            .ConfigureJustSaying((builder) => builder.Publications((options) => options.WithQueue<WaitingMessage>(o => o.WithQueueName(UniqueName))))
             .ConfigureJustSaying(
                 (builder) => builder.Subscriptions(
                     (options) => options
@@ -41,19 +41,21 @@ public sealed class WhenReceivingIsThrottled(ITestOutputHelper outputHelper) : I
                                 c.WithSubscriptionGroup("group")))))
             .AddSingleton<IHandlerAsync<WaitingMessage>>(handler);
 
-        var baseSleep = TimeSpan.FromMilliseconds(500);
+        var baseSleep = TimeSpan.FromMilliseconds(50);
 
         await WhenAsync(
             services,
             async (publisher, listener, cancellationToken) =>
             {
+                var waitForElevenMessages = handler.WaitForMessageCountAsync(11, cancellationToken);
+
                 await listener.StartAsync(cancellationToken);
                 await publisher.StartAsync(cancellationToken);
 
-                // Publish the message with a long running handler
+                // Publish the message with a long-running handler
                 await publisher.PublishAsync(messagesToSend.First(), cancellationToken);
 
-                // Give some time to AWS to schedule the first long running message
+                // Give some time to AWS to schedule the first long-running message
                 await Task.Delay(baseSleep, cancellationToken);
 
                 foreach (var msg in messagesToSend.Skip(1).SkipLast(1))
@@ -65,8 +67,8 @@ public sealed class WhenReceivingIsThrottled(ITestOutputHelper outputHelper) : I
                 await Task.Delay(baseSleep, cancellationToken);
                 await publisher.PublishAsync(messagesToSend.Last(), cancellationToken);
 
-                // Wait for a reasonble time before asserting whether the last message has been scheduled.
-                await Task.Delay(baseSleep * 2, cancellationToken);
+                // Wait for more than 10 messages.
+                await waitForElevenMessages;
 
                 handler.ReceivedMessages.Count.ShouldBeGreaterThan(10);
                 handler.ReceivedMessages.ShouldBeInOrder(SortDirection.Ascending);

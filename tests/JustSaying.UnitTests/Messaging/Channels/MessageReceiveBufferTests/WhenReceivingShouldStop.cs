@@ -1,5 +1,9 @@
 using Amazon.SQS.Model;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Middleware.Receive;
 using JustSaying.TestingFramework;
@@ -12,9 +16,9 @@ public class WhenReceivingShouldStop
 {
     private class TestMessage : Message { }
 
-    private int _callCount;
     private readonly MessageReceivePauseSignal _messageReceivePauseSignal;
     private readonly MessageReceiveBuffer _messageReceiveBuffer;
+    private readonly FakeSqsQueue _queue;
 
     public WhenReceivingShouldStop(ITestOutputHelper testOutputHelper)
     {
@@ -24,11 +28,16 @@ public class WhenReceivingShouldStop
             new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>();
 
         var messages = new List<Message> { new TestMessage() };
-        var queue = new FakeSqsQueue(ct =>
+        _queue = new FakeSqsQueue(ct => Task.FromResult(messages.AsEnumerable()))
         {
-            Interlocked.Increment(ref _callCount);
-            return Task.FromResult(messages.AsEnumerable());
-        });
+            MaxNumberOfMessagesToReceive = 10
+        };
+
+        var source = new SqsSource
+        {
+            SqsQueue = _queue,
+            MessageConverter = new InboundMessageConverter(SimpleMessage.Serializer, new MessageCompressionRegistry(), false)
+        };
 
         _messageReceivePauseSignal = new MessageReceivePauseSignal();
 
@@ -40,7 +49,7 @@ public class WhenReceivingShouldStop
             10,
             TimeSpan.FromSeconds(1),
             TimeSpan.FromSeconds(1),
-            queue,
+            source,
             sqsMiddleware,
             _messageReceivePauseSignal,
             monitor,
@@ -72,14 +81,14 @@ public class WhenReceivingShouldStop
         _messageReceivePauseSignal.Pause();
 
         using var cts = new CancellationTokenSource();
-        var _ = _messageReceiveBuffer.RunAsync(cts.Token);
+        _ = _messageReceiveBuffer.RunAsync(cts.Token);
         var readTask = Messages();
 
         // Check if we can start receiving for a while
-        await Task.Delay(TimeSpan.FromSeconds(2));
+        await Task.Delay(TimeSpan.FromMilliseconds(150), cts.Token);
 
         // Cancel token
-        cts.Cancel();
+        await cts.CancelAsync();
 
         // Ensure buffer completes
         await _messageReceiveBuffer.Reader.Completion;
@@ -98,20 +107,20 @@ public class WhenReceivingShouldStop
         _messageReceivePauseSignal.Pause();
 
         using var cts = new CancellationTokenSource();
-        var _ = _messageReceiveBuffer.RunAsync(cts.Token);
+        _ = _messageReceiveBuffer.RunAsync(cts.Token);
         var readTask = Messages();
 
         // Check if we can start receiving for a while
-        await Task.Delay(TimeSpan.FromSeconds(1));
+        await Task.Delay(TimeSpan.FromMilliseconds(50), cts.Token);
 
         // Signal start receiving messages
         _messageReceivePauseSignal.Resume();
 
         // Read messages for a while
-        await Task.Delay(TimeSpan.FromSeconds(1));
+        await _queue.ReceivedAllMessages.WaitAsync(TimeSpan.FromSeconds(5), cts.Token);
 
         // Cancel token
-        cts.Cancel();
+        await cts.CancelAsync();
 
         // Ensure buffer completes
         await _messageReceiveBuffer.Reader.Completion;
@@ -121,6 +130,6 @@ public class WhenReceivingShouldStop
 
         // Make sure that number makes sense
         messagesRead.ShouldBeGreaterThan(0);
-        messagesRead.ShouldBeLessThanOrEqualTo(_callCount);
+        messagesRead.ShouldBeLessThanOrEqualTo(10);
     }
 }

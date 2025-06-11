@@ -1,6 +1,8 @@
+using System.Text.Json.Nodes;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -10,14 +12,15 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
 public class WhenPublishingAsync : WhenPublishingTestBase
 {
-    private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
+    private readonly OutboundMessageConverter _outboundMessageConverter = CreateConverter();
     private const string Url = "https://blablabla/" + QueueName;
     private readonly SimpleMessage _message = new() { Content = "Hello" };
+    private string _capturedMessageBody;
     private const string QueueName = "queuename";
 
     private protected override Task<SqsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _serializationRegister, Substitute.For<ILoggerFactory>());
+        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _outboundMessageConverter, Substitute.For<ILoggerFactory>());
         return Task.FromResult(sqs);
     }
 
@@ -29,8 +32,7 @@ public class WhenPublishingAsync : WhenPublishingTestBase
         Sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>())
             .Returns(new GetQueueAttributesResponse());
 
-        _serializationRegister.Serialize(_message, false)
-            .Returns("serialized_contents");
+        Sqs.SendMessageAsync(Arg.Do<SendMessageRequest>(x => _capturedMessageBody = x.MessageBody));
     }
 
     protected override async Task WhenAsync()
@@ -41,8 +43,12 @@ public class WhenPublishingAsync : WhenPublishingTestBase
     [Fact]
     public void MessageIsPublishedToQueue()
     {
-        Sqs.Received().SendMessageAsync(Arg.Is<SendMessageRequest>(
-            x => x.MessageBody.Equals("serialized_contents", StringComparison.OrdinalIgnoreCase)));
+        _capturedMessageBody.ShouldNotBeNull();
+        var jsonNode = JsonNode.Parse(_capturedMessageBody).ShouldNotBeNull();
+        var messageBody = jsonNode["Message"]!.GetValue<string>();
+        var message = JsonNode.Parse(messageBody).ShouldNotBeNull();
+        var content = message["Content"].ShouldNotBeNull().GetValue<string>();
+        content.ShouldBe("Hello");
     }
 
     [Fact]

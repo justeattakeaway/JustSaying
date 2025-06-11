@@ -12,7 +12,7 @@ public class WhenCreatingAMessagePublisher(ITestOutputHelper outputHelper) : Int
         // Arrange
         var serviceProvider = GivenJustSaying()
             .ConfigureJustSaying((builder) => builder.Publications((options) =>
-                options.WithQueue<SimpleMessage>(qo => qo.WithName(UniqueName))))
+                options.WithQueue<SimpleMessage>(qo => qo.WithQueueName(UniqueName))))
             .BuildServiceProvider();
 
         // Act - Force queue creation

@@ -21,7 +21,7 @@ public class WhenEnsuringMessageIsOnlyHandledExactlyOnce(ITestOutputHelper outpu
                 l.AddXUnit(outputHelper))
             .AddSingleton<IMessageLockAsync>(messageLock));
 
-        var monitor = new TrackingLoggingMonitor(LoggerFactory.Create(lf => lf.AddXUnit()).CreateLogger<TrackingLoggingMonitor>());
+        var monitor = new TrackingLoggingMonitor(LoggerFactory.Create(lf => lf.AddXUnit().SetMinimumLevel(LogLevel.Information)).CreateLogger<TrackingLoggingMonitor>());
         var handler = new InspectableHandler<OrderAccepted>();
 
         var middleware = new HandlerMiddlewareBuilder(testResolver, testResolver)

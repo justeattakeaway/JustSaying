@@ -15,7 +15,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 /// <param name="groupName">The name of the subscription group.</param>
 public class SubscriptionGroupConfigBuilder(string groupName)
 {
-    private readonly List<ISqsQueue> _sqsQueues = [];
+    private readonly List<SqsSource> _sqsSources = [];
     private readonly string _groupName = groupName ?? throw new ArgumentNullException(nameof(groupName));
 
     private int? _bufferSize;
@@ -30,10 +30,10 @@ public class SubscriptionGroupConfigBuilder(string groupName)
     /// </summary>
     /// <param name="sqsQueue">The queue to be consumed, assumed to already be created and ready.</param>
     /// <returns>This builder object.</returns>
-    public SubscriptionGroupConfigBuilder AddQueue(ISqsQueue sqsQueue)
+    internal SubscriptionGroupConfigBuilder AddQueue(SqsSource sqsQueue)
     {
         if (sqsQueue == null) throw new ArgumentNullException(nameof(sqsQueue));
-        _sqsQueues.Add(sqsQueue);
+        _sqsSources.Add(sqsQueue);
         return this;
     }
 
@@ -42,10 +42,10 @@ public class SubscriptionGroupConfigBuilder(string groupName)
     /// </summary>
     /// <param name="sqsQueues">The queues to be consumed, assumed to already be created and ready.</param>
     /// <returns>This builder object.</returns>
-    public SubscriptionGroupConfigBuilder AddQueues(IEnumerable<ISqsQueue> sqsQueues)
+    internal SubscriptionGroupConfigBuilder AddQueues(IEnumerable<SqsSource> sqsQueues)
     {
         if (sqsQueues == null) throw new ArgumentNullException(nameof(sqsQueues));
-        _sqsQueues.AddRange(sqsQueues);
+        _sqsSources.AddRange(sqsQueues);
         return this;
     }
 
@@ -138,7 +138,7 @@ public class SubscriptionGroupConfigBuilder(string groupName)
             _receiveMessagesWaitTime ?? defaults.ReceiveMessagesWaitTime,
             _multiplexerCapacity ?? defaults.MultiplexerCapacity,
             _prefetch ?? defaults.Prefetch,
-            _sqsQueues);
+            _sqsSources);
 
         settings.Validate();
 

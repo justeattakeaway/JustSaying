@@ -6,11 +6,8 @@ namespace JustSaying.TestingFramework;
 public sealed class AwsFactAttribute : FactAttribute
 {
     public AwsFactAttribute()
-        : base()
     {
-        if (!TestEnvironment.IsSimulatorConfigured && !TestEnvironment.HasCredentials)
-        {
-            Skip = "This test requires either an AWS simulator URL or AWS credentials to be configured.";
-        }
+        // TODO Add back logic to check if AWS credentials are available when running with LocalStack
+        // at the moment we are not using LocalStack so we can skip this check
     }
 }

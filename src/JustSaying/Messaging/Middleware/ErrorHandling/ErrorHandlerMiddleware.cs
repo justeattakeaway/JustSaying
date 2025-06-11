@@ -22,6 +22,11 @@ public sealed class ErrorHandlerMiddleware(IMessageMonitor monitor) : Middleware
         {
             return await func(stoppingToken).ConfigureAwait(false);
         }
+        catch (OperationCanceledException)
+        {
+            // Do not log OperationCanceledException
+            return false;
+        }
         catch (Exception e)
         {
             _monitor.HandleException(context.MessageType);

@@ -3,6 +3,7 @@ using Amazon.Runtime;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -16,7 +17,7 @@ public class WhenPublishingInBatchAsyncResponseLoggerAsyncIsCalled : WhenPublish
 {
     private readonly List<SimpleMessage> _testMessages = new();
     private readonly List<string> _messageIds = new();
-    private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
+    private readonly OutboundMessageConverter _outboundMessageConverter = CreateConverter();
     private const string Url = "https://blablabla/" + QueueName;
     private const string QueueName = "queuename";
 
@@ -27,7 +28,7 @@ public class WhenPublishingInBatchAsyncResponseLoggerAsyncIsCalled : WhenPublish
 
     private protected override Task<SqsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _serializationRegister, Substitute.For<ILoggerFactory>())
+        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _outboundMessageConverter, Substitute.For<ILoggerFactory>())
         {
             MessageBatchResponseLogger = (r, m) =>
             {
@@ -51,9 +52,6 @@ public class WhenPublishingInBatchAsyncResponseLoggerAsyncIsCalled : WhenPublish
 
         Sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>())
             .Returns(new GetQueueAttributesResponse());
-
-        _serializationRegister.Serialize(Arg.Any<SimpleMessage>(), false)
-            .Returns("serialized_contents");
 
         Sqs.SendMessageBatchAsync(Arg.Any<SendMessageBatchRequest>())
             .Returns(PublishResult);

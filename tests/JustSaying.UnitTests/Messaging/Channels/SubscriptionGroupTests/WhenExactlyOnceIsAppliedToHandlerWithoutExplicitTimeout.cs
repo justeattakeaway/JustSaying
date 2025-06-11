@@ -1,4 +1,6 @@
+using System.Text.Json;
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.Middleware;
 using JustSaying.TestingFramework;
@@ -11,20 +13,24 @@ namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
 public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
 {
-    private ISqsQueue _queue;
+    private SqsSource _queue;
     private readonly int _maximumTimeout = (int)TimeSpan.MaxValue.TotalSeconds;
     private FakeMessageLock _messageLock;
 
     protected override void Given()
     {
-        _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage());
+        _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(),
+            new TestMessage
+            {
+                Body = $$"""{"Subject":"SimpleMessage", "Message": "{{JsonEncodedText.Encode("""{ "Content": "Hi" }""")}}"}"""
+            });
         Queues.Add(_queue);
         _messageLock = new FakeMessageLock();
 
         var serviceResolver = new InMemoryServiceResolver(sc =>
             sc.AddSingleton<IMessageLockAsync>(_messageLock)
                 .AddSingleton<IHandlerAsync<SimpleMessage>>(Handler)
-                .AddLogging(x => x.AddXUnit(OutputHelper)));
+                .AddLogging(x => x.AddXUnit(OutputHelper).SetMinimumLevel(LogLevel.Information)));
 
         var middlewareBuilder = new HandlerMiddlewareBuilder(serviceResolver, serviceResolver);
 
@@ -39,16 +45,16 @@ public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper te
 
     protected override async Task WhenAsync()
     {
-        MiddlewareMap.Add<SimpleMessage>(_queue.QueueName, Middleware);
+        MiddlewareMap.Add<SimpleMessage>(_queue.SqsQueue.QueueName, Middleware);
 
         var cts = new CancellationTokenSource();
 
         var completion = SystemUnderTest.RunAsync(cts.Token);
 
         await Patiently.AssertThatAsync(OutputHelper,
-            () => Handler.ReceivedMessages.Any());
+            () => !Handler.ReceivedMessages.IsEmpty);
 
-        cts.Cancel();
+        await cts.CancelAsync();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => completion);
 
     }
@@ -56,9 +62,9 @@ public class WhenExactlyOnceIsAppliedWithoutSpecificTimeout(ITestOutputHelper te
     [Fact]
     public void MessageIsLocked()
     {
-        var messageId = SerializationRegister.DefaultDeserializedMessage().Id.ToString();
+        var messageId = SetupMessage.Id.ToString();
 
-        var tempLockRequests = _messageLock.MessageLockRequests.Where(lr => !lr.isPermanent);
+        var tempLockRequests = _messageLock.MessageLockRequests.Where(lr => !lr.isPermanent).ToList();
         tempLockRequests.ShouldNotBeEmpty();
 
         foreach(var lockRequest in tempLockRequests)

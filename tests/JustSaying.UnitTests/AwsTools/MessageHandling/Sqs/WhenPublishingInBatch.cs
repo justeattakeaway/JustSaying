@@ -1,6 +1,8 @@
+using System.Text.Json;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.Logging;
@@ -10,14 +12,14 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.Sqs;
 
 public class WhenPublishingInBatch : WhenPublishingTestBase
 {
-    private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
+    private readonly OutboundMessageConverter _outboundMessageConverter = CreateConverter();
     private const string Url = "https://blablabla/" + QueueName;
     private readonly List<SimpleMessage> _messages = new();
     private const string QueueName = "queuename";
 
     private protected override Task<SqsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _serializationRegister, Substitute.For<ILoggerFactory>());
+        var sqs = new SqsMessagePublisher(new Uri(Url), Sqs, _outboundMessageConverter, Substitute.For<ILoggerFactory>());
         return Task.FromResult(sqs);
     }
 
@@ -33,9 +35,6 @@ public class WhenPublishingInBatch : WhenPublishingTestBase
 
         Sqs.GetQueueAttributesAsync(Arg.Any<GetQueueAttributesRequest>())
             .Returns(new GetQueueAttributesResponse());
-
-        _serializationRegister.Serialize(Arg.Any<SimpleMessage>(), false)
-            .Returns(x => $"serialized_contents_{((SimpleMessage)x.Args()[0]).Content}" );
     }
 
     protected override async Task WhenAsync()
@@ -65,7 +64,10 @@ public class WhenPublishingInBatch : WhenPublishingTestBase
         for (var i = 0; i < 10; i++)
         {
             var entry = request.Entries[i];
-            if (!entry.MessageBody.Equals($"serialized_contents_Message_{i}"))
+            if (!entry.MessageBody.Contains(JsonEncodedText.Encode(
+                    $"""
+                    "Content":"Message_{i}
+                    """).Value, StringComparison.Ordinal))
             {
                 return false;
             }

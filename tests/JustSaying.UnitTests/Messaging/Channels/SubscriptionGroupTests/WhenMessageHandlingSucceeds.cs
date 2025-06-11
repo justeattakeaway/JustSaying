@@ -1,37 +1,48 @@
+using System.Diagnostics.CodeAnalysis;
 using Amazon.SQS.Model;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.TestingFramework;
 
 namespace JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
 
-public class WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper) : BaseSubscriptionGroupTests(testOutputHelper)
+public class WhenMessageHandlingSucceeds : BaseSubscriptionGroupTests
 {
-    private const string MessageBody = "Expected Message Body";
+    [StringSyntax(StringSyntaxAttribute.Json)]
+    private const string MessageBody = """
+                                       {
+                                         "Subject": "TestMessage",
+                                         "Message": "Expected Message Body"
+                                       }
+                                       """;
     private FakeSqsQueue _queue;
+
+    public WhenMessageHandlingSucceeds(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+    {
+        MessagesToWaitFor = 10;
+    }
 
     protected override void Given()
     {
-        _queue = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(),
-            ct => Task.FromResult(new List<Message> { new TestMessage { Body = MessageBody } }.AsEnumerable()));
+        var sqsSource = CreateSuccessfulTestQueue(Guid.NewGuid().ToString(), new TestMessage { Body = MessageBody });
+        _queue = sqsSource.SqsQueue as FakeSqsQueue;
+        _queue!.MaxNumberOfMessagesToReceive = MessagesToWaitFor;
 
-        Queues.Add(_queue);
-    }
-
-    [Fact]
-    public void MessagesGetDeserializedByCorrectHandler()
-    {
-        SerializationRegister.ReceivedDeserializationRequests.ShouldAllBe(
-            msg => msg == MessageBody);
+        Queues.Add(sqsSource);
     }
 
     [Fact]
     public void ProcessingIsPassedToTheHandlerForCorrectMessage()
     {
-        Handler.ReceivedMessages.ShouldContain(SerializationRegister.DefaultDeserializedMessage());
+        Handler.ReceivedMessages.ShouldContain(SetupMessage);
     }
 
     [Fact]
-    public void AllMessagesAreClearedFromQueue()
+    public async Task AllMessagesAreClearedFromQueue()
     {
-        _queue.DeleteMessageRequests.Count.ShouldBe(Handler.ReceivedMessages.Count);
+        await _queue.ReceivedAllMessages.WaitAsync(TimeSpan.FromSeconds(5));
+        await CompletionMiddleware.Complete.WaitAsync(TimeSpan.FromSeconds(5));
+
+        await Patiently.AssertThatAsync(OutputHelper, () => _queue.DeleteMessageRequests.Count.ShouldBe(Handler.ReceivedMessages.Count));
     }
 
     [Fact]
