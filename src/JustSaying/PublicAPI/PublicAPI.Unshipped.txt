@@ -82,6 +82,7 @@ JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer
 JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>
 JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>.Deserialize(string messageBody) -> JustSaying.Models.Message
 JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>.Serialize(JustSaying.Models.Message message) -> string
+JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>.SystemTextJsonMessageBodySerializer() -> void
 JustSaying.Messaging.MessageSerialization.SystemTextJsonMessageBodySerializer<T>.SystemTextJsonMessageBodySerializer(System.Text.Json.JsonSerializerOptions options) -> void
 JustSaying.Messaging.MessageSerialization.SystemTextJsonSerializationFactory.GetSerializer<T>() -> JustSaying.Messaging.MessageSerialization.IMessageBodySerializer
 JustSaying.MessagingConfig.DefaultCompressionOptions.get -> JustSaying.AwsTools.MessageHandling.PublishCompressionOptions
