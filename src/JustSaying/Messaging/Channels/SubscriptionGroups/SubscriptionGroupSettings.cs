@@ -65,7 +65,7 @@ public sealed class SubscriptionGroupSettings : ISubscriptionGroupSettings
     public string Name { get; }
 
     /// <summary>
-    /// A collection of <see cref="ISqsQueue"/> to read messages from.
+    /// A collection of <see cref="SqsSource"/> to read messages from.
     /// </summary>
     public IReadOnlyCollection<SqsSource> QueueSources { get; }
 }
