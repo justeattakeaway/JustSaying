@@ -69,8 +69,6 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
                         .Client((options) =>
                         {
                             options.WithClientFactory(() => new LocalAwsClientFactory(Bus));
-                            // options.WithSessionCredentials(AccessKeyId, SecretAccessKey, SessionToken)
-                            //     .WithServiceUri(ServiceUri);
                         });
                     builder.Subscriptions(sub => sub.WithDefaults(x => x.WithDefaultConcurrencyLimit(10)));
 
