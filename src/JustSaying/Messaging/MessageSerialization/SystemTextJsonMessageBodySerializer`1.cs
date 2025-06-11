@@ -12,6 +12,12 @@ public sealed class SystemTextJsonMessageBodySerializer<T> : IMessageBodySeriali
     private readonly JsonSerializerOptions _options;
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="SystemTextJsonMessageBodySerializer{T}"/> class with default JSON serializer options.
+    /// </summary>
+    public SystemTextJsonMessageBodySerializer() : this(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions)
+    { }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="SystemTextJsonMessageBodySerializer{T}"/> class with custom JSON serializer options.
     /// </summary>
     /// <param name="options">The custom <see cref="JsonSerializerOptions"/> to use for serialization and deserialization.</param>
