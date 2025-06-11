@@ -8,6 +8,7 @@ using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
+using LocalSqsSnsMessaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -34,7 +35,9 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
 
     protected virtual bool IsSimulator => TestEnvironment.IsSimulatorConfigured;
 
-    protected virtual TimeSpan Timeout => TimeSpan.FromSeconds(Debugger.IsAttached ? 60 : 20);
+    protected virtual InMemoryAwsBus Bus { get; } = new InMemoryAwsBus();
+
+    protected virtual TimeSpan Timeout => TimeSpan.FromSeconds(Debugger.IsAttached ? 300 : 10);
 
     protected virtual string UniqueName { get; } = $"{Guid.NewGuid():N}-integration-tests";
 
@@ -53,7 +56,7 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
         LogLevel logLevel = levelOverride ?? LogLevel.Debug;
         return new ServiceCollection()
             .AddLogging((p) => p
-                .AddTest()
+                .AddFakeLogging()
                 .AddXUnit(OutputHelper, o =>
                 {
                     o.IncludeScopes = true;
@@ -65,8 +68,7 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
                     builder.Messaging((options) => options.WithRegion(RegionName))
                         .Client((options) =>
                         {
-                            options.WithSessionCredentials(AccessKeyId, SecretAccessKey, SessionToken)
-                                .WithServiceUri(ServiceUri);
+                            options.WithClientFactory(() => new LocalAwsClientFactory(Bus));
                         });
                     builder.Subscriptions(sub => sub.WithDefaults(x => x.WithDefaultConcurrencyLimit(10)));
 
@@ -76,8 +78,7 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
 
     protected virtual IAwsClientFactory CreateClientFactory()
     {
-        var credentials = new SessionAWSCredentials(AccessKeyId, SecretAccessKey, SessionToken);
-        return new DefaultAwsClientFactory(credentials) { ServiceUri = ServiceUri };
+        return new LocalAwsClientFactory(Bus);
     }
 
     protected IHandlerAsync<T> CreateHandler<T>(TaskCompletionSource<object> completionSource, int expectedMessageCount = 1)

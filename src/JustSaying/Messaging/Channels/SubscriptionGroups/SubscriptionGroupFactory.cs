@@ -15,7 +15,7 @@ namespace JustSaying.Messaging.Channels.SubscriptionGroups;
 /// <summary>
 /// Builds <see cref="ISubscriptionGroup"/>'s from the various components required.
 /// </summary>
-public class SubscriptionGroupFactory : ISubscriptionGroupFactory
+internal sealed class SubscriptionGroupFactory : ISubscriptionGroupFactory
 {
     private readonly IMessageDispatcher _messageDispatcher;
     private readonly IMessageReceivePauseSignal _messageReceivePauseSignal;
@@ -29,7 +29,7 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
     /// <param name="messageDispatcher">The <see cref="IMessageDispatcher"/> to use to dispatch messages.</param>
     /// <param name="monitor">The <see cref="IMessageMonitor"/> used by the <see cref="IMessageReceiveBuffer"/>.</param>
     /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to use.</param>
-    public SubscriptionGroupFactory(
+    private SubscriptionGroupFactory(
         IMessageDispatcher messageDispatcher,
         IMessageMonitor monitor,
         ILoggerFactory loggerFactory)
@@ -111,7 +111,7 @@ public class SubscriptionGroupFactory : ISubscriptionGroupFactory
 
         var logger = _loggerFactory.CreateLogger<MessageReceiveBuffer>();
 
-        foreach (ISqsQueue queue in subscriptionGroupSettings.Queues)
+        foreach (SqsSource queue in subscriptionGroupSettings.QueueSources)
         {
             var buffer = new MessageReceiveBuffer(
                 subscriptionGroupSettings.Prefetch,

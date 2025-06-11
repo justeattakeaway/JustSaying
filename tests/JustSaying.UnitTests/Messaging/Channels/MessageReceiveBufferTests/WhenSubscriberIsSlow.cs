@@ -1,5 +1,9 @@
 using Amazon.SQS.Model;
+using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Messaging.Middleware.Receive;
 using JustSaying.TestingFramework;
@@ -23,11 +27,15 @@ public class WhenSubscriberIsSlow
             new DelegateMiddleware<ReceiveMessagesContext, IList<Message>>();
 
         var messages = new List<Message> { new TestMessage() };
-        var queue = new FakeSqsQueue(ct =>
+        var queue = new SqsSource
         {
-            Interlocked.Increment(ref _callCount);
-            return Task.FromResult(messages.AsEnumerable());
-        });
+            SqsQueue = new FakeSqsQueue(ct =>
+            {
+                Interlocked.Increment(ref _callCount);
+                return Task.FromResult(messages.AsEnumerable());
+            }),
+            MessageConverter = new InboundMessageConverter(SimpleMessage.Serializer, new MessageCompressionRegistry(), false)
+        };
 
         var monitor = new TrackingLoggingMonitor(
             loggerFactory.CreateLogger<TrackingLoggingMonitor>());
@@ -50,7 +58,6 @@ public class WhenSubscriberIsSlow
 
         while (true)
         {
-            await Task.Delay(100);
             var couldRead = await _messageReceiveBuffer.Reader.WaitToReadAsync();
             if (!couldRead) break;
 
@@ -67,14 +74,14 @@ public class WhenSubscriberIsSlow
     public async Task All_Messages_Are_Processed()
     {
         using var cts = new CancellationTokenSource();
-        var _ = _messageReceiveBuffer.RunAsync(cts.Token);
+        _ = _messageReceiveBuffer.RunAsync(cts.Token);
         var readTask = Messages();
 
         // Read messages for a while
-        await Task.Delay(TimeSpan.FromSeconds(2));
+        await Task.Delay(TimeSpan.FromMilliseconds(150), cts.Token);
 
         // Cancel token
-        cts.Cancel();
+        await cts.CancelAsync();
 
         // Ensure buffer completes
         await _messageReceiveBuffer.Reader.Completion;

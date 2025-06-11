@@ -1,8 +1,8 @@
+using System.Text.RegularExpressions;
 using JustSaying.IntegrationTests.Fluent;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.TestingFramework;
-using MELT;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -27,13 +27,14 @@ public class LogContextTests(ITestOutputHelper outputHelper) : IntegrationTestBa
         var message = new SimpleMessage();
         await publisher.PublishAsync(message, cts.Token);
 
-        var testLogger = sp.GetRequiredService<ITestLoggerSink>();
+        var testLogger = sp.GetFakeLogCollector();
+        var messageMatcher = new Regex(@"Published message ([a-zA-Z0-9\-]+) of type ([\w\.]+) to ([\w\s]+) '(.+?)'.");
 
-        var handleMessage = testLogger.LogEntries
-            .Single(le => le.OriginalFormat == "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.");
+        var handleMessage = testLogger.GetSnapshot()
+            .Single(le => messageMatcher.IsMatch(le.Message));
 
-        var propertyMap = new Dictionary<string, object>(handleMessage.Properties);
-        propertyMap.ShouldContainKeyAndValue("MessageId", message.Id);
+        var propertyMap = handleMessage.StructuredState.ShouldNotBeNull().ToDictionary();
+        propertyMap.ShouldContainKeyAndValue("MessageId", message.Id.ToString());
         propertyMap.ShouldContainKeyAndValue("MessageType", message.GetType().FullName);
         propertyMap.ShouldContainKeyAndValue("DestinationType", "Topic");
         propertyMap.ShouldContainKey("MessageDestination");
@@ -58,13 +59,14 @@ public class LogContextTests(ITestOutputHelper outputHelper) : IntegrationTestBa
         var message = new SimpleMessage();
         await publisher.PublishAsync(message, cts.Token);
 
-        var testLogger = sp.GetRequiredService<ITestLoggerSink>();
+        var testLogger = sp.GetFakeLogCollector();
+        var messageMatcher = new Regex(@"Published message ([a-zA-Z0-9\-]+) of type ([\w\.]+) to Queue '(.+?)'.");
 
-        var handleMessage = testLogger.LogEntries
-            .Single(le => le.OriginalFormat == "Published message {MessageId} of type {MessageType} to {DestinationType} '{MessageDestination}'.");
+        var handleMessage = testLogger.GetSnapshot()
+            .Single(le => messageMatcher.IsMatch(le.Message));
 
-        var propertyMap = new Dictionary<string, object>(handleMessage.Properties);
-        propertyMap.ShouldContainKeyAndValue("MessageId", message.Id);
+        var propertyMap = handleMessage.StructuredState.ShouldNotBeNull().ToDictionary();
+        propertyMap.ShouldContainKeyAndValue("MessageId", message.Id.ToString());
         propertyMap.ShouldContainKeyAndValue("MessageType", message.GetType().FullName);
         propertyMap.ShouldContainKeyAndValue("DestinationType", "Queue");
         propertyMap.ShouldContainKey("MessageDestination");
@@ -107,16 +109,17 @@ public class LogContextTests(ITestOutputHelper outputHelper) : IntegrationTestBa
             .ShouldHaveSingleItem()
             .Id.ShouldBe(message.Id));
 
-        var testLogger = sp.GetRequiredService<ITestLoggerSink>();
+        var testLogger = sp.GetFakeLogCollector();
+        var messageMatcher = new Regex(@"\w handling message with Id '([a-zA-Z0-9\-]+)' of type ([\w\.]+) in \d*ms.");
 
         await Patiently.AssertThatAsync(() =>
         {
-            var handleMessage = testLogger.LogEntries
-                .SingleOrDefault(le => le.OriginalFormat == "{Status} handling message with Id '{MessageId}' of type {MessageType} in {TimeToHandle}ms.");
+            var handleMessage = testLogger.GetSnapshot()
+                .SingleOrDefault(le => messageMatcher.IsMatch(le.Message));
 
             handleMessage.ShouldNotBeNull();
 
-            handleMessage.LogLevel.ShouldBe(level);
+            handleMessage.Level.ShouldBe(level);
 
             if (exceptionMessage != null)
             {
@@ -124,9 +127,9 @@ public class LogContextTests(ITestOutputHelper outputHelper) : IntegrationTestBa
                 handleMessage.Exception.Message.ShouldBe(exceptionMessage);
             }
 
-            var propertyMap = new Dictionary<string, object>(handleMessage.Properties);
+            var propertyMap = handleMessage.StructuredState.ShouldNotBeNull().ToDictionary();
             propertyMap.ShouldContainKeyAndValue("Status", status);
-            propertyMap.ShouldContainKeyAndValue("MessageId", message.Id);
+            propertyMap.ShouldContainKeyAndValue("MessageId", message.Id.ToString());
             propertyMap.ShouldContainKeyAndValue("MessageType", message.GetType().FullName);
             propertyMap.ShouldContainKey("TimeToHandle");
         });

@@ -3,20 +3,20 @@ using JustSaying.TestingFramework;
 
 namespace JustSaying.UnitTests.Messaging.Serialization.Newtonsoft;
 
-public class WhenSerializingAndDeserializing : XBehaviourTest<NewtonsoftSerializer>
+public class WhenSerializingAndDeserializing : XBehaviourTest<NewtonsoftMessageBodySerializer<MessageWithEnum>>
 {
     private MessageWithEnum _messageOut;
     private MessageWithEnum _messageIn;
     private string _jsonMessage;
     protected override void Given()
     {
-        _messageOut = new MessageWithEnum() { EnumVal = Value.Two };
+        _messageOut = new MessageWithEnum { EnumVal = Value.Two };
     }
 
     protected override void WhenAction()
     {
-        _jsonMessage = SystemUnderTest.Serialize(_messageOut, false, _messageOut.GetType().Name);
-        _messageIn = SystemUnderTest.Deserialize(_jsonMessage, typeof(MessageWithEnum)) as MessageWithEnum;
+        _jsonMessage = SystemUnderTest.Serialize(_messageOut);
+        _messageIn = SystemUnderTest.Deserialize(_jsonMessage) as MessageWithEnum;
     }
 
     [Fact]

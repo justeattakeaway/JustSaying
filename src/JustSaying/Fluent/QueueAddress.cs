@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Amazon;
+using Amazon.SQS;
 
 namespace JustSaying.Fluent;
 
@@ -79,11 +80,7 @@ internal sealed class QueueAddress
         if (!Arn.TryParse(queueArn, out var arn)) throw new ArgumentException("Must be a valid ARN.", nameof(queueArn));
         if (!string.Equals(arn.Service, "sqs", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Must be an ARN for an SQS queue.", nameof(queueArn));
 
-#pragma warning disable CS0618 // Type or member is obsolete
-        var hostname = RegionEndpoint.GetBySystemName(arn.Region)
-            .GetEndpointForService("sqs")
-            .Hostname;
-#pragma warning restore CS0618 // Type or member is obsolete
+        var hostname = SqsEndpointHelper.GetSqsHostname(arn.Partition, arn.Region);
 
         var queueUrl = new UriBuilder("https", hostname)
         {

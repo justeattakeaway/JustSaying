@@ -1,5 +1,9 @@
 using JustSaying.AwsTools.MessageHandling;
+using JustSaying.Messaging;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
+using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using JustSaying.UnitTests.AwsTools.MessageHandling;
 using NSubstitute;
@@ -30,7 +34,11 @@ public class WhenRegisteringMessageHandlers(ITestOutputHelper outputHelper) : Gi
 
     protected override async Task WhenAsync()
     {
-        SystemUnderTest.AddQueue(typeof(Message).FullName, _queue);
+        SystemUnderTest.AddQueue(typeof(Message).FullName, new SqsSource
+        {
+            SqsQueue = _queue,
+            MessageConverter = new InboundMessageConverter(new SystemTextJsonMessageBodySerializer<Message>(SystemTextJsonMessageBodySerializer.DefaultJsonSerializerOptions), new MessageCompressionRegistry(), false)
+        });
         SystemUnderTest.AddMessageMiddleware<Message>(_queue.QueueName, _futureHandler1);
         SystemUnderTest.AddMessageMiddleware<Message2>(_queue.QueueName, _futureHandler2);
 

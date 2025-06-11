@@ -1,8 +1,10 @@
 using JustSaying.Fluent;
+using JustSaying.IntegrationTests.Fluent;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
+using LocalSqsSnsMessaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -22,16 +24,20 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
         var queueName = Guid.NewGuid().ToString();
 
         // Arrange
+        var bus = new InMemoryAwsBus();
         var services = new ServiceCollection()
             .AddLogging((p) => p.AddXUnit(OutputHelper))
             .AddJustSaying(
                 (builder) =>
                 {
                     builder.Client((options) =>
-                            options.WithBasicCredentials("accessKey", "secretKey")
-                                .WithServiceUri(TestEnvironment.SimulatorUrl))
+                            options.WithClientFactory(() => new LocalAwsClientFactory(bus))
+                            // TODO Add back LocalStack config for running in CI
+                            // options.WithBasicCredentials("accessKey", "secretKey")
+                            //     .WithServiceUri(TestEnvironment.SimulatorUrl)
+                            )
                         .Messaging((options) => options.WithRegion("eu-west-1"))
-                        .Publications((options) => options.WithQueue<QueueMessage>(o => o.WithName(queueName)))
+                        .Publications((options) => options.WithQueue<QueueMessage>(o => o.WithQueueName(queueName)))
                         .Subscriptions((options) => options.ForQueue<QueueMessage>(o => o.WithQueueName(queueName)))
                         .Services((options) => options.WithMessageMonitoring(() => new MyMonitor()));
                 })
@@ -66,6 +72,7 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
         var topicName = Guid.NewGuid().ToString();
 
         // Arrange
+        var bus = new InMemoryAwsBus();
         var services = new ServiceCollection()
             .AddLogging((p) => p.AddXUnit(OutputHelper))
             .AddJustSaying(
@@ -73,8 +80,11 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
                 {
                     builder
                         .Client((options) =>
-                            options.WithBasicCredentials("accessKey", "secretKey")
-                                .WithServiceUri(TestEnvironment.SimulatorUrl))
+                                options.WithClientFactory(() => new LocalAwsClientFactory(bus))
+                            // TODO Add back LocalStack config for running in CI
+                            // options.WithBasicCredentials("accessKey", "secretKey")
+                            //     .WithServiceUri(TestEnvironment.SimulatorUrl)
+                            )
                         .Messaging((options) => options.WithRegion("eu-west-1"))
                         .Publications((options) => options.WithTopic<TopicMessage>())
                         .Subscriptions((options) => options.ForTopic<TopicMessage>(cfg => cfg.WithQueueName(topicName)));
@@ -212,9 +222,14 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
     {
         public void Configure(MessagingBusBuilder builder)
         {
+            var bus = new InMemoryAwsBus();
             builder.Client(
-                (options) => options.WithSessionCredentials("accessKeyId", "secretKeyId", "token")
-                    .WithServiceUri(TestEnvironment.SimulatorUrl));
+                (options) =>
+                    options.WithClientFactory(() => new LocalAwsClientFactory(bus))
+                    // TODO Add back LocalStack config for running in CI
+                    // options.WithSessionCredentials("accessKeyId", "secretKeyId", "token")
+                    // .WithServiceUri(TestEnvironment.SimulatorUrl)
+                );
         }
     }
 
@@ -235,7 +250,7 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
 
         public void Configure(MessagingBusBuilder builder)
         {
-            builder.Publications((p) => p.WithQueue<QueueMessage>(options => options.WithName(QueueName)))
+            builder.Publications((p) => p.WithQueue<QueueMessage>(options => options.WithQueueName(QueueName)))
                 .Subscriptions((p) => p.ForQueue<QueueMessage>(cfg => cfg.WithQueueName(QueueName)));
         }
     }

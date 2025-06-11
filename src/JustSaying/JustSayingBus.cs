@@ -1,10 +1,10 @@
 using System.Collections.Concurrent;
-using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Extensions;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Channels.Receive;
 using JustSaying.Messaging.Channels.SubscriptionGroups;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
@@ -36,33 +36,25 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     private readonly IMessageMonitor _monitor;
 
     private ISubscriptionGroup SubscriptionGroups { get; set; }
-    public IMessageSerializationRegister SerializationRegister { get; }
 
     internal MiddlewareMap MiddlewareMap { get; }
+    internal MessageCompressionRegistry CompressionRegistry { get; }
+    internal IMessageBodySerializationFactory MessageBodySerializerFactory { get; set; }
 
     public Task Completion { get; private set; }
 
-    public JustSayingBus(
+    internal JustSayingBus(
         IMessagingConfig config,
-        IMessageSerializationRegister serializationRegister,
+        IMessageBodySerializationFactory serializationFactory,
         ILoggerFactory loggerFactory,
         IMessageMonitor monitor)
-        : this(config, serializationRegister, null, loggerFactory, monitor, config as IPublishBatchConfiguration)
+        : this(config, serializationFactory, null, loggerFactory, monitor, config as IPublishBatchConfiguration)
     {
     }
 
-    public JustSayingBus(
+    internal JustSayingBus(
         IMessagingConfig config,
-        IMessageSerializationRegister serializationRegister,
-        IMessageReceivePauseSignal messageReceivePauseSignal,
-        ILoggerFactory loggerFactory,
-        IMessageMonitor monitor) : this(config, serializationRegister, messageReceivePauseSignal, loggerFactory, monitor, config as IPublishBatchConfiguration)
-    {
-    }
-
-    public JustSayingBus(
-        IMessagingConfig config,
-        IMessageSerializationRegister serializationRegister,
+        IMessageBodySerializationFactory serializationFactory,
         IMessageReceivePauseSignal messageReceivePauseSignal,
         ILoggerFactory loggerFactory,
         IMessageMonitor monitor,
@@ -89,8 +81,9 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
             }
         }
 
-        SerializationRegister = serializationRegister;
         MiddlewareMap = new MiddlewareMap();
+        CompressionRegistry = new MessageCompressionRegistry([new GzipMessageBodyCompression()]);
+        MessageBodySerializerFactory = serializationFactory;
 
         _publishersByType = [];
         _batchPublishersByType = [];
@@ -98,7 +91,17 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
         _defaultSubscriptionGroupSettings = new SubscriptionGroupSettingsBuilder();
     }
 
-    public void AddQueue(string subscriptionGroup, ISqsQueue queue)
+    internal JustSayingBus(
+        IMessagingConfig config,
+        IMessageBodySerializationFactory serializationFactory,
+        IMessageReceivePauseSignal messageReceivePauseSignal,
+        ILoggerFactory loggerFactory,
+        IMessageMonitor monitor) : this(config, serializationFactory, loggerFactory, monitor)
+    {
+        _messageReceivePauseSignal = messageReceivePauseSignal;
+    }
+
+    internal void AddQueue(string subscriptionGroup, SqsSource queue)
     {
         if (string.IsNullOrWhiteSpace(subscriptionGroup))
         {
@@ -134,7 +137,6 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     public void AddMessageMiddleware<T>(string queueName, HandleMessageMiddleware middleware)
         where T : Message
     {
-        SerializationRegister.AddSerializer<T>();
         MiddlewareMap.Add<T>(queueName, middleware);
     }
 
@@ -206,7 +208,6 @@ public sealed class JustSayingBus : IMessagingBus, IMessagePublisher, IMessageBa
     private async Task RunImplAsync(CancellationToken stoppingToken)
     {
         var dispatcher = new MessageDispatcher(
-            SerializationRegister,
             _monitor,
             MiddlewareMap,
             _loggerFactory);

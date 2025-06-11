@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using Amazon.SQS.Model;
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.MessageHandling;
@@ -40,7 +41,7 @@ public class WhenUsingABasicThrottle(ITestOutputHelper outputHelper) : Integrati
         {
             await queue.CreateAsync(new SqsBasicConfiguration());
 
-            if (!IsSimulator)
+            if (ServiceUri is not null)
             {
                 // Wait for up to 60 secs for queue creation to be guaranteed completed by AWS
                 using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(1));
@@ -72,7 +73,7 @@ public class WhenUsingABasicThrottle(ITestOutputHelper outputHelper) : Integrati
             {
                 var batchEntry = new SendMessageBatchRequestEntry
                 {
-                    MessageBody = $$"""{"Subject":"SimpleMessage", "Message": { "Content": "{{entriesAdded}}"} }""",
+                    MessageBody = $$"""{"Subject":"SimpleMessage", "Message": "{{JsonEncodedText.Encode($$"""{ "Content": "{{entriesAdded}}" }""")}}" }""",
                     Id = Guid.NewGuid().ToString()
                 };
 
@@ -105,7 +106,7 @@ public class WhenUsingABasicThrottle(ITestOutputHelper outputHelper) : Integrati
             async (publisher, listener, cancellationToken) =>
             {
                 var stopwatch = Stopwatch.StartNew();
-                var delay = IsSimulator ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(5);
+                var delay = (ServiceUri is null) ? TimeSpan.FromMilliseconds(100) : TimeSpan.FromSeconds(5);
 
                 await listener.StartAsync(cancellationToken);
 

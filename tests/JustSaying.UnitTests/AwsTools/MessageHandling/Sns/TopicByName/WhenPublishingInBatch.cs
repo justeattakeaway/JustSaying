@@ -1,9 +1,10 @@
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.AwsTools.MessageHandling;
 using JustSaying.Messaging;
-using JustSaying.Messaging.MessageSerialization;
+using JustSaying.Messaging.Compression;
 using JustSaying.Models;
 using JustSaying.TestingFramework;
+using JustSaying.UnitTests.Messaging.Channels.TestHelpers;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
@@ -15,17 +16,16 @@ public class WhenPublishingInBatch : WhenPublishingTestBase
 {
     private const string Message = "the_message_in_json";
     private const string TopicArn = "topicarn";
-    private readonly IMessageSerializationRegister _serializationRegister = Substitute.For<IMessageSerializationRegister>();
 
     private protected override Task<SnsMessagePublisher> CreateSystemUnderTestAsync()
     {
-        var topic = new SnsMessagePublisher(TopicArn, Sns, _serializationRegister, NullLoggerFactory.Instance, new NonGenericMessageSubjectProvider());
+        var messageConverter = CreateConverter(new FakeBodySerializer(Message));
+        var topic = new SnsMessagePublisher(TopicArn, Sns, messageConverter, NullLoggerFactory.Instance, null, null);
         return Task.FromResult(topic);
     }
 
     protected override void Given()
     {
-        _serializationRegister.Serialize(Arg.Any<Message>(), Arg.Is(true)).Returns(Message);
         Sns.FindTopicAsync("TopicName")
             .Returns(new Topic { TopicArn = TopicArn });
     }

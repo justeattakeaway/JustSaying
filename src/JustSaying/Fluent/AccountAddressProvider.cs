@@ -106,9 +106,7 @@ public sealed class AccountAddressProvider
     /// <returns>The <see cref="Uri"/> for this queue.</returns>
     public Uri GetQueueUri(string queueName)
     {
-#pragma warning disable CS0618 // Type or member is obsolete
-        var hostname = _regionEndpoint.GetEndpointForService("sqs").Hostname;
-#pragma warning restore CS0618 // Type or member is obsolete
+        var hostname = SqsEndpointHelper.GetSqsHostname(_regionEndpoint.PartitionName, _regionEndpoint.SystemName);
         return new UriBuilder(Uri.UriSchemeHttps, hostname)
         {
             Path = $"{_accountId}/{queueName}"

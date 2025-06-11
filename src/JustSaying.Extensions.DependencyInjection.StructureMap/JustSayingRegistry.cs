@@ -2,6 +2,7 @@ using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
 using JustSaying.Fluent;
 using JustSaying.Messaging.Channels.Receive;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Middleware.Logging;
@@ -9,6 +10,7 @@ using JustSaying.Messaging.Middleware.PostProcessing;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Naming;
 using StructureMap;
+using StructureMap.Pipeline;
 
 namespace JustSaying;
 
@@ -33,7 +35,7 @@ internal sealed class JustSayingRegistry : Registry
         For<IMessagingConfig>().Use(context => context.GetInstance<MessagingConfig>()).Singleton();
         For<IPublishBatchConfiguration>().Use<MessagingConfig>(context => context.GetInstance<MessagingConfig>()).Singleton();
         For<IMessageMonitor>().Use<NullOpMessageMonitor>().Singleton();
-        For<IMessageSerializationFactory>().Use<NewtonsoftSerializationFactory>().Singleton();
+        For<IMessageBodySerializationFactory>().Use<NewtonsoftSerializationFactory>().Singleton();
         For<IMessageSubjectProvider>().Use<GenericMessageSubjectProvider>().Singleton();
         For<IVerifyAmazonQueues>().Use<AmazonQueueCreator>().Singleton();
 
@@ -43,18 +45,8 @@ internal sealed class JustSayingRegistry : Registry
 
         For<LoggingMiddleware>().AlwaysUnique();
         For<SqsPostProcessorMiddleware>().AlwaysUnique();
-
-        For<IMessageSerializationRegister>()
-            .Use(
-                nameof(IMessageSerializationRegister),
-                (p) =>
-                {
-                    var config = p.GetInstance<IMessagingConfig>();
-                    var serializerFactory = p.GetInstance<IMessageSerializationFactory>();
-                    return new MessageSerializationRegister(config.MessageSubjectProvider, serializerFactory);
-                })
-            .Singleton();
-
+        For<IMessageBodyCompression>().Add<GzipMessageBodyCompression>().Singleton();
+        For<MessageCompressionRegistry>().Singleton();
         For<IMessageReceivePauseSignal>().Use<MessageReceivePauseSignal>().Singleton();
 
         For<DefaultNamingConventions>().Singleton();

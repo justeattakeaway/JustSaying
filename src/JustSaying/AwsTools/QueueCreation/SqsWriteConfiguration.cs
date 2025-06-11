@@ -1,12 +1,8 @@
+using JustSaying.AwsTools.MessageHandling;
+
 namespace JustSaying.AwsTools.QueueCreation;
 
 public class SqsWriteConfiguration : SqsBasicConfiguration
 {
-    public SqsWriteConfiguration()
-    {
-        MessageRetention = JustSayingConstants.DefaultRetentionPeriod;
-        ErrorQueueRetentionPeriod = JustSayingConstants.MaximumRetentionPeriod;
-        VisibilityTimeout = JustSayingConstants.DefaultVisibilityTimeout;
-        RetryCountBeforeSendingToErrorQueue = JustSayingConstants.DefaultHandlerRetryCount;
-    }
+    public PublishCompressionOptions CompressionOptions { get; set; }
 }

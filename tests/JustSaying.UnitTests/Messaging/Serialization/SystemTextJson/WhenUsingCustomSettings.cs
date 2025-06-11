@@ -5,14 +5,14 @@ using Newtonsoft.Json;
 
 namespace JustSaying.UnitTests.Messaging.Serialization.SystemTextJson;
 
-public class WhenUsingCustomSettings : XBehaviourTest<SystemTextJsonSerializer>
+public class WhenUsingCustomSettings : XBehaviourTest<SystemTextJsonMessageBodySerializer<MessageWithEnum>>
 {
     private MessageWithEnum _messageOut;
     private string _jsonMessage;
 
-    protected override SystemTextJsonSerializer CreateSystemUnderTest()
+    protected override SystemTextJsonMessageBodySerializer<MessageWithEnum> CreateSystemUnderTest()
     {
-        return new SystemTextJsonSerializer(new JsonSerializerOptions());
+        return new SystemTextJsonMessageBodySerializer<MessageWithEnum>(new JsonSerializerOptions());
     }
 
     protected override void Given()
@@ -22,7 +22,7 @@ public class WhenUsingCustomSettings : XBehaviourTest<SystemTextJsonSerializer>
 
     public string GetMessageInContext(MessageWithEnum message)
     {
-        var context = new { Subject = message.GetType().Name, Message = SystemUnderTest.Serialize(message, false, message.GetType().Name) };
+        var context = new { Subject = message.GetType().Name, Message = SystemUnderTest.Serialize(message) };
         return JsonConvert.SerializeObject(context);
     }
 

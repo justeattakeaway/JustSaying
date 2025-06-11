@@ -1,5 +1,7 @@
 using JustSaying.AwsTools;
 using JustSaying.AwsTools.QueueCreation;
+using JustSaying.Messaging;
+using JustSaying.Messaging.Channels.SubscriptionGroups;
 using JustSaying.Messaging.Middleware;
 using JustSaying.Models;
 using JustSaying.Naming;
@@ -40,7 +42,6 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
     private Dictionary<string, string> Tags { get; } = new(StringComparer.Ordinal);
 
     private Action<HandlerMiddlewareBuilder> MiddlewareConfiguration { get; set; }
-
 
     /// <summary>
     /// Configures that the <see cref="ITopicNamingConvention"/> will create the topic name that should be used.
@@ -203,7 +204,15 @@ public sealed class TopicSubscriptionBuilder<T> : ISubscriptionBuilder<T>
             subscriptionConfig);
 
         bus.AddStartupTask(queueWithStartup.StartupTask);
-        bus.AddQueue(subscriptionConfig.SubscriptionGroupName, queueWithStartup.Queue);
+        var compressionRegistry = bus.CompressionRegistry;
+        var serializer = bus.MessageBodySerializerFactory.GetSerializer<T>();
+
+        var sqsSource = new SqsSource
+        {
+            SqsQueue = queueWithStartup.Queue,
+            MessageConverter = new InboundMessageConverter(serializer, compressionRegistry, subscriptionConfig.RawMessageDelivery)
+        };
+        bus.AddQueue(subscriptionConfig.SubscriptionGroupName, sqsSource);
 
         logger.LogInformation(
             "Created SQS topic subscription on topic '{TopicName}' and queue '{QueueName}'.",

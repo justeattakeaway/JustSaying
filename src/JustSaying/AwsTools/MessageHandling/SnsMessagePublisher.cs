@@ -3,50 +3,38 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Interrogation;
-using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Models;
 using Microsoft.Extensions.Logging;
 using MessageAttributeValue = Amazon.SimpleNotificationService.Model.MessageAttributeValue;
 
 namespace JustSaying.AwsTools.MessageHandling;
 
-public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, IInterrogable
+internal sealed class SnsMessagePublisher(
+    IAmazonSimpleNotificationService client,
+    IOutboundMessageConverter messageConverter,
+    ILoggerFactory loggerFactory,
+    Func<Exception, Message, bool> handleException,
+    Func<Exception, IReadOnlyCollection<Message>, bool> handleBatchException) : IMessagePublisher, IMessageBatchPublisher, IInterrogable
 {
-    private readonly IMessageSerializationRegister _serializationRegister;
-    private readonly IMessageSubjectProvider _messageSubjectProvider;
-    private readonly Func<Exception, Message, bool> _handleException;
-    private readonly ILogger _logger;
-
-    public Func<Exception, IReadOnlyCollection<Message>, bool> HandleBatchException { get; set; }
+    private readonly IOutboundMessageConverter _messageConverter = messageConverter;
+    private readonly Func<Exception, Message, bool> _handleException = handleException;
+    private readonly Func<Exception, IReadOnlyCollection<Message>, bool> _handleBatchException = handleBatchException;
+    private readonly IAmazonSimpleNotificationService _client = client;
+    private readonly ILogger _logger = loggerFactory.CreateLogger("JustSaying.Publish");
     public Action<MessageResponse, Message> MessageResponseLogger { get; set; }
     public Action<MessageBatchResponse, IReadOnlyCollection<Message>> MessageBatchResponseLogger { get; set; }
     public string Arn { get; internal set; }
-    protected IAmazonSimpleNotificationService Client { get; }
-
-    public SnsMessagePublisher(
-        IAmazonSimpleNotificationService client,
-        IMessageSerializationRegister serializationRegister,
-        ILoggerFactory loggerFactory,
-        IMessageSubjectProvider messageSubjectProvider,
-        Func<Exception, Message, bool> handleException = null)
-        : this(null, client, serializationRegister, loggerFactory, messageSubjectProvider, handleException)
-    {
-    }
 
     public SnsMessagePublisher(
         string topicArn,
         IAmazonSimpleNotificationService client,
-        IMessageSerializationRegister serializationRegister,
+        IOutboundMessageConverter messageConverter,
         ILoggerFactory loggerFactory,
-        IMessageSubjectProvider messageSubjectProvider,
-        Func<Exception, Message, bool> handleException = null)
+        Func<Exception, Message, bool> handleException,
+        Func<Exception, IReadOnlyCollection<Message>, bool> handleBatchException)
+        : this(client, messageConverter, loggerFactory, handleException, handleBatchException)
     {
         Arn = topicArn;
-        Client = client;
-        _serializationRegister = serializationRegister;
-        _logger = loggerFactory.CreateLogger("JustSaying.Publish");
-        _handleException = handleException;
-        _messageSubjectProvider = messageSubjectProvider;
     }
 
     public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
@@ -56,11 +44,11 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
 
     public async Task PublishAsync(Message message, PublishMetadata metadata, CancellationToken cancellationToken)
     {
-        var request = BuildPublishRequest(message, metadata);
+        var request = await BuildPublishRequestAsync(message, metadata);
         PublishResponse response = null;
         try
         {
-            response = await Client.PublishAsync(request, cancellationToken).ConfigureAwait(false);
+            response = await _client.PublishAsync(request, cancellationToken).ConfigureAwait(false);
         }
         catch (AmazonServiceException ex)
         {
@@ -96,30 +84,33 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
 
     private bool ClientExceptionHandler(Exception ex, Message message) => _handleException?.Invoke(ex, message) ?? false;
 
-    private PublishRequest BuildPublishRequest(Message message, PublishMetadata metadata)
+    private async Task<PublishRequest> BuildPublishRequestAsync(Message message, PublishMetadata metadata)
     {
-        string messageToSend = _serializationRegister.Serialize(message, serializeForSnsPublishing: true);
-        string messageType = _messageSubjectProvider.GetSubjectForType(message.GetType());
+        var (messageToSend, attributes, subject) = await _messageConverter.ConvertToOutboundMessageAsync(message, metadata);
 
-        return new PublishRequest
+        var request = new PublishRequest
         {
             TopicArn = Arn,
-            Subject = messageType,
+            Subject = subject,
             Message = messageToSend,
-            MessageAttributes = BuildMessageAttributes(metadata)
         };
+
+        AddMessageAttributes(request.MessageAttributes, attributes);
+
+        return request;
     }
 
-    private static Dictionary<string, MessageAttributeValue> BuildMessageAttributes(PublishMetadata metadata)
+    private static void AddMessageAttributes(Dictionary<string, MessageAttributeValue> requestMessageAttributes, Dictionary<string, Messaging.MessageAttributeValue> attributes)
     {
-        if (metadata?.MessageAttributes == null || metadata.MessageAttributes.Count == 0)
+        if (attributes == null || attributes.Count == 0)
         {
-            return null;
+            return;
         }
 
-        return metadata.MessageAttributes.ToDictionary(
-            source => source.Key,
-            source => BuildMessageAttributeValue(source.Value));
+        foreach (var attribute in attributes)
+        {
+            requestMessageAttributes.Add(attribute.Key, BuildMessageAttributeValue(attribute.Value));
+        }
     }
 
     private static MessageAttributeValue BuildMessageAttributeValue(Messaging.MessageAttributeValue value)
@@ -142,7 +133,7 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
     }
 
     /// <inheritdoc/>
-    public virtual InterrogationResult Interrogate()
+    public InterrogationResult Interrogate()
     {
         return new InterrogationResult(new { Arn });
     }
@@ -155,12 +146,12 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
 
         foreach (var chunk in messages.Chunk(size))
         {
-            var request = BuildPublishBatchRequest(chunk, metadata);
+            var request = await BuildPublishBatchRequestAsync(chunk, metadata);
 
             PublishBatchResponse response = null;
             try
             {
-                response = await Client.PublishBatchAsync(request, cancellationToken).ConfigureAwait(false);
+                response = await _client.PublishBatchAsync(request, cancellationToken).ConfigureAwait(false);
             }
             catch (AmazonServiceException ex)
             {
@@ -232,25 +223,26 @@ public class SnsMessagePublisher : IMessagePublisher, IMessageBatchPublisher, II
     }
 
     private bool ClientExceptionHandler(Exception ex, IReadOnlyCollection<Message> messages)
-        => HandleBatchException?.Invoke(ex, messages) ?? false;
+        => _handleBatchException?.Invoke(ex, messages) ?? false;
 
-    private PublishBatchRequest BuildPublishBatchRequest(Message[] messages, PublishMetadata metadata)
+    private async Task<PublishBatchRequest> BuildPublishBatchRequestAsync(Message[] messages, PublishMetadata metadata)
     {
         var entries = new List<PublishBatchRequestEntry>(messages.Length);
 
         foreach (var message in messages)
         {
-            string subject = _messageSubjectProvider.GetSubjectForType(message.GetType());
-            string payload = _serializationRegister.Serialize(message, serializeForSnsPublishing: true);
-            var attributes = BuildMessageAttributes(metadata);
+            var (messageToSend, attributes, subject) = await _messageConverter.ConvertToOutboundMessageAsync(message, metadata);
 
-            entries.Add(new()
+            PublishBatchRequestEntry request = new()
             {
                 Id = message.UniqueKey(),
                 Subject = subject,
-                Message = payload,
-                MessageAttributes = attributes,
-            });
+                Message = messageToSend,
+            };
+
+            AddMessageAttributes(request.MessageAttributes, attributes);
+
+            entries.Add(request);
         }
 
         return new PublishBatchRequest
