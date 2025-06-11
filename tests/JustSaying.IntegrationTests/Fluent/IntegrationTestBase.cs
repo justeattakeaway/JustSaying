@@ -81,8 +81,6 @@ public abstract class IntegrationTestBase(ITestOutputHelper outputHelper)
     protected virtual IAwsClientFactory CreateClientFactory()
     {
         return new LocalAwsClientFactory(Bus);
-        // var credentials = new SessionAWSCredentials(AccessKeyId, SecretAccessKey, SessionToken);
-        // return new DefaultAwsClientFactory(credentials) { ServiceUri = ServiceUri };
     }
 
     protected IHandlerAsync<T> CreateHandler<T>(TaskCompletionSource<object> completionSource, int expectedMessageCount = 1)
