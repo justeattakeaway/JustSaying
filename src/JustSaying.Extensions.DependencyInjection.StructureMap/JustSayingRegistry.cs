@@ -9,6 +9,7 @@ using JustSaying.Messaging.Middleware.Logging;
 using JustSaying.Messaging.Middleware.PostProcessing;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.Naming;
+using Newtonsoft.Json;
 using StructureMap;
 using StructureMap.Pipeline;
 
@@ -36,6 +37,7 @@ internal sealed class JustSayingRegistry : Registry
         For<IPublishBatchConfiguration>().Use<MessagingConfig>(context => context.GetInstance<MessagingConfig>()).Singleton();
         For<IMessageMonitor>().Use<NullOpMessageMonitor>().Singleton();
         For<IMessageBodySerializationFactory>().Use<NewtonsoftSerializationFactory>().Singleton();
+        For<JsonSerializerSettings>().Use(() => new JsonSerializerSettings()).Singleton();
         For<IMessageSubjectProvider>().Use<GenericMessageSubjectProvider>().Singleton();
         For<IVerifyAmazonQueues>().Use<AmazonQueueCreator>().Singleton();
 
