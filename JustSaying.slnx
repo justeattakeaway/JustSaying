@@ -1,0 +1,68 @@
+<Solution>
+  <Folder Name="/samples/" />
+  <Folder Name="/samples/src/">
+    <Project Path="samples/src/JustSaying.Sample.Middleware/JustSaying.Sample.Middleware.csproj" />
+    <Project Path="samples/src/JustSaying.Sample.Restaurant.KitchenConsole/JustSaying.Sample.Restaurant.KitchenConsole.csproj" />
+    <Project Path="samples/src/JustSaying.Sample.Restaurant.Models/JustSaying.Sample.Restaurant.Models.csproj" />
+    <Project Path="samples/src/JustSaying.Sample.Restaurant.OrderingApi/JustSaying.Sample.Restaurant.OrderingApi.csproj" />
+  </Folder>
+  <Folder Name="/samples/tests/">
+    <File Path="samples/tests/readme.md" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="build.ps1" />
+    <File Path="CHANGELOG.md" />
+    <File Path="CodeAnalysisRules.ruleset" />
+    <File Path="CODE_OF_CONDUCT.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="justeat-oss.snk" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+    <File Path="Releases.md" />
+  </Folder>
+  <Folder Name="/Solution Items/.github/">
+    <File Path=".github/actionlint-matcher.json" />
+    <File Path=".github/CODEOWNERS" />
+    <File Path=".github/CONTRIBUTING.md" />
+    <File Path=".github/dependabot.yml" />
+    <File Path=".github/ISSUE_TEMPLATE.md" />
+    <File Path=".github/PULL_REQUEST_TEMPLATE.md" />
+    <File Path=".github/stale.yml" />
+  </Folder>
+  <Folder Name="/Solution Items/.github/ISSUE_TEMPLATE/">
+    <File Path=".github/ISSUE_TEMPLATE/bug_report.md" />
+    <File Path=".github/ISSUE_TEMPLATE/feature_request.md" />
+  </Folder>
+  <Folder Name="/Solution Items/.github/workflows/">
+    <File Path=".github/workflows/approve-and-merge.yml" />
+    <File Path=".github/workflows/build.yml" />
+    <File Path=".github/workflows/code-ql.yml" />
+    <File Path=".github/workflows/dependabot-approve.yml" />
+    <File Path=".github/workflows/dependency-review.yml" />
+    <File Path=".github/workflows/lint-actions.yml" />
+    <File Path=".github/workflows/scorecard.yml" />
+    <File Path=".github/workflows/update-dotnet-sdk.yml" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/JustSaying.Extensions.Aws/JustSaying.Extensions.Aws.csproj" />
+    <Project Path="src/JustSaying.Extensions.DependencyInjection.Microsoft/JustSaying.Extensions.DependencyInjection.Microsoft.csproj" />
+    <Project Path="src/JustSaying.Extensions.DependencyInjection.StructureMap/JustSaying.Extensions.DependencyInjection.StructureMap.csproj" />
+    <Project Path="src/JustSaying.Models/JustSaying.Models.csproj" />
+    <Project Path="src/JustSaying.Tools/JustSaying.Tools.csproj" />
+    <Project Path="src/JustSaying/JustSaying.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/JustSaying.Benchmark/JustSaying.Benchmark.csproj" />
+    <Project Path="tests/JustSaying.Extensions.Aws.Tests/JustSaying.Extensions.Aws.Tests.csproj" />
+    <Project Path="tests/JustSaying.Extensions.DependencyInjection.StructureMap.Tests/JustSaying.Extensions.DependencyInjection.StructureMap.Tests.csproj" />
+    <Project Path="tests/JustSaying.IntegrationTests/JustSaying.IntegrationTests.csproj" />
+    <Project Path="tests/JustSaying.TestingFramework/JustSaying.TestingFramework.csproj" />
+    <Project Path="tests/JustSaying.UnitTests/JustSaying.UnitTests.csproj" />
+  </Folder>
+</Solution>
