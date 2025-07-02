@@ -104,7 +104,7 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
                     _logger.LogTrace("Downloaded {MessageCount} messages from queue {QueueName}.", messages?.Count ?? 0, _sqsQueueReader.QueueName);
                 }
 
-                if (messages == null)
+                if (messages is null)
                 {
                     continue;
                 }
