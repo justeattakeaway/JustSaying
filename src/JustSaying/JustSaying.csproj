@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsShipping>true</IsShipping>
-    <TargetFrameworks>netstandard2.0;net461;net8.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net462;net8.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\JustSaying.Models\JustSaying.Models.csproj" />
@@ -16,9 +16,10 @@
   <ItemGroup>
     <PackageReference Include="AWSSDK.SimpleNotificationService" />
     <PackageReference Include="AWSSDK.SQS" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="Newtonsoft.Json" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462' Or '$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Text.Json" />
     <PackageReference Include="System.Threading.Channels" />
   </ItemGroup>

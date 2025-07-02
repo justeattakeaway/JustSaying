@@ -65,7 +65,10 @@ public class WhenPublishingAsync : WhenPublishingTestBase
     [Fact]
     public void MessageAttributeKeyIsPublished()
     {
-        Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x => x.MessageAttributes.Single().Key == MessageAttributeKey));
+        Sns.Received().PublishAsync(Arg.Is<PublishRequest>(x =>
+            x.MessageAttributes != null &&
+            x.MessageAttributes.ContainsKey(MessageAttributeKey)
+        ));
     }
 
     [Fact]

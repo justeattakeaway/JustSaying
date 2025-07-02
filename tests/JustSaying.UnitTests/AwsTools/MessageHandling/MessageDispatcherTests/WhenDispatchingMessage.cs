@@ -127,6 +127,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
         protected override void Given()
         {
             base.Given();
+            _sqsMessage.Attributes ??= [];
             _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString(CultureInfo.InvariantCulture));
         }
 
@@ -199,6 +200,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
             _middlewareMap.Add<SimpleMessage>(_queue.QueueName, middleware);
 
             _messageBackoffStrategy.GetBackoffDuration(_typedMessage, 1, _expectedException).Returns(_expectedBackoffTimeSpan);
+            _sqsMessage.Attributes ??= [];
             _sqsMessage.Attributes.Add(MessageSystemAttributeName.ApproximateReceiveCount, ExpectedReceiveCount.ToString(CultureInfo.InvariantCulture));
         }
 

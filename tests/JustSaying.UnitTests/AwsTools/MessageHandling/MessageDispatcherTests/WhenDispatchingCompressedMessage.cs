@@ -7,7 +7,6 @@ using JustSaying.AwsTools.MessageHandling;
 using JustSaying.AwsTools.MessageHandling.Dispatch;
 using JustSaying.Messaging;
 using JustSaying.Messaging.Compression;
-using JustSaying.Messaging.MessageSerialization;
 using JustSaying.Messaging.Monitoring;
 using JustSaying.TestingFramework;
 using JustSaying.UnitTests.Messaging.Channels.SubscriptionGroupTests;
@@ -47,12 +46,10 @@ public class WhenDispatchingCompressedMessage
 
         var sqsMessage = new Message
         {
-            Body = fullMessagePayload,
-            MessageAttributes =
-            {
-                ["Content-Encoding"] = new MessageAttributeValue { DataType = "String", StringValue = ContentEncodings.GzipBase64 }
-            }
+            Body = fullMessagePayload
         };
+        sqsMessage.MessageAttributes ??= [];
+        sqsMessage.MessageAttributes["Content-Encoding"] = new MessageAttributeValue { DataType = "String", StringValue = ContentEncodings.GzipBase64 };
 
         var queue = new FakeSqsQueue(ct => Task.FromResult(Enumerable.Empty<Message>()));
         var queueReader = new SqsQueueReader(queue, messageConverter);

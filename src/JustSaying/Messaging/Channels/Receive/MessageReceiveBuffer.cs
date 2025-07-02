@@ -97,16 +97,16 @@ internal class MessageReceiveBuffer : IMessageReceiveBuffer
                 using (_monitor.MeasureReceive(_sqsQueueReader.QueueName, _sqsQueueReader.RegionSystemName))
                 {
                     messages = await GetMessagesAsync(_prefetch, stoppingToken).ConfigureAwait(false);
-
-                    if (messages == null)
-                    {
-                        continue;
-                    }
                 }
 
                 if (_logger.IsEnabled(LogLevel.Trace))
                 {
-                    _logger.LogTrace("Downloaded {MessageCount} messages from queue {QueueName}.", messages.Count, _sqsQueueReader.QueueName);
+                    _logger.LogTrace("Downloaded {MessageCount} messages from queue {QueueName}.", messages?.Count ?? 0, _sqsQueueReader.QueueName);
+                }
+
+                if (messages is null)
+                {
+                    continue;
                 }
 
                 foreach (Message message in messages)

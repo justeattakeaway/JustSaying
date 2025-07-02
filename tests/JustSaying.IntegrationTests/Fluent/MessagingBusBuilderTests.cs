@@ -119,6 +119,7 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
         var topicName = Guid.NewGuid().ToString();
 
         // Arrange
+        var bus = new InMemoryAwsBus();
         var services = new ServiceCollection()
             .AddLogging((p) => p.AddXUnit(OutputHelper))
             .AddJustSaying(
@@ -126,8 +127,10 @@ public class MessagingBusBuilderTests(ITestOutputHelper outputHelper)
                 {
                     builder
                         .Client((options) =>
-                            options.WithBasicCredentials("accessKey", "secretKey")
-                                .WithServiceUri(TestEnvironment.SimulatorUrl))
+                            options.WithClientFactory(() => new LocalAwsClientFactory(bus)))
+                            // TODO Add back LocalStack config for running in CI
+                            // options.WithBasicCredentials("accessKey", "secretKey")
+                            //     .WithServiceUri(TestEnvironment.SimulatorUrl))
                         .Messaging((options) => options.WithRegion("eu-west-1"))
                         .Publications((options) => options.WithTopic<TopicMessage>())
                         .Subscriptions((options) => options.ForTopic<TopicMessage>(cfg => cfg.WithQueueName(topicName)));

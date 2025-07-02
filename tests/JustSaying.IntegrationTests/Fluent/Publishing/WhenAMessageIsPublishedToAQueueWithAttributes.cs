@@ -1,8 +1,5 @@
-using JustSaying.AwsTools.QueueCreation;
-using JustSaying.Fluent.Subscribing.Newtonsoft;
 using JustSaying.Messaging;
 using JustSaying.Messaging.MessageHandling;
-using JustSaying.Messaging.MessageSerialization;
 using JustSaying.TestingFramework;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -57,6 +54,7 @@ public class WhenAMessageIsPublishedToAQueueWithAttribute(ITestOutputHelper outp
                     {
                         var (actualMessageContext, actualMessage) = handler.HandledMessages.ShouldHaveSingleItem();
                         actualMessage.Content.ShouldBe(message.Content);
+                        actualMessageContext.MessageAttributes.ShouldNotBeNull();
                         actualMessageContext.MessageAttributes.GetKeys().ShouldContain("Hello");
                     });
             });

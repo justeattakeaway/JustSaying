@@ -95,21 +95,36 @@ internal sealed class SnsMessagePublisher(
             Message = messageToSend,
         };
 
-        AddMessageAttributes(request.MessageAttributes, attributes);
+        AddMessageAttributes(request, attributes);
 
         return request;
     }
 
-    private static void AddMessageAttributes(Dictionary<string, MessageAttributeValue> requestMessageAttributes, Dictionary<string, Messaging.MessageAttributeValue> attributes)
+    private static void AddMessageAttributes(PublishRequest request, Dictionary<string, Messaging.MessageAttributeValue> attributes)
     {
         if (attributes == null || attributes.Count == 0)
         {
             return;
         }
 
+        request.MessageAttributes ??= [];
         foreach (var attribute in attributes)
         {
-            requestMessageAttributes.Add(attribute.Key, BuildMessageAttributeValue(attribute.Value));
+            request.MessageAttributes.Add(attribute.Key, BuildMessageAttributeValue(attribute.Value));
+        }
+    }
+
+    private static void AddMessageAttributes(PublishBatchRequestEntry request, Dictionary<string, Messaging.MessageAttributeValue> attributes)
+    {
+        if (attributes == null || attributes.Count == 0)
+        {
+            return;
+        }
+
+        request.MessageAttributes ??= [];
+        foreach (var attribute in attributes)
+        {
+            request.MessageAttributes.Add(attribute.Key, BuildMessageAttributeValue(attribute.Value));
         }
     }
 
@@ -163,11 +178,11 @@ internal sealed class SnsMessagePublisher(
                 }
             }
 
-            if (response is { })
+            if (response is not null)
             {
                 using var scope = _logger.BeginScope(new Dictionary<string, string> { ["AwsRequestId"] = response.ResponseMetadata?.RequestId });
 
-                if (response.Successful.Count > 0 && _logger.IsEnabled(LogLevel.Information))
+                if (response.Successful is not null && response.Successful.Count > 0 && _logger.IsEnabled(LogLevel.Information))
                 {
                     _logger.LogInformation(
                         "Published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
@@ -186,7 +201,7 @@ internal sealed class SnsMessagePublisher(
                     }
                 }
 
-                if (response.Failed.Count > 0 && _logger.IsEnabled(LogLevel.Error))
+                if (response.Failed is not null && response.Failed.Count > 0 && _logger.IsEnabled(LogLevel.Error))
                 {
                     _logger.LogError(
                         "Failed to publish batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
@@ -207,12 +222,12 @@ internal sealed class SnsMessagePublisher(
                 }
             }
 
-            if (MessageBatchResponseLogger != null)
+            if (MessageBatchResponseLogger is not null)
             {
                 var responseData = new MessageBatchResponse
                 {
-                    SuccessfulMessageIds = response?.Successful.Select(x => x.MessageId).ToArray(),
-                    FailedMessageIds = response?.Failed.Select(x => x.Id).ToArray(),
+                    SuccessfulMessageIds = response?.Successful?.Select(x => x.MessageId).ToArray(),
+                    FailedMessageIds = response?.Failed?.Select(x => x.Id).ToArray(),
                     ResponseMetadata = response?.ResponseMetadata,
                     HttpStatusCode = response?.HttpStatusCode,
                 };
@@ -240,7 +255,7 @@ internal sealed class SnsMessagePublisher(
                 Message = messageToSend,
             };
 
-            AddMessageAttributes(request.MessageAttributes, attributes);
+            AddMessageAttributes(request, attributes);
 
             entries.Add(request);
         }

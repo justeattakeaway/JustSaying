@@ -52,6 +52,7 @@ public class WhenAMessageIsPublishedToAQueueWithCompression(ITestOutputHelper ou
                 await Patiently.AssertThatAsync(OutputHelper,
                     () =>
                     {
+                        handler.ReceivedMessages.ShouldNotBeNull();
                         handler.ReceivedMessages.ShouldHaveSingleItem().Content.ShouldBe(message.Content);
                     });
             });
