@@ -1,8 +1,8 @@
 <Project>
   <ItemGroup Label="Libraries">
-    <PackageVersion Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.2" />
-    <PackageVersion Include="AWSSDK.SimpleNotificationService" Version="4.0.0.11" />
-    <PackageVersion Include="AWSSDK.SQS" Version="4.0.0.12" />
+    <PackageVersion Include="AWSSDK.Extensions.NETCore.Setup" Version="[4.0.2,5)" />
+    <PackageVersion Include="AWSSDK.SimpleNotificationService" Version="[4.0.0.11,5)" />
+    <PackageVersion Include="AWSSDK.SQS" Version="[4.0.0.12,5)" />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="1.1.0" Condition=" '$(TargetFramework)' == 'net462' " />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.0.0" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
