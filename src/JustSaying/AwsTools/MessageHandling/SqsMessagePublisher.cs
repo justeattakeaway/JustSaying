@@ -86,7 +86,7 @@ internal sealed class SqsMessagePublisher(
             QueueUrl = QueueUrl.AbsoluteUri
         };
 
-        AddMessageAttributes(request.MessageAttributes, attributes);
+        AddMessageAttributes(request, attributes);
 
         if (metadata?.Delay != null)
         {
@@ -96,16 +96,31 @@ internal sealed class SqsMessagePublisher(
         return request;
     }
 
-    private static void AddMessageAttributes(Dictionary<string, MessageAttributeValue> requestMessageAttributes, Dictionary<string, Messaging.MessageAttributeValue> messageAttributes)
+    private static void AddMessageAttributes(SendMessageRequest request, Dictionary<string, Messaging.MessageAttributeValue> messageAttributes)
     {
         if (messageAttributes == null || messageAttributes.Count == 0)
         {
             return;
         }
 
+        request.MessageAttributes ??= [];
         foreach (var attribute in messageAttributes)
         {
-            requestMessageAttributes.Add(attribute.Key, BuildMessageAttributeValue(attribute.Value));
+            request.MessageAttributes.Add(attribute.Key, BuildMessageAttributeValue(attribute.Value));
+        }
+    }
+
+    private static void AddMessageAttributes(SendMessageBatchRequestEntry request, Dictionary<string, Messaging.MessageAttributeValue> messageAttributes)
+    {
+        if (messageAttributes == null || messageAttributes.Count == 0)
+        {
+            return;
+        }
+
+        request.MessageAttributes ??= [];
+        foreach (var attribute in messageAttributes)
+        {
+            request.MessageAttributes.Add(attribute.Key, BuildMessageAttributeValue(attribute.Value));
         }
     }
 
@@ -163,7 +178,7 @@ internal sealed class SqsMessagePublisher(
             if (response != null)
             {
                 using var scope = _logger.BeginScope(new Dictionary<string, string> { ["AwsRequestId"] = response.ResponseMetadata?.RequestId });
-                if (response.Successful.Count > 0 && _logger.IsEnabled(LogLevel.Information))
+                if (response.Successful is not null && response.Successful.Count > 0 && _logger.IsEnabled(LogLevel.Information))
                 {
                     _logger.LogInformation(
                         "Published batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
@@ -182,7 +197,7 @@ internal sealed class SqsMessagePublisher(
                     }
                 }
 
-                if (response.Failed.Count > 0 && _logger.IsEnabled(LogLevel.Error))
+                if (response.Failed is not null && response.Failed.Count > 0 && _logger.IsEnabled(LogLevel.Error))
                 {
                     _logger.LogError(
                         "Failed to publish batch of {MessageCount} to {DestinationType} '{MessageDestination}'.",
@@ -207,8 +222,8 @@ internal sealed class SqsMessagePublisher(
             {
                 var responseData = new MessageBatchResponse
                 {
-                    SuccessfulMessageIds = response?.Successful.Select(x => x.MessageId).ToArray(),
-                    FailedMessageIds = response?.Failed.Select(x => x.Id).ToArray(),
+                    SuccessfulMessageIds = response?.Successful?.Select(x => x.MessageId).ToArray(),
+                    FailedMessageIds = response?.Failed?.Select(x => x.Id).ToArray(),
                     ResponseMetadata = response?.ResponseMetadata,
                     HttpStatusCode = response?.HttpStatusCode,
                 };
@@ -233,7 +248,7 @@ internal sealed class SqsMessagePublisher(
                 MessageBody = messageBody
             };
 
-            AddMessageAttributes(entry.MessageAttributes, attributes);
+            AddMessageAttributes(entry, attributes);
 
             if (delaySeconds is { } value)
             {

@@ -1,25 +1,26 @@
 <Project>
   <ItemGroup Label="Libraries">
-    <PackageVersion Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.300" />
-    <PackageVersion Include="AWSSDK.SimpleNotificationService" Version="3.7.400.25" />
-    <PackageVersion Include="AWSSDK.SQS" Version="3.7.400.25" />
-    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
+    <PackageVersion Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.2" />
+    <PackageVersion Include="AWSSDK.SimpleNotificationService" Version="4.0.0.11" />
+    <PackageVersion Include="AWSSDK.SQS" Version="4.0.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="1.1.0" Condition=" '$(TargetFramework)' == 'net461' " />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="1.1.0" Condition=" '$(TargetFramework)' == 'net462' " />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.0.0" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" Condition=" '$(TargetFramework)' == 'net8.0' " />
+    <PackageVersion Include="System.Threading.Channels" Version="9.0.6" Condition=" '$(TargetFramework)' == 'net462' " />
+    <PackageVersion Include="System.Threading.Channels" Version="9.0.6" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
+    <PackageVersion Include="System.Text.Json" Version="8.0.5" Condition=" '$(TargetFramework)' == 'net462' " />
+    <PackageVersion Include="System.Text.Json" Version="8.0.5" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageVersion Include="StructureMap" Version="4.6.0" />
-    <PackageVersion Include="System.Text.Json" Version="6.0.10" />
-    <PackageVersion Include="System.Threading.Channels" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup Label="Tests and Samples">
     <PackageVersion Include="AutoFixture" Version="4.18.1" />
     <PackageVersion Include="CommandLineParser" Version="2.9.1" />
     <PackageVersion Include="coverlet.msbuild" Version="6.0.4" />
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
-    <PackageVersion Include="LocalSqsSnsMessaging" Version="0.5.3" />
+    <PackageVersion Include="LocalSqsSnsMessaging" Version="0.6.1" />
     <PackageVersion Include="Magnum" Version="2.1.3" />
     <PackageVersion Include="MartinCostello.Logging.XUnit" Version="0.5.1" />
     <PackageVersion Include="MELT" Version="0.9.0" />

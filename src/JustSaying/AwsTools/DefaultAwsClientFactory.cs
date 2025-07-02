@@ -1,5 +1,6 @@
 using Amazon;
 using Amazon.Runtime;
+using Amazon.Runtime.Credentials;
 using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 
@@ -11,7 +12,7 @@ public class DefaultAwsClientFactory : IAwsClientFactory
 
     public DefaultAwsClientFactory()
     {
-        _credentials = FallbackCredentialsFactory.GetCredentials();
+        _credentials = DefaultAWSCredentialsIdentityResolver.GetCredentials();
     }
 
     public DefaultAwsClientFactory(AWSCredentials customCredentials)

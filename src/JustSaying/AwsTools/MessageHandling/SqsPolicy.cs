@@ -11,12 +11,10 @@ internal static class SqsPolicy
 
         var setQueueAttributesRequest = new SetQueueAttributesRequest
         {
-            QueueUrl = policyDetails.QueueUri.AbsoluteUri,
-            Attributes =
-            {
-                ["Policy"] = policyJson
-            }
+            QueueUrl = policyDetails.QueueUri.AbsoluteUri
         };
+        setQueueAttributesRequest.Attributes ??= [];
+        setQueueAttributesRequest.Attributes["Policy"] = policyJson;
 
         await client.SetQueueAttributesAsync(setQueueAttributesRequest).ConfigureAwait(false);
     }
