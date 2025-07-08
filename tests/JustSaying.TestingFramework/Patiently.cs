@@ -1,7 +1,8 @@
 using System.Diagnostics;
 using NSubstitute.Exceptions;
 using Shouldly;
-using Xunit; using Xunit.Sdk;
+using Xunit;
+using Xunit.Sdk;
 
 namespace JustSaying.TestingFramework;
 
