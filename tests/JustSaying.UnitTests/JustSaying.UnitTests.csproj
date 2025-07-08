@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <NoWarn>$(NoWarn);CA1034;CA1051;CA1054;CA1707;CA2000;CA2007</NoWarn>
+    <OutputType>Exe</OutputType>
+    <NoWarn>$(NoWarn);CA1034;CA1051;CA1054;CA1707;CA2000;CA2007;xUnit1051</NoWarn>
     <TargetFramework>net9.0</TargetFramework>
     <Deterministic>false</Deterministic>
   </PropertyGroup>
@@ -18,12 +19,11 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Newtonsoft.Json" VersionOverride="13.0.3" />
     <PackageReference Include="Polly.Core" />
-    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Shouldly" />
     <Using Include="Xunit" />
-    <Using Include="Xunit.Abstractions" />
   </ItemGroup>
 </Project>

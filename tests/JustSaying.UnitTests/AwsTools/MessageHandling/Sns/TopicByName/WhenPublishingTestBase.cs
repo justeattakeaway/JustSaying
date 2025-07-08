@@ -14,7 +14,7 @@ public abstract class WhenPublishingTestBase : IAsyncLifetime
 
     public IAmazonSimpleNotificationService Sns { get; private set; } = Substitute.For<IAmazonSimpleNotificationService>();
 
-    public virtual async Task InitializeAsync()
+    public virtual async ValueTask InitializeAsync()
     {
         Given();
 
@@ -23,10 +23,10 @@ public abstract class WhenPublishingTestBase : IAsyncLifetime
         await WhenAsync().ConfigureAwait(false);
     }
 
-    public virtual Task DisposeAsync()
+    public virtual ValueTask DisposeAsync()
     {
         Sns?.Dispose();
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
     protected abstract void Given();

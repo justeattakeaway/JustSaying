@@ -1,5 +1,5 @@
 using JustSaying.Messaging.Middleware;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace JustSaying.TestingFramework;
 

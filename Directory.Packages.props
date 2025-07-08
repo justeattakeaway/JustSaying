@@ -14,6 +14,7 @@
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageVersion Include="StructureMap" Version="4.6.0" />
+    <PackageVersion Include="xunit.v3.assert" Version="2.0.3" />
   </ItemGroup>
   <ItemGroup Label="Tests and Samples">
     <PackageVersion Include="AutoFixture" Version="4.18.1" />
@@ -21,8 +22,7 @@
     <PackageVersion Include="coverlet.msbuild" Version="6.0.4" />
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
     <PackageVersion Include="LocalSqsSnsMessaging" Version="0.6.1" />
-    <PackageVersion Include="Magnum" Version="2.1.3" />
-    <PackageVersion Include="MartinCostello.Logging.XUnit" Version="0.5.1" />
+    <PackageVersion Include="MartinCostello.Logging.XUnit.v3" Version="0.6.0" />
     <PackageVersion Include="MELT" Version="0.9.0" />
     <PackageVersion Include="MELT.Xunit" Version="0.9.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
@@ -48,7 +48,8 @@
     <PackageVersion Include="SerilogTimings" Version="3.1.0" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="8.1.1" />
-    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.v3" Version="2.0.3" />
+    <PackageVersion Include="xunit.v3.extensibility.core" Version="2.0.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.1" />
   </ItemGroup>
   <ItemGroup Condition=" '$(IsShipping)' == 'true' ">

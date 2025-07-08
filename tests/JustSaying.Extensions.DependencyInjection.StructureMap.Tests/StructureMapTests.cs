@@ -9,7 +9,7 @@ using LocalSqsSnsMessaging;
 using Microsoft.Extensions.Logging;
 using Shouldly;
 using StructureMap;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace JustSaying;
 

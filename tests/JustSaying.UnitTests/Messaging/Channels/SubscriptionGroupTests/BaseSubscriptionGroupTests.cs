@@ -40,7 +40,7 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
         Logger = LoggerFactory.CreateLogger(GetType());
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         GivenInternal();
 
@@ -161,11 +161,11 @@ public abstract class BaseSubscriptionGroupTests : IAsyncLifetime
         };
     }
 
-    public Task DisposeAsync()
+    public ValueTask DisposeAsync()
     {
         LoggerFactory?.Dispose();
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
     protected class TestMessage : Message
