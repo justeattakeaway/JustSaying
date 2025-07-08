@@ -8,6 +8,19 @@ public class CapturingTestOutputHelper(ITestOutputHelper inner) : ITestOutputHel
 
     public string Output => _sb.ToString();
 
+    public void Write(string message)
+    {
+        _sb.Append(message);
+        inner.Write(message);
+    }
+
+    public void Write(string format, params object[] args)
+    {
+        string formattedMessage = string.Format(format, args);
+        _sb.Append(formattedMessage);
+        inner.Write(formattedMessage);
+    }
+
     public void WriteLine(string message)
     {
         _sb.AppendLine(message);

@@ -12,7 +12,7 @@ public abstract class GivenAServiceBusWithoutMonitoring : IAsyncLifetime
 
     protected JustSaying.JustSayingBus SystemUnderTest { get; private set; }
 
-    public virtual async Task InitializeAsync()
+    public virtual async ValueTask InitializeAsync()
     {
         Given();
 
@@ -21,9 +21,9 @@ public abstract class GivenAServiceBusWithoutMonitoring : IAsyncLifetime
     }
 
 
-    public virtual Task DisposeAsync()
+    public virtual ValueTask DisposeAsync()
     {
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
     protected virtual void Given()

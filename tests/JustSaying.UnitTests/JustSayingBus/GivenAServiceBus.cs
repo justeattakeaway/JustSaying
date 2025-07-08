@@ -22,7 +22,7 @@ public abstract class GivenAServiceBus(ITestOutputHelper outputHelper) : IAsyncL
 
     protected static readonly TimeSpan TimeoutPeriod = TimeSpan.FromSeconds(1);
 
-    public virtual async Task InitializeAsync()
+    public virtual async ValueTask InitializeAsync()
     {
         Given();
 
@@ -37,9 +37,9 @@ public abstract class GivenAServiceBus(ITestOutputHelper outputHelper) : IAsyncL
         }
     }
 
-    public virtual Task DisposeAsync()
+    public virtual ValueTask DisposeAsync()
     {
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
     protected virtual void Given()

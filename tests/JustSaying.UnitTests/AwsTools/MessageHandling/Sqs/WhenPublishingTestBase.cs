@@ -13,7 +13,7 @@ public abstract class WhenPublishingTestBase : IAsyncLifetime
     private protected SqsMessagePublisher SystemUnderTest { get; private set; }
     public IAmazonSQS Sqs { get; private set; } = Substitute.For<IAmazonSQS>();
 
-    public virtual async Task InitializeAsync()
+    public virtual async ValueTask InitializeAsync()
     {
         Given();
 
@@ -22,10 +22,10 @@ public abstract class WhenPublishingTestBase : IAsyncLifetime
         await WhenAsync().ConfigureAwait(false);
     }
 
-    public virtual Task DisposeAsync()
+    public virtual ValueTask DisposeAsync()
     {
         Sqs?.Dispose();
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
     protected abstract void Given();

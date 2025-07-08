@@ -59,7 +59,7 @@ public class WhenDispatchingMessage : IAsyncLifetime
         _messageConverter = new InboundMessageConverter(_messageBodySerializer, new MessageCompressionRegistry(), true);
     }
 
-    public virtual async Task InitializeAsync()
+    public virtual async ValueTask InitializeAsync()
     {
         Given();
 
@@ -68,9 +68,9 @@ public class WhenDispatchingMessage : IAsyncLifetime
         await When();
     }
 
-    public virtual Task DisposeAsync()
+    public virtual ValueTask DisposeAsync()
     {
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
     protected virtual void Given()

@@ -54,7 +54,6 @@
     <Project Path="src/JustSaying.Extensions.DependencyInjection.Microsoft/JustSaying.Extensions.DependencyInjection.Microsoft.csproj" />
     <Project Path="src/JustSaying.Extensions.DependencyInjection.StructureMap/JustSaying.Extensions.DependencyInjection.StructureMap.csproj" />
     <Project Path="src/JustSaying.Models/JustSaying.Models.csproj" />
-    <Project Path="src/JustSaying.Tools/JustSaying.Tools.csproj" />
     <Project Path="src/JustSaying/JustSaying.csproj" />
   </Folder>
   <Folder Name="/tests/">
