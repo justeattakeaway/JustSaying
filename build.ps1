@@ -110,6 +110,18 @@ function DotNetTest {
         $additionalArgs += "GitHubActions;report-warnings=false"
     }
 
+    # Always generate TRX test results for codecov
+    $testResultsDir = Join-Path $solutionPath "test-results"
+    if (!(Test-Path $testResultsDir)) {
+        New-Item -ItemType Directory -Path $testResultsDir -Force | Out-Null
+    }
+    
+    $projectName = [System.IO.Path]::GetFileNameWithoutExtension($Project)
+    $additionalArgs += "--logger"
+    $additionalArgs += "trx;LogFileName=${projectName}.trx"
+    $additionalArgs += "--results-directory"
+    $additionalArgs += $testResultsDir
+
     & $dotnet test $Project --configuration "Release" $additionalArgs
 
     if ($LASTEXITCODE -ne 0) {
