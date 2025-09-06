@@ -81,10 +81,10 @@ jobs:
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
         uses:  codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
+          files: ./test-results/**/*.xml
           flags: ${{ matrix.os-name }}
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Generate SBOM
         uses: anchore/sbom-action@da167eac915b4e86f08b264dbdbc867b61be6f0c # v0.20.5
