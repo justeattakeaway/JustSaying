@@ -106,9 +106,17 @@ function DotNetTest {
     $additionalArgs = @()
 
     if (![string]::IsNullOrEmpty($env:GITHUB_SHA)) {
-        $additionalArgs += "--logger"
-        $additionalArgs += "GitHubActions;report-warnings=false"
+        $additionalArgs += "--logger:GitHubActions;report-warnings=false"
     }
+
+    # Always generate JUnit XML test results for codecov
+    $testResultsDir = Join-Path $solutionPath "test-results"
+    if (!(Test-Path $testResultsDir)) {
+        New-Item -ItemType Directory -Path $testResultsDir -Force | Out-Null
+    }
+
+    $projectName = [System.IO.Path]::GetFileNameWithoutExtension($Project)
+    $additionalArgs += "--logger:junit;LogFilePath=${testResultsDir}/${projectName}.xml"
 
     & $dotnet test $Project --configuration "Release" $additionalArgs
 
@@ -117,29 +125,10 @@ function DotNetTest {
     }
 }
 
-function Get-ContainerRunnerCommand() {
-    $commands = @('docker', 'podman')
-
-    foreach ($command in $commands) {
-        if (Get-Command $command -ErrorAction SilentlyContinue) {
-            return $command
-        }
-    }
-}
-
 Write-Host "Creating packages..." -ForegroundColor Green
 
 ForEach ($libraryProject in $libraryProjects) {
     DotNetPack $libraryProject
-}
-
-if (($null -ne $env:CI) -And ($EnableIntegrationTests -eq $true)) {
-    $LocalStackImage = "localstack/localstack:3.5.0"
-    $LocalStackPort = "4566"
-    $containerRunner = Get-ContainerRunnerCommand
-    & $containerRunner pull --quiet $LocalStackImage
-    & $containerRunner run --detach --name localstack --publish "${LocalStackPort}:${LocalStackPort}" $LocalStackImage
-    $env:AWS_SERVICE_URL = "http://localhost:$LocalStackPort"
 }
 
 if (-Not $SkipTests) {

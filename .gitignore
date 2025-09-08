@@ -27,3 +27,4 @@ TestResult.xml
 UpgradeLog*.htm
 !3rdparty/*/bin
 *.received.txt
+test-results
