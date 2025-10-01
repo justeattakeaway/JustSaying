@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.Interrogation;
 using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
@@ -44,10 +45,12 @@ namespace JustSaying.AwsTools.MessageHandling
             _messagingMonitor = messagingMonitor;
             onError = onError ?? ((ex, message) => { });
             _log = loggerFactory.CreateLogger("JustSaying");
+            //TODO Check if needs to be here or somewhere else
+            IMessageBodyCompression messageBodyCompression = new GzipMessageBodyCompression();
 
             _messageProcessingStrategy = new DefaultThrottledThroughput(_messagingMonitor);
             _messageHandlerWrapper = new MessageHandlerWrapper(messageLock, _messagingMonitor);
-            _messageDispatcher = new MessageDispatcher(queue, serialisationRegister, messagingMonitor, onError, _handlerMap, loggerFactory, messageBackoffStrategy);
+            _messageDispatcher = new MessageDispatcher(queue, serialisationRegister, messageBodyCompression, messagingMonitor, onError, _handlerMap, loggerFactory, messageBackoffStrategy);
 
             Subscribers = new Collection<ISubscriber>();
 
