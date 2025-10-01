@@ -179,18 +179,25 @@ namespace JustSaying.AwsTools.MessageHandling
         private string GetMessageBody(SQSMessage message)
         {
             string body = message.Body;
-            var attributes = GetMessageAttributes(message);
-            var contentEncoding = attributes.Get(MessageAttributeKeys.ContentEncoding);
 
-            if (body is not null && contentEncoding is null)
+            if (body == null)
             {
+                return null;
+            }
+
+            if (body.StartsWith(CompressedHeaders.GzipBase64Header))
+            {
+                body = _messageBodyCompression.Decompress(body);
                 return body;
             }
 
-            return _messageBodyCompression.Decompress(body);
+            var attributes = GetMessageAttributes(message);
+            var contentEncoding = attributes.Get(MessageAttributeKeys.ContentEncoding);
+
+            return contentEncoding is null ? body : _messageBodyCompression.Decompress(body);
         }
 
-        private static MessageAttributes GetMessageAttributes(SQSMessage message)
+        private MessageAttributes GetMessageAttributes(SQSMessage message)
         {
             return isSnsPayload(message.Body) ? GetMessageAttributes(message.Body) : GetRawMessageAttributes(message);
         }
@@ -235,7 +242,7 @@ namespace JustSaying.AwsTools.MessageHandling
             return new MessageAttributes(rawAttributes);
         }
 
-        private static bool isSnsPayload(string body)
+        private bool isSnsPayload(string body)
         {
             if (body is null)
             {
@@ -244,6 +251,11 @@ namespace JustSaying.AwsTools.MessageHandling
 
             try
             {
+                if (body.StartsWith(CompressedHeaders.GzipBase64Header))
+                {
+                    body = _messageBodyCompression.Decompress(body);
+                }
+
                 var jObject = JObject.Parse(body);
                 var typeValue = jObject.Value<string>("Type");
                 return typeValue == "Notification";

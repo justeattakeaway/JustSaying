@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
@@ -62,16 +64,65 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
             return new MessageDispatcher(_queue, _serialisationRegister, _compression, _messageMonitor, _onError, _handlerMap, _loggerFactory, _messageBackoffStrategy);
         }
 
-        public class AndMessageProcessingSucceeds : WhenDispatchingCompressedMessage
+        public class AndMessageCompressedProcessingSucceeds : WhenDispatchingCompressedMessage
         {
             protected override void Given()
             {
                 base.Given();
+                var messageAttributes = new Dictionary<string, MessageAttributeValue>
+                {
+                    {
+                        MessageAttributeKeys.ContentEncoding,
+                        new MessageAttributeValue
+                        {
+                            DataType = "String",
+                            StringValue = ContentEncodings.GzipBase64
+                        }
+                    }
+                };
+
+                _sqsMessage.MessageAttributes = messageAttributes;
                 _handlerMap.Add(typeof(OrderAccepted), m => Task.FromResult(true));
             }
 
             [Fact]
-            public void ShouldDeserializeMessageWithDecompressedBody()
+            public void ShouldDeserializeMessageWithDecompressedBodyRawMessageAttributes()
+            {
+                _serialisationRegister.Received(1).DeserializeMessage(Arg.Is<string>(x => x == _plainMessageBody));
+            }
+
+            [Fact]
+            public void ShouldDeleteMessageIfHandledSuccessfully()
+            {
+                _amazonSqsClient.Received(1).DeleteMessageAsync(Arg.Is<DeleteMessageRequest>(x => x.QueueUrl == ExpectedQueueUrl && x.ReceiptHandle == _sqsMessage.ReceiptHandle));
+            }
+        }
+
+        public class AndMessageCompressedAttributesOnBodyProcessingSucceeds : WhenDispatchingCompressedMessage
+        {
+            protected override void Given()
+            {
+                base.Given();
+                var messageAttributes = new Dictionary<string, Models.MessageAttributeValue>
+                {
+                    {
+                        MessageAttributeKeys.ContentEncoding,
+                        new Models.MessageAttributeValue
+                        {
+                            DataType = "String",
+                            StringValue = ContentEncodings.GzipBase64
+                        }
+                    }
+                };
+                _typedMessage.MessageAttributes = messageAttributes;
+                _plainMessageBody = JsonConvert.SerializeObject(_typedMessage);
+                _sqsMessage.Body = _compression.Compress(_plainMessageBody);
+
+                _handlerMap.Add(typeof(OrderAccepted), m => Task.FromResult(true));
+            }
+
+            [Fact]
+            public void ShouldDeserializeMessageWithDecompressedBodyRawMessageAttributes()
             {
                 _serialisationRegister.Received(1).DeserializeMessage(Arg.Is<string>(x => x == _plainMessageBody));
             }
