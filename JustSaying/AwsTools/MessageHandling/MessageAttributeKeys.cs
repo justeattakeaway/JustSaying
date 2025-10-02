@@ -1,6 +1,7 @@
-﻿namespace JustSaying.AwsTools.MessageHandling;
-
-internal static class MessageAttributeKeys
+﻿namespace JustSaying.AwsTools.MessageHandling
 {
-    public const string ContentEncoding = "Content-Encoding";
+    internal static class MessageAttributeKeys
+    {
+        public const string ContentEncoding = "Content-Encoding";
+    }
 }

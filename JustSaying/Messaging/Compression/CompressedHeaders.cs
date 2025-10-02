@@ -1,6 +1,7 @@
-﻿namespace JustSaying.Messaging.Compression;
-
-public static class CompressedHeaders
+﻿namespace JustSaying.Messaging.Compression
 {
-    public const string GzipBase64Header = "H4sI";
+    public static class CompressedHeaders
+    {
+        public const string GzipBase64Header = "H4sI";
+    }
 }
