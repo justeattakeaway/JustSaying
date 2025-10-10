@@ -34,6 +34,8 @@ namespace JustSaying
         private Func<INamingStrategy> _busNamingStrategyFunc;
         private readonly ILoggerFactory _loggerFactory;
 
+        internal IAwsClientFactory AwsClientFactory => _awsClientFactoryProxy.GetAwsClientFactory();
+
         protected internal JustSayingFluently(IAmJustSaying bus, IVerifyAmazonQueues queueCreator, IAwsClientFactoryProxy awsClientFactoryProxy, ILoggerFactory loggerFactory)
         {
             _loggerFactory = loggerFactory;

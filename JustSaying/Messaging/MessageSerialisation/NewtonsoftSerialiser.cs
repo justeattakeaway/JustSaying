@@ -22,7 +22,7 @@ namespace JustSaying.Messaging.MessageSerialisation
         public Message Deserialise(string message, Type type)
         {
             var jsqsMessage = JObject.Parse(message);
-            var messageBody = jsqsMessage["Message"].ToString();
+            var messageBody = jsqsMessage["Message"].ToString().ApplyDecompressionIfRequired();
             return (Message)JsonConvert.DeserializeObject(messageBody, type, GetJsonSettings());
         }
 
@@ -32,7 +32,7 @@ namespace JustSaying.Messaging.MessageSerialisation
 
             var msg = JsonConvert.SerializeObject(message, settings);
 
-            // AWS SNS service will add Subject and Message properties automatically, 
+            // AWS SNS service will add Subject and Message properties automatically,
             // so just return plain message
             if (serializeForSnsPublishing)
             {

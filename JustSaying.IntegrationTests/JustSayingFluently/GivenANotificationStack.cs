@@ -33,6 +33,8 @@ namespace JustSaying.IntegrationTests.JustSayingFluently
 
         protected RegionEndpoint Region =>TestFixture.Region;
 
+        protected string UniqueName => TestFixture.UniqueName;
+
         private JustSayingFixture TestFixture { get; } = new JustSayingFixture();
 
         protected void RegisterSnsHandler(Future<SimpleMessage> handler)
