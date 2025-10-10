@@ -144,24 +144,27 @@ namespace JustSaying.AwsTools.MessageHandling
 
         private RedrivePolicy ExtractRedrivePolicyFromQueueAttributes(Dictionary<string, string> queueAttributes)
         {
-            if (!queueAttributes.ContainsKey(JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY))
+            if (queueAttributes != null && queueAttributes.TryGetValue(JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY, out var redrivePolicy))
             {
-                return null;
+                return RedrivePolicy.ConvertFromString(redrivePolicy);
             }
-            return RedrivePolicy.ConvertFromString(queueAttributes[JustSayingConstants.ATTRIBUTE_REDRIVE_POLICY]);
+
+            return null;
         }
 
         private ServerSideEncryption ExtractServerSideEncryptionFromQueueAttributes(Dictionary<string, string> queueAttributes)
         {
-            if (!queueAttributes.ContainsKey(JustSayingConstants.ATTRIBUTE_ENCRYPTION_KEY_ID))
+            if (queueAttributes is not null && queueAttributes.TryGetValue(JustSayingConstants.ATTRIBUTE_ENCRYPTION_KEY_ID, out var encryptionKeyId))
             {
-                return null;
+                queueAttributes.TryGetValue(JustSayingConstants.ATTRIBUTE_ENCRYPTION_KEY_REUSE_PERIOD_SECOND_ID, out var reusePeriod);
+                return new ServerSideEncryption
+                {
+                    KmsMasterKeyId = encryptionKeyId,
+                    KmsDataKeyReusePeriodSeconds = reusePeriod
+                };
             }
-            return new ServerSideEncryption
-            {
-                KmsMasterKeyId = queueAttributes[JustSayingConstants.ATTRIBUTE_ENCRYPTION_KEY_ID],
-                KmsDataKeyReusePeriodSeconds = queueAttributes[JustSayingConstants.ATTRIBUTE_ENCRYPTION_KEY_REUSE_PERIOD_SECOND_ID]
-            };
+
+            return null;
         }
     }
 }
