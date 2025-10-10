@@ -28,7 +28,7 @@ public class NewtonsoftSerializer : IMessageSerializer
     public Message Deserialize(string message, Type type)
     {
         var document = JObject.Parse(message);
-        string json = document["Message"].ToString();
+        string json = document["Message"].ToString().ApplyDecompressionIfRequired();
 
         return (Message)JsonConvert.DeserializeObject(json, type, _settings);
     }
