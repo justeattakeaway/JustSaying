@@ -82,7 +82,7 @@ public class SystemTextJsonSerializer : IMessageSerializer
     {
         using var document = JsonDocument.Parse(message);
         JsonElement element = document.RootElement.GetProperty("Message");
-        string json = element.ToString();
+        string json = element.ToString().ApplyDecompressionIfRequired();
 
         return (Message)JsonSerializer.Deserialize(json, type, _options);
     }
