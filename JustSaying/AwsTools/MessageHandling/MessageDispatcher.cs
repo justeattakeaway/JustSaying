@@ -17,7 +17,6 @@ namespace JustSaying.AwsTools.MessageHandling
     {
         private readonly SqsQueueBase _queue;
         private readonly IMessageSerialisationRegister _serialisationRegister;
-        private readonly IMessageBodyCompression _messageBodyCompression;
         private readonly IMessageMonitor _messagingMonitor;
         private readonly Action<Exception, SQSMessage> _onError;
         private readonly HandlerMap _handlerMap;
@@ -28,7 +27,6 @@ namespace JustSaying.AwsTools.MessageHandling
         public MessageDispatcher(
             SqsQueueBase queue,
             IMessageSerialisationRegister serialisationRegister,
-            IMessageBodyCompression messageBodyCompression,
             IMessageMonitor messagingMonitor,
             Action<Exception, SQSMessage> onError,
             HandlerMap handlerMap,
@@ -42,7 +40,6 @@ namespace JustSaying.AwsTools.MessageHandling
             _handlerMap = handlerMap;
             _log = loggerFactory.CreateLogger("JustSaying");
             _messageBackoffStrategy = messageBackoffStrategy;
-            _messageBodyCompression = messageBodyCompression;
         }
 
         public async Task DispatchMessage(SQSMessage message)
