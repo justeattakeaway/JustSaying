@@ -21,11 +21,15 @@ namespace JustSaying.Messaging.Compression
         public string Compress(string messageBody)
         {
             var contentBytes = Encoding.UTF8.GetBytes(messageBody);
-            var compressedStream = new MemoryStream();
-            var gZipStream = new GZipStream(compressedStream, CompressionMode.Compress);
-            gZipStream.Write(contentBytes, 0, contentBytes.Length);
+            using (var compressedStream = new MemoryStream())
+            {
+                using (var gZipStream = new GZipStream(compressedStream, CompressionMode.Compress))
+                {
+                    gZipStream.Write(contentBytes, 0, contentBytes.Length);
+                }
 
-            return Convert.ToBase64String(compressedStream.ToArray());
+                return Convert.ToBase64String(compressedStream.ToArray());
+            }
         }
 
         /// <summary>

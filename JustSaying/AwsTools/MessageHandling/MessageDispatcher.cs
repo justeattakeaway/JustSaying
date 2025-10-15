@@ -1,20 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustSaying.Messaging.Compression;
-using JustSaying.Messaging.MessageHandling;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
 using Message = JustSaying.Models.Message;
 using SQSMessage = Amazon.SQS.Model.Message;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using MessageAttributeValue = JustSaying.Models.MessageAttributeValue;
 
 namespace JustSaying.AwsTools.MessageHandling
 {
@@ -55,8 +50,7 @@ namespace JustSaying.AwsTools.MessageHandling
             Message typedMessage;
             try
             {
-                var body = GetMessageBody(message);
-                typedMessage = _serialisationRegister.DeserializeMessage(body);
+                typedMessage = _serialisationRegister.DeserializeMessage(message.Body);
             }
             catch (MessageFormatNotSupportedException ex)
             {
@@ -174,114 +168,6 @@ namespace JustSaying.AwsTools.MessageHandling
             approxReceiveCount = 0;
 
             return attributes.TryGetValue(MessageSystemAttributeName.ApproximateReceiveCount, out string rawApproxReceiveCount) && int.TryParse(rawApproxReceiveCount, out approxReceiveCount);
-        }
-
-        private string GetMessageBody(SQSMessage message)
-        {
-            string body = message.Body;
-
-            if (body == null)
-            {
-                return null;
-            }
-
-            if (body.StartsWith(CompressedHeaders.GzipBase64Header))
-            {
-                body = _messageBodyCompression.Decompress(body);
-                return body;
-            }
-
-            var attributes = GetMessageAttributes(message);
-            var contentEncoding = attributes.Get(MessageAttributeKeys.ContentEncoding);
-
-            return contentEncoding is null ? body : _messageBodyCompression.Decompress(body);
-        }
-
-        private MessageAttributes GetMessageAttributes(SQSMessage message)
-        {
-            return isSnsPayload(message.Body) ? GetMessageAttributes(message.Body) : GetRawMessageAttributes(message);
-        }
-
-        private static MessageAttributes GetMessageAttributes(string message)
-        {
-            var jsonObject = JObject.Parse(message);
-
-            var attributesToken = jsonObject["MessageAttributes"];
-            if (attributesToken == null || attributesToken.Type != JTokenType.Object)
-            {
-                return new MessageAttributes();
-            }
-
-            Dictionary<string, MessageAttributeValue> attributes = new Dictionary<string, MessageAttributeValue>();
-            foreach (var property in ((JObject)attributesToken).Properties())
-            {
-                var dataType = property.Value.Value<string>("Type");
-                var dataValue = property.Value.Value<string>("Value");
-
-                attributes.Add(property.Name, ParseMessageAttribute(dataType, dataValue));
-            }
-
-            return new MessageAttributes(attributes);
-        }
-
-        private static MessageAttributes GetRawMessageAttributes(SQSMessage message)
-        {
-            if (message.MessageAttributes is null)
-            {
-                return new MessageAttributes();
-            }
-
-            Dictionary<string, MessageAttributeValue> rawAttributes = new Dictionary<string, MessageAttributeValue>();
-            foreach (var messageMessageAttribute in message.MessageAttributes)
-            {
-                var dataType = messageMessageAttribute.Value.DataType;
-                var dataValue = messageMessageAttribute.Value.StringValue;
-                rawAttributes.Add(messageMessageAttribute.Key, ParseMessageAttribute(dataType, dataValue));
-            }
-
-            return new MessageAttributes(rawAttributes);
-        }
-
-        private bool isSnsPayload(string body)
-        {
-            if (body is null)
-            {
-                return false;
-            }
-
-            try
-            {
-                if (body.StartsWith(CompressedHeaders.GzipBase64Header))
-                {
-                    body = _messageBodyCompression.Decompress(body);
-                }
-
-                var jObject = JObject.Parse(body);
-                var typeValue = jObject.Value<string>("Type");
-                return typeValue == "Notification";
-            }
-            catch (JsonReaderException)
-            {
-            }
-
-            return false;
-        }
-
-        private static MessageAttributeValue ParseMessageAttribute(string dataType, string dataValue)
-        {
-            bool isBinary = dataType?.StartsWith("Binary", StringComparison.Ordinal) is true;
-
-            return new MessageAttributeValue()
-            {
-                DataType = dataType,
-                StringValue = !isBinary ? dataValue : null,
-                BinaryValue = isBinary ? Convert.FromBase64String(dataValue) : null
-            };
-        }
-
-        private string ApplyBodyDecompression(string body, MessageAttributeValue contentEncoding)
-        {
-            return _messageBodyCompression.Decompress(body);
         }
     }
 }

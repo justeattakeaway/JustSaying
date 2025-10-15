@@ -1,4 +1,5 @@
 using JustBehave;
+using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.TestingFramework;
 using Shouldly;
@@ -15,6 +16,10 @@ namespace JustSaying.UnitTests.Messaging.Serialisation.Newtonsoft
         {
             _messageOut = new MessageWithEnum(Values.Two);
         }
+
+        protected override NewtonsoftSerialiser CreateSystemUnderTest() =>
+            new NewtonsoftSerialiser()
+                .AddCompression(CompressedHeaders.GzipBase64Header, new GzipMessageBodyCompression());
 
         protected override void When()
         {

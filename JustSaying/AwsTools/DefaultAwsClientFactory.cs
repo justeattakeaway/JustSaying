@@ -1,4 +1,5 @@
-﻿using Amazon;
+﻿using System;
+using Amazon;
 using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SQS;
@@ -8,6 +9,7 @@ namespace JustSaying.AwsTools
     public class DefaultAwsClientFactory : IAwsClientFactory
     {
         private readonly AWSCredentials _credentials;
+        public Uri ServiceUri { get; set; }
 
         public DefaultAwsClientFactory()
         {
@@ -19,10 +21,36 @@ namespace JustSaying.AwsTools
             _credentials = customCredentials;
         }
 
-        public IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region) 
-            => new AmazonSimpleNotificationServiceClient(_credentials, region);
+        public IAmazonSimpleNotificationService GetSnsClient(RegionEndpoint region)
+        {
+            var config = new AmazonSimpleNotificationServiceConfig()
+            {
+                RegionEndpoint = region
+            };
+
+            if (ServiceUri != null)
+            {
+                config.ServiceURL = ServiceUri.ToString();
+            }
+
+            return new AmazonSimpleNotificationServiceClient(_credentials, config);
+        }
 
         public IAmazonSQS GetSqsClient(RegionEndpoint region)
-            => new AmazonSQSClient(_credentials, region);
+        {
+            var config = new AmazonSQSConfig()
+            {
+                RegionEndpoint = region
+            };
+
+            if (ServiceUri != null)
+            {
+                config.ServiceURL = ServiceUri.ToString();
+            }
+
+            return new AmazonSQSClient(_credentials, region);
+        }
+
+
     }
 }
