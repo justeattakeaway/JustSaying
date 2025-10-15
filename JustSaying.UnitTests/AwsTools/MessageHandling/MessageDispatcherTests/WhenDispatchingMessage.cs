@@ -5,7 +5,6 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using JustBehave;
 using JustSaying.AwsTools.MessageHandling;
-using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
@@ -30,11 +29,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
         public override Task<bool> ExistsAsync() => Task.FromResult(true);
     }
-
+    
     public class WhenDispatchingMessage : XAsyncBehaviourTest<MessageDispatcher>
     {
         private const string ExpectedQueueUrl = "http://queueurl";
-
+        
         private readonly IMessageSerialisationRegister _serialisationRegister = Substitute.For<IMessageSerialisationRegister>();
         private readonly IMessageMonitor _messageMonitor = Substitute.For<IMessageMonitor>();
         private readonly Action<Exception, SQSMessage> _onError = Substitute.For<Action<Exception, SQSMessage>>();
@@ -43,11 +42,11 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
         private readonly ILogger _logger = Substitute.For<ILogger>();
         private readonly IMessageBackoffStrategy _messageBackoffStrategy = Substitute.For<IMessageBackoffStrategy>();
         private readonly IAmazonSQS _amazonSqsClient = Substitute.For<IAmazonSQS>();
-
+        
         private DummySqsQueue _queue;
         private SQSMessage _sqsMessage;
         private Message _typedMessage;
-
+        
         protected override void Given()
         {
             _typedMessage = new OrderAccepted();
@@ -67,8 +66,7 @@ namespace JustSaying.UnitTests.AwsTools.MessageHandling.MessageDispatcherTests
 
         protected override MessageDispatcher CreateSystemUnderTest()
         {
-            var messageBodyCompression = new GzipMessageBodyCompression();
-            return new MessageDispatcher(_queue, _serialisationRegister, messageBodyCompression, _messageMonitor, _onError, _handlerMap, _loggerFactory, _messageBackoffStrategy);
+            return new MessageDispatcher(_queue, _serialisationRegister, _messageMonitor, _onError, _handlerMap, _loggerFactory, _messageBackoffStrategy);
         }
 
         public class AndHandlerMapDoesNotHaveMatchingHandler : WhenDispatchingMessage
