@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using JustSaying.Messaging.Compression;
 using JustSaying.Messaging.MessageProcessingStrategies;
 using JustSaying.Messaging.MessageSerialisation;
 using JustSaying.Messaging.Monitoring;
@@ -134,7 +133,7 @@ namespace JustSaying.AwsTools.MessageHandling
 
             await _queue.Client.DeleteMessageAsync(deleteRequest).ConfigureAwait(false);
         }
-
+        
         private async Task UpdateMessageVisibilityTimeout(SQSMessage message, string receiptHandle, Message typedMessage, Exception lastException)
         {
             if (TryGetApproxReceiveCount(message.Attributes, out int approxReceiveCount))
