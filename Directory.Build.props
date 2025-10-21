@@ -4,6 +4,9 @@
     <PackageReference Include="OpenCover" Version="4.6.519" PrivateAssets="All" />
     <PackageReference Include="ReportGenerator" Version="3.1.2" PrivateAssets="All" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)package-icon.png" Pack="True" PackagePath="" />
+  </ItemGroup>
   <PropertyGroup>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <Authors>Just Eat</Authors>
@@ -12,9 +15,9 @@
     <Description>A light-weight message bus on top of AWS SNS and SQS</Description>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-    <PackageIconUrl>https://avatars3.githubusercontent.com/u/1516790?s=200</PackageIconUrl>
+    <PackageIcon>package-icon.png</PackageIcon>
     <PackageProjectUrl>https://github.com/justeat/JustSaying</PackageProjectUrl>
-    <PackageLicenseUrl>$(PackageProjectUrl)/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageReleaseNotes>$(PackageProjectUrl)/releases</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageTags>aws;sns;sqs</PackageTags>
