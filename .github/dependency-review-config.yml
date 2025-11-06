@@ -1,0 +1,6 @@
+# Dependency Review configuration
+# Exclude the Docusaurus website directory from dependency review
+# as it contains Node.js/npm packages separate from the main .NET project
+
+ignored_directories:
+  - 'website/'
