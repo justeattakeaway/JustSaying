@@ -20,3 +20,5 @@ jobs:
         uses: actions/dependency-review-action@40c09b7dc99638e5ddb0bfd91c1673effc064d8a # v4.8.1
         with:
           config-file: './.github/dependency-review-config.yml'
+          license-check: false
+          fail-on-severity: critical

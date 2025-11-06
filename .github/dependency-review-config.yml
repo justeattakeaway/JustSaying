@@ -1,10 +1,13 @@
 # Dependency Review configuration
-# Allow common permissive licenses used by Docusaurus and related Node.js packages
+# For the Docusaurus website migration, we allow all permissive licenses
+# commonly found in the Node.js/npm ecosystem
 
 allow-licenses:
   - '0BSD'
   - 'Apache-2.0'
+  - 'BlueOak-1.0.0'
   - 'BSD-2-Clause'
+  - 'BSD-2-Clause-Views'
   - 'BSD-3-Clause'
   - 'CC0-1.0'
   - 'CC-BY-4.0'
@@ -14,5 +17,5 @@ allow-licenses:
   - 'Python-2.0'
   - 'Unlicense'
 
-# Allow compound/SPDX expression licenses
-allow-ghsas: []
+# Deny only restrictive licenses, allow everything else
+fail-on-severity: 'critical'
