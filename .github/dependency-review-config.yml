@@ -1,6 +1,18 @@
 # Dependency Review configuration
-# Exclude the Docusaurus website directory from dependency review
-# as it contains Node.js/npm packages separate from the main .NET project
+# Allow common permissive licenses used by Docusaurus and related Node.js packages
 
-ignored_directories:
-  - 'website/'
+allow-licenses:
+  - '0BSD'
+  - 'Apache-2.0'
+  - 'BSD-2-Clause'
+  - 'BSD-3-Clause'
+  - 'CC0-1.0'
+  - 'CC-BY-4.0'
+  - 'ISC'
+  - 'MIT'
+  - 'MIT-0'
+  - 'Python-2.0'
+  - 'Unlicense'
+
+# Allow compound/SPDX expression licenses
+allow-ghsas: []
